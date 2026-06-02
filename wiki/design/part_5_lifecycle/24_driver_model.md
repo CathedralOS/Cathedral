@@ -22,11 +22,12 @@ taking down the system, and upgradable in place via the hot-swap machinery
 `device_io`, `memory_map` — plus narrow capabilities over *its* registers, DMA
 regions, and interrupt lines, and nothing more. No arbitrary kernel driver blobs.
 
-**The early wedge matters more here than anywhere.** Driver surface area is what
-kills OS projects, so the first target is a *controlled hardware class* — a TV box,
-appliance, kiosk, router, thin client, dev board, or a single locked-down laptop SKU
-— where the device set is small, known, and stable. "All PCs" is the bad first
-wedge; that path is pain (see [[00_vision_and_non_goals]]).
+**Driver scope is the deciding constraint here.** Driver surface area is what
+kills OS projects, so the design targets a *constrained, known, stable device
+set* rather than arbitrary hardware. A small fixed device set is far more
+tractable than supporting "all PCs," which is explicitly out of scope for the
+model (see [[00_vision_and_non_goals]]): the combinatorics of arbitrary hardware
+defeat the proof and isolation guarantees the rest of the system depends on.
 
 ## Concerns & Design Space
 
@@ -54,8 +55,8 @@ wedge; that path is pain (see [[00_vision_and_non_goals]]).
 
 - What is the minimum trusted hardware-access broker, and how much driver logic can
   live outside the privileged core ([[26_kernel_architecture]])?
-- How is DMA made safe without an IOMMU, if a wedge device lacks one — or is "has an
-  IOMMU" a hardware prerequisite for the first wedge?
+- How is DMA made safe without an IOMMU, if a target device lacks one — or is "has an
+  IOMMU" a hardware prerequisite for the target hardware?
 - How does a driver re-establish device state after a crash without a window where the
   hardware is in an unknown configuration?
 - Which interrupt and power paths can meet quiescence for hot swap, and which force
@@ -77,7 +78,7 @@ wedge; that path is pain (see [[00_vision_and_non_goals]]).
 ## Open Questions
 
 - How far can DMA isolation rely on hardware (IOMMU) vs. needing software shadowing,
-  and what does that cost the first wedge?
+  and what does that cost on a constrained device set?
 - Can a meaningfully large fraction of drivers be authored in proved Omega, or is a
   bounded unsafe boundary unavoidable for the lowest register pokes?
 - Where is the line between a verified user-mode driver and the privileged broker it

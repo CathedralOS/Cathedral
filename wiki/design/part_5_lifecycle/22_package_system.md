@@ -31,9 +31,9 @@ are hermetic. Because all of this is structured, "install this package" reduces 
 verify provenance, check the capability manifest against policy, prove the state
 schema migrates, allocate the budget, and atomically commit — or atomically refuse.
 
-This is plausibly the **company moat**: every other OS treats the package as opaque
-payload; Cathedral treats it as an auditable object whose blast radius is computed,
-not trusted.
+This is the core divergence: every other OS treats the package as an opaque
+payload, executed on faith; Cathedral treats it as a checkable contract whose
+blast radius is computed, not trusted.
 
 ## Concerns & Design Space
 

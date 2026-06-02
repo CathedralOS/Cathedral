@@ -1,7 +1,7 @@
 # Chapter 32: Web Integration
 
-> The web is the largest app platform; if Cathedral's first wedge is a
-> laptop/TV/mobile-like device, the strong move is to make web *origins* into
+> Where Cathedral targets a browser-class device, the web is the largest existing
+> app surface; the strong move is to make web *origins* into
 > first-class principals in the capability system.
 
 ## The Legacy Contract

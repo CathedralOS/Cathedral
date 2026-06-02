@@ -19,7 +19,7 @@ authority, over what state, observable how, and replaceable when.*
 
 If you read nothing else, read:
 
-1. [Vision & Non-Goals](part_0_foundations/00_vision_and_non_goals.md)
+1. [Direction & Scope](part_0_foundations/00_vision_and_non_goals.md)
 2. [The Omega Substrate](part_0_foundations/01_omega_substrate.md)
 3. [Capability Model & Authority Graph](part_1_authority/03_capability_model.md)
 4. [Component Model](part_2_components/09_component_model.md)
@@ -75,7 +75,7 @@ A few writing rules, inherited from Omega's docs:
 ## Chapter map
 
 ### Part 0 — Foundations
-- [00 — Vision & Non-Goals](part_0_foundations/00_vision_and_non_goals.md)
+- [00 — Direction & Scope](part_0_foundations/00_vision_and_non_goals.md)
 - [01 — The Omega Substrate](part_0_foundations/01_omega_substrate.md)
 - [02 — Vocabulary](part_0_foundations/02_vocabulary.md)
 
@@ -125,7 +125,7 @@ A few writing rules, inherited from Omega's docs:
 - [33 — Observability & Introspection](part_7_governance/33_observability_and_introspection.md)
 - [34 — Audit, Compliance & Provenance](part_7_governance/34_audit_compliance_provenance.md)
 - [35 — Telemetry & Update Feedback](part_7_governance/35_telemetry_and_feedback.md)
-- [36 — App Store & Economic Control Plane](part_7_governance/36_store_and_economic_control.md)
+- [36 — Distribution & Revocation](part_7_governance/36_store_and_economic_control.md)
 - [37 — Governance & Extension Boundaries](part_7_governance/37_governance_and_extension_boundaries.md)
 
 ### Part 8 — Developer & Verification

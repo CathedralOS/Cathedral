@@ -26,7 +26,7 @@ inspectable policy precedence, so the effective value and the layer it came from
 are always a query. Changes are transactional ([[19_transactions_and_consistency]]),
 diffable, rollback-able, and audited ([[34_audit_compliance_provenance]]).
 Secrets are a separate, capability-gated namespace ([[07_secrets_and_keys]]), never
-inlined. This is the enterprise wedge: configuration as versioned, typed,
+inlined. The result is configuration as versioned, typed,
 capability-scoped data with auditable, layered policy.
 
 ## Concerns & Design Space

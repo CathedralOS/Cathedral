@@ -24,7 +24,7 @@ in a log — so reads can be point-in-time snapshots, watchers become durable
 subscriptions that never miss an event, and the past is replayable. Objects carry
 content addresses (dedup, integrity), causal history (undo, audit), and
 per-object capabilities (a directory listing is an *attenuated view*, not a raw
-mode bit). The killer feature is not "a better ext4" — it is that **every change
+mode bit). The point is not a better ext4 — it is that **every change
 is structured, durable, observable, replayable, permissioned, and queryable**,
 which is exactly what robust file watching, app sync, backup, audit, undo, and
 state migration all need underneath.

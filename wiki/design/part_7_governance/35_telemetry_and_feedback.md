@@ -1,7 +1,7 @@
 # Chapter 35: Telemetry & Update Feedback
 
-> The OS reports on itself to its vendor — under the same capability model it
-> imposes on everyone else, so telemetry never becomes spyware with proofs.
+> The OS reports on itself to its vendor — bound by the same capability model it
+> imposes on everyone else, so system-level observation is never ambient.
 
 ## The Legacy Contract
 
@@ -9,21 +9,21 @@ Legacy telemetry is a trust sink. It ships as an opaque, privileged channel the
 user cannot inspect, attenuate, or fully disable; "off" often means "less," and
 nobody outside the vendor can verify what crosses the wire. Crash reporters
 scoop up memory that may contain secrets. "Anonymized" analytics are routinely
-re-identifiable. Enterprises get a coarse on/off knob, not control. The
+re-identifiable. An organization gets a coarse on/off knob, not control. The
 structural problem is that telemetry runs *outside* the OS's own authority model:
 the vendor is an unmodeled super-principal with ambient reach. That is exactly
 the ambient-authority sin Cathedral exists to kill — applied to the vendor.
 
 ## What Cathedral Wants
 
-A commercial OS needs telemetry — crash reports, performance data, upgrade
+An OS needs some telemetry — crash reports, performance data, upgrade
 health, security signals — but it must **not destroy trust**. The domains:
 
 - crash reports and performance telemetry
 - upgrade health and rollout signals ([[23_updates_and_hot_swap]])
 - security events and capability-usage summaries
 - privacy-preserving analytics (possibly differential privacy)
-- enterprise-controlled telemetry policy ([[31_multi_user_and_org_control]])
+- organization/tenant-controlled telemetry policy ([[31_multi_user_and_org_control]])
 - user-visible telemetry policy and local-first diagnostics
 
 Because Cathedral already produces **structured events** ([[33_observability_and_introspection]]),
@@ -35,10 +35,10 @@ attenuated summaries leaving.
 **Critical principle:** the capability model applies to the **OS vendor too**.
 The vendor is a principal in the authority graph like any app. A telemetry
 upload is a network flow under a held, attenuated, revocable capability, visible
-in the same introspection surface. If the vendor's reach is not modeled and
-bounded, Cathedral is just "spyware with proofs" — the failure mode the vision
-explicitly forbids ([[00_vision_and_non_goals]] is wrong without this chapter;
-see also the vendor-principal note in [[03_capability_model]]).
+in the same introspection surface. If system- and OS-level observation is not
+itself bound by the capability model, the proofs elsewhere are meaningless — the
+failure mode the vision explicitly forbids ([[00_vision_and_non_goals]] is wrong
+without this chapter; see also the vendor-principal note in [[03_capability_model]]).
 
 ## Concerns & Design Space
 
@@ -52,8 +52,8 @@ see also the vendor-principal note in [[03_capability_model]]).
   ([[07_secrets_and_keys]]).
 - **Privacy-preserving analytics.** Whether differential privacy or k-anonymity
   is worth its accuracy cost, and where aggregation happens.
-- **Enterprise control.** Orgs set telemetry policy as enforced, attested policy,
-  not a checkbox ([[31_multi_user_and_org_control]]).
+- **Organization control.** An organization or tenant sets telemetry policy as
+  enforced, attested policy, not a checkbox ([[31_multi_user_and_org_control]]).
 - **User visibility.** The user can *see* exactly what telemetry is defined to
   leave and follow its authority path, like any other flow.
 
@@ -92,5 +92,5 @@ see also the vendor-principal note in [[03_capability_model]]).
 - [[33_observability_and_introspection]] — the event graph telemetry projects from.
 - [[08_data_model_and_privacy]] — what may leave the device and how.
 - [[03_capability_model]] — the vendor is a principal, not an exception.
-- [[31_multi_user_and_org_control]] — enterprise-controlled telemetry policy.
+- [[31_multi_user_and_org_control]] — organization/tenant-controlled telemetry policy.
 - [[23_updates_and_hot_swap]] — upgrade health as a telemetry signal.

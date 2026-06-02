@@ -8,8 +8,9 @@
 Legacy systems answer "what is replaceable" by accident, not by design. Linux is
 the cautionary tale: the package manager, init/service manager, display stack,
 filesystem semantics, and even the C library are all forkable at the platform
-level, so the "platform" is really N incompatible platforms in a trench coat —
-the **distro chaos** that makes "ship one app to all Linux" a perennial joke. The
+level, so the "platform" is really N mutually incompatible variants. Forking the
+core contracts this way destroys any single-contract guarantee: a component built
+against one variant cannot be assumed to run on another. The
 opposite legacy failure (a locked monolith) forbids the *good* extensibility too:
 you cannot add a driver or a service without vendor blessing. Neither system ever
 drew a principled line between *extending inside a contract* and *redefining the
@@ -29,8 +30,8 @@ meaning of the platform:
 - the IPC protocol model
 - filesystem semantics
 
-If these are forkable at the platform level, you get distro chaos and Cathedral
-stops being one system. So **the rule**:
+If these are forkable at the platform level, the core contracts fragment into
+mutually incompatible variants and Cathedral stops being one system. So **the rule**:
 
 > Developers can build apps, services, drivers, and components.
 > They **cannot** redefine what an app, service, driver, or component *means*.

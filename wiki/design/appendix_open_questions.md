@@ -6,17 +6,12 @@ big questions whose answers ripple across many chapters. When one is resolved, i
 should collapse into a decision recorded in the relevant chapters and be struck
 from here.
 
-## Strategic
+## Scope
 
-- **The first wedge is unchosen.** TV box, appliance, kiosk, router, thin client,
-  dev board, or a single controlled laptop SKU? The choice sharpens
-  [[24_driver_model]], [[25_boot_and_trust_chain]], [[26_kernel_architecture]],
-  [[29_media_and_graphics]], [[31_multi_user_and_org_control]], and
-  [[36_store_and_economic_control]] dramatically. Until chosen, several chapters
-  hedge.
 - **How much legacy compatibility, if any.** A real answer to
   [[41_compatibility_and_legacy]] changes the risk profile of nearly every
-  contract. Native-only is cleanest; any Linux/POSIX surface risks colonization.
+  contract. Native-only is cleanest; any Linux/POSIX surface risks letting a
+  legacy contract become Cathedral's contract.
 
 ## Architectural
 
@@ -55,8 +50,10 @@ from here.
 - **The trusted computing base is the boundary-provider set.** Enumerating,
   minimizing, and auditing it is a standing task across
   [[26_kernel_architecture]], [[24_driver_model]], [[25_boot_and_trust_chain]].
-- **Does the OS vendor obey the capability model in practice**, not just in
-  principle? The credibility of [[35_telemetry_and_feedback]] depends on it.
+- **Is system/OS-level code itself bound by the capability model**, or does it sit
+  outside it? Whether observation and data collection are subject to the same
+  authority machinery as everything else is a structural question, not a policy
+  one ([[35_telemetry_and_feedback]]).
 
 ## How to use this register
 

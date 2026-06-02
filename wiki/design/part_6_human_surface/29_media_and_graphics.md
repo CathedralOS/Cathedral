@@ -28,7 +28,7 @@ renders because it holds a rendering capability, captures the screen because it
 holds a (rare, attributed) capture capability.
 
 The discipline is *say no early*. Pick one GPU path, one decode path, one audio
-graph for the first wedge; gate each behind a capability; route everything
+graph for the initial target; gate each behind a capability; route everything
 through the driver model ([[24_driver_model]]) so the untrusted vendor blob is
 isolated rather than mapped into apps.
 

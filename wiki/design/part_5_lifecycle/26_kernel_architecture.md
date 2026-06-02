@@ -51,7 +51,7 @@ likely needs both, with the boundary between them being *the* architectural deci
   privileged.
 - **Options on the table.** Monolithic, microkernel, hybrid, exokernel-ish,
   library-OS-ish, Theseus-style SAS, capability kernel, hypervisor-first — held as
-  candidates, not commitments, until the wedge constrains them.
+  candidates, not commitments, until the target hardware and workload constrain them.
 
 ## Key Questions
 
@@ -60,7 +60,7 @@ likely needs both, with the boundary between them being *the* architectural deci
 - Where is the line drawn between language-isolated (proved Omega, single address
   space) and hardware-isolated (untrusted/foreign) domains?
 - How much of the classic kernel can become restartable components without losing the
-  performance the wedge needs?
+  performance the target workload needs?
 - Is a hypervisor-first base worth it for running a legacy box
   ([[41_compatibility_and_legacy]]) safely alongside the native system?
 
@@ -83,7 +83,7 @@ likely needs both, with the boundary between them being *the* architectural deci
   miscompilation, unsafe boundaries, and side channels the type system does not model?
 - What is the performance reality of a single-address-space design once hardware
   isolation must be reintroduced for untrusted code at the seams?
-- Does the architecture decision even resolve before the commercial wedge does, or is
+- Does the architecture decision even resolve before the target platform is fixed, or is
   it deliberately deferred ([[00_vision_and_non_goals]])?
 
 ## Related

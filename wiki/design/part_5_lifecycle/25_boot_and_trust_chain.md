@@ -46,7 +46,7 @@ later.
 
 ## Key Questions
 
-- What is the hardware root of trust for the first wedge (TPM, secure element, SoC
+- What is the hardware root of trust for the target hardware (TPM, secure element, SoC
   fuses), and what does Cathedral assume vs. require of it?
 - Where exactly does the measured chain *end* — at the kernel, at privileged
   components, or at the full live authority graph?

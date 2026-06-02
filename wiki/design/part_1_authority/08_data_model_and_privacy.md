@@ -12,8 +12,8 @@ of a medical record and a JPEG of a meme are the same object to the OS — so th
 permission is coarse, binary, and blind to *why* the access happens. Once an app
 is granted "Contacts," it may read every field of every contact for any reason,
 forever, and the system records only that it *was* granted, never *for what
-purpose*. Enterprise and regulatory regimes (the ones that actually audit data
-use) care precisely about the *why*, and the legacy model cannot represent it.
+purpose*. Regulatory and audit regimes care about the *purpose* of access, not just
+whether it happened, and the legacy model cannot represent it.
 
 ## What Cathedral Wants
 

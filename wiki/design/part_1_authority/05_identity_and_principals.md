@@ -8,7 +8,8 @@
 Unix collapsed identity into a small integer. A `uid` and a few `gid`s decide
 everything, and authority is ambient over that identity: you can act because of
 *who you are*, not what you hold. The model has almost no vocabulary for the
-identities that actually matter on a commercial platform. There is no first-class
+identities that carry the most weight; publisher identity and component
+provenance are barely represented at all. There is no first-class
 notion of an *app*, a *publisher*, a *component build*, a *device*, an
 *organization*, or a *session* — those get faked with usernames, service
 accounts, signing certificates bolted on at install time, and MDM profiles

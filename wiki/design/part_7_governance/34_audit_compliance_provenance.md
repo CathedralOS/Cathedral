@@ -17,8 +17,9 @@ by hand, expensively and unreliably.
 
 ## What Cathedral Wants
 
-For commercial value this deserves its own domain: make compliance **mechanically
-derivable**. Because Cathedral already records authority and a causal event graph
+Compliance deserves its own domain because it can be made **mechanically
+derivable** rather than reconstructed by hand. Because Cathedral already records
+authority and a causal event graph
 ([[33_observability_and_introspection]]), the artifacts an auditor needs are
 either first-class or one query away:
 

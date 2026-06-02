@@ -43,8 +43,7 @@ legacy systems cannot answer at all:
 The key idea is **system-wide causality**: Cathedral records a **causal event
 graph** from the first boot. An event is not a log line; it is a node with edges
 to the events that caused it and the authority that permitted it. Observability
-is then just *querying that graph*. This is also where much of Cathedral's
-enterprise value lives — the same graph feeds audit ([[34_audit_compliance_provenance]]).
+is then just *querying that graph*. The same graph feeds audit ([[34_audit_compliance_provenance]]).
 
 ## Concerns & Design Space
 
