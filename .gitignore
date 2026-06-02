@@ -1,0 +1,16 @@
+# Build output (none yet — Cathedral is docs-first for now)
+build/
+target/
+**/build/
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/*
+!.vscode/settings.json
+
+# Scratch
+scratch/
+*.local.md
