@@ -19,7 +19,7 @@ authority, over what state, observable how, and replaceable when.*
 
 If you read nothing else, read:
 
-1. [Direction & Scope](part_0_foundations/00_vision_and_non_goals.md)
+1. [What Cathedral Is](part_0_foundations/00_vision_and_non_goals.md)
 2. [The Omega Substrate](part_0_foundations/01_omega_substrate.md)
 3. [Capability Model & Authority Graph](part_1_authority/03_capability_model.md)
 4. [Component Model](part_2_components/09_component_model.md)
@@ -75,7 +75,7 @@ A few writing rules, inherited from Omega's docs:
 ## Chapter map
 
 ### Part 0 — Foundations
-- [00 — Direction & Scope](part_0_foundations/00_vision_and_non_goals.md)
+- [00 — What Cathedral Is](part_0_foundations/00_vision_and_non_goals.md)
 - [01 — The Omega Substrate](part_0_foundations/01_omega_substrate.md)
 - [02 — Vocabulary](part_0_foundations/02_vocabulary.md)
 

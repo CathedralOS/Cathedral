@@ -1,82 +1,104 @@
-# Chapter 00: Direction & Scope
+# Chapter 00: What Cathedral Is
 
-> What Cathedral is trying to change about OS design, and where it draws its
-> boundaries. This is a technical direction, not a product plan.
+> An operating system where authority is visible, upgrades don't stop the world,
+> and the system can answer questions about itself.
 
-## The Premise
+## The Idea
 
-Most OS contracts were shaped by a few historical forces: C's untyped bytes and
-manual lifetimes; ambient authority, where a process can act because of *who it
-is* rather than *what it holds*; the process as the only unit of isolation,
-authority, scheduling, and failure all at once; reboot-based upgrade; and weak
-metadata, so the system cannot answer questions about itself.
+Cathedral is an operating system where authority is something you can see.
 
-A direct consequence is that a normal OS cannot answer questions that ought to be
-cheap: who can do what, why, through which path, and can it be revoked safely?
-What wrote this object? What is blocking this upgrade? Under whose authority did
-this happen? The information was never modeled, so it cannot be queried.
+Every power a piece of software holds — to read a file, reach a server, use the
+camera, wake the machine — is a value it was *handed*, by someone, for a reason
+the system recorded. Ask who can reach your photos and Cathedral draws you the
+graph. Revoke it and the grant is gone everywhere at once, with nothing left
+holding a stale copy. This is not a permissions dialog bolted onto a Unix. It is
+the substance of the system: there is no ambient power, no "well, it runs as your
+user, so it can do anything you can." If software can do a thing, it is holding
+the thing that lets it, and you can follow that thread all the way back.
 
-Cathedral starts from the bet that these are not separate features to add but one
-missing thing: the system never modeled **authority, effects, protocols, and
-state evolution as first-class, compiler-visible facts.** Omega models exactly
-those (see [[01_omega_substrate]]). Cathedral is the OS that follows from taking
-them seriously.
+Cathedral is also an operating system that does not stop to upgrade itself. A
+running component — a driver in the middle of a transfer, a service in the middle
+of a request — is replaced by reaching a quiet point, migrating its live state
+through typed code the compiler already checked, and resuming on the new version.
+No reboot. No "do not power off." No praying that yesterday's on-disk state still
+fits today's struct. Upgrade is a normal, designed motion, not a controlled
+demolition.
 
-## What Cathedral Tries to Do Differently
+And it is an operating system whose storage *remembers*. Every change is a
+structured, durable, queryable fact: what changed, when, and under whose
+authority. "What wrote this?" and "show me this object as it was last Tuesday"
+are ordinary queries, not forensic archaeology. A file watcher that misses events
+is a contradiction in terms here, because change is recorded, not guessed at.
 
-Four ideas run through every later chapter:
+These are not three features. They are one idea seen from three sides — that an
+operating system should model **authority, behavior, and change as first-class
+facts it can inspect** — instead of throwing that information away the moment it
+acts and reconstructing it later from logs, heuristics, and hope.
 
-1. **Capability flow.** Authority is a value that is held, passed, attenuated,
-   and revoked — never an ambient property of identity. The system can describe
-   the authority graph at any time. See [[03_capability_model]].
-2. **Proof-carrying components.** A component declares — and the compiler checks
-   — what authority it accepts, uses, stores, and acquires; what effects it can
-   reach; what protocols it speaks; what state it persists; how it migrates.
-3. **Resumability.** Upgrade, restart, and migration are normal designed
-   operations. A component reaches quiescence and has its live state migrated
-   rather than the system stopping and reloading. See [[23_updates_and_hot_swap]].
-4. **Explicit state migration.** When a data shape changes, the transformation
-   from old to new is typed code with obligations, not an assumption that the
-   bytes still line up. See [[21_versioned_state_and_migration]].
+## What That Makes Possible
 
-These are design properties, not slogans. Each chapter is accountable to whether
-it actually delivers them or merely claims to.
+Things that are painful or impossible on every mainstream OS become ordinary:
 
-## Out of Scope
+- **Revocation that actually works.** Cut an app off from the network and *every*
+  path it had is severed at once — including the capability it quietly stored for
+  later — because the system tracks the grant, not the app's good behavior.
+- **A driver that crashes without taking the machine with it**, and comes back,
+  because it is an isolated, restartable component holding nothing but the narrow
+  authority over its own device.
+- **Conditional breakpoints that don't make your program crawl** — the condition
+  is evaluated in-process, not by trapping into the kernel on every hit, so
+  "stop when `id == 4071`" on a hot loop is cheap instead of unusable.
+- **"Why is the battery draining / why did this app touch that record / what is
+  blocking this upgrade"** answered as a query, because the causal and authority
+  graphs are kept, not reconstructed.
+- **Software you can reason about before you run it**, because a component carries
+  a checkable account of the authority it accepts, the effects it can reach, and
+  the protocols it speaks — and the compiler already verified the account matches
+  the code.
 
-- **Compatibility with existing ecosystems is not a goal.** Cathedral makes no
-  attempt to run existing Unix/Linux/Windows binaries natively or to mirror their
-  syscall surfaces. It is a clean-slate model. If legacy execution is offered at
-  all, it is an isolated, contained subsystem and never the platform's own
-  contract — see [[41_compatibility_and_legacy]]. The point is to avoid letting a
-  legacy contract silently become Cathedral's contract.
-- **No product, market, or hardware-targeting strategy.** These docs describe the
-  system's design. Which hardware it runs on first, how it is distributed, and
-  who it is sold to are not OS-design questions and are deliberately absent.
-- **Not infinitely forkable.** Developers build apps, services, drivers, and
-  components. They do not redefine what those *mean*. Extensibility happens inside
-  stable contracts — see [[37_governance_and_extension_boundaries]].
+None of these are tricks layered on top. Each one falls out of the same core:
+authority, effects, protocols, and state evolution are visible to the compiler
+and the running system.
 
-## Concerns & Design Space
+## Why This Is Possible Now
 
-- The order contracts must be designed in: authority and the component model are
-  load-bearing for everything else; getting them wrong poisons the rest.
-- Where the line falls between "the OS proves it" and "the OS checks it at
-  load/runtime." Not everything can be static.
+Cathedral is built on [Omega](../../../../Omega/wiki/language_guide/language_guide.md),
+a systems language that already makes the hard nouns first-class: capabilities as
+ordinary held values, effects as a checked vocabulary of what code can do, typed
+protocols, and versioned data with migrations the compiler proves safe. The OS
+does not have to invent a safety model and enforce it with runtime bureaucracy —
+the language carries it, and the OS gives it operational meaning (a scheduler, a
+loader, a driver host, a filesystem). See [[01_omega_substrate]].
 
-## Key Questions
+That is the bet in one line: **the reason older systems can't answer questions
+about themselves is that the language underneath them never modeled the answers.**
+Cathedral starts from a language that does.
 
-- Can Cathedral *always* answer "who can do what, why, through which path, and can
-  I revoke it safely"? Every chapter is ultimately accountable to this.
-- What is the minimum set of contracts that must hold for the rest to be coherent
-  rather than aspirational?
+## The Four Properties
 
-## Open Questions
+Every later chapter is accountable to delivering these, not just invoking them:
 
-- How much of the resumability and migration story is statically provable versus
-  necessarily checked at load/run time.
+1. **Capability flow** — authority is held, passed, attenuated, and revoked; never
+   ambient. See [[03_capability_model]].
+2. **Proof-carrying components** — code ships with a checked account of its own
+   authority, effects, and protocols.
+3. **Resumability** — restart, upgrade, and migration are designed operations, not
+   catastrophes. See [[23_updates_and_hot_swap]].
+4. **Explicit state migration** — a shape change is typed code with obligations,
+   not an assumption that the bytes line up. See [[21_versioned_state_and_migration]].
+
+## Scope
+
+Cathedral is a clean-slate model. It does not try to run existing
+Unix/Linux/Windows binaries or mirror their syscalls; if legacy execution exists
+at all, it is a contained subsystem, never the platform's own contract
+([[41_compatibility_and_legacy]]). The reason is design integrity, not purity:
+adopt a legacy contract and it quietly becomes *your* contract. Product, market,
+and hardware-targeting decisions are deliberately out of these docs — this is the
+design of the system, not a plan to sell it.
 
 ## Related
 - [[01_omega_substrate]] — the language this rests on.
 - [[03_capability_model]] — the authority spine.
-- [[37_governance_and_extension_boundaries]] — what stays fixed.
+- [[09_component_model]] — the unit the whole system is built from.
+- [[23_updates_and_hot_swap]] — upgrade without stopping the world.
