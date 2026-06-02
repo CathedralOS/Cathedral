@@ -30,14 +30,19 @@ Other operating systems cannot do this cleanly because the languages underneath 
 
 Every chapter is accountable to these:
 
-1. **Capability flow.** Authority is held, passed, narrowed, and revoked, never ambient. [[03_capability_model]]
+1. **Capability flow.** Authority can be held, passed, narrowed, revoked, and never ambient. [[03_capability_model]]
 2. **Proof-carrying components.** Code ships with a checked account of its own authority and effects.
 3. **Resumability.** Restart, upgrade, and migration are designed operations. [[23_updates_and_hot_swap]]
 4. **Explicit state migration.** A shape change is typed code, not an assumption the bytes still line up. [[21_versioned_state_and_migration]]
 
 ## Scope
 
-Clean slate. Cathedral does not run existing Unix/Linux/Windows binaries or mirror their syscalls. Any legacy execution is a contained box, never the platform's contract ([[41_compatibility_and_legacy]]). Adopting a legacy contract means inheriting its problems, which is the thing being avoided. Product and hardware decisions are out of scope here.
+Clean slate. Cathedral does not run existing Unix/Linux/Windows binaries or mirror their syscalls. Any legacy execution is within a contained sandbox rather than the platform's contract ([[41_compatibility_and_legacy]]). Adopting a legacy contract would mean inheriting its problems, which is precisely the thing being avoided.
+
+At the present moment, it is unclear how much of the driver fiasco Cathedral can avoid. There are a few roads ahead:
+- Make drivers user space, less scary.
+- Adopt the existing chaotic driver ecosystem, which is unlikley.
+- Find niche hardware wedges and force hardware to comply to a simple universal spec. Drastically reduce what drivers can do. Force vendors to ship hardware that actually works.
 
 ## Related
 - [[01_omega_substrate]]
