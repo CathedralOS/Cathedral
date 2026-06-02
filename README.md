@@ -1,47 +1,26 @@
 # Cathedral
 
-Cathedral is a new operating system built on [Omega](../Omega/README.md), an
-experimental systems language centered on explicit state, proof-carrying
-behavior, capability-aware boundaries, and data-oriented execution.
+Cathedral is a new operating system built on [Omega](../Omega/README.md), an experimental systems language centered on explicit state, proof-carrying behavior, capability-aware boundaries, and data-oriented execution.
 
-Cathedral is not a safer Unix with a nicer package manager. It is an attempt to
-redesign the legacy OS contracts that were shaped by C, ambient authority,
-process isolation, reboot-based upgrades, and weak metadata — and to rebuild
-them around **capability flow, proof-carrying components, resumability, and
-explicit state migration.**
+Cathedral is not a safer Unix with a nicer package manager. It is an attempt to redesign the legacy OS contracts that were shaped by C, ambient authority, process isolation, reboot-based upgrades, and weak metadata — and to rebuild them around **capability flow, proof-carrying components, resumability, and explicit state migration.**
 
 The wager, stated plainly:
 
-> Every traditional OS domain has a legacy contract. Most of those contracts
-> cannot answer simple questions — *who can do what, why, through which path,
-> and can I revoke it safely?* Cathedral should answer them by construction,
-> because authority, effects, protocols, and state evolution are visible to the
-> compiler before a single byte is emitted.
+> Every traditional OS domain has a legacy contract. Most of those contracts cannot answer simple questions — *who can do what, why, through which path, and can I revoke it safely?* Cathedral should answer them by construction, because authority, effects, protocols, and state evolution are visible to the compiler before a single byte is emitted.
 
-It is partly inspired by [Theseus](https://www.theseus-os.com/) — a single
-address space, language-level isolation, live component replacement — but
-Cathedral revisits many more contracts than Theseus did: the filesystem becomes
-a database, IPC becomes typed protocol invocation, install becomes a declarative
-state transition, the debugger stops trapping into the kernel, and *everything*
-is up for reconsideration.
+It is partly inspired by [Theseus](https://www.theseus-os.com/) — a single address space, language-level isolation, live component replacement — but Cathedral revisits many more contracts than Theseus did: the filesystem becomes a database, IPC becomes typed protocol invocation, install becomes a declarative state transition, the debugger stops trapping into the kernel, and *everything* is up for reconsideration.
 
 ## Status
 
-Cathedral is in the **design** phase. There is no kernel, no driver, no line of
-runtime code yet — on purpose. The current work is to write down the system we
-intend to build, one design chapter per meaningful concept, so the contracts can
-be argued about, challenged, and proven coherent before they harden into code.
+Cathedral is in the **design** phase. There is no kernel, no driver, no line of runtime code yet — on purpose. The current work is to write down the system we intend to build, one design chapter per meaningful concept, so the contracts can be argued about, challenged, and proven coherent before they harden into code.
 
-If a design chapter and a future implementation disagree, the chapter is the bug
-report, not the law — but until code exists, the chapters are the system.
+If a design chapter and a future implementation disagree, the chapter is the bug report, not the law — but until code exists, the chapters are the system.
 
 ## The design wiki
 
-All design lives under [`wiki/design/`](wiki/design/design.md). Start at the
-index:
+All design lives under [`wiki/design/`](wiki/design/design.md). Start at the index:
 
-- **[Cathedral Design Index](wiki/design/design.md)** — the reading path, the
-  chapter map, and the template every chapter follows.
+- **[Cathedral Design Index](wiki/design/design.md)** — the reading path, the chapter map, and the template every chapter follows.
 
 The chapters are organized into parts:
 
@@ -57,11 +36,7 @@ The chapters are organized into parts:
 
 ## Relationship to Omega
 
-Cathedral does not get to assume a finished language. Where a chapter needs a
-language feature that Omega does not yet have, it says so and links the relevant
-Omega language-guide chapter. The two repositories evolve together: Omega
-provides the proof, effect, capability, and versioned-data machinery; Cathedral
-is the first system large enough to put real pressure on it.
+Cathedral does not get to assume a finished language. Where a chapter needs a language feature that Omega does not yet have, it says so and links the relevant Omega language-guide chapter. The two repositories evolve together: Omega provides the proof, effect, capability, and versioned-data machinery; Cathedral is the first system large enough to put real pressure on it.
 
 Key Omega chapters Cathedral leans on heavily:
 

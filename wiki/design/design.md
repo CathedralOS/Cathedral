@@ -1,21 +1,12 @@
 # Cathedral Design Index
 
-This is the map of Cathedral's design. Every meaningful OS concept gets one
-chapter. Chapters are grouped into parts so the system can be read as a story
-rather than a flat pile of topics.
+This is the map of Cathedral's design. Every meaningful OS concept gets one chapter. Chapters are grouped into parts so the system can be read as a story rather than a flat pile of topics.
 
-These are **design stubs**, not finished specifications. Each chapter states the
-legacy contract being replaced, the contract Cathedral wants instead, the
-concerns and open questions to work through, and how the [Omega](../../../Omega/wiki/language_guide/language_guide.md)
-language substrate is expected to carry the weight. The point right now is to
-frame the problems sharply and consistently — not to resolve them.
+These are **design stubs**, not finished specifications. Each chapter states the legacy contract being replaced, the contract Cathedral wants instead, the concerns and open questions to work through, and how the [Omega](../../../Omega/wiki/language_guide/language_guide.md) language substrate is expected to carry the weight. The point right now is to frame the problems sharply and consistently — not to resolve them.
 
 ## How to read this
 
-The parts build on each other. Part 0 is the philosophy and the shared
-vocabulary; Part 1 is the authority spine that everything else hangs from; the
-remaining parts are domains that all reduce, eventually, to *who holds what
-authority, over what state, observable how, and replaceable when.*
+The parts build on each other. Part 0 is the philosophy and the shared vocabulary; Part 1 is the authority spine that everything else hangs from; the remaining parts are domains that all reduce, eventually, to *who holds what authority, over what state, observable how, and replaceable when.*
 
 If you read nothing else, read:
 
@@ -28,9 +19,7 @@ If you read nothing else, read:
 
 ## The chapter template
 
-Every chapter follows the same shape so they stay comparable and skimmable.
-Keep them tight — these are framing documents, not essays. A chapter is a stub,
-not a spec.
+Every chapter follows the same shape so they stay comparable and skimmable. Keep them tight — these are framing documents, not essays. A chapter is a stub, not a spec.
 
 ```markdown
 # Chapter N: Title
@@ -63,14 +52,10 @@ Omega still needs to grow.
 
 A few writing rules, inherited from Omega's docs:
 
-- Use real words. `capability`, `principal`, `quiescence`, `attenuation` — not
-  abbreviations only an insider would recognize.
-- Name the legacy contract honestly before proposing a replacement. The value of
-  Cathedral is the *delta* from what exists.
-- Prefer Omega code sketches over prose when illustrating a contract. Syntax is
-  provisional; the obligation it expresses is the point.
-- Cross-link generously. The whole system is one authority graph; the docs
-  should feel like one too.
+- Use real words. `capability`, `principal`, `quiescence`, `attenuation` — not abbreviations only an insider would recognize.
+- Name the legacy contract honestly before proposing a replacement. The value of Cathedral is the *delta* from what exists.
+- Prefer Omega code sketches over prose when illustrating a contract. Syntax is provisional; the obligation it expresses is the point.
+- Cross-link generously. The whole system is one authority graph; the docs should feel like one too.
 
 ## Chapter map
 

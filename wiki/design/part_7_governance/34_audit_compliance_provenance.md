@@ -1,27 +1,14 @@
 # Chapter 34: Audit, Compliance & Provenance
 
-> Compliance is mechanically derivable: a report is a query over the OS's
-> authority and event model, not a screenshot, a questionnaire, or MDM duct tape.
+> Compliance is mechanically derivable: a report is a query over the OS's authority and event model, not a screenshot, a questionnaire, or MDM duct tape.
 
 ## The Legacy Contract
 
-On legacy systems, compliance is theater performed *around* the OS, not *by* it.
-SOC 2, ISO 27001, HIPAA, FedRAMP, GDPR data-residency — each is satisfied with
-spreadsheets, vendor questionnaires, periodic screenshots, agent-scraped
-inventories, and MDM policies that *assert* a posture the OS cannot actually
-prove. Audit logs are append-mostly text files that a sufficiently privileged
-process can edit. Provenance ("where did this binary come from, what touched this
-record") is reconstructed from whatever logs happened to survive. The OS holds
-none of the structure a real auditor would want, so humans manufacture evidence
-by hand, expensively and unreliably.
+On legacy systems, compliance is theater performed *around* the OS, not *by* it. SOC 2, ISO 27001, HIPAA, FedRAMP, GDPR data-residency — each is satisfied with spreadsheets, vendor questionnaires, periodic screenshots, agent-scraped inventories, and MDM policies that *assert* a posture the OS cannot actually prove. Audit logs are append-mostly text files that a sufficiently privileged process can edit. Provenance ("where did this binary come from, what touched this record") is reconstructed from whatever logs happened to survive. The OS holds none of the structure a real auditor would want, so humans manufacture evidence by hand, expensively and unreliably.
 
 ## What Cathedral Wants
 
-Compliance deserves its own domain because it can be made **mechanically
-derivable** rather than reconstructed by hand. Because Cathedral already records
-authority and a causal event graph
-([[33_observability_and_introspection]]), the artifacts an auditor needs are
-either first-class or one query away:
+Compliance deserves its own domain because it can be made **mechanically derivable** rather than reconstructed by hand. Because Cathedral already records authority and a causal event graph ([[33_observability_and_introspection]]), the artifacts an auditor needs are either first-class or one query away:
 
 - signed builds and **reproducible** builds
 - SBOMs and component provenance ([[22_package_system]])
@@ -29,64 +16,39 @@ either first-class or one query away:
 - data-access logs tied to the accessing principal and authority path
 - policy attestations and runtime attestation ([[25_boot_and_trust_chain]])
 - tamper-evident audit logs and chain of custody
-- organization policy enforcement, data residency, retention, legal hold,
-  and secure deletion ([[08_data_model_and_privacy]])
+- organization policy enforcement, data residency, retention, legal hold, and secure deletion ([[08_data_model_and_privacy]])
 
-**The magic:** a compliance report becomes a **query**. "Prove no component with
-network authority ever read records tagged `EU-personal` outside an EU region" is
-a walk over the authority graph plus the event graph, returning either a witness
-trail or a proof of absence — not a binder of attestations a human swore to.
+**The magic:** a compliance report becomes a **query**. "Prove no component with network authority ever read records tagged `EU-personal` outside an EU region" is a walk over the authority graph plus the event graph, returning either a witness trail or a proof of absence — not a binder of attestations a human swore to.
 
 ## Concerns & Design Space
 
-- **Tamper-evidence.** Audit logs must be append-only and verifiable (hash chain
-  / Merkle log), so "the log was edited" is detectable, ideally with external
-  anchoring.
-- **Chain of custody.** Every artifact — build, package, record — carries
-  provenance from origin through every transform; gaps are themselves findings.
-- **Data residency & retention as policy.** Region and lifetime are properties of
-  data the system *enforces and proves*, not documentation
-  ([[08_data_model_and_privacy]]).
-- **Legal hold vs. secure deletion.** Two opposing obligations that must coexist;
-  hold must suspend deletion verifiably and reversibly.
-- **Attestation scope.** Runtime attestation says "this exact, signed, proof-
-  carrying component is running" — booted from a trusted chain ([[25_boot_and_trust_chain]]).
-- **Query trust.** The compliance query engine is itself in scope; its results
-  must be reproducible and its own access audited.
-- **Standards mapping.** Mapping derived facts onto named control frameworks
-  (control X ↔ which graph query) without that mapping rotting.
+- **Tamper-evidence.** Audit logs must be append-only and verifiable (hash chain / Merkle log), so "the log was edited" is detectable, ideally with external anchoring.
+- **Chain of custody.** Every artifact — build, package, record — carries provenance from origin through every transform; gaps are themselves findings.
+- **Data residency & retention as policy.** Region and lifetime are properties of data the system *enforces and proves*, not documentation ([[08_data_model_and_privacy]]).
+- **Legal hold vs. secure deletion.** Two opposing obligations that must coexist; hold must suspend deletion verifiably and reversibly.
+- **Attestation scope.** Runtime attestation says "this exact, signed, proof- carrying component is running" — booted from a trusted chain ([[25_boot_and_trust_chain]]).
+- **Query trust.** The compliance query engine is itself in scope; its results must be reproducible and its own access audited.
+- **Standards mapping.** Mapping derived facts onto named control frameworks (control X ↔ which graph query) without that mapping rotting.
 
 ## Key Questions
 
 - What is the canonical tamper-evident log structure, and what does it anchor to?
-- Which controls are *fully derivable* from the graph vs. those still needing a
-  human attestation, and can that boundary shrink over time?
-- How is secure deletion proven when data may have been replicated or migrated
-  ([[21_versioned_state_and_migration]])?
-- Who holds the capability to run a compliance query, and is that query logged
-  like any other access?
+- Which controls are *fully derivable* from the graph vs. those still needing a human attestation, and can that boundary shrink over time?
+- How is secure deletion proven when data may have been replicated or migrated ([[21_versioned_state_and_migration]])?
+- Who holds the capability to run a compliance query, and is that query logged like any other access?
 
 ## Omega Leverage
 
-- **Provenance** is first-class, so chain of custody is intrinsic to values and
-  artifacts rather than logged alongside them.
-- **Capability manifests** and **authority-flow reports** are the per-component
-  evidence (accepts / uses / derives / stores / acquires / returns / releases),
-  generated by the compiler
-  ([capabilities & boundaries](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
-- **Build artifacts** already enumerate effects, authority flow, boundary
-  providers, and capability manifests — the SBOM and proof artifacts are these.
-- **Proof obligations** let a build *carry its own evidence* that policy held
-  ([proof obligations](../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md)).
-- What Omega may need to grow: a tamper-evident at-rest log format and a standard
-  vocabulary for residency/retention/hold tags on data.
+- **Provenance** is first-class, so chain of custody is intrinsic to values and artifacts rather than logged alongside them.
+- **Capability manifests** and **authority-flow reports** are the per-component evidence (accepts / uses / derives / stores / acquires / returns / releases), generated by the compiler ([capabilities & boundaries](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
+- **Build artifacts** already enumerate effects, authority flow, boundary providers, and capability manifests — the SBOM and proof artifacts are these.
+- **Proof obligations** let a build *carry its own evidence* that policy held ([proof obligations](../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md)).
+- What Omega may need to grow: a tamper-evident at-rest log format and a standard vocabulary for residency/retention/hold tags on data.
 
 ## Open Questions
 
-- How much compliance can be *proven* statically vs. only *witnessed* at runtime,
-  and is a witness trail acceptable evidence to real auditors?
-- Reproducible builds across a moving hardware/toolchain base are hard; what is
-  the minimum reproducibility that still anchors trust?
+- How much compliance can be *proven* statically vs. only *witnessed* at runtime, and is a witness trail acceptable evidence to real auditors?
+- Reproducible builds across a moving hardware/toolchain base are hard; what is the minimum reproducibility that still anchors trust?
 
 ## Related
 - [[33_observability_and_introspection]] — the event/authority graph audit queries.
