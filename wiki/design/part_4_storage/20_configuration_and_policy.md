@@ -1,6 +1,6 @@
 # Chapter 20: Configuration & Policy
 
-> Configuration is typed, versioned, capability-scoped data — not text-file archaeology — and policy is the layered resolution of that data across actors.
+> Configuration is typed, versioned, capability-scoped data — not scattered, untyped text files — and policy is the layered resolution of that data across actors.
 
 ## The Legacy Contract
 

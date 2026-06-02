@@ -1,10 +1,10 @@
 # Chapter 04: Capability Lifecycle
 
-> A capability is not a static permission bit — it has a life. This chapter owns the states a capability moves through and the transitions between them.
+> A capability models the lifetime of a granted permission. This chapter owns the states in which a capability moves, and models the transitions between them.
 
 ## The Legacy Contract
 
-Legacy permissions barely have a lifecycle. A file descriptor exists or is closed. A token is valid until it isn't. There is no first-class notion of leasing, attenuation, delegation tracking, or safe revocation of a delegated sub-tree. Once you hand a process a secret or a handle, the system loses sight of it; "revoking access" usually means rotating a credential and hoping.
+Legacy permissions have a thin lifecycle. A file descriptor is open or closed; a token is valid until it expires or is rotated. Leasing, attenuation, delegation tracking, and revocation of a delegated sub-tree are not first-class: they have to be built per-application. Once a process holds a secret or an open handle, the system has no general way to reach it again, so revoking access means changing an ACL or rotating a credential, which governs future access checks but does not invalidate references already handed out.
 
 ## What Cathedral Wants
 

@@ -1,12 +1,16 @@
 # Chapter 01: The Omega Substrate
 
-Cathedral benefits from the *Omega Language* handling as the as much of the complex OS nouns as possible. This avoids a common pitfall of reinventing safety as second-class features. Omega is built around exactly the primitives an authority-first, upgrade-first OS needs. The OS's job is to give those primitives operational meaning (a scheduler, a loader, a store, a driver host), not to invent the safety model.
+> The guarantees of an operating system are only as strong as the underlying programming language. Omega exists to give Cathedral a stronger foundation than any operating system.
 
 ## The Legacy Contract
 
 In legacy operating systems, types, permissions, protocols, lifetimes, upgrade safety are simply conventions enforced by discipline, linters, and reviewers. The kernel cannot ask the language "what can this code do?" because the language does not know.
 
 We seek to avoid this hellscape.
+
+## Cathedral & Omega
+
+Cathedral benefits from the *Omega Language*, which is an incredibly strict language to provide maximum safety. This avoids a common pitfall of reinventing safety as second-class bolt-on features. Omega is built around exactly the primitives an authority-first, upgrade-first OS needs. The OS's job is to give those primitives operational meaning (a scheduler, a loader, a store, a driver host), not to invent the safety model.
 
 ## What Omega Already Provides
 

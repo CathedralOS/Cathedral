@@ -4,7 +4,7 @@
 
 ## The Legacy Contract
 
-Unix collapsed identity into a small integer. A `uid` and a few `gid`s decide everything, and authority is ambient over that identity: you can act because of *who you are*, not what you hold. The model has almost no vocabulary for the identities that carry the most weight; publisher identity and component provenance are barely represented at all. There is no first-class notion of an *app*, a *publisher*, a *component build*, a *device*, an *organization*, or a *session* — those get faked with usernames, service accounts, signing certificates bolted on at install time, and MDM profiles layered on top. "Is this really the vendor who shipped the last update?" and "is this the same device that enrolled last week?" are answered outside the OS, if at all. Identity rotation means provisioning a new account and migrating files by hand.
+Unix models identity as a small integer. A `uid` and a few `gid`s decide access, and authority is ambient over that identity: you can act because of *who you are*, not what you hold. The model has little vocabulary for the identities that carry the most weight; publisher identity and component provenance are not represented at the OS level. There is no first-class notion of an *app*, a *publisher*, a *component build*, a *device*, an *organization*, or a *session* — those are approximated with usernames, service accounts, signing certificates checked at install time, and MDM profiles layered on top. "Is this really the vendor who shipped the last update?" and "is this the same device that enrolled last week?" are answered outside the OS, if at all. Identity rotation means provisioning a new account and migrating files by hand.
 
 ## What Cathedral Wants
 

@@ -4,7 +4,7 @@
 
 ## The Legacy Contract
 
-On Unix, testing a system component means wrestling nondeterminism. The scheduler, the clock, the network, the disk, and the failure of any of them are all real, global, and unrepeatable. So "tests" devolve into unit tests of pure logic plus a prayer that integration behaves; the genuinely scary behaviors — a partition mid- transaction, a crash mid-write, a capability revoked mid-call, an upgrade that deadlocks — are nearly impossible to provoke reliably and so are mostly *not* tested. Model checkers like TLA+ exist, but they check a *separate model* a human wrote, which drifts from the code that actually ships.
+On Unix, testing a system component means wrestling nondeterminism. The scheduler, the clock, the network, the disk, and the failure of any of them are all real, global, and unrepeatable. So "tests" devolve into unit tests of pure logic plus an untested assumption that integration behaves; the genuinely difficult behaviors — a partition mid- transaction, a crash mid-write, a capability revoked mid-call, an upgrade that deadlocks — are nearly impossible to provoke reliably and so are mostly *not* tested. Model checkers like TLA+ exist, but they check a *separate model* a human wrote, which drifts from the code that actually ships.
 
 ## What Cathedral Wants
 

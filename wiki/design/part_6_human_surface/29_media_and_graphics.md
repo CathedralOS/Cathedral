@@ -1,6 +1,6 @@
 # Chapter 29: Media & Graphics
 
-> The low-level pipeline beneath the window manager: display server, GPU, decode, and audio — capability-gated, and deliberately kept narrow, because graphics stacks are where elegant operating systems go to die.
+> The low-level pipeline beneath the window manager: display server, GPU, decode, and audio — capability-gated, and deliberately kept narrow, because graphics stacks are historically a major source of OS complexity and instability.
 
 ## The Legacy Contract
 

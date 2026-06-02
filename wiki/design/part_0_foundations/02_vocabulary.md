@@ -1,16 +1,12 @@
 # Chapter 02: Vocabulary
 
-> The shared terms Cathedral chapters use precisely, so that "capability," "component," and "principal" mean one thing across the whole design.
+> This section contains a glossary where each term names exactly one concept. Chapters should link back here rather than redefine terms locally. This chapter is a stub to be filled as the design firms up; below is the seed vocabulary.
 
 ## The Legacy Contract
 
 In legacy OSes the core nouns are overloaded into mush. "Process" means address space *and* authority *and* scheduling identity *and* crash boundary. "User" means a human *and* a uid *and* a permission bundle *and* a home directory. "Permission" means a file bit, an ACL entry, a sandbox rule, and a capability all at once. Ambiguous nouns produce ambiguous systems.
 
-## What Cathedral Wants
-
-A small glossary where each term names exactly one concept. Chapters should link back here rather than redefine terms locally. This chapter is a stub to be filled as the design firms up; below is the seed vocabulary.
-
-## Seed Glossary
+## Cathedral Seed Glossary
 
 **Principal** — an entity that can hold authority and to whom actions are attributed: a human user, an app, a component instance, a publisher, a device, an organization, a session, or a remote peer. Distinct from identity *bytes*. See [[05_identity_and_principals]].
 

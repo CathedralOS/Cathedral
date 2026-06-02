@@ -8,7 +8,7 @@ A traditional OS does not have *one* authority model — it has a sediment of th
 
 ## What Cathedral Wants
 
-**One** authority model. Authority is always a *capability*: an unforgeable value that confers a specific, narrow power, obtained through a visible path, held by a principal, and revocable. Nothing is ambient — not the filesystem root, not the clock, not the network, not the power to spawn. If a component can do it, it is because it *holds* something that lets it.
+Cathedral aims for**One** authority model. Authority is always a *capability*: an unforgeable value that confers a specific, narrow power, obtained through a visible path, held by a principal, and revocable. Nothing is ambient — not the filesystem root, not the clock, not the network, not the power to spawn. If a component can do it, it is because it *holds* something that lets it.
 
 Because every grant is a value with provenance, the OS can maintain a live **authority graph**: nodes are principals and capabilities; edges are acquisition, delegation, attenuation, and storage. "Who can reach the camera?" and "if I revoke this, what breaks?" become queries, not investigations.
 

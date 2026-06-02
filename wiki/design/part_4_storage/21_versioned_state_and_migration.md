@@ -4,7 +4,7 @@
 
 ## The Legacy Contract
 
-On a traditional OS, a software update is "stop the thing, replace its files, start it again, and hope the state on disk is still compatible." State continuity is informal: a hand-written upgrade script, an `if version < N` ladder in startup code, or a database migration tool the OS itself knows nothing about. When old and new shapes disagree, the failure modes are silent corruption, crash-on-load, or a one-way migration that cannot be rolled back. There is no typed notion of "old shape," no checked transform from old to new, and no way to prove a migration preserves the invariants the new code depends on.
+On a traditional OS, a software update is "stop the thing, replace its files, start it again," with no check that the state on disk is still compatible. State continuity is informal: a hand-written upgrade script, an `if version < N` ladder in startup code, or a database migration tool the OS itself knows nothing about. When old and new shapes disagree, the failure modes are silent corruption, crash-on-load, or a one-way migration that cannot be rolled back. There is no typed notion of "old shape," no checked transform from old to new, and no way to prove a migration preserves the invariants the new code depends on.
 
 ## What Cathedral Wants
 

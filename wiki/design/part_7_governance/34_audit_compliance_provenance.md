@@ -1,6 +1,6 @@
 # Chapter 34: Audit, Compliance & Provenance
 
-> Compliance is mechanically derivable: a report is a query over the OS's authority and event model, not a screenshot, a questionnaire, or MDM duct tape.
+> Compliance is mechanically derivable: a report is a query over the OS's authority and event model, not a screenshot, a questionnaire, or after-the-fact MDM reporting.
 
 ## The Legacy Contract
 
@@ -18,7 +18,7 @@ Compliance deserves its own domain because it can be made **mechanically derivab
 - tamper-evident audit logs and chain of custody
 - organization policy enforcement, data residency, retention, legal hold, and secure deletion ([[08_data_model_and_privacy]])
 
-**The magic:** a compliance report becomes a **query**. "Prove no component with network authority ever read records tagged `EU-personal` outside an EU region" is a walk over the authority graph plus the event graph, returning either a witness trail or a proof of absence — not a binder of attestations a human swore to.
+**The consequence:** a compliance report becomes a **query**. "Prove no component with network authority ever read records tagged `EU-personal` outside an EU region" is a walk over the authority graph plus the event graph, returning either a witness trail or a proof of absence — not a binder of attestations a human swore to.
 
 ## Concerns & Design Space
 

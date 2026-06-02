@@ -4,7 +4,7 @@
 
 ## The Legacy Contract
 
-In a traditional OS, transactions live *inside* a database and nowhere else. Installing a package, applying an update, editing a config file, changing a permission, or moving files are all multi-step mutations with no atomicity — they half-complete, leaving a state no design intended. The canonical recovery is "delete the lockfile, run it again, hope." Each subsystem reinvents a private, leaky commit/rollback (dpkg's `--configure -a`, a `.bak` file, a journal replay), and none compose. There is no OS-level answer to "make these N changes atomically, or none of them."
+In a traditional OS, transactions live *inside* a database and nowhere else. Installing a package, applying an update, editing a config file, changing a permission, or moving files are all multi-step mutations with no atomicity — they half-complete, leaving a state no design intended. The canonical recovery is "delete the lockfile and run it again." Each subsystem reinvents a private, partial commit/rollback (dpkg's `--configure -a`, a `.bak` file, a journal replay), and none compose. There is no OS-level answer to "make these N changes atomically, or none of them."
 
 ## What Cathedral Wants
 

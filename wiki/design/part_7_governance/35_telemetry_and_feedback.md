@@ -4,7 +4,7 @@
 
 ## The Legacy Contract
 
-Legacy telemetry is a trust sink. It ships as an opaque, privileged channel the user cannot inspect, attenuate, or fully disable; "off" often means "less," and nobody outside the vendor can verify what crosses the wire. Crash reporters scoop up memory that may contain secrets. "Anonymized" analytics are routinely re-identifiable. An organization gets a coarse on/off knob, not control. The structural problem is that telemetry runs *outside* the OS's own authority model: the vendor is an unmodeled super-principal with ambient reach. That is exactly the ambient-authority sin Cathedral exists to kill — applied to the vendor.
+Legacy telemetry is structurally hard to trust. It ships as an opaque, privileged channel the user cannot inspect, attenuate, or fully disable; "off" often means "less," and nobody outside the vendor can verify what crosses the wire. Crash reporters scoop up memory that may contain secrets. "Anonymized" analytics are routinely re-identifiable. An organization gets a coarse on/off knob, not control. The structural problem is that telemetry runs *outside* the OS's own authority model: the vendor is an unmodeled super-principal with ambient reach. That is the same ambient-authority problem Cathedral rejects elsewhere, here applied to the vendor.
 
 ## What Cathedral Wants
 
@@ -17,7 +17,7 @@ An OS needs some telemetry — crash reports, performance data, upgrade health, 
 - organization/tenant-controlled telemetry policy ([[31_multi_user_and_org_control]])
 - user-visible telemetry policy and local-first diagnostics
 
-Because Cathedral already produces **structured events** ([[33_observability_and_introspection]]), telemetry can be far cleaner than the log-scraping of legacy OSes: a telemetry stream is a *defined projection* of the event graph, not a grab bag. Most diagnostics can stay **local-first** — answerable on-device — with only explicit, attenuated summaries leaving.
+Because Cathedral already produces **structured events** ([[33_observability_and_introspection]]), telemetry can be far cleaner than the log-scraping of legacy OSes: a telemetry stream is a *defined projection* of the event graph, not unstructured log text. Most diagnostics can stay **local-first** — answerable on-device — with only explicit, attenuated summaries leaving.
 
 **Critical principle:** the capability model applies to the **OS vendor too**. The vendor is a principal in the authority graph like any app. A telemetry upload is a network flow under a held, attenuated, revocable capability, visible in the same introspection surface. If system- and OS-level observation is not itself bound by the capability model, the proofs elsewhere are meaningless — the failure mode the vision explicitly forbids ([[00_vision_and_non_goals]] is wrong without this chapter; see also the vendor-principal note in [[03_capability_model]]).
 

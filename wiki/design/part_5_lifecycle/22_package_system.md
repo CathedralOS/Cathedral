@@ -4,7 +4,7 @@
 
 ## The Legacy Contract
 
-Linux packaging is the canonical disaster: a package is an archive plus a pile of imperative hooks — `preinst`, `postinst`, `%post`, `pkg_postinst` — that run as root with full ambient authority. **Install *is* arbitrary code execution.** Around that core sit dependency solvers, dynamic-linker search paths, signature schemes, trust databases, and per-distro policy, none of which can constrain the one thing that matters: what the postinstall script actually does. The system cannot answer "what authority does this package require, what state does it own, is this upgrade compatible, and can I revoke it?" — because none of that was ever declared. It was buried in a shell script.
+Linux packaging is the clearest example of the problem: a package is an archive plus a set of imperative hooks — `preinst`, `postinst`, `%post`, `pkg_postinst` — that run as root with full ambient authority. **Install *is* arbitrary code execution.** Around that core sit dependency solvers, dynamic-linker search paths, signature schemes, trust databases, and per-distro policy, none of which can constrain the one thing that matters: what the postinstall script actually does. The system cannot answer "what authority does this package require, what state does it own, is this upgrade compatible, and can I revoke it?" — because none of that was ever declared. It was buried in a shell script.
 
 ## What Cathedral Wants
 
@@ -12,7 +12,7 @@ Installation is a **declarative state transition**, not a program. A package is 
 
 A package declares: exports and imports; capabilities required, stored, and delegated; protocols spoken ([[15_ipc_and_service_invocation]] `wire data`); persistent state schemas with their versions and migration functions; resource budgets; upgrade-compatibility facts; security invariants; and the test/proof artifacts that back them. Build provenance is signed and reproducible; dependencies are hermetic. Because all of this is structured, "install this package" reduces to: verify provenance, check the capability manifest against policy, prove the state schema migrates, allocate the budget, and atomically commit — or atomically refuse.
 
-This is the core divergence: every other OS treats the package as an opaque payload, executed on faith; Cathedral treats it as a checkable contract whose blast radius is computed, not trusted.
+This is the core divergence: every other OS treats the package as an opaque payload whose effects are discovered only by running it; Cathedral treats it as a checkable contract whose blast radius is computed in advance.
 
 ## Concerns & Design Space
 

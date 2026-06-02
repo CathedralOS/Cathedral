@@ -1,6 +1,6 @@
 # Chapter 00: What Cathedral Is
 
-Cathedral is a clean-slate OS that fixes what operating systems have left broken for decades: viruses, weak security, bloatware, slow boot times, slow upgrades requiring constant reboots, an endless barrage of buggy behavior.
+> Cathedral is a clean-slate OS that fixes what operating systems have left broken for decades: viruses, weak security, bloatware, slow boot times, slow upgrades requiring constant reboots, an endless barrage of buggy behavior.
 
 ## Stagnation in Software
 

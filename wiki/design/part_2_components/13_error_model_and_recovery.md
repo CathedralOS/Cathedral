@@ -4,11 +4,11 @@
 
 ## The Legacy Contract
 
-Operating systems are full of unprincipled failure. A syscall returns `EIO` — and you pray, because `EIO` tells you almost nothing: not what failed, not why, not whether retrying helps, not whether the state is now consistent. `errno` is a flat integer namespace shared across every cause. Signals (`SIGSEGV`, `SIGKILL`) deliver failure as an abrupt, lossy interrupt. Recovery is whatever each program improvised: a retry loop, a watchdog, a restart script, a core dump nobody reads. There is no shared notion of *causality* — you get the symptom, never the chain that produced it, and certainly not a machine-readable one.
+Failure handling in traditional OSes is largely unprincipled. A syscall returns `EIO` and the caller has little to act on: `EIO` does not say what failed, why, whether retrying helps, or whether the state is now consistent. `errno` is a flat integer namespace shared across every cause. Signals (`SIGSEGV`, `SIGKILL`) deliver failure as an abrupt, lossy interrupt. Recovery is left to each program: a retry loop, a watchdog, a restart script, a core dump. There is no shared notion of *causality* — you get the symptom, never the chain that produced it, and certainly not a machine-readable one.
 
 ## What Cathedral Wants
 
-A real, **typed error taxonomy** where failures are values carrying structured causality, and recovery is a designed behavior — not a prayer. The OS knows the kinds of failure that exist, because there are finitely many that matter:
+A real, **typed error taxonomy** where failures are values carrying structured causality, and recovery is a designed behavior rather than improvised per program. The OS knows the kinds of failure that exist, because there are finitely many that matter:
 
 ```omega
 data Failure {

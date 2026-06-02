@@ -4,7 +4,7 @@
 
 ## The Legacy Contract
 
-Power management on legacy systems is a pile of side channels around a scheduler that doesn't really believe in energy. Wake locks are ambient strings any app can hold; background execution is a privilege granted coarsely and abused widely; battery drain is attributed after the fact by heuristic, if at all. The device sleeps and wakes through a tangle of timers, alarms, network triggers, and vendor daemons, and the user's only real lever is to force-stop an app. Crucially, the power to *keep the device awake* and to *run while the user isn't looking* is not modeled as authority — it leaks in through timers, push notifications, and background services that nobody had to explicitly grant.
+Power management on legacy systems is a set of side mechanisms around a scheduler that does not treat energy as a first-class resource. Wake locks are ambient strings any app can hold; background execution is a privilege granted coarsely; battery drain is attributed after the fact by heuristic, if at all. The device sleeps and wakes through a tangle of timers, alarms, network triggers, and vendor daemons, and the user's only real lever is to force-stop an app. Crucially, the power to *keep the device awake* and to *run while the user isn't looking* is not modeled as authority — it leaks in through timers, push notifications, and background services that nobody had to explicitly grant.
 
 ## What Cathedral Wants
 
