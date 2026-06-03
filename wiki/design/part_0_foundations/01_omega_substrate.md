@@ -40,14 +40,14 @@ Omega answers "is this sound?" Cathedral answers "should this happen, now, here,
 
 - **Capabilities as values vs. as kernel objects.** Omega models authority as ordinary values plus facts, with no new `uses capability` keyword. Cathedral must decide what the *runtime representation* of a held capability is, how it survives a crash, and how it crosses a real IPC boundary — without breaking the value/fact model.
 - **The boundary registry as the trusted base.** Omega only accepts host authority through registered `BoundaryProvider`s in whitelisted packages. Cathedral's TCB is, in large part, *the set of boundary providers it ships.*
-- **Single address space vs. hardware isolation.** Theseus-style language-level isolation in one address space is attractive for zero-copy IPC and hot swap, but interacts with the driver model, the kernel architecture, and untrusted legacy code. This is a recurring tension (see [[26_kernel_architecture]]).
+- **Single address space vs. hardware isolation.** Theseus-style language-level isolation in one address space is attractive for zero-copy IPC and hot swap, but interacts with the driver model, the kernel architecture, and untrusted legacy code. This is a recurring tension (see [[kernel_architecture]]).
 
 ## What Omega Still Needs to Grow (driven by Cathedral)
 
-- A runtime/serialized representation of a held capability that preserves attenuation and revocability across processes and reboots ([[04_capability_lifecycle]]).
-- Quiescence proofs in the presence of interrupts, timers, async work, and hardware ([[23_updates_and_hot_swap]]).
-- Possibly: purpose-tagged authority (`Capability<Read<Contact.Email>, Purpose<SendMessage>>`) ([[08_data_model_and_privacy]]).
-- Operation-capabilities for secrets (`Capability<SignWithKey(K)>`) rather than raw key bytes ([[07_secrets_and_keys]]).
+- A runtime/serialized representation of a held capability that preserves attenuation and revocability across processes and reboots ([[capability_lifecycle]]).
+- Quiescence proofs in the presence of interrupts, timers, async work, and hardware ([[updates_and_hot_swap]]).
+- Possibly: purpose-tagged authority (`Capability<Read<Contact.Email>, Purpose<SendMessage>>`) ([[data_model_and_privacy]]).
+- Operation-capabilities for secrets (`Capability<SignWithKey(K)>`) rather than raw key bytes ([[secrets_and_keys]]).
 
 ## Key Questions
 
@@ -59,7 +59,7 @@ Omega answers "is this sound?" Cathedral answers "should this happen, now, here,
 - Does Cathedral need any capability primitive that *cannot* be expressed as an Omega value + domain, forcing a language extension rather than a library?
 
 ## Related
-- [[00_vision_and_non_goals]] — why these primitives matter.
-- [[02_vocabulary]] — precise terms.
-- [[03_capability_model]] — the first heavy user of effects + authority flow.
-- [[21_versioned_state_and_migration]] — the heavy user of versioned data.
+- [[vision_and_non_goals]] — why these primitives matter.
+- [[vocabulary]] — precise terms.
+- [[capability_model]] — the first heavy user of effects + authority flow.
+- [[versioned_state_and_migration]] — the heavy user of versioned data.
