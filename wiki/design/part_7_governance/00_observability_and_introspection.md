@@ -2,11 +2,11 @@
 
 > The OS can be asked about itself: every component is observable in its authority, resources, communication, and history — by query, not by guesswork.
 
-## The Legacy Contract
+## The Legacy Model
 
 Observability on a legacy OS is a stack of bolted-on, after-the-fact tooling: `top`, `strace`, `dtrace`, `perf`, `auditd`, `journald`, `lsof`, `iotop`, eBPF probes, APM agents. Each samples a different keyhole, none share a model, and almost all of it is *reconstructed* — the kernel never recorded *why* a syscall happened, only that it did. So the simplest questions are answered with detective work: "why is my battery draining?" becomes hours of profiling; "what wrote this file?" is usually unanswerable; "what permission path let this app phone home?" has no path to follow, because the path was never a thing.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Observability is **first-class and built in**, not an instrumentation layer. Every component is continuously observable along a fixed set of axes:
 

@@ -2,11 +2,11 @@
 
 > On every device with a battery, energy is a budget and wakefulness is authority. This chapter owns sleep, wake, background work, and energy attribution.
 
-## The Legacy Contract
+## The Legacy Model
 
 Power management on legacy systems is a set of side mechanisms around a scheduler that does not treat energy as a first-class resource. Wake locks are ambient strings any app can hold; background execution is a privilege granted coarsely; battery drain is attributed after the fact by heuristic, if at all. The device sleeps and wakes through a tangle of timers, alarms, network triggers, and vendor daemons, and the user's only real lever is to force-stop an app. Crucially, the power to *keep the device awake* and to *run while the user isn't looking* is not modeled as authority — it leaks in through timers, push notifications, and background services that nobody had to explicitly grant.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Wakefulness and background execution are **capabilities**, never ambient. If a component can keep the screen or CPU awake, or run while backgrounded, it is because it *holds* something that says so — with a reason and a budget the user can see and revoke:
 

@@ -2,11 +2,11 @@
 
 > Failure is a first-class part of the system, not an afterthought. This chapter owns the typed taxonomy of how things break and the principled way they recover.
 
-## The Legacy Contract
+## The Legacy Model
 
 Failure handling in traditional OSes is largely unprincipled. A syscall returns `EIO` and the caller has little to act on: `EIO` does not say what failed, why, whether retrying helps, or whether the state is now consistent. `errno` is a flat integer namespace shared across every cause. Signals (`SIGSEGV`, `SIGKILL`) deliver failure as an abrupt, lossy interrupt. Recovery is left to each program: a retry loop, a watchdog, a restart script, a core dump. There is no shared notion of *causality* — you get the symptom, never the chain that produced it, and certainly not a machine-readable one.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 A real, **typed error taxonomy** where failures are values carrying structured causality, and recovery is a designed behavior rather than improvised per program. The OS knows the kinds of failure that exist, because there are finitely many that matter:
 

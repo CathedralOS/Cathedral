@@ -2,11 +2,11 @@
 
 > Every OS eventually grows a keychain; this one is designed in, not bolted on. The chapter owns secrets — and the idea that a secret is an *operation*, not bytes.
 
-## The Legacy Contract
+## The Legacy Model
 
 Legacy systems leak secrets by construction. Credentials live in dotfiles, config files, and environment variables; private keys sit on disk readable by whatever the uid can read; an ambient keychain or agent hands raw key material to any process that asks nicely. The unit of sharing is *the secret itself* — you give a component the bytes of the API token or the private key, and from that moment the system has lost control of it. Rotation means re-issuing and chasing down copies. There is no per-component scoping, no leasing, no notion that what a component actually needs is the *ability to sign*, not the *key*.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 The central inversion: **a secret is an operation capability, not a payload.** Components do not receive key material; they receive narrowly-scoped authority to *use* a key for a specific operation, brokered by a holder that keeps the bytes — ideally in hardware that never exports them.
 

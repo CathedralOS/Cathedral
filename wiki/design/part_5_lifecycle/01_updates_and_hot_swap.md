@@ -2,11 +2,11 @@
 
 > The operational act of updating a live system without stopping the world: prove replacement compatibility, reach quiescence, migrate live state, switch protocol versions, observe health, and roll back if needed.
 
-## The Legacy Contract
+## The Legacy Model
 
 Updating a live system is, almost everywhere, a controlled outage: stop the thing, replace files on disk, restart, with no check that the new code accepts the old state. The dynamic linker, the service manager, and the database migration tool each own a slice of this and none of them coordinate. There is no system-wide notion of "reach a safe point, carry the live object graph forward, switch the protocol version atomically." Rollback means restoring a backup, and draining in-flight work is rarely handled at all. The restart is treated as free because the alternative was never built.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Update is a **first-class language/runtime/OS operation**, designed from day one, not a feature bolted onto a package manager. Cathedral replaces a live component by: driving it to **quiescence**, migrating its live state forward, switching its protocol endpoints to the new version, observing the new version's health, and **rolling back** if it misbehaves — all without restarting the world.
 

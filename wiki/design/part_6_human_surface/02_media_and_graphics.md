@@ -2,11 +2,11 @@
 
 > The low-level pipeline beneath the window manager: display server, GPU, decode, and audio — capability-gated, and deliberately kept narrow, because graphics stacks are historically a major source of OS complexity and instability.
 
-## The Legacy Contract
+## The Legacy Model
 
 The media stack is the least-contained part of a legacy OS. GPU access means a giant, vendor-specific userspace driver mapped into the app with broad DMA reach; video decode and audio mixing run through sprawling frameworks (VA-API/V4L2/PulseAudio/PipeWire/DRM-KMS) with their own ad hoc permission models. Screen capture is frequently all-or-nothing. DRM/content protection drags in opaque, attestation-hungry blobs. The result is enormous attack surface, poor isolation between apps sharing the GPU, and a pipeline so complex that "clean-slate" OS projects routinely founder trying to reimplement it.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Treat every media facility as a **capability-gated `device_io` effect** over an explicit pipeline, and keep the *first target deliberately narrow* — enough to play video, render UI, and mix audio on one class of device, not a universal graphics platform on day one. The display server / compositor pipeline here sits *beneath* the window management of [[windowing_and_compositor]]: this chapter owns the bytes-and-frames layer, that chapter owns windows and trust. GPU, decode, and screen capture are all held capabilities, never ambient: an app renders because it holds a rendering capability, captures the screen because it holds a (rare, attributed) capture capability.
 

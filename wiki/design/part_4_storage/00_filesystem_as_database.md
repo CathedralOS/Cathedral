@@ -2,7 +2,7 @@
 
 > The filesystem is one content-addressed object graph, partitioned into capability-rooted realms with no global root, where every change is structured, durable, observable, replayable, and permissioned.
 
-## The Legacy Contract
+## The Legacy Model
 
 Two separate failures, both structural.
 
@@ -10,7 +10,7 @@ First, there is one global tree. Unix fuses system and user data into a single h
 
 Second, the API is byte-level. Unix gives you `open`, `read`, `write`, `rename`, `stat`, `unlink`, and, depending on the platform, `inotify`/`kqueue`/`FSEvents`. A file is an opaque byte stream; a directory is a list of names; metadata is a fixed `stat` struct plus best-effort xattrs. There are no transactions across files, no query language, no history, no durable subscription, no schema, no provenance. Atomicity is approximated with write-to-temp-then-`rename`, change notification is lossy and drops events on overflow, and "what changed, when, by whom, and can I replay it?" has no answer. Applications rebuild the same machinery (SQLite, journals, watchers, sync engines) atop an abstraction that does not provide it.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 A filesystem that *is* a database: a durable object graph with a transaction log at its core. Files are records with typed metadata; directories are indexes and views over those records. Every mutation is a structured, durable, ordered entry in a log, so reads can be point-in-time snapshots, watchers become durable subscriptions that never miss an event, and the past is replayable. Objects carry content addresses (dedup, integrity), causal history (undo, audit), and per-object capabilities (a directory listing is an *attenuated view*, not a raw mode bit). The point is not a better ext4; it is that **every change is structured, durable, observable, replayable, permissioned, and queryable**, which is exactly what robust file watching, app sync, backup, audit, undo, and state migration all need underneath.
 

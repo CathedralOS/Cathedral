@@ -2,11 +2,11 @@
 
 > A package is not a tarball plus scripts — it is a proof-carrying object whose install is a declarative, checked state transition, never code execution.
 
-## The Legacy Contract
+## The Legacy Model
 
 Linux packaging is the clearest example of the problem: a package is an archive plus a set of imperative hooks — `preinst`, `postinst`, `%post`, `pkg_postinst` — that run as root with full ambient authority. **Install *is* arbitrary code execution.** Around that core sit dependency solvers, dynamic-linker search paths, signature schemes, trust databases, and per-distro policy, none of which can constrain the one thing that matters: what the postinstall script actually does. The system cannot answer "what authority does this package require, what state does it own, is this upgrade compatible, and can I revoke it?" — because none of that was ever declared. It was buried in a shell script.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Installation is a **declarative state transition**, not a program. A package is an Omega artifact that *declares* everything the system needs to admit it, and the compiler/loader *checks* the declaration before anything is written. There is no install-script escape hatch — the manifest is the only way in.
 

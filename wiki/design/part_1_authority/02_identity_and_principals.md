@@ -2,11 +2,11 @@
 
 > Capabilities answer *what* may be done; this chapter owns *who* holds them — the principals that are the nodes of the authority graph, and why we trust them.
 
-## The Legacy Contract
+## The Legacy Model
 
 Unix models identity as a small integer. A `uid` and a few `gid`s decide access, and authority is ambient over that identity: you can act because of *who you are*, not what you hold. The model has little vocabulary for the identities that carry the most weight; publisher identity and component provenance are not represented at the OS level. There is no first-class notion of an *app*, a *publisher*, a *component build*, a *device*, an *organization*, or a *session* — those are approximated with usernames, service accounts, signing certificates checked at install time, and MDM profiles layered on top. "Is this really the vendor who shipped the last update?" and "is this the same device that enrolled last week?" are answered outside the OS, if at all. Identity rotation means provisioning a new account and migrating files by hand.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 A **principal** is any entity the authority graph can name as a holder of authority. Cathedral admits many kinds and treats them uniformly as graph nodes: human users, sessions, apps, individual components, package builds, publishers, devices, organizations, services, and remote principals across a trust boundary. Each principal has a stable, unforgeable identity with explicit *provenance* — we can say how the identity was established and who vouches for it — and that identity is what edges in the graph attach to (see [[capability_model]]).
 

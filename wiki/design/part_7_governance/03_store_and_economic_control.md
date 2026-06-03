@@ -2,11 +2,11 @@
 
 > The technical mechanism by which a component is admitted to run and later revoked — capability-manifest verification, proof checking, and kill-switch. Economic and commercial policy is out of scope for these docs.
 
-## The Legacy Contract
+## The Legacy Model
 
 On legacy systems, "can this software run" is answered by a tangle of mechanisms that are not really about the software's behavior: a signature check that verifies *who* shipped a binary but says nothing about *what it does*, a trust-on-first-use prompt, an antivirus heuristic, and — once installed — almost no ongoing handle on the code at all. Revocation is weak: a certificate revocation list that clients may never consult, or a best-effort "kill bit" that depends on the program phoning home. The system admitted the code based on provenance, not on a checkable account of its authority and effects, and once admitted it largely loses control.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Admission is a check over a component's **declared, machine-checkable contract**, not over who shipped it. Because a Cathedral package is proof-carrying ([[package_system]]), the admission gate is mechanical: verify the capability manifest, the effect ceilings, and the proof artifacts against policy before the component is allowed to run. Revocation is a first-class operation on the authority model — a component's grants can be withdrawn and its execution stopped because the system holds the authority graph, not because the component cooperates.
 

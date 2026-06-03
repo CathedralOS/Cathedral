@@ -2,11 +2,11 @@
 
 > Omega makes memory *safe*; Cathedral makes it *coherent* and *single-level*: persistence is a property of a typed object, not a separate disk world, and that coherence must survive hot swap, migration, and crashes.
 
-## The Legacy Contract
+## The Legacy Model
 
 A C-based OS hands out raw virtual address spaces and trusts everyone to behave. Shared memory, copy-on-write, mmap, page cache, and zero-copy IPC are powerful but unsafe: a pointer into another region is just an integer, lifetime is a convention, and crash consistency is the application's problem. Persistence is a second, disconnected world — you serialize objects into bytes, write them to a file, and re-parse on the way back, with no type continuity and no guarantee the on-disk shape matches the code that reads it. Memory and storage are two universes joined by hand-rolled marshalling.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Memory safety is assumed (Omega owns it). The OS's remaining job is a *memory architecture* whose ownership, sharing, and lifetime rules are the same rules that govern authority and upgrade — so that a borrowed reference, a shared buffer, and a persisted object are all visible to the same analysis.
 

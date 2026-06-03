@@ -2,7 +2,7 @@
 
 > This section contains a glossary where each term names exactly one concept. Chapters should link back here rather than redefine terms locally. This chapter is a stub to be filled as the design firms up; below is the seed vocabulary.
 
-## The Legacy Contract
+## The Legacy Model
 
 In legacy OSes the core nouns are overloaded into mush. "Process" means address space *and* authority *and* scheduling identity *and* crash boundary. "User" means a human *and* a uid *and* a permission bundle *and* a home directory. "Permission" means a file bit, an ACL entry, a sandbox rule, and a capability all at once. Ambiguous nouns produce ambiguous systems.
 

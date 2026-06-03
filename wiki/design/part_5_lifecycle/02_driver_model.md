@@ -2,11 +2,11 @@
 
 > Drivers are ordinary components — isolated, capability-limited, and restartable — with hard effect ceilings on the hardware they touch, never privileged kernel blobs.
 
-## The Legacy Contract
+## The Legacy Model
 
 A traditional driver is a binary blob loaded into the kernel's address space with *total* authority: it can touch any memory, program any DMA engine, take any interrupt, and a single bug crashes — or silently corrupts — the whole system. There is no capability boundary between "this NIC driver" and "all of physical memory." Driver crashes are fatal; updates mean reboots; certification is a signature on an opaque blob. And because every PC has thousands of devices, the driver surface area is the single largest reason OS projects die before shipping.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Drivers are components like any other ([[component_model]]): isolated, holding only the specific capabilities for *their* device, restartable after a crash without taking down the system, and upgradable in place via the hot-swap machinery ([[updates_and_hot_swap]]). A driver's hardware reach is an **effect ceiling** — `device_io`, `memory_map` — plus narrow capabilities over *its* registers, DMA regions, and interrupt lines, and nothing more. No arbitrary kernel driver blobs.
 

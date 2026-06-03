@@ -2,11 +2,11 @@
 
 > Sandboxing is not a feature to add — it is what the capability model already produces. This chapter owns the policies that ceiling the authority graph.
 
-## The Legacy Contract
+## The Legacy Model
 
 On legacy systems, isolation is a stack of afterthoughts bolted onto ambient uid power. A process starts able to do almost anything its uid can do, and then we *claw authority back*: seccomp filters, AppArmor and SELinux profiles, sandbox profiles, namespaces, cgroups, entitlement lists. Each mechanism speaks a different language, none of them sees the others, and all of them fight the default — which is that the process already had the power. The system cannot answer the questions that matter per permission: *why* does this app have camera access, *who* granted it, can it *store* it, can it *pass it onward*, can it use it *in the background*, and — the dangerous one — can it *combine* it with the network. Photo-read plus network is a different animal than either alone, and no legacy policy engine reasons about the conjunction.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Sandboxing falls out of [[capability_model]] for free: a component that was never handed a capability cannot use that authority, so the *default* is the sandbox. Policy is then not a wall built around a powerful process; it is a set of **ceilings** over an already-minimal, already-visible authority flow. A policy says, at most: which capabilities a principal may *hold*, which it may *store* or *delegate*, which **effects** it may reach, and which **boundary providers** may satisfy those effects.
 

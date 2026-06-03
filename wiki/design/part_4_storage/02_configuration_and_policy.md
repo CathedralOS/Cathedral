@@ -2,11 +2,11 @@
 
 > Configuration is typed, versioned, capability-scoped data — not scattered, untyped text files — and policy is the layered resolution of that data across actors.
 
-## The Legacy Contract
+## The Legacy Model
 
 Configuration on a mainstream OS is a junk drawer: `/etc` text files in a dozen ad-hoc syntaxes, the Windows registry, plist blobs, dotfiles, environment variables, command-line flags, and per-app databases nobody can enumerate. Nothing is typed, so an invalid value is discovered at runtime — if you are lucky, with a log line; if not, with a silent default. There is no schema, no validated migration when a key's meaning changes, no diff, no rollback, no audit of who changed what, and no coherent story for layering user vs. organization vs. device vs. application defaults. Secrets get pasted into the same files as ordinary settings. Answering "what is the effective value of X here, and why?" means reading source and guessing precedence.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 A single typed configuration substrate. Every setting is a field in a typed, versioned `data` shape with declared validity; writing an invalid value is a compile- or commit-time error, not a runtime surprise. Configuration *layers* — user, organization, device, application defaults — resolve through an explicit, inspectable policy precedence, so the effective value and the layer it came from are always a query. Changes are transactional ([[transactions_and_consistency]]), diffable, rollback-able, and audited ([[audit_compliance_provenance]]). Secrets are a separate, capability-gated namespace ([[secrets_and_keys]]), never inlined. The result is configuration as versioned, typed, capability-scoped data with auditable, layered policy.
 

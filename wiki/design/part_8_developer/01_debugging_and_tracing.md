@@ -2,11 +2,11 @@
 
 > How a developer observes, pauses, and steps a live Cathedral component — without a kernel round-trip per breakpoint hit, without stopping the world, and without ambient root. Everything here is up for reconsideration.
 
-## The Legacy Contract
+## The Legacy Model
 
 Legacy debugging is built on `int3`: the debugger overwrites an instruction with a one-byte software breakpoint that traps into the kernel. Every hit is a kernel round-trip — trap, context-switch to the debugger, evaluate the predicate there, resume. This makes a *conditional* breakpoint ("stop when `id == 4071`") pay the full round-trip on every iteration, so it is often unusably slow on a hot loop. Worse, the whole mechanism rides on ambient authority: `ptrace`/root lets one process read and rewrite another's memory because of *who it is*, not because of anything it *holds*. Tracing (`strace`, `dtrace`) is a separate, line-oriented, ephemeral stream — not structured, not durable, not replayable.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Reconsider the whole stack. A breakpoint predicate should be **compiled and evaluated in-process** — no kernel round-trip per hit — so conditional and data/watchpoints are cheap. Debugging should support **time-travel**: deterministic **replay** of a recorded run (shared with [[testing_and_simulation]]) so a bug is re-examined, not re-hunted. Tracing should be **durable structured events**, not a text stream, feeding the same pipeline as observability ([[observability_and_introspection]]). And debugging must be **hot-swap-aware**: you can debug across a live migration, over versioned state, while the component upgrades underneath you.
 

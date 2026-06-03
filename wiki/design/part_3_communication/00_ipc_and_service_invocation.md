@@ -2,11 +2,11 @@
 
 > One IPC primitive: a capability-scoped shared memory region. Every named pattern (pipes, sockets, queues, pub/sub, RPC) is a library over it. Notification and blocking belong to the scheduler; typed safety is an opt-in layer.
 
-## The Legacy Contract
+## The Legacy Model
 
 Unix offers a bazaar of half-overlapping IPC mechanisms: pipes, FIFOs, Unix domain sockets, shared memory, signals, message queues, `ioctl`, and a userspace bus layer (dbus-ish) bolted on top. Every one of them, at the bottom, treats IPC as byte movement, and each is a *separate kernel mechanism* with its own setup, lifetime, and quirks. Two things go wrong at once: the *mechanism* count explodes (N incompatible ways to move bytes), and the *semantics* (schema, versioning, call/reply, auth, backpressure) are reinvented by hand over each one, incompatibly. Authority rides along ambiently, if at all: the receiver trusts the sender's uid.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 One mechanism: a **capability-scoped shared memory region**. The OS maps it once, gated by a capability to the endpoint. After that, communication is plain reads and writes plus atomics, with no kernel in the hot path: the producer writes a slot and advances an index with a release store, the consumer reads it. That is the entire data path. Pipes, sockets, queues, pub/sub, and RPC are libraries over this, not kernel features, so the mechanism count stops growing.
 

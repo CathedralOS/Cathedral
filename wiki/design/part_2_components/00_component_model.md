@@ -2,11 +2,11 @@
 
 > The unit Cathedral actually runs, isolates, restarts, and upgrades — and the recognition that those are *not one unit* but a family of overlapping ones.
 
-## The Legacy Contract
+## The Legacy Model
 
 The Unix process is one of computing's great overloaded nouns. A single `pid` simultaneously names an address space, a permission identity (uid/gid), a file descriptor table, an environment block, a signal-handling context, a lifecycle (fork/exec/wait/exit), a scheduling entity, and a crash boundary. These are welded together because in 1970 they were cheap to weld. The cost shows up everywhere after: you cannot restart the crash boundary without losing the address space; you cannot upgrade the code without killing the identity; you cannot isolate authority more finely than the process because authority *is* the process. Everything that wants a different granularity — threads, containers, namespaces, sessions, transactions — is bolted on as a partial, ad-hoc escape.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Stop pretending one noun fits. Cathedral models an explicit **family** of units and lets each concern pick the granularity it needs:
 

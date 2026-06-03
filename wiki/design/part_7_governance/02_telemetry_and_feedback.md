@@ -2,11 +2,11 @@
 
 > The OS reports on itself to its vendor — bound by the same capability model it imposes on everyone else, so system-level observation is never ambient.
 
-## The Legacy Contract
+## The Legacy Model
 
 Legacy telemetry is structurally hard to trust. It ships as an opaque, privileged channel the user cannot inspect, attenuate, or fully disable; "off" often means "less," and nobody outside the vendor can verify what crosses the wire. Crash reporters scoop up memory that may contain secrets. "Anonymized" analytics are routinely re-identifiable. An organization gets a coarse on/off knob, not control. The structural problem is that telemetry runs *outside* the OS's own authority model: the vendor is an unmodeled super-principal with ambient reach. That is the same ambient-authority problem Cathedral rejects elsewhere, here applied to the vendor.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 An OS needs some telemetry — crash reports, performance data, upgrade health, security signals — but it must **not destroy trust**. The domains:
 

@@ -2,11 +2,11 @@
 
 > Network access is a per-destination capability: the right to exchange packets with a named, identity-verified peer, enforced where packets meet the shared Network Interface Controler (NIC). The OS owns that demux and the authority; the transport (TCP, QUIC, TLS) is a userspace library.
 
-## The Legacy Contract
+## The Legacy Model
 
 In a traditional OS, networking bottoms out at the socket: a process opens a file descriptor to an IP address and port and is then free to send and receive arbitrary bytes. Two things are wrong. First, the kernel owns one general-purpose TCP/IP stack that every app shares, which fixes the policy (its congestion control, its buffering, its feature set) and costs a syscall on every operation. Second, authority is ambient and binary: an app that can open a socket can reach anything the routing table allows. Everything that makes networking safe or meaningful (DNS, TLS identity, service discovery, firewalling, per-app permission, bandwidth limits) lives in separate ambient subsystems the socket layer neither knows nor enforces. The OS enforces reachability, never *which peer* a given component may talk to, and cannot answer "which services may this app reach, over which protocols, under whose identity, within what budget?" because the socket abstraction discards exactly that.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Split the problem the way [[ipc_and_service_invocation]] splits IPC: a small privileged substrate the OS owns, and the protocol logic as a library the component links.
 

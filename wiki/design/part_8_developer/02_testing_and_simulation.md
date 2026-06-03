@@ -2,11 +2,11 @@
 
 > Cathedral is designed to be *simulated*: every component can be run in a deterministic, hostile simulator before it is certified — the OS's single biggest verification differentiator.
 
-## The Legacy Contract
+## The Legacy Model
 
 On Unix, testing a system component means wrestling nondeterminism. The scheduler, the clock, the network, the disk, and the failure of any of them are all real, global, and unrepeatable. So "tests" devolve into unit tests of pure logic plus an untested assumption that integration behaves; the genuinely difficult behaviors — a partition mid- transaction, a crash mid-write, a capability revoked mid-call, an upgrade that deadlocks — are nearly impossible to provoke reliably and so are mostly *not* tested. Model checkers like TLA+ exist, but they check a *separate model* a human wrote, which drifts from the code that actually ships.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Because Omega already aims at proof and model checking, the OS itself should be **designed to be simulated**: deterministic by construction, with time and IO as injectable effects rather than ambient facts. TLA+-style property checks remain useful, but they are not the headline. **The real product is the hostile simulator**: every component runs against a deterministic adversary that controls the scheduler, the clock, the network, storage, and faults — and a developer (and the certification gate) can ask "does this component preserve its invariants under the worst legal interleaving?" before it ships.
 

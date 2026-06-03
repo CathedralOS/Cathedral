@@ -2,11 +2,11 @@
 
 > Compliance is mechanically derivable: a report is a query over the OS's authority and event model, not a screenshot, a questionnaire, or after-the-fact MDM reporting.
 
-## The Legacy Contract
+## The Legacy Model
 
 On legacy systems, compliance is theater performed *around* the OS, not *by* it. SOC 2, ISO 27001, HIPAA, FedRAMP, GDPR data-residency — each is satisfied with spreadsheets, vendor questionnaires, periodic screenshots, agent-scraped inventories, and MDM policies that *assert* a posture the OS cannot actually prove. Audit logs are append-mostly text files that a sufficiently privileged process can edit. Provenance ("where did this binary come from, what touched this record") is reconstructed from whatever logs happened to survive. The OS holds none of the structure a real auditor would want, so humans manufacture evidence by hand, expensively and unreliably.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Compliance deserves its own domain because it can be made **mechanically derivable** rather than reconstructed by hand. Because Cathedral already records authority and a causal event graph ([[observability_and_introspection]]), the artifacts an auditor needs are either first-class or one query away:
 

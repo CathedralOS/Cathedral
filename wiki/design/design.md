@@ -28,10 +28,10 @@ Every chapter follows the same shape so they stay comparable and skimmable. Keep
 
 > One sentence: what this concept owns in Cathedral.
 
-## The Legacy Contract
+## The Legacy Model
 What Unix / mainstream OSes do here, and the specific limitation Cathedral targets.
 
-## What Cathedral Wants
+## The Cathedral Model
 The redesigned contract, in a few sentences.
 
 ## Concerns & Design Space

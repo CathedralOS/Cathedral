@@ -2,11 +2,11 @@
 
 > Where Cathedral targets a browser-class device, the web is the largest existing app surface; the strong move is to make web *origins* into first-class principals in the capability system.
 
-## The Legacy Contract
+## The Legacy Model
 
 Legacy OSes treat the browser as one opaque, maximally-trusted app and the web as a parallel universe with its own security model bolted alongside the OS's. The same-origin policy, web permissions, passkeys, service workers, and the storage sandbox are a sophisticated capability-ish system — but it is entirely *internal* to the browser, invisible to the OS, and duplicated badly when a web app is "installed." WebViews embedded in native apps re-expose every classic confused- deputy bug. The OS cannot reason about what a web origin can do, cannot grant it native authority safely, and cannot show the user one coherent picture of "what does this thing — native or web — actually hold?"
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Unify the two models. **The strong move: a web origin becomes a principal in the OS capability system** — `https://app.example.com` holds and is granted capabilities exactly like a native app, native component, or device ([[identity_and_principals]], [[capability_model]]). The browser's same-origin boundary *is* a principal boundary the OS understands; a web permission *is* a capability grant routed through the same human gestures as native ones ([[human_permission_ux]]). This collapses the duplicated security model into one authority graph and makes "what can this origin do?" a normal query.
 

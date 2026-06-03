@@ -2,11 +2,11 @@
 
 > The toolchain Cathedral hands a developer: not an editor plugin bolted onto a Unix, but a very opinionated distributed-systems IDE that makes authority, versions, and liveness *visible* before anything ships.
 
-## The Legacy Contract
+## The Legacy Model
 
 On Unix the developer experience is a loose federation of independent tools: a compiler, a libc, a set of CLI tools, `gdb`, `strace`, `valgrind`, a package manager, a CI service, and a store, each invented separately and unaware of the others. None of them can answer the questions that actually break production: *what authority does this binary need? where does it stash a credential for later? is this schema migration total? can this upgrade deadlock? which protocol field did I just break?* The information needed to answer them is dissolved across ELF symbols, runtime behavior, and tribal knowledge. The tooling sees bytes, so it shows you bytes.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 A single, opinionated SDK where the *facts the Omega compiler already produces* are first-class developer surfaces. The platform should feel less like a code editor and more like a control room for a distributed system you happen to be authoring. The default verbs are not "edit / build / run" but "inspect authority / diff a protocol / simulate an upgrade / replay a trace."
 

@@ -2,11 +2,11 @@
 
 > Cathedral's stance on running software written for other worlds — and the discipline that keeps legacy compatibility from quietly *becoming* the platform.
 
-## The Legacy Contract
+## The Legacy Model
 
 A new OS faces enormous gravity to "just run Linux apps." The legacy contract a Linux binary carries is not a few syscalls — it is a whole world model: ambient authority (uid/root), a global mutable filesystem namespace, `fork`/`exec` processes, signals, `/proc`, and the assumption that anything can reach anything it has a path to. Historically, OSes that adopted Linux compatibility natively (WSL1, various microkernels with a Linux personality) found that the compatibility layer's contract *colonized* the host: to run the apps faithfully you must honor their assumptions, and those assumptions are exactly the ambient-authority model Cathedral exists to reject.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 A deliberate, named **stance** — not a default that accretes. The governing rule: **native apps are the new model; legacy apps live in an isolated compatibility box.** Legacy execution is a *tenant*, sandboxed behind the capability and component models ([[security_policy_and_sandboxing]], [[component_model]]), never a privileged peer of native components. The box translates a legacy app's ambient-authority expectations into a finite set of explicitly granted capabilities; anything it cannot be granted, it cannot have. Crucially, the legacy contract must **never leak outward** to become the contract native apps see.
 

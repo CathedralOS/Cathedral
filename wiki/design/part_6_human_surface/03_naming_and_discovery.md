@@ -2,11 +2,11 @@
 
 > Every OS grows naming systems — and naming is a security primitive, because a name resolves to authority, and a spoofed name steals it.
 
-## The Legacy Contract
+## The Legacy Model
 
 Naming in legacy systems is a dozen uncoordinated schemes that calcify into permanent compatibility constraints. Filesystem paths, DNS names, D-Bus service names, device nodes, package names, usernames, MIME types, URL schemes, port numbers — each invented separately, each with different uniqueness, ownership, and spoofing properties. None was designed as a security boundary, yet all of them resolve to authority: a path resolves to a file you may write, a service name to a process you will trust, a package name to code you will run. Homograph domains, dependency-confusion package names, and service-name hijacking are all the same bug — *a name resolved to the wrong authority*. And once a naming scheme ships, its mistakes are forever; renaming breaks the world.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 One coherent naming discipline where **a name is a value that resolves to authority through an auditable path**, and where resolution is *spoof-resistant by construction*. Names are typed, namespaced, and owned: resolving a name yields a capability (or a principal handle), and the resolution records *who* claimed that name and *whether that claim is trustworthy*. Human-readable names are layered *over* stable, unforgeable identifiers, never the other way around, so that renaming and aliasing are first-class operations that do not change identity.
 

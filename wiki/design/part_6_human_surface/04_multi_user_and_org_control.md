@@ -2,11 +2,11 @@
 
 > Whether a device serves one person, a family, a fleet, or a kiosk is a foundational decision — it shapes storage, identity, permissions, UI, and update policy, and it cannot be bolted on later.
 
-## The Legacy Contract
+## The Legacy Model
 
 Legacy multi-user grew out of the timesharing uid model and never escaped it. "User" conflates a human, a login account, a permission bundle, and a home directory. Enterprise management (MDM, group policy, domain join) is layered on top as a separate, often-fighting authority that the local OS only partially understands. Family devices, shared TVs, guest sessions, and work/personal separation are each handled by a different bespoke mechanism. Because tenancy was not a first-class isolation concept, "wipe only the work data," "this kiosk owns no personal state," and "the org may set this policy but not see that data" are all hard or impossible to state cleanly.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Make the **tenant** a first-class isolation domain for *data, policy, and authority* (see the seed glossary in [[vocabulary]]), and decide the tenancy model *early* because it touches everything. A tenant scopes which data exists, which policies apply, and which capabilities are reachable; principals ([[identity_and_principals]]) act *within* a tenant. The same primitive must express the full range of deployments — and the design picks one model that covers them rather than a new mechanism per case:
 

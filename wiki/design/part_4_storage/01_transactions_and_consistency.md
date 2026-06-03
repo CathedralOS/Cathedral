@@ -2,11 +2,11 @@
 
 > Atomicity is an OS primitive, not a database feature: this chapter owns the one common mechanism by which a set of state transitions commits all-or-nothing.
 
-## The Legacy Contract
+## The Legacy Model
 
 In a traditional OS, transactions live *inside* a database and nowhere else. Installing a package, applying an update, editing a config file, changing a permission, or moving files are all multi-step mutations with no atomicity — they half-complete, leaving a state no design intended. The canonical recovery is "delete the lockfile and run it again." Each subsystem reinvents a private, partial commit/rollback (dpkg's `--configure -a`, a `.bak` file, a journal replay), and none compose. There is no OS-level answer to "make these N changes atomically, or none of them."
 
-## What Cathedral Wants
+## The Cathedral Model
 
 A single transactional primitive that any subsystem can use to make a set of state transitions atomic, isolated, and rollback-able — exposed the same way for filesystem writes, package installs, upgrades, UI state, configuration changes, and capability grants/revocations. The trick is *not* to make the whole OS globally transactional (that way lies a planet-sized lock). It is to identify precisely **which** state transitions must be atomic, draw that boundary explicitly, and give it one shared commit/abort/compensation machinery. Outside those boundaries, the system stays loosely coupled and eventually consistent on purpose.
 

@@ -2,11 +2,11 @@
 
 > The hardest part of a capability OS is not the type system — it is the human gesture. This chapter owns how people *mint, delegate, and revoke* authority through interface actions they already understand.
 
-## The Legacy Contract
+## The Legacy Model
 
 Mainstream permission UX is a tax bolted onto an ambient-authority OS. Either the app already has broad access (desktop: read any file the user can), or the user is interrogated by a stream of modal prompts ("App X wants to access your Photos") that they click through blind. Prompts are vague, un-attributed, easy to spoof, and grant *categories* ("all photos") rather than *objects* ("this photo"). Revocation is buried in a settings panel nobody visits, and "what does this app currently have?" has no honest answer. The deepest failure: the file picker — the single most important permission UI ever built — is treated as a mere file-chooser dialog, its authority-granting nature completely unmodeled.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Make the human gesture the *primary* way authority is minted and moved. The **key insight**: in a capability OS the file picker is not a dialog — it is an **authority mint**. When the user picks `report.pdf`, the OS mints a narrow `Capability<File::Read("report.pdf")>` for exactly that object and delegates it to the requesting app. Nothing broader is created. The same principle generalizes:
 

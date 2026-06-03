@@ -2,11 +2,11 @@
 
 > This chapter owns the data/state-shape continuity primitive: the typed mechanism by which live state survives a change to its shape.
 
-## The Legacy Contract
+## The Legacy Model
 
 On a traditional OS, a software update is "stop the thing, replace its files, start it again," with no check that the state on disk is still compatible. State continuity is informal: a hand-written upgrade script, an `if version < N` ladder in startup code, or a database migration tool the OS itself knows nothing about. When old and new shapes disagree, the failure modes are silent corruption, crash-on-load, or a one-way migration that cannot be rolled back. There is no typed notion of "old shape," no checked transform from old to new, and no way to prove a migration preserves the invariants the new code depends on.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Historical shapes coexist as **named versions** of a typed `data`, and a migration is **typed code** — a migration machine — that transforms an old shape into the current one under explicit effect, ownership, and invariant obligations. Migrations compose along a chain (`v1 -> v2 -> current`), so state from any known era can be carried forward by stitching known steps. Crucially, this chapter owns *shape continuity only*. The **operational** act of updating a running system — reaching quiescence, draining work, rolling upgrades, dependency planning, and operational rollback — belongs to [[updates_and_hot_swap]]. We define the typed transform; that chapter decides when it runs and on whose schedule.
 

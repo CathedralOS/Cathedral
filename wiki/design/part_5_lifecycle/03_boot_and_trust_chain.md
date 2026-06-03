@@ -2,11 +2,11 @@
 
 > The boring, scary stuff: how the system comes up provably from a hardware root of trust, and how it survives a bad update without bricking.
 
-## The Legacy Contract
+## The Legacy Model
 
 Boot is a chain of mutually-distrustful-but-unverified stages: firmware loads a bootloader loads a kernel loads userspace, and at each hop "trust" is, classically, *nothing* — or a Secure Boot signature check that stops at the kernel and never covers the live component graph. Recovery is an afterthought: a separate partition that may itself be stale, a factory reset that nukes user state, and a rollback story that, where it exists, is bolted on by the update tool rather than designed in. The result is the field's most feared failure: a half-applied update that bricks the device with no path back.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 A continuous, **measured** trust chain from a hardware root of trust through firmware, bootloader, kernel, and every privileged component — each stage verifying and measuring the next, with the measurements available for remote attestation ([[audit_compliance_provenance]]). And, equally first-class: **recovery and rollback protection.** A beautiful OS that bricks during an update is a dead OS, so the ability to detect a bad boot, roll back to a known-good system, and recover a half-applied update is part of the design from the start — not a rescue disk added later.
 

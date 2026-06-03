@@ -2,11 +2,11 @@
 
 > Privacy is not a permission sheet stapled to a filesystem. This chapter owns data *classification* as structure — and access scoped by the *purpose* it serves.
 
-## The Legacy Contract
+## The Legacy Model
 
 Legacy systems store everything as undifferentiated bytes in a flat namespace, and then bolt privacy on top as a per-app permission list: "this app may access Contacts," "this app may access Photos." The data has no inherent class — a JPEG of a medical record and a JPEG of a meme are the same object to the OS — so the permission is coarse, binary, and blind to *why* the access happens. Once an app is granted "Contacts," it may read every field of every contact for any reason, forever, and the system records only that it *was* granted, never *for what purpose*. Regulatory and audit regimes care about the *purpose* of access, not just whether it happened, and the legacy model cannot represent it.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Make classification **structural**. Every datum belongs to a **data class** the OS understands as a first-class thing — documents, media, contacts, messages, location, health, credentials, telemetry, app state, organization data, personal data, shared data — and authority over data is always *typed by its class*.
 

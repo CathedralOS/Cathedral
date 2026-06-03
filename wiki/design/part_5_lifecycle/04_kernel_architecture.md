@@ -2,11 +2,11 @@
 
 > The decision of what the privileged core actually is: the smallest trusted substrate that can carry Cathedral's component, capability, and update story.
 
-## The Legacy Contract
+## The Legacy Model
 
 Monolithic kernels fuse everything privileged — drivers, filesystems, network stacks, schedulers — into one address space where any bug is a total compromise. Microkernels split that out into servers but pay in IPC overhead and complexity, and in practice still grow a fat trusted base. Hybrids inherit both sets of problems. Across all of them the privileged boundary is drawn by *hardware rings and address spaces*, and the question "what must actually be trusted, and what can crash or be replaced without killing the system?" is answered by accident of history rather than by design.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Pick the **smallest privileged substrate** that supports the component, capability, and update story — not the cleanest-sounding diagram. The architecture is not chosen by aesthetics ("microkernel sounds clean"); it is chosen by answering, for each piece of the system, four questions: **what must be trusted? what can be restarted? what can be upgraded? what can be proven? — and what can crash without killing the system?** The answer follows from Omega's isolation guarantees, not from x86 ring boundaries.
 

@@ -2,11 +2,11 @@
 
 > The point where the OS model leaves the machine — and the bet that if local IPC and remote protocols share one abstraction, Cathedral becomes a node in a typed, capability-secured distributed runtime.
 
-## The Legacy Contract
+## The Legacy Model
 
 A traditional OS ends at the machine. Crossing to another node means leaving the OS's model entirely and entering a *different* world: sockets, an RPC framework, a service mesh, a separate auth system (tokens, mTLS, OAuth), a separate discovery system, a separate consistency story, all bolted on by application developers. Identity, authority, and types do not survive the trip — a local file handle, a local permission, a local object reference mean nothing on the wire. So every distributed system re-implements, badly and incompatibly, the things the OS already had locally: who may call this, what version is it, is this reference still valid, what happens when the link drops. The machine boundary is a *cliff*, and everyone falls off it the same way.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Make the machine boundary a *seam*, not a cliff. Because IPC is already typed, versioned, capability-bearing protocol invocation ([[ipc_and_service_invocation]]), and networking already carries protocol schemas and identity ([[networking]]), a remote call is the *same operation* as a local one with a longer, lossier, partition-prone path. A capability serializes and transfers; `wire data` carries it across versions; a **lease** bounds remote authority so a dropped or hostile peer cannot hold power forever.
 

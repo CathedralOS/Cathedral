@@ -2,11 +2,11 @@
 
 > The decision of what can be replaced: developers build inside stable contracts; they cannot redefine what an app, service, driver, or component *means*.
 
-## The Legacy Contract
+## The Legacy Model
 
 Legacy systems answer "what is replaceable" by accident, not by design. Linux is the cautionary tale: the package manager, init/service manager, display stack, filesystem semantics, and even the C library are all forkable at the platform level, so the "platform" is really N mutually incompatible variants. Forking the core contracts this way destroys any single-contract guarantee: a component built against one variant cannot be assumed to run on another. The opposite legacy failure (a locked monolith) forbids the *good* extensibility too: you cannot add a driver or a service without vendor blessing. Neither system ever drew a principled line between *extending inside a contract* and *redefining the contract*.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 You must decide, deliberately and up front, **what can be replaced.** Some extension points are too load-bearing to open, because forking them forks the meaning of the platform:
 

@@ -2,11 +2,11 @@
 
 > The surface where pixels meet people: the compositor owns window arrangement, input routing, and — above all — the *trusted path* that lets a human know which app they are actually talking to.
 
-## The Legacy Contract
+## The Legacy Model
 
 X11 and its descendants treat the display server as a shared, mostly-trusting bus. Any client that can connect can typically snoop global input, read the clipboard, screenshot other windows, register global hotkeys, and draw anywhere — the original threat model assumed one cooperating user on one trusted host. Wayland tightened this, but the security-critical surfaces are still negotiated per-compositor, ad hoc: which client owns input focus, who may read the clipboard, whether a window can claim to be someone else's. Worst of all, the human has *no reliable signal* of which application owns the surface in front of them. Overlay windows, borderless popups, and fullscreen takeovers let a malicious app impersonate a password dialog, a system prompt, or another app's chrome. The legacy contract has no concept of a path the user can *trust*.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 The compositor is a privileged broker, not a shared bus. It mediates input, clipboard, notifications, and window state as **capability-gated effects**, and it guarantees a **trusted path**: a region of the screen, and a set of interactions, that no untrusted app can draw over, spoof, or synthesize. Input events are *routed* capabilities — an app receives keystrokes because the compositor delegated focus to it for this surface, not because it asked the bus. App identity (see [[identity_and_principals]]) is something the compositor can *display authentically*, so "which app is this?" is always answerable by the human, never forgeable by the app.
 

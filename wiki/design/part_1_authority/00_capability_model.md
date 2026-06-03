@@ -1,12 +1,12 @@
 # Chapter 00: Capability Model & Authority Graph
 
-> The spine of the system: one coherent model of authority, where every grant is a held value and the OS can always draw the full graph of who can do what.
+> One coherent model of authority, where every grant is a held value and the OS can always draw the full graph of who is allowed to do what.
 
-## The Legacy Contract
+## The Legacy Model
 
 A traditional OS does not have *one* authority model — it has a sediment of them, layered and uncoordinated: users, groups, file-mode bits, ACLs, sudo, setuid, capabilities(7), seccomp profiles, AppArmor/SELinux policy, container namespaces, cgroup limits, environment variables, secrets in files, and IPC handles. Authority is mostly **ambient**: a process can act because of *who it is* (its uid), not because of *what it holds*. The consequence is that no component can honestly answer "who can do what, why, through which path, and can I revoke it safely?" The information was never modeled in one place.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Cathedral aims for**One** authority model. Authority is always a *capability*: an unforgeable value that confers a specific, narrow power, obtained through a visible path, held by a principal, and revocable. Nothing is ambient — not the filesystem root, not the clock, not the network, not the power to spawn. If a component can do it, it is because it *holds* something that lets it.
 

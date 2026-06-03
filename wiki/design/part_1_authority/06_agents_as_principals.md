@@ -2,11 +2,11 @@
 
 > Autonomous software that acts for the user is a principal like any other: it holds a scoped, leased, revocable bundle of capabilities, and every action it takes is in the authority graph. The OS owns none of the AI; it governs the authority.
 
-## The Legacy Contract
+## The Legacy Model
 
 No mainstream OS has a notion of an autonomous agent. An "AI assistant" today is just an app, which means it runs with one of two bad authority models. Either it has the user's full ambient power (on a desktop, it can read every file the user can), or it is sandboxed like any app and therefore cannot do the cross-app things an agent exists for. Neither models the thing that actually matters: the *agent is acting on the user's behalf*, and what it is allowed to do should be a delegated, scoped, time-bounded subset of the user's authority, not all of it and not a fixed app sandbox. Worse, the agent's inputs are untrusted (a web page, an email, a tool result), so an agent with broad authority and untrusted input is a confused deputy waiting to be steered. Prompt injection is not a model bug to be filtered away; it is an authority-design problem the OS layer below the model has to answer.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 First, the boundary: **the OS owns none of the AI.** The inference runtime and the model weights are userspace libraries, exactly like the transport stack ([[networking]]) and the typed IPC layer ([[ipc_and_service_invocation]]). The accelerator (NPU/GPU) is a shared device, multiplexed, isolated, and budgeted by the driver and scheduler ([[driver_model]], [[scheduler_and_resources]]). There is no "AI subsystem" in the kernel. A model is a tool an agent runs, not a service the OS provides.
 

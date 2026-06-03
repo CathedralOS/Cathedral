@@ -2,11 +2,11 @@
 
 > Time looks like plumbing and is actually authority. This chapter owns clocks, timers, and the principle that access to *which* clock is a capability.
 
-## The Legacy Contract
+## The Legacy Model
 
 A traditional OS gives every process the time for free. `gettimeofday`, `clock_gettime`, `sleep`, timers — all ambient, all available to anyone. There is usually one wall clock (which jumps when NTP corrects it or the user changes it) and one monotonic clock, and the application is left to know which is safe for what. This ambient time is quietly load-bearing for security: certificate validity, token expiry, and replay windows all trust the clock, yet any code can read it, depend on it, and be fooled by it. And because time is ambient, code is hard to test deterministically and impossible to run in virtual time without intercepting the whole runtime.
 
-## What Cathedral Wants
+## The Cathedral Model
 
 Time is not one thing and not free. Cathedral distinguishes clocks and treats *access to each* as a held capability, granted deliberately:
 
