@@ -43,7 +43,7 @@ The component never names `34.117.12.9:443`; it names a service, and authority i
 - **Peer identity.** Connections bind to identities on both ends ([[identity_and_principals]]); pinning and attestation are part of `authorize`, not bolted on after `connect`.
 - **Firewall as capability ceilings.** Egress/ingress policy is a ceiling over the network capability graph, not a parallel ambient ruleset.
 - **Bandwidth & budgets.** Network is a metered resource; budgets are accounted via effects and governed by the scheduler ([[scheduler_and_resources]]). Congestion fairness may have to be enforced at the demux even though the transport is a library (see below).
-- **Transport as a library.** QUIC, TLS, multipath, connection migration, and NAT traversal are libraries over an authorized flow, so mobility and multihoming are normal rather than heroic, and the choice of stack is the component's.
+- **Transport as a library.** QUIC, TLS, multipath, connection migration, and NAT traversal are libraries over an authorized flow, so mobility and multihoming are normal cases the model handles, and the choice of stack is the component's.
 - **Observability.** Every flow is attributable by construction: which principal, which peer identity, which protocol, how much bandwidth ([[observability_and_introspection]]).
 
 ## Key Questions

@@ -1,6 +1,6 @@
 # Chapter 04: Secrets & Key Management
 
-> Every OS eventually grows a keychain; this one is designed in, not bolted on. The chapter owns secrets — and the idea that a secret is an *operation*, not bytes.
+> Every OS eventually grows a keychain; this one is designed in from the start. The chapter owns secrets — and the idea that a secret is an *operation*, not bytes.
 
 ## The Legacy Model
 

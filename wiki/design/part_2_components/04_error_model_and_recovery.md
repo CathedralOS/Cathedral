@@ -1,6 +1,6 @@
 # Chapter 04: Error Model & Recovery
 
-> Failure is a first-class part of the system, not an afterthought. This chapter owns the typed taxonomy of how things break and the principled way they recover.
+> Failure is a first-class part of the system. This chapter owns the typed taxonomy of how things break and the principled way they recover.
 
 ## The Legacy Model
 

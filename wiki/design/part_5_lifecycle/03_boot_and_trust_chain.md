@@ -8,7 +8,7 @@ Boot is a chain of mutually-distrustful-but-unverified stages: firmware loads a 
 
 ## The Cathedral Model
 
-A continuous, **measured** trust chain from a hardware root of trust through firmware, bootloader, kernel, and every privileged component — each stage verifying and measuring the next, with the measurements available for remote attestation ([[audit_compliance_provenance]]). And, equally first-class: **recovery and rollback protection.** A beautiful OS that bricks during an update is a dead OS, so the ability to detect a bad boot, roll back to a known-good system, and recover a half-applied update is part of the design from the start — not a rescue disk added later.
+A continuous, **measured** trust chain from a hardware root of trust through firmware, bootloader, kernel, and every privileged component — each stage verifying and measuring the next, with the measurements available for remote attestation ([[audit_compliance_provenance]]). And, equally first-class: **recovery and rollback protection.** A beautiful OS that bricks during an update is a dead OS, so the ability to detect a bad boot, roll back to a known-good system, and recover a half-applied update is part of the design from the start.
 
 ### Confidential computing: distrusting the host
 
@@ -21,7 +21,7 @@ Two ways this matters for Cathedral:
 
 The honest tensions, which belong in the doc rather than glossed over:
 
-- **It grows the TCB toward the silicon vendor.** You are now trusting the CPU vendor's TEE implementation and microcode, and TEEs have a long history of side-channel breaks. Confidential is not unconditional.
+- **It grows the TCB toward the silicon vendor.** You are now trusting the CPU vendor's TEE implementation and microcode, and TEEs have a long history of side-channel breaks. That confidentiality rests on the vendor's silicon being sound.
 - **It is in direct tension with this OS's thesis.** Cathedral's pitch is observable, introspectable, queryable behavior. A confidential component is deliberately *opaque*: you cannot trace, debug, or audit its internals from outside ([[observability_and_introspection]], [[debugging_and_tracing]]). The design must say explicitly which components may be confidential and what observability the user or operator knowingly gives up to gain it. That trade is a policy, not a default.
 
 ## Concerns & Design Space

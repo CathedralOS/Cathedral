@@ -10,7 +10,7 @@ On Unix the developer experience is a loose federation of independent tools: a c
 
 A single, opinionated SDK where the *facts the Omega compiler already produces* are first-class developer surfaces. The platform should feel less like a code editor and more like a control room for a distributed system you happen to be authoring. The default verbs are not "edit / build / run" but "inspect authority / diff a protocol / simulate an upgrade / replay a trace."
 
-The organizing promise: **the developer can SEE it before a user feels it.** Your app *requires these capabilities*; this function *stores that authority*; this migration is *incomplete*; this upgrade *can deadlock*; this component *blocks hot swap*; this protocol change is *breaking*. Each of those is a report, not a surprise.
+The organizing promise: **the developer can SEE it before a user feels it.** Your app *requires these capabilities*; this function *stores that authority*; this migration is *incomplete*; this upgrade *can deadlock*; this component *blocks hot swap*; this protocol change is *breaking*. Each of those is a report the developer sees before shipping.
 
 ## Concerns & Design Space
 

@@ -12,7 +12,7 @@ Second, the API is byte-level. Unix gives you `open`, `read`, `write`, `rename`,
 
 ## The Cathedral Model
 
-A filesystem that *is* a database: a durable object graph with a transaction log at its core. Files are records with typed metadata; directories are indexes and views over those records. Every mutation is a structured, durable, ordered entry in a log, so reads can be point-in-time snapshots, watchers become durable subscriptions that never miss an event, and the past is replayable. Objects carry content addresses (dedup, integrity), causal history (undo, audit), and per-object capabilities (a directory listing is an *attenuated view*, not a raw mode bit). The point is not a better ext4; it is that **every change is structured, durable, observable, replayable, permissioned, and queryable**, which is exactly what robust file watching, app sync, backup, audit, undo, and state migration all need underneath.
+A filesystem that *is* a database: a durable object graph with a transaction log at its core. Files are records with typed metadata; directories are indexes and views over those records. Every mutation is a structured, durable, ordered entry in a log, so reads can be point-in-time snapshots, watchers become durable subscriptions that never miss an event, and the past is replayable. Objects carry content addresses (dedup, integrity), causal history (undo, audit), and per-object capabilities (a directory listing is an *attenuated view*, not a raw mode bit). The point is that **every change is structured, durable, observable, replayable, permissioned, and queryable**, which is exactly what robust file watching, app sync, backup, audit, undo, and state migration all need underneath.
 
 The other half of the redesign is that there is no global root.
 
@@ -53,7 +53,7 @@ The tradeoff, stated plainly: a global root is a composability win, realms are a
 - **Per-object capabilities.** A handle to an object is the authority over it; a directory view is an attenuated capability ([[capability_model]]), and a realm root is just the top-most such capability.
 - **Provenance.** Each record carries who/what/when wrote it ([[audit_compliance_provenance]]).
 - **Schema evolution.** Records have typed, versioned shapes that migrate ([[versioned_state_and_migration]]).
-- **Offline/online sync & conflict resolution.** Causal history makes merge and conflict detection a property of the log, not an afterthought.
+- **Offline/online sync & conflict resolution.** Causal history makes merge and conflict detection a property of the log.
 
 ## Key Questions
 

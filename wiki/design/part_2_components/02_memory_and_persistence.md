@@ -23,7 +23,7 @@ The sharp tension this chapter exists to face: **safe references vs. hot swappin
 ## Concerns & Design Space
 
 - **Address spaces & isolation.** One Omega-isolated space (zero-copy, cheap IPC, easy hot swap) vs. hardware-isolated spaces (defense in depth) — decided per component, recurring with [[kernel_architecture]].
-- **Capability-safe shared buffers.** A shared buffer is a capability with a domain (`Buffer::ReadOnly`, `Buffer::Writable`), not a raw mapping; aliasing rules are proof obligations, not hope.
+- **Capability-safe shared buffers.** A shared buffer is a capability with a domain (`Buffer::ReadOnly`, `Buffer::Writable`), not a raw mapping; aliasing rules are proof obligations.
 - **Zero-copy IPC & borrowing across boundaries.** Can a borrow cross an IPC edge ([[ipc_and_service_invocation]])? If so, the lender's lifetime now spans two components and constrains both their upgrades.
 - **Object lifetime & kernel-object ownership.** Who owns a kernel object (a timer, a port, a mapping), and does its lifetime bind to a component instance so it's reclaimed on crash?
 - **Persistent-memory & memory-mapped objects.** Treat durable state as *typed, versioned objects* mapped into memory, not byte files; persistence becomes a property of `data`, not a separate serialization step.

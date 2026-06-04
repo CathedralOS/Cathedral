@@ -21,7 +21,7 @@ The discipline is *say no early*. Pick one GPU path, one decode path, one audio 
 - **DRM / content protection.** Quarantine the attestation blob behind a narrow boundary; decide *whether* to support it at all in the first target.
 - **Screen capture.** A capability ([[capability_model]]), rare, attributed, and visibly indicated — never silent.
 - **Window isolation & input routing.** Defer to [[windowing_and_compositor]]; the pipeline must not leak one principal's frames or input to another.
-- **Accessibility & color management.** First-class consumers of the pipeline, not afterthoughts; accessibility needs a privileged-but-audited read path.
+- **Accessibility & color management.** First-class consumers of the pipeline; accessibility needs a privileged-but-audited read path.
 - **Frame scheduling / GPU budget.** GPU time and frame deadlines are scheduled resources ([[scheduler_and_resources]]).
 - **Low-latency media & power-aware rendering.** Latency and energy as explicit budgets, with rendering that backs off under power policy ([[power_management]]).
 

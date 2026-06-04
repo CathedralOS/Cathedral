@@ -8,7 +8,7 @@ Updating a live system is, almost everywhere, a controlled outage: stop the thin
 
 ## The Cathedral Model
 
-Update is a **first-class language/runtime/OS operation**, designed from day one, not a feature bolted onto a package manager. Cathedral replaces a live component by: driving it to **quiescence**, migrating its live state forward, switching its protocol endpoints to the new version, observing the new version's health, and **rolling back** if it misbehaves — all without restarting the world.
+Update is a **first-class language/runtime/OS operation**, designed in from day one. Cathedral replaces a live component by: driving it to **quiescence**, migrating its live state forward, switching its protocol endpoints to the new version, observing the new version's health, and **rolling back** if it misbehaves — all without restarting the world.
 
 This chapter owns the *operational* act. The typed state-shape continuity primitive — versioned `data` and migration machines — lives in [[versioned_state_and_migration]]; this chapter is what *drives* that machinery across a running system. This is the domain where Cathedral is genuinely differentiated, and the chapter the whole "resumability" thesis is accountable to.
 

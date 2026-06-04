@@ -4,13 +4,13 @@
 
 ## The Legacy Model
 
-A traditional OS does not have *one* authority model — it has a sediment of them, layered and uncoordinated: users, groups, file-mode bits, ACLs, sudo, setuid, capabilities(7), seccomp profiles, AppArmor/SELinux policy, container namespaces, cgroup limits, environment variables, secrets in files, and IPC handles. Authority is mostly **ambient**: a process can act because of *who it is* (its uid), not because of *what it holds*. The consequence is that no component can honestly answer "who can do what, why, through which path, and can I revoke it safely?" The information was never modeled in one place.
+A traditional OS has too many uncoordinated authority models: users, groups, file-mode bits, ACLs, sudo, setuid, capabilities(7), seccomp profiles, AppArmor/SELinux policy, container namespaces, cgroup limits, environment variables, secrets in files, and IPC handles. Authority is mostly **ambient**: a process can act because of *who it is* (its uid), not because of *what it holds*. The consequence is that no component can honestly answer "who can do what, why, through which path, and can I revoke it safely?" The information was never modeled in one place.
 
 ## The Cathedral Model
 
-Cathedral aims for**One** authority model. Authority is always a *capability*: an unforgeable value that confers a specific, narrow power, obtained through a visible path, held by a principal, and revocable. Nothing is ambient — not the filesystem root, not the clock, not the network, not the power to spawn. If a component can do it, it is because it *holds* something that lets it.
+Cathedral aims for **one** authority model. Authority is always a *capability*: an unforgeable value that confers a specific, narrow power, obtained through a visible path, held by a principal, and revocable. Nothing is ambient. Not the filesystem root, not the clock, not the network, not the power to spawn. If a component can do it, it is because it *holds* something that lets it.
 
-Because every grant is a value with provenance, the OS can maintain a live **authority graph**: nodes are principals and capabilities; edges are acquisition, delegation, attenuation, and storage. "Who can reach the camera?" and "if I revoke this, what breaks?" become queries, not investigations.
+Because every grant is a value with recorded provenance, the OS can keep a live **authority graph** of which principals hold which capabilities and where each one came from. A question like "what can reach the camera", or "what breaks if I revoke this" is answered by walking the graph.
 
 Capabilities read like types over a stable object plus a domain:
 

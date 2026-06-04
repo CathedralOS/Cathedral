@@ -52,7 +52,7 @@ The key idea is **system-wide causality**: Cathedral records a **causal event gr
 
 - The **authority graph** is already modeled from authority-flow inference (accepts / uses / derives / stores / acquires / returns / releases); observing it is reading a structure Omega built, not adding a probe.
 - **Effects** give the orthogonal "what kind of behavior" axis as a queryable ceiling per component ([effects](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
-- **Provenance** of values and artifacts makes "what wrote this / what migrated this" a lookup, not a forensic exercise.
+- **Provenance** of values and artifacts makes "what wrote this / what migrated this" a lookup.
 - Causal events compose with **versioned data** so "which migration touched this object" is intrinsic ([versioned data](../../../../Omega/wiki/language_guide/chapter_21_versioned_data.md)).
 - What Omega may need to grow: a standard, queryable *causal event graph* schema and an `Observe` capability domain that attenuates over axes.
 
