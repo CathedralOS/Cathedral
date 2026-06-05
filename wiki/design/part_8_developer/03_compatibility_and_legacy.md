@@ -8,7 +8,7 @@ A new OS faces enormous gravity to "just run Linux apps." The legacy contract a 
 
 ## The Cathedral Model
 
-A deliberate, named **stance** — not a default that accretes. The governing rule: **native apps are the new model; legacy apps live in an isolated compatibility box.** Legacy execution is a *tenant*, sandboxed behind the capability and component models ([[security_policy_and_sandboxing]], [[component_model]]), never a privileged peer of native components. The box translates a legacy app's ambient-authority expectations into a finite set of explicitly granted capabilities; anything it cannot be granted, it cannot have. Crucially, the legacy contract must **never leak outward** to become the contract native apps see.
+A deliberate, named **stance** — not a default that accretes. The governing rule: **native apps are the new model; legacy apps live in an isolated compatibility box.** Legacy execution is a *tenant*, sandboxed behind the capability and component models ([[security_policy_and_sandboxing]], [[component_model]]), never a privileged peer of native components. The box translates a legacy app's ambient-authority expectations into a finite set of explicitly granted capabilities; anything it cannot be granted, it cannot have. Software that demands root (installers, init systems, package managers, a whole distro image) is handed authority over a synthetic system realm ([[filesystem_as_database]]), so it is god of a fabricated world while holding no real root; its privileged writes hit its overlay, and its real authority is the enumerated capability set the box was granted. Crucially, the legacy contract must **never leak outward** to become the contract native apps see.
 
 ## Concerns & Design Space
 
@@ -18,7 +18,7 @@ The stance is a choice among consequences, not a free menu:
 - **Linux syscall compatibility.** Broadest app catalog, *highest* colonization risk — pulls the whole ambient world model in if done natively.
 - **WASM-like app target.** A capability-friendly sandbox by construction; aligns with the authority model but needs a porting story.
 - **Browser-first / web app model.** Leans on the web as the runtime ([[web_integration]]); large existing catalog, capability-shaped surface.
-- **VM / container compatibility.** Strong isolation, coarse authority; the legacy world runs *whole* but opaque to the authority graph.
+- **VM / container compatibility.** The isolation and namespacing a container needs is native (a synthetic realm plus a scoped capability set, [[filesystem_as_database]]), so what remains is emulating the foreign ABI inside the box. Strong isolation, but the legacy world stays coarse and opaque to the authority graph unless the box attributes its internal accesses.
 - **Remote app streaming.** The legacy app runs elsewhere; Cathedral renders it. Maximal isolation, network-dependent.
 - **A compatibility subsystem.** One isolated box that hosts a legacy personality as an ordinary, sandboxed Cathedral component.
 

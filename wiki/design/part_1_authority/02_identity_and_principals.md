@@ -29,6 +29,7 @@ domain Principal::Attested { self.provenance in Attestation::Verified; }
 - **Rotation.** Keys and identities must rotate without orphaning everything a principal held. This is a graph-rewrite problem, not a re-provisioning one, and it leans on key management ([[secrets_and_keys]]).
 - **Compromised publishers.** When a publisher's signing identity is revoked, every component descended from it must be reachable and re-evaluated. The graph must record the publisher → build → instance edges to make this a query.
 - **Organizations & delegated administration.** An org is a principal that grants bounded administrative authority to sub-principals — without becoming an ambient super-uid (see [[multi_user_and_org_control]]).
+- **Nested principals.** An app that holds authority over a synthetic realm ([[filesystem_as_database]]) mints its own sub-principals, its "users," with the same primitive the OS uses for real ones. An app's account model and the OS's principal model are one concept at two levels, and the app's minted principals are confined to its realm.
 - **Remote attestation.** A principal across the network ([[distributed_boundary]]) must prove identity to the same standard as a local one; "trusted because it's on the LAN" is exactly the ambient mistake to avoid.
 - **Sessions.** A login/session is a short-lived principal that carries a human's authority for a bounded window, and is itself revocable and leasable ([[capability_lifecycle]]).
 

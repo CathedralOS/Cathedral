@@ -55,8 +55,37 @@ The real limit is large, hot files. A continuously appended high-bandwidth file,
 
 This works only because no component's address space is ever pinned to a storage location, which is why Cathedral has no memory-mapped files. An `mmap` hands an app raw pointers into specific physical pages, so the backing cannot move without invalidating them. The legitimate uses of `mmap` are served by location-independent primitives instead: paged access to large persistent data is the single-level store ([[memory_and_persistence]]), a zero-copy read is a borrowed view over an object's pages with the runtime still owning placement, and shared-memory IPC is the shared-region primitive ([[ipc_and_service_invocation]]). The app holds an object reference or a borrowed view; the runtime owns where the bytes live.
 
+### Virtual realms: sandboxing and containers
+
+A realm root is an *interface* (resolve a name, list children, read or write an object), and a component only ever talks to the root capability it holds. It has no global root to escape to, so the world a component sees is entirely determined by what sits behind the root it was handed, and that can be anything that implements the interface:
+
+- **Attenuated.** The real `system://` root, narrowed to read-only (a `Realm::ReadOnly` domain). The component sees the truth and cannot write.
+- **A view.** A root that delegates reads to a real realm but hides or substitutes subtrees. Directories are already views, so a realm root can be a masking one.
+- **A copy-on-write overlay.** Reads fall through to a base realm; writes land in a private per-component layer. The component edits "system files" and is really writing its own overlay, the base untouched and, because bodies are content-addressed, shared with no copy. That is `overlayfs`, for free.
+- **Fully synthetic.** The root is backed by a provider that fabricates the tree: a made-up `system://`, a made-up `user://` with apps and files that do not exist. The provider answers however it likes, and the component believes it is running on a whole OS.
+
+The component cannot tell which it was given, because resolving names against its root is the only thing it can do.
+
+This is how Cathedral subsumes Docker. A container is a stack of Linux namespaces (mount, pid, net, user) plus cgroups and seccomp, all bolted on to carve a private view out of a system that has a global everything. Cathedral has no global anything, so each piece is a primitive that already exists:
+
+- the filesystem view is the root you hand it (above);
+- the visible component set ("what is running") is capability-scoped already ([[observability_and_introspection]]), so a process listing inside shows a fabricated or empty set;
+- the network is flow authorizations to specific peers ([[networking]]); a private or synthetic network is a provider answering them;
+- resource limits are budgets ([[scheduler_and_resources]]);
+- syscall filtering is the effect ceiling.
+
+So a "container" is an app handed synthetic or attenuated roots and a scoped capability set. There is no container runtime and no image format: the sandbox is the default you get by not handing over the real roots, and it **nests**, because a sandboxed component can hand its own children further-attenuated roots. It is the same machinery as the deterministic test world ([[testing_and_simulation]]) and live migration: a container, a hostile simulator (lie about time with a virtual clock, lie about the network, inject faults), and a snapshot-and-move are all "the component's world is the capabilities and roots you gave it."
+
+The illusion can go all the way to root. An app can be handed not just a synthetic root but the *authority* over that realm, the same kind of capability the realm registry holds at the top of the real tree. Then the app is root of its world: it can mint capabilities, grant and attenuate them, revoke them, spawn privileged children, and carve sub-realms, with real operations scoped to synthetic objects. It is running its own miniature Cathedral and can sandbox its own children exactly as it was sandboxed. One invariant keeps this safe: **a realm-authority can only mint capabilities over objects within its own realm.** The app can mint endlessly, but every minted capability resolves through its realm's graph and names a synthetic object, never a real one; its only bridges outward are the few real capabilities it was granted.
+
+Authority nests downward, and the host owns all of it. The realm registry is the root of the whole tree, so every realm is a descendant the host holds ancestor authority over, and a parent realm's authority dominates every child's. The sandboxed app is sovereign inside its realm while the host reaches into it from above, because the host owns the realm the app's realm lives in. Two things stay real no matter how root the app feels: its children draw on the app's actual resource budget ([[scheduler_and_resources]]), not the unlimited one it imagines granting them, and the whole fabricated world, including every capability the app minted, is one attributable subtree the host can read ([[observability_and_introspection]], [[audit_compliance_provenance]]). Sovereign inside, contained outside.
+
+The limit is honest. Fooling an app into believing it runs on *Cathedral* is free, because every surface it touches is already providable. Fooling an app that expects a *specific other OS* (a Linux binary wanting `/proc`, `fork`, signals, `mmap`, ioctls) means emulating that ABI, which is the compatibility box ([[compatibility_and_legacy]]), not the realm. The realm gives the namespacing for nothing; the foreign syscall surface is the work.
+
 ## Concerns & Design Space
 
+- **Virtual realms.** A realm root is an interface, so a component can be handed an attenuated, view, overlay, or fully synthetic root and cannot tell the difference. This is the native form of containers and sandboxes ([[security_policy_and_sandboxing]]): overlays fall out of content-addressing, and sandboxes nest for free.
+- **Realm-authority delegation.** An app can hold the *authority* over its synthetic realm, becoming root of it (mint, grant, revoke, sub-realm), confined by the rule that a realm-authority mints only within its own realm. Authority nests downward, and the host owns every realm through ancestor authority ([[capability_model]], [[identity_and_principals]]).
 - **Records and views.** Files as typed records; directories as indexes/views; a query layer ([[observability_and_introspection]]) over metadata rather than `find`/`stat` loops. Search/indexing is a first-class service, scoped to the realms you hold.
 - **The transaction log as the source of truth.** Journaling is exposed *as an API*: change data capture is reading the log forward from an offset. Snapshots are log positions; rollback is replay to a position ([[transactions_and_consistency]]). The log is likely per-realm.
 - **Durable subscriptions.** File watching becomes a resumable cursor over the log: a subscriber holds an offset, survives reboot, and is guaranteed every change in order with no overflow drops.
@@ -79,6 +108,7 @@ This works only because no component's address space is ever pinned to a storage
 - A shared object reachable from two realms has no single home; is its "home realm" its creator, with others reaching it by a cross-realm edge, or is realm membership genuinely multi-valued?
 - What is retained forever vs. compacted, and who pays for unbounded history?
 - Is there a write rate above which live relocation cannot converge, leaving a hot subtree pinned to its device until it cools, and how is that surfaced to the user who asked to move it?
+- What does a synthetic or overlay realm cost at the resolution layer, and is a fully fabricated `system://` cheap enough to back a long-running sandbox, or only a short-lived test world?
 
 ## Omega Leverage
 
@@ -104,4 +134,6 @@ This works only because no component's address space is ever pinned to a storage
 - [[transactions_and_consistency]] — the atomic-commit primitive this chapter consumes.
 - [[versioned_state_and_migration]] — schema evolution and the swappable system realm.
 - [[memory_and_persistence]] — the single-level store, tiered placement, and why there are no memory-mapped files.
+- [[security_policy_and_sandboxing]] — virtual realms as the native container/sandbox.
+- [[compatibility_and_legacy]] — synthetic realms vs. the foreign-ABI box.
 - [[audit_compliance_provenance]] — provenance recorded per change.

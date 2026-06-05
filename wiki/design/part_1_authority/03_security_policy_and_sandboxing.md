@@ -29,6 +29,7 @@ Every sandboxed surface — app, service, driver, secret access, clipboard, scre
 - **Effect and boundary ceilings.** Beyond *which* objects, policy bounds *what kind* of behavior (`filesystem_io`, `network_io`, `device_io`) and *which provider* may implement it ([[driver_model]]).
 - **Secrets, clipboard, capture, media devices.** Each is a capability surface, not a special case — clipboard read, screenshot, audio, and camera are grants with the same lifecycle ([[secrets_and_keys]], [[capability_lifecycle]]).
 - **Inter-app communication.** IPC is capability transfer; the policy that bounds what an app may *do* must also bound what it may *hand to a peer* ([[ipc_and_service_invocation]]).
+- **Containers are synthetic realms.** A container or sandbox is an app handed attenuated or fabricated realm roots ([[filesystem_as_database]]) plus a scoped capability set. That one mechanism replaces the Linux namespace, cgroup, and seccomp stack, and the sandbox is the default, because an app only ever has the roots and capabilities it was given.
 - **Policy introspection & revocation UX.** A policy that cannot be read back, or a revocation a human cannot understand the consequences of, is not a policy ([[human_permission_ux]], [[observability_and_introspection]]).
 - **Auditing.** Every grant, denial, and combination check is an event in the provenance record ([[audit_compliance_provenance]]).
 
