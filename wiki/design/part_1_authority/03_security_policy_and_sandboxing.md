@@ -52,6 +52,7 @@ Every sandboxed surface — app, service, driver, secret access, clipboard, scre
 - Are combination rules global, per-publisher, per-org, or per-data-class ([[data_model_and_privacy]])? Who is authoritative when they conflict?
 - Can "no dangerous combination is reachable" ever be proven statically, or is it inherently a runtime graph query?
 - How are policy ceilings versioned and migrated when an app updates and its authority footprint changes ([[updates_and_hot_swap]])?
+- Capability confinement of system access holds for any app in any language, but a native app reads raw CPU state (`rdtsc`, `cpuid`) directly. So can a sandbox be made *undetectable* to native code at all without hardware trapping/virtualization, or is the host-floor for transparency a hardware feature ([[kernel_architecture]])?
 
 ## Related
 - [[capability_model]] — policy is ceilings over this graph.

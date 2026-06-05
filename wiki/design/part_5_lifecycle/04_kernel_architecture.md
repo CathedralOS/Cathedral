@@ -10,13 +10,13 @@ Monolithic kernels fuse everything privileged — drivers, filesystems, network 
 
 Pick the **smallest privileged substrate** that supports the component, capability, and update story — not the cleanest-sounding diagram. The architecture is not chosen by aesthetics ("microkernel sounds clean"); it is chosen by answering, for each piece of the system, four questions: **what must be trusted? what can be restarted? what can be upgraded? what can be proven? — and what can crash without killing the system?** The answer follows from Omega's isolation guarantees, not from x86 ring boundaries.
 
-The central tension: a **Theseus-style language-level single address space** buys zero-copy IPC and clean hot swap ([[updates_and_hot_swap]]) because isolation comes from the type system, not the MMU — but it assumes all code is proved Omega. **Hardware isolation** is the fallback for untrusted, unproved, or foreign code (legacy boxes, some drivers) at the cost of MMU crossings and copies. Cathedral likely needs both, with the boundary between them being *the* architectural decision.
+The boundary is **OS code versus app code.** The OS is written in Omega and is proof-carrying, so its own components isolate from one another by the type system rather than the MMU, which is what makes a Theseus-style single address space and frictionless hot swap ([[updates_and_hot_swap]]) possible *for the OS*. App code is the other side: a user app can be written in anything, C++ included, so the OS cannot trust its instruction stream and isolates it with hardware (separate address space, MMU, instruction trapping) while the capability model confines its system access. Language isolation is the OS's internal mechanism; hardware isolation is the wall between the OS and untrusted apps. That is the normal case, not just legacy boxes, and where exactly the wall sits is *the* architectural decision.
 
 ## Concerns & Design Space
 
 - **The important axis.** Trust / restartability / upgradability / provability / crash-isolation, evaluated per subsystem — drivers, FS, net, scheduler — rather than one global verdict.
 - **Single address space + language isolation.** Zero-copy IPC and frictionless hot swap, conditioned on proved Omega; the boundary-provider set becomes much of the TCB ([[omega_substrate]]).
-- **Hardware isolation for untrusted code.** Where proof is unavailable (foreign binaries, risky drivers, see [[driver_model]]), fall back to MMU/address-space isolation despite the cost.
+- **Hardware isolation for app code.** Any code the Omega toolchain did not compile and prove, which is most user apps in any language, is untrusted at the instruction level and is isolated by MMU/address space and instruction trapping, while capabilities still confine its system access ([[security_policy_and_sandboxing]]). Legacy boxes and risky drivers ([[driver_model]]) are the same case, not a separate one.
 - **What stays privileged.** The minimal substrate likely owns only: capability enforcement, memory/address-space management ([[memory_and_persistence]]), scheduling primitives, the boundary-provider registry, and the hardware root of trust handoff ([[boot_and_trust_chain]]).
 - **Restartable subsystems.** Everything not in the minimal core should be a restartable, upgradable component, including most of what monolithic kernels keep privileged.
 - **Options on the table.** Monolithic, microkernel, hybrid, exokernel-ish, library-OS-ish, Theseus-style SAS, capability kernel, hypervisor-first — held as candidates, not commitments, until the target hardware and workload constrain them.
@@ -24,7 +24,7 @@ The central tension: a **Theseus-style language-level single address space** buy
 ## Key Questions
 
 - What is the irreducible privileged core — the set whose compromise is fatal — and how small can it be made?
-- Where is the line drawn between language-isolated (proved Omega, single address space) and hardware-isolated (untrusted/foreign) domains?
+- Where is the line drawn between language-isolated OS code (proved Omega, single address space) and hardware-isolated app code (untrusted, any language)?
 - How much of the classic kernel can become restartable components without losing the performance the target workload needs?
 - Is a hypervisor-first base worth it for running a legacy box ([[compatibility_and_legacy]]) safely alongside the native system?
 
