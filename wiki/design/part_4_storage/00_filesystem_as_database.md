@@ -41,6 +41,20 @@ Cross-realm sharing is a capability-gated edge, not a global path. When an app n
 
 The tradeoff, stated plainly: a global root is a composability win, realms are an isolation win, and you cannot fully have both. A bare path is no longer a universal address, so sharing across realms costs a capability plus a qualified name instead of passing a string, and a persisted reference must record realm-plus-path, not a bare path. A global object store still exists underneath, so realms partition *naming and authority*, not storage. And "see everything" for admin, backup, or search needs a meta-capability instead of being free.
 
+### Storage is relocatable
+
+Because names resolve through the object graph and nothing addresses a device offset, the physical backing of any object or subtree can move at runtime while everything keeps running. Right-clicking a folder and choosing "move to another drive" is an ordinary online operation, and it works on any subtree, up to and including the entire system realm, with the system still live.
+
+This falls out of the model rather than being a feature bolted on. Realms already decouple a name from its storage. Content-addressed bodies are identified by hash, so a body is location-independent and moving it re-places bytes without renaming anything. The single-level store ([[memory_and_persistence]]) already treats placement as a movable property, so "another drive" is just another placement target on the tier continuum. And because the store is a database, relocation is a routine online migration: copy the body to the new backing, switch the reference, drop the old copy, all committed as a transaction ([[transactions_and_consistency]]) so a power loss mid-move leaves either the old backing or the new one, never a corrupt half.
+
+Omega is what lets the running system absorb this. A handle is a capability over an object, resolved through the graph, not a raw pointer to a disk location, so relocating the backing does not invalidate it; the runtime re-points the handle atomically. Because the OS holds the handle and lease graph, it knows exactly which components have the object open and can quiesce or re-point them, the same machinery hot swap uses to reach a safe point ([[updates_and_hot_swap]]).
+
+The friction is that an app actively writing a file is mutating the bytes being moved. A cooperative component can be asked to quiesce and flush. The general case uses live-migration technique: copy the bulk while writes continue, track the delta from the log (change data capture, [[transactions_and_consistency]]), then take a brief cutover freeze to apply the final delta and switch the reference. A foreign or uncooperative app can delay the cutover but cannot corrupt the move, because the OS owns the indirection; the worst it can do is hold the file open, the familiar "file in use."
+
+The real limit is large, hot files. A continuously appended high-bandwidth file, such as an active video capture, resists live migration for the same reason a write-heavy VM does: if the write rate exceeds the copy bandwidth, the delta never converges. The honest options are to wait for the writer to rotate or finish, force a cutover the writer must tolerate, or move only the cold prefix and leave the hot tail in place until it cools. The OS should pick and say which, rather than pretend the database makes it free.
+
+This works only because no component's address space is ever pinned to a storage location, which is why Cathedral has no memory-mapped files. An `mmap` hands an app raw pointers into specific physical pages, so the backing cannot move without invalidating them. The legitimate uses of `mmap` are served by location-independent primitives instead: paged access to large persistent data is the single-level store ([[memory_and_persistence]]), a zero-copy read is a borrowed view over an object's pages with the runtime still owning placement, and shared-memory IPC is the shared-region primitive ([[ipc_and_service_invocation]]). The app holds an object reference or a borrowed view; the runtime owns where the bytes live.
+
 ## Concerns & Design Space
 
 - **Records and views.** Files as typed records; directories as indexes/views; a query layer ([[observability_and_introspection]]) over metadata rather than `find`/`stat` loops. Search/indexing is a first-class service, scoped to the realms you hold.
@@ -50,6 +64,8 @@ The tradeoff, stated plainly: a global root is a composability win, realms are a
 - **Content addressing & dedup.** Object bodies keyed by content hash give cheap dedup, integrity, and snapshot sharing across realms; names are mutable references into it.
 - **Realm membership by ancestry.** Membership is the root the parent chain ends at, not a per-file tag; the optional cached `realm_root_id` is a denormalization, and a cross-realm move invalidates that cache over the moved subtree.
 - **The system realm is swappable.** It wants to be immutable and content-addressed so the OS can version and roll it back independently of the user realm ([[versioned_state_and_migration]], [[updates_and_hot_swap]]); reinstall swaps the system realm and leaves the user realm untouched.
+- **Online relocation.** Any subtree's physical backing can move between devices at runtime, because names resolve through the graph and bodies are content-addressed; the move is a transaction with a live-migration cutover for in-use files ([[transactions_and_consistency]], [[updates_and_hot_swap]]).
+- **No memory-mapped files.** Nothing pins a component's address space to a storage location, which is what makes relocation and tiering possible. `mmap`'s uses are covered by the single-level store, borrowed object views, and the shared-region IPC primitive ([[memory_and_persistence]], [[ipc_and_service_invocation]]).
 - **Per-object capabilities.** A handle to an object is the authority over it; a directory view is an attenuated capability ([[capability_model]]), and a realm root is just the top-most such capability.
 - **Provenance.** Each record carries who/what/when wrote it ([[audit_compliance_provenance]]).
 - **Schema evolution.** Records have typed, versioned shapes that migrate ([[versioned_state_and_migration]]).
@@ -62,6 +78,7 @@ The tradeoff, stated plainly: a global root is a composability win, realms are a
 - Is the log global, per-realm, or per-subtree, and how is ordering defined across objects that commit together vs. independently?
 - A shared object reachable from two realms has no single home; is its "home realm" its creator, with others reaching it by a cross-realm edge, or is realm membership genuinely multi-valued?
 - What is retained forever vs. compacted, and who pays for unbounded history?
+- Is there a write rate above which live relocation cannot converge, leaving a hot subtree pinned to its device until it cools, and how is that surfaced to the user who asked to move it?
 
 ## Omega Leverage
 
@@ -77,6 +94,7 @@ The tradeoff, stated plainly: a global root is a composability win, realms are a
 - How are durable subscriptions garbage-collected when a subscriber dies without unsubscribing: lease-based cursors ([[capability_lifecycle]])?
 - What is the consistency boundary between content-addressed bodies and the mutable name graph during a partial-failure write?
 - How does a persisted cross-realm reference stay valid across a system-realm upgrade that relocates the target?
+- How is an open handle re-pointed across a relocation atomically, with no window where a read sees neither the old backing nor the new one?
 
 ## Related
 - [[capability_model]] — per-object capabilities, realm roots, and attenuated directory views.
@@ -85,4 +103,5 @@ The tradeoff, stated plainly: a global root is a composability win, realms are a
 - [[multi_user_and_org_control]] — tenants as realms.
 - [[transactions_and_consistency]] — the atomic-commit primitive this chapter consumes.
 - [[versioned_state_and_migration]] — schema evolution and the swappable system realm.
+- [[memory_and_persistence]] — the single-level store, tiered placement, and why there are no memory-mapped files.
 - [[audit_compliance_provenance]] — provenance recorded per change.

@@ -22,7 +22,7 @@ let ring: SharedRing<Slot> = channel.grant_ring(slots: 1024);
 ring.write(slot);   // plain memory write + release store on the index
 ```
 
-**Notification and blocking are not IPC concerns.** As long as a consumer is running it just reads the region. The only reason to involve the OS is when a consumer would rather sleep than spin, and waking a sleeping consumer is a scheduling operation (park/unpark on a shared word), which belongs to the scheduler. See [[scheduler_and_resources]] for parking, wakeups, and the spin-versus-sleep policy. This chapter owns the data path; the scheduler owns the wait path.
+**Notification and blocking are not IPC concerns.** As long as a consumer is running it just reads the region. The only reason to involve the OS is when a consumer would rather sleep than spin, and waking a sleeping consumer is a scheduling operation (park/unpark on a condition, the same wait primitive timers and interrupts use), which belongs to the scheduler. See [[scheduler_and_resources]] for parking, wakeups, and the spin-versus-sleep policy. This chapter owns the data path; the scheduler owns the wait path.
 
 This is deliberately unopinionated: C, C++, Rust, and Omega all see the same `memcpy`-able region. People build their own framing over whatever we expose, so the floor presumes no paradigm. Even so it beats POSIX `shm`: the region is capability-scoped (not an ambient `/dev/shm` name anyone can guess), its lifetime is leased, and its mappings are MMU-enforced.
 

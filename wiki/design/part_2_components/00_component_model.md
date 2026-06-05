@@ -12,6 +12,7 @@ Stop pretending one noun fits. Cathedral models an explicit **family** of units 
 
 - **Component** — the unit of *code identity and deployment* (what the store ships, what the loader instantiates).
 - **Instance** — a live running occurrence of a component, with its own state.
+- **Task** — the unit of *concurrent execution*; a single running state machine. An instance is one or more tasks.
 - **Actor / Service** — the unit of *protocol identity* (what others invoke).
 - **Driver** — a component bound to a device, with a distinct trust and restart story ([[driver_model]]).
 - **Session / Transaction / Job** — units of *work* with their own lifetime.
@@ -32,15 +33,27 @@ data ComponentIdentity {
 }
 ```
 
+### Concurrency: tasks that share nothing
+
+The smallest member of the family is the **task**: a single running state machine. A component runs as one or more tasks, and concurrency is many tasks making progress at once. The model has no locks, because tasks share no mutable state: ownership and borrowing forbid two tasks from holding a mutable reference to the same data, so data races are impossible by construction.
+
+Tasks coordinate two ways:
+
+- **Message-passing** over channels (the shared-region primitive, [[ipc_and_service_invocation]]) and **ownership transfer**, which hands data from one task to another with no copy and no sharing.
+- **Owning actors** for shared mutable state: the state is owned by one task and others send it messages, so the serialization point a lock would provide is the owner's mailbox. Trivial shared cells can use lock-free atomics directly.
+
+Tasks are **structured**: a task is owned by a scope and cannot outlive it, so a parent that exits accounts for its children instead of leaking them. Cancellation is cooperative, taking effect where a task waits, and it carries the deadline from the call that started the work ([[ipc_and_service_invocation]]). Blocking itself is parking on a condition, owned by the scheduler ([[scheduler_and_resources]]).
+
 ## Concerns & Design Space
 
 - **Decoupling the axes.** State identity must outlive code identity (that is what makes hot swap possible — [[updates_and_hot_swap]]). Authority identity must be assignable independently of code (a component runs *as* a principal, [[capability_model]]). Crash boundary must be choosable smaller than address space.
 - **Composition.** Is a component a tree, a graph, or flat? Can components nest (a service containing drivers), and does restarting a parent restart children?
+- **Instance creation.** An instance is created by spawning a component with an explicit initial state and an explicitly granted capability set, so a child starts from a known, declared state and holds only what it was passed.
 - **Instance lifecycle.** start / ready / running / quiescing / migrating / draining / stopped / failed — modeled as an Omega state graph the OS can inspect and schedule, not as opaque process states.
 - **Crash boundary vs. restart unit.** Erlang's lesson: the thing that fails and the thing that restarts it (a supervisor) are different components on purpose ([[error_model_and_recovery]]).
 - **Persistence identity.** Which components are stateless and respawnable, which own durable state, and which *are* their state (a database).
 - **Authority binding.** A component holds capabilities; spawning a child grants *nothing* ambient — every authority is explicitly passed ([[capability_model]]).
-- **Resource identity.** Each instance is a billable, budgetable scheduling entity ([[scheduler_and_resources]]); scheduling granularity need not equal isolation granularity.
+- **Resource identity.** Each instance is a billable, budgetable entity, and the schedulable execution unit within it is the **task** ([[scheduler_and_resources]]); scheduling granularity need not equal isolation granularity.
 
 ## Key Questions
 

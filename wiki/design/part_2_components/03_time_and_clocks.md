@@ -15,7 +15,7 @@ Capability<Clock::Monotonic>          // duration, never jumps
 Capability<Clock::Wall>               // calendar time, may jump
 Capability<Clock::Trusted>            // attested, for cert/replay decisions
 Capability<Clock::Virtual(timeline)>  // simulation / test time
-Capability<Timer::Schedule(deadline)> // wakeups, gated by power policy
+Capability<Clock::Wake>               // arm a wakeup on a clock; a power event
 ```
 
 The consequences are deliberate. A deterministic component gets *no* wall-clock access, so it cannot accidentally become non-reproducible. A test runner gets a **virtual** clock and drives time by hand. A security-sensitive protocol demands a **trusted** clock and refuses to validate certificates against an attacker-influenced one ([[secrets_and_keys]]). Reading a clock is an **effect** (`clock_read`), so the authority graph shows exactly which components depend on time and which clock.
@@ -24,7 +24,7 @@ The consequences are deliberate. A deterministic component gets *no* wall-clock 
 
 - **Clock taxonomy.** Wall vs. monotonic vs. trusted vs. virtual — each a separate capability with separate trust and separate failure modes.
 - **Time as authority for security.** Cert validation, token/lease expiry ([[capability_lifecycle]]), and replay prevention must bind to a *trusted* clock, not an ambient one ([[secrets_and_keys]]).
-- **Timers, sleep & wake.** A scheduled wakeup is a power event, not a free operation — it must be gated by background/power policy ([[power_management]], [[scheduler_and_resources]]).
+- **A timer is a clock-conditioned wakeup.** There is no timer object: a timer is parking a task until a clock reaches a time, the scheduler's one wait primitive ([[scheduler_and_resources]]) applied to a clock condition. Sleep, timeout, deadline, and periodic work all compose from it. Because a wakeup can rouse a sleeping device, arming one that wakes the device needs a wakefulness capability and is gated by power policy ([[power_management]]).
 - **Scheduling deadlines.** The scheduler's deadlines ([[scheduler_and_resources]]) and a component's timers draw on the same time substrate.
 - **Virtual time & deterministic simulation.** Granting a virtual clock lets the test/sim harness control the entire timeline, enabling deterministic replay and model checking ([[testing_and_simulation]]).
 - **Distributed causality.** Across the [[distributed_boundary]] there is no single now; causality (logical/hybrid clocks) matters more than wall time, and lease expiry under partition is genuinely hard.

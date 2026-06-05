@@ -16,7 +16,7 @@ Drivers are components like any other ([[component_model]]): isolated, holding o
 
 - **Capability-limited hardware access.** A driver holds capabilities for its MMIO range, its DMA windows, and its IRQs — not ambient hardware power ([[capability_model]]).
 - **DMA isolation.** The dangerous core: a device that can DMA anywhere defeats every software boundary. Requires IOMMU-backed, capability-scoped DMA windows.
-- **Interrupt handling & power management.** Interrupts as scheduled work that must respect quiescence during swap; power transitions as typed states ([[power_management]]).
+- **Interrupts are inbound messages.** A device signals its driver by unparking a driver task on a channel condition (a completion-queue post or doorbell), the scheduler's one wait primitive ([[scheduler_and_resources]]), so there is no special interrupt-handler context. DMA regions are capability-leased shared memory between device and driver (the shared-region primitive across the hardware boundary, [[ipc_and_service_invocation]]); registers are a narrow MMIO capability. Interrupt delivery must respect quiescence during a swap, and power transitions are typed states ([[power_management]]).
 - **Crash recovery & restartability.** A driver crash is contained and recovered, not fatal ([[error_model_and_recovery]]); device state is re-established on restart.
 - **Hot plugging & device discovery/matching.** Discovery enumerates devices; matching binds a device to a driver under explicit, auditable policy.
 - **Versioned driver APIs.** The kernel↔driver and driver↔client interfaces are `wire data` + versioned `data`, so driver upgrades follow the same compatibility proofs as everything else.

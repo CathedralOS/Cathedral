@@ -17,7 +17,7 @@ Split the problem the way [[ipc_and_service_invocation]] splits IPC: a small pri
 - Run the NIC driver ([[driver_model]]) and hand each component its own send/receive queues (hardware does this with multiqueue, SR-IOV, and flow steering),
 - Demultiplex inbound packets to the right owner,
 - Enforce isolation, so a component cannot send as, or read the traffic of, another,
-- Arbitrate the scarce shared resources: addresses, ports, bandwidth, queues.
+- Arbitrate the scarce shared resources: bandwidth, NIC queues, and flow-table capacity. (`IP:port` addressing is a legacy-internet bridge detail, not a Cathedral primitive it hands out.)
 
 **A network capability is a flow authorization.** It is not "can do network," and not a syscall into a kernel stack. It is the right to exchange packets with a named, identity-verified peer, enforced where packets meet the shared NIC: the broker installs flow-steering rules only for the peers a component's capability permits, and the NIC drops everything else. So a component runs its own transport over an authorized flow, but the *set of peers it can reach* is gated by the privileged demux, not by its own untrusted stack. This is what resolves the obvious objection that a userspace stack can craft a packet to any address: it can, and the NIC drops it.
 
