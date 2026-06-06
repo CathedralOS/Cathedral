@@ -8,6 +8,10 @@ With the store mounted ([phase 4](04_mounting_the_store.md)), component code in 
 
 The kernel starts one component first: the **root supervisor**. It is the top of a *supervision tree*, a structure where supervisor components watch worker components and restart them when they fail ([component model](../design/part_2_components/00_component_model.md), [error model](../design/part_2_components/04_error_model_and_recovery.md)). This is the role init or systemd plays on a Unix system, except it is an ordinary restartable component, and the thing that fails is deliberately separate from the thing that restarts it.
 
+## What "fail" means here
+
+A reader might reasonably ask what is left to go wrong, given that these components are written in a proof-carrying language. Expected, typed errors (an absent file, a refused connection, a declined allocation) are handled in band by the code that meets them and never reach a supervisor. A *fault* is the case the supervisor exists for: a component that can no longer be trusted to make correct progress. Proof removes large classes of fault (memory corruption, capability escapes, many logic bugs), but not the rest: hardware errors and dying devices, resource exhaustion, a wrong assumption at a firmware or hardware boundary, a deadlock, or an invariant a bit flip violated after the proof assumed correct hardware. Foreign application code in another language can simply crash. For a component whose own state is no longer trustworthy, the recovery is a restart to a known-good state ([error model](../design/part_2_components/04_error_model_and_recovery.md)).
+
 ## A declarative startup, not scripts
 
 The supervisor reads a typed, declarative startup description from the system realm ([configuration & policy](../design/part_4_storage/02_configuration_and_policy.md)): which components to start, the capabilities each needs, its resource budget, and what it depends on. There are no startup shell scripts. Bringing the system up is a declarative state transition, the same principle as installing a package ([package system](../design/part_5_lifecycle/00_package_system.md)).
