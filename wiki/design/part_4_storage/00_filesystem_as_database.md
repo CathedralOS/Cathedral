@@ -109,6 +109,7 @@ The limit is honest. Fooling an app into believing it runs on *Cathedral* is fre
 - **Per-object capabilities.** A handle to an object is the authority over it; a directory view is an attenuated capability ([[capability_model]]), and a realm root is just the top-most such capability.
 - **Provenance.** Each record carries who/what/when wrote it ([[audit_compliance_provenance]]).
 - **Schema evolution.** Records have typed, versioned shapes that migrate ([[versioned_state_and_migration]]).
+- **The on-disk format is `wire data`.** Durable, source-of-truth metadata (directory nodes, file records, log entries, the superblock) is a versioned `wire data` schema with stable field numbers, so it decodes across OS versions. Storage is the hardest compatibility case, because a node may have been written by a version that now runs nowhere: you never break decode of an old node and you keep a total migration chain ([[versioned_state_and_migration]]). The superblock is the most frozen of all, a tiny self-describing header (format version, root hash, log head) the boot chain reads before anything else is reachable. Derived structures like the `hash -> location` index are the exception: version-tagged but rebuildable, discarded and regenerated on a mismatch rather than migrated.
 - **Offline/online sync & conflict resolution.** Causal history makes merge and conflict detection a property of the log.
 
 ## Key Questions
