@@ -37,6 +37,14 @@ Realms are not separate disks. Underneath every realm is one global, content-add
 
 The parent chain terminates at the realm root: an ordinary capability can walk *down* a realm but not *up* past its root. Above all realm roots sits exactly one privileged node, the **realm registry**, whose children are the realms. Traversing into it needs the realm-authority capability, held by the installer, backup tooling, and factory reset, not by ordinary principals. So there is still one global thing, but it is an *authority* almost nobody holds, not a *namespace* everyone shares.
 
+### Copying is a reference operation
+
+Because bodies are content-addressed and a name is a reference to a hash, copying a file is creating a new reference to the same body. No bytes move, so a copy is O(1) regardless of file size. Directory nodes are content-addressed too (a directory's content is its list of `name -> hash` child entries), so a directory's hash transitively names its entire subtree. Copying a whole folder is therefore one reference to the existing tree root, not a walk that recreates a million nodes. A snapshot is the same operation over a realm root.
+
+The store is a Merkle DAG, not a tree: the same immutable node can be referenced by many parents, so copies share nodes. This is safe because nodes are immutable, so two references can never interfere; modifying a copy never edits a shared node, it writes new nodes along the path from the change to the root (copy-on-write path-copy, O(depth)) and leaves every untouched subtree shared. The DAG is also acyclic *by construction*: a node's hash depends on its children's hashes, so a cycle would require a hash to be known before it is computed. That means traversal always terminates and needs no cycle detection, unlike symlinks. The one place sharing is visible is aggregate queries: "how big is this folder" must walk with a visited-set so a shared body is counted once, and storage accounting can answer honestly that ten copies of a 100GB folder cost about 100GB, not a terabyte.
+
+Bytes only actually move when a copy must live on different physical storage (cross-device, or a realm backed by another drive), which is the online-relocation path, and even then content-addressing dedups it: a body the target already holds transfers for free.
+
 ### Cross-realm access and the honest cost
 
 Cross-realm sharing is a capability-gated edge, not a global path. When an app needs a user file, something mints a capability into the user realm for that one object: that is the file picker as an authority mint ([[human_permission_ux]]). The distinction to keep explicit, which iOS and Android both blur, is app-private storage (the app realm) versus user-facing documents (the user realm): a file an app saves "for the user" lands in the user realm via a granted capability, not buried in the app's container.
