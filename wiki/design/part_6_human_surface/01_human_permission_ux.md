@@ -18,6 +18,20 @@ Each is a *principled authority-transfer mechanism*: the user's intent, expresse
 
 These gestures must run on the compositor's **trusted path** ([[windowing_and_compositor]]) so the picker, the share target, and the app identity shown cannot be spoofed.
 
+### What the model actually fixes
+
+Permission UX gets judged on three separate axes, and conflating them is why the comparison feels muddy:
+
+| Axis | Windows (UAC) | macOS (TCC) | Cathedral |
+|---|---|---|---|
+| Un-spoofable surface | Strong (secure desktop) | Weak (system-drawn but occludable) | Strong, without a full takeover |
+| Who initiates | The app | The app | The user's gesture; a prompt only when no gesture fits |
+| Scope of the grant | Blanket administrator | A category ("all photos") | The one object named |
+| Tied to user intent | No | No | Yes, the action is the grant |
+| CLI inheritance | Elevate once, children inherit everything | `sudo`: once, then inherited | No ambient authority to inherit |
+
+Two corrections fall out of this. A trusted path does not require Windows's screen-dimming takeover; it requires an OS-drawn surface the compositor guarantees is focused and un-occludable, so the actual takeover is reserved for session-level events like login ([[sessions_and_login]]). And the app should not be the one initiating: the common case is the user's own gesture minting a scoped grant, with a prompt only where no natural gesture exists.
+
 ### Synthetic grants: defeating permission coercion
 
 Apps weaponize permissions ("no full photo access, no launch"). The capability model removes the *leverage* rather than fighting the app, because the answer to a demand need not be a real grant or a hard denial. A request resolves to one of three fidelities, and the everyday "deny" is the third:
@@ -32,6 +46,14 @@ Because **Blank** is the default deny, an app can never distinguish "the user sa
 
 Sandboxing is the default ([[security_policy_and_sandboxing]]), so the UX is not a switch but a choice of the app's **world**: a few human slots, each at a fidelity. Right-click an app and "Run sandboxed…" offers Files / System / Network / Devices / Identity, each Real / Curated / Blank / None, with presets (Default, Locked down, Throwaway, Trusted). A live per-app panel shows what it holds and is using *right now*, with one-click revoke and the ability to flip a fidelity on the running app, because the runtime re-points the binding underneath it ([[filesystem_as_database]] resolution environment). Throwaway (discard on exit), clone, and reset come free, because a world is just capabilities plus roots plus an overlay. All of it is progressive disclosure: the everyday user only meets the picker and the prompt; the chooser is for when someone wants it, and it runs on the trusted path so an app cannot fake being sandboxed.
 
+### Granting at the command line
+
+A shell is the same minting model in text. It runs as the user's session principal ([[sessions_and_login]]), so it wields the user's own authority rather than a sandboxed app's, and typing a path is the gesture: when the user runs `cat ./report.pdf`, the shell resolves the path, mints `Capability<File::Read("report.pdf")>` for that one object, and passes it to `cat`. The arguments are the grants. `rm a.txt b.txt` hands `rm` a delete capability for each named file and nothing else.
+
+A spawned command gets exactly three things: capabilities for the paths it was named on the line, the current directory as a scoped standing delegation (so it can work in the folder without naming every file), and whatever its own manifest declares and policy permits, such as network for a downloader. Nothing ambient beyond the cwd. "It needs everything" resolves to "the user can name anything they already hold," which is their own realm, scoped by what they actually type; naming `/` hands over the realm root the user already has, not the system realm or another user's.
+
+This closes the `sudo`/UAC inheritance hole. The shell holds broad authority because it is the user, but it never passes that wholesale: each command gets only the slice its invocation named, so `rm a.txt` cannot also read the photos. Reaching the system realm is a per-operation trusted-path mint for the specific object, not a blanket elevated shell that every child inherits.
+
 ## Concerns & Design Space
 
 - **The picker as a mint.** A trusted OS-owned surface that returns a freshly minted, object-scoped capability — the app never sees the broader namespace.
@@ -43,6 +65,8 @@ Sandboxing is the default ([[security_policy_and_sandboxing]]), so the UX is not
 - **Least-surprise defaults.** When ambiguous, mint the narrowest plausible capability and let the user widen explicitly — never the reverse.
 - **Synthetic grants vs. coercion.** "Blank" (a real-looking empty realm, [[filesystem_as_database]]) is the default deny, so an app cannot tell denial from emptiness and gating on the grant stops paying; hard-deny is an advanced toggle for cooperative apps only.
 - **The world chooser.** Sandbox config presented as a few fidelity slots (Real / Curated / Blank / None) plus a live per-app revoke panel; throwaway, clone, and reset fall out of a world being capabilities-plus-roots ([[security_policy_and_sandboxing]]).
+- **The command line is a textual mint.** The shell runs as the session principal and turns named paths into scoped capabilities passed to each command, so arguments are grants and there is no elevate-once-inherit-everything hole ([[sessions_and_login]]).
+- **Trusted path without takeover.** Un-spoofability is an OS-drawn, un-occludable surface, not a screen-dimming event; full takeover is reserved for login and unlock ([[windowing_and_compositor]]).
 
 ## Key Questions
 
@@ -50,6 +74,7 @@ Sandboxing is the default ([[security_policy_and_sandboxing]]), so the UX is not
 - How does drag-and-drop carry a capability across principal boundaries without a spoofable intermediate?
 - What does the revocation surface show, and how does it map back onto delegation edges in the authority graph?
 - How is background-task consent expressed as a lease the user can see and end?
+- At the command line, how does the shell decide the cwd delegation and a command's declared needs without re-prompting per file, while still scoping each child to what its invocation named?
 
 ## Omega Leverage
 
