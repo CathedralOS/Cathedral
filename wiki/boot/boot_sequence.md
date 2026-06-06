@@ -12,7 +12,7 @@ The recurring shape is **bootstrap**: each layer is unreadable or unrunnable unt
 
 ## The phases
 
-1. [Firmware and handoff](01_firmware.md) — what runs before the kernel, what it provides, and why the kernel image lives in the ESP and not the store.
+1. [Firmware and handoff](01_firmware.md) — what runs before the kernel, what it provides, and why the kernel image lives in the EFI System Partition and not the store.
 2. [Early kernel bring-up](02_kernel_entry.md) — taking over from firmware: real page tables, the heap, exceptions, and `ExitBootServices`.
 3. [The kernel becomes itself](03_kernel_subsystems.md) — memory manager, scheduler, IPC, capability enforcement, the boundary-provider registry.
 4. [Mounting the object store](04_mounting_the_store.md) — the superblock, the log that turns hashes into locations, and the realm registry coming online.

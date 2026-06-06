@@ -1,28 +1,28 @@
 # Phase 2: Early Kernel Bring-up
 
-> From the firmware handoff to a kernel that owns the machine: real virtual memory, a heap, exception handling, and the moment you stop borrowing firmware. Part of the [boot sequence](boot_sequence.md). Intended mechanism, not yet implemented.
+> From the firmware handoff to a kernel that owns the machine: real virtual memory, a heap, fault handling, and the point of no return. Part of the [boot sequence](boot_sequence.md). Intended mechanism, not yet implemented.
 
-## The state you are handed
+## The state at entry
 
-The kernel starts privileged (ring 0 on x86, EL1 on ARM, possibly EL2). On x86_64 the firmware already left paging **on** with a flat identity map, so this is not "no virtual memory," it is "you are running on someone else's dumb page tables and need your own." Boot services may still be alive, so the firmware's Block I/O driver is still usable for the moment.
+The kernel starts in the CPU's most privileged mode (ring 0 on x86, exception level 1, "EL1", on ARM). On x86-64 the firmware has already enabled paging with a flat **identity map**: a trivial page table where each virtual address equals its physical address. So the kernel is not running without virtual memory, it is running on the firmware's throwaway page tables and needs its own. Firmware's temporary services, including its disk-read driver, are still available for now.
+
+One term to fix, since the rest of the phase leans on it: virtual memory works through **page tables**, the in-memory structures the CPU's memory management unit (MMU) walks to translate a virtual address to a physical one. Owning your page tables means owning the address space.
 
 ## First jobs
 
-Before anything complex, the kernel brings up its own primitives:
-
-- **Page tables.** Build real kernel page tables and switch to them (load `CR3` on x86, set `TTBR`/`SCTLR` on ARM). This is where actual virtual memory begins, ahead of any serious storage work ([memory & persistence](../design/part_2_components/02_memory_and_persistence.md)).
-- **A heap / allocator.** So the kernel can allocate dynamically instead of carving fixed buffers.
-- **Exception and interrupt vectors.** So faults and timer ticks have somewhere to go.
-- **Per-CPU state and a diagnostic console.** Enough to report what is happening if early boot fails.
+- **Page tables.** Build the kernel's own page tables and point the MMU at them (load `CR3` on x86, set the translation base register on ARM). Real virtual memory begins here, before any serious storage work ([memory & persistence](../design/part_2_components/02_memory_and_persistence.md)).
+- **A heap.** A dynamic allocator, so the kernel can allocate at runtime instead of from fixed buffers.
+- **Fault and interrupt handling.** Install the table the CPU jumps through when a fault or a hardware interrupt occurs, so neither halts the machine.
+- **Per-CPU state and a console.** Enough to run each core and to report a diagnostic if early boot fails.
 
 ## ExitBootServices: the point of no return
 
-At some point the kernel calls `ExitBootServices()`. This is the line between borrowing firmware's drivers and owning the hardware yourself. Everything you needed from firmware (the final memory map especially) must be captured **before** this call. After it, the firmware's Block I/O driver is gone and the kernel must bring up its own early disk driver (NVMe, AHCI, or virtio) good enough to read the store in [phase 4](04_mounting_the_store.md).
+`ExitBootServices()` is the UEFI call after which firmware's temporary drivers and services are gone for good and the kernel owns the hardware. Anything still needed from firmware, the final memory map above all, must be captured before this call. Afterward the kernel brings up its own driver for whatever disk controller is present (NVMe or AHCI on real machines, the virtio interface under virtualization), good enough to read the store in [phase 4](04_mounting_the_store.md).
 
 ## What is Omega and what is not
 
-Most of the kernel is ordinary Omega components in a single address space ([kernel architecture](../design/part_5_lifecycle/04_kernel_architecture.md)), isolated by the type system rather than the MMU. This earliest bring-up is the most primitive bootstrap code, and it is where the small amount of raw hardware poking lives, through Omega's audited inline-assembly boundary rather than ambient escape. The goal is to reach the normal Omega world as fast as possible and keep this hand-rolled layer tiny.
+Most of the kernel is ordinary Omega code sharing one address space ([kernel architecture](../design/part_5_lifecycle/04_kernel_architecture.md)), isolated by the type system rather than by the MMU. This earliest bring-up is the most primitive bootstrap, and it holds the small amount of direct hardware access the rest of the system avoids, expressed through Omega's audited inline-assembly boundary rather than ambient power. The aim is to reach the normal Omega world quickly and keep this hand-written layer tiny.
 
 ## Next
 
-[Phase 3: The kernel becomes itself](03_kernel_subsystems.md) — memory manager, scheduler, IPC, and capability enforcement, before any storage.
+[Phase 3: The kernel becomes itself](03_kernel_subsystems.md).
