@@ -22,7 +22,7 @@ This is the core divergence: every other OS treats the package as an opaque payl
 - **Atomic install / uninstall.** Commit or refuse as one transaction ([[transactions_and_consistency]]); no half-installed state, no orphaned hooks.
 - **Reproducible, hermetic builds + signed provenance.** The same source yields the same artifact; the build's inputs and signer are recorded ([[audit_compliance_provenance]]).
 - **Static, hermetic linking.** A component ships with its dependencies resolved and pinned at build time, so there is no runtime symbol resolution and no dynamic-library search path. Identical code used by many instances or components is deduplicated in physical memory by content address ([[filesystem_as_database]]), so a component carrying its own dependencies does not cost extra RAM per instance.
-- **Machine-checkable compatibility.** ABI/protocol/schema compatibility with the installed world is a checked fact, not a version-string heuristic.
+- **Machine-checkable compatibility.** ABI/protocol/schema compatibility with the installed world is a checked fact, not a version-string heuristic. The baseline it is checked against exists by construction: the distribution plane records every published version's declared schemas ([[store_and_economic_control]]), so admission can refuse a package whose wire schemas break what came before, instead of relying on a developer to supply the old schema by hand. Storage formats are the strict case, since on-disk data can outlive every version that could write it ([[versioned_state_and_migration]]).
 - **Revocation & staged rollout.** Package-level revocation, staged/canary rollout, and rollback are first-class, gated by the store/control plane ([[store_and_economic_control]]).
 
 ## Key Questions

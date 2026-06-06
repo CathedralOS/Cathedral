@@ -45,6 +45,16 @@ The store is a Merkle DAG, not a tree: the same immutable node can be referenced
 
 Bytes only actually move when a copy must live on different physical storage (cross-device, or a realm backed by another drive), which is the online-relocation path, and even then content-addressing dedups it: a body the target already holds transfers for free.
 
+### Files, copies, and aliases
+
+A content hash names fixed bytes, but a file that changes needs an identity that survives its edits, so a file is two levels: a small mutable **cell** with stable identity that points at its current content hash, over the immutable content the cell points at. That split makes the three operations users expect fall out cleanly:
+
+- **Copy** is a new cell pointing at the same content. Two independent files sharing a body until one is written, at which point copy-on-write gives that one a new content hash and leaves the other alone.
+- **Alias** (the hardlink) is two names for the *same* cell. A write goes through the shared cell, so both names see it. There is no original and no owner: the cell lives while any name references it and is freed when the last one goes. "If the original is deleted the other takes over" is just refcounting on the cell, and the reason that feels like a fiction is that it is one.
+- **Symlink** is a name that points at another name or path, and dangles if its target is renamed or removed. It is the weaker shortcut, for when you want a pointer that follows a location rather than a thing.
+
+Copy and alias differ on purpose: copy duplicates identity, alias shares it. Snapshots and dedup are unaffected, because the content is still content-addressed and a snapshot just freezes every cell's current content pointer into an immutable point-in-time tree. Whether the mutable-cell level exists at all is a real design choice: a purely path-identified store (Git-like) gives copies but not true aliases.
+
 ### Cross-realm access and the honest cost
 
 Cross-realm sharing is a capability-gated edge, not a global path. When an app needs a user file, something mints a capability into the user realm for that one object: that is the file picker as an authority mint ([[human_permission_ux]]). The distinction to keep explicit, which iOS and Android both blur, is app-private storage (the app realm) versus user-facing documents (the user realm): a file an app saves "for the user" lands in the user realm via a granted capability, not buried in the app's container.
@@ -64,6 +74,18 @@ The friction is that an app actively writing a file is mutating the bytes being 
 The real limit is large, hot files. A continuously appended high-bandwidth file, such as an active video capture, resists live migration for the same reason a write-heavy VM does: if the write rate exceeds the copy bandwidth, the delta never converges. The honest options are to wait for the writer to rotate or finish, force a cutover the writer must tolerate, or move only the cold prefix and leave the hot tail in place until it cools. The OS should pick and say which, rather than pretend the database makes it free.
 
 This works only because no component's address space is ever pinned to a storage location, which is why Cathedral has no memory-mapped files. An `mmap` hands an app raw pointers into specific physical pages, so the backing cannot move without invalidating them. The legitimate uses of `mmap` are served by location-independent primitives instead: paged access to large persistent data is the single-level store ([[memory_and_persistence]]), a zero-copy read is a borrowed view over an object's pages with the runtime still owning placement, and shared-memory IPC is the shared-region primitive ([[ipc_and_service_invocation]]). The app holds an object reference or a borrowed view; the runtime owns where the bytes live.
+
+### Placement and durability classes
+
+Where an object's bytes live, and how many copies exist, is a **placement and durability class** tagged on a subtree, separate from which realm names it. Realms are namespace and authority; placement is physical policy; the two are orthogonal, so changing how something is stored never means moving it between realms. The class spans a simple range:
+
+- **Default.** The runtime chooses the tier and location, the single-level store's normal behavior ([[memory_and_persistence]]).
+- **Pinned.** One copy, on a named drive. A games folder on a specific disk is a subtree pinned there. This is an explicit re-coupling of logical to physical that the user opted into, while the default stays decoupled.
+- **Mirrored.** N copies across a set of drives. Writes go to a primary and propagate to the replicas; reads can serve from the nearest. Because bodies are content-addressed, a replica that already holds a hash costs nothing to copy.
+
+Mirroring is easy exactly when there is no write contention. The immutable system realm replicates trivially: copy once, newest version wins. Low-rate, effectively single-writer data such as OS configuration replicates on commit just fine. The hard case is high-rate multi-master data, the same user document edited on two machines at once, which needs conflict resolution ([[distributed_boundary]]) and is the one thing you keep out of the cheap synchronous class. The boundary is contention, not mutability.
+
+This subsumes the boot story: tag the system realm and the boot-critical config as mirrored across the enrolled drives, and every drive becomes a self-contained boot drive, with the recovery image as the degenerate one-copy case ([[boot_and_trust_chain]]). Changing a class, starting or stopping mirroring or moving a pin, is a managed cutover, the same online-migration machinery as relocation above, not a flag flip.
 
 ### Virtual realms: sandboxing and containers
 
@@ -105,6 +127,8 @@ The limit is honest. Fooling an app into believing it runs on *Cathedral* is fre
 - **Realm membership by ancestry.** Membership is the root the parent chain ends at, not a per-file tag; the optional cached `realm_root_id` is a denormalization, and a cross-realm move invalidates that cache over the moved subtree.
 - **The system realm is swappable.** It wants to be immutable and content-addressed so the OS can version and roll it back independently of the user realm ([[versioned_state_and_migration]], [[updates_and_hot_swap]]); reinstall swaps the system realm and leaves the user realm untouched.
 - **Online relocation.** Any subtree's physical backing can move between devices at runtime, because names resolve through the graph and bodies are content-addressed; the move is a transaction with a live-migration cutover for in-use files ([[transactions_and_consistency]], [[updates_and_hot_swap]]).
+- **Placement & durability classes.** A subtree is tagged with where it lives and how many copies it keeps (default, pinned, mirrored), orthogonal to its realm. Mirroring is cheap only without write contention, and changing a class is a managed cutover ([[memory_and_persistence]], [[distributed_boundary]]). Mirroring the system realm across drives makes every drive a valid boot drive ([[boot_and_trust_chain]]).
+- **Mutable file identity.** A file is a mutable cell over immutable content, which yields copies (a new cell), aliases/hardlinks (a shared cell with no owner), and symlinks (a name pointing at a path). Whether the cell level exists is a real design choice with snapshot and dedup implications.
 - **No memory-mapped files.** Nothing pins a component's address space to a storage location, which is what makes relocation and tiering possible. `mmap`'s uses are covered by the single-level store, borrowed object views, and the shared-region IPC primitive ([[memory_and_persistence]], [[ipc_and_service_invocation]]).
 - **Per-object capabilities.** A handle to an object is the authority over it; a directory view is an attenuated capability ([[capability_model]]), and a realm root is just the top-most such capability.
 - **Provenance.** Each record carries who/what/when wrote it ([[audit_compliance_provenance]]).

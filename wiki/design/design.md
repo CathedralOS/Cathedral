@@ -74,6 +74,7 @@ A few writing rules, inherited from Omega's docs:
 - [04 — Secrets & Key Management](part_1_authority/04_secrets_and_keys.md)
 - [05 — Data Model & Privacy Boundaries](part_1_authority/05_data_model_and_privacy.md)
 - [06 — Agents as Principals](part_1_authority/06_agents_as_principals.md)
+- [07 — Sessions & Login](part_1_authority/07_sessions_and_login.md)
 
 ### Part 2 — Components & Execution
 - [00 — Component Model](part_2_components/00_component_model.md)

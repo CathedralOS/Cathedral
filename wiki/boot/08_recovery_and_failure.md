@@ -18,7 +18,7 @@ A half-applied update has to be survivable. Because the system realm is immutabl
 
 ## The recovery image
 
-A known-good fallback the normal update process cannot corrupt, used when the primary path will not come up. The hard part is keeping it un-brickable by the very mechanism it backs up: it has to be updatable enough to stay useful, yet isolated enough that a bad update cannot take it down along with the main system.
+A known-good fallback the normal update process cannot corrupt, used when the primary path will not come up. The hard part is keeping it un-brickable by the very mechanism it backs up: it has to be updatable enough to stay useful, yet isolated enough that a bad update cannot take it down along with the main system. A fuller version of the same idea is mirroring the system realm across every enrolled drive (a placement class, [filesystem](../design/part_4_storage/00_filesystem_as_database.md)), so any drive boots and the recovery image becomes the minimal one-copy case.
 
 ## Credential and user-realm failures
 

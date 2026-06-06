@@ -1,6 +1,6 @@
 # Phase 6: Session and Login
 
-> The human arrives. Whether there is a login process, where credentials are stored, and what logging in actually produces. Part of the [boot sequence](boot_sequence.md). Intended mechanism, not yet implemented.
+> The human arrives. Whether there is a login process, where credentials are stored, and what logging in actually produces. Part of the [boot sequence](boot_sequence.md). Intended mechanism, not yet implemented. The design contract is in [Sessions & Login](../design/part_1_authority/07_sessions_and_login.md).
 
 After [phase 5](05_components_and_services.md) the machine is running but unattended, showing a login surface with no user authority in play.
 
