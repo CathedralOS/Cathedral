@@ -26,6 +26,7 @@ Worked shapes the design must support cleanly:
 - **Renaming & aliases.** First-class, non-identity-changing, recorded — multiple names may map to one object/principal.
 - **Versioning.** Names carry or resolve a version (`/v3`); resolution honors compatibility ([[versioned_state_and_migration]]).
 - **Discovery.** Finding services/objects/peers by name or attribute, with resolution that returns *attenuated* authority, not the whole namespace.
+- **Per-principal resolution.** A name's stable identifier is global, but the human-name-to-target binding is resolved in each principal's environment, so a parent can decide what names mean for a child: split-horizon views, blocked or fabricated entries, a synthetic registry. This is the recursive-provider pattern ([[capability_model]]) applied to naming, and the same mechanism the filesystem realms ([[filesystem_as_database]]) and nested networking ([[networking]]) rely on.
 - **Spoof resistance.** Homograph, confusable, and squatting attacks neutralized at the resolution layer; the resolver authenticates claims to a name.
 - **Ownership transfer.** Handing a name to a new owner without orphaning what it pointed to or silently redirecting trust.
 - **Deprecation.** Retiring a name without breaking holders, and without an attacker reclaiming a freed name to inherit its authority.

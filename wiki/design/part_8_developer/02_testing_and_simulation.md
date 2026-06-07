@@ -32,6 +32,7 @@ ensures invariant: no double_charge
 - **Driver mock devices.** Model devices behind the driver boundary so hardware- adjacent code is testable without hardware.
 - **Deadlock & resource-exhaustion exploration.** Sweep interleavings and resource ceilings for hangs and OOM, surfaced to the deadlock checker.
 - **Migration property tests.** Generate prior-version states and assert the migration is total and invariant-preserving ([[versioned_state_and_migration]]).
+- **Simulation is the recursive-provider pattern.** Injecting a deterministic scheduler, clock, network, storage, and mock devices is the same mechanism as a nested compositor or a virtual machine ([[capability_model]]): the harness implements the interfaces the component resolves and serves synthetic ones. Simulability and virtualization are the same capability pointed at testing.
 
 ## Key Questions
 

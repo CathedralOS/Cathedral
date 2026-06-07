@@ -21,6 +21,7 @@ Drivers are components like any other ([[component_model]]): isolated, holding o
 - **Hot plugging & device discovery/matching.** Discovery enumerates devices; matching binds a device to a driver under explicit, auditable policy.
 - **Versioned driver APIs.** The kernel↔driver and driver↔client interfaces are `wire data` + versioned `data`, so driver upgrades follow the same compatibility proofs as everything else.
 - **User-mode drivers & verified interfaces.** Prefer user-mode where the device class allows; the driver↔hardware contract is a verified boundary.
+- **Synthetic devices.** A driver presents a device interface, so a component can serve a *synthetic* device to a child instead of real hardware: a virtual NIC, framebuffer, sound, or block device. This is the recursive-provider pattern ([[capability_model]]) at the hardware edge, and it is what lets a virtual machine present hardware to a guest and a simulator hand mock devices to code under test ([[testing_and_simulation]]).
 - **Firmware updates, device permissions & certification.** Firmware flashing is a capability-gated operation; device access is granted, not assumed; driver certification flows through the store ([[store_and_economic_control]]).
 
 ## Key Questions

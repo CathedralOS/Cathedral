@@ -27,6 +27,7 @@ The consequences are deliberate. A deterministic component gets *no* wall-clock 
 - **A timer is a clock-conditioned wakeup.** There is no timer object: a timer is parking a task until a clock reaches a time, the scheduler's one wait primitive ([[scheduler_and_resources]]) applied to a clock condition. Sleep, timeout, deadline, and periodic work all compose from it. Because a wakeup can rouse a sleeping device, arming one that wakes the device needs a wakefulness capability and is gated by power policy ([[power_management]]).
 - **Scheduling deadlines.** The scheduler's deadlines ([[scheduler_and_resources]]) and a component's timers draw on the same time substrate.
 - **Virtual time & deterministic simulation.** Granting a virtual clock lets the test/sim harness control the entire timeline, enabling deterministic replay and model checking ([[testing_and_simulation]]).
+- **Nested clocks.** A virtual clock is the recursive-provider pattern ([[capability_model]]) applied to time: a parent serves a child's clock and may pause, scale, or fabricate it, which is exactly a virtual machine's clock as well as a test harness's timeline.
 - **Distributed causality.** Across the [[distributed_boundary]] there is no single now; causality (logical/hybrid clocks) matters more than wall time, and lease expiry under partition is genuinely hard.
 - **Clock drift, jumps & corrections.** Components must declare whether they tolerate a wall-clock jump; the OS should never silently hand jumpy time to code that assumed monotonicity.
 

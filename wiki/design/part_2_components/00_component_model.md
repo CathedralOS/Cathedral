@@ -48,6 +48,7 @@ Tasks are **structured**: a task is owned by a scope and cannot outlive it, so a
 
 - **Decoupling the axes.** State identity must outlive code identity (that is what makes hot swap possible — [[updates_and_hot_swap]]). Authority identity must be assignable independently of code (a component runs *as* a principal, [[capability_model]]). Crash boundary must be choosable smaller than address space.
 - **Composition.** Is a component a tree, a graph, or flat? Can components nest (a service containing drivers), and does restarting a parent restart children?
+- **Components as hosts.** A component can implement OS interfaces for the children it spawns, becoming their runtime: their compositor, their network, their clock, their realm. With realm-authority it runs a miniature Cathedral, sandboxing its own children with the same machinery that sandboxes it. This is the execution-level form of the recursive-provider pattern ([[capability_model]]).
 - **Instance creation.** An instance is created by spawning a component with an explicit initial state and an explicitly granted capability set, so a child starts from a known, declared state and holds only what it was passed.
 - **Instance lifecycle.** start / ready / running / quiescing / migrating / draining / stopped / failed — modeled as an Omega state graph the OS can inspect and schedule, not as opaque process states.
 - **Crash boundary vs. restart unit.** Erlang's lesson: the thing that fails and the thing that restarts it (a supervisor) are different components on purpose ([[error_model_and_recovery]]).
