@@ -109,6 +109,7 @@ A few writing rules, inherited from Omega's docs:
 - [03 — Naming & Discovery](part_6_human_surface/03_naming_and_discovery.md)
 - [04 — Multi-User, Multi-Tenant & Org Control](part_6_human_surface/04_multi_user_and_org_control.md)
 - [05 — Web Integration](part_6_human_surface/05_web_integration.md)
+- [06 — Audio](part_6_human_surface/06_audio.md)
 
 ### Part 7 — Observability & Governance
 - [00 — Observability & Introspection](part_7_governance/00_observability_and_introspection.md)
