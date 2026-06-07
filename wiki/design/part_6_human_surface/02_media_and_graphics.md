@@ -12,10 +12,25 @@ Treat every media facility as a **capability-gated `device_io` effect** over an 
 
 The discipline is *say no early*. Pick one GPU path, one decode path, one audio graph for the initial target; gate each behind a capability; route everything through the driver model ([[driver_model]]) so the untrusted vendor blob is isolated rather than mapped into apps.
 
+## Why the GPU is the deliberately minimized concern
+
+GPUs are the least standardized hardware in the machine, which is the whole reason they sit at the edge of the design rather than the center. The pain has two separable sources, and only one of them is the OS's to solve.
+
+The first is vendor opacity. A discrete GPU's command interface and instruction set are undocumented and change every hardware generation, and the driver is millions of lines of closed vendor code that includes a runtime compiler turning shader bytecode (SPIR-V, PTX) into the GPU's secret instruction set and then runs that untrusted shader code on a separate processor. Standardization exists at the API level (Vulkan, SPIR-V, Metal) but not at the hardware level, so the layer the OS must actually drive stays proprietary. This is the opposite of the small, known, capability-confined driver the driver model wants, and it is why a clean GPU driver is not something an OS project can simply sit down and write.
+
+The second is genuine hardware hardness, opaque or not. A GPU is a bus-master DMA engine that reaches all of system memory without an IOMMU, its preemption is coarse so a long-running kernel can hog the device between submissions, context isolation between clients has historically leaked video memory, and virtualization (the synthetic-device path from [[driver_model]]) is the hardest nesting case there is and is vendor-locked where it exists at all.
+
+So the stance is to treat the heavy GPU as a large opaque boundary provider behind the hardware-isolation wall, the application side of the two-walls model in [[kernel_architecture]]: confined by the IOMMU, by capabilities over which clients it serves and which memory it may touch, and by a scheduling budget, but not proven. It is the canonical big foreign blob the OS walls off rather than verifies, the same treatment a C++ binary gets. This also fits how GPU drivers are already built, mostly in userspace (the Mesa or vendor userspace stack) with a smaller kernel piece for command submission, memory management, and modesetting, which aligns with the user-mode-driver preference in [[driver_model]].
+
+The useful separation is between the display controller and the render engine. Getting the compositor's framebuffer onto the screen is scanout and modesetting, a far simpler and more separable job than the 3D and compute engine, and it can be driven by a comparatively clean display-controller driver. A working composited desktop then needs only scanout plus CPU or software rendering, with the heavy GPU as an optional, confined accelerator that graphics, compute, and ML clients reach through a budget. That decouples "the system boots and shows a trustworthy UI" from "the full GPU stack works," which matters because the compositor and its trusted path must never depend on the messiest component in the machine.
+
+What Cathedral cannot do here is worth stating plainly: it cannot prove the vendor's shader compiler, it cannot make coarse hardware preemption schedule fairly, and it cannot dissolve the opacity. A genuinely clean GPU answer is partly a hardware-control decision, targeting a documented or open GPU, which is a hardware-strategy question the design deliberately stays out of.
+
 ## Concerns & Design Space
 
 - **Display server / compositor pipeline.** The frame-composition and scanout layer beneath window management; the boundary to GPU scanout hardware.
 - **GPU access.** Capability-gated command submission with isolation between principals sharing the device; no ambient DMA reach.
+- **Display controller vs render engine.** Scanout and modesetting are a separable, comparatively clean driver; the 3D/compute GPU is the opaque blob. A composited desktop can run on scanout plus software rendering, with the heavy GPU as an optional confined accelerator, so the trusted display path never depends on the vendor GPU stack.
 - **Video decode.** A `device_io` capability over a decode session, not a mapped library with the run of memory.
 - **Audio graph.** A routed graph of capability-held nodes; mixing and capture are distinct, separately granted.
 - **DRM / content protection.** Quarantine the attestation blob behind a narrow boundary; decide *whether* to support it at all in the first target.
@@ -44,6 +59,7 @@ The discipline is *say no early*. Pick one GPU path, one decode path, one audio 
 
 - Is a clean capability model achievable over today's monolithic vendor GPU stacks, or does the first target need a simpler/software path until drivers cooperate?
 - Does Cathedral support hardware DRM at all in v1, given the trust it demands?
+- Can the display controller be driven cleanly enough that the compositor and its trusted path never depend on the heavy GPU stack, even when no accelerated GPU driver is present?
 
 ## Related
 - [[windowing_and_compositor]] — window management above this pipeline.
@@ -51,3 +67,5 @@ The discipline is *say no early*. Pick one GPU path, one decode path, one audio 
 - [[scheduler_and_resources]] — frame scheduling and GPU budget.
 - [[power_management]] — power-aware rendering.
 - [[capability_model]] — screen capture and GPU access as held capabilities.
+- [[kernel_architecture]] — the hardware-isolation wall the GPU blob sits behind.
+- [[audio]] — the audio pipeline, now its own chapter.
