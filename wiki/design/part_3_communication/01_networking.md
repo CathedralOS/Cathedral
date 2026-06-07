@@ -36,6 +36,21 @@ let conn = Quic::open(flow, PaymentAPI::v3);
 
 The component never names `34.117.12.9:443`; it names a service, and authority is per-peer, so revoking "may reach this service" is a precise graph operation, not a firewall-rule edit. Because the authorized flow can carry a typed protocol, the resulting endpoint is identical in shape to a local IPC endpoint ([[ipc_and_service_invocation]]): the same `wire data` schema and capability passing work whether the peer is local or across the network. A component that wants raw authorized packets can take the flow directly and skip the typed layer.
 
+## Recursive networking
+
+The network provider is a recursive interface, the same shape as the compositor ([[windowing_and_compositor]]). Its operations are resolve a name, authorize a flow to a peer, accept inbound flows, and carry packets. Any component that holds network authority can implement that interface for its children and bind their network resolution to its own endpoint at spawn. The child resolves "the network" from its environment and opens flows exactly as it would against the OS broker, and cannot tell whether the other end is the real demux or a parent. That one pattern is a VPN, a firewall, a proxy, a NAT, container networking, a virtual machine's NIC, and a fully fabricated network for tests.
+
+Several properties fall out:
+
+- **Egress control is attenuation.** A parent can delegate only the reach it holds, so a child's set of reachable peers is bounded by what its parent passed down, and reach narrows as you descend the tree. Per-app egress filtering is the capability algebra ([[capability_model]]), not a separate ruleset.
+- **Naming nests.** Resolution is part of the interface, so the child's name-to-peer map is whatever the parent serves: split-horizon, blocked hosts, fabricated peers. This is the per-principal resolution environment ([[filesystem_as_database]]) pointed at network endpoints.
+- **Inbound nests.** A parent can mediate which inbound flows reach a child and publish the child under the parent's own address, which is a reverse proxy or an ingress, the listen-side dual.
+- **Proxy or synthesize.** A nested provider either holds a flow to its own real network and forwards after policy (NAT, firewall, proxy), or terminates the flow at itself.
+
+That termination case is worth naming. A parent can authorize a child's flow to some peer and answer it locally instead of routing to a wire, so the child believes it reached `api.vendor.com` while it is really talking to the parent. Because a locally terminated flow lowers to the shared-region IPC primitive ([[ipc_and_service_invocation]]), local and remote are two lowerings of one endpoint, and this is the parent choosing the local lowering and serving the call itself. Terminating a child's flow at the provider is a clean way to emulate a server for tests, terminate cloud calls locally for offline or local-first operation, virtualize a service, record and replay, inject faults, shim a dead backend, or sandbox an app behind a fake internet that never touches a NIC. Two honest caveats: termination is free, but being a convincing server means actually implementing enough of the wire protocol the child expects, and a TLS peer requires a certificate the child will accept.
+
+The man-in-the-middle position is the real difference from display and audio. Those terminate at hardware you own, so a nesting parent is benign. The network terminates at a remote, so a nesting parent sits in the data path, which is exactly a man in the middle. How much that costs the child is a crypto gradient governed by who controls its trust anchors. With no encryption, or when the child trusts a trust-anchor set the parent supplied, the parent reads and rewrites everything and can mint a certificate for any peer, which is how an intercepting proxy with an installed root works. When the child pins a baked-in peer key, the parent drops to a blind carrier that sees metadata and can drop or delay but cannot read or forge. So the invariant that survives network nesting is end-to-end authentication the child performs itself, because the parent legitimately carries the bytes and there is nothing for the OS to draw over. Capabilities bound what the child can reach, the child's own crypto bounds content and identity against its carrier, and the authority graph keeps "who is my network provider" an explicit fact ([[observability_and_introspection]]), so the man in the middle is always named even when it is allowed.
+
 ## Concerns & Design Space
 
 - **Demux and flow rules.** How a peer is authorized at the device: hardware flow steering / SR-IOV when the NIC supports it (the broker just configures it), a software demux when it does not, and what that software path costs.
@@ -45,6 +60,7 @@ The component never names `34.117.12.9:443`; it names a service, and authority i
 - **Bandwidth & budgets.** Network is a metered resource; budgets are accounted via effects and governed by the scheduler ([[scheduler_and_resources]]). Congestion fairness may have to be enforced at the demux even though the transport is a library (see below).
 - **Transport as a library.** QUIC, TLS, multipath, connection migration, and NAT traversal are libraries over an authorized flow, so mobility and multihoming are normal cases the model handles, and the choice of stack is the component's.
 - **Observability.** Every flow is attributable by construction: which principal, which peer identity, which protocol, how much bandwidth ([[observability_and_introspection]]).
+- **Nested providers.** A component can implement the network interface for its children (VPN, firewall, NAT, a VM's NIC, or terminating flows locally), with reach bounded by attenuation and confidentiality bounded by the child's end-to-end crypto.
 
 ## Key Questions
 
@@ -52,6 +68,7 @@ The component never names `34.117.12.9:443`; it names a service, and authority i
 - Who enforces congestion-control fairness when each component owns its own transport? A misbehaving userspace stack can be antisocial, so does the demux or NIC enforce pacing regardless ([[scheduler_and_resources]])?
 - How much of demux and flow authorization can be offloaded to a smartNIC/DPU, leaving the OS as a configurator, versus done in a software fast path?
 - Where do bandwidth budgets live (per principal, per capability, per flow), and how do they compose?
+- When a parent terminates a child's flow locally instead of routing it, should the OS surface that the flow did not leave the machine, given the child cannot otherwise tell, and what stops a malicious provider impersonating a sensitive peer beyond the child pinning identity?
 
 ## Omega Leverage
 
@@ -59,6 +76,7 @@ The component never names `34.117.12.9:443`; it names a service, and authority i
 - **`effects` (`network_io`)** mark and account every crossing into the network, giving the boundary edge where the OS broker provides authority.
 - **`wire data`** frames the typed-library protocol with stable field numbers and compatibility rules, identical to local IPC, so cross-version interop and compatibility reports apply to the network too. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_20_wire_protocols.md).
 - **`boundary` providers** are the home for the NIC driver below the demux and for the transport stack (TLS, QUIC, NAT traversal) below the connection API; the demux/broker itself is Omega, keeping that TCB small and checked.
+- The network provider is a **trait** any component can implement, so nesting is one interface with many implementations resolved from the child's environment; a nested provider is just that resolution bound to a parent endpoint. See Omega [Traits](../../../../Omega/wiki/language_guide/chapter_13_traits.md).
 - Omega does not yet model bandwidth as a metered effect or peer attestation as a fact; both are extensions Cathedral drives.
 
 ## Open Questions
@@ -75,3 +93,5 @@ The component never names `34.117.12.9:443`; it names a service, and authority i
 - [[distributed_boundary]] — networking as the path off the machine.
 - [[identity_and_principals]] — peer identity binds both ends of a flow.
 - [[scheduler_and_resources]] — bandwidth as a governed budget, and congestion fairness.
+- [[filesystem_as_database]] — the per-principal resolution environment that nested naming reuses.
+- [[windowing_and_compositor]] — the recursive-provider pattern networking mirrors.
