@@ -33,6 +33,7 @@ ensures invariant: no double_charge
 - **Deadlock & resource-exhaustion exploration.** Sweep interleavings and resource ceilings for hangs and OOM, surfaced to the deadlock checker.
 - **Migration property tests.** Generate prior-version states and assert the migration is total and invariant-preserving ([[versioned_state_and_migration]]).
 - **Simulation is the recursive-provider pattern.** Injecting a deterministic scheduler, clock, network, storage, and mock devices is the same mechanism as a nested compositor or a virtual machine ([[capability_model]]): the harness implements the interfaces the component resolves and serves synthetic ones. Simulability and virtualization are the same capability pointed at testing.
+- **Zero value.** A zero `Adversary` config is the benign baseline run ([[omega_substrate]]): each unset field inherits its default, so the schedule is honest, the clock is plain virtual time, the network is whole, and no faults are injected. Zeroing the config gives the gentlest legal run, and hostility is added a field at a time.
 
 ## Key Questions
 

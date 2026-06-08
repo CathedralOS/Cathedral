@@ -29,6 +29,7 @@ Because Cathedral already produces **structured events** ([[observability_and_in
 - **Privacy-preserving analytics.** Whether differential privacy or k-anonymity is worth its accuracy cost, and where aggregation happens.
 - **Organization control.** An organization or tenant sets telemetry policy as enforced, attested policy, not a checkbox ([[multi_user_and_org_control]]).
 - **User visibility.** The user can *see* exactly what telemetry is defined to leave and follow its authority path, like any other flow.
+- **Zero value.** A zero vendor telemetry capability is the inert null-object capability ([[omega_substrate]]): the collector holds no authority, so nothing leaves the device and the projection of the event graph is empty rather than the upload erroring. Local-first becomes the literal zero default, and granting telemetry is an explicit, attenuated step away from it.
 
 ## Key Questions
 

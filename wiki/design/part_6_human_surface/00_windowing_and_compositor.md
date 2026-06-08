@@ -61,6 +61,7 @@ The split is at the bottom. A Cathedral-native guest is intercepted at the Omega
 - **Notifications.** Attributed to a principal, rate-limited, and spoof-resistant; a notification cannot claim another app's identity.
 - **Multi-window state restoration.** Window geometry/session restored across restart and hot swap ([[updates_and_hot_swap]]) as versioned state, without reviving stale authority.
 - **App identity display.** The compositor renders publisher/identity facts it *holds*, so the label is trustworthy even when the app is hostile.
+- **Zero value.** A zero surface is the inert null-object ([[omega_substrate]] ZII): draws, frames, and input routed to it are accepted and discarded as no-ops, so a child handed a zeroed compositor capability composites against nothing rather than crashing, and an uninitialized surface field never faults the pipeline.
 
 ## Key Questions
 

@@ -24,6 +24,7 @@ This is the core divergence: every other OS treats the package as an opaque payl
 - **Static, hermetic linking.** A component ships with its dependencies resolved and pinned at build time, so there is no runtime symbol resolution and no dynamic-library search path. Identical code used by many instances or components is deduplicated in physical memory by content address ([[filesystem_as_database]]), so a component carrying its own dependencies does not cost extra RAM per instance.
 - **Machine-checkable compatibility.** ABI/protocol/schema compatibility with the installed world is a checked fact, not a version-string heuristic. The baseline it is checked against exists by construction: the distribution plane records every published version's declared schemas ([[store_and_economic_control]]), so admission can refuse a package whose wire schemas break what came before, instead of relying on a developer to supply the old schema by hand. Storage formats are the strict case, since on-disk data can outlive every version that could write it ([[versioned_state_and_migration]]).
 - **Revocation & staged rollout.** Package-level revocation, staged/canary rollout, and rollback are first-class, gated by the store/control plane ([[store_and_economic_control]]).
+- **Zero value.** A zero package is the empty manifest (valid-empty): it declares no exports and an empty capability manifest, so it requires zero authority and installs as a no-op, which is both the least-privilege admission case and ZII-coherent ([[omega_substrate]]).
 
 ## Key Questions
 

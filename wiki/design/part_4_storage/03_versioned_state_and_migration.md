@@ -32,6 +32,7 @@ ensures FileRecord::invariants(out)
 - **Version matching at boundaries.** Places that can legitimately hold mixed versions: hot-swap state stores ([[updates_and_hot_swap]]), saved snapshots ([[filesystem_as_database]]), replicated state, and persisted memory ([[memory_and_persistence]]). Normal current-version code should not pay a version tag everywhere.
 - **Chain composition & gaps.** A complete chain upgrades any old era automatically; a missing step makes the upgrade unavailable, not silently lossy.
 - **Where migrated state lives.** Filesystem records, config, capabilities, and IPC protocol versions ([[ipc_and_service_invocation]]) are all migration participants sharing this one primitive.
+- **Zero value.** A zeroed state is the initial empty version (valid-empty), the base of the migration chain, so "no state yet" is an inhabitant the current shape's invariants admit rather than a missing-state special case ([[omega_substrate]]).
 
 ## Key Questions
 

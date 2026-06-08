@@ -24,6 +24,7 @@ Org control is then *policy layered onto tenants* ([[configuration_and_policy]])
 - **Remote wipe & managed deployment.** Fleet actions scoped to a tenant; managed enrollment via the store/control plane ([[store_and_economic_control]]).
 - **Work/personal separation.** Two tenants on one device with a hard authority wall and a clear, spoof-resistant indicator of which one is active.
 - **Fleet policy.** Tenancy as the unit a distributed control plane addresses ([[distributed_boundary]]).
+- **Zero value.** A zero tenant is the valid-empty isolation domain ([[omega_substrate]] ZII): it owns no data, reaches no capability, and applies no policy, which is exactly the ephemeral guest or fresh-kiosk case, so acting within a zeroed tenant is coherent and leak-free rather than a cross-tenant fault.
 
 ## Key Questions
 

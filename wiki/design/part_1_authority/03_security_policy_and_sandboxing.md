@@ -33,6 +33,7 @@ Every sandboxed surface — app, service, driver, secret access, clipboard, scre
 - **Transparent sandboxing.** An app's entire reality is the capabilities it holds: every observation (files, devices, disk info, even time) routes through a host-owned provider, so a *sealed* sandbox is fabricable in software and undetectable to trusted-toolchain code. The only residue is raw CPU instructions a native (non-Omega) binary can execute directly, which need hardware trapping to virtualize ([[kernel_architecture]]); system-access confinement holds for any app in any language regardless.
 - **Policy introspection & revocation UX.** A policy that cannot be read back, or a revocation a human cannot understand the consequences of, is not a policy ([[human_permission_ux]], [[observability_and_introspection]]).
 - **Auditing.** Every grant, denial, and combination check is an event in the provenance record ([[audit_compliance_provenance]]).
+- **Zero value.** A zeroed policy is the empty ceiling set over a principal that holds nothing (shape 1 in [[omega_substrate]]), which is exactly the deny-all default sandbox, so an uninitialized policy is the safest one rather than an open or ambient one.
 
 ## Key Questions
 

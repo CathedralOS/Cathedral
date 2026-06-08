@@ -32,6 +32,7 @@ The sharp tension this chapter exists to face: **safe references vs. hot swappin
 - **Crash consistency.** What invariants hold across a power loss mid-write ([[power_management]], [[transactions_and_consistency]])? Typed objects let consistency be stated as a contract.
 - **Versioned persistent data.** On-disk objects carry a version; reading an old shape runs a migration machine, so code and storage never silently disagree ([[versioned_state_and_migration]]).
 - **Proof-carrying shared memory.** Can a shared buffer carry an *obligation* the consumer must discharge (initialized-before-read, written-once)?
+- **Zero value.** A zero object reference is the empty object and a zero-length view borrows nothing, so the zero here is valid-empty (shape 1): `read(object, range)` over a zeroed object returns 0 bytes and pins nothing rather than faulting, which is why zero-allocating durable `data` yields a usable empty object with no init step ([[omega_substrate]]).
 
 ## Key Questions
 

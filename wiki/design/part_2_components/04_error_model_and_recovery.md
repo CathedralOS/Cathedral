@@ -38,6 +38,7 @@ Four properties every failure must have: **typed** (a known cause, not an intege
 - **Failure during upgrade.** `MigrationFailed` and `VersionMismatch` are their own causes with their own rollback story ([[updates_and_hot_swap]], [[versioned_state_and_migration]]).
 - **Corruption & loss.** `CorruptionDetected` and `PowerLoss` need crash- consistency guarantees to even be detectable ([[memory_and_persistence]], [[power_management]]).
 - **Authority failures as first-class.** `CapabilityRevoked` and `UserDeniedAuthority` are normal control flow, not exceptions ([[capability_model]], [[capability_lifecycle]]).
+- **Zero value.** A zeroed `Failure` is the no-error case (shape 1, valid-empty): zero must read as success with an empty causal chain so the absence of a failure is the same value as a freshly zeroed one, and matching on a zero cause never trips a spurious error path ([[omega_substrate]]).
 
 ## Key Questions
 

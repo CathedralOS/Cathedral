@@ -23,6 +23,7 @@ Drivers are components like any other ([[component_model]]): isolated, holding o
 - **User-mode drivers & verified interfaces.** Prefer user-mode where the device class allows; the driver↔hardware contract is a verified boundary.
 - **Synthetic devices.** A driver presents a device interface, so a component can serve a *synthetic* device to a child instead of real hardware: a virtual NIC, framebuffer, sound, or block device. This is the recursive-provider pattern ([[capability_model]]) at the hardware edge, and it is what lets a virtual machine present hardware to a guest and a simulator hand mock devices to code under test ([[testing_and_simulation]]).
 - **Firmware updates, device permissions & certification.** Firmware flashing is a capability-gated operation; device access is granted, not assumed; driver certification flows through the store ([[store_and_economic_control]]).
+- **Zero value.** A zero device handle is the null device, a synthetic device that accepts every operation and does nothing (inert null-object), so a driver or client handed a zeroed handle runs against `/dev/null` rather than crashing, the degenerate case of the synthetic-device provider above ([[omega_substrate]]).
 
 ## Key Questions
 

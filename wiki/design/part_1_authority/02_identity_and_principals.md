@@ -32,6 +32,7 @@ domain Principal::Attested { self.provenance in Attestation::Verified; }
 - **Nested principals.** An app that holds authority over a synthetic realm ([[filesystem_as_database]]) mints its own sub-principals, its "users," with the same primitive the OS uses for real ones. An app's account model and the OS's principal model are one concept at two levels, and the app's minted principals are confined to its realm.
 - **Remote attestation.** A principal across the network ([[distributed_boundary]]) must prove identity to the same standard as a local one; "trusted because it's on the LAN" is exactly the ambient mistake to avoid.
 - **Sessions.** A login/session is a short-lived principal that carries a human's authority for a bounded window, and is itself revocable and leasable ([[capability_lifecycle]]).
+- **Zero value.** A zeroed principal is the anonymous nobody: a valid, named graph node (shape 1 in [[omega_substrate]]) with unattested provenance that holds no authority, so an uninitialized identity is the least-trusted holder rather than an error or, worse, an accidental match for a real principal.
 
 ## Key Questions
 

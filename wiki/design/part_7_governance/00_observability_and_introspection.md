@@ -40,6 +40,7 @@ The key idea is **system-wide causality**: Cathedral records a **causal event gr
 - **Privacy of observation.** "What app read this record" is itself sensitive; introspection must not become a side channel ([[data_model_and_privacy]]).
 - **Live vs. historical.** Some questions need the current graph; some need a replay. The event graph should support both without a second system.
 - **Attribution under aggregation.** Shared services do work *on behalf of* callers; attribution must follow the causal chain, not stop at the proximate actor.
+- **Zero value.** A zero `Observe` capability is the inert null-object capability ([[omega_substrate]]): it holds no observation authority, so a query over it returns an empty, well-formed result rather than crashing or leaking the whole graph. Since observing is itself an authority, zero observation is the natural least-privilege default and avoids a "see everything" escape hatch.
 
 ## Key Questions
 

@@ -30,6 +30,7 @@ The consequences are deliberate. A deterministic component gets *no* wall-clock 
 - **Nested clocks.** A virtual clock is the recursive-provider pattern ([[capability_model]]) applied to time: a parent serves a child's clock and may pause, scale, or fabricate it, which is exactly a virtual machine's clock as well as a test harness's timeline.
 - **Distributed causality.** Across the [[distributed_boundary]] there is no single now; causality (logical/hybrid clocks) matters more than wall time, and lease expiry under partition is genuinely hard.
 - **Clock drift, jumps & corrections.** Components must declare whether they tolerate a wall-clock jump; the OS should never silently hand jumpy time to code that assumed monotonicity.
+- **Zero value.** A zero clock capability is the inert null clock (shape 2): holding no clock is exactly the deterministic, time-independent default, and a zero `Duration` is a valid 0 (shape 1), so a zeroed timer fires immediately rather than erroring ([[omega_substrate]]).
 
 ## Key Questions
 

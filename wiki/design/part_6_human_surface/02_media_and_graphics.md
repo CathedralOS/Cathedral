@@ -39,6 +39,7 @@ What Cathedral cannot do here is worth stating plainly: it cannot prove the vend
 - **Accessibility & color management.** First-class consumers of the pipeline; accessibility needs a privileged-but-audited read path.
 - **Frame scheduling / GPU budget.** GPU time and frame deadlines are scheduled resources ([[scheduler_and_resources]]).
 - **Low-latency media & power-aware rendering.** Latency and energy as explicit budgets, with rendering that backs off under power policy ([[power_management]]).
+- **Zero value.** A zero decode or render session is the inert null-object ([[omega_substrate]] ZII): submitting buffers to it is accepted and produces no output, so a zeroed session is a valid no-op pipeline that drains cleanly rather than faulting, never mapping the vendor blob or touching real device memory.
 
 ## Key Questions
 

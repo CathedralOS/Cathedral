@@ -29,6 +29,7 @@ A component that needs to authenticate gets `UseToken(T, scope)`, not the token.
 - **Leasing.** Network credentials, API tokens, and session secrets are leased by default ([[capability_lifecycle]]); expiry is the primary revocation path.
 - **The credential zoo.** Network credentials, API tokens, certificates, passkeys, and org-managed keys are all the same shape — a scoped operation over a secret held elsewhere.
 - **Org-managed keys.** An organization ([[multi_user_and_org_control]]) may own keys and delegate bounded operations to enrolled devices and users.
+- **Zero value.** A zeroed signing or decryption operation is the fail-safe sentinel (shape 4 in [[omega_substrate]]): invoking it yields a clearly-invalid result that verification rejects and never a forged signature or a silent plaintext, so an uninitialized key capability fails visibly rather than dangerously succeeding.
 
 ## Key Questions
 

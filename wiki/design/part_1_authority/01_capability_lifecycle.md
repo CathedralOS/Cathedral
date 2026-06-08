@@ -50,6 +50,7 @@ Together these map onto the authority-flow verbs (accepts / uses / derives / sto
 - **Inheritance across components.** What a spawned component inherits from its parent: by default *nothing* ambient; everything must be explicitly passed.
 - **Serialization.** A capability that survives a reboot or crosses a network must serialize without becoming forgeable or losing its attenuation/revocation binding. This likely needs cryptographic binding to a principal plus an authority server, or an unforgeable kernel-held table.
 - **Transfer over IPC/network.** Passing a capability *is* an IPC operation; local and remote transfer should share one model ([[ipc_and_service_invocation]], [[distributed_boundary]]).
+- **Zero value.** A zeroed capability reads as already-terminated and a zeroed lease as one whose expiry has lapsed, which is the fail-safe shape (shape 4 in [[omega_substrate]]): the dead state is the default, so an uninitialized grant is inert and never falsely live.
 
 ## Omega Leverage
 

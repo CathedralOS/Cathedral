@@ -20,6 +20,7 @@ A single typed configuration substrate. Every setting is a field in a typed, ver
 - **Capability-scoped read/write.** Who may *read* a config key and who may *write* it are distinct capabilities ([[capability_model]]); a component sees only the config it holds authority over.
 - **Secrets separation.** Secret-valued settings resolve through the key subsystem and never materialize as plaintext in the config store ([[secrets_and_keys]]).
 - **Search.** Effective-value and provenance queries across the whole config graph.
+- **Zero value.** A zero configuration takes the inherited defaults (inherit/default): an unset key falls through to the next policy layer rather than being an error or a silent built-in, so a zeroed config layer is the identity element of precedence resolution ([[omega_substrate]]).
 
 ## Key Questions
 

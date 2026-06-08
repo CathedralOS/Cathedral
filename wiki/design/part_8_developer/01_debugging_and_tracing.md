@@ -52,6 +52,7 @@ This only applies where the toolchain controls codegen, so it never covers a C++
 - **State-graph debugging.** Step the *source* state graph and inspect the *lowered* graph — both are first-class Omega artifacts, so "which state am I in, which transition fired" is answerable directly, not reconstructed from a stack.
 - **Hot-swap-aware debugging.** Debug across a swap: hold a debug session while the component migrates versioned state, and map breakpoints across versions ([[updates_and_hot_swap]]).
 - **Debug as governed authority.** `Capability<Debug<X>>` is auditable in the authority graph; a production debug session is a recorded, revocable grant.
+- **Zero value.** A zero `Capability<Debug<X>>` is the inert null-object capability ([[omega_substrate]]): it holds no debug authority, so pause, step, and read are accepted and return nothing rather than crashing or escalating. Zero debug authority is the same value as least privilege, the natural default for a component handed no debug grant.
 
 ## Key Questions
 

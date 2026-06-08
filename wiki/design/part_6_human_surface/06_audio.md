@@ -21,6 +21,7 @@ Audio is the compositor for sound. A privileged **audio server** mixes per-app t
 - **A/V sync.** Audio and video reference one clock ([[time_and_clocks]]); synchronization is presenting a given sample and a given frame at the same wall-clock time.
 - **Recursive sub-mixing.** The mixer is an interface any component can implement, so a browser, a game, or a VM sub-mixes its children and submits one stream upward, the audio twin of recursive composition ([[windowing_and_compositor]]).
 - **DSP graph.** Effects, resampling, and spatialization are processing nodes connected by streams, so a professional-audio plugin graph is an ordinary component graph.
+- **Zero value.** A zero stream is its ZII zero ([[omega_substrate]]): a zero playback stream mixes as silence (valid-empty) and a zero capture stream reads silence as the inert null-object, which is exactly the blank-capture case, so an app handed a zeroed stream emits and records nothing rather than crashing the mixer.
 
 ## Key Questions
 

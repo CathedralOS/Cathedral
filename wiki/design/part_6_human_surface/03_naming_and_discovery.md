@@ -30,6 +30,7 @@ Worked shapes the design must support cleanly:
 - **Spoof resistance.** Homograph, confusable, and squatting attacks neutralized at the resolution layer; the resolver authenticates claims to a name.
 - **Ownership transfer.** Handing a name to a new owner without orphaning what it pointed to or silently redirecting trust.
 - **Deprecation.** Retiring a name without breaking holders, and without an attacker reclaiming a freed name to inherit its authority.
+- **Zero value.** A zero name resolves to the canonical null object ([[omega_substrate]] ZII): resolution succeeds and hands back the zero capability over nothing, valid-empty rather than an error or an exception, so an uninitialized name reference is inert instead of a resolution fault and never silently resolves to some other principal's authority.
 
 ## Key Questions
 

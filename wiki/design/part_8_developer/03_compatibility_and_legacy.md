@@ -24,6 +24,8 @@ The stance is a choice among consequences, not a free menu:
 
 The safe pattern across all of these: the legacy box is *isolated*, its authority is *enumerated*, and the platform contract native apps depend on stays the new model. Do **not** let legacy compatibility become the platform contract.
 
+- **Zero value.** A zero capability set is the safest legal box ([[omega_substrate]]): the legacy tenant is granted nothing, so its synthetic root reaches no real resource and every privileged action lands inertly on its own overlay. This is the valid-empty shape and the default the box starts from, with each real authority added explicitly, never ambient.
+
 ## Key Questions
 
 - Which single stance does Cathedral commit to first, and which are explicitly deferred or refused?

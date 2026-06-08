@@ -22,6 +22,7 @@ The login surface is a trusted broker on the compositor's trusted path ([[window
 - **Lock, logout, timeout.** Revoke the session and drop the realm key from memory; an idle session is a lease that can expire.
 - **Remote and federated login.** Authenticating against an organization identity or a remote principal to the same standard as a local one ([[identity_and_principals]], [[distributed_boundary]]).
 - **Recovery.** A lost credential or a tampered boot leaves the realm sealed; the account-recovery path must not become a backdoor ([[boot_and_trust_chain]]).
+- **Zero value.** A zeroed session is the unauthenticated pre-login principal (shape 1 in [[omega_substrate]]): a valid principal holding no capabilities with the realm still sealed, so the not-yet-logged-in state is the default and an uninitialized session can read nothing rather than defaulting open.
 
 ## Key Questions
 

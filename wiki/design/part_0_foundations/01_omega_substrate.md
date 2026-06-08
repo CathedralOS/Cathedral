@@ -36,6 +36,21 @@ A useful rule for every later chapter:
 
 Omega answers "is this sound?" Cathedral answers "should this happen, now, here, and for whom?"
 
+## Zero Is Initialization
+
+Cathedral adopts a system-wide convention: the all-zero bit pattern is a valid, coherent value for every construct, and every system API accepts a zeroed object without crashing or raising a spurious error. Zero-allocate a structure and you get something usable; reset a structure by zeroing its memory. Allocation and reset become cheap (often a `memset`, sometimes free), and an entire category of "forgot to initialize" and "null handle" crashes disappears.
+
+The convention splits along the usual line. Omega's side is that the zero value is a valid inhabitant of every `data` type, so zeroed memory is never an illegal bit pattern. Cathedral's side is the API contract: a zeroed object is accepted everywhere and behaves coherently, where coherent means one of a small set of shapes chosen per construct.
+
+- **Valid-empty.** The zero object is the empty case and operations work normally on it. A zero file handle reads as a zero-byte file; a zero collection is empty; a zero channel has no messages.
+- **Inert null-object.** Operations are accepted and do nothing. A write to a zero file handle is discarded, a no-op rather than an error.
+- **Inherit or default.** The zero value means "take the ambient default," usually inheriting the parent. A zero executor domain inherits the parent's envelope ([[scheduler_and_resources]]); a zero configuration takes the inherited defaults ([[configuration_and_policy]]).
+- **Recognized-invalid, fail-safe.** Where a silent no-op would be dangerous, the zero object is a recognized sentinel that fails safe and visibly rather than crashing or succeeding falsely. A zero signing capability does not emit a forged empty signature; it yields a clearly-invalid result ([[secrets_and_keys]]).
+
+For capabilities this lands especially cleanly: the zero capability is the capability over the canonical null object, which is simultaneously least privilege (it reaches no real resource) and ZII-coherent (operations on it are inert rather than erroring). That is the same spirit as the Blank grant in [[human_permission_ux]], where zero is the real-looking empty version rather than a hostile denial. So default-deny and zero-is-valid turn out to be the same value seen from two sides.
+
+The honest tension is bug-masking. A zero handle whose writes are silently discarded can hide a genuine "forgot to open the file" mistake, trading a loud failure for a quiet one. The position is that the production API stays coherent and non-crashing, while surfacing "you operated on a null object where a real one was likely intended" stays a debug and lint concern ([[debugging_and_tracing]]) rather than a runtime error path. Where the quiet failure would be a security or data-integrity hole instead of a mere logic slip, the construct uses the recognized-invalid fail-safe shape rather than the silent no-op.
+
 ## Concerns & Design Space
 
 - **Capabilities as values vs. as kernel objects.** Omega models authority as ordinary values plus facts, with no new `uses capability` keyword. Cathedral must decide what the *runtime representation* of a held capability is, how it survives a crash, and how it crosses a real IPC boundary — without breaking the value/fact model.

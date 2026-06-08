@@ -34,6 +34,7 @@ But the deep work is not "permissions as types." It is the *lifecycle* of a capa
 - **Where authority is minted.** Only trusted brokers/providers `acquire` fresh authority (a host prompt, the store, a loader, an OS broker). Ordinary code only accepts, derives, uses, and releases — visible in its Omega authority-flow report.
 - **Storage of capabilities.** When a component *stores* authority for later, the graph must record it; stored authority is the main source of surprising long-lived power.
 - **Dangerous combinations.** The graph must support reasoning over *conjunctions* — photo-read + network is a different risk than either alone (see [[security_policy_and_sandboxing]] and [[data_model_and_privacy]]).
+- **Zero value.** A zeroed capability is the capability over the canonical null object: an inert null-object (shape 2 in [[omega_substrate]]), reaching no real resource and accepting operations as no-ops, so the same value is both least-privilege and ZII-coherent and appears in the graph as a holder of nothing rather than a crash.
 
 ## Omega Leverage
 

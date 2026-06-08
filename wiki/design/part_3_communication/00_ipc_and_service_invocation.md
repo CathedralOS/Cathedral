@@ -65,6 +65,7 @@ The cost to state plainly: for foreign-language components the OS tracks authori
 - **Grant/revoke cost.** Page grant/revoke costs TLB shootdowns; decide when copying a small payload is cheaper than a remap.
 - **Capability passing.** Transferring a capability is an operation on this same region; the graph records the delegation edge ([[capability_model]]).
 - **Typed-layer semantics.** Call shapes, versioned protocols, replay/idempotency, and deadlock detection over the wait-for graph are the library's concern, built on the primitive. Backpressure, deadlines, and cancellation cross into the scheduler ([[scheduler_and_resources]]).
+- **Zero value.** A zero region reads as an empty channel with no slots (shape 1, valid-empty) and a zero endpoint capability is the inert null endpoint (shape 2) whose writes are discarded rather than faulting, so a receiver draining a zeroed region simply sees no messages and a send to a dead-leased endpoint no-ops instead of crashing ([[omega_substrate]]).
 
 ## Key Questions
 

@@ -67,6 +67,7 @@ This closes the `sudo`/UAC inheritance hole. The shell holds broad authority bec
 - **The world chooser.** Sandbox config presented as a few fidelity slots (Real / Curated / Blank / None) plus a live per-app revoke panel; throwaway, clone, and reset fall out of a world being capabilities-plus-roots ([[security_policy_and_sandboxing]]).
 - **The command line is a textual mint.** The shell runs as the session principal and turns named paths into scoped capabilities passed to each command, so arguments are grants and there is no elevate-once-inherit-everything hole ([[sessions_and_login]]).
 - **Trusted path without takeover.** Un-spoofability is an OS-drawn, un-occludable surface, not a screen-dimming event; full takeover is reserved for login and unlock ([[windowing_and_compositor]]).
+- **Zero value.** The Blank grant is the ZII zero of a grant ([[omega_substrate]]): a zero grant is the capability over the canonical null realm, valid-empty rather than a hostile denial, so an app handed a zeroed grant boots and sees an empty world, which is why default-deny and zero-is-valid are the same value from two sides.
 
 ## Key Questions
 

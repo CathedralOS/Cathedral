@@ -147,6 +147,7 @@ Three honest limits. Porting a legacy database wholesale still works but is wast
 - **Schema evolution.** Records have typed, versioned shapes that migrate ([[versioned_state_and_migration]]).
 - **The on-disk format is `wire data`.** Durable, source-of-truth metadata (directory nodes, file records, log entries, the superblock) is a versioned `wire data` schema with stable field numbers, so it decodes across OS versions. Storage is the hardest compatibility case, because a node may have been written by a version that now runs nowhere: you never break decode of an old node and you keep a total migration chain ([[versioned_state_and_migration]]). The superblock is the most frozen of all, a tiny self-describing header (format version, root hash, log head) the boot chain reads before anything else is reachable. Derived structures like the `hash -> location` index are the exception: version-tagged but rebuildable, discarded and regenerated on a mismatch rather than migrated.
 - **Offline/online sync & conflict resolution.** Causal history makes merge and conflict detection a property of the log.
+- **Zero value.** A zero file handle is the canonical null object: it reads as a zero-byte file (valid-empty) and discards writes (inert null-object), so the all-zero hash names the empty body and a zeroed handle is accepted everywhere without a null-handle crash, the storage-side instance of ZII ([[omega_substrate]]).
 
 ## Key Questions
 

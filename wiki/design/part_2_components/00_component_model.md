@@ -55,6 +55,7 @@ Tasks are **structured**: a task is owned by a scope and cannot outlive it, so a
 - **Persistence identity.** Which components are stateless and respawnable, which own durable state, and which *are* their state (a database).
 - **Authority binding.** A component holds capabilities; spawning a child grants *nothing* ambient — every authority is explicitly passed ([[capability_model]]).
 - **Resource identity.** Each instance is a billable, budgetable entity, and the schedulable execution unit within it is the **task** ([[scheduler_and_resources]]); scheduling granularity need not equal isolation granularity.
+- **Zero value.** A zeroed `ComponentIdentity` is the canonical null instance: it holds the zero authority (the inert capability over the null object) and names no live state or code, so a reference to it is an inert null-object (shape 2) that accepts operations as no-ops, keeping the family's handles ZII-coherent without a forgeable ambient identity ([[omega_substrate]]).
 
 ## Key Questions
 

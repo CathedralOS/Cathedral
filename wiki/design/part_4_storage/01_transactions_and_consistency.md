@@ -29,6 +29,7 @@ transaction grant_and_record {
 - **Rollback & compensation.** Some effects reverse (state writes); some do not (a sent packet, a fired actuator) and need *compensation*, not naive undo.
 - **Conflict detection & isolation.** Concurrent transactions on the same state: optimistic (detect-and-retry) vs. pessimistic (lock-and-block), and the isolation level each subsystem actually needs.
 - **Distributed transactions / sagas.** Across the distributed boundary ([[filesystem_as_database]] sync, multiple devices), two-phase commit is often wrong; long-lived sagas with compensation usually fit better.
+- **Zero value.** A zero transaction has no participants and commits as a no-op (valid-empty): it satisfies `committed` trivially and leaves state untouched, so an empty commit is coherent rather than an error ([[omega_substrate]]).
 
 ## Key Questions
 

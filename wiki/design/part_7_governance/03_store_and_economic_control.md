@@ -20,6 +20,7 @@ This chapter is only the *mechanism*. Who decides admission policy, and any comm
 - **Revocation / kill-switch.** Withdraw a component's grants and stop its instances. This is a concrete operation on the authority graph and the component lifecycle, with the same revocation-cost questions as any capability ([[capability_lifecycle]]).
 - **Staged rollout.** A new version reaches a subset of instances first, with health observed before wider admission — an upgrade-control mechanism ([[updates_and_hot_swap]]).
 - **Policy layering.** Admission policy can be layered (device / organization) the same way other policy is ([[configuration_and_policy]], [[multi_user_and_org_control]]).
+- **Zero value.** A zero capability manifest is the valid-empty case ([[omega_substrate]]): a component that declares no authority and no effects passes the admission gate trivially and runs fully sandboxed, able to do nothing real. The empty manifest is the least-privilege baseline the gate measures every other component against.
 
 ## Key Questions
 

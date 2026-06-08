@@ -61,6 +61,7 @@ The man-in-the-middle position is the real difference from display and audio. Th
 - **Transport as a library.** QUIC, TLS, multipath, connection migration, and NAT traversal are libraries over an authorized flow, so mobility and multihoming are normal cases the model handles, and the choice of stack is the component's.
 - **Observability.** Every flow is attributable by construction: which principal, which peer identity, which protocol, how much bandwidth ([[observability_and_introspection]]).
 - **Nested providers.** A component can implement the network interface for its children (VPN, firewall, NAT, a VM's NIC, or terminating flows locally), with reach bounded by attenuation and confidentiality bounded by the child's end-to-end crypto.
+- **Zero value.** A zero flow authorization is the null flow reaching no peer (shape 2, inert): it is simultaneously least-privilege (the NIC steers nothing to or from it) and ZII-coherent, so a component handed a zeroed flow sends into the void and receives nothing instead of erroring, matching default-deny egress ([[omega_substrate]]).
 
 ## Key Questions
 

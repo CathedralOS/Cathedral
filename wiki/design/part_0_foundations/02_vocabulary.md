@@ -44,6 +44,8 @@ In legacy OSes the core nouns are overloaded into mush. "Process" means address 
 
 **Tenant** — an isolation domain for data, policy, and authority on a shared device (personal vs. work, family member, kiosk session, server tenant). See [[multi_user_and_org_control]].
 
+**Zero value (Zero Is Initialization)** — the all-zero bit pattern is a valid, coherent value for every construct, accepted by all system APIs without crashing or spurious error. The coherent behavior is one of valid-empty, inert null-object, inherit/default, or recognized-invalid-fail-safe, chosen per construct. See [[omega_substrate]].
+
 ## Concerns & Design Space
 
 - Which terms are load-bearing enough to deserve a domain or type in Omega vs. which are purely documentation conveniences.
