@@ -58,11 +58,25 @@ Sub-compositing plus synthetic interfaces is what a virtual machine is, at the l
 
 The split is at the bottom. A Cathedral-native guest is intercepted at the Omega service interfaces, so it is cheap confinement plus implementations you serve. A foreign operating system that expects real hardware needs the hardware-isolation wall ([[kernel_architecture]]): CPU virtualization, instruction trapping, and synthetic or paravirtualized devices, where the guest's display device is a synthetic framebuffer that becomes a surface the host composites. The shape is identical at every depth: synthesize the environment the guest expects, bind it to interfaces you implement, and the guest's output becomes a surface in your window.
 
+## Input
+
+Input has two layers that stay strictly separated. At the bottom, an input device driver ([[driver_model]]) holds the device's transport capability and translates raw device reports into a normalized, typed event vocabulary (`wire data` events: key, relative pointer, absolute pointer, axis, button, touch contact, pressure, and the like). Every device quirk is absorbed at that boundary. Above it, the compositor consumes only typed events and never sees the raw device, so routing is device-agnostic.
+
+This standardizes at the event-vocabulary level even though devices do not standardize at the hardware level. HID (Human Interface Device) is a genuine self-describing bottom standard: a device declares its axes, buttons, and usages, and most input hardware speaks it, which makes input far more tractable than the GPU situation. The slop is the long tail (broken descriptors, vendor gesture processing, proprietary protocols, devices that lie), and it is contained in per-device drivers and quirk tables rather than leaking upward. A genuinely novel device ships a driver that maps its raw input to typed events, extending the vocabulary with a new kind. The exact normalized vocabulary, and how much processing the driver does versus higher stages, is a detail this chapter will expand later.
+
+Routing is capability work. Focus is a per-surface capability the compositor mints and revokes, so a surface receives input because focus was delegated to it. Global capture is a separate, rare, audited capability (accessibility, screen readers, global hotkeys, input methods) that sees input regardless of focus. Under nesting, "global" attenuates per level: a nested compositor can grant global-within-its-own-subtree but not the real global, because it only holds the input its parent routed to it, so a sandbox's global is global inside the sandbox.
+
+Above the driver, input is a pipeline of typed-event transformers from raw events up to the focused app: gesture recognition, input-method composition, accessibility remapping, and the like. Each stage is a component, and the powerful ones (global capture, an input method, an accessibility remapper, a nested compositor) are capabilities that insert a stage, so "global input" is just a high position in the pipeline, and an app takes raw or cooked input by which capability it holds.
+
+Two pressures shape the pipeline. Latency: a deep chain costs, so high-rate devices (8 kHz pointers, pens) and games want a short-circuit, raw or exclusive input delivered straight to the focused app past the cooked stages, itself a capability, the same concern [[audio]] has. Security: input is keylogging-sensitive, so any stage that sees keystrokes is significant audited authority and "who can see my keystrokes" is an authority-graph query. Trusted-path input (login, unlock, grant prompts) bypasses every app stage and goes straight to the OS, so no input method or global-capture grant ever observes a credential, which is why the trusted path takes input directly.
+
 ## Concerns & Design Space
 
 - **Trusted path.** A user-recognizable, app-unforgeable indicator of which principal owns the focused surface, plus a reserved region/gesture the OS owns outright (a "secure attention" the compositor alone can render).
 - **Anti-spoofing.** No app may draw chrome that impersonates system UI or another app's identity; fullscreen, overlays, and always-on-top are capability-gated and visibly attributed.
 - **Input routing.** Keystrokes, pointer, touch, and IME events delivered only to the focused surface's principal; global input capture is a rare, explicit, audited capability (accessibility, screen readers).
+- **Input normalization.** Drivers translate raw device reports (HID and the long tail of quirks) into a typed event vocabulary, so the compositor and apps see device-agnostic events ([[driver_model]]). The exact vocabulary and the driver-versus-higher-stage processing split are to be specified.
+- **Input as a staged pipeline.** Gesture recognition, input methods, and accessibility remapping are capability-held stages between the normalizing driver and the focused app; raw or exclusive low-latency input is a short-circuit capability past the cooked stages.
 - **Clipboard.** A mediated transfer channel, not ambient shared memory: a paste is a delegated, one-shot capability over the chosen payload, not a poll-able global buffer (overlaps the authority-transfer view in [[human_permission_ux]]).
 - **Notifications.** Attributed to a principal, rate-limited, and spoof-resistant; a notification cannot claim another app's identity.
 - **Multi-window state restoration.** Window geometry/session restored across restart and hot swap ([[updates_and_hot_swap]]) as versioned state, without reviving stale authority.
@@ -94,6 +108,8 @@ The split is at the bottom. A Cathedral-native guest is intercepted at the Omega
 - Can trusted path be guaranteed purely in software on commodity GPUs, or does it need a dedicated overlay plane the OS reserves?
 - Should the compositor be one component or a small federation (input router, surface manager, identity renderer) with capabilities flowing between them?
 - How deep can recursive composition nest before input latency or frame scheduling degrades, and does the occlusion-and-power gating recursion need a hard depth bound?
+- What is the normalized input event vocabulary, how extensible is it for novel device classes, and how much interpretation (gestures, composition) belongs in the driver versus shared higher stages?
+- What latency does the staged input pipeline add, and when must a raw or exclusive short-circuit bypass the cooked stages for pointers, pens, and games?
 
 ## Related
 - [[human_permission_ux]] — the grant gestures the compositor must host on a trusted path.
@@ -103,3 +119,5 @@ The split is at the bottom. A Cathedral-native guest is intercepted at the Omega
 - [[filesystem_as_database]] — realms and the synthetic-root move that recursive composition mirrors; the Desktop location behind the desktop roles.
 - [[kernel_architecture]] — the hardware-isolation wall a foreign-OS guest needs at the bottom of the synthesis spectrum.
 - [[scheduler_and_resources]] — budgets and the occlusion/power gating for background and nested surfaces.
+- [[driver_model]] — input device drivers normalize raw HID into the typed event vocabulary.
+- [[audio]] — the shared low-latency concern for the input and audio pipelines.
