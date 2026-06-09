@@ -16,6 +16,7 @@ The login surface is a trusted broker on the compositor's trusted path ([[window
 
 - **The session as a principal.** A leased ([[capability_lifecycle]]) principal carrying a human's delegated authority for a bounded window; everything the user's apps hold is delegated down from it.
 - **Sealing the user realm.** The realm's key is sealed to the credential and the boot measurement, so login is the act that makes the data readable ([[secrets_and_keys]], [[boot_and_trust_chain]]).
+- **On-demand and nested sealing.** Sealing is not only the whole user realm at login; any subtree can be its own sealed realm with its own credential, unsealed on demand and re-sealed when done. The unseal prompt runs on the trusted path, so the requesting app or shell triggers the unlock but never sees the credential or the key ([[secrets_and_keys]], [[filesystem_as_database]]).
 - **Credentials as operations.** Passkeys, biometrics, and passwords are operations against a sealed secret; the broker never sees raw credential material.
 - **A broker with no user authority.** It can initiate authentication and mint a session only by invoking the authority machinery, never by possessing the user's capabilities.
 - **Multi-user and switching.** Each user or tenant is a realm; switching runs a separate login; two sessions never share ambient authority ([[multi_user_and_org_control]]).
