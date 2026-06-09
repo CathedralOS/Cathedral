@@ -31,6 +31,8 @@ domain Principal::Attested { self.provenance in Attestation::Verified; }
 - **Organizations & delegated administration.** An org is a principal that grants bounded administrative authority to sub-principals — without becoming an ambient super-uid (see [[multi_user_and_org_control]]).
 - **Nested principals.** An app that holds authority over a synthetic realm ([[filesystem_as_database]]) mints its own sub-principals, its "users," with the same primitive the OS uses for real ones. An app's account model and the OS's principal model are one concept at two levels, and the app's minted principals are confined to its realm.
 - **Remote attestation.** A principal across the network ([[distributed_boundary]]) must prove identity to the same standard as a local one; "trusted because it's on the LAN" is exactly the ambient mistake to avoid.
+- **Per-relationship identity.** Resisting correlation means presenting a distinct pseudonymous principal to each relying party by default, the way passkeys are per-site, so two services cannot link the same human across contexts; a stable cross-service identity is opt-in ([[wallet_and_credentials]]).
+- **Federated login.** Authenticating against an organization or remote identity mints a session to the same standard as a local login, with the OS brokering the credential so the service receives a scoped authentication and never the user's secret ([[sessions_and_login]]).
 - **Sessions.** A login/session is a short-lived principal that carries a human's authority for a bounded window, and is itself revocable and leasable ([[capability_lifecycle]]).
 - **Zero value.** A zeroed principal is the anonymous nobody: a valid, named graph node (shape 1 in [[omega_substrate]]) with unattested provenance that holds no authority, so an uninitialized identity is the least-trusted holder rather than an error or, worse, an accidental match for a real principal.
 
@@ -60,3 +62,4 @@ domain Principal::Attested { self.provenance in Attestation::Verified; }
 - [[multi_user_and_org_control]] — organizations and delegated administration.
 - [[audit_compliance_provenance]] — identity as a provenance record.
 - [[store_and_economic_control]] — publisher identity in the distribution path.
+- [[wallet_and_credentials]] — credentials and unlinkable per-relationship presentation.

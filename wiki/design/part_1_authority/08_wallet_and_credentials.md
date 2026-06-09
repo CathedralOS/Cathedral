@@ -1,0 +1,65 @@
+# Chapter 08: Wallet & Verifiable Credentials
+
+> The user-facing face of the credential model: the things you hold and present, payment, identity, passkeys, tickets, keys, modeled as scoped operations over sealed secrets, disclosed minimally and unlinkably.
+
+## The Legacy Model
+
+Today's credentials leak and overshare by default. Passwords are reused across services, so one breach cascades and every service that holds your password can impersonate you to others. Proving a single fact means handing over the whole document: you show an entire driver's license to prove you are over twenty-one. A payment is a card number you hand to every merchant, replayable and stored in a thousand databases. And the same identity, the same email, the same account, is presented everywhere, so services correlate you across contexts effortlessly. Recent work helps in pieces: passkeys make per-site keys normal, mobile driver's licenses and verifiable credentials enable selective disclosure, and platform wallets hold payment and identity in a secure element. But these are bolted onto operating systems that do not model a credential as a first-class scoped operation, and each wallet tends to be a vendor silo rather than an OS primitive.
+
+## The Cathedral Model
+
+A wallet item is a **held credential**, modeled as an operation-capability over a sealed, hardware-backed secret, the same inversion as the keychain ([[secrets_and_keys]]): you never hold or hand over the secret, you present a scoped, minimal proof. Three principles shape it.
+
+First, **operation, not bytes.** Presenting an identity, signing a challenge, or authorizing a payment is an operation against a secret held in hardware; the private key, the card number, and the identity document never leave it. The relying party gets a proof, never the material.
+
+Second, **minimal disclosure.** A presentation proves the predicate the verifier actually needs (over twenty-one, holds a valid ticket, authorized to pay at most a stated amount) without revealing the data behind it, through verifiable-credential presentation and predicate proofs. This is attenuation ([[capability_lifecycle]]) applied to identity claims: present the narrowest fact, and hold back the document.
+
+Third, **unlinkable per-relationship identity.** By default a distinct pseudonymous principal ([[identity_and_principals]]) is presented to each relying party, the way passkeys are per-site and relay addresses hide a real one, so two services cannot correlate you across contexts. One face per relationship is the default, and a single stable identity across services is the exception you opt into.
+
+There is a line this chapter draws sharply, because the wallet uses signing and attestation while Cathedral elsewhere declines attestation. The two are different. A wallet presentation is **you proving a claim you chose to disclose**, minimally and on your own trusted path, which is empowering. The thing Cathedral declined is **a remote party attesting your machine's state** against your will, which is owner-disempowering ([[security_policy_and_sandboxing]]). The OS provides the first and refuses the second, and the distinction is who proves what to whom: you presenting a minimal claim, versus a stranger verifying your device.
+
+Every presentation happens on the compositor's trusted path ([[human_permission_ux]], [[windowing_and_compositor]]): you see and approve exactly what is disclosed, the requesting app or site receives only the scoped proof, and neither can spoof the consent or extract more than was approved.
+
+## Concerns & Design Space
+
+- **Credential as operation-capability.** A payment method, an identity document, a passkey, a ticket, or a key is a scoped operation (present, sign, pay) over a hardware-sealed secret, never the secret itself ([[secrets_and_keys]]).
+- **Minimal disclosure.** A presentation proves the verifier's predicate (an age threshold, a membership, a spending limit) without revealing the underlying attributes, via verifiable credentials and predicate or zero-knowledge proofs. Reveal the claim, hold back the data.
+- **Unlinkable per-relationship identity.** A distinct pseudonymous principal per relying party by default ([[identity_and_principals]]), so credentials presented to different services do not correlate, and a stable cross-service identity is opt-in.
+- **Payment as a scoped operation.** A payment authorizes at most a stated amount to a named payee, one-shot or leased, as a tokenized operation rather than a reusable card number, so a compromised merchant cannot replay it.
+- **Issuer, holder, verifier.** A verifiable credential is issued by an authority, held by the user, and presented to a verifier, three principals with the issuer's signature making the claim checkable offline; revoking a credential is a graph and revocation-list operation ([[capability_lifecycle]]).
+- **The good-versus-bad attestation line.** User-controlled, consensual, minimal claim presentation is provided; machine-state attestation to a gatekeeper is declined ([[security_policy_and_sandboxing]]). The wallet is the empowering half of attestation.
+- **Presentation on the trusted path.** Disclosure is approved on the OS trusted path, so the requester sees only the scoped proof and cannot spoof the consent or read more than was granted ([[human_permission_ux]]).
+- **Offline presentation.** An identity or a ticket is held locally and verifiable without the issuer online, because the issuer's signature travels with the credential.
+- **Recovery and rotation.** Losing the device or a credential must be recoverable without a backdoor, and a per-relationship identity must rotate without orphaning what it established ([[secrets_and_keys]], [[identity_and_principals]]).
+- **Cross-device sync.** The wallet syncs as sealed, content-addressed data ([[filesystem_as_database]]); the secret stays hardware-bound per device or is re-provisioned, never synced in the clear.
+- **Zero value.** A zero credential is the fail-safe sentinel (shape 4 in [[omega_substrate]]): presenting it yields a clearly-invalid proof that a verifier rejects, never a forged credential or a silent success.
+
+## Key Questions
+
+- What predicate and zero-knowledge proofs are practical on commodity secure elements, and which claims fall back to revealing more than ideal?
+- Who issues the credentials (governments for identity, banks for payment, venues for tickets), and what is the OS's role versus the issuer ecosystem's?
+- How is wallet recovery made possible without creating a backdoor into the sealed secrets?
+- Where does unlinkability genuinely break, given that a verifier demanding a stable identifier defeats it by policy, and how is that surfaced to the user?
+
+## Omega Leverage
+
+- A credential is a **capability + domain** (`Credential::Present`, `Payment::Authorize(limit, payee)`), so minimal disclosure is **attenuation** and the whole authority model applies with no new machinery ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
+- The secret operation is a **boundary provider** backed by the secure element, the same as a signing key ([[secrets_and_keys]]).
+- A verifiable credential and its presentation are **wire data** with stable field numbers, so they cross boundaries and verify across versions ([wire protocols](../../../../Omega/wiki/language_guide/chapter_20_wire_protocols.md)).
+- Issuer, holder, and verifier are **principals** ([[identity_and_principals]]); the issuer's signature is a provenance edge.
+- Omega does not define predicate-proof or verifiable-credential protocols; those are Cathedral and ecosystem structure over the capability and secret primitives.
+
+## Open Questions
+
+- Can selective disclosure and unlinkability be the default without making everyday flows (signing into an account you want to be stable) awkward?
+- What is the minimum issuer trust root for identity credentials, and does it reduce to the same hardware and attestation roots as boot ([[boot_and_trust_chain]])?
+- How does an org-issued credential ([[multi_user_and_org_control]]) compose with a personal wallet without the org gaining cross-context correlation?
+
+## Related
+- [[secrets_and_keys]] — the operation-not-bytes credential model the wallet is the user-facing face of.
+- [[identity_and_principals]] — per-relationship pseudonymous principals and unlinkability.
+- [[sessions_and_login]] — authentication as a credential operation, and federated login.
+- [[human_permission_ux]] — disclosure approved on the trusted path.
+- [[data_model_and_privacy]] — purpose and minimal disclosure.
+- [[security_policy_and_sandboxing]] — the machine-state attestation Cathedral declines, versus user claim presentation.
+- [[capability_lifecycle]] — attenuation, leasing, and revocation of credentials.
