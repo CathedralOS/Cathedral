@@ -83,6 +83,7 @@ A few writing rules, inherited from Omega's docs:
 - [03 — Time, Clocks & Timers](part_2_components/03_time_and_clocks.md)
 - [04 — Error Model & Recovery](part_2_components/04_error_model_and_recovery.md)
 - [05 — Power Management](part_2_components/05_power_management.md)
+- [06 — Service Activation & Lifecycle](part_2_components/06_service_activation.md)
 
 ### Part 3 — Communication
 - [00 — IPC & Service Invocation](part_3_communication/00_ipc_and_service_invocation.md)
