@@ -26,6 +26,14 @@ The useful separation is between the display controller and the render engine. G
 
 What Cathedral cannot do here is worth stating plainly: it cannot prove the vendor's shader compiler, it cannot make coarse hardware preemption schedule fairly, and it cannot dissolve the opacity. A genuinely clean GPU answer is partly a hardware-control decision, targeting a documented or open GPU, which is a hardware-strategy question the design deliberately stays out of.
 
+## Text and fonts
+
+Text rendering, shaping, layout, and locale formatting are userspace libraries rather than OS services. Turning codepoints and a font into positioned glyphs, and glyphs into pixels, is pure computation with no capabilities and no I/O, so it belongs in a shared standard library that renders into the app's own surface. The OS owns only two thin touchpoints, both already covered: the compositor supplies DPI and scale and composites the finished surface without ever seeing a glyph ([[windowing_and_compositor]]), and input methods are a capability-held stage in the input pipeline.
+
+Fonts and locale data are content-addressed shared assets ([[filesystem_as_database]]), not a special subsystem. The system ships a core UI font plus a broad Unicode coverage floor (open-licensed, with large scripts and emoji as on-demand content-addressed packs), and the chrome pins its own fonts by hash so the trusted path always renders. An app declares the fonts it renders in by hash, so the system set is a dedup cache and a coverage floor rather than an ambient dependency: a font the system already holds is shared for free, one it does not is shipped by the app, and either way the result is reproducible. That is why shipping fonts does not reintroduce the implicit-host-dependency problem realms otherwise kill.
+
+Installing a font adds it to the user's font collection in the user realm, discoverable by querying font-typed objects, never a write into the immutable system realm; changing the system set is a versioned update or an org policy ([[multi_user_and_org_control]]) rather than a drop into a global folder. And because the text library is pure and confined, the historical font-parser remote-code-execution vector shrinks to corrupting at most the one surface being drawn, with no escape and no reach into the system chrome.
+
 ## Concerns & Design Space
 
 - **Display server / compositor pipeline.** The frame-composition and scanout layer beneath window management; the boundary to GPU scanout hardware.
@@ -70,3 +78,4 @@ What Cathedral cannot do here is worth stating plainly: it cannot prove the vend
 - [[capability_model]] — screen capture and GPU access as held capabilities.
 - [[kernel_architecture]] — the hardware-isolation wall the GPU blob sits behind.
 - [[audio]] — the audio pipeline, now its own chapter.
+- [[filesystem_as_database]] — content-addressed fonts and locale data, and the no-special-folders model.
