@@ -28,6 +28,7 @@ Capability<Power::MaintenanceWindow(schedule)>       // batched deferred work
 - **Thermal policy.** Thermal headroom is a shared budget; throttling is a scheduling decision, and a component can declare `power_saving` intent ([[scheduler_and_resources]]).
 - **Network wake.** Being woken by an inbound packet/push is a capability (`Power::Wake`), so the set of things that can rouse the device is enumerable ([[networking]]).
 - **Maintenance windows.** The OS batches deferred work across components into shared wake windows to amortize the cost of waking at all.
+- **Activation triggers and wake.** A demand-activation trigger ([[service_activation]]) that would rouse a sleeping device is gated by `Power::Wake`: a service may register to spawn on an event, but waking the machine to run it requires the wake capability and defers into a maintenance window, so the set of things that can wake-and-spawn stays enumerable and budgeted.
 - **Crash/consistency under power loss.** Sudden power loss is a failure cause ([[error_model_and_recovery]]); durable state must survive it ([[memory_and_persistence]]).
 
 ## Key Questions
@@ -56,3 +57,4 @@ Capability<Power::MaintenanceWindow(schedule)>       // batched deferred work
 - [[scheduler_and_resources]] — energy and thermal as governed resources.
 - [[component_model]] — the instance as the unit of background execution.
 - [[observability_and_introspection]] — per-component battery attribution.
+- [[service_activation]] — demand-activation triggers gated by the wake capability.

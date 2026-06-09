@@ -68,3 +68,4 @@ The shape that results is a small **resident core** of latency-critical always-o
 - [[memory_and_persistence]] — persisting and rehydrating a quiesced service's state.
 - [[configuration_and_policy]] — the activation manifest as typed config.
 - [[observability_and_introspection]] — activation and idle-residency as attributable facts.
+- [[power_management]] — wake-to-run triggers gated by the wakefulness capability, and maintenance-window batching.
