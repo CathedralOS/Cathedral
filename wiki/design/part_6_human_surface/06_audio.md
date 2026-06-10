@@ -16,6 +16,7 @@ Audio is the compositor for sound. A privileged **audio server** mixes per-app t
 - **The mixer as a broker.** The audio server reads the active streams, applies gain and effects, and writes the device buffer, the temporal twin of the compositor.
 - **Real-time latency.** The device consumes a buffer on a hard deadline, and a miss is an audible glitch. The mixer parks on the device clock with the wait primitive and runs in a real-time scheduling class ([[scheduler_and_resources]], [[time_and_clocks]]). Professional-audio round trip is the stress case that decides how good the design is.
 - **Microphone as sensitive input.** Capture is a capability with a trusted-path live indicator, default-deny, attributed, and revocable. A blank capture capability returns silence, so a coercive app cannot tell denial from a quiet room ([[human_permission_ux]]).
+- **App-audio capture is the observation family.** Recording another app's *output* (screen sharing with sound, OBS) is the temporal twin of screen capture ([[windowing_and_compositor]]): a grant over a node of the mixing tree, same shape as pixels — your own streams free, another app's by grant, the reserved OS channel never — and a stream can declare itself absent or substituted in capture mixes the way a surface declares no-capture, enforced at mix time, never in the consumer. The same OS-drawn watched indicator applies.
 - **Routing and devices.** "Default output" and "default input" are names bound in the per-principal resolution environment, rebindable live and per-app, so hot-plug, Bluetooth, and USB devices are driver components appearing and disappearing while the server re-routes.
 - **Policy.** Per-stream volume, mute, ducking, and audio focus tied to the foreground are applied by the server as it mixes. Alarms, accessibility, and system sounds use a reserved OS channel that apps cannot suppress, the audio twin of the trusted path.
 - **A/V sync.** Audio and video reference one clock ([[time_and_clocks]]); synchronization is presenting a given sample and a given frame at the same wall-clock time.
@@ -45,6 +46,7 @@ Audio is the compositor for sound. A privileged **audio server** mixes per-app t
 - Can a userspace mixer reach professional-audio latencies on commodity hardware, or is a tighter path needed for the lowest-latency clients?
 - Should spatial audio and room modeling live in the server, in a system filter graph, or in the app, and who owns the listener model?
 - How are system sounds and alarms made un-suppressible without becoming a channel that apps learn to abuse?
+- What does an app-audio capture mix exclude by default, and does the watched indicator unify with the microphone live indicator or stay distinct?
 
 ## Related
 - [[media_and_graphics]] — the display and GPU half of media; audio is the symmetric temporal half.
