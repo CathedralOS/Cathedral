@@ -27,7 +27,7 @@ But the deep work is not "permissions as types." It is the *lifecycle* of a capa
 ## Concerns & Design Space
 
 - **Object capabilities.** Designation and authority are the same thing: holding a reference to an object *is* the permission to use it. No separate ACL check.
-- **The authority graph.** A queryable, auditable structure derived from Omega's authority-flow analysis (accepts / uses / derives / stores / acquires / returns / releases) plus runtime grant records.
+- **The authority graph.** A queryable, auditable structure derived from Omega's authority-flow analysis (accepts / uses / derives / stores / acquires / returns / releases) plus runtime grant records. The runtime half has a decided materialization: the grant arena's entries and parent edges *are* the live graph, recorded by construction because delegation is a syscall ([[capability_lifecycle]]); the event log is its history.
 - **Revocation safety.** Revoking one capability should be able to revoke the transitive sub-tree it seeded — or explicitly not, by policy. This requires recording delegation edges, not just current holders.
 - **Attenuation.** Narrowing is a first-class, always-available operation; it is how least privilege is actually achieved in practice. Modeled as deriving a tighter domain (`Folder::Writable` → `File::Writable`).
 - **Recursive providers.** A service is reached through a held capability resolved from a principal's environment, so any provider interface nests: a parent can implement the interface and bind a child's resolution to its own endpoint, becoming the thing behind it. Reach stays bounded by attenuation, since a parent passes down only what it holds, and the invariant that survives the nesting is interface-specific (the OS-drawn trusted path for the compositor, end-to-end crypto for the network). Synthetic realms ([[filesystem_as_database]]), nested compositors ([[windowing_and_compositor]]), nested networks ([[networking]]), virtual clocks ([[time_and_clocks]]), synthetic devices ([[driver_model]]), and full virtual machines are this one pattern at different depths of synthesis.
@@ -46,14 +46,14 @@ But the deep work is not "permissions as types." It is the *lifecycle* of a capa
 ## Key Questions
 
 - Can the OS *always* answer the four-part question (who / what / why / which path / revoke safely)? This chapter is the one most accountable to it.
-- What is the runtime representation of a held capability, and how does it stay unforgeable across IPC and reboot without becoming an ambient handle table?
-- Is the authority graph materialized continuously, or reconstructed on demand from an event log (see [[observability_and_introspection]])?
+- The representation is settled — per-principal generational tables, bound to caller identity, so the table is not ambient: stolen bits redeem as nothing ([[capability_lifecycle]]). Remaining: the exact entry schema and audit surface.
+- The graph is materialized — it is the arena; the log is its history ([[capability_lifecycle]], [[observability_and_introspection]]). Remaining: how static authority-flow reports and the live arena are reconciled.
 - How is the *root* of authority bootstrapped? Someone holds the first capability; what is it and who is trusted to mint it?
 
 ## Open Questions
 
 - Static authority flow describes *possible* power; the live graph describes *actual* held grants. How tightly are the two reconciled, and who flags drift?
-- Revocation of widely-delegated capabilities may be expensive; what is the cost model and is lazy/epoch-based revocation acceptable?
+- Revocation cost is settled in shape (one generation bump plus an O(subtree) walk, discovered lazily at redemption); is that lazy discovery latency acceptable for every grant class, or do some classes need the mapped-grant treatment (active teardown)?
 
 ## Related
 - [[capability_lifecycle]] — the states a capability moves through.

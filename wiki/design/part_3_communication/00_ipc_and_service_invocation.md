@@ -61,9 +61,9 @@ The cost to state plainly: for foreign-language components the OS tracks authori
 ## Concerns & Design Space
 
 - **Ring discipline.** Single-producer/single-consumer with index ownership is the race-free default (the Disruptor single-writer principle); multi-producer rings need a defined claim protocol.
-- **Region lifetime.** Leases tie a region to peer liveness; what happens to in-flight slots on revoke must be defined ([[capability_lifecycle]], [[error_model_and_recovery]]).
+- **Region lifetime.** Leases tie a region to peer liveness. In-flight slots on revoke are resolved by the arena model: a capability sitting in a message is claim-ticket bits, and it dies at *redemption* — the receiver that picks it up after revocation gets the typed `CapabilityRevoked` result, so queues never need scrubbing ([[capability_lifecycle]], [[error_model_and_recovery]]). The region itself is the mapped-grant carve-out: revoking it is an unmap, and a straggler faults.
 - **Grant/revoke cost.** Page grant/revoke costs TLB shootdowns; decide when copying a small payload is cheaper than a remap.
-- **Capability passing.** Transferring a capability is an operation on this same region; the graph records the delegation edge ([[capability_model]]).
+- **Capability passing.** Transferring a capability is a kernel insert into the receiver's table — checked against the receiver's manifest ceiling at insert and recording the parent edge — with the handle bits riding the region as ordinary payload ([[capability_model]], [[capability_lifecycle]]). The bits alone convey nothing; only the insert moves authority.
 - **Typed-layer semantics.** Call shapes, versioned protocols, replay/idempotency, and deadlock detection over the wait-for graph are the library's concern, built on the primitive. Backpressure, deadlines, and cancellation cross into the scheduler ([[scheduler_and_resources]]).
 - **Zero value.** A zero region reads as an empty channel with no slots (shape 1, valid-empty) and a zero endpoint capability is the inert null endpoint (shape 2) whose writes are discarded rather than faulting, so a receiver draining a zeroed region simply sees no messages and a send to a dead-leased endpoint no-ops instead of crashing ([[omega_substrate]]).
 

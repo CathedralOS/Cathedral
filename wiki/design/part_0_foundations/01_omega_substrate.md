@@ -53,13 +53,13 @@ The honest tension is bug-masking. A zero handle whose writes are silently disca
 
 ## Concerns & Design Space
 
-- **Capabilities as values vs. as kernel objects.** Omega models authority as ordinary values plus facts, with no new `uses capability` keyword. Cathedral must decide what the *runtime representation* of a held capability is, how it survives a crash, and how it crosses a real IPC boundary — without breaking the value/fact model.
+- **Capabilities as values vs. as kernel objects.** Omega models authority as ordinary values plus facts, with no new `uses capability` keyword. Cathedral's runtime representation is decided and preserves the value model: the held value is a claim ticket (`{slot, generation}`, plain data the language reasons about freely), and the authority lives in the OS's per-principal generational grant arena, checked at redemption ([[capability_lifecycle]]). Static analysis answers what a holder *may* do; the arena answers whether the grant is *still* live.
 - **The boundary registry as the trusted base.** Omega only accepts host authority through registered `BoundaryProvider`s in whitelisted packages. Cathedral's TCB is, in large part, *the set of boundary providers it ships.*
 - **Single address space vs. hardware isolation.** Theseus-style language-level isolation in one address space is attractive for zero-copy IPC and hot swap, but interacts with the driver model, the kernel architecture, and untrusted legacy code. This is a recurring tension (see [[kernel_architecture]]).
 
 ## What Omega Still Needs to Grow (driven by Cathedral)
 
-- A runtime/serialized representation of a held capability that preserves attenuation and revocability across processes and reboots ([[capability_lifecycle]]).
+- A serialized capability representation — largely dissolved by the grant arena: the durable arena is the at-rest representation and handles are inert bits, so the ask on Omega shrinks to typed redemption results and domains over handle types ([[capability_lifecycle]]).
 - Quiescence proofs in the presence of interrupts, timers, async work, and hardware ([[updates_and_hot_swap]]).
 - Possibly: purpose-tagged authority (`Capability<Read<Contact.Email>, Purpose<SendMessage>>`) ([[data_model_and_privacy]]).
 - Operation-capabilities for secrets (`Capability<SignWithKey(K)>`) rather than raw key bytes ([[secrets_and_keys]]).
