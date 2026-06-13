@@ -14,13 +14,23 @@ The point is that **communication is not an OS concept**. A shared page and atom
 - **The region is mapped once**, because only the OS can map the same physical pages into two protection domains, and it gates that on a capability;
 - **The OS leases the lifetime of the region**, so a dead peer's memory is reclaimed instead of leaked.
 
-```omega
-// The OS maps a shared ring once (capability-scoped, lease-bound):
-let ring: SharedRing<Slot> = channel.grant_ring(slots: 1024);
+The map is the one declared **`boundary`** in the whole mechanism (the [ch18](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md) keyword, not just the discipline): only the kernel can map the same frames into two protection domains, so it is a `boundary trait` with the `memory_map` effect, capability-gated.
 
-// Hot path: no syscalls. Write a slot, advance the index.
-ring.write(slot);   // plain memory write + release store on the index
+```omega
+// The map is a boundary: capability-scoped, memory_map effect, kernel-provided.
+boundary trait RegionMap {
+    machine grant_region(channel: Channel, slots: usize) -> SharedRegion<Untrusted>
+    requires channel in Channel::Mappable
+    effects memory_map;
+}
+
+// What it hands back is access, not truth: a sea of bytes another principal
+// can mutate. The hot path is plain memory; no syscall, no kernel.
+let ring: SharedRegion<Untrusted> = channel.grant_region(slots: 1024);
+ring.publish(slot);   // body write, then release store on the index
 ```
+
+The boundary proves exactly one thing — that the crossing was legitimate and these frames are yours to see. It proves **nothing about the contents**. Everything above it is ordinary Omega proof imposed incrementally on the bytes: the membrane passes bytes, not proofs, and the typed layer below rebuilds the proofs on this side.
 
 **Notification and blocking are not IPC concerns.** As long as a consumer is running it just reads the region. The only reason to involve the OS is when a consumer would rather sleep than spin, and waking a sleeping consumer is a scheduling operation (park/unpark on a condition, the same wait primitive timers and interrupts use), which belongs to the scheduler. See [[scheduler_and_resources]] for parking, wakeups, and the spin-versus-sleep policy. This chapter owns the data path; the scheduler owns the wait path.
 
@@ -39,7 +49,7 @@ The OS owns the physical frames; the peers hold *leases* on the region, not owne
 
 ### Typed safety is an opt-in layer
 
-A safe language can wrap the raw region as a typed, single-writer channel: a `wire data` schema, capabilities passed as values, versioning. Between two checked peers it is zero-copy and race-free by construction; at a boundary with C it validates incoming bytes on ingress (the `boundary` discipline from [ch18](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md): proofs stop, checks begin). This is *how you build safety over the primitive*, not a tax the kernel imposes.
+A safe language can wrap the raw region as a typed, single-writer channel: a `wire data` schema, capabilities passed as values, versioning. This is structure imposed on the sea of bytes — each field read is a refinement check (in range, valid tag, snapshot-then-validate so a concurrent writer cannot change the value between check and use) that re-earns a proof the boundary did not provide. Between two checked peers the compiler already knows the writer's discipline, so it elides the checks: zero-copy and race-free by construction. At a boundary with C the checks stay, validating incoming bytes on ingress. This is *how you build safety over the primitive*, not a tax the kernel imposes.
 
 ```omega
 wire data PlaceOrder {
@@ -84,6 +94,7 @@ The cost to state plainly: for foreign-language components the OS tracks authori
 
 - Can single-writer safety be more than convention when a foreign peer holds a read/write mapping, short of grant/revoke per message?
 - How much of the local fast path can be *proved* equivalent to the remote path rather than tested?
+- What exactly is the `SharedRegion<Untrusted>` type the map boundary returns — a stdlib type over the primitives, or does it need language support? It must make reads return raw/unproven values and enforce snapshot-then-validate (the bytes are shared-mutable, so re-reading after a check is a TOCTOU hole). This is a third memory category — neither proved nor boundary-accepted, but *adversarially mutable* — that ch18 does not yet name.
 
 ## Related
 - [[scheduler_and_resources]] — parking, wakeups, and the spin-versus-sleep wait path.
