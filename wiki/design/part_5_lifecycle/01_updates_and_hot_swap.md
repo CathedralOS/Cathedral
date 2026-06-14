@@ -10,7 +10,18 @@ Updating a live system is, almost everywhere, a controlled outage: stop the thin
 
 Update is a **first-class language/runtime/OS operation**, designed in from day one. Cathedral replaces a live component by: driving it to **quiescence**, migrating its live state forward, switching its protocol endpoints to the new version, observing the new version's health, and **rolling back** if it misbehaves — all without restarting the world.
 
-This chapter owns the *operational* act. The typed state-shape continuity primitive — versioned `data` and migration machines — lives in [[versioned_state_and_migration]]; this chapter is what *drives* that machinery across a running system. This is the domain where Cathedral is genuinely differentiated, and the chapter the whole "resumability" thesis is accountable to.
+This chapter owns the *operational* act. The typed state-shape continuity primitive — versioned `data` and the `Upgradable` migration ([Omega ch21](../../../../Omega/wiki/language_guide/chapter_21_versioned_data.md)) — lives in [[versioned_state_and_migration]]; this chapter is what *drives* that machinery across a running system. This is the domain where Cathedral is genuinely differentiated, and the chapter the whole "resumability" thesis is accountable to.
+
+### The decided mechanism
+
+The substrate is settled; the residue is one hard corner (devices).
+
+- **Quiescence is the actor's receive-loop park.** Run-to-completion actors ([[scheduler_and_resources]], [[component_model]]) hold no call stack between messages, so a parked actor is just its `self`. Quiescence stops being a research problem and becomes "wait for the next inter-message gap," which run-to-completion guarantees arrives promptly. The Omega swap obligations are discharged at that park — no stack to unwind, no scheduled re-entry.
+- **The cutover is a pointer rebind, not a code patch.** Stop delivery (messages queue, OS-held) → run the migration (`Upgradable`, with an effectful `capture` first if old state alone is not enough, [Omega ch21](../../../../Omega/wiki/language_guide/chapter_21_versioned_data.md)) → rebind the instance's one code pointer to the freshly-loaded new image → resume. The resume point is a **state tag**, version-stable, not a raw instruction pointer, so the parked task re-enters the new image by dispatch and there is no raw return address to dangle. The image loads as a second copy; the old is freed at refcount-zero (a rolling swap keeps both mapped). No in-place `.text` patching, no trampolines.
+- **The cutover atom is the instance, bounded by reference edges.** A migration rewrites a data shape, so everything sharing that representation moves together: inline/embedded data migrates with it; references (handles, channels, capabilities) are the cut points. That blob — `data` plus the machines over it — is the unit. A **component** is that unit drawn as a trust+swap boundary (isolation + crash + capability); a **sub-component** is a swap-only boundary inside one trust domain (an indirect-call optimization barrier, not isolation). Both are one `boundary` parameterized by `{host, trust, swap}` — no separate `component` keyword — and where you draw the line sets swap granularity, call cost, and blast radius at once.
+- **Live upgrade is single-step.** A live component is always at the last-installed version, so the upgrade is `prev → current`. The multi-version case is persisted data = `wire data` ([[ipc_and_service_invocation]]), not this. Coexistence (old + new running, versioned dispatch) is reserved for a genuinely incompatible protocol change, used sparingly.
+- **The replacement is an owned, OS-gated plan.** `quiesce → capture → upgrade → install → resume`, gated on an upgrade capability ([[capability_lifecycle]]); the compiler verifies each phase's obligations chain. `capture` is the only fallible point and aborts before `old` is mutated, so a failed cutover is "did nothing."
+- **Failure falls down a ladder, never force-freezes.** A `Quiesce` control message asks a component to reach a swappable rest point cooperatively; the OS never freezes a running task mid-execution. Past a deadline, the backstop is the component's declared policy ([[component_model]] `QuiescePolicy`/`UpgradePath`): **live-migrate** → **kill-and-restart** (a component that declares itself safely restartable, losing in-flight state) → **defer-to-reboot** (a critical stateful component that can neither migrate nor safely restart). "Defer to reboot" is scoped to the smallest possible set — ideally just the privileged core.
 
 ## Concerns & Design Space
 
@@ -26,10 +37,11 @@ This chapter owns the *operational* act. The typed state-shape continuity primit
 
 ## Key Questions
 
-- How is quiescence proven in the presence of interrupts, timers, async work, and external hardware ([[driver_model]]) — statically, or via load-time checks?
-- What is the cutover atom: per-component, per-dependency-cluster, or whole-graph?
-- When is coexistence (old + new running together) worth its cost, and what does the runtime require to admit it safely?
-- What is the rollback contract when forward migration was *lossy* — is reverse migration always available, or do some upgrades become one-way?
+Quiescence (the receive-loop park) and the cutover atom (the instance bounded by reference edges) are resolved above for software actors. The residue:
+
+- **Device quiescence.** Proving a driver's *hardware* is quiescent enough to snapshot — in-flight DMA drained, interrupts masked, queue heads stable — has no run-to-completion guarantee to lean on; this is the genuinely hard corner ([[driver_model]]), and where load/swap-time checks rather than static proof likely dominate.
+- **Admitting coexistence.** Single-step covers the compatible case; what does the runtime require to *safely* admit the sparingly-used old+new mode (versioned dispatch, old-callback fencing) for a protocol-incompatible change, without it becoming a permanent fork?
+- **Lossy rollback.** Capture-before-mutation makes the common abort "did nothing"; but once a *forward* migration has committed and was lossy, reverse is opt-in and some upgrades are one-way — what contract tells an operator which, before they pull the trigger?
 
 ## Omega Leverage
 
