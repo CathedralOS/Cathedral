@@ -16,8 +16,8 @@ The boundary is **OS code versus app code.** The OS is written in Omega and is p
 
 - **The important axis.** Trust / restartability / upgradability / provability / crash-isolation, evaluated per subsystem — drivers, FS, net, scheduler — rather than one global verdict.
 - **Single address space + language isolation.** Zero-copy IPC and frictionless hot swap, conditioned on proved Omega; the boundary-provider set becomes much of the TCB ([[omega_substrate]]).
-- **Hardware isolation for app code.** Any code the Omega toolchain did not compile and prove, which is most user apps in any language, is untrusted at the instruction level and is isolated by MMU/address space and instruction trapping, while capabilities still confine its system access ([[security_policy_and_sandboxing]]). Legacy boxes and risky drivers ([[driver_model]]) are the same case, not a separate one.
-- **What stays privileged.** The minimal substrate likely owns only: capability enforcement, memory/address-space management ([[memory_and_persistence]]), scheduling primitives, the boundary-provider registry, and the hardware root of trust handoff ([[boot_and_trust_chain]]).
+- **Hardware isolation for app code — and for drivers.** Any code the Omega toolchain did not compile and prove (most user apps, in any language) is untrusted at the instruction level and isolated by MMU/address space and instruction trapping, with capabilities confining its system access ([[security_policy_and_sandboxing]]). Drivers are the same case, deliberately: they run as confined user-mode components, *contained not trusted*, so a bad driver corrupts only its own device ([[driver_model]]). Because device DMA bypasses the CPU's MMU, containing a device needs an **IOMMU** — Cathedral mandates one as the hardware floor.
+- **What stays privileged.** The minimal substrate likely owns only: capability enforcement, memory/address-space management including **IOMMU and MMIO programming** (the device-confinement machinery a driver may only *request*, [[driver_model]]), scheduling primitives and the generic interrupt stub, the boundary-provider registry, and the hardware root-of-trust handoff ([[boot_and_trust_chain]]).
 - **Restartable subsystems.** Everything not in the minimal core should be a restartable, upgradable component, including most of what monolithic kernels keep privileged.
 - **Options on the table.** Monolithic, microkernel, hybrid, exokernel-ish, library-OS-ish, Theseus-style SAS, capability kernel, hypervisor-first — held as candidates, not commitments, until the target hardware and workload constrain them.
 
@@ -37,7 +37,7 @@ The boundary is **OS code versus app code.** The OS is written in Omega and is p
 
 ## Open Questions
 
-- How much trust can language-level isolation actually bear in privileged code, given miscompilation, unsafe boundaries, and side channels the type system does not model?
+- How much trust can language-level isolation bear *inside the proved core*, given miscompilation, unsafe boundaries, and side channels the type system does not model? (Drivers are deliberately excluded — they are hardware-confined, not language-trusted, [[driver_model]].)
 - What is the performance reality of a single-address-space design once hardware isolation must be reintroduced for untrusted code at the seams?
 - Does the architecture decision even resolve before the target platform is fixed, or is it deliberately deferred ([[vision_and_non_goals]])?
 

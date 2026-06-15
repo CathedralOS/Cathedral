@@ -12,6 +12,17 @@ Drivers are components like any other ([[component_model]]): isolated, holding o
 
 **Driver scope is the deciding constraint here.** Driver surface area is what kills OS projects, so the design targets a *constrained, known, stable device set* rather than arbitrary hardware. A small fixed device set is far more tractable than supporting "all PCs," which is explicitly out of scope for the model (see [[vision_and_non_goals]]): the combinatorics of arbitrary hardware defeat the proof and isolation guarantees the rest of the system depends on.
 
+### The decided mechanism
+
+The model is **confinement over trust**: don't try to make a driver trustworthy — make its trustworthiness *not matter*. A driver runs as an ordinary user-mode component, walled by hardware and confined by capabilities, so a driver that is buggy, hostile, miscompiled, or written in plain C can corrupt only the one device it already owns. Proved-Omega drivers are rewarded (more trust, less overhead) but never *required* for system safety — the only honest stance while the toolchain is young, and what lets Cathedral accept third-party or vendor-written drivers without each one being a system-wide risk.
+
+- **IOMMU is the hardware floor.** Device DMA bypasses the CPU and its MMU entirely, so the MMU cannot contain a device — only the IOMMU can ([[kernel_architecture]]). Cathedral therefore *requires* an IOMMU and treats a machine without one as a weaker-guarantee target rather than contorting the architecture around legacy hardware. This retires the "safe DMA without an IOMMU" question.
+- **The capability manifest.** A driver instance is spawned with exactly: an **MMIO** capability over its device's registers; a **DMA buffer + IOMMU domain** sized to its device; its **IRQ**, delivered as a message; and the **service channel(s)** to whoever it serves. Nothing ambient — its blast radius is precisely those four things.
+- **The core owns the confinement machinery.** The privileged core programs the IOMMU and maps MMIO; the driver only *requests*. It must be this way: programming the IOMMU *is* the confinement, so a driver that could shape its own DMA domain could unconfine itself. The driver sits outside the TCB; the core's hardware-access broker is inside it.
+- **Interrupt = message.** The only kernel-mode code on the path is a tiny, device-agnostic IRQ stub: it acks/masks the line (no storms) and turns the interrupt into a wakeup for the parked driver actor (the scheduler's existing park/unpark, [[scheduler_and_resources]]). No device-specific code runs privileged. Extreme-throughput devices skip interrupts and **poll** — the driver busy-reads a DMA ring with no kernel hop, the shared-region primitive ([[ipc_and_service_invocation]]) as the ring.
+- **Restart is the easy cousin of hot-swap.** A crash discards state instead of preserving it — no quiescence-snapshot, no migration. The core tears down the dead instance's IOMMU domain and capabilities *first* (cutting the device off RAM before that memory is reused), resets the device to a known state, and spawns a fresh instance. Recovery is **visible and typed**, never a silent auto-replay: the client's channel reports the restart and the layer holding the semantics (an FS journal, a protocol's retry) decides what to redo, with a standard reconnect helper so visible is not painful ([[error_model_and_recovery]]).
+- **DMA copy strategy: zero-copy primary, bounce fallback, one call.** A driver asks the core to make a buffer DMA-able and gets back a device address; the core picks the path. **Zero-copy** is the design target (big, page-aligned transfers — the streaming/benchmark case): the client's own page is granted into the device's IOMMU domain for a borrowed transfer window, ownership-enforced so the client cannot touch it mid-DMA, no copy. **Bounce** is the fallback for buffers that physically cannot be mapped — misaligned, not DMA-addressable, or so small the IOMMU remap would cost more than the copy. The crossover is physical, not a hedge; the exact threshold is a profile-when-real knob. High-frequency small transfers are amortized by **batching** under poll-mode, not by tuning the copy.
+
 ## Concerns & Design Space
 
 - **Capability-limited hardware access.** A driver holds capabilities for its MMIO range, its DMA windows, and its IRQs — not ambient hardware power ([[capability_model]]).
@@ -23,17 +34,18 @@ Drivers are components like any other ([[component_model]]): isolated, holding o
 - **Peripheral classes are ordinary devices.** Printers, scanners, cameras, and USB peripherals are ordinary device-plus-driver-plus-capability instances rather than special subsystems. Printing is a userspace print service rendering to a page description, plus a printer driver, plus a "may print here" capability, with the spooler a queue component; the OS adds no print subsystem beyond the driver and the service.
 - **Foreign filesystems and removable media.** A drive formatted for another OS (FAT, exFAT, NTFS) is mounted as a realm by a translating filesystem driver that implements the realm interface over the foreign layout ([[filesystem_as_database]]). You read and write files, but the native features (content-addressing, integrity, type metadata, snapshots, sealing) are absent because the foreign format cannot hold them. So a removable drive is an interop-versus-features choice: keep it foreign so it travels to other systems, or reformat it native for the full feature set. The foreign parser runs as a confined driver, so a malicious removable filesystem degrades from a kernel compromise to a contained driver fault.
 - **Versioned driver APIs.** The kernel↔driver and driver↔client interfaces are `wire data` + versioned `data`, so driver upgrades follow the same compatibility proofs as everything else.
-- **User-mode drivers & verified interfaces.** Prefer user-mode where the device class allows; the driver↔hardware contract is a verified boundary.
+- **User-mode, contained not trusted.** Drivers run in user mode, confined by capabilities and the IOMMU, so a driver's *correctness is never relied on for system safety* (see the decided mechanism above). The driver↔hardware contract is a `boundary`; proved Omega is rewarded, not required.
 - **Synthetic devices.** A driver presents a device interface, so a component can serve a *synthetic* device to a child instead of real hardware: a virtual NIC, framebuffer, sound, or block device. This is the recursive-provider pattern ([[capability_model]]) at the hardware edge, and it is what lets a virtual machine present hardware to a guest and a simulator hand mock devices to code under test ([[testing_and_simulation]]).
 - **Firmware updates, device permissions & certification.** Firmware flashing is a capability-gated operation; device access is granted, not assumed; driver certification flows through the store ([[store_and_economic_control]]).
 - **Zero value.** A zero device handle is the null device, a synthetic device that accepts every operation and does nothing (inert null-object), so a driver or client handed a zeroed handle runs against `/dev/null` rather than crashing, the degenerate case of the synthetic-device provider above ([[omega_substrate]]).
 
 ## Key Questions
 
-- What is the minimum trusted hardware-access broker, and how much driver logic can live outside the privileged core ([[kernel_architecture]])?
-- How is DMA made safe without an IOMMU, if a target device lacks one — or is "has an IOMMU" a hardware prerequisite for the target hardware?
-- How does a driver re-establish device state after a crash without a window where the hardware is in an unknown configuration?
-- Which interrupt and power paths can meet quiescence for hot swap, and which force coexistence or a brief device-quiesce?
+The confinement model (above) settles the trust question; the residue is device-side and sizing:
+
+- **Device reset / half-state.** Tearing down the IOMMU domain closes the *memory* window on a crash, but the **device itself** may be left mid-operation — in-flight DMA, a wedged queue, latched state. Can it always be reset to a known-good configuration, and which devices resist a clean reset? This is the hard corner, shared with hot-swap's device-quiescence residue.
+- **The minimal hardware broker.** The core owns IOMMU/MMIO programming and the IRQ stub — what is the *smallest* such broker surface, and how little device knowledge can it carry while staying generic ([[kernel_architecture]])?
+- **Quiescence for hot-swap, not crash.** Upgrading a *live* driver (vs. restarting a dead one) still needs the device quiesced enough to snapshot — which interrupt and power paths can reach that, and which force a brief device-quiesce ([[power_management]], [[updates_and_hot_swap]])?
 
 ## Omega Leverage
 
@@ -45,9 +57,9 @@ Drivers are components like any other ([[component_model]]): isolated, holding o
 
 ## Open Questions
 
-- How far can DMA isolation rely on hardware (IOMMU) vs. needing software shadowing, and what does that cost on a constrained device set?
-- Can a meaningfully large fraction of drivers be authored in proved Omega, or is a bounded unsafe boundary unavoidable for the lowest register pokes?
-- Where is the line between a verified user-mode driver and the privileged broker it must call — and who is in the TCB ([[kernel_architecture]])?
+- Can a device's half-state always be driven to a known-good reset, or do some devices make crash-restart lossy in ways the client cannot fully paper over?
+- How much *reward* should a proved-Omega driver earn over a confined C one — extra trust, lower overhead, fewer IOMMU round-trips — given safety no longer depends on it?
+- What is the IOMMU's real cost on the hot path (remap + cache-flush), and where does that put the zero-copy/bounce threshold once there is hardware to profile?
 
 ## Related
 - [[component_model]] — drivers are components; this is the hard case.
