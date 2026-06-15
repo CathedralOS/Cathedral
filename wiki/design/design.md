@@ -128,3 +128,4 @@ A few writing rules, inherited from Omega's docs:
 
 ## Appendix
 - [Open Questions Register](appendix_open_questions.md) — cross-cutting unknowns that don't belong to one chapter.
+- [Specification Gap Register](gap_register.md) — checkable per-chapter backlog of named-but-unmechanized holes; crossed off as mechanisms land.

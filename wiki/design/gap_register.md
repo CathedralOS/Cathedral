@@ -1,0 +1,104 @@
+# Specification Gap Register
+
+A checkable backlog of **"named but not yet mechanized"** holes — places a chapter says *what* happens but not *how*. Generated from a full-spec gap audit (2026-06-15) and maintained as a living checklist.
+
+**How to use:** check an item off when its mechanism lands (a `### The decided mechanism` section in the chapter, or the hole otherwise closed) and note the commit. The biggest *cross-cutting* unknowns also live in [appendix_open_questions.md](appendix_open_questions.md) (the prose "ripple" view); this register is the granular per-chapter work list.
+
+Legend: `[ ]` open · `[x]` closed.
+
+---
+
+## Recently closed (this session)
+
+- [x] **Kernel architecture** — proved-SAS core, caged-or-proved dichotomy, IOMMU mandate (`62f5ca5`, `dbb29ec`)
+- [x] **Driver model** — user-mode contained-not-trusted, capability manifest, interrupt=message, restart + device-reset ladder, coverage strategy (`ea96c1b`, `62f5ca5`)
+- [x] **Hot-swap / versioned-state** — single-step `Upgradable`, reconciled with Omega ch21 (`a1c9f49`, `9c920c9`)
+- [x] **TCB minimization** — bootstrap seed + checker + verified translation; trusting-trust resistance canon (`7bb4e69`)
+- [x] **Side channels** — parity posture + `IsolationClass` ladder, core-enforced (`008343e`)
+- [x] **Compatibility (core)** — sandbox→VM continuum, recursive-provider, bridge-not-home (`197059b`)
+- [x] **Performance honesty** — bimodal claim + higher-ceiling/verified-LLM compiler (`95365be`)
+
+---
+
+## Load-bearing (blocks other decided work — close these first)
+
+- [ ] **Grant arena schema** — entry structure, operation wire-shapes, and query surface of "the arena" referenced by [[capability_lifecycle]], [[scheduler_and_resources]] (`PeerDied`/`Revoked`), and [[ipc_and_service_invocation]] (redemption). *Most-referenced unspecified mechanism in the spec.*
+- [ ] **Trust-chain roots** — root of authority (first capability), root of identity (first principal + where it lives), hardware root of trust (assumption if none). [[capability_model]] [[identity_and_principals]] [[boot_and_trust_chain]]
+- [ ] **Serialized / transferable capability** — the form that survives network/reboot preserving attenuation + revocability. [[distributed_boundary]] *(also in appendix)*
+- [ ] **Data-class attachment + purpose enforcement** — how a class attaches to a datum and survives copy/transform/serialize/IPC; purpose type-enforced vs. audit-only. [[data_model_and_privacy]]
+- [ ] **Minimal trusted broker pattern** — concrete size/mechanism for the recurring TCB-worthy intermediary (networking demux, observability query engine, compliance engine, activator routing table).
+- [ ] **Borrow vs. hot-swap** — can an outstanding borrow block a swap; back-pressure or liveness bug. [[capability_lifecycle]] [[memory_and_persistence]] [[debugging_and_tracing]] *(also in appendix)*
+
+---
+
+## Part 0 — Foundations
+- [ ] `omega_substrate` — no decision rule for *which* ZII shape each construct adopts.
+- [ ] `vocabulary` — stub; "which terms deserve a domain vs. doc" unframed.
+
+## Part 1 — Authority
+- [ ] `capability_model` — arena entry schema + query shape; root-of-authority bootstrap.
+- [ ] `capability_lifecycle` — delegate/transfer/revoke entry schema + wire shape; drain-handshake protocol for revoking mapped grants.
+- [ ] `identity_and_principals` — what each identity kind *is* + what binds it across reinstall/rebuild/device-move/reboot; rotation algorithm (called "a graph-rewrite," no algorithm); who mints a principal.
+- [ ] `security_policy_and_sandboxing` — "dangerous combinations" policy language (syntax, static-vs-dynamic eval, scope); enforcement point (hand-off vs. use vs. both).
+- [ ] `secrets_and_keys` — operation-capability schema; what an "operation handle" is + how it binds hardware + survives reboot; key rotation without a revocation window.
+- [ ] `data_model_and_privacy` — class attachment + purpose enforcement *(load-bearing)*; open-vs-closed class set; derived-data classification rule.
+- [ ] `agents_as_principals` — agent default-authority bundle mechanism; human-approval-as-capability-mint protocol; bounding a dangerous *sequence* of individually-safe tool calls.
+- [ ] `sessions_and_login` — session bundle composition at mint; realm-key seal/release + hardware-absent fallback; session = principal-kind or lease.
+- [ ] `wallet_and_credentials` — which ZK/predicate proofs are practical on commodity secure elements; wallet recovery without a backdoor; issuer-vs-OS role boundary.
+
+## Part 2 — Components
+- [ ] `component_model` — is "component" one type or a zoo (Part 2 leans on this); identity persistence across reboot/device-move without a forgeable handle.
+- [ ] `scheduler_and_resources` — the kernel path that *checks* a held budget before an op; the `N` formula for non-mailbox resources.
+- [ ] `memory_and_persistence` — borrow-crossing-IPC enforcement; crash-consistency contract for mmap'd typed objects (no log/shadow/snapshot mechanism); single-level-store fallback if persistent memory absent.
+- [ ] `time_and_clocks` — who mints/attests `Clock::Trusted`; virtual-time composition when a tested component calls a real-clock service.
+- [ ] `error_model_and_recovery` — `FailureCause` taxonomy open-vs-closed; where recovery policy is decided; errors-as-values vs. traps line.
+- [ ] `power_management` — default-suspend mechanism; wake-lock arbitration + who attests a "justified reason"; thermal-headroom allocation/measurement/revocation.
+- [ ] `service_activation` — registry lookup mechanism; stateful-service rehydration path; how the activator's own routing table survives its restart.
+
+## Part 3 — Communication
+- [ ] `ipc_and_service_invocation` — exact minimal kernel surface; blessed shared-ring layout; `SharedRegion<Untrusted>` invariants + check-elision; is local literally remote-with-different-lowering or proven-equivalent.
+- [ ] `networking` — minimal TCB-worthy demux/broker size + mechanism; congestion-fairness enforcer; bandwidth-budget locus + composition.
+- [ ] `distributed_boundary` — serialized capability *(load-bearing)*; cross-node revocation propagation + stale-authority bound under partition; default consistency model + conflict surfacing.
+
+## Part 4 — Storage
+- [ ] `filesystem_as_database` — record granularity vs. huge blobs; realm granularity + who mints a realm; log scope + cross-object commit ordering; retain-vs-compact + who pays for history; hash-migration path for a broken hash.
+- [ ] `transactions_and_consistency` — smallest transactional API across subsystems; which transitions must be atomic + who declares a boundary; how irreversible effects participate; default isolation guarantee.
+- [ ] `configuration_and_policy` — precedence algebra (total? explainable?); org-cap-vs-user-override rejection; conflicting-org-policy composition.
+- [ ] `versioned_state_and_migration` — capture/transform fallibility enforcement; lazy-on-load vs. eager-on-mount upgrade of stale snapshots.
+
+## Part 5 — Lifecycle
+- [ ] `package_system` — install-side-effects-as-declarative-transitions; setup-machine confinement; manifest-attestation enforcement + lying/incomplete manifest.
+- [ ] `boot_and_trust_chain` — measured-chain scope (which/how-many components, when complete); hardware-root assumption if none; confidential-components vs. observability tension.
+- [ ] `kernel_architecture` *(spine decided)* — effects-ceiling-on-privileged-components mechanism; implementation-level detail under the recorded TCB/side-channel strategy.
+- [x] `updates_and_hot_swap` — **SOLID**
+- [x] `driver_model` — **SOLID**
+
+## Part 6 — Human Surface
+- [ ] `windowing_and_compositor` — focus-revocation vs. in-flight events; child-compositor capability-binding contract + trusted-path escalation across nesting; per-stream alternate-content API.
+- [ ] `human_permission_ux` — picker↔app exact contract (object-scoped, not namespace); drag-drop capability crossing without a spoofable intermediary; background-lease renewal + visibility.
+- [ ] `media_and_graphics` — input-event capability-kind set + governing registry (explicitly "remain to be specified"); driver-extends-vocabulary extension point.
+- [ ] `naming_and_discovery` — name-ownership authentication at resolution; the unforgeable-identifier scheme + anti-spoof; alias/rename recording structure.
+- [ ] `multi_user_and_org_control` — tenant-tag on capabilities + cross-tenant detect/refuse; shared-service-without-leak; remote-wipe scope guarantee + algorithm.
+- [ ] `web_integration` — how the OS authenticates a web origin → principal; WebView confused-deputy architecture; web-permission ↔ native-capability reconciliation.
+- [ ] `audio` — real-time scheduling-class mechanism; exclusive-device-access mechanism; mic-capture fan-out to multiple listeners.
+
+## Part 7 — Governance *(entirely framing — every chapter has holes)*
+- [ ] `observability_and_introspection` — causal-event-graph retention/resolution policy; consistent live snapshot over typed state without stopping the world; the observe-attenuation "axis" mechanism.
+- [ ] `audit_compliance_provenance` — tamper-evident log structure + anchor; secure-deletion proof under replication/migration; how the compliance engine stays inside the capability model.
+- [ ] `telemetry_and_feedback` — how crash payloads are proven secret-free at construction; the minimum-telemetry-for-safe-updates floor.
+- [ ] `store_and_economic_control` — the actual admissibility-gate algorithm (which fields/proofs/checks); revocation eager-vs-lazy; how a kill-switch is authorized against abuse; one-time vs. continuous admission.
+- [ ] `governance_and_extension_boundaries` — which contracts are frozen (the list); the bar to change one; who holds governance authority; mechanical fork detection.
+
+## Part 8 — Developer
+- [ ] `developer_experience` — which compiler artifacts are stable-enough-for-tooling; fused-graph-view vs. separate lenses.
+- [ ] `debugging_and_tracing` — predicate sandboxing (what it can touch without being a backdoor); breakpoints across a version boundary; debug-borrow-blocking-swap.
+- [ ] `testing_and_simulation` — the simulability contract + whether it's mandatory; how "hostile" is exhaustive + the coverage claim; simulation-as-store-trusted-certification-artifact.
+- [x] `compatibility_and_legacy` — **SOLID core**; residual: sandbox "knee," authority-shim mechanism, legacy-box graph visibility.
+
+---
+
+## Omega language/compiler asks (tracked in `../../../Omega/wiki/cathedral_alignment.md`)
+- [ ] Information-flow secrecy labels (propagating `Secret<T>` taint) — drives isolation level + constant-time obligation.
+- [ ] Constant-time verification (provable discipline + DIT-safe codegen; wall-clock is a hardware fact).
+- [ ] Verified-gated ML-native optimizer (`design_briefs/verified_gated_ml_optimizer.md`).
+- [ ] The standing pre-boot asks: wire data, versioned data, concurrency, atomics, separate compilation, freestanding target.
