@@ -42,7 +42,7 @@ The **core itself** is the one thing on neither side of that wall — it is *tru
 ## Open Questions
 
 - Miscompilation is answered by the TCB-minimization strategy above, and side channels by the `IsolationClass` posture (parity + opt-in flush/placement); the residue *inside the proved core* is the irreducible {seed, checker, specs, hardware} base — small and human-audited, never zero — including the one hardware fact constant-time rests on (the CPU's data-independent-timing guarantee, ARM DIT / Intel DOITM). (Drivers are excluded — hardware-confined, not language-trusted, [[driver_model]].)
-- What is the performance reality of a single-address-space design once hardware isolation must be reintroduced for untrusted code at the seams?
+- Performance is now framed honestly: the SAS win is real *inside the proved core* (IPC-heavy / service-mesh / OS-service workloads — possibly multiples), Linux-class at the untrusted-app seam, and parity-or-slower for compute-bound work *until* the optimizer matures — which Omega's higher-ceiling + verified-LLM-optimization loop should accelerate ([../../../../Omega/wiki/design_briefs/verified_gated_ml_optimizer.md](../../../../Omega/wiki/design_briefs/verified_gated_ml_optimizer.md)). The residual open part is the empirical crossover — how much of a real desktop workload is seam-dominated.
 - Does the architecture decision even resolve before the target platform is fixed, or is it deliberately deferred ([[vision_and_non_goals]])?
 
 ## Related
