@@ -10,6 +10,12 @@ A new OS faces enormous gravity to "just run Linux apps." The legacy contract a 
 
 A deliberate, named **stance** — not a default that accretes. The governing rule: **native apps are the new model; legacy apps live in an isolated compatibility box.** Legacy execution is a *tenant*, sandboxed behind the capability and component models ([[security_policy_and_sandboxing]], [[component_model]]), never a privileged peer of native components. The box translates a legacy app's ambient-authority expectations into a finite set of explicitly granted capabilities; anything it cannot be granted, it cannot have. Software that demands root (installers, init systems, package managers, a whole distro image) is handed authority over a synthetic system realm ([[filesystem_as_database]]), so it is god of a fabricated world while holding no real root; its privileged writes hit its overlay, and its real authority is the enumerated capability set the box was granted. Crucially, the legacy contract must **never leak outward** to become the contract native apps see.
 
+### The decided mechanism
+
+The options below are not a menu to pick *one* from — they are points on a single dial: **how much of the foreign world the box must fake.** The common case is a **light sandbox**: run the binary directly and fake only what it touches — a capability-scoped filesystem (scratch by default; real folders appear only where explicitly granted, via the standard picker-as-authority UX, [[human_permission_ux]]) and a granted, scopeable network capability. That covers a *lot* — CLI tools, servers, many GUI apps. What it can't fake cleanly — exotic syscalls, direct devices, specific kernel features — escalates up the *same* dial to a **full VM** that fakes an entire kernel. One mechanism, more or less of the world synthesized. The tension resolves as **ambient-inside, capability-bounded-outside**: the guest is god of its fabricated world but reaches only the enumerated capabilities the box holds.
+
+None of it is a special subsystem: a legacy box is the **recursive-provider / synthetic-device pattern** ([[capability_model]], [[driver_model]]) applied to a whole foreign OS — a confined component *provides* a fake filesystem, network, and devices to its guest, and is itself one ordinary component with a capability manifest. And the box is a *bridge, not a home*: LLM-cheap porting and reverse-engineering move apps onto the native, first-class path over time, shrinking reliance on it.
+
 ## Concerns & Design Space
 
 The stance is a choice among consequences, not a free menu:
@@ -28,7 +34,7 @@ The safe pattern across all of these: the legacy box is *isolated*, its authorit
 
 ## Key Questions
 
-- Which single stance does Cathedral commit to first, and which are explicitly deferred or refused?
+- The stance is the *continuum* above (light sandbox → full VM), not a single picked option; the residue is where the dial's knee sits — how much a light sandbox can fake before an app must escalate to a full VM.
 - What is the authority bridge — how does an enumerated set of capabilities get presented to legacy code as the ambient world it expects, inside the box?
 - How visible is a legacy box in the authority graph: one opaque node, or can its internal accesses be attributed?
 
@@ -41,7 +47,7 @@ The safe pattern across all of these: the legacy box is *isolated*, its authorit
 
 ## Open Questions
 
-- Is faithful Linux compatibility achievable *at all* without leaking ambient authority, or is fidelity fundamentally at odds with the capability model?
+- Authority leakage is resolved (ambient-inside, capability-bounded-outside — the box's outward reach is its enumerated cap set); the residue is *behavioral fidelity* — how perfectly the box emulates Linux semantics — which is an emulation-quality problem, not an authority one.
 - Does the web app model ([[web_integration]]) make a native Linux personality unnecessary, letting Cathedral refuse it outright?
 
 ## Related
