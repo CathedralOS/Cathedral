@@ -33,8 +33,11 @@ A useful rule for every later chapter:
 | What effects a component *could* reach | Whether the running system *grants* them |
 | That a protocol change is *compatible* | Which versions are *deployed* and routed |
 | That a swap is *borrow-safe* | Reaching *quiescence* in a live system |
+| Whether concurrency is *data-race / deadlock free* (the model, `Send`/`Shared`, the memory model) | Whether tasks actually *run* — the scheduler, fairness, and context switch |
 
 Omega answers "is this sound?" Cathedral answers "should this happen, now, here, and for whom?"
+
+The concurrency row splits the same way the proofs do (Omega `concurrency_atomics.md` 2026-06-15 review): Omega proves SAFETY (no data race, no deadlock, no protocol violation) against *every* scheduler including adversarial — no scheduler required. Cathedral supplies the scheduler, which is the *trusted* provider of the fairness/atomicity hypotheses that discharge Omega's *conditional* LIVENESS theorems (progress, no starvation). A bug in Cathedral's scheduler cannot break a safety proof; it can invalidate a liveness guarantee.
 
 ## Zero Is Initialization
 
@@ -63,6 +66,7 @@ The honest tension is bug-masking. A zero handle whose writes are silently disca
 - Quiescence proofs in the presence of interrupts, timers, async work, and hardware ([[updates_and_hot_swap]]).
 - Possibly: purpose-tagged authority (`Capability<Read<Contact.Email>, Purpose<SendMessage>>`) ([[data_model_and_privacy]]).
 - Operation-capabilities for secrets (`Capability<SignWithKey(K)>`) rather than raw key bytes ([[secrets_and_keys]]).
+- **Concurrency primitives** (Omega `concurrency_atomics.md` 2026-06-15 review): real-atomic RMW + a verified memory model (two ISA lowerings; device/MMIO as a second model), `Send`/`Shared` data-race typing, the `suspend` effect, and a `Scheduler` *interface* Cathedral implements. Omega owns the model + the safety proofs; Cathedral owns the scheduler. First increment is Omega task #27 (real atomics).
 
 ## Key Questions
 

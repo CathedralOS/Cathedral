@@ -48,7 +48,7 @@ Legend: `[ ]` open · `[x]` closed.
 
 ## Part 2 — Components
 - [ ] `component_model` — is "component" one type or a zoo (Part 2 leans on this); identity persistence across reboot/device-move without a forgeable handle.
-- [ ] `scheduler_and_resources` — the kernel path that *checks* a held budget before an op; the `N` formula for non-mailbox resources.
+- [ ] `scheduler_and_resources` — the kernel path that *checks* a held budget before an op; the `N` formula for non-mailbox resources; **the context-switch keystone** — the Omega concurrency model is stackless and parks only at `await`, so it cannot represent a PREEMPTED task's full register/stack state; Cathedral must define how a preempted task is represented + switched, and likely write the kernel scheduler in a restricted static-task subset (no `spawn`/`await`) to break the bootstrap regress (Omega `concurrency_atomics.md` 2026-06-15 review, OQ2).
 - [ ] `memory_and_persistence` — borrow-crossing-IPC enforcement; crash-consistency contract for mmap'd typed objects (no log/shadow/snapshot mechanism); single-level-store fallback if persistent memory absent.
 - [ ] `time_and_clocks` — who mints/attests `Clock::Trusted`; virtual-time composition when a tested component calls a real-clock service.
 - [ ] `error_model_and_recovery` — `FailureCause` taxonomy open-vs-closed; where recovery policy is decided; errors-as-values vs. traps line.
@@ -101,4 +101,5 @@ Legend: `[ ]` open · `[x]` closed.
 - [ ] Information-flow secrecy labels (propagating `Secret<T>` taint) — drives isolation level + constant-time obligation.
 - [ ] Constant-time verification (provable discipline + DIT-safe codegen; wall-clock is a hardware fact).
 - [ ] Verified-gated ML-native optimizer (`design_briefs/verified_gated_ml_optimizer.md`).
-- [ ] The standing pre-boot asks: wire data, versioned data, concurrency, atomics, separate compilation, freestanding target.
+- [ ] The standing pre-boot asks: wire data, versioned data, separate compilation, freestanding target.
+- [ ] **Concurrency / atomics** — now scoped (Omega `concurrency_atomics.md` 2026-06-15 review): real-atomic RMW + a verified memory model (one IR model → two verified x86/ARM lowerings; device/MMIO is a SECOND model Cathedral gates), `Send`/`Shared` data-race typing, the `suspend` effect, and a `Scheduler` *interface* Cathedral implements. SAFETY (data-race / deadlock / protocol freedom) is proven WITHOUT a scheduler and holds against any scheduler; LIVENESS (progress / no-starvation) is conditional on Cathedral's scheduler supplying fairness. First increment is Omega task #27 (real `LOCK`/`ldxr-stxr` atomics).
