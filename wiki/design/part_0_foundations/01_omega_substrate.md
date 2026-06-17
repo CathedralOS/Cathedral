@@ -33,7 +33,7 @@ A useful rule for every later chapter:
 | What effects a component *could* reach | Whether the running system *grants* them |
 | That a protocol change is *compatible* | Which versions are *deployed* and routed |
 | That a swap is *borrow-safe* | Reaching *quiescence* in a live system |
-| Whether concurrency is *data-race / deadlock free* (the model, `Send`/`Shared`, the memory model) | Whether tasks actually *run* — the scheduler, fairness, and context switch |
+| Whether concurrency is *data-race / deadlock free* (the model, `Send`/`Share`, the memory model) | Whether tasks actually *run* — the scheduler, fairness, and context switch |
 
 Omega answers "is this sound?" Cathedral answers "should this happen, now, here, and for whom?"
 
@@ -66,7 +66,7 @@ The honest tension is bug-masking. A zero handle whose writes are silently disca
 - Quiescence proofs in the presence of interrupts, timers, async work, and hardware ([[updates_and_hot_swap]]).
 - Possibly: purpose-tagged authority (`Capability<Read<Contact.Email>, Purpose<SendMessage>>`) ([[data_model_and_privacy]]).
 - Operation-capabilities for secrets (`Capability<SignWithKey(K)>`) rather than raw key bytes ([[secrets_and_keys]]).
-- **Concurrency primitives** (Omega `concurrency_atomics.md` 2026-06-15 review): real-atomic RMW + a verified memory model (two ISA lowerings; device/MMIO as a second model), `Send`/`Shared` data-race typing, the `suspend` effect, and a `Scheduler` *interface* Cathedral implements. Omega owns the model + the safety proofs; Cathedral owns the scheduler. First increment is Omega task #27 (real atomics).
+- **Concurrency primitives** (Omega `concurrency_atomics.md` 2026-06-15 review): real-atomic RMW + a verified memory model (two ISA lowerings; device/MMIO as a second model), `Send`/`Share` data-race typing, the `suspend` effect, and a `Scheduler` *interface* Cathedral implements. Omega owns the model + the safety proofs; Cathedral owns the scheduler. First increment is Omega task #27 (real atomics).
 
 ## Key Questions
 
