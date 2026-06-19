@@ -19,6 +19,17 @@ Capability<Read<Location.Coarse>, Purpose<ShowNearbyStores>>
 
 A grant of `Read<Contact.Email>` for `Purpose<SendMessage>` does not authorize the same read for `Purpose<BuildAdProfile>`. The purpose is not a comment; it is part of the capability, it bounds what the holder may do, and it lands in the provenance record ([[audit_compliance_provenance]]) so an auditor can answer "why was this contact's email read?" instead of merely "was Contacts granted?".
 
+### The decided scope: the guarantee is confinement, not IFC
+
+The privacy *guarantee* — "an app cannot exfiltrate your data" — is delivered by mechanisms already core, **not** by information-flow control:
+
+- **Confinement / the capability boundary.** An app with no network capability *cannot* leak your data — there is no channel. "Don't let it exfiltrate" is mostly "don't hand it a channel," enforced at the boundary ([[capability_model]], [[security_policy_and_sandboxing]]).
+- **Operation-capabilities for secrets.** Keys, credentials, wallet, and login are protected by *never holding the secret* — you hold a `Capability<Sign>` / `Capability<Unseal>`, and the value stays sealed / in hardware ([[secrets_and_keys]], [[wallet_and_credentials]]). Categorically stronger than labeling a held secret, and it does **not** use IFC.
+
+So **information-flow control — propagating `Secret<T>`-style labels — is *not* the load-bearing privacy mechanism**, and is not needed to ship the OS, wallets, or login. It is the **fine-grained residual** for one case: an app that *legitimately holds* sensitive data **and** has an output channel, where some flows are allowed but the leak must be blocked (the photo app that may upload the picked photo but must not auto-exfiltrate the library). For that case the shape (from IFC prior art — Jif, HiStar, robust declassification) is: the label rides in the content-addressed envelope (stripping it = a *different* object); **declassification** (lowering a label) is a *gated, dangerous* op — unlike capability attenuation (lowering authority), which is *free* — and a declassify must also pin the **integrity of its input** or it is an authorized laundromat; **purpose** is the same machinery on the integrity axis.
+
+**Layer + status:** IFC is a **language-level** feature (propagating labels need compiler support — not stdlib, not kernel-core), and it is **deferred / to-explore** — including whether a *less verbose* scheme than classical IFC exists (label creep is the historical adoption-killer; coarse labels + re-anchoring at world boundaries may suffice). The purpose-scoped capabilities and class-as-domain above remain the *recording/audit* surface; the *enforcement guarantee* is the capability boundary.
+
 ## Concerns & Design Space
 
 - **Data classes as types, not folders.** Class is a property of the datum ([[filesystem_as_database]]), not of where it happens to sit; moving or copying a health record must not strip its class.

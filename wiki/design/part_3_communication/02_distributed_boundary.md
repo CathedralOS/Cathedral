@@ -18,6 +18,16 @@ let remote: Capability<OrderService::place> =
 
 When that holds, the OS stops being "an OS on one box" and becomes a *node* in a typed, capability-secured distributed runtime: objects replicate, authority delegates across nodes with provenance intact, and the same authority graph ([[capability_model]]) spans the fleet ([[multi_user_and_org_control]]).
 
+### The decided mechanism: capabilities are remote-native
+
+A detached capability is a **live reference into its home grant arena**, not the authority itself (CapTP / Cap'n Proto style). Invoking it routes a message back to the home world, which checks its arena — is the generation still live? — and acts or refuses. So **cross-node (and cross-world) revocation is the same operation as local revocation: the generation bump.** No second revocation mechanism. Attenuation across the boundary is a **membrane** — the home (or an interposed proxy) exposes a weaker forwarding reference. This makes the capability system **remote-native and first-class**: a remote cap is just a cap, and the OS routes the invocation home. Confinement holds because the holder gets a callable reference, never raw authority.
+
+When the home world is **unreachable** (offline / partition), the fallback is a detached **content-addressed cryptographic token**: the object's CAS hash is its name and rights diminish along a closed read/write/verify lattice (Tahoe-LAFS-style — natural since everything is content-addressed). Revocation here is **lazy** — a short TTL plus an **epoch field bound to the home generation**, so a home generation-bump invalidates outstanding tokens at next renew/contact. *One generation number governs both modes.* This is the deliberately-degraded mode, not the primitive.
+
+Two worlds that don't know each other are connected by **third-party handoff** (introduce both without either getting the other's raw cap), and a router forwards a **sealed** cap it cannot itself open (sealer/unsealer) — the same primitive the minimal-broker pattern leans on, and what keeps "no ambient authority" from leaking back in via token-sharing.
+
+This unifies local cross-world sharing with distributed sharing — a sibling Matrix and a remote machine are the same case. The Key/Open Questions below (serialized form, cross-node revocation, one-abstraction-for-local-and-remote) are answered by this; the residue is **engineering** — the exact wire protocol, token format, and handoff handshake. This is the load-bearing piece that is *approach-decided but not yet built.*
+
 ## Concerns & Design Space
 
 - **Remote capabilities.** Authority that serializes and transfers without becoming forgeable, preserving its attenuation and revocation binding ([[capability_lifecycle]]). Cryptographic binding to a principal is the likely mechanism.
