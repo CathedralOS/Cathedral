@@ -34,6 +34,8 @@ A capability is a **reference** to an object, not a copy of it. Three distinct t
 
 Same path; only the provider differs — so a **custom capability is just one whose provider is a userspace component** (the recursive-provider pattern below). The extensibility is free: the capability carries its provider reference, so any component can mint capabilities to its own operations and become a provider. And that cross-boundary redemption is **capability-gated, not ambient** — a confined world may IPC a provider *because it holds the capability*, which **is** the permission to make that call. The capability is at once the reference and the IPC-permission; the two are one object.
 
+**OS-owned delegation vs. userspace proxy.** Attenuation has two implementations, and choosing between them is a real decision. A component can **proxy** — keep its own cap and perform operations on a caller's behalf (the recursive-provider pattern) — which is pure userspace, invisible to the OS, and right when you *want* a middleman doing real mediation. Or it can ask the OS to **mint a derived cap** the caller then redeems *directly*. OS-owned delegation buys two things proxying cannot: **direct redemption** (the delegator is out of the hot path — no per-operation hop, no liveness coupling to a delegator that may be busy or dead) and **graph-visibility** (the delegation is recorded, so it is auditable and reliably, transitively revocable *by the OS* even if the delegator is compromised or gone). So: proxy when you want a middleman in the loop; mint a derived cap when you want fast, decoupled, auditable, OS-revocable delegation — the framebuffer region a compositor hands a window is the canonical case (per-pixel hops would be fatal, yet the OS must still revoke on close).
+
 ## Concerns & Design Space
 
 - **Object capabilities.** Designation and authority are the same thing: holding a reference to an object *is* the permission to use it. No separate ACL check.
@@ -63,7 +65,7 @@ Same path; only the provider differs — so a **custom capability is just one wh
 ## Open Questions
 
 - Static authority flow describes *possible* power; the live graph describes *actual* held grants. How tightly are the two reconciled, and who flags drift?
-- Revocation cost is settled in shape (one generation bump plus an O(subtree) walk, discovered lazily at redemption); is that lazy discovery latency acceptable for every grant class, or do some classes need the mapped-grant treatment (active teardown)?
+- Revocation transitivity is **decided: lazy chain-walk.** Revoking is a root generation-bump (**O(1)**); a derived cap is validated at *redemption* by walking its parent-edge chain and comparing each generation, so an ancestor's bump kills the whole subtree lazily at next use. Needs **only parent edges** (no reverse child-index). Eager subtree-bump was rejected: revoke must stay O(1), realistic depths are tiny (<~200), and the redeem-side walk is cacheable ("verified live to depth N at generation G"). Residual: whether a few grant classes want active teardown (mapped-grant) rather than lazy discovery.
 
 ## Related
 - [[capability_lifecycle]] — the states a capability moves through.
