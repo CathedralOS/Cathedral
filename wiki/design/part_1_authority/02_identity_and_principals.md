@@ -22,6 +22,26 @@ data Principal {
 domain Principal::Attested { self.provenance in Attestation::Verified; }
 ```
 
+### The decided mechanism: identity is the confined-world primitive
+
+A principal is a **confined world** — the same primitive as a sandbox, a filesystem realm, a tenant, or the legacy box. "User" is not special: a user is a confined world that root mints, and identity nests with one primitive — bare machine → user → app → tab — the recursive-provider pattern ([[capability_model]]), generalizing the nested-principals point below to *every* level.
+
+This collapses the trust-chain roots into one anchored chain:
+
+- **root = the measured bare machine** — the principal the hardware root of trust + measured boot vouch for ([[boot_and_trust_chain]]); it owns the login program and the bare services.
+- root **mints the user-worlds** (so it is the root of *identity*) and **grants the first capabilities** into them (so it is the root of *authority*) — the two roots are one. The login program is a root-owned chooser; "logging in" selects and unseals a world and runs the session inside it.
+- each user-world's identity = its **sealed realm + the credential that unseals it** ([[sessions_and_login]]).
+
+So: *hardware root → measured-good boot → root (= authority + identity root) → user-worlds → app-worlds.* That answers where the root of identity lives and who mints a principal — **root does, and root is the measured bare machine.**
+
+Consequences:
+
+- **"Run as root" is essentially not a thing.** Root is minimized to login + bare services and is never inhabited by user-facing software — the minimized single point of total compromise (you cannot cage the cage, [[kernel_architecture]]). Only a bare server case skips the login program and runs a world directly.
+- **Confinement is informational, not only authoritative.** A world knows *nothing* outside itself by default: no enumeration of sibling worlds, no shared filesystem namespace. "Browse every account's files" is a normalized ambient leak, and it is gone — the only entity that knows the list of worlds is root, exposed only to the login program.
+- **Cross-world sharing = cross-machine sharing.** A world is opaque from outside, so a sibling world is, to you, exactly like a remote host: sharing is **identity-addressed capability-passing** (grant a capability to a content-addressed object, addressed to an identity you already hold out-of-band), not a shared namespace — unifying local multi-user with distributed multi-machine ([[distributed_boundary]]). Co-ownership (the family computer) is an explicit **shared world** both identities hold capabilities into; locally that shared realm is a zero-copy copy of the *hierarchy* (storage decoupled, content-addressed), so it is nearly free.
+- **Indistinguishability.** Because everything runs in a world, being in one is not suspicious — defeating sandbox-detect-and-evade malware. The honest bound is "no *reliable* tell," not "impossible to tell."
+- **Per-persona unlinkability.** A human may hold several unlinkable worlds (work / personal / anonymous) — the per-relationship-identity point below taken to its conclusion.
+
 ## Concerns & Design Space
 
 - **What an identity *is* per kind.** A user, an app, a publisher, a device, and a component are not the same shape. Each needs its own answer for what makes two references the same principal, and what survives reinstall, rebuild, or reboot.
@@ -53,9 +73,10 @@ domain Principal::Attested { self.provenance in Attestation::Verified; }
 
 ## Open Questions
 
-- Is there a single principal type with a kind tag, or a family of principal types with a shared trust interface?
-- Where does the root of identity live — a hardware device identity, an enrollment authority, the store — and who is allowed to mint a new principal?
-- Can a human's identity be fully decoupled from any one device, and what is the recovery story when the rooting device is lost?
+- *Resolved above:* the root of identity is **root, the measured bare machine** (which mints every principal), and a principal is **one confined-world primitive**, not a family of types. The live questions:
+- **The local-network-sharing facade.** Cross-world sharing is modeled as talking to a remote host — but is that literally loopback (`127.0.0.1` permitted) or a distinct local lowering? Does treating a sibling world as "remote" confuse the case where the user wants *actual* network sharing? Is targeted "share with exactly one other world" a credential concern, and do worlds identify themselves so one can whitelist a specific shared world? Does a shared world really need a full system realm — cheap (zero-copy hierarchy, storage decoupled), but is "a whole OS to share a file" the right shape?
+- **Recovery without a backdoor.** A world sealed to a credential is unrecoverable if the credential is lost; root must be able to *reset* a world without being able to *read* it, and a human wants to decouple from any single rooting device. That reset-not-read power is the hard residue ([[secrets_and_keys]], [[wallet_and_credentials]]).
+- **Rotation** remains: rotating a key/identity without orphaning the authority that legitimately flowed from it (a graph-rewrite with no algorithm yet).
 
 ## Related
 - [[capability_model]] — principals are the graph's nodes.

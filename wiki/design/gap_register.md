@@ -23,7 +23,7 @@ Legend: `[ ]` open · `[x]` closed.
 ## Load-bearing (blocks other decided work — close these first)
 
 - [ ] **Grant arena schema** — entry structure, operation wire-shapes, and query surface of "the arena" referenced by [[capability_lifecycle]], [[scheduler_and_resources]] (`PeerDied`/`Revoked`), and [[ipc_and_service_invocation]] (redemption). *Most-referenced unspecified mechanism in the spec.* **Concurrency resolved (not a soundness risk):** lock-free via the generation counter — revoke = atomic generation bump, redemption = lockless read-compare, race-safe by construction; paged-slab backing for stable addresses under growth; per-principal scoping bounds contention; only slot allocation needs sync (rare, shardable). Provably implementable lock-free; exact wire-schema + impl deferred.
-- [ ] **Trust-chain roots** — root of authority (first capability), root of identity (first principal + where it lives), hardware root of trust (assumption if none). [[capability_model]] [[identity_and_principals]] [[boot_and_trust_chain]]
+- [x] **Trust-chain roots — RESOLVED.** The three collapse to one anchored chain: hardware root of trust → measured-good boot → **root (the bare machine) = root of *both* authority and identity**. Users are confined-world "Matrices" root mints; each world's identity = its sealed realm + the credential that unseals it. Recorded in [[identity_and_principals]] (decided mechanism). Residual local follow-ups: root-of-authority bootstrap mechanics ([[capability_model]]) and the no-hardware-root fallback ([[boot_and_trust_chain]]).
 - [ ] **Serialized / transferable capability** — the form that survives network/reboot preserving attenuation + revocability. [[distributed_boundary]] *(also in appendix)*
 - [ ] **Data-class attachment + purpose enforcement** — how a class attaches to a datum and survives copy/transform/serialize/IPC; purpose type-enforced vs. audit-only. [[data_model_and_privacy]]
 - [ ] **Minimal trusted broker pattern** — concrete size/mechanism for the recurring TCB-worthy intermediary (networking demux, observability query engine, compliance engine, activator routing table).
@@ -38,7 +38,7 @@ Legend: `[ ]` open · `[x]` closed.
 ## Part 1 — Authority
 - [ ] `capability_model` — arena entry schema + query shape; root-of-authority bootstrap.
 - [ ] `capability_lifecycle` — delegate/transfer/revoke entry schema + wire shape; drain-handshake protocol for revoking mapped grants.
-- [ ] `identity_and_principals` — what each identity kind *is* + what binds it across reinstall/rebuild/device-move/reboot; rotation algorithm (called "a graph-rewrite," no algorithm); who mints a principal.
+- [ ] `identity_and_principals` — *root-of-identity + one-primitive-vs-zoo RESOLVED* (root = the measured bare machine mints every principal; a principal is one confined-world primitive — see the chapter's decided mechanism). Residue: the rotation algorithm (still "a graph-rewrite," no algorithm); the local-network-sharing facade + recovery-without-a-backdoor (now in the chapter's open questions).
 - [ ] `security_policy_and_sandboxing` — "dangerous combinations" policy language (syntax, static-vs-dynamic eval, scope); enforcement point (hand-off vs. use vs. both).
 - [ ] `secrets_and_keys` — operation-capability schema; what an "operation handle" is + how it binds hardware + survives reboot; key rotation without a revocation window.
 - [ ] `data_model_and_privacy` — class attachment + purpose enforcement *(load-bearing)*; open-vs-closed class set; derived-data classification rule.
