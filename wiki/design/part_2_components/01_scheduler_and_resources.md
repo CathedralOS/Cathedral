@@ -56,6 +56,23 @@ Liveness is therefore not a separate subsystem and not a header polled out of th
 
 There are no locks to wait on, because mutual exclusion is ownership, enforced at compile time ([[component_model]]): two tasks cannot hold a mutable reference to the same data, so there is nothing to lock. A task only ever waits for a value, a message, or a time.
 
+### Preemption and safepoints
+
+A task runs until it parks — but untrusted or compute-bound code cannot be *trusted* to park promptly, so the scheduler must be able to force it. Forcing a *stackless* task is the subtlety: parking at an `await` saves a known, bounded continuation, while interrupting at an arbitrary instruction would require saving a full native context, breaking the compile-time storage bound. The resolution is a gradient by task class:
+
+- **Native Omega code — boundary-awaits + back-edge safepoints.** Every OS-boundary crossing (syscall, IPC, alloc) *is* an `await`, so real code reaches a safepoint constantly, for free. The one gap — a tight loop doing no boundary calls — is closed by a compiler-inserted **safepoint poll at every loop back-edge** (a predicted-not-taken check of a scheduler flag; the mature JVM/Go technique). So even a hostile `loop {}` yields within one iteration *by guarantee*, and every yield lands at a compiler-known point that keeps the continuation bounded (stackless preserved). This is what makes scheduling **preemptive, not cooperative** — no component can monopolize a core.
+- **Foreign / untrusted code — signal preemption behind the wall.** Code the compiler does not control gets conventional timer-interrupt preemption with a full register/stack save, inside its hardware-isolated address space, where it is already paying full-thread costs.
+
+Totality *strengthens* this rather than replacing it. If **actor handlers are required to terminate** (the receive loop itself stays productive, [[omega_substrate]]), the *quiescence* worry dissolves by construction — a terminating handler always returns to its park, so the actor always reaches a swap point without being forced; preemption then covers only the *fairness/latency* axis (a long-but-terminating handler still shares the core). For the **realtime class**, a task that can *prove a bounded worst-case runtime* (WCET-style) may run un-preempted to a deadline — an opt-in for small RT code, bottoming out at the hardware timing model (the same below-the-model wall as constant-time). *(Exploration, not committed.)*
+
+| Code | Mechanism | Guarantee |
+|---|---|---|
+| general | preempted (boundary-await + back-edge safepoint) | bounded latency, no proof burden |
+| actor handlers / pure fns | required-total | no infinite loops; quiescence always reachable |
+| realtime-critical | optional bounded-runtime (WCET) proof | run un-preempted to a deadline |
+
+The earlier worry that the stackless model "cannot represent a preempted task" resolves here: native tasks are never preempted at an *arbitrary* point — they are nudged to the next compiler-known safepoint (a boundary or a back-edge), where the continuation is bounded; only foreign code takes a full-context save, behind the wall.
+
 ## Concerns & Design Space
 
 - **Capability-gated resource access.** A held budget is required to *touch* a resource, not just to be prioritized within it. Absence of budget = absence of the effect, audited like any capability.
