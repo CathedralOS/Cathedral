@@ -77,7 +77,7 @@ Legend: `[ ]` open · `[x]` closed.
 - [ ] `windowing_and_compositor` — focus-revocation vs. in-flight events; child-compositor capability-binding contract + trusted-path escalation across nesting; per-stream alternate-content API.
 - [ ] `human_permission_ux` — picker↔app exact contract (object-scoped, not namespace); drag-drop capability crossing without a spoofable intermediary; background-lease renewal + visibility.
 - [ ] `media_and_graphics` — input-event capability-kind set + governing registry (explicitly "remain to be specified"); driver-extends-vocabulary extension point.
-- [ ] `naming_and_discovery` — name-ownership authentication at resolution; the unforgeable-identifier scheme + anti-spoof; alias/rename recording structure.
+- [ ] `naming_and_discovery` — name-ownership authentication at resolution; the unforgeable-identifier scheme + anti-spoof; alias/rename recording structure. *Speculative direction:* self-certifying keys + untrusted-DHT resolution + name→key consensus quarantined to global discovery — see [post_dns_resolution](../speculation/post_dns_resolution.md).
 - [ ] `multi_user_and_org_control` — tenant-tag on capabilities + cross-tenant detect/refuse; shared-service-without-leak; remote-wipe scope guarantee + algorithm.
 - [ ] `web_integration` — how the OS authenticates a web origin → principal; WebView confused-deputy architecture; web-permission ↔ native-capability reconciliation.
 - [ ] `audio` — real-time scheduling-class mechanism; exclusive-device-access mechanism; mic-capture fan-out to multiple listeners.
