@@ -24,6 +24,16 @@ Capability<Observe<EventStreamY>>
 
 But the deep work is not "permissions as types." It is the *lifecycle* of a capability and the *graph* the lifecycle traces (see [[capability_lifecycle]]).
 
+### Reference, not copy — and redemption routes to a provider
+
+A capability is a **reference** to an object, not a copy of it. Three distinct things: the **object** (the resource — lives in its home world, may be large), the **capability** (a small reference + authority — locally the `{slot, generation}` arena ticket, on the wire a tiny descriptor naming home + slot + rights + generation), and the **type** `T` (what it is *over*). Holding a capability conveys authority, not contents: to learn what is behind it you must **redeem** it. Reference (the capability) and copy (shipping the object itself as `wire data`) are two distinct sharing modes — the capability is the live, revocable, redeem-to-read one.
+
+**Redeeming routes to a provider.** A capability's arena entry names *who handles redemption* — its **provider** — and redeeming sends the invocation there:
+- **OS-core provider** (read a file, send a packet): redemption traps as a **syscall**.
+- **Component provider** (a credential manager, a custom service): redemption routes as an **IPC** to that component.
+
+Same path; only the provider differs — so a **custom capability is just one whose provider is a userspace component** (the recursive-provider pattern below). The extensibility is free: the capability carries its provider reference, so any component can mint capabilities to its own operations and become a provider. And that cross-boundary redemption is **capability-gated, not ambient** — a confined world may IPC a provider *because it holds the capability*, which **is** the permission to make that call. The capability is at once the reference and the IPC-permission; the two are one object.
+
 ## Concerns & Design Space
 
 - **Object capabilities.** Designation and authority are the same thing: holding a reference to an object *is* the permission to use it. No separate ACL check.

@@ -134,3 +134,4 @@ A few writing rules, inherited from Omega's docs:
 
 Forward-looking explorations under [`../speculation/`](../speculation/) — coherent visions to revisit, **not** committed design.
 - [Future Browser Design](../speculation/future_browser.md) — the browser decomposed into OS primitives: Omega-IR web-artifacts, native-exe tabs in a sandbox-host gatekeeper, tiered fidelity (native on Cathedral / WASM on legacy), and runtime re-optimization via hot-swap.
+- [Code-Shipping Capability](../speculation/code_shipping_capability.md) — eBPF-generalized: ship verified Omega IR to run *outside* your Matrix in a bounded capability context (next to a credential), checked by PCC. The stronger agent-credential model; same mechanism as the web-artifact.
