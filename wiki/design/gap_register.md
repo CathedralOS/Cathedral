@@ -22,7 +22,7 @@ Legend: `[ ]` open · `[x]` closed.
 
 ## Load-bearing (blocks other decided work — close these first)
 
-- [ ] **Grant arena schema** — entry structure, operation wire-shapes, and query surface of "the arena" referenced by [[capability_lifecycle]], [[scheduler_and_resources]] (`PeerDied`/`Revoked`), and [[ipc_and_service_invocation]] (redemption). *Most-referenced unspecified mechanism in the spec.*
+- [ ] **Grant arena schema** — entry structure, operation wire-shapes, and query surface of "the arena" referenced by [[capability_lifecycle]], [[scheduler_and_resources]] (`PeerDied`/`Revoked`), and [[ipc_and_service_invocation]] (redemption). *Most-referenced unspecified mechanism in the spec.* **Concurrency resolved (not a soundness risk):** lock-free via the generation counter — revoke = atomic generation bump, redemption = lockless read-compare, race-safe by construction; paged-slab backing for stable addresses under growth; per-principal scoping bounds contention; only slot allocation needs sync (rare, shardable). Provably implementable lock-free; exact wire-schema + impl deferred.
 - [ ] **Trust-chain roots** — root of authority (first capability), root of identity (first principal + where it lives), hardware root of trust (assumption if none). [[capability_model]] [[identity_and_principals]] [[boot_and_trust_chain]]
 - [ ] **Serialized / transferable capability** — the form that survives network/reboot preserving attenuation + revocability. [[distributed_boundary]] *(also in appendix)*
 - [ ] **Data-class attachment + purpose enforcement** — how a class attaches to a datum and survives copy/transform/serialize/IPC; purpose type-enforced vs. audit-only. [[data_model_and_privacy]]
