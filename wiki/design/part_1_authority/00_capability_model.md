@@ -28,6 +28,8 @@ But the deep work is not "permissions as types." It is the *lifecycle* of a capa
 
 A capability is a **reference** to an object, not a copy of it. Three distinct things: the **object** (the resource — lives in its home world, may be large), the **capability** (a small reference + authority — locally the `{slot, generation}` arena ticket, on the wire a tiny descriptor naming home + slot + rights + generation), and the **type** `T` (what it is *over*). Holding a capability conveys authority, not contents: to learn what is behind it you must **redeem** it. Reference (the capability) and copy (shipping the object itself as `wire data`) are two distinct sharing modes — the capability is the live, revocable, redeem-to-read one.
 
+**A capability is named by its arena slot — an O(1), fd-like handle.** You present the *specific* `{slot, generation}` (like a file descriptor: you pass `fd 3`, not a path), and redemption is `arena[slot]` plus a generation/rights check — a **lookup, not a search.** The OS never asks "does this principal hold *some* cap for resource X" — that would be an ACL-style scan needing a reverse index; you always name the one you mean. This is the capabilities-vs-ACLs efficiency, and it is why holding two independent caps to the same object (two picker grants) is unambiguous: you redeem one *specific* slot, revoking *that* slot is what stops you, and the other stays live.
+
 **Redeeming routes to a provider.** A capability's arena entry names *who handles redemption* — its **provider** — and redeeming sends the invocation there:
 - **OS-core provider** (read a file, send a packet): redemption traps as a **syscall**.
 - **Component provider** (a credential manager, a custom service): redemption routes as an **IPC** to that component.
