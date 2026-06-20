@@ -1,8 +1,8 @@
 # Cathedral
 
-Cathedral is a new operating system built on [Omega](../Omega/README.md), an experimental systems language centered on explicit state, proof-carrying behavior, capability-aware boundaries, and data-oriented execution.
+Cathedral is a new operating system built on [Omega](../Omega/README.md), a systems language centered on explicit state, proof-carrying behavior, capability-aware boundaries, and data-oriented execution.
 
-Cathedral is not a safer Unix with a nicer package manager. It is an attempt to redesign the legacy OS contracts that were shaped by C, ambient authority, process isolation, reboot-based upgrades, and weak metadata — and to rebuild them around **capability flow, proof-carrying components, resumability, and explicit state migration.**
+Cathedral redesigns the operating system around a single spine — **authority is always a capability**: explicit, held, attenuable, revocable, never ambient. Every domain is rebuilt on it — proof-carrying components, typed state, and explicit migration — coherent by construction rather than by convention.
 
 The wager, stated plainly:
 
@@ -48,7 +48,3 @@ Key Omega chapters Cathedral leans on heavily:
 - [Versioned Data And Machine Replacement](../Omega/wiki/language_guide/chapter_21_versioned_data.md)
 - [Wire Protocols](../Omega/wiki/language_guide/chapter_20_wire_protocols.md)
 - [Proof Obligations](../Omega/wiki/language_guide/chapter_9_proof_obligations.md)
-
-## Naming
-
-It is **Cathedral**. Not CathedralOS. Not Cathedral OS. The OS is the cathedral.
