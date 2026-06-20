@@ -8,7 +8,9 @@ The wager, stated plainly:
 
 > Every traditional OS domain has a legacy contract. Most of those contracts cannot answer simple questions — *who can do what, why, through which path, and can I revoke it safely?* Cathedral should answer them by construction, because authority, effects, protocols, and state evolution are visible to the compiler before a single byte is emitted.
 
-It is partly inspired by [Theseus](https://www.theseus-os.com/) — a single address space, language-level isolation, live component replacement — but Cathedral revisits many more contracts than Theseus did: the filesystem becomes a database, IPC becomes typed protocol invocation, install becomes a declarative state transition, the debugger stops trapping into the kernel, and *everything* is up for reconsideration.
+Cathedral reconsiders *every* legacy OS contract, not one. Storage becomes a single content-addressed database of typed objects, partitioned into capability-rooted realms with no global root; authority is capabilities all the way down, with nothing ambient; IPC becomes typed protocol invocation; drivers run as confined, restartable user-mode components behind a mandatory IOMMU; identity becomes confined "Matrix" worlds; and persistence, install, upgrade, and even the running privileged core become declarative, hot-swappable state transitions.
+
+One technique among these — a single address space with language-level isolation and live component replacement, used for the *proved* core — shares ground with [Theseus](https://www.theseus-os.com/). It is one idea here, not the thesis. The thesis is the wager above: that authority, effects, protocols, and state evolution are visible to the compiler before a single byte is emitted, so the OS can answer *who-can-do-what-why-and-can-I-revoke-it* by construction.
 
 ## Status
 
