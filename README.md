@@ -1,8 +1,16 @@
 # Cathedral
 
-Cathedral is a new operating system built on [Omega](../Omega/README.md), a systems language centered on explicit state, proof-carrying behavior, capability-aware boundaries, and data-oriented execution.
+A new operating system built on [Omega](../Omega/README.md) — designed so that whole classes of disaster are not *patched* but *structurally impossible*.
 
-Cathedral redesigns the operating system around a single spine — **authority is always a capability**: explicit, held, attenuable, revocable, never ambient. Every domain is rebuilt on it — proof-carrying components, typed state, and explicit migration — coherent by construction rather than by convention.
+Because authority is always an explicit, held, revocable capability — never ambient — the failures that define modern computing stop being expressible:
+
+- **Ransomware encrypts nothing.** No program can touch a file, device, or network it wasn't explicitly handed. A malicious download, a backdoored dependency, a hijacked AI agent — each reaches only what you granted, and you can revoke any grant instantly and see exactly what would break.
+- **AI agents you can hand real power.** An agent holds the *right to use* a secret, never the secret's bytes — so a prompt-injected agent can be capped to "use this key, read-only, rate-limited" and *cannot* exfiltrate it, because the bytes never enter its reach.
+- **A crash never corrupts your data.** Storage is one transactional, versioned object store: power loss leaves you at your last consistent commit, and any object rolls back to the state before a bad change — git-style history, built into the filesystem.
+- **Update anything without rebooting.** Drivers, services, even the privileged core hot-swap live, with rollback.
+- **A buggy driver kills its device, not your machine.** Drivers run confined in user space behind a mandatory IOMMU.
+
+Underneath, every OS contract is rebuilt on one spine — capabilities, proof-carrying components, typed state, explicit migration — so the system is coherent by construction rather than by convention.
 
 The wager, stated plainly:
 
