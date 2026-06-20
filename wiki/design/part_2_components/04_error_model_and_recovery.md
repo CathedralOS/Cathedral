@@ -28,6 +28,18 @@ domain FailureCause {
 
 Four properties every failure must have: **typed** (a known cause, not an integer), **recoverable** (a declared recovery strategy), **observable** (it appears in the introspection surface, [[observability_and_introspection]]), and **policy-controllable** (the response is configurable, not hard-coded).
 
+### The decided mechanism
+
+**Errors-as-values vs. traps — the line.** *Expected, modeled* failures are **`Result`-shaped values** (`Ok | Err`): not-found, timeout, conflict-retry, `CapabilityRevoked`, `UserDeniedAuthority`, `DeadlineExceeded` — normal control flow, matched and handled. **Traps (panic → crash)** are for the **unprovable residue** the proof system cannot rule out: a hardware fault, a **boundary/FFI contract violation** (a provider broke a guarantee Omega accepted on trust), resource exhaustion (`ResourceExhausted`/OOM), `CorruptionDetected`, `PowerLoss`, or an explicit `panic`. Crucially, a trap is **not** for a *proven invariant* — Omega proves those at compile time, so they cannot fail at runtime and there is nothing to trap. A trap means "the world broke its promise, or I'm out of resources" → crash → supervisor, not in-line handling.
+
+**Taxonomy: closed dispositions + open causes, wire-encoded.** The **recovery disposition is the closed, frozen set** (`retry | restart | migrate | escalate | fatal`); the **`FailureCause` is extensible** and carried as `wire data` (stable field numbers, [[versioned_state_and_migration]]). This is the forward-compatibility mechanism: a new OS can emit a cause an *old* app has never heard of, and the old app still reacts correctly because it reads the **disposition** even when the specific cause is unknown. Closed handling-vocabulary = the semantic floor; open causes = the detail.
+
+**Provenance is a non-issue for the crash path.** The crash report is emitted by the **trusted kernel** — it *observed* the fault; a faulting component does not get to narrate its own death — so a component cannot forge it. A component's *self-reported* reason is an ordinary `Result` claim, used for diagnostics, never blindly obeyed (the supervisor's retry/escalation policy is the supervisor's). And attestation is **relative to the trust boundary**: a Matrix's synthetic kernel attests within its own fiction by design ([[identity_and_principals]]). So there is no "lying about failures" hole.
+
+**Recovery = crash-only + reattach + replay.** A crashed component is restarted by its supervisor from clean state ([[component_model]] supervision tree), then **reattaches to its last-committed durable state** ([[memory_and_persistence]]) and **replays its outbox** (the output-commit pattern, [[transactions_and_consistency]]) — so a restart resumes from the last consistent commit and re-drives any pending external effect idempotently. Crash-only *composes* the persistence, transaction, and outbox work; it is not new machinery.
+
+**Outcomes fail closed on zero.** The success/failure *discriminator* must never read a zeroed/uninitialized outcome as success — a zeroed `Result` is `Err`/pending, not `Ok`. (Distinct from a zeroed `Failure` *descriptor*, which is the no-failure-described empty value; the discriminator is what fails closed.) The opposite of the C `errno` / `0 = success` hole.
+
 ## Concerns & Design Space
 
 - **The taxonomy itself.** Is `FailureCause` a closed enum the OS owns, or extensible so drivers and services add domain-specific causes ([[driver_model]])?
@@ -42,8 +54,8 @@ Four properties every failure must have: **typed** (a known cause, not an intege
 
 ## Key Questions
 
-- Is the failure taxonomy closed (the OS owns it, exhaustively) or open (extensible per domain)? This shapes how much the kernel must know.
-- Are errors propagated as Omega typed return values, as traps, or both — and where is the line?
+- **Taxonomy — decided** (see mechanism): closed recovery *dispositions* (`retry|restart|migrate|escalate|fatal`) + extensible `FailureCause` as `wire data`, so an old app reads the disposition even for a cause it doesn't know.
+- **Value vs. trap — decided:** `Result` for modeled/expected failures; trap for the unprovable residue (hardware fault, boundary-contract violation, OOM, explicit panic) — never for a proven invariant (compile-time gone).
 - Who decides recovery policy: the failing component, its supervisor, or system policy ([[configuration_and_policy]])?
 - How much causality can be carried cheaply enough to attach to *every* failure without it becoming a performance tax?
 
