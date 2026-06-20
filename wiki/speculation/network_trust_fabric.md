@@ -63,6 +63,23 @@ Most of the *user-visible* benefit (no passwords, no phishable form, no card-on-
 - Identity = the **Matrix** root key + per-relationship pseudonyms ([[identity_and_principals]]); consent on the **compositor trusted path** ([[windowing_and_compositor]], [[human_permission_ux]]).
 - None of the crypto is new (WebAuthn/passkeys, OPAQUE/PAKE, SPKI/SDSI, CapTP/Spritely, petnames/Zooko's-triangle, Tahoe-LAFS, macaroons/UCAN/Biscuits, TEE attestation, EMV tokenization) — the novelty is welding them into one naming-authority-free, capability-native fabric under a single invariant: *no bearer secret leaves the device, for any relationship.*
 
+## First-pin: born-low, provenance-gated ceiling
+
+> **PROVISIONAL — needs a security/crypto expert's review before being treated as decided.** Records where the first-introduction exploration landed (2026-06-19, design panel). The keystone open problem; banked for continuity, not committed.
+
+The model — **don't ask the human "trust this?" (they click yes); born-low + structural refusal instead.** A fresh cold pin is *born low-assurance*; the OS gates *capability classes* on a pin's provenance and **refuses** (never just warns) to let a weak pin anchor dangerous authority. Capability-scoping makes a *wrong* pin survivable; born-low makes the *right* one safe by default — the human is never asked the trust question they're bad at, only the *scope* below a ceiling.
+
+Tiered by reversibility of loss:
+- **Tier 0 — read / identity-proof / one-shot `Charge(≤$X)` against an already-pinned rail** → instant TOFU off a self-certifying record, frictionless (the dangerous grants don't exist at this tier).
+- **Tier 1 — standing authority** (subscriptions, recurring charge, standing delegation) → per-grant caps lose to *accumulation*, so a durable grant off a low pin needs **one independent corroboration + a probation window** + a legible standing-grant review surface. No never-met → recurring-money in one sitting.
+- **Tier 2 — irreversible emission** (KYC, gov-ID, biometrics, custody bytes) **or trust-transitive roles** (IdP, "my bank", introducer, recovery channel) → scoping gives *zero* protection (can't un-send, can't un-vouch), so **mandatory strong out-of-band; TOFU forbidden; refuse-until-upgraded.**
+
+**The crypto cannot stop the dominant attack.** A logged lookalike name (`acmebаnk`, Cyrillic) + a harvest page is a *valid, signed, transparency-logged* binding — green on every check. So the load-bearing anti-phishing is **non-cryptographic** and must be *built*, not deferred: (a) **hard-block** a freshly-pinned name confusable/mixed-script against the user's *own* higher-assurance pins; (b) **refuse to render a secret-entry surface from a low pin.** Transparency logs / ledgers / CA-notary are **optional assurance *boosters*** that buy *consistency, not correctness*, and at cold-start re-root authority into the OS vendor — ship as anchor-*quality*, never anchor-*elimination*. Agents may *use* pinned keys but may **never create a new trust root** (no out-of-band channel, no human gesture).
+
+**Irreducible residual:** the out-of-band root bottoms out at trusting whoever shipped the OS (spread across a k-of-n quorum so no single root is fatal — never zero); the name→intent gap (shrink, never close); total-path MITM at the pinning instant; and **recovery — the nastiest**: device loss re-pins *everything at once*, correlated with the thief holding your recovery channel (SIM/email). Mitigated by social-re-introduction + an off-device **authority-graph** backup (pins/petnames/fingerprints, *never keys* → cold re-pins become fingerprint *verifications*) + re-pins getting minimal caps, never inherited standing authority. And detection is only *population-level*: a transparency log's catch accrues to the real brand watching it, not to *this* victim at *this* pin.
+
+**Flagged for expert validation:** the consistency-vs-correctness limits of transparency logs; the tier boundaries + cap-class gating; the recovery-coupling threat model; the Unicode-confusable defense; and whether born-low + structural-refusal holds against attack classes not modeled here.
+
 ## Related
 - [future_browser.md](future_browser.md) — the client that runs on this fabric (a capability wallet + trusted-path compositor, not a renderer-that-POSTs-forms).
 - [code_shipping_capability.md](code_shipping_capability.md) — the sibling "ship verified IR to run elsewhere" pattern.
