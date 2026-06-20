@@ -20,6 +20,16 @@ transaction grant_and_record {
 }
 ```
 
+### The decided mechanism
+
+**Commit is an explicit runtime act, not magic.** Durable state becomes durable through an actual commit — a host/stdlib `store.commit(obj)` call (API spelling illustrative), or a declared transaction the compiler lowers to one. There is **no implicit RAII commit**, and `effects filesystem_io` is only a static label — it persists nothing. ("No save" is a slogan; there is always a commit call.) The atomic unit is **one object's new version, written as one realm-log append** (CoW): mutate its fields in the RAM working copy, then commit. So **single-object atomicity is free** — co-locating the things that must commit together as fields of one aggregate (e.g. an outbox as a field of the account it guards) makes "both or neither" automatic, with no transaction primitive at all.
+
+**A real transaction is needed only when state spans objects.** Within one realm: stage writes to N objects, path-copy to the realm root, commit the root once (one append) — same log, still cheap. **Across realms on one machine: the OS coordinates 2-phase commit** (reliable coordinator, no partition — genuinely easy; this is one of the few intrinsically-OS pieces). **Across machines: 2PC is wrong** (it blocks under partition) — use **sagas / compensation** ([[distributed_boundary]]).
+
+**Concurrency: snapshot isolation + optimistic.** CoW *is* MVCC — every reader gets a consistent point-in-time view of the object graph with no reader locks. Write-write conflicts use **optimistic first-committer-wins** (detect at commit, abort+retry or surface a merge), never lock-on-open ("file in use" is the wrong UX) and never silent last-write-wins (lost updates). Most data is uncontended, so it is invisible; genuine concurrent edits surface as a conflict to merge ([[distributed_boundary]]). This is the database playbook (Postgres/InnoDB MVCC; FoundationDB/Spanner optimistic), inherited because the store is a db-fs — conventional OSes punt this (Windows TxF was deprecated; file locks are the alternative).
+
+**Irreversible effects are fenced OUT, not made to "participate."** A world-touching effect (`network_io`, `device_io`) cannot appear inside a commit, because the commit code carries a storage-only effect ceiling (`filesystem_io`, no `network_io`) and Omega's effect system already rejects any reach past a ceiling — **the fence is a free consequence of the existing effect system, no new keyword or `[irreversible]` marker.** The irreversible act is handled *outside* the transaction by the **transactional-outbox pattern** (record a durable intent *inside* the commit; emit *after* it; carry an idempotency key for crash-replay) — a **userspace/stdlib pattern, not OS machinery.** The OS supplies only the atomic commit (which the filesystem needs anyway) and the compiler supplies only the fence; the resend/reconcile loop is irreducibly the app's. The db-fs's value here is just *no second WAL* (intent commits in the same realm-log append as the state) and *whole-system atomicity* (no private DB needed).
+
 ## Concerns & Design Space
 
 - **Where the boundaries are.** The core design work: classifying state transitions into "must be atomic together" sets. Package install + capability grant is one transaction ([[package_system]], [[capability_model]]); a background telemetry write is not.
@@ -35,8 +45,8 @@ transaction grant_and_record {
 
 - What is the smallest transactional API that serves filesystem, package, config, and capability subsystems without forcing them into one storage engine?
 - Which transitions are *required* atomic vs. merely *convenient* atomic — and who is authorized to declare a new transactional boundary?
-- How do irreversible effects participate: are they forbidden inside a transaction, deferred until commit, or always paired with a compensator?
-- What isolation guarantee is the OS-wide default, and where is it relaxed?
+- **Irreversible effects — decided** (see mechanism): *forbidden inside* a transaction (the commit's storage-only effect ceiling rejects `network_io`/`device_io`, free from the existing effect system), and handled *after* commit by the userspace transactional-outbox pattern (durable intent in-commit, emit post-commit, idempotency key). Not OS machinery — a stdlib pattern + a free fence.
+- **Isolation — decided:** snapshot isolation (CoW = MVCC, no reader locks) is the default; write-write conflict uses optimistic first-committer-wins (abort+retry / surface a merge), never lock-on-open, never silent last-write-wins. The database playbook, inherited because the store is a db-fs.
 
 ## Omega Leverage
 
