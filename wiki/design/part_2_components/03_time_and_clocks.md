@@ -20,6 +20,22 @@ Capability<Clock::Wake>               // arm a wakeup on a clock; a power event
 
 The consequences are deliberate. A deterministic component gets *no* wall-clock access, so it cannot accidentally become non-reproducible. A test runner gets a **virtual** clock and drives time by hand. A security-sensitive protocol demands a **trusted** clock and refuses to validate certificates against an attacker-influenced one ([[secrets_and_keys]]). Reading a clock is an **effect** (`clock_read`), so the authority graph shows exactly which components depend on time and which clock.
 
+### The decided mechanism
+
+**Clock-as-capability costs nothing per read.** The capability selects *which time page a principal is mapped*, once at grant; the read itself is the ordinary cheap userspace path — a free-running hardware counter (`rdtsc` / ARM `CNTVCT`) scaled by constants in that page, no syscall. `Monotonic` and `Wall` stay as fast as any vDSO read; the capability gates *whether and which*, not *how fast*. `Clock::Trusted` is the exception — the rare, costlier path (it checks attestation), used only for security-expiry decisions.
+
+**Virtual-clock dilation has two honest tiers, because a visible scale is bypassable.** A parent serves a child a dilated clock by mapping it a page with different `scale`/`offset` constants — cheap, and the free-running counter supplies the motion, so the page is written only when the dilation *changes* (no hot loop, no per-read trap). But this is **cooperative-only**: an adversarial child reads the *raw* counter and *measures* the effective rate (`Δtime / Δcounter`), so it cannot be fooled — and obfuscating/encrypting the constants does not help, because the child measures the *behavior*, never reads the *parameter* (a linear transform extracts in two queries anyway; you cannot keep a secret from code on its own core). So:
+- **Cooperative (default, fast):** software `scale`/`offset`. Binds honest software (test harnesses, replay, offsets); an adversarial child can read real time — which is **fine**, since it is confined and "am I in a Matrix?" is meaningless when *everything* is one.
+- **Non-bypassable (rare):** gate the raw counter — `CR4.TSD` (x86) / `CNTKCTL` (ARM) makes a userspace counter read *trap*, routing all time through the host. Correct but **slow** (a trap per read), so it is reserved for the rare Matrix that genuinely must not see real time (adversarial deterministic replay, a paranoid anti-fingerprint sandbox).
+
+**No VT-x for native Matrices.** Hardware-transparent offsetting (x86 VT-x TSC-offset / ARM `CNTVOFF`) *would* give fast non-bypassable dilation, but it needs the virtualization stack Cathedral deliberately avoids for native domains ([[kernel_architecture]]). Since the non-bypassable case is rare and the slow counter-gate covers it, Matrices stay lightweight MMU-confined domains; **VT-x is reserved for the compatibility box** running a real foreign OS ([[compatibility_and_legacy]]). The instruction-gate (`CR4.TSD`/`CNTKCTL`) is a basic, universal CPU control in the same family as the MMU permission bits — not a virtualization dependency.
+
+**`Clock::Trusted` is composed, not a single source.** The threat it defends is **rollback** — setting the clock backward to un-expire a cert, token, or lease. So it is: an **anti-rollback monotonic counter** (secure element / TPM / TrustZone, persisted, so time can never precede the last durably-recorded point — the load-bearing part); **provable calendar accuracy** (Roughtime-style *signed*, multi-server-cross-checked time, so a lying server is catchable, unlike unauthenticated NTP); **continuity** from the free-running counter between syncs; all maintained by **measured-boot-attested** kernel code ([[boot_and_trust_chain]]). The RTC is only the plausible cold-start baseline. So trusted time is best-effort but *attestable* — and only the rare expiry decision needs it; `Monotonic`/`Wall` need none.
+
+**ARM is 1:1.** `rdtsc`→`CNTVCT`/`CNTPCT`, `CR4.TSD`→`CNTKCTL`, VT-x TSC-offset→`CNTVOFF` (built into the timer, if anything cleaner). Same problems, same solutions, same decisions.
+
+**A custom ISA dissolves all of this by construction.** Bake the per-domain offset/scale into the counter-read instruction itself, behind an unreadable domain register, and every time read is *transparent, controlled, non-bypassable, and fast* by default — no trap, no virtualization stack. More broadly, a capability-native ISA (the CHERI lineage) turns the whole capability check — including clock-read gating — into a cheap instruction rather than a trap or MMU game. The cost/leak/bypass trade-offs above are artifacts of commodity silicon that never had capabilities or per-domain time in its instruction set; on Cathedral's own ISA they are non-problems — limited only to where code actually runs on that ISA (foreign code and the compat box still ride commodity hardware).
+
 ## Concerns & Design Space
 
 - **Clock taxonomy.** Wall vs. monotonic vs. trusted vs. virtual — each a separate capability with separate trust and separate failure modes.
@@ -35,8 +51,8 @@ The consequences are deliberate. A deterministic component gets *no* wall-clock 
 ## Key Questions
 
 - What is the minimal default — does an ordinary component get *any* clock without asking?
-- Who is trusted to mint a `Clock::Trusted`, and what attests it (secure element, network time authority, boot measurement [[boot_and_trust_chain]])?
-- How does virtual time compose when a component under test calls a real service that holds a real clock?
+- **`Clock::Trusted` attestation — decided** (see mechanism): anti-rollback monotonic counter (secure element/TPM/TrustZone) + Roughtime-style signed network time + measured-boot-attested keeper; RTC is only the cold-start baseline.
+- **How does virtual time compose when a component under test calls a real service that holds a real clock?** *(Still open — the one genuinely-unresolved clock question.)*
 - What is the correct lease-expiry semantics when the only available clock is unreliable or partitioned?
 
 ## Omega Leverage
@@ -48,7 +64,7 @@ The consequences are deliberate. A deterministic component gets *no* wall-clock 
 
 ## Open Questions
 
-- Is "trusted time" achievable on commodity hardware without a secure time source, or is it always best-effort with attestation?
+- "Trusted time" on commodity hardware — **resolved (above):** best-effort but *attestable* — anti-rollback monotonic counter (defeats the load-bearing rollback attack) + Roughtime signed/cross-checked accuracy + measured-boot keeper; never perfect, but rollback-resistant and provable, which is what expiry decisions actually need.
 - Should monotonic time be the universal default and wall-clock the privileged exception, inverting the legacy convention?
 - How much of distributed time belongs here vs. in [[distributed_boundary]]?
 
