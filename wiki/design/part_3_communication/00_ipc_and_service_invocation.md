@@ -68,6 +68,20 @@ Because the typed layer lowers to the same region whether the peer is local or r
 
 The cost to state plainly: for foreign-language components the OS tracks authority and lifetime at **region and endpoint granularity**, not message granularity. Message-level authority flow is available only to components that use the typed layer. That is a gradient, not a gate.
 
+### Trust coordination is type-enforced, not a new memory category
+
+Two facts settle the "untrusted shared memory" worry.
+
+**Between two proved-Omega peers, IPC is safe by construction** — it is a *protection-domain* boundary (separate components), not a *trust* boundary. The compiler checks both sides' discipline, so the move/borrow hand-offs above are provably race-free and zero-copy. This *reads* as unsafe the way a syscall into the kernel reads as unsafe, and is safe for the same reason: the other side is Omega too. `SharedRegion<Untrusted>` exists *only* for a foreign / non-Omega peer.
+
+**At a foreign boundary, no new memory category is needed — the invariant-parameter system already does it.** Untrusted bytes arrive carrying an *empty* proven-invariant set (`&[u8, []]`), and a value may only be used through facts that have been *established*. So you cannot index without first proving in-bounds, dereference an embedded pointer without discharging its contract (`stable` / in-bounds / valid-lifetime), or treat a byte as a tag without validating it — and *establishing the fact is the validation* (snapshot a copy, check it, the proof now holds on the copy; never re-read the shared cell). Forget to validate and it does not typecheck, so adversarial pointer-chasing *cannot compile*. The earlier framing of "a third memory category Omega must grow" is overstated: `<Untrusted>` is bytes-with-no-invariants over the existing primitives, and the contracts force snapshot-then-validate structurally.
+
+**The consequence is the validate-control / zero-copy-payload split.** Snapshot-and-validate the small *control* (indices, sizes, offsets — bounds-checked against the granted allocation); read the large *payload* zero-copy *within those validated bounds*. Where the consumer makes no memory-safety decision on payload values (a compositor blitting pixels), a concurrent adversarial write is benign (tearing), so the payload stays zero-copy even from a hostile writer. For "here, this buffer is yours" hand-off, zero-copy comes from **MMU ownership-transfer** (unmap the writer — needs no cooperation; a hostile writer faults on its stale pointer), never a defensive copy.
+
+**Local invocation is remote invocation with the same contract, not a hidden fast path.** This resolves the local-vs-remote question. Every capability call carries the *remote-grade contract* — it is an `await` (park/unpark, [[scheduler_and_resources]]), returns a *fallible* `Result`, and may take unbounded time under a caller-set deadline. This is the inverse of transparent RPC (Waldo, *A Note on Distributed Computing*): rather than hide remote's hardness behind a local-looking API, the local call *exposes* it, so a caller written against the contract works whether the provider is local, cross-wall, remote, or synthetic — and the provider stays unknowable. A timed-out call carries the **`Unknown`** outcome-disposition (maybe-happened → reconcile via idempotency key), distinct from `Rejected` (didn't-happen → safe retry) ([[error_model_and_recovery]]).
+
+The residual is a primitive-enumeration, not a hard problem: settle the exact *set* of trust-coordinating primitives — the Omega↔Omega move/borrow set vs. the foreign-boundary `<Untrusted>`-region + page-grant/transfer set.
+
 ## Concerns & Design Space
 
 - **Cardinalities are ring disciplines, not separate mechanisms.** One ring backs them all; the cardinality is just how each side advances its index — a plain bump for a sole owner, an atomic *claim* (plus a per-slot publish flag, since claimed slots fill out of order) for many. So the primitive MUST expose the atomic claim-a-slot / claim-an-item hooks, or the multi-sided cardinalities are unbuildable on top and you've foreclosed them at the floor. The blessed set, named for legibility over SPSC/MPSC: `one_to_one` (private streams and replies — cheapest, no claim either side), `many_to_one` (the actor **mailbox** — atomic-claim writes, sole reader), `one_to_many_distribute` (a work pool — each item to exactly one worker), and `broadcast` (each item to every reader; distribute-vs-broadcast is the axis SPSC/MPSC omits). `one_to_one` can drop below a ring entirely: a single cell, a single-use oneshot, or a capacity-0 rendezvous.
@@ -81,9 +95,9 @@ The cost to state plainly: for foreign-language components the OS tracks authori
 
 ## Key Questions
 
-- What is the exact minimal kernel surface (`grant_region`, `set_perms`, `revoke`, `send_capability`), and is any of those itself a library?
-- What shared-ring layout does the substrate bless, given that C must use it with a plain struct and offsets?
-- Is local typed invocation literally the remote path with a different lowering, or a fast path *proven* equivalent to it?
+- What is the exact minimal kernel surface (`grant_region`, `set_permissions`, `revoke`, `send_capability`), and is any of those itself a library? *(Sensible irreducible set; refine in implementation.)*
+- What shared-ring layout does the substrate bless, given that C must use it with a plain struct and offsets? *(Library-level interop ABI, not a kernel concern — the ring is a stdlib structure over the raw region; "blessing" one layout is just so C and Omega agree on offsets.)*
+- **Local typed invocation is remote invocation with the same contract** (decided, above): one abstraction carrying the remote-grade contract (`await` + fallible + deadline), the inverse of transparent RPC — not a hidden fast path that could diverge.
 
 ## Omega Leverage
 
@@ -96,7 +110,7 @@ The cost to state plainly: for foreign-language components the OS tracks authori
 
 - Can single-writer safety be more than convention when a foreign peer holds a read/write mapping, short of grant/revoke per message?
 - How much of the local fast path can be *proved* equivalent to the remote path rather than tested?
-- What exactly is the `SharedRegion<Untrusted>` type the map boundary returns — a stdlib type over the primitives, or does it need language support? It must make reads return raw/unproven values and enforce snapshot-then-validate (the bytes are shared-mutable, so re-reading after a check is a TOCTOU hole). This is a third memory category — neither proved nor boundary-accepted, but *adversarially mutable* — that ch18 does not yet name.
+- `SharedRegion<Untrusted>` — **resolved (above): not a new memory category.** It is bytes carrying an *empty* invariant set (`&[u8, []]`) over the existing primitives; the invariant-parameter + pointer/`Ref<T>` contract system forces snapshot-then-validate structurally (you can only use facts you have established, so a TOCTOU index/deref does not typecheck). Likely a stdlib type, not language growth. Residual: whether the empty-invariant-slice ergonomics need any compiler help.
 
 ## Related
 - [[scheduler_and_resources]] — parking, wakeups, and the spin-versus-sleep wait path.
