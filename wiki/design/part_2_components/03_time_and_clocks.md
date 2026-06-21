@@ -52,7 +52,7 @@ The consequences are deliberate. A deterministic component gets *no* wall-clock 
 
 - What is the minimal default — does an ordinary component get *any* clock without asking?
 - **`Clock::Trusted` attestation — decided** (see mechanism): anti-rollback monotonic counter (secure element/TPM/TrustZone) + Roughtime-style signed network time + measured-boot-attested keeper; RTC is only the cold-start baseline.
-- **How does virtual time compose when a component under test calls a real service that holds a real clock?** *(Still open — the one genuinely-unresolved clock question.)*
+- **Virtual-time composition — resolved (subsumed).** A component's time-frame *is* its clock capability, and it is Matrix-scoped. Within a frame, time is consistent; **crossing out of the Matrix is the distributed case** (no global now — already handled, [[distributed_boundary]]); a *local* cross-frame mismatch arises only from a **deliberately-granted cross-frame capability** (a virtual-clock component handed a *real* service, or an un-owned differently-dilated child) — never a surprise, since the granter chose it. The deterministic-test rule follows: hand the component a virtual clock *and* virtual versions of its dependencies, and it stays in one coherent frame; hand it a real cap and that call is a real-world side effect by your own setup. The one genuinely-hard residual — cross-*machine* causality with no global now — lives in [[distributed_boundary]].
 - What is the correct lease-expiry semantics when the only available clock is unreliable or partitioned?
 
 ## Omega Leverage
