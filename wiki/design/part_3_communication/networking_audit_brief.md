@@ -50,10 +50,16 @@
    not to serve, so the vendor-seeded relay floor is a permanent recurring cost +
    a centralization/censorship chokepoint, not a cold-start crutch. "No central
    servers" holds for *integrity*, not *availability* behind CGNAT.
-3. **Legacy public-ingress front-end** — a stock browser does DNS→SYN to :443
-   with no key, so the broker MUST accept unauthenticated TCP/TLS on a fixed
-   port, parse ClientHello SNI, and eat SYN-flood DoS like today. A carved-out
-   attack-exposed trusted component, an explicit exception to "never parse."
+3. **Legacy public-ingress front-end** — ✅ BANKED (see chapter "Legacy public
+   ingress: the exposed front-end"). A carved-out minimal front-end (not the core
+   demux) accepts unauthenticated TCP/TLS, reads ClientHello SNI, steers to the
+   serving world (recursive inbound-nests; **SNI-passthrough** — never terminates
+   TLS; under ECH holds only the scoped ECH key). **Dead by default** → a
+   non-hosting machine has *zero stranger-facing open ports*; the front-end exists
+   only under a `Serve<Public>` grant (distinct, higher-authority than
+   `Serve<Key>`). DoS is inherent (SYN floods like nginx; standard mitigations);
+   Cathedral's contribution is **isolation** (compromise contained to its Matrix)
+   + **attribution** (every accept steered into a named world), NOT elimination.
 4. **Demux token discipline under QUIC** — ✅ BANKED (see chapter "QUIC routing
    and the classifier discipline"): broker mints/partitions the CID space
    (QUIC-LB), route-on-token-never-semantics, cross-delivery invariant scopes to
