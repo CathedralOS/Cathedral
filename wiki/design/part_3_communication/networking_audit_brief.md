@@ -54,9 +54,15 @@
    with no key, so the broker MUST accept unauthenticated TCP/TLS on a fixed
    port, parse ClientHello SNI, and eat SYN-flood DoS like today. A carved-out
    attack-exposed trusted component, an explicit exception to "never parse."
-4. **Demux token discipline under QUIC** — broker-minted/partitioned Connection-ID
-   space (QUIC-LB style); the cross-delivery invariant only provably scopes to
-   broker-minted tokens, degrading to 5-tuple for stock peers.
+4. **Demux token discipline under QUIC** — ✅ BANKED (see chapter "QUIC routing
+   and the classifier discipline"): broker mints/partitions the CID space
+   (QUIC-LB), route-on-token-never-semantics, cross-delivery invariant scopes to
+   broker-minted CIDs (5-tuple fallback for stock peers); protocol-agnostic
+   always-on router core + on-demand proved classifier module loaded into the
+   router domain at hot-path speed (proof-isolation, no per-packet IPC),
+   hot-swappable; `RegisterClassifier` (OS-only TCB) vs `Serve` (app) split;
+   trap-upward = provider-IPC up the Matrix tree to the OS broker (one driver /
+   one broker / N provider-endpoints; SR-IOV optional perf).
 5. **The open-web client tier** — browser/`curl`/paste-a-URL reach peers that
    don't exist at build time → a loud gesture-gated `Reach<UserDirected>` tier
    where the URL bar/picker *is* the per-connection mint (network analogue of the
