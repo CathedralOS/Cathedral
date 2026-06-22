@@ -63,11 +63,18 @@
    hot-swappable; `RegisterClassifier` (OS-only TCB) vs `Serve` (app) split;
    trap-upward = provider-IPC up the Matrix tree to the OS broker (one driver /
    one broker / N provider-endpoints; SR-IOV optional perf).
-5. **The open-web client tier** — browser/`curl`/paste-a-URL reach peers that
-   don't exist at build time → a loud gesture-gated `Reach<UserDirected>` tier
-   where the URL bar/picker *is* the per-connection mint (network analogue of the
-   file picker). Plus the POSIX porting shim (bind→endpoint-register,
-   connect→authorize) and a zero-ceremony developer-Matrix for the inner loop.
+5. **The open-web client tier** — ✅ BANKED (see chapter "The open-web client:
+   contain, don't enumerate"). Resolution: **scrap URL-bar-as-mint** — the OS
+   doesn't own the browser's chrome, so a self-reported navigation is an
+   untrusted claim, not a mint. The client is *just a Matrix*: **full net + zero
+   ambient local authority**, so broad reach is harmless because the sandbox is
+   empty of anything to steal (the conjunction ceiling, `network_io` ∧ no
+   `Read<sensitive>`, in canonical form). Picker is the only inbound bridge;
+   per-trust-domain browser instances (throwaway vs banking) are the cheap
+   isolation win. Honest residual: it can still leak *what you actively put into
+   it this session* (typed passwords, picked files) — blast radius bounded to
+   "what this instance was handed," not zero. POSIX shim (connect→authorize) +
+   developer-Matrix for the inner loop still apply.
 6. **"Locally-terminated / synthetic" fact vs Matrix indistinguishability** —
    a positive "this flow never left the machine" indicator is meaningful only to
    a child that brought its own pinned anchor; for confined code, "are you really
