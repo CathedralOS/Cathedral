@@ -86,8 +86,16 @@
    a child that brought its own pinned anchor; for confined code, "are you really
    online" must stay unanswerable by construction. Don't promise an honest-offline
    indicator.
-7. **Finite steering-slot allocation** as a `SteeringSlot` capability + its
-   cross-world timing side-channel (slot occupancy leaks).
+7. **Finite steering-slot allocation** — ✅ BANKED (see chapter "Hardware steering
+   slots as a scheduled capability"). The cap is the **right to be *scheduled
+   into*** the finite hardware fast-path pool (not slot ownership); the broker
+   places/evicts opportunistically, fair-shared via the scheduler; overflow → the
+   software path. Allocation status is **not exposed** (closes the explicit
+   channel). Residual = a timing channel (own-latency reveals fast-vs-software),
+   irreducible but low-SNR (µs demux delta vs ms network jitter → negligible for
+   real flows). Two tiers: opaque dynamic scheduling (default, max utilization) vs
+   partitioned/reserved sub-pool (paranoid/local, closes even timing, costs idle
+   entries).
 8. **Recovery-without-a-backdoor** + per-relationship-key cross-device continuity
    (unlinkable-by-default, linkable-by-explicit-intent via the user's own
    authority graph).
