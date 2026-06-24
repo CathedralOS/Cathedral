@@ -80,6 +80,33 @@ Tiered by reversibility of loss:
 
 **Flagged for expert validation:** the consistency-vs-correctness limits of transparency logs; the tier boundaries + cap-class gating; the recovery-coupling threat model; the Unicode-confusable defense; and whether born-low + structural-refusal holds against attack classes not modeled here.
 
+## The trust-bootstrap surface: the DAG, the collapse, and the build root
+
+> **PROVISIONAL — continuity of the first-pin exploration (a later session).** Extends the keystone from *network peers* to the *whole* trust-bootstrap surface, including the OS image itself.
+
+**First-pin is a pattern, not a place — it recurs at every layer as a trust DAG.** "Establish trust in X the first time, no prior pin to lean on" appears everywhere, and the instances *chain* into a DAG bottoming out at a few irreducible roots:
+- **Irreducible roots (cannot be derived, only assumed):** the **silicon/firmware vendor** (a backdoored CPU/firmware defeats everything above — out of scope to *solve*, in scope to *depend on*); the **OS image itself** (pivotal — both a root *and* the enforcer of every other pin, so a malicious OS makes all capability machinery theatre); the **bootstrap channel** (the physical/social act by which the first bits arrived — website, store, friend, USB).
+- **Derived pins (each chains to a root):** boot chain (→ firmware), OS updates (→ the install pin), OS-bundled apps (→ the image; trusted because vendor-*authored*, not role-*blessed*), third-party apps + publishers (→ the store-as-introducer; two pins — artifact *and* publisher identity), dependencies/supply-chain, network peers (→ CA/DNS-or-self-certifying + confusable), people/contacts, your own other devices, account enrollment + recovery, content provenance, and the trust-infra itself (CA store, transparency logs, DHT, DNS, time authorities → the vendor's choices).
+
+Two flavours, different defenses: **"is this artifact authentic?"** (OS image, app, update, document — signatures + reproducible/checkable builds + transparency) vs **"is this live counterparty who I meant?"** (service, person, device — where the *confusable-name* attack lives — confusable-block + OOB + multi-path).
+
+**The collapse: self-attestation is worthless and proof bounds rather than blesses, so the problem is small.**
+- **Self-attestation is a no-op** — a malicious OS signs "I'm honest" with keys it owns and hot-swaps its own answering code. A trust root must be *external* to what it attests (self → worthless; vendor-signed → external; TPM measured-boot → external). Corollary: scope out hardware and you scope out any *software* defense against a malicious OS, so the OS is an **assumed-honest root**.
+- **Proof bounds, it does not bless** — proof-carrying code proves *declared obligations*, never "non-malicious" (malice isn't formalizable; evil lives in unproven dimensions or in the *legitimate-but-harmful combination* — input-cap ∧ network-cap = keylogger, no proof violated). So PCC + capabilities convert "is this good?" (unanswerable) into "what's the worst a thing confined like this can do?" (boundable). **Confine, don't verify-intent.**
+
+So the DAG collapses to **two irreducible cores**: (1) the **assumed OS/hardware root** (no software verifies it; *spread* it, never eliminate), and (2) the **unconfineable decisions** — irreversible / trust-transitive actions to a counterparty whose intent must be judged (the high-stakes first-pin core above). Everything between dissolves into **confinement, not trust**.
+
+**The build root: trust-by-checking via the Omega bootstrap lattice closes the deepest hole.** Cathedral is written in Omega, and Omega builds itself through the [bootstrap lattice](../../../Omega/wiki/architecture/bootstrap_lattice/bootstrap_lattice.md): a producer (any compiler, even hostile) emits output **plus a certificate**, and a tiny audited **checker** validates it against the **meaning** (reference interpreters). You trust the checker, never the builder — a backdoored toolchain's output *fails the check*. This **closes the Thompson / trusting-trust hole that k-of-n signing, transparency, and multi-path fundamentally cannot** (they sign and log a Thompson-backdoored binary perfectly). It is the *master* mechanism for the build root, not one option among four — but it buys exactly **one of three** layers, which must be kept apart:
+- **#1 Build integrity** ("the binary correctly implements *this source's* meaning") — ✅ the lattice; Thompson closed, *modulo the lattice's own residual*: **seed diversity** (multiple independent `alpha` VMs on different ISAs) is where real Thompson resistance lives, and it is the genuine "spread the root," at the very bottom.
+- **#2 Source identity** ("is this the *real* Cathedral source/release?") — not given by checking; needs a publisher pin / signing (k-of-n, later).
+- **#3 Source goodness** ("is the genuine source non-evil?") — irreducible: a valid certificate over subtly-evil source passes. The OS cannot confine itself, so **the OS authors' intent is the floor of trust** — "someone has to read the source," never zero.
+
+**Stance (provisional, v1-shaped):**
+- **Build root** → the Omega lattice (trust-by-checking + audited seed). The strong, deep answer; also dissolves most of the *channel* root (a corrupted download fails the check, so multi-path matters less).
+- **Source** → **auditable but gated**: open/auditable source is *mandatory* (the checking story is meaningless to anyone but the vendor without it), while distribution stays a single canonical gated release (readable + reproducible-checkable, one "Cathedral," trademark-controlled). Auditability and avoiding distro-hell are orthogonal — do not conflate closing the *gate* with closing the *source*.
+- **Defer** k-of-n signing (the #2 root; less scary here because a stolen v1 key can only sign *auditable-source* malice) and multi-path (largely subsumed by checking) as operational hardening.
+- **Irreducible residue, stated honestly:** the **hardware axiom**, **seed diversity**, and **#3 author intent** — small, explicit, never zero.
+
 ## Related
 - [future_browser.md](future_browser.md) — the client that runs on this fabric (a capability wallet + trusted-path compositor, not a renderer-that-POSTs-forms).
 - [code_shipping_capability.md](code_shipping_capability.md) — the sibling "ship verified IR to run elsewhere" pattern.
