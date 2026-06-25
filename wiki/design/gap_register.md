@@ -69,7 +69,7 @@ Legend: `[ ]` open · `[x]` closed.
 
 ## Part 5 — Lifecycle
 - [ ] `package_system` — install-side-effects-as-declarative-transitions; setup-machine confinement; manifest-attestation enforcement + lying/incomplete manifest.
-- [ ] `boot_and_trust_chain` — measured-chain scope (which/how-many components, when complete); hardware-root assumption if none; confidential-components vs. observability tension.
+- [ ] `boot_and_trust_chain` — *much decided* (see chapter "The decided mechanism"): the measured chain = **static TCB** (firmware → tiny loader shim → proved core → privileged component manifest), and the measured-good core then **reports the dynamic authority graph transitively** (measure the reporter; the reporter covers the runtime); composes the **lattice** (image is *correct*) with measured boot (*which* image); **no hardware root → degrade honestly** to software-chain + passphrase and mark self *unattestable* (self-report ≠ attestation); **confidential computing is a hardware feature Cathedral *exposes*, not implements** — opacity is a hardware *fact* not an OS policy; the only Cathedral residue is **attestation-gated capabilities** (a quote becomes a grant predicate) + exposing the TEE as a requestable property; external attribution automatic; custom-ISA makes it a native capability; **rollback vs anti-downgrade = a hardware monotonic security floor**; **un-brickable recovery = the storage A/B-mirror + atomic-flip** (no new machinery). Residue = impl-level (PCR layout, quote format).
 - [ ] `kernel_architecture` *(spine decided)* — effects-ceiling-on-privileged-components mechanism; implementation-level detail under the recorded TCB/side-channel strategy.
 - [x] `updates_and_hot_swap` — **SOLID**
 - [x] `driver_model` — **SOLID**
