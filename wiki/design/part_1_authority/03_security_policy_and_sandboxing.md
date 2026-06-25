@@ -10,7 +10,7 @@ On legacy systems, isolation is a stack of afterthoughts bolted onto ambient uid
 
 Sandboxing falls out of [[capability_model]] for free: a component that was never handed a capability cannot use that authority, so the *default* is the sandbox. Policy is then not a wall built around a powerful process; it is a set of **ceilings** over an already-minimal, already-visible authority flow. A policy says, at most: which capabilities a principal may *hold*, which it may *store* or *delegate*, which **effects** it may reach, and which **boundary providers** may satisfy those effects.
 
-The headline requirement is reasoning over **dangerous combinations**. The policy layer must evaluate conjunctions of authority, not permissions one at a time:
+The headline requirement is handling **dangerous combinations** — `Read<Photo>` ∧ `network_io` is a different animal than either alone. This was first imagined as a formal *policy language* that evaluates conjunctions of authority (the example below). **That formal engine is demoted** — see "The decided mechanism": deciding *danger* formulaically is intractable (intent is not in the capability set), so the conjunction ceiling is enforced by containment + judged real-grants + LLM-advised legibility, not a rule engine. The example records the shape that was rejected:
 
 ```omega
 // A ceiling can forbid a conjunction even when each grant alone is allowed.
@@ -20,6 +20,20 @@ deny Principal::App when
 ```
 
 Every sandboxed surface — app, service, driver, secret access, clipboard, screenshot, audio, camera, filesystem, hardware, inter-app communication — is the same kind of node under the same kind of ceiling. There is no separate "sandbox engine," and there is no ambient authority for policy to claw back.
+
+### The decided mechanism
+
+**Formulaically deciding "dangerous combination" is a fake problem — drop the policy engine.** "Dangerous" is *intent*, and intent is not in the capability set: `Read<Photo>` ∧ `network_io` is a photo-backup app *or* spyware, and no rule distinguishes them because the difference is the human's *purpose*, which the graph does not contain (the same limit as "proof cannot prove non-malicious"). A formal dangerous-combinations rule language can only over-block (kill legitimate apps) or under-block (miss novel combinations). So the conjunction ceiling is **not** a danger-deciding language. It is enforced three ways, none formulaic:
+
+**1. Containment defuses the combination by default — no judgment needed.** Do not reason about whether a combination is dangerous; *neuter it by containment*. An app is granted what it asks, but its rights resolve **inside a Matrix to synthetic/contained resources by default** (virtual realms, [[filesystem_as_database]]; the Blank/Curated fidelities of [[human_permission_ux]]): "Photos" is a blank or curated realm, "the network" is contained. So **"granted the general right" ≠ "given the real resource."** The app boots happy and cannot tell it is contained (Matrix indistinguishability), and `Read<Photo>` ∧ `network_io` is *harmless* because the photos are blank and the egress reaches nothing real. The conjunction is defused by **what the Matrix actually exposes upward — which defaults to nothing — not by a policy rule.**
+
+**2. The *real* hole-punch is separate, per-resource, gestural, and judged.** Two tiers: granting the capability **type** (the app holds `Read<Photo>`, contained) is distinct from granting the **real resource** (the hole-punch up to your actual photo library). Real access is minted one resource at a time by a user gesture (the picker mints real read of *the file you picked*; a network hole-punch reaches *the peer you allowed*), so the dangerous combination only *exists* if **both real hole-punches are deliberately granted** — the rare, scrutinized case, never the default.
+
+**3. The judgment "is this real combination sketchy?" is LLM-advised + human, not a formula.** At the one moment it matters — granting real access that completes a worrying combination — the legibility/scanner agent ([[human_permission_ux]]) flags it in context ("a calculator is asking for real photos *and* real outbound network — that is suspicious"), advisory, and the human decides. Judgment, by a person with an LLM's help, does the deciding a rule cannot.
+
+So what survives is not a policy language but a **discipline**: contain by default, make each real hole-punch a deliberate per-resource gesture, and advise the judgment with the legibility agent. At most a **tiny hard-block backstop** exists for a handful of genuinely-never-legitimate combinations (e.g. global keystroke capture ∧ unconstrained network, no gesture override) — explicitly a floor, *not* the mechanism. And because containment is the default, **getting a judgment wrong is survivable**: the worst case of a mistaken real-grant is bounded by everything *else* still being contained.
+
+**The principle still holds, restated honestly:** "do not co-locate real-sensitive-read ∧ real-unconstrained-egress in one principal" is real — it is the exfil ceiling, and it is *why the browser is a Matrix with network ∧ nothing-real* ([[networking]]). But it is enforced by **containment + judged real-grants**, never by a formula that decides danger. Enforcement is therefore at **hand-off / containment**, not at *use* (deny-at-use based on data provenance is information-flow control — the deferred fine-grained residual, [[data_model_and_privacy]]). The genuinely hard part is the **legibility UX** of the judged real-grant ([[human_permission_ux]]), not a missing policy engine.
 
 ## Concerns & Design Space
 
@@ -38,8 +52,8 @@ Every sandboxed surface — app, service, driver, secret access, clipboard, scre
 ## Key Questions
 
 - For any app, can the OS produce the *why / who / stored? / passable? / background? / combinable?* answer for every permission it holds?
-- How are dangerous-combination rules expressed, and are they evaluated statically over authority flow, dynamically at grant time, or both?
-- What is the relationship between a policy ceiling and the actual held authority — is the ceiling enforced at hand-off, at use, or at both?
+- ~~How are dangerous-combination rules expressed, and are they evaluated statically over authority flow, dynamically at grant time, or both?~~ **Resolved/demoted** (see "The decided mechanism"): there is no formal rule engine — deciding danger formulaically is intractable. The conjunction ceiling is enforced by containment-by-default + per-resource judged real-grants + LLM-advised legibility; judgment (human + LLM), not a formula, does the deciding.
+- What is the relationship between a policy ceiling and the actual held authority — is the ceiling enforced at hand-off, at use, or at both? **At hand-off / containment** (use = data-flow = IFC = deferred).
 - What does revocation *look like* to a human, and how is the consequence ("this will break X") computed before they confirm?
 
 ## Omega Leverage
