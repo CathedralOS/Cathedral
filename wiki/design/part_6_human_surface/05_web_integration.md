@@ -12,6 +12,20 @@ Unify the two models. **The strong move: a web origin becomes a principal in the
 
 A concrete early decision: are web apps **first-class** (origins are full principals, installable, holding native capabilities under the same ceilings as native code via [[security_policy_and_sandboxing]]), **second-class** (web apps run but with a constrained capability menu), or **isolated legacy** (the browser is a sandboxed compatibility box, like other legacy runtimes in [[compatibility_and_legacy]])? The architecture differs sharply by answer; the design should commit to first-class as the aspiration and name the fallback.
 
+### The decided direction (deferred — web is late-stage)
+
+Web integration composes almost entirely from already-decided machinery, so the *shape* is settled even though the full mechanics are intentionally deferred: web comes late in the OS journey and is better revisited once the native stack exists.
+
+**First-class, via nesting — born-low, promoted on install.** An origin is a **nested principal inside the browser-Matrix** (the recursive sub-principal pattern, [[identity_and_principals]]). By default a visited origin is **born-low, ephemeral, and near-empty** — a nested sub-world with full web reach but *no* native authority — which is cheap because nested Matrices are cheap (the open-web-client model, [[networking]]). On **install** (a deliberate user act) the origin is **promoted** into its own Matrix and may hold *delegated, attenuated* native capabilities granted through the OS gestures, like a native app. So principal-hood is universal, the default costs ~nothing, and weight is earned by promotion — resolving first-class-vs-second-class-vs-long-tail in one move.
+
+**Identity = the origin's key; authentication = the first-pin problem (deferred).** An origin's principal id is its TLS/cert identity (legacy) or pinned key (native) — the same reachable-as-key identity as [[networking]] — so "how is an origin authenticated" *is* the first-introduction/first-pin problem parked in the security bucket ([network_trust_fabric](../../speculation/network_trust_fabric.md)). Nothing new; it inherits the deferred trust work.
+
+**One authority graph → one revocation surface; web permissions are OS gestures.** Because origins are principals in the *same* graph, a web grant and a native grant are the same edge in the same Warden/legibility view, revoked the same way. Web permission prompts **become** the OS grant gestures (picker, action-confirm), so the browser's internal permission model is **replaced** for native browsing; the legacy web's own model survives only **contained inside the legacy browser** (native gets the clean model, legacy runs its old model in a box, [[compatibility_and_legacy]]). File-System-Access = the OS picker; passkeys = WebAuthn as an origin-tied **operation-capability** ([[secrets_and_keys]], use-not-read); all reuse.
+
+**WebView confused-deputy dies by nesting.** An embedded WebView is recursive composition: the host hosts the web content as a *child Matrix* holding its **own** attenuated capabilities, never the host's, so host authority cannot ambiently leak in (identity does not propagate through intermediaries — [[identity_and_principals]]).
+
+**Deferred residue:** origin authentication = first-pin (security bucket); the legacy web is vast and runs contained (near-zero *native* coverage at launch — the same adoption-gradient honesty as networking); WebGPU/WebCodecs bridge under `device_io` but GPU is deferred. The full mechanics are intentionally left for a later pass.
+
 ## Concerns & Design Space
 
 - **Origin as principal.** Map same-origin identity onto an OS principal; web permission prompts become capability grants in the unified graph.
@@ -25,6 +39,8 @@ A concrete early decision: are web apps **first-class** (origins are full princi
 - **Sandboxing & native capability bridge.** A typed bridge so an origin gains native authority only by held capability, never ambiently.
 
 ## Key Questions
+
+*(Direction resolved by "The decided direction" above, mechanics deferred: first-class **via nesting** (origin = a born-low nested principal in the browser-Matrix, promoted to its own Matrix on install); origin id = its key, auth = the deferred first-pin; one authority graph → one revocation surface, web permissions = OS gestures; WebView confused-deputy dies by nesting.)*
 
 - Are web apps first-class, second-class, or isolated legacy — and what is the fallback if first-class proves too costly for the first device?
 - What is the exact mapping from same-origin identity to an OS principal, and how is an origin authenticated (TLS identity, the resolver of [[naming_and_discovery]])?
