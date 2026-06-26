@@ -12,14 +12,30 @@ Because Omega already aims at proof and model checking, the OS itself should be 
 
 ```omega
 simulate PaymentService under Adversary {
-    schedule:   worst_case_interleaving
+    schedule:   exhaustive                    // enumerate interleavings to a bound (TLC mode)
     clock:      virtual                       // see [[time_and_clocks]]
     network:    partition_at(t)               // distributed boundary
     storage:    crash_after(write)            // torn-write injection
     authority:  revoke(Capability<Charge>) at_step(n)
 }
-ensures invariant: no double_charge
+// A REAL state invariant the machine maintains — NOT a wished business property.
+// "No double charge" is *engineered* (a one-shot Charge capability + a charged
+// state the machine cannot re-enter) and *proven inductively*; the simulator
+// only bug-hunts the residue. There is no magic `ensure no_double_charge`.
+ensures invariant: ledger.unique_by(idempotency_key)
 ```
+
+### The decided mechanism: prove, then bound-check the residue
+
+**Kill the wishcast invariant.** Omega does not prove a high-level business property because you *declared* it — there is no magic `ensure no_double_charge`. The real surface is `requires`/`ensures`, machine **state invariants**, **domain** predicates, and machine-gating of who-may-call-what. A property like "no double charge" must be **engineered into proper invariants** so the bad state is *structurally unreachable* — a one-shot `Charge` capability that is consumed, a transaction machine that cannot re-enter `charged`, an idempotency-key set carrying an at-most-once invariant. The verifier checks the invariants you *set up correctly*; it never divines safety from a slogan. (Simulability itself is free, not an added contract: a Cathedral-native component sources *all* nondeterminism through declared effects/providers — clock, network, storage, input, randomness — because the OS forbids ambient ones, so it is deterministic-given-its-effects, hence simulable, *by construction*. The simulator is just a Matrix serving synthetic providers; a hostile simulator is one that lies adversarially.)
+
+**Verification is one front-end over three backends, in preference order.** The `simulate … ensures invariant …` surface dispatches to:
+
+- **Prove (inductive invariant — TLAPS-style). The primary path.** Show the invariant holds initially and is *preserved by every transition* → it holds in **all** reachable states **without enumerating any**, by induction; proof size scales with the number of *actions*, not the state space. This is what Omega's machine-invariant proofs already *are* — and unlike TLA+, the proof is on the **shipping machine, not a separate spec that drifts**. The cost is human (find/strengthen the inductive invariant); how much the prover discharges automatically is the Omega proof-engine's maturity question, not a Cathedral one.
+- **Enumerate (bounded model check — TLC-style). The bounded fallback.** The simulator is deterministic given `(component, adversary-choices, seed)`, and the adversary's knobs *are* the injectable effects, so the state space to enumerate is exactly the **adversary's choice space** (interleavings, fault timings, revocation points). TLC-mode sets the adversary to **exhaust** that space to a bound and checks the invariant in every reached state — definitive for the bounded model, yields counterexample traces, and **state-explosion-expensive**, so it is a bounded fallback, never the scaling answer.
+- **Sample (randomized / guided adversary). The bug-finder.** Run many interleavings + fault injections without exhausting them. It **finds** violations and exercises the not-yet-proven residue; it **proves nothing**. This is the simulator's everyday role.
+
+So the honest hierarchy: **prove what you can (total, no enumeration); bound-enumerate (TLC) where a small model makes it feasible; sample (random sim) to bug-hunt the residue.** The simulator is the *bug-finder and the fallback for the unproven* — **not the headline; the headline is the inductive proof, on the real code.** Certification states *which* backend covered each invariant ("proven" / "model-checked to depth N" / "M hours guided search"), never "exhaustively correct" unless it is a proof — and because a sim run is deterministic, the store **re-runs/spot-checks** it (trust-by-checking) rather than trusting the developer's word.
 
 ## Concerns & Design Space
 
@@ -37,9 +53,9 @@ ensures invariant: no double_charge
 
 ## Key Questions
 
-- What is the *contract* a component must satisfy to be simulable — fully deterministic given injected time/IO/faults? Is that mandatory for certification?
-- How exhaustive is "hostile"? Bounded model checking, randomized adversary, or guided search — and what coverage claim does certification actually make?
-- Where does property-based simulation end and full model checking begin?
+- **Simulability contract — resolved:** "deterministic given injected time/IO/faults" *is* the no-ambient-effects property the capability model already enforces, so every Cathedral-native component is simulable **for free, by construction** (foreign/walled code is the only exception). No added price; not a separate contract.
+- **How exhaustive is "hostile" — resolved:** it is the three-backend hierarchy (prove → bounded-enumerate (TLC) → sample), and the coverage claim is *which backend covered each invariant*, stated honestly — "proven" / "checked to depth N" / "M hours guided," never "exhaustively correct" unless proven.
+- **Where property-based simulation ends and model checking begins — resolved:** one continuum, three backends over a single `simulate … ensures invariant` front-end; **proof (inductive/TLAPS) is the only unbounded rung**, TLC-enumeration is the bounded-exhaustive fallback, random sampling is the bug-finder.
 
 ## Omega Leverage
 
