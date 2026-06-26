@@ -14,6 +14,22 @@ Make the **tenant** a first-class isolation domain for *data, policy, and author
 
 Org control is then *policy layered onto tenants* ([[configuration_and_policy]]) with clear inheritance, plus fleet-level actions (remote wipe, policy push) that respect tenant boundaries: the org may govern the work tenant without reaching into the personal one.
 
+### The decided mechanism
+
+**A "tenant" is a Matrix — not a new primitive.** A tenant is a confined world ([[identity_and_principals]]) plus its realms (data) and its ceiling (policy): the work tenant is a Matrix, the personal tenant a sibling Matrix behind a hard wall, a kiosk an ephemeral Matrix with a wipe-on-exit realm, a guest the *zero* Matrix, a server tenant an isolated Matrix. "One primitive or a family of kinds?" dissolves into **one primitive (the confined world) on a provisioning spectrum** — the strength dial is *how the Matrix is provisioned* (shared parent + soft boundary = a lightweight profile; isolated + no cross-exposure = a hard wall), the same single axis as the window→VM spectrum. *(Naming for "tenant"/"Matrix" is unsettled — placeholders.)*
+
+**A "user" is a seated principal — not a primitive either.** "User" = a principal (the username/identity world) + the input devices routed to its seat ([[identity_and_principals]], [[windowing_and_compositor]]). So **multi-user and multi-agent are one model** — a seated principal — differing only in input source (physical/virtual, indistinguishable to consumers, OS-attested for the physical seat). A human acts through *per-persona* worlds (work / personal / anonymous, unlinkable), and crossing tenants is an **explicit, audited switch** with a spoof-resistant trusted-path indicator of which is active — never ambient spanning, which would *be* the cross-tenant leak.
+
+**Isolation is structural, not a runtime tag.** A Matrix cannot name another's object because there is **no global root** and it holds no capability into the other's realm ([[filesystem_as_database]]) — cross-tenant naming is *unexpressible*, not detected-and-refused. Cross-tenant *sharing* is an explicit capability grant recorded in the graph, like any cross-realm share.
+
+**Shared services isolate per-caller in *userspace*, not via OS machinery.** One printer or one network stack serving many tenants is a userspace provider each tenant reaches via its own capability; the *service* exposes a **per-caller view capability** (tenant A cannot see B's queue because the service attenuates per caller), and the OS only guarantees capabilities do not cross ambiently. So shared-service-without-leak is **service design + capability attenuation**, not OS machinery; the residual contention/timing channel is minor and the service's concern (the genuine *OS-level* shared-resource side-channel is the hardware-contention kind — `SteeringSlot` ([[networking]]) — not a print queue).
+
+**Remote-wipe = crypto-erase the realm key + revoke the capability subtree.** "Wipe the work tenant" destroys the Matrix's sealed-realm key (the `wipe`/crypto-erase from [[filesystem_as_database]] — instant, no block-scrubbing) and revokes its capability subtree (generation bump, lazy-chain-walk [[capability_lifecycle]]). It is **exact and complete because the boundary was clean from the start** — no work data leaked into the personal realm. Shares resolve cleanly: a *copy* shared into personal is personal's (independent content-addressed cell, survives); a *live cap* into the work realm dies with it.
+
+**Org control = a scoped ceiling-capability; policy is the ceiling-intersection.** org → device → tenant → app is the **most-restrictive-wins meet of ceilings** ([[security_policy_and_sandboxing]], [[configuration_and_policy]]) — everyone tightens, only the owner loosens. The org holds the **capability over the work-Matrix's ceiling**, scoped to *it*, which structurally cannot reach the personal Matrix (a sibling the org holds no capability over): "govern the work tenant without seeing the personal one," by construction.
+
+**Orchestration is no-code for the common case.** Creating a Matrix is a capability (the realm-authority spawn-confined-child grant) held over your own world. The OS ships a **stock configurable default Matrix**, so the common case is right-click → New → pick a config preset (the world-chooser presets — Default / Locked-down / Throwaway / Trusted, [[human_permission_ux]]) → drag apps in (the cross-Matrix drag [[windowing_and_compositor]], re-minting them into the Matrix's realm). The child's `system:` binds to a **CoW overlay / view** of the real system realm ([[filesystem_as_database]] virtual realms) — *not a copy*, O(1), content-addressed-shared. Custom behavior means **overriding only the provider interface you care about** (compositor, network, realm view) and inheriting OS defaults for the rest — never reimplementing the whole world.
+
 ## Concerns & Design Space
 
 - **Tenant as isolation domain.** Data, policy, and authority partitioned per tenant; nothing ambient crosses the boundary.
@@ -27,6 +43,8 @@ Org control is then *policy layered onto tenants* ([[configuration_and_policy]])
 - **Zero value.** A zero tenant is the valid-empty isolation domain ([[omega_substrate]] ZII): it owns no data, reaches no capability, and applies no policy, which is exactly the ephemeral guest or fresh-kiosk case, so acting within a zeroed tenant is coherent and leak-free rather than a cross-tenant fault.
 
 ## Key Questions
+
+*(All four resolved by "The decided mechanism": one primitive — a confined-world Matrix — on a provisioning spectrum; policy inheritance = the most-restrictive-wins ceiling-intersection (only the owner loosens); remote-wipe = crypto-erase the realm key + revoke the capability subtree, exact because the boundary is clean; a human is a *seated principal* who crosses tenants only by an explicit audited switch, never ambient spanning.)*
 
 - Is there one tenant primitive with strength parameters, or a small family of tenant kinds? What is the minimal model that covers personal → kiosk → server?
 - How does policy inheritance resolve conflicts between org, device, and tenant layers, and who wins?
