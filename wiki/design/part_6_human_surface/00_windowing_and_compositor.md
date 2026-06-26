@@ -144,7 +144,7 @@ Some states gate whole classes of grants at once rather than revoking anything. 
 ## Key Questions
 
 - What is the minimal hardware/firmware assist (if any) for an unspoofable trusted-path indicator across the OS's first target devices?
-- How is input focus modeled as a capability that the compositor mints and revokes per surface, and how does revocation interact with in-flight events?
+- How is input focus modeled as a capability that the compositor mints and revokes per surface, and how does revocation interact with in-flight events? *(Decided: a per-surface input queue; an event's destination is fixed at **enqueue** time, so a focus change only redirects *subsequent* events; the target's already-queued events **drain** (dropping them mid-stream would leave a key-down with no key-up). The window of risk is one event, and the security-critical path never enters app routing at all — secure-entry is a modality routing straight to the OS.)*
 - How are clipboard payload formats negotiated at paste time, and what does the OS-chrome clipboard history expose, to whom?
 - How does session/window restoration carry geometry forward without carrying forward authority a restarted app should re-acquire?
 - How is a child's compositor capability bound at spawn, and how does a trusted-path interaction escalate to the root and address the right principal across arbitrary nesting depth?
@@ -167,7 +167,7 @@ Some states gate whole classes of grants at once rather than revoking anything. 
 
 - Can trusted path be guaranteed purely in software on commodity GPUs, or does it need a dedicated overlay plane the OS reserves?
 - Should the compositor be one component or a small federation (input router, surface manager, identity renderer) with capabilities flowing between them?
-- How deep can recursive composition nest before input latency or frame scheduling degrades, and does the occlusion-and-power gating recursion need a hard depth bound?
+- How deep can recursive composition nest before input latency or frame scheduling degrades, and does the occlusion-and-power gating recursion need a hard depth bound? *(Decided: no hard depth bound — by design nobody knows how deep they are (indistinguishability). Depth costs latency (a compose pass + input hop per level), so it is bounded by the scheduler's resource/CPU **budget** ([[scheduler_and_resources]]): a pathologically-nesting subtree blows its budget and is quiesced or killed like any runaway, not capped by a special depth limit.)*
 - What is the normalized input event vocabulary, how extensible is it for novel device classes, and how much interpretation (gestures, composition) belongs in the driver versus shared higher stages?
 - What latency does the staged input pipeline add, and when must a raw or exclusive short-circuit bypass the cooked stages for pointers, pens, and games?
 
