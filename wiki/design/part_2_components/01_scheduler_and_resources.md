@@ -73,6 +73,28 @@ Totality *strengthens* this rather than replacing it. If **actor handlers are re
 
 The earlier worry that the stackless model "cannot represent a preempted task" resolves here: native tasks are never preempted at an *arbitrary* point — they are nudged to the next compiler-known safepoint (a boundary or a back-edge), where the continuation is bounded; only foreign code takes a full-context save, behind the wall.
 
+### The decided mechanism: the budget-check path
+
+**There is no central budget-check trap; the check rides existing mediation, split in two.** The **authority** half — "no budget capability → no effect" — is the **effect ceiling + an arena lookup** (the `{slot, generation}` handle), already gated at the boundary you cross; nothing new. The **quantity** half is distributed by resource kind to wherever the resource is *already* mediated:
+
+- **Metered (bytes / cycles — storage-write, network, NPU):** the **provider** does an atomic *decrement-if-sufficient* on the caller's budget counter as it serves; folded into the serve path, billed per-instance.
+- **Share (CPU / GPU time):** the **scheduler** honors the weight in dispatch — no per-op check; the share *is* the enforcement.
+- **Ceiling (memory working-set):** the **allocator** checks the envelope at the alloc boundary (an `await`).
+
+So the scheduler is the enforcement *arm*, but the arm reaches into providers, dispatch, and the allocator rather than trapping centrally.
+
+**The resource vocabulary is a closed core + driver-extensible** — a fixed core (cpu / memory / storage / network / gpu / npu / power) the OS understands, extended by a driver declaring a new budgetable kind: the same closed-core-open-extension shape as effects, failure causes, and the input registry.
+
+**A budget is a ceiling, a share, or a reservation — by resource kind** (ceiling for depletable quantities; weighted share for time-multiplexed engines; reservation for latency-guaranteed work). Not one shape.
+
+**Declared intent is *proven* for Omega code, *measured* only for legacy — and is a soft optimization either way.** Cathedral-native code can *prove* its resource behavior (the WCET/bounded-runtime proof generalized — PCC), so its declared class is **trusted because proven, not measured-and-demoted**; the **measure-and-demote heuristic is the legacy-only fallback** for code that declares nothing. And honestly, intent is a *soft scheduling optimization of uncertain marginal value* (modern schedulers do well with little of it). **The load-bearing part is the budget *capability* — the hard ceiling that bounds safety and isolation; intent only tunes preference *within* it.** Lying (legacy) costs scheduling preference, never the budget.
+
+**Preemption needs no cooperation, by either path.** Omega code is preempted at **compiler-inserted safepoints** (boundary-awaits + back-edge polls) — *forced* by the compiler, not voluntary "play nicely," so a hostile `loop {}` still yields by guarantee. Legacy/non-Omega code *cannot* be given safepoints (we do not compile it), so it takes **conventional hardware timer-interrupt preemption with a full context save, behind the hardware-isolation wall** where that cost is already paid. Safepoints are the Omega optimization, not a universal requirement.
+
+**Budgets reclaim on crash by the generation bump.** A budget is an arena capability; instance death **bumps the generations** of its arena entries, invalidating every capability it held (budgets included) by lazy revocation — no leak window, reachability-based, the same as grants and borrows.
+
+*(Global energy/thermal as a true shared budget — arbitration under contention — is deferred to [[power_management]].)*
+
 ## Concerns & Design Space
 
 - **Capability-gated resource access.** A held budget is required to *touch* a resource, not just to be prioritized within it. Absence of budget = absence of the effect, audited like any capability.
@@ -92,6 +114,8 @@ The earlier worry that the stackless model "cannot represent a preempted task" r
 - **Zero value.** A zero executor domain inherits the parent's envelope and a zero reservation means best-effort rather than zero share, so the zero `ResourceIntent` is the inherit-or-default shape (shape 3): a deliberate choice that lets a spawned task run under ambient defaults instead of failing for want of an explicit budget ([[omega_substrate]]).
 
 ## Key Questions
+
+*(Mostly resolved by "The decided mechanism: the budget-check path": vocabulary = closed core + driver-extensible; a budget is ceiling/share/reservation by resource kind; intent is *proven* for Omega (PCC), *measured-and-demoted* only for legacy, and a soft optimization regardless — the budget *capability* is the load-bearing part; accelerators (NPU/GPU/DPU) are metered providers, the same decrement-as-served pattern as the NIC. Deadlines/realtime trust stays with the flagged realtime-path REVISIT.)*
 
 - What is the canonical resource vocabulary, and is it open (drivers add new resource kinds) or fixed?
 - Is a budget a hard ceiling, a weighted share, a reservation, or all three depending on resource kind?
