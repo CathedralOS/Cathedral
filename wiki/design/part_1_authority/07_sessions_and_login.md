@@ -46,7 +46,7 @@ A session is **a leased delegate of the identity-world principal**, scoped to a 
 
 ### Sealing, and the honest-degrade fallback
 
-The realm key is sealed to the **credential plus the measured-good boot** ([[secrets_and_keys]], [[boot_and_trust_chain]]), so a tampered boot leaves it sealed and the credential never passes through the broker (a secure element performs the match). When sealing hardware is absent, the realm degrades honestly: the key is derived from a passphrase (KDF), the realm stays encrypted, but the session is **marked unattestable** — the boot-binding is gone and the OS says so, never silently.
+The realm is strongly sealed **by default** via envelope encryption — one random data key, unlockable through any of N **wrapped** credentials (passphrase, biometric, a disclosed user-held escrow, a backup key), sealed to the **credential plus the measured-good boot** ([[secrets_and_keys]], [[boot_and_trust_chain]]). A tampered boot leaves it sealed, and the credential never passes through the broker (a secure element performs the match). "Forgot my password" recovers through a pre-provisioned method, not a backdoor. When sealing hardware is absent, the realm degrades honestly: the key is derived from a passphrase (KDF), the realm stays encrypted, but the session is **marked unattestable** — the boot-binding is gone and the OS says so, never silently.
 
 ### Compositing is a seat-bind, not a separate right
 
@@ -88,7 +88,7 @@ The recursion ends where authority stops being *forwarded from above* and starts
 
 ## Open Questions
 
-- **Recovery without a backdoor** is shape-decided but crypto-deferred (the security bucket): a credential sealed to a lost realm means the data is cryptographically gone — *a recovery that restores it without the credential is the backdoor*. So recovery is **reset, not restore**, softened only by **opt-in escrow the user pre-distributes** (a second device, a social-recovery quorum, an org escrow for work realms) — another deliberately-minted credential, never an OS backdoor. The quorum/social-recovery cryptography stays parked.
+- **Recovery without a backdoor — shape decided** (mechanism in [[secrets_and_keys]]): the realm is strongly sealed by default (envelope encryption, N wrapped unlock keys), and recovery is a **pre-provisioned, disclosed, user-or-host-held escrow** credential (other devices, chosen guardians, or an opt-in cloud/org support path), opt-out for the high-security realm — never an OS backdoor. "Any one of N" is plain key-wrapping (decided); the **K-of-M threshold-sharing scheme + first-pin (guardian-key trust)** stay parked in the security bucket.
 - How are organization-mandated re-authentication intervals and revocation propagated to a live session lease across a partition ([[distributed_boundary]])?
 
 ## Related
