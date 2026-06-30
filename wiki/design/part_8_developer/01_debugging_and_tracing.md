@@ -65,6 +65,15 @@ The shape of the differences:
 - **Omega-ness changes only two things:** the predicate is **inlined native** instead of a **bytecode virtual machine**, and the **safe-patch metadata** is handed over instead of recovered by decoding. On ARM that is a convenience; on x86 it is what makes coarse pre-reserved slots and recompile-and-swap possible at all.
 - **Only a custom ISA removes the *last* kernel entry** — the one on a genuine stop — by delivering the breakpoint exception straight to a user-mode handler. Everywhere else a true hit still takes one ring transition; the trap-free rows only remove it from the *false/hot* path.
 - **The honest x86 default is `int3` with in-process handling** (the achievable half of Fleury's plea), not trap-free. An Omega component on x86 reaches trap-free only by **recompiling the affected function with the predicate inlined and hot-swapping it in** — real, but it pays a recompile + swap per breakpoint-set, so it is a hot-loop tool, not the default.
+- **The "Omega" rows assume *walled* native code.** Raw in-place patching is forbidden for code actually running in the single address space (see below); those rows describe walled or temporarily-walled native code, where the raw path is safe.
+
+### Native code in the SAS: checked instrumentation, never raw patches
+
+The matrix's raw in-place patching assumes you may write a branch and a trampoline into the target's memory. **In the single address space that is forbidden**, because the SAS is safe for exactly one reason — only checker-verified code is ever admitted — and an unchecked trampoline injected into it would be a universal escape (no MMU wall, no proof bounding it). So SAS-native trap-free debugging installs **checked instrumentation**: a recompiled function (re-checked, hot-swapped) or a toolchain-generated, checker-verified patch — never raw bytes. Because that instrumentation is checked, the checker confines it to exactly the debugged component's references and capabilities, which is *why* `Capability<Debug<X>>` stays bounded to X in the SAS rather than becoming access to the whole address space.
+
+The cheap raw path (`int3`, hand-written trampolines) is therefore **walled-only** — fine inside a hardware wall, where injection compromises only that already-untrusted wall. The practical consequence is a placement choice: **debug an app by temporarily walling it** for the session (drop it to an MMU domain, use the cheap raw mechanism, re-admit it after — paying slower walled execution while debugging, which is acceptable); only the **SAS core itself** — un-wallable, since it *is* the wall-enforcer — must pay checker-verified instrumentation per breakpoint, which is exactly where you want every instruction checked anyway (proof-caching keeps re-checking a one-function patch cheap).
+
+This is one of the SAS's accumulating costs, and a real data point in the **MMU→CHERI vs SAS-via-PCC** question ([[kernel_architecture]]): cheap in-place debugging is a property the walled/CHERI world gets for free and the proof-isolated SAS must work to recover.
 
 ## Stopping, snapshots, and swapping under a live system
 
