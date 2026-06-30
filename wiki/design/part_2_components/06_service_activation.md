@@ -20,6 +20,22 @@ Triggers are the scheduler's wait primitive ([[scheduler_and_resources]]) pointe
 
 The shape that results is a small **resident core** of latency-critical always-on services (the compositor, input, audio, the store, the network demux) plus a **demand-activated tail** of everything else, under an adaptive quiesce policy that keeps hot services warm and lets cold ones exit. Residency is paid only where it earns its keep. The entire advantage rests on **cheap spawn**, which the content-addressed code (already in memory, deduped), the single address space (no memory-management-unit setup or process creation for OS components), and language isolation (no ring transition) are designed to deliver. If spawn turned out expensive the model would degrade back toward keeping things warm, so cheap spawn is the load-bearing assumption, named here honestly rather than assumed.
 
+## The decided mechanics
+
+**The endpoint is a small dispatch object.** Invoking a service loads the endpoint's live-instance pointer and branches: live → a direct call (a virtual call, cheap); cold → the slow path, which calls the activator, `await`s the spawn, fills the pointer, and proceeds. The warm path is a plain dispatch with no kernel in the SAS; the cold path routes through the activator and the core's spawn provider — still function calls in the SAS (no ring transition), a trap when the target is hardware-walled. The unavoidable cold cost is the spawn *work*, and whether spawn is object-cheap or pays MMU domain-setup is the same SAS-vs-walled question as [[kernel_architecture]] — so the resident-core ↔ demand-tail balance shifts with the isolation substrate.
+
+**The activator is an actor on one mailbox.** Every trigger source is normalized into a variant posted to the activator's mailbox — the core's interrupt stub turns a device interrupt into a message, the timer subsystem posts `TimerFired`, an endpoint message is already one, a watched object posts a change — so the activator does one wait on a `TriggerEvent` sum and switches to spawn the handler. There is no per-trigger task; one actor parks on its whole condition set ([[ipc_and_service_invocation]]).
+
+**Timers are tickless.** The timer subsystem keeps registered timers ordered by expiry and arms the hardware timer as a *one-shot* at the earliest — not a periodic tick. On fire it drains all due timers (pop while `expiry ≤ now`, where firing is a cheap enqueue-and-wake into each target's mailbox) and re-arms for the next future expiry, so even a thousand timers at one instant fire in a single pass. Zero work between expirations is what lets the machine deep-sleep with no polling daemon ([[power_management]]).
+
+**Quiesce is a cost model, not a timeout.** Weigh stay-warm cost against re-spawn cost — where re-spawn includes the power-cycle-as-consumable transition wear ([[power_management]]) and any state-rehydration cost — and enforce it as a scheduler budget, so hysteresis falls out and it composes with resource governance. A stateful service persists to the store and rehydrates on spawn (reattach-to-last-commit, [[memory_and_persistence]]); cheap-to-rehydrate state quiesces, expensive state stays resident.
+
+**The registry is durable; live-instance pointers are soft.** Registrations — boot-seeded *plus* everything added at runtime — are persisted to the activator's realm and rehydrated on a crash-restart, so runtime registrations survive the activator's death (a boot-list alone would restore only the floor). Live-instance pointers are soft: surviving instances are reattached, or the next cold-miss re-resolves an orphan. The supervision tree bottoms out in the eagerly-booted resident core, so there is always a warm root to field the first cold-miss.
+
+**Registration is declarative-first.** Most triggers are declared in the boot manifest and the activator registers them *for* the service, so it need not run at boot to be registered (it is spawned later when the trigger fires); a running service registers dynamically by invoking a `Capability<Activator::Register>` handed in its launch context, granted per-manifest (least authority — only services and drivers that register receive it). Predictive pre-warming to hide cold-start latency is an opt-in optimization carrying the same behavior-modeling privacy cost as predictive wake-coalescing, not a core default.
+
+**Parked: the per-Matrix boot-manifest protocol.** *How* a Matrix's boot manifest is declared, assigned, applied on boot, and edited — the natural shape is a typed config object in the Matrix's own realm, shipped in its closure or written by the parent at provisioning, applied by the Matrix's bootstrap, edited via the cap to it — belongs to the larger **Matrix-architecture** design (recompile-to-mirror child manifests, the OS-default-Matrix-needs-every-capability dilemma, ad-hoc Matrices from config), which is parked as a TODO, too large to settle here.
+
 ## Concerns & Design Space
 
 - **Service as an endpoint capability.** A service's identity is the capability to its endpoint, and the endpoint outlives any instance. Access is activation, capability-gated, so an unreachable service cannot be spawned ([[capability_model]], [[ipc_and_service_invocation]]).
@@ -39,11 +55,11 @@ The shape that results is a small **resident core** of latency-critical always-o
 
 ## Key Questions
 
-- What is the actual cost of a cold spawn for a typical OS component, and what latency does a first invocation add on the interactive path?
-- What quiesce policy avoids thrashing a periodically-used service while not keeping cold services warm, and how much hysteresis or prediction does it need?
-- How does a stateful service persist and rehydrate cheaply enough that quiescing it beats keeping it resident?
-- Which services genuinely belong in the always-warm resident core, and who decides?
-- How does the activator's own routing table survive its restart, given the activator is itself a supervised component?
+- **Cold-spawn cost — resolved (rides the substrate):** warm invocation is a direct dispatch (a virtual call in the SAS); cold pays the spawn *work* plus an activator/core-spawn hop, which is function-calls in the SAS and a domain-setup trap when the spawned service is hardware-walled — so the actual number is the same SAS-vs-walled question as [[kernel_architecture]], and the resident-core/demand-tail balance shifts with it.
+- **Quiesce policy — resolved:** a cost model (stay-warm vs re-spawn, the latter charging power-cycle transition wear and rehydration), enforced as a scheduler budget, so hysteresis falls out and it composes with resource governance.
+- **Stateful rehydration — resolved:** persist to the store and reattach-to-last-commit; the rehydration cost is a term in the re-spawn cost, so the cost model keeps expensive-state services resident and quiesces cheap ones.
+- **Resident-core membership — resolved (mechanism), parked (declaration):** a base set plus adaptive promotion of hot services; *how* the base set is declared per Matrix is the parked boot-manifest protocol.
+- **Activator's table surviving restart — resolved:** the registry is durable (rehydrated from its realm), live-instance pointers are soft (reattached or re-resolved), and the root supervisor sits in the eagerly-booted resident core.
 
 ## Omega Leverage
 
@@ -55,9 +71,10 @@ The shape that results is a small **resident core** of latency-critical always-o
 
 ## Open Questions
 
-- Is there a predictive or pre-warming activation that hides cold-start latency for interactive services without drifting back to resident daemons?
-- Can the quiesce policy be expressed as a budget the scheduler enforces rather than a bespoke timer, so it composes with the rest of resource governance?
-- How far down does demand activation go: are core services themselves lazily brought up as their first caller needs them, or eagerly started at boot?
+- **Predictive pre-warming — resolved (deferred):** an opt-in optimization to hide cold-start latency, carrying the same behavior-modeling privacy cost as predictive wake-coalescing; not a core default.
+- **Quiesce as a scheduler budget — resolved:** yes, expressed as a budget rather than a bespoke timer, so it composes with the rest of resource governance.
+- **How far down demand activation goes — resolved:** down to the eagerly-booted resident core (latency-critical services + the root supervision needed to activate everything else); the tail below is demand-activated.
+- **Still open — the per-Matrix boot-manifest protocol**, parked with the wider Matrix-architecture design.
 
 ## Related
 - [[component_model]] — the supervisor and instance kinds, and the nesting supervision tree.
