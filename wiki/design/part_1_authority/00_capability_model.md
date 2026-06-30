@@ -47,6 +47,12 @@ How a capability is *physically* represented — and what stops it being forged 
 
 So the forgery defense is exactly one of three — **proof, a hardware tag, or kernel indirection** — and the endpoint sits *in the capability's bits* only under the first two. The SAS/direct-call path is a **localized performance bet** ([[kernel_architecture]]): absent PCC or CHERI, every capability is the kernel-indexed handle and every cross-component call is a trap — correct, merely slower. Same `Capability<T>` source either way; placement picks the substrate.
 
+### Manifest vs grant: the ceiling and the held
+
+Two artifacts answer two different questions, and conflating them is the category error behind most "where does the config live?" confusion. The **manifest** is the static **ceiling** — declared in the component/executable artifact, shipped, immutable: *what it may ever ask for*, as categories (camera, network, files). It is the auditable-before-you-download contract. The **grant** is the dynamic **held subset** — *what it actually holds right now* (this file, this camera session) — accreted by gesture or expand-on-use, living in the component's own realm. **A grant is always ≤ its manifest:** you cannot be granted what you never declared you might use.
+
+Both are authoritative, in different homes: the **manifest** in the package (authoritative for *what is allowed*), the **grants** in the realm (authoritative for *what is held* — they are the persisted authority graph for that component, real references, not a hint that can drift). So up-front legibility (the manifest) and runtime least-authority (the grants) hold *at once*. A broad manifest is therefore a **legibility smell** — an over-asking app reads as suspicious — never a threat on its own, because nothing is held until a grant completes. A hot-swap may ship a new manifest; one that **widens** the ceiling requires fresh consent for the added categories (an update cannot silently escalate what a component may ask for), while narrowing or holding carries existing grants forward.
+
 ## Concerns & Design Space
 
 - **Object capabilities.** Designation and authority are the same thing: holding a reference to an object *is* the permission to use it. No separate ACL check.
