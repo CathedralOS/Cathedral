@@ -1,60 +1,64 @@
 # Chapter 03: Naming & Discovery
 
-> Every OS grows naming systems — and naming is a security primitive, because a name resolves to authority, and a spoofed name steals it.
+> A name resolves to authority, and a spoofed name steals it — so Cathedral resolves to authority by **unforgeable value (a capability or a content-hash/key), not by string**. Names barely exist: the internals are nameless, local names are mundane, and the one hard case — a human-memorable global name for a stranger — is the parked network trust-bootstrap.
 
 ## The Legacy Model
 
-Naming in legacy systems is a dozen uncoordinated schemes that calcify into permanent compatibility constraints. Filesystem paths, DNS names, D-Bus service names, device nodes, package names, usernames, MIME types, URL schemes, port numbers — each invented separately, each with different uniqueness, ownership, and spoofing properties. None was designed as a security boundary, yet all of them resolve to authority: a path resolves to a file you may write, a service name to a process you will trust, a package name to code you will run. Homograph domains, dependency-confusion package names, and service-name hijacking are all the same bug — *a name resolved to the wrong authority*. And once a naming scheme ships, its mistakes are forever; renaming breaks the world.
+Naming in legacy systems is a dozen uncoordinated schemes that calcify into permanent compatibility constraints — filesystem paths, DNS names, D-Bus service names, device nodes, package names, usernames, MIME types, URL schemes, port numbers — each invented separately, each with different uniqueness, ownership, and spoofing properties. None was designed as a security boundary, yet all of them resolve to authority: a path resolves to a file you may write, a service name to a process you will trust, a package name to code you will run. Homograph domains, dependency-confusion package names, and service-name hijacking are all the same bug — *a name resolved to the wrong authority*. And strings sit everywhere, resolved constantly at real compute cost, even where nothing human ever reads them.
 
 ## The Cathedral Model
 
-One coherent naming discipline where **a name is a value that resolves to authority through an auditable path**, and where resolution is *spoof-resistant by construction*. Names are typed, namespaced, and owned: resolving a name yields a capability (or a principal handle), and the resolution records *who* claimed that name and *whether that claim is trustworthy*. Human-readable names are layered *over* stable, unforgeable identifiers, never the other way around, so that renaming and aliasing are first-class operations that do not change identity.
+Designation is by **unforgeable value, not string**: a **capability** (designation-by-reference — you hold it, there is no name) or a **content-hash / key** (a stable, unforgeable identity). So the threat "what authority does an attacker gain by making me resolve their name instead of the intended one" mostly **has no attack surface, because there is no string to resolve** — you hold a capability, or you name a hash. Human-readable strings appear only where a *human* must read, type, or share something, and there they are **aliases layered over the unforgeable identity, never the identity itself**.
 
-Worked shapes the design must support cleanly:
+The consequence is that "naming" is not a subsystem. It splits into three, and only the third is hard.
 
-- `com.vendor.app` — app identity ([[identity_and_principals]]).
-- `service://camera.default` — a service/protocol name ([[ipc_and_service_invocation]]).
-- `object://user/photos/2026/...` — a stable object ID ([[filesystem_as_database]]).
-- `protocol://vendor.payment/v3` — a versioned protocol name.
+### 1. The internals are nameless
 
-**Key principle: naming is a security primitive.** The threat model for every name is "what authority does an attacker gain by getting me to resolve their name instead of the intended one?"
+Capabilities designate by reference ([[capability_model]]) — you reach a service, object, or principal because you *hold a capability to it*, not because you resolved a string. Where a persistent identity is needed across reboot or machine, it is a **content-hash or key**: an app is its closure-hash / signing-key, an object its content-address, a protocol its schema-hash, a principal its realm-key. The `com.vendor.app`, `service://…`, and `protocol://…/v3` strings people write are **store/dev display labels over those unforgeable values**, not names the OS resolves to authority — you never "resolve Spotify" at runtime, you *hold the closure*. So the entire machine fabric has **no names to spoof, and none to resolve at cost**.
+
+### 2. Local names are mundane, scoped, and owned
+
+Human names *do* appear locally — a realm path is a chain of filenames, an environment binds "default printer" or "default camera." But these are **local labels in a scoped, owned namespace**: a realm path resolves to an object capability within *your* realm; an environment binding resolves within *your* per-principal resolution environment (the recursive-provider, [[capability_model]]). There is **no global-uniqueness question and no spoofing surface** — it is yours. The only mechanics are boring: a separator convention (disallowed inside a name), and per-principal resolution so a host can decide what a name means for a child (split-horizon, fabricated or blocked entries) — both already decided. A path is a human-convenience traversal whose leaves are object capabilities; the names are labels on the edges, never the identity.
+
+### 3. Human-memorable global names — the one hard case, and it is the parked network problem
+
+The single place a name must resolve to authority you do *not* already hold, by something a human can type / remember / share, is **first contact with a stranger**: a URL, a person's handle, a remote service. This — and only this — is naming-as-a-security-primitive (homograph, squatting, hijack), because here the string genuinely stands in for authority you have no prior reference to. And it is **not an OS naming system; it is the network trust-bootstrap** — the **first-pin** problem, parked in the security bucket and explored in [[networking]] / [post_dns_resolution](../speculation/post_dns_resolution.md). The self-certifying half is clear: a name that *is* a key resolves by authenticating end-to-end to that key, no third party. The hard, parked half is binding a **human-memorable** string to a key for a **cold stranger**. The theoretical direction floated for the "reference a known remote endpoint" case is an **untrusted distributed hash table of public keys** — recorded as a possible approach, not a near-term commitment.
+
+## The through-line
+
+Everywhere the OS resolves to authority it uses an **unforgeable value** — a capability or a content-hash/key — so there is **nothing to spoof and nothing to resolve at cost**. Strings appear only where a human must read them, and only as **aliases over the unforgeable identity**: local labels (mundane, scoped, owned) or first-contact handles (the parked network trust-bootstrap). Avoiding strings anywhere they are not human-facing is deliberate — they add compute and a spoofing surface for no benefit.
 
 ## Concerns & Design Space
 
-- **Global uniqueness** vs. local convenience — when must a name be globally unique, and who arbitrates the global namespace?
-- **Human-readable names over stable IDs.** Display names are aliases of unforgeable identifiers; identity survives renaming.
-- **Renaming & aliases.** First-class, non-identity-changing, recorded — multiple names may map to one object/principal.
-- **Versioning.** Names carry or resolve a version (`/v3`); resolution honors compatibility ([[versioned_state_and_migration]]).
-- **Discovery.** Finding services/objects/peers by name or attribute, with resolution that returns *attenuated* authority, not the whole namespace.
-- **Per-principal resolution.** A name's stable identifier is global, but the human-name-to-target binding is resolved in each principal's environment, so a parent can decide what names mean for a child: split-horizon views, blocked or fabricated entries, a synthetic registry. This is the recursive-provider pattern ([[capability_model]]) applied to naming, and the same mechanism the filesystem realms ([[filesystem_as_database]]) and nested networking ([[networking]]) rely on.
-- **Spoof resistance.** Homograph, confusable, and squatting attacks neutralized at the resolution layer; the resolver authenticates claims to a name.
-- **Ownership transfer.** Handing a name to a new owner without orphaning what it pointed to or silently redirecting trust.
-- **Deprecation.** Retiring a name without breaking holders, and without an attacker reclaiming a freed name to inherit its authority.
-- **Zero value.** A zero name resolves to the canonical null object ([[omega_substrate]] ZII): resolution succeeds and hands back the zero capability over nothing, valid-empty rather than an error or an exception, so an uninitialized name reference is inert instead of a resolution fault and never silently resolves to some other principal's authority.
+- **Unforgeable identity underneath.** A typed family of unforgeable values per kind — app = key/closure-hash, object = content-address, service = endpoint capability, protocol = schema-hash, principal = realm-key. One property, not one scheme: the identity is always an unforgeable value.
+- **Human names as aliases over stable IDs.** Display names are aliases of the unforgeable identity; identity survives renaming because identity *is* the stable ID, not the string.
+- **Per-principal resolution.** A local name's binding is resolved in each principal's environment, so a host decides what names mean for a child — the recursive-provider applied to naming, shared with realms ([[filesystem_as_database]]) and nested networking ([[networking]]).
+- **Spoof resistance is structural.** Homograph, confusable, squatting, and dependency-confusion attacks die by construction, because authority binds to the unforgeable ID and the string was never the authority.
+- **Renaming, aliases, deprecation.** A rename rebinds a local alias to the same stable ID; the stable ID (key/hash) is **never reused**, so a freed name cannot inherit authority; a local alias is rebindable only by its owner and pinned (trust-on-first-use), so a rebind to a different key is a *detected change*, not a silent inheritance.
+- **No global namespace authority.** The OS arbitrates no global namespace; the only global-name case is first-contact, handled as federated self-certifying (a name that is a key), never a central resolver.
+- **Zero value.** A zero name resolves to the canonical null object ([[omega_substrate]] ZII): resolution hands back the zero capability over nothing, valid-empty rather than a fault, and never silently resolves to some other principal's authority.
 
 ## Key Questions
 
-- What is the stable, unforgeable identifier underneath each human name, and is it one scheme or a small typed family per kind (app / service / object / protocol)?
-- At resolution time, what proves a name's claimant is its legitimate owner — and what capability does resolution hand back?
-- How are aliases and renames recorded so the authority graph stays honest about "this name now means that principal"?
-- Can a deprecated/freed name ever be safely reused, or is reuse forbidden to prevent authority inheritance?
+- **The stable identifier — resolved:** a typed family of unforgeable values (key / content-hash / capability) per kind; the human name is a display alias over it, never the identity.
+- **What proves a claimant owns a name — resolved:** *local* names resolve through the host's per-principal environment (the host *is* the authority for its children's namespace, honor-the-sandbox); *global self-certifying* names resolve by authenticating end-to-end to the key the name *is* (no third party); *human-memorable global name → key* is **first-pin, parked**. Resolution returns a capability attenuated to exactly that authority.
+- **Aliases and renames — resolved:** local rebindings over the stable ID; because identity is the ID, a rename changes nothing the authority graph tracks.
+- **Name reuse — resolved:** the stable ID is never reused (structurally kills authority-inheritance); a local alias is rebindable only by its owner and pinned to detect key-changes.
 
 ## Omega Leverage
 
 - Names and IDs are **values**; resolution yields a **capability + domain**, so a resolved name carries exactly its authority and no more ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
-- Spoof-resistance lives in a **domain / proof predicate** ([domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md)): a name is in `Resolvable::Authentic` only with proof of its owner's claim.
-- Versioned names ride on **versioned data** ([versioned data](../../../../Omega/wiki/language_guide/chapter_21_versioned_data.md)).
-- Wire-format names crossing boundaries are **wire data** ([wire protocols](../../../../Omega/wiki/language_guide/chapter_20_wire_protocols.md)).
-- Omega does not define a global namespace authority; who arbitrates uniqueness is a Cathedral governance question, not a language feature.
+- Self-certifying spoof-resistance lives in a **domain / proof predicate** ([domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md)): a name is `Resolvable::Authentic` only with proof it authenticates to its key.
+- Versioned names ride on **versioned data**; wire-format names crossing boundaries are **wire data**.
+- Omega defines no global namespace authority; who arbitrates first-contact uniqueness is the parked network/security question, not a language feature.
 
 ## Open Questions
 
-- Is there one universal name resolver, or a federation per namespace with shared spoof-resistance rules?
-- How much of resolution can be proved statically versus checked at runtime against a live registry?
+- **Human-memorable global name → cold-stranger key (first-pin)** — the only genuinely-hard residual, parked in the security bucket. The self-certifying (name-is-a-key) part is decided; the human-memorable-binding part needs the security expert. The untrusted-DHT-of-public-keys is the recorded speculative approach, not a near-term commitment ([post_dns_resolution](../speculation/post_dns_resolution.md)).
 
 ## Related
-- [[identity_and_principals]] — app IDs and principal names.
-- [[capability_model]] — resolution yields authority.
-- [[ipc_and_service_invocation]] — service and protocol names.
-- [[filesystem_as_database]] — stable object IDs.
-- [[networking]] — network names and their spoofing surface.
+- [[capability_model]] — designation by reference; per-principal resolution.
+- [[filesystem_as_database]] — realm paths as local label chains over object capabilities.
+- [[identity_and_principals]] — app/principal identity as keys.
+- [[ipc_and_service_invocation]] — services reached by capability, discovered via a scoped broker, not a global name.
+- [[networking]] — first-contact and the network trust-bootstrap.
