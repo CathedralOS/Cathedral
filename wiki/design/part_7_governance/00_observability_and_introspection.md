@@ -32,6 +32,29 @@ Because of this, the OS ships with **built-in answers** to the questions that le
 
 The key idea is **system-wide causality**: Cathedral records a **causal event graph** from the first boot. An event is not a log line; it is a node with edges to the events that caused it and the authority that permitted it. Observability is then just *querying that graph*. The same graph feeds audit ([[audit_compliance_provenance]]).
 
+## The decided mechanism
+
+Observability is the authority graph, the causal event graph, the host chain, and capabilities re-applied to "the OS observing itself" — mostly composition. Two things structure it: *what you read* splits into two families, and *who may read* is the host chain.
+
+### Two families: structural (cheap, always-on) and behavioral (armed, expensive)
+
+- **Structural / graph observe** — the authority graph (caps held + grant path), the dependency graph (who talks to whom), per-object provenance (what wrote this, which migration touched it), network-flow-caps, storage-mutation principals, lifecycle/quiescence state. These are **reads of structures Cathedral already materializes by construction** (the arena, the CoW version history, the state machines), so they are **trivial and always-on-cheap**, and they leak *structure only* (X holds a network cap), not behavior. They are **host-chain-scoped** — the host's view of its subtree — and are *not* a read into any single component, so this is a distinct capability, not `Debug<X>`'s read tier.
+- **Behavioral / trace observe** — per-message IPC, fine-grained resource/energy patterns, latency distributions, per-event capture. These need **hot-path instrumentation or sampling**, so they are **expensive, armed-on-demand, per-component**, and leak *what X is computing* (the side-channel risk). This half *is* exactly `Debug<X>`'s read-only tier.
+
+So the split maps onto the debugging chapter's *light-structured-trace-always-on + full-record-armed-by-the-grant*: structural = always-on-cheap, behavioral = armed-and-expensive. The cost/leak gradient runs cheap-intrinsic (the structural graph) → sampled (latency, resource-over-time) → armed (per-message trace), and **side-channel risk correlates with cost**, so coarsening and arm-on-demand land exactly on the high-leak axes. (Energy is not a raw read even in the cheap tier — it is the attributed-by-proxy model, [[power_management]].)
+
+### The graph: live is the arena, history is a hash-chained event log
+
+The **live authority graph *is* the arena** — materialized by construction, because delegation is a recorded operation ([[capability_lifecycle]]); live questions read it. **History is a causal event log** kept **append-only and hash-chained**, which makes it tamper-evident and lets it **double as the audit substrate** ([[audit_compliance_provenance]]) — one graph, two reads, no second system. Cross-component causality is the one genuinely non-trivial part: "what caused this" *across* an IPC boundary needs a **causality token propagated through the call** (trace-context style), and recording every cross-IPC edge always-on is costly — so cross-component causal chains are **propagated by a trace token and sampled or armed**, not always full-fidelity.
+
+### Who may observe, and no see-everything backdoor
+
+`Observe` is a capability attenuated three ways — by **scope** (which component/subtree), **axis** (energy / network / storage / IPC), and **fidelity** (full detail vs coarse aggregate — coarsening is the attenuation). **Who may observe is the host chain**: you observe what you host; the machine owner's broad view is a **held, attenuable, auditable capability** reached via the host chain, *not ambient authority* — there is no un-gated god-mode, the obvious attack target. And because **observing is itself an authority, it appears in the graph** (you can see who observed what), so even the broadest view is visible, not a hidden backdoor. Observing *another* principal's behavior is governed like `Debug<X>` (you observe what you host; observing a sibling needs a real grant), with coarsening as the safe-by-default attenuation — the same discipline as the power-metering side channel.
+
+### Retention: recent-full, old-thinned, raise-on-demand
+
+Full causality forever is impossible, so the event log rides the storage **retain-vs-compact continuum** ([[filesystem_as_database]]): recent events at full fidelity, older ones **deferred-compacted to summaries**. A specific investigation **raises fidelity for a scope** via a held capability — you cannot un-compact the past, but you can start recording a suspected component in full. The honest line is a *thinning gradient*, not infinite fidelity.
+
 ## Concerns & Design Space
 
 - **Cost of always-on causality.** Recording every causal edge has overhead; what is sampled, what is summarized, what is retained at full fidelity, and how is retention bounded without losing answerability.
@@ -44,10 +67,10 @@ The key idea is **system-wide causality**: Cathedral records a **causal event gr
 
 ## Key Questions
 
-- Is the authority graph materialized continuously, or reconstructed on demand from the event graph (the open question raised in [[capability_model]])?
-- What is the retention and resolution policy, and who holds the capability to raise it for a specific investigation?
-- Can observation be made tamper-evident cheaply enough to double as audit?
-- How is "observe" attenuated — per component, per axis, per principal?
+- **Materialized vs reconstructed — resolved:** the live authority graph *is* the arena (materialized by construction); history is the append-only causal event log. Live questions read the arena, historical ones replay the log — one structure, two reads.
+- **Retention / who raises it — resolved:** recent events at full fidelity, older ones deferred-compacted (the storage retain-vs-compact continuum); a held capability raises fidelity for a scope during an investigation (host-chain-scoped).
+- **Tamper-evident cheaply — resolved:** the event log is append-only and hash-chained, so it is tamper-evident by construction and *is* the audit substrate.
+- **How `Observe` attenuates — resolved:** by scope × axis × fidelity, host-chain-scoped; structural observe (cheap, always-on, host's view of its subtree) is a distinct capability from behavioral/trace observe (armed, per-component, `Debug<X>`'s read tier).
 
 ## Omega Leverage
 
@@ -59,8 +82,8 @@ The key idea is **system-wide causality**: Cathedral records a **causal event gr
 
 ## Open Questions
 
-- Full-fidelity causality forever is impossible; where is the honest line between answerability and retention cost?
-- Can the query layer itself stay inside the capability model without a privileged "see everything" escape hatch that becomes the obvious attack target?
+- **Answerability vs retention — resolved (a thinning gradient):** recent-full + old-compacted + raise-fidelity-on-demand; some old detail is genuinely gone, accepted honestly rather than pretending to infinite fidelity. The one implementation cost is cross-component causal-chain propagation (a trace token through IPC), which is sampled/armed, not always-full.
+- **No see-everything escape hatch — resolved:** the broadest observation is a *held, attenuable, auditable* capability reached via the host chain, never ambient authority; and because observing is itself an authority it appears in the graph, so god-mode is a visible held cap, not a hidden backdoor.
 
 ## Related
 - [[capability_model]] — the authority graph this surface queries.
