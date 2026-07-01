@@ -20,6 +20,31 @@ Compliance deserves its own domain because it can be made **mechanically derivab
 
 **The consequence:** a compliance report becomes a **query**. "Prove no component with network authority ever read records tagged `EU-personal` outside an EU region" is a walk over the authority graph plus the event graph, returning either a witness trail or a proof of absence.
 
+## The decided mechanism
+
+### The purpose is honesty, not paperwork
+
+The record exists first for **you**: the OS can tell its owner the truth about what happened — *what did this app actually read, where did it send data, what deleted my file, what drained my battery*. It is verify-don't-trust: an app's privacy-policy claim is either witnessed in the log or *proven absent* (a component that provably never held a network flow while holding photo reads). Second, it is **forensics**: the record is hash-chained and externally anchored, so an attacker cannot `rm` their tracks — a breach is reconstructable. Third, and least interesting, it is **compliance-as-a-query** for those who must prove things to regulators — which comes *free* from the first, rather than as a separate product. Crucially this is **not a data-change log**: it is the **authority + causality graph**. A change-log says "row X changed"; this says "app A changed X *because* it held capability C granted via path P, *triggered by* event E" — the *why* and *by-whose-authority* is the point.
+
+### It does not grow forever
+
+"Record everything forever" is explicitly rejected. Growth is bounded three ways:
+
+- **The structural graph is current state, not a log** — who holds what, who wrote this object, who talks to whom is the live arena + CoW history, bounded by *what exists*, not growing with time. This is the cheap always-on part.
+- **The event history is rolling-window-full + compact-with-age** — recent events at full per-event fidelity, older ones **deferred-compacted** to summaries, oldest rolled to aggregates (the storage retain-vs-compact continuum, [[filesystem_as_database]]). Fidelity decays with age.
+- **Only the flagged subset is retained long-term** — most events are ephemeral (routine reads, normal IPC) under a short rolling window; the small subset worth keeping tamper-evident/anchored (sensitive-data access, authority grants, deletions, security-relevant actions) is retained per policy. Per-event *behavioral* tracing is armed-on-demand, not always-on.
+
+Retention is a **policy knob**: a personal machine keeps a modest rolling window (auto-compacting); a regulated enterprise keeps the compliance subset for years (a small who-touched-what fraction, not every event); a throwaway keeps nothing.
+
+### The two mechanisms with real content
+
+- **Tamper-evidence: hash-chain locally, external anchor against the operator.** The append-only hash chain ([[observability_and_introspection]]) makes silent edits detectable; but a fully-sovereign machine owner controls their own machine, so auditing *against the operator* — the point of third-party evidence — needs the chain head **periodically anchored to an external witness the operator does not control** (a transparency log / notary), so a rewrite-and-re-hash diverges from the anchor. Which anchor is a governance choice, not an OS mechanism.
+- **Secure deletion under replication: crypto-erase the key.** You do not hunt down every copy — the data was encrypted, so deletion is **destroying the key** (`wipe`, [[secrets_and_keys]]) → every replica, wherever it lives, becomes unrecoverable ciphertext. The provenance graph enumerates *reachable* copies for physical removal; crypto-erase covers the unreachable ones. The **proof of deletion is the key-destruction event**. **Legal hold is a capability that fences the wipe** — it suspends deletion verifiably and reversibly, so the hold-vs-delete obligations coexist.
+
+### The rest composes
+
+Derivable-vs-human: graph-facts derive (a query, or a PCC proof of flow-absence); **intent** — is the classification *correct*, is the policy the *right* policy — needs human attestation (the spec-vs-intent gap, irreducible, [[kernel_architecture]]); more tagging shrinks the human boundary but never to zero. The compliance query is an **`Observe`-family capability** (host-chain-scoped, no god-mode), and because observing is itself an authority the query is **self-audited**; an external auditor gets a scoped, time-boxed query cap. Evidence strength is a gradient — **proven-absent → anchored-witness-trail → human-attested** — already stronger than legacy's screenshots; reproducible builds are reproducible *given a pinned toolchain closure* and bottom out at the bootstrap seed.
+
 ## Concerns & Design Space
 
 - **Tamper-evidence.** Audit logs must be append-only and verifiable (hash chain / Merkle log), so "the log was edited" is detectable, ideally with external anchoring.
@@ -32,10 +57,10 @@ Compliance deserves its own domain because it can be made **mechanically derivab
 
 ## Key Questions
 
-- What is the canonical tamper-evident log structure, and what does it anchor to?
-- Which controls are *fully derivable* from the graph vs. those still needing a human attestation, and can that boundary shrink over time?
-- How is secure deletion proven when data may have been replicated or migrated ([[versioned_state_and_migration]])?
-- Who holds the capability to run a compliance query, and is that query logged like any other access?
+- **Tamper-evident structure + anchor — resolved:** the append-only hash-chained event log (from observability), anchored periodically to an external witness the operator does not control (transparency log / notary), so tampering is detectable *even against the machine's own owner*.
+- **Derivable vs human — resolved:** graph-facts derive (query or PCC proof); intent/classification-correctness needs human attestation (the spec-vs-intent gap); the boundary shrinks with more tagging but never reaches zero.
+- **Secure deletion under replication — resolved:** crypto-erase the key → all replicas become unrecoverable ciphertext wherever they live; proof of deletion is the key-destruction event; legal hold is a capability that fences the wipe.
+- **Who runs a compliance query — resolved:** an `Observe`-family capability, host-chain-scoped, self-audited (the query appears in the graph); an external auditor gets a scoped, time-boxed cap.
 
 ## Omega Leverage
 
@@ -47,8 +72,8 @@ Compliance deserves its own domain because it can be made **mechanically derivab
 
 ## Open Questions
 
-- How much compliance can be *proven* statically vs. only *witnessed* at runtime, and is a witness trail acceptable evidence to real auditors?
-- Reproducible builds across a moving hardware/toolchain base are hard; what is the minimum reproducibility that still anchors trust?
+- **Proven vs witnessed — resolved (a gradient):** proven-absent (PCC) → anchored-witness-trail → human-attested, already stronger than legacy's screenshots; whether a given regulator *accepts* a witness trail is a mapping/governance question, not an OS mechanism.
+- **Reproducible builds — resolved-direction:** reproducible *given a pinned toolchain closure* (the toolchain is content-addressed, part of the build closure); the residual is the bootstrap seed — the trusting-trust TCB residual already named in [[kernel_architecture]].
 
 ## Related
 - [[observability_and_introspection]] — the event/authority graph audit queries.
