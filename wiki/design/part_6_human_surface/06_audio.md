@@ -10,6 +10,20 @@ Audio stacks sprawl because they bundle six concerns that each grew their own la
 
 Audio is the compositor for sound. A privileged **audio server** mixes per-app temporal streams into the output device the way the compositor mixes spatial surfaces into the framebuffer, and the same primitives carry it. A stream is a capability-scoped shared-memory ring ([[ipc_and_service_invocation]]): the app writes samples, the server reads them, with no kernel in the hot path. Playback is therefore a held capability, so an app that was never granted output cannot make a sound. Output devices are driver components ([[driver_model]]); the server holds their capabilities, mixes the active streams with per-stream gain, and writes the device ring. Capture is the mirror image and is gated like the camera: the microphone is a capability with an OS-drawn live indicator on the trusted path ([[human_permission_ux]], [[windowing_and_compositor]]), default-deny, revocable, and visible in the authority graph. The one irreducibly hard part is timing, which is a scheduling guarantee rather than an audio-architecture problem.
 
+## The decided mechanism
+
+The model above composes the IPC-ring, capability, and compositor machinery; the open layer is timing, exclusivity, and fan-out, and each resolves against work already done.
+
+**Real-time latency is a scheduler reservation, and the floor is hardware.** The mixer runs in the RT class with a **WCET-bounded mix, dispatched every device-clock period** (parked on the device clock), plus a **frequency-floor** ([[power_management]]) so DVFS throttling cannot blow the deadline. The genuine cost of a *userspace* mixer is not the mixing (summing streams is cheap) but that it inserts **a buffering stage — about one period of added latency — and a second scheduling hop**: the app *and* the mixer must each hit a sub-millisecond deadline every period, doubling the jitter risk at tiny buffers. Both are handled the way JACK/PipeWire already prove reachable (<3 ms round trip, userspace): **RT reservations** make each stage punctual, and the graph (app → effects → mixer → device) is **processed synchronously within one period** rather than buffered per hop, so no per-node latency accrues. The floor below that is **hardware and firmware** — interrupt latency, the DMA buffer, and SMM/firmware stealing unbounded CPU (the same [[power_management]] hazard, fatal to an audio deadline). The reservation reaches that floor; the floor itself is a hardware fact.
+
+**Effects and resampling are filter components; only the mandatory final stage runs in the server.** Reverb, EQ, per-app resampling, and spatialization are **processing nodes in a stream graph** — a pro-audio plugin chain is an ordinary component graph — out of the server so they compose and swap. Only the **device-rate resampling and the reserved-channel mix** run inside the server's RT cycle, to avoid an extra hop per period, the temporal twin of the compositor's per-surface-effects-vs-final-composite split.
+
+**Exclusive device access is a leased capability handoff — the audio twin of fullscreen direct-scanout.** Normally the server holds the device capability and multiplexes; a client wanting the lowest latency requests **exclusive mode**, and the server **leases it the device capability**, stepping out of the path (`app → device` directly, zero mixer-stage latency). It is the same *forward-the-real-device-vs-synthesize-a-shared-view* choice a Matrix mediator makes, applied to a device — the direct analog of a compositor handing a fullscreen surface straight to scanout. It is gestural/policy-gated because, audio being additive, taking the device **silences** every other stream (a stronger takeover than visual fullscreen, which merely occludes), and it is reclaimed on release.
+
+**Capture fans out from one device read; the mic is shared by default.** The capture server **reads the microphone once and fans the stream to each authorized listener** (each holding a capture capability) — the mirror of the compositor fanning capture out. A call app and a transcriber both receive it; a **denied listener gets silence** (blank capture — indistinguishable from a quiet room, [[human_permission_ux]]); **exclusive** capture is an unusual gestural takeover.
+
+**Audio focus is OS-assigned from the foreground, and the reserved channel is a held capability.** Audio focus tracks input/window focus (the foreground surface owns it), assigned by the OS — an app **cannot grab** it. Ducking (a call lowers media) is a **server policy** over focus + stream class. The **reserved OS channel** (alarms, accessibility, system sounds) is **capability-gated**: only the OS and specifically-authorized components hold its capability, so it is **un-suppressible** (apps cannot mute it) *and* **un-abusable** (apps cannot emit on it) — a held capability, not an ambient channel, the audio twin of the trusted path. Spatial audio is a **filter component consuming a listener-model capability** (head/room context as a sensor cap), app-side or system-side, deferred with the other sensor-model work. An app-audio capture mix **excludes the reserved channel and any no-capture stream by default**, and its watched indicator stays distinct from the mic-live indicator (different meanings) while sharing the being-observed chrome.
+
 ## Concerns & Design Space
 
 - **Streams as shared rings.** Playback and capture are capability-scoped shared-memory rings; holding the stream capability is the permission to emit or record ([[ipc_and_service_invocation]]).
@@ -26,11 +40,11 @@ Audio is the compositor for sound. A privileged **audio server** mixes per-app t
 
 ## Key Questions
 
-- What real-time scheduling guarantee does the mixer need, and how low can round-trip latency go with a userspace mixer and isolated clients?
-- Where do shared effects and resampling run: inside the server, or as separate filter components in a stream graph?
-- How is exclusive device access, for a professional-audio app that wants the raw device, reconciled with the shared mixer?
-- How does capture fan out to multiple authorized listeners, and when is the microphone exclusive versus shared?
-- How is audio focus decided so it follows the foreground without an app being able to grab it coercively?
+- **RT guarantee + latency — resolved:** a scheduler reservation (WCET-bounded mix, dispatched every device period, frequency-floor so DVFS can't miss it); userspace-mixer-at-pro-latency is reachable (JACK/PipeWire) via RT reservations + single-period graph processing; the floor below is hardware/firmware (interrupt latency, DMA buffer, SMM).
+- **Effects/resampling location — resolved:** separate filter components in a stream graph, except the device-rate resampling + reserved-channel mix, which run in the server's RT cycle to avoid a per-period hop.
+- **Exclusive device access — resolved:** a leased device-capability handoff (the app takes the device directly, mixer steps aside) — the audio twin of fullscreen direct-scanout; gestural, because it silences other streams.
+- **Capture fan-out — resolved:** the server reads the mic once and fans it out to each authorized listener (shared by default); denied listeners get silence (blank); exclusive capture is a gestural takeover.
+- **Audio focus — resolved:** OS-assigned from the foreground (not app-grabbable); ducking is a server policy; the reserved OS channel is a held capability (un-suppressible *and* un-abusable).
 
 ## Omega Leverage
 
@@ -43,10 +57,10 @@ Audio is the compositor for sound. A privileged **audio server** mixes per-app t
 
 ## Open Questions
 
-- Can a userspace mixer reach professional-audio latencies on commodity hardware, or is a tighter path needed for the lowest-latency clients?
-- Should spatial audio and room modeling live in the server, in a system filter graph, or in the app, and who owns the listener model?
-- How are system sounds and alarms made un-suppressible without becoming a channel that apps learn to abuse?
-- What does an app-audio capture mix exclude by default, and does the watched indicator unify with the microphone live indicator or stay distinct?
+- **Userspace mixer at pro-audio latency — resolved:** reachable (JACK/PipeWire are the existence proof) with RT reservations + single-period graph processing; the lowest-latency clients that can't spare the mixer stage take **exclusive mode** (the fullscreen-bypass analog). The residual is empirical — the exact commodity-hardware floor, set by interrupt latency and SMM, the same limit the scheduler/power work names, not an audio-specific unknown.
+- **Spatial audio — resolved-direction:** a filter component consuming a listener-model capability (head/room as a sensor cap), app- or system-side; deferred with the other sensor-model work.
+- **Un-suppressible system sounds without abuse — resolved:** the reserved channel is a **held capability** — apps can neither mute it nor emit on it, because it's not an ambient channel.
+- **App-audio capture exclusions + indicator — resolved:** excludes the reserved channel and any no-capture stream by default; the watched indicator stays distinct from the mic-live indicator (different meanings) but shares the being-observed chrome.
 
 ## Related
 - [[media_and_graphics]] — the display and GPU half of media; audio is the symmetric temporal half.
