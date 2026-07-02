@@ -44,7 +44,7 @@ The wallet is the **Warden** ([[secrets_and_keys]]) pointed at credentials — a
 
 ## Key Questions
 
-- **Which predicate/ZK proofs are practical on commodity secure elements — PARKED (crypto, security bucket):** the disclosure gradient (operation-not-bytes → attribute-selective-disclosure → ZK derived-predicates + unlinkability) is decided; *how far up* commodity hardware reaches is the parked crypto question.
+- **Which predicate/ZK proofs are practical on commodity secure elements — PARKED (crypto, security bucket):** the disclosure gradient (operation-not-bytes → attribute-selective-disclosure → ZK derived-predicates + unlinkability) is decided; *how far up* commodity hardware reaches is the parked crypto question. The primitive landscape (algebraic Tier-A menu vs general zkVM Tier-B, the secure-element crux) is captured in [zk_credential_primitives](../../speculation/zk_credential_primitives.md) as a future avenue, beyond initial release.
 - **Issuer vs OS role — resolved:** issuer/holder/verifier are principals; the **OS holds and presents, it does not issue** — issuers are the ecosystem (governments, banks, venues), the issuer's signature travels with the credential (offline-verifiable), and the OS's role is the Warden + trusted-path presentation.
 - **Recovery without a backdoor — PARKED (security bucket):** the shape is the `secrets_and_keys` reset-not-restore + disclosed-escrow; the wallet-specific crypto is parked with first-pin.
 - **Where unlinkability breaks — resolved:** a verifier demanding a stable identifier defeats it *by policy*, and that is surfaced to the user at the gesture ("this verifier requires a stable identity — you will be correlatable here"), a legibility fact, not a mechanism gap.
