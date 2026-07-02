@@ -34,7 +34,7 @@ The shape that results is a small **resident core** of latency-critical always-o
 
 **Registration is declarative-first.** Most triggers are declared in the boot manifest and the activator registers them *for* the service, so it need not run at boot to be registered (it is spawned later when the trigger fires); a running service registers dynamically by invoking a `Capability<Activator::Register>` handed in its launch context, granted per-manifest (least authority — only services and drivers that register receive it). Predictive pre-warming to hide cold-start latency is an opt-in optimization carrying the same behavior-modeling privacy cost as predictive wake-coalescing, not a core default.
 
-**Parked: the per-Matrix boot-manifest protocol.** *How* a Matrix's boot manifest is declared, assigned, applied on boot, and edited — the natural shape is a typed config object in the Matrix's own realm, shipped in its closure or written by the parent at provisioning, applied by the Matrix's bootstrap, edited via the cap to it — belongs to the larger **Matrix-architecture** design (recompile-to-mirror child manifests, the OS-default-Matrix-needs-every-capability dilemma, ad-hoc Matrices from config), which is parked as a TODO, too large to settle here.
+**The per-Matrix boot manifest — resolved** (mechanism in [[security_policy_and_sandboxing]], "A Matrix is an object owning its world-realm"): a **typed config object in the Matrix's own realm**, shipped in the template closure or written by the parent at provisioning, read and applied by the Matrix's mediator on boot — spawn the resident set, register the declared triggers, grant register-capabilities — and edited via the cap to it (a watched-object trigger can hot-apply changes). The residual is the exact manifest *schema*, an implementation detail discovered at dev.
 
 ## Concerns & Design Space
 
@@ -74,7 +74,7 @@ The shape that results is a small **resident core** of latency-critical always-o
 - **Predictive pre-warming — resolved (deferred):** an opt-in optimization to hide cold-start latency, carrying the same behavior-modeling privacy cost as predictive wake-coalescing; not a core default.
 - **Quiesce as a scheduler budget — resolved:** yes, expressed as a budget rather than a bespoke timer, so it composes with the rest of resource governance.
 - **How far down demand activation goes — resolved:** down to the eagerly-booted resident core (latency-critical services + the root supervision needed to activate everything else); the tail below is demand-activated.
-- **Still open — the per-Matrix boot-manifest protocol**, parked with the wider Matrix-architecture design.
+- **The per-Matrix boot-manifest protocol — resolved** (a typed config object in the Matrix's realm, template-closure-shipped or parent-written, mediator-applied on boot — see above); the manifest *schema* is an implementation detail.
 
 ## Related
 - [[component_model]] — the supervisor and instance kinds, and the nesting supervision tree.
