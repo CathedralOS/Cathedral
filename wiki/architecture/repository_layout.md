@@ -146,6 +146,41 @@ The load-bearing rules that make the kernel edge real:
 
 ---
 
+## Reach: imports are declared, never ambient
+
+The dependency law is enforced by the same discipline the OS uses at runtime:
+**a package reaches only what it explicitly declares.** There is no reaching
+"up" the tree.
+
+- **Designation is by package name, never by path.** Imports name a package and
+  a symbol (`use contracts.UefiHandoff`), never a filesystem path (`../../`).
+  Moving a package never breaks its importers; the tree structure does not leak
+  into the code. (Omega already resolves imports this way — chapter 14.)
+- **The manifest is the reach-set.** Each package declares its dependency
+  packages (by content hash, per the pinned-closure model in
+  `developer_experience`). A package may import **only** from its declared
+  dependencies; a package it did not declare is not nameable. The manifest is
+  the package's held reach-capabilities; an import invokes one; an undeclared
+  package is unforgeable — you cannot say its name.
+- **The layer law becomes self-enforcing, not merely checked.** `boot`'s
+  manifest lists `[contracts, foundation]` and omits `core`, so `boot` *cannot
+  express* an import of `core`. The impossibility is the point — the same way
+  ambient authority does not exist at runtime.
+- **Two-sided contract.** `pub` (Omega visibility) says what a package *offers*;
+  the manifest says what it may *reach*. Neither is the other's job.
+
+Enforcement, at two strengths:
+
+- **Now (no language change):** the ported layering test checks
+  `import graph ⊆ declared-manifest dependencies` and **fails the build** on any
+  undeclared reach — the same test that enforces the downward layer law.
+- **Target (an Omega ask, tracked in `cathedral_alignment.md`):** the name
+  resolver itself gates on the declared set, so a fully-qualified package path
+  cannot bypass the manifest — undeclared reach is *unresolvable at compile*,
+  not caught by a separate pass.
+
+---
+
 ## Placement decision-procedures
 
 Phrased so a stranger applies them without discussion. *If behavior is X, it
