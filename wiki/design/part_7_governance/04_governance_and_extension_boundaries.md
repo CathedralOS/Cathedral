@@ -24,6 +24,20 @@ If these are forkable at the platform level, the core contracts fragment into mu
 
 **Extensibility happens inside stable contracts.** A driver is wildly flexible in *what hardware it speaks to* and fully rigid in *what a driver is* and how it binds authority. This is the same non-goal the vision commits to — Cathedral is **not infinitely forkable** ([[vision_and_non_goals]]) — and the same contract the store leans on to keep certification meaningful ([[store_and_economic_control]]).
 
+## The decided mechanism
+
+"What can be replaced" sorts into **three tiers**, by one question: *does anything else interoperate through you?*
+
+**Tier 1 — frozen semantics: the platform ABI.** The contract shapes everything is written against, served by root/the trusted core: the **capability model semantics** (what a capability is; delegation, attenuation, revocation, arena behavior), the **component/Matrix model** (what a component is; the manifest shape; spawn/lifecycle; host-chain semantics), the **IPC primitive** (shared region + endpoints + `wire data`), the **realm/filesystem semantics** (object model, CoW commit, sealing), the **package unit** (closure + manifest), the **compositor/seat contract**, the **driver contract**, and the **checker's admission requirements**. These are singular and stable the way the Win32 or Linux *syscall* ABI is stable — the anti-fragmentation commitment. The legacy failure being avoided is the **Linux userland disease**: N competing incompatible implementations of core interfaces (init systems, display protocols, package formats) until "runs on Linux" means nothing and apps target distros. Frozen semantics evolve only by the **versioned-interface discipline** (support N and N+1, migrate), never by in-place redefinition; a contract's identity is a **content-hash**, and a component's manifest declares which contract versions it targets — so compatibility is ordinary dependency versioning, and there is no separate "fork detection" problem (a system either serves the contracts a component declares or it does not).
+
+**Tier 2 — frozen contracts, open implementations.** Where components interoperate *through* an interface — drivers behind the driver contract, the compositor implementation behind the surface/seat protocol, the network stack, stores — the *interface shape* is fixed and the *implementation* swaps freely behind it. This is ordinary provider replacement.
+
+**Tier 3 — frozen capability bundles, freely swappable binaries.** Most of the visible OS surface has **no contract at all**, because nothing calls into it — it is a *leaf role defined purely by held authority*. The file explorer is the canonical case: its role *is* a capability bundle — enumerate-without-content-read, execute/launch, mint-open-with-by-gesture ([[human_permission_ux]]) — and nothing is behind any ABI. Swap in any binary granted the same bundle → identical behavior, identical safety, blast radius bounded by the bundle itself. The shell, the login broker, the task manager, and the legibility agent are the same shape. This is precisely the mechanism that makes **no-blessed-apps** work: a role defined by what it *holds* rather than what it *serves* is structurally un-blessable and trivially replaceable.
+
+**Enforcement is nothing new** — the type system (to *be* a driver you implement the driver boundary contract; there is no way to mint a new *kind* the system must learn, because kinds are the tier-1 shapes) and the host chain (you cannot redefine a contract you do not serve; root serves the platform contracts to everyone, and nothing below root alters what root provides). The **experimentation valve is your own Matrix**: inside it you synthesize whatever contracts you like for your children — contained redefinition, honor-the-sandbox — and it forks nothing, because you only host your own subtree.
+
+The consequence: Cathedral can be **radically customizable without fragmenting** — customization lives in tiers 2–3 (swap any implementation, re-grant any role), while platform identity lives in tier 1. Governance authority over the tier-1 contracts rests with whoever ships the OS, constrained by the versioning discipline (evolution is additive-and-migrated, never a rug-pull).
+
 ## Concerns & Design Space
 
 - **Fixed vs. open, drawn explicitly.** A published list of which contracts are frozen (semantics) and which surfaces are open (behavior inside them), so the boundary is a design decision, not an emergent accident.
@@ -35,10 +49,10 @@ If these are forkable at the platform level, the core contracts fragment into mu
 
 ## Key Questions
 
-- Exactly which contracts are frozen, and what is the bar to ever change one?
-- How do stable contracts evolve across versions without enabling de facto forks?
-- Who holds governance authority over the contracts themselves, and how is that authority constrained ([[multi_user_and_org_control]])?
-- Where is the line between healthy extension and a fork attempt, and can the system detect the latter mechanically?
+- **Which contracts are frozen — resolved:** the tier-1 list (capability semantics, component/Matrix model, IPC primitive, realm semantics, package unit, compositor/seat contract, driver contract, checker admission). The bar to change one is the versioned-interface discipline — additive, migrated, never redefined in place.
+- **Evolution without de facto forks — resolved:** contracts are content-hashed and versioned; components declare targets in their manifests; compatibility is ordinary dependency versioning.
+- **Governance authority — resolved (thin):** whoever ships the OS holds tier-1; the constraint is the versioning discipline (no rug-pulls). Closed-source makes the multi-steward question moot for now.
+- **Extension vs fork, detected mechanically — dissolved:** there is nothing to detect. A component either implements the contracts it declares or it does not; "redefining a kind" fails to type-check; redefining root's contracts is structurally impossible below root; and inside your own Matrix, redefinition is contained and legitimate.
 
 ## Omega Leverage
 
@@ -50,8 +64,8 @@ If these are forkable at the platform level, the core contracts fragment into mu
 
 ## Open Questions
 
-- A too-rigid boundary kills the experimentation that makes a platform thrive; how is the frozen set kept small enough to breathe yet firm enough to prevent forks?
-- Can "this is a fork attempt, not an extension" be detected mechanically, or is it ultimately a governance/judgment call?
+- **Rigidity vs experimentation — resolved:** the frozen set is only tier 1 (the kinds); tiers 2–3 are wide open (swap any implementation, re-grant any role), and the Matrix is the contained-redefinition valve — so the platform breathes everywhere except its identity.
+- The exact tier-1 contract *versions* and their content-hash discipline are pinned when the interfaces themselves are implemented — an implementation-time task, not an open design question.
 
 ## Related
 - [[vision_and_non_goals]] — not infinitely forkable, by commitment.
