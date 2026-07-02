@@ -32,6 +32,16 @@ Cathedral is in the **design** phase. There is no kernel, no driver, no line of 
 
 If a design chapter and a future implementation disagree, the chapter is the bug report, not the law — but until code exists, the chapters are the system.
 
+## Repository layout
+
+The source tree is planned before it is built. The root separates the OS from everything *about* it:
+
+- **`wiki/`** — design truth (why it's built this way).
+- **`source/`** — the OS itself, split by trust: `contracts/` (the frozen ABI), `core/` (the proved kernel — the TCB), `foundation/` (the kernel-safe shared library), then userspace `services/`, `drivers/`, `libraries/`, `applications/`, and the `boot/` firmware seam.
+- **`tools/`** — host-side tooling that never ships.
+
+Nothing under `source/` exists yet — directories are created only when real code lands in them. The full plan, the dependency law, and the placement rules live in [`wiki/architecture/repository_layout.md`](wiki/architecture/repository_layout.md); the trusted set is enumerated in [`wiki/architecture/tcb.md`](wiki/architecture/tcb.md); the decision is locked in [ADR 0001](wiki/decisions/0001-repository-layout.md).
+
 ## The design wiki
 
 All design lives under [`wiki/design/`](wiki/design/design.md). Start at the index:
