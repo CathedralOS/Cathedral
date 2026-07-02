@@ -20,6 +20,14 @@ There is a line this chapter draws sharply, because the wallet uses signing and 
 
 Every presentation happens on the compositor's trusted path ([[human_permission_ux]], [[windowing_and_compositor]]): you see and approve exactly what is disclosed, the requesting app or site receives only the scoped proof, and neither can spoof the consent or extract more than was approved.
 
+## The decided mechanism
+
+The wallet is the **Warden** ([[secrets_and_keys]]) pointed at credentials — and "Warden" is an **interface, not a privileged program.**
+
+**Warden = a generic key-manager role, distinguished by backing store.** Any component implementing the Warden contract — the operation-not-bytes surface (`sign`, `decrypt`, `present`, `attenuate`) — *is* a Warden; they differ only in what backs the key store: **hardware-backed** (the root Warden, over the secure element), **software-backed** (a per-Matrix Warden, keys in its own realm), **synthesized** (a sandbox Warden serving contained credentials), or a **remote HSM**. This is the tier-2 pattern — frozen interface, open implementation ([[governance_and_extension_boundaries]]). The root Warden is **not blessed**: it is special only in holding the **secure-element device capability** — the secure element's manager, the way a driver holds its device cap ([[driver_model]]) — replaceable like any component. A child holds a capability to *a* Warden (whichever its host **forwarded or synthesized**) and talks to it through the interface without knowing the implementation; forward gives real hardware keys, synthesize gives contained per-world credentials, and forwarding is direct by default so the Matrix gate-keeps and can revoke but is not a per-operation middleman.
+
+**Agents hold operation-caps, never keys — so credential leaks are structurally impossible.** An agent needing a credential holds `Capability<Credential::Present(scope)>` or `Payment::Authorize(limit, payee)` — an attenuated operation, never the bytes. A fully prompt-injected, adversarial model **cannot leak the credential because it never holds it**; it only wields a bounded capability redeemed at the Warden, and the secret never enters the agent's memory ([[agents_as_principals]]). The *effect* is bounded by the attenuation plus the human gate — a **WYSIWYS gesture** for a high-stakes presentation ("present your ID to X?") or a **leased, ceiling'd cap** for autonomy (the credential analog of the payment virtual-card). Leaks are not mitigated; they are impossible, because leaking requires holding.
+
 ## Concerns & Design Space
 
 - **Credential as operation-capability.** A payment method, an identity document, a passkey, a ticket, or a key is a scoped operation (present, sign, pay) over a hardware-sealed secret, never the secret itself ([[secrets_and_keys]]).
@@ -36,10 +44,10 @@ Every presentation happens on the compositor's trusted path ([[human_permission_
 
 ## Key Questions
 
-- What predicate and zero-knowledge proofs are practical on commodity secure elements, and which claims fall back to revealing more than ideal?
-- Who issues the credentials (governments for identity, banks for payment, venues for tickets), and what is the OS's role versus the issuer ecosystem's?
-- How is wallet recovery made possible without creating a backdoor into the sealed secrets?
-- Where does unlinkability genuinely break, given that a verifier demanding a stable identifier defeats it by policy, and how is that surfaced to the user?
+- **Which predicate/ZK proofs are practical on commodity secure elements — PARKED (crypto, security bucket):** the disclosure gradient (operation-not-bytes → attribute-selective-disclosure → ZK derived-predicates + unlinkability) is decided; *how far up* commodity hardware reaches is the parked crypto question.
+- **Issuer vs OS role — resolved:** issuer/holder/verifier are principals; the **OS holds and presents, it does not issue** — issuers are the ecosystem (governments, banks, venues), the issuer's signature travels with the credential (offline-verifiable), and the OS's role is the Warden + trusted-path presentation.
+- **Recovery without a backdoor — PARKED (security bucket):** the shape is the `secrets_and_keys` reset-not-restore + disclosed-escrow; the wallet-specific crypto is parked with first-pin.
+- **Where unlinkability breaks — resolved:** a verifier demanding a stable identifier defeats it *by policy*, and that is surfaced to the user at the gesture ("this verifier requires a stable identity — you will be correlatable here"), a legibility fact, not a mechanism gap.
 
 ## Omega Leverage
 
@@ -51,9 +59,9 @@ Every presentation happens on the compositor's trusted path ([[human_permission_
 
 ## Open Questions
 
-- Can selective disclosure and unlinkability be the default without making everyday flows (signing into an account you want to be stable) awkward?
-- What is the minimum issuer trust root for identity credentials, and does it reduce to the same hardware and attestation roots as boot ([[boot_and_trust_chain]])?
-- How does an org-issued credential ([[multi_user_and_org_control]]) compose with a personal wallet without the org gaining cross-context correlation?
+- **Selective-disclosure default without awkward stable-login — resolved-direction:** per-relationship pseudonym is the default, a stable identity is opt-in per the identity model, and the gesture picks "a new pseudonym" vs "your stable identity for X" — the awkwardness is a UX-default question, not a mechanism gap.
+- **Minimum issuer trust root — PARKED (security bucket):** it reduces to the same cold-trust / first-pin question as boot ([[boot_and_trust_chain]]); needs the crypto/security expert.
+- **Org-issued credential without cross-context correlation — resolved-direction:** the org issues a work credential presented per-relationship; because the org only sees *its* presentations (the ceiling-intersection + per-relationship identity, [[multi_user_and_org_control]]), it cannot correlate your personal contexts.
 
 ## Related
 - [[secrets_and_keys]] — the operation-not-bytes credential model the wallet is the user-facing face of.
