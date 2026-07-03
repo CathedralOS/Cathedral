@@ -1,0 +1,23 @@
+// source/boot/uefi/build.omg
+//
+// The milestone-1 UEFI boot application. Declares its reach (only `uefi`
+// contracts) and its target. PROVISIONAL SYNTAX (Omega build_and_package_model.md).
+
+build cathedral_boot_uefi {
+    // Reach is exactly this set — `main.omg` can name `uefi` and nothing else.
+    depends {
+        uefi = path("../../contracts/uefi"),   // milestone 1: local path binding;
+                                                // hash-pinned once the store exists.
+    }
+
+    // The freestanding UEFI target. `entry` names the machine firmware calls;
+    // subsystem drives PE32+ emission.
+    target Uefi64 {
+        entry     = main,
+        subsystem = EfiApplication,   // PE32+ subsystem 10; empty import table; .reloc section
+        stack     = 128 * KiB,
+    }
+
+    // toolchain intentionally omitted at milestone 1: build.omg is interpreted by
+    // the tool in hand, so a pin is optional until reproducibility matters.
+}

@@ -1,0 +1,8 @@
+// source/contracts/uefi/build.omg
+//
+// The UEFI ABI contracts package. A root of the reach graph: depends on nothing.
+// PROVISIONAL SYNTAX (Omega build_and_package_model.md).
+
+build cathedral_contracts_uefi {
+    // depends {}  — contracts reach nothing.
+}

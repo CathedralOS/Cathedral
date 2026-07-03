@@ -287,10 +287,16 @@ adopted). Consequences:
   perjuring the tree with empty folders.
 
 Status legend: **built** · **in-progress** · **planned** · **parked**.
-Current reality (2026-07-02): everything is **planned**. The first code will be
-`source/boot/uefi/` + a minimal `source/core/` (the first-boot ladder in
-`../../../Omega/wiki/cathedral_alignment.md`), and `source/contracts/` grows the
-boot handoff alongside them.
+Current reality (2026-07-02):
+
+- **in-progress** — `source/boot/uefi/` (milestone-1 UEFI application) and
+  `source/contracts/uefi/` (the boot hand-off ABI). These are real source but do
+  **not compile yet** — they target Omega features still landing (the first-boot
+  ladder in `../../../Omega/wiki/cathedral_alignment.md` item 7). Written now as
+  the concrete pressure-test and the thing the Omega work aims at.
+- **planned** — everything else (`core/`, `foundation/`, `services/`, `drivers/`,
+  `libraries/`, `applications/`, `tools/`). No directory exists until real code
+  lands in it.
 
 ---
 

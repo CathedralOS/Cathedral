@@ -1,0 +1,102 @@
+// source/contracts/uefi/uefi.omg
+//
+// The UEFI x86-64 boot ABI Cathedral targets at hand-off — transcribed from the
+// UEFI specification (cross-check: reference_code/rust-osdev/uefi-rs). These are
+// FOREIGN structs, so they are plain `data` (firmware structs never cross a
+// schema-evolution edge → no identity numbers); their byte layout is supplied by
+// the `Uefi` C-ABI layout policy at the use site (Omega programmable_layouts.md).
+// Function-pointer protocol calls go through boundary traits bound to a vtable
+// slot (Omega extern_boundary_and_format_domains.md §12).
+//
+// PROVISIONAL SYNTAX — targets Omega features still being implemented.
+
+package cathedral_contracts_uefi
+
+// --- Scalars (UEFI spec) --------------------------------------------------
+
+// EFI_STATUS is UINTN (pointer-width). On x86-64 that is 64-bit; 0 == success,
+// high bit set == error.
+pub data EfiStatus { code: u64; }
+
+pub EFI_SUCCESS:           EfiStatus = EfiStatus { code: 0 };
+pub EFI_INVALID_PARAMETER: EfiStatus = EfiStatus { code: 0x8000_0000_0000_0002 };
+
+// EFI_HANDLE — an opaque firmware handle. We never dereference it, only hold and
+// pass it (a gated token; extern brief §12.2 case 3, opaque).
+pub data EfiHandle { raw: addr; }
+
+// A pointer to an EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL (con_out).
+pub data ConsolePtr { raw: addr; }
+
+// --- Simple Text Output protocol (con_out) --------------------------------
+//
+// An EFI protocol struct embeds its function pointers as inline fields (there is
+// no separate vtable pointer — the object *is* the vtable). OutputString is
+// field index 1 (Reset is 0), so it binds to VtableSlot(1): read the fn pointer
+// at that slot of the console object, call it MS-x64. `String` is a
+// null-terminated [u16] (CHAR16*, UCS-2).
+
+pub boundary trait SimpleTextOutput {
+    machine output_string(console: ConsolePtr, string: &[u16]) -> EfiStatus
+        effects device_io;
+}
+
+// The Uefi64 target lowers the protocol call to the embedded function pointer.
+// (Placement of this binding may move into a target definition; inline here for
+// the self-contained milestone-1 slice.)
+uefi64 provides SimpleTextOutput {
+    output_string -> VtableSlot(1)   // OutputString = field 1 of the protocol struct
+}
+
+// --- The System Table (firmware's root hand-off structure) ----------------
+//
+// Byte layout = the C ABI (Uefi policy). Only the header and the fields boot
+// needs are named; the trailing service pointers are spec-defined and unread at
+// milestone 1.
+
+pub data EfiTableHeader {
+    signature:   u64;
+    revision:    u32;
+    header_size: u32;
+    crc32:       u32;
+    reserved:    u32;
+}
+
+pub data EfiSystemTable {
+    header:              EfiTableHeader;
+    firmware_vendor:     addr;
+    firmware_revision:   u32;
+    console_in_handle:   EfiHandle;
+    con_in:              addr;
+    console_out_handle:  EfiHandle;
+    con_out:             ConsolePtr;   // the field boot reads
+    // standard_error_handle, std_err, runtime_services, boot_services,
+    // number_of_table_entries, configuration_table follow (unread at M1).
+}
+
+// --- The entry provider: the firmware hand-off ----------------------------
+//
+// UefiHandoff is minted by exactly one provider (the Uefi64 entry), so holding
+// one is proof control arrived via the declared hand-off. The initial machine
+// state is an AUDITED AXIOM LIST — prose checked against the UEFI spec and
+// enumerated in the build artifact, NOT typed `ensures` clauses
+// (freestanding_boot_and_hardware_facts.md sample 1):
+//
+//   axiom: CPU in long mode, paging on, identity-mapped (the state Uefi64
+//          codegen assumes — a target invariant, audited once, never threaded)
+//   axiom: interrupts enabled; ≥ 128 KiB of 16-aligned stack
+//   axiom: system_table points at the live EFI system table (a provenance vouch;
+//          the STRUCTURE is minted + validated by the reader, not assumed here)
+
+pub data UefiHandoff {
+    image_handle: EfiHandle;
+    system_table: addr;      // pointer to firmware-owned EfiSystemTable
+}
+
+pub boundary trait Uefi64Entry {
+    // Firmware calls this MS-x64: ImageHandle in RCX, SystemTable* in RDX.
+    // Nothing to prove — the guarantees are the axiom list above, accepted from
+    // the provider.
+    machine entry() -> UefiHandoff
+        effects device_io, memory_map;
+}

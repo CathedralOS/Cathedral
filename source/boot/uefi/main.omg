@@ -1,0 +1,72 @@
+// source/boot/uefi/main.omg
+//
+// Milestone 1 of the first-boot ladder: an Omega UEFI application that prints a
+// line via con_out->OutputString and returns. Boots under QEMU/OVMF
+// (`qemu-system-x86_64 -bios OVMF.fd -drive format=raw,file=fat:rw:<dir>`, with
+// this built to <dir>\EFI\BOOT\BOOTX64.EFI).
+//
+// NOT expected to compile yet. It is written as the real target — a concrete
+// pressure-test that forces the remaining Omega features into shape, and the
+// first resident of source/boot/uefi/. See "What this needs from Omega" below.
+//
+// PROVISIONAL SYNTAX.
+
+package cathedral_boot_uefi
+
+use uefi.UefiHandoff
+use uefi.EfiSystemTable
+use uefi.ConsolePtr
+use uefi.EfiStatus
+use uefi.EFI_SUCCESS
+use uefi.EFI_INVALID_PARAMETER
+use uefi.SimpleTextOutput
+
+// The message as null-terminated UTF-16 (UEFI CHAR16*). Provisional literal
+// form — UEFI text is UCS-2, not Omega's native UTF-8.
+GREETING: [u16] = utf16"Hello from Omega\r\n\0"
+
+// The firmware entry. `main` is named as the Uefi64 target's entry point in
+// build.omg; firmware calls it MS-x64 and it receives the hand-off minted by the
+// Uefi64Entry provider.
+machine main(handoff: UefiHandoff) -> EfiStatus
+    effects device_io
+{
+    // system_table is firmware-owned foreign bytes: mint a validated Uefi-layout
+    // view over the pointer, then project con_out. Validation checks the table
+    // header (signature / CRC32); the "it is the live table" meaning is the
+    // provider's axiom, not something validation conjures.
+    transition Uefi<EfiSystemTable>::validate(handoff.system_table) {
+        Valid(table) -> greet(table.con_out)
+        Invalid      -> bad_handoff()
+    }
+
+    state greet(console: ConsolePtr) -> EfiStatus {
+        // Boundary call: the Uefi64 provides-binding lowers this to
+        // "read the fn pointer at vtable slot 1 of `console`, call it MS-x64".
+        SimpleTextOutput::output_string(console, &GREETING);
+        EFI_SUCCESS
+    }
+
+    state bad_handoff() -> EfiStatus {
+        EFI_INVALID_PARAMETER
+    }
+}
+
+// --- What this needs from Omega (why it will not compile yet) --------------
+//
+// All four are milestone-1 items on the first-boot ladder in
+// ../../../Omega/wiki/cathedral_alignment.md item 7:
+//
+//   1. A no-host freestanding target (empty host-provider set) whose entry has
+//      the EFI signature — the Uefi64 target + the Uefi64Entry provider.
+//   2. PE32+ EFI_APPLICATION emission (subsystem 10, empty import table, and a
+//      .reloc section — OVMF loads at an arbitrary base). VERIFY early.
+//   3. Layout policies + validating mints over the foreign UEFI structs
+//      (`Uefi<EfiSystemTable>::validate`, field projection) —
+//      programmable_layouts.md, landing now (L0–L3).
+//   4. The runtime-pointer call: the MS-x64 call encoder targeting a pointer
+//      read from a struct (VtableSlot) rather than an import symbol —
+//      calling_plans.md + extern_boundary §12.
+//
+// Milestones 2 (GetMemoryMap → ExitBootServices → first Region mint) and 3
+// (interrupts, serial, staying alive) build on this and need no new contracts.
