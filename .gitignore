@@ -11,6 +11,11 @@ Thumbs.db
 .vscode/*
 !.vscode/settings.json
 
+# Studied prior art — forked reference codebases (rust-osdev crates, other OSes)
+# read as fact-sources and quirk-references, never linked or shipped.
+# See wiki/architecture/prior_art_and_hardware_facts.md.
+reference_code/
+
 # Scratch
 scratch/
 *.local.md

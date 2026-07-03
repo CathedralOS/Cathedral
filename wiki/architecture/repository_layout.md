@@ -337,7 +337,10 @@ boot handoff alongside them.
   third-party unsafe code inside the TCB, its ambient-authority idioms
   (`Port::new(0x60)`) contradict the capability model, and it hands the boot
   contract to outsiders. Hardware *facts* are transcribed as data in
-  `source/drivers/facts/`; hardware *drivers* are ours.
+  `source/drivers/facts/`; hardware *drivers* are ours. Prior art is *studied*,
+  not linked — cloned into a gitignored root `reference_code/` (Dolrus-style),
+  read as a fact-source and quirk-reference; the method and the per-crate work
+  breakdown are in [`prior_art_and_hardware_facts.md`](prior_art_and_hardware_facts.md).
 - **No third-party quarantine directory — because there is no third-party code.**
   If that ever changes, it enters through one named, policy-governed location,
   and the all-in-house invariant becomes a browsable boundary rather than a
