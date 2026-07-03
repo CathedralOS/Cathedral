@@ -17,12 +17,12 @@
 //     trusted boot code.
 //   * `table.con_out` projects the live SystemTable at the plan offset (+64) —
 //     a dereference of the firmware pointer the boundary vouched for.
-//   * `output_string -> VtableSlot(1)` dispatches through the protocol's own
+//   * `output_string -> output_string` (field model) dispatches through the protocol's own
 //     vtable (mov rax,[rcx+8]; call rax) — COM/UEFI per-object dispatch.
 //   * utf16"..." is the CHAR16 text UEFI expects.
 //
 // Typed-ABI note: Cathedral names the boot ABI with typed wrappers (EfiStatus,
-// EfiHandle, ConsolePtr) where the single-file sample used raw `addr`/`i32`.
+// EfiHandle, &TextOutputProtocol) where the single-file sample used raw `addr`/`i32`.
 // The typed form is the target as the toolchain threads typed params through the
 // vtable path; the sample is the proven-compiling shape.
 
@@ -32,7 +32,7 @@ use uefi.EfiHandle
 use uefi.EfiStatus
 use uefi.EFI_SUCCESS
 use uefi.EfiSystemTable
-use uefi.ConsolePtr
+use uefi.TextOutputProtocol
 use uefi.SimpleTextOutput
 use uefi.BootServices
 
@@ -57,7 +57,7 @@ boundary machine Main::run(&self, handle: EfiHandle, table: &EfiSystemTable) -> 
     // Project con_out through a frame local (the reference-param deref), then
     // dispatch OutputString(con_out, &msg) through the firmware's own vtable.
     // No `validate` on the boot path — the boundary vouched for `table`'s shape.
-    let con_out: ConsolePtr = table.con_out;
+    let con_out: &TextOutputProtocol = table.con_out;
     self.out.output_string(con_out, &self.msg);
     // Milestone 2 — own the machine (own_machine.omg): walk the memory map, exit
     // boot services, mint the first Region, then idle. Does NOT return (firmware

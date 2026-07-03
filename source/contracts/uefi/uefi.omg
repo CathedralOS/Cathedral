@@ -5,8 +5,9 @@
 // FOREIGN structs, so they are plain `data` (firmware structs never cross a
 // schema-evolution edge → no identity numbers); their byte layout is supplied by
 // the `Uefi` C-ABI layout policy at the use site (Omega programmable_layouts.md).
-// Function-pointer protocol calls go through boundary traits bound to a vtable
-// slot (Omega extern_boundary_and_format_domains.md §12).
+// Function-pointer protocol calls go through boundary traits bound to a named
+// fn-ptr FIELD of the table struct — the field model (Omega
+// extern_boundary_and_format_domains.md §12, decided 2026-07-04).
 //
 // BOOT-VERIFIED SHAPE (aligned to Omega samples/uefi_hello, ea51376cd,
 // 2026-07-04 — milestone 1 boots under QEMU/OVMF). Cathedral names the ABI with
@@ -28,31 +29,30 @@ pub EFI_INVALID_PARAMETER: EfiStatus = EfiStatus { code: 0x8000_0000_0000_0002 }
 // pass it (a gated token; extern brief §12.2 case 3, opaque).
 pub data EfiHandle { raw: addr; }
 
-// A pointer to an EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL (con_out).
-pub data ConsolePtr { raw: addr; }
-
-// A pointer to the EFI_BOOT_SERVICES table (SystemTable.boot_services).
-// Reached at milestone 2 (GetMemoryMap / ExitBootServices — see boot_services.omg).
-pub data BootServicesPtr { raw: addr; }
-
 // --- Simple Text Output protocol (con_out) --------------------------------
 //
-// An EFI protocol struct embeds its function pointers as inline fields (there is
-// no separate vtable pointer — the object *is* the vtable). OutputString is
-// field index 1 (Reset is 0), so it binds to VtableSlot(1): read the fn pointer
-// at that slot of the console object, call it MS-x64. `String` is a
-// null-terminated [u16] (CHAR16*, UCS-2).
+// An EFI protocol struct embeds its function pointers as inline fields — the
+// object IS the vtable. The FIELD MODEL: declare the fn-ptr fields in spec order
+// (the `Uefi` policy computes each offset), and the `provides` binding names the
+// FIELD to call — no magic slot index. `String` is a null-terminated [u16]
+// (CHAR16*, UCS-2).
+
+pub data TextOutputProtocol {
+    reset:         addr;   // EFI_TEXT_RESET (unused; present so output_string's offset is right)
+    output_string: addr;   // EFI_TEXT_STRING — bound below
+    // test_string, query_mode, set_mode, … follow (unread at milestone 1).
+}
 
 pub boundary trait SimpleTextOutput {
-    machine output_string(console: ConsolePtr, string: &[u16]) -> EfiStatus
+    machine output_string(console: &TextOutputProtocol, string: &[u16]) -> EfiStatus
         effects device_io;
 }
 
-// The provides table binds the protocol call to the embedded function pointer:
-// dispatch through the vtable slot (`mov rax, [rcx+8]; call rax`), no import
-// thunk. Boot-verified.
-uefi_x64 provides SimpleTextOutput {
-    output_string -> VtableSlot(1)   // OutputString = field 1 of the protocol struct
+// Bind the method to the fn-ptr FIELD — dispatch reads the field and calls it
+// MS-x64, no import thunk. `over` names the struct whose fields the bindings
+// index.
+uefi_x64 provides SimpleTextOutput over TextOutputProtocol {
+    output_string -> output_string
 }
 
 // --- The System Table (firmware's root hand-off structure) ----------------
@@ -79,11 +79,11 @@ pub data EfiSystemTable {
     console_in_handle:       EfiHandle;
     con_in:                  addr;              // EFI_SIMPLE_TEXT_INPUT_PROTOCOL*
     console_out_handle:      EfiHandle;
-    con_out:                 ConsolePtr;        // milestone 1 reads this
+    con_out:                 &TextOutputProtocol;  // milestone 1 dispatches through this
     standard_error_handle:   EfiHandle;
     std_err:                 addr;              // EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL*
     runtime_services:        addr;              // EFI_RUNTIME_SERVICES*
-    boot_services:           BootServicesPtr;   // milestone 2 reads this
+    boot_services:           &BootServicesTable; // milestone 2 dispatches through this (boot_services.omg)
     number_of_table_entries: u64;               // UINTN
     configuration_table:     addr;              // EFI_CONFIGURATION_TABLE*
 }
