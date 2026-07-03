@@ -61,6 +61,14 @@ The effective value is: resolve *up* the inheritance chain, then *clamp* to any 
 
 **The effective value is a derived, cached-with-invalidation view; the layers are the source of truth.** Semantically recompute-on-read; practically cache the materialized value and invalidate when a contributing layer commits. The cache is never authoritative (re-derivable from the layers and the resolution function), so audit and rollback operate on the **layers**. The resolution *function* is static and total; its *inputs* are live — which is why precedence is a runtime computation over live org/user state with a static, explainable algorithm.
 
+### Config is authored by augmenting machines, not a file format
+
+There are no config *files* — no TOML, YAML, INI, or dotfile grammar anywhere in the system. A settings object is a typed `data` value, and it is populated by an **augmenting machine**: `machine configure(settings: &mut Settings)` that sets the fields it cares about and leaves the rest at their ZII defaults. This is the same mechanism as the build manifest — Omega's `build.omg` is an augmenting machine over a `Build`, and config is that pattern generalized (see Omega's [build & package model](../../../../Omega/wiki/design_briefs/build_and_package_model.md)). It exists for the same reason: a bespoke config grammar is a *secret export language* — untyped, unvalidated, a battle to comply with — whereas a machine is ordinary typed Omega with real errors, no invented syntax, and full expressiveness (a value computed from context, not a string table).
+
+**Layering is augmenting machines called in order** — org defaults, then user, then local — each mutating the same settings value. That *is* the `inherit` operator realized: augmenting fills-absent, so an untouched field falls through to the previous layer's write and ultimately to ZII; `constrain` is a ceiling machine applied after. Because the machines are effect-free (mutating a passed-in local is not an effect), the resolver simply runs them and reads the settings back — so config stays **authored as code, consumed as data**, and each machine is a named, authorized contribution in the authority graph (the "explainable-for-free" provenance above).
+
+The settings *type* is owned by whoever the config belongs to — a service exposes its `Settings`, the platform exposes the ones in `contracts/`, an app defines its own — and a `configure` machine imports the type it augments from that owner. Which owner, and how the type evolves, is ordinary dependency detail that shifts as the system grows; the invariant is only that config is a typed value augmented by a machine, never a parsed format.
+
 ## Concerns & Design Space
 
 - **Declarative typed config.** Settings as typed `data`; validity as domains, so illegal configurations are unrepresentable rather than merely discouraged.
@@ -76,6 +84,7 @@ The effective value is: resolve *up* the inheritance chain, then *clamp* to any 
 - **Org caps rejected at commit — resolved:** a cap is a typed domain; a violating write fails the commit-time domain check with an explainable error, never a silent clamp or ignore.
 - **Config vs application state — resolved:** no bright line; "config" is the layered-and-legible *role* over uniform typed realm data, not a separate store.
 - **Legacy text/registry config — resolved:** a synthesized projection over the typed store (the recursive-provider pattern), read-mostly with validated write-back.
+- **Config authoring mechanism — resolved:** config is authored by an augmenting machine over a typed settings value (`machine configure(&mut Settings)`), never a parsed file format; layering = augmenting machines called in order (the `inherit` operator); pure machines keep it authored-as-code, consumed-as-data. The same mechanism as Omega's `build.omg`.
 
 ## Omega Leverage
 
@@ -83,6 +92,7 @@ The effective value is: resolve *up* the inheritance chain, then *clamp* to any 
 - **Domains** express validity classes and policy states (`Config::Valid`, `Config::OrgAllowed`) so layering, caps, and validation are proof facts — see Omega [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - **Capabilities as values** scope read vs. write per key, so config access is an authority-flow fact, not an ambient file permission ([[capability_model]]).
 - **`wire data`** gives a stable cross-version encoding for config that must be exported, synced, or read by external tooling — see Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_20_wire_protocols.md).
+- **Build-time evaluation + the effect system** make config-as-a-machine safe: an effect-free `configure` machine is *run* to produce the settings value, and the effect system proves it did no IO — so config is code without being an opaque script — see Omega [build & package model](../../../../Omega/wiki/design_briefs/build_and_package_model.md) and [build-time evaluation](../../../../Omega/wiki/design_briefs/build_time_evaluation.md).
 
 ## Open Questions
 
