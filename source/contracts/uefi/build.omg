@@ -1,8 +1,10 @@
 // source/contracts/uefi/build.omg
 //
-// The UEFI ABI contracts package. A root of the reach graph: depends on nothing.
-// PROVISIONAL SYNTAX (Omega build_and_package_model.md).
+// The UEFI ABI contracts package. Reaches nothing and uses default settings, so
+// `build` augments nothing. (A package with no deps and default settings could
+// omit build.omg entirely — ZII gives the defaults — but it is kept explicit
+// here.) PROVISIONAL SYNTAX (Omega build_and_package_model.md).
 
-build cathedral_contracts_uefi {
-    // depends {}  — contracts reach nothing.
+machine build(b: &mut Build) {
+    // contracts reach nothing; no targets to augment.
 }

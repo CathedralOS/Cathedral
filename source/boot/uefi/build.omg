@@ -1,23 +1,21 @@
 // source/boot/uefi/build.omg
 //
-// The milestone-1 UEFI boot application. Declares its reach (only `uefi`
-// contracts) and its target. PROVISIONAL SYNTAX (Omega build_and_package_model.md).
+// The build description is authored as an ordinary machine that augments a
+// mutable Build — NO config grammar, just machine calls and field assignment
+// (Omega build_and_package_model.md). The toolchain calls `build` with a fresh
+// (ZII-default) Build and reads the result. PROVISIONAL SYNTAX.
 
-build cathedral_boot_uefi {
-    // Reach is exactly this set — `main.omg` can name `uefi` and nothing else.
-    depends {
-        uefi = path("../../contracts/uefi"),   // milestone 1: local path binding;
-                                                // hash-pinned once the store exists.
-    }
+machine build(b: &mut Build) {
+    // Reach: bind the local alias `uefi` to a pinned source (appends to b's
+    // dependency set). main.omg may name `uefi` and nothing else.
+    b.depend("uefi", path("../../contracts/uefi"));   // hash-pinned once the store exists
 
-    // The freestanding UEFI target. `entry` names the machine firmware calls;
-    // subsystem drives PE32+ emission.
-    target Uefi64 {
-        entry     = main,
-        subsystem = EfiApplication,   // PE32+ subsystem 10; empty import table; .reloc section
-        stack     = 128 * KiB,
-    }
+    // A freestanding UEFI target, augmented field by field.
+    let target = b.target(Uefi64);
+    target.entry     = main;
+    target.subsystem = EfiApplication;   // PE32+ subsystem 10; empty import table; .reloc section
+    target.stack     = 128 * KiB;
 
-    // toolchain intentionally omitted at milestone 1: build.omg is interpreted by
-    // the tool in hand, so a pin is optional until reproducibility matters.
+    // toolchain left default at milestone 1: build.omg is interpreted by the
+    // tool in hand, so a pin is optional until reproducibility matters.
 }
