@@ -296,13 +296,17 @@ Current reality (2026-07-04):
   `source/boot/uefi/` + the milestone-1 path of `source/contracts/uefi/` are
   aligned to that boot-verified shape). No C, no host runtime, no hand-written
   assembly. `tools/boot-harness/` runs it end-to-end under QEMU/OVMF.
-- **in-progress** — `source/contracts/uefi/boot_services.omg` (milestone-2
-  boot-services + memory-map ABI — designed, no new language features needed,
-  Cathedral-side code over the milestone-1 machinery) and
-  `source/drivers/facts/uart_16550` (milestone-3 serial facts — pure data).
-- **planned** — everything else (`core/`, `foundation/`, `services/`,
-  `libraries/`, and the driver *programs* under `drivers/`). No directory exists
-  until real code lands in it.
+- **in-progress** — **milestone 2 (own the machine)** is under way:
+  `source/core/region.omg` (the first capability — `Region` + `mint_region`, the
+  origin of the authority graph; `core/`'s first resident) and
+  `source/boot/uefi/own_machine.omg` (the memory-map dance → `ExitBootServices` →
+  first `Region` mint), over the milestone-2 ABI in
+  `source/contracts/uefi/boot_services.omg`. No fundamentally new language
+  features — the M2 ladder (Omega `TASKS.md`) is small deltas on the M1
+  machinery. `source/drivers/facts/uart_16550` is milestone-3 serial prep.
+- **planned** — everything else (`foundation/`, `services/`, `libraries/`, and
+  the driver *programs* under `drivers/`). No directory exists until real code
+  lands in it.
 
 ---
 

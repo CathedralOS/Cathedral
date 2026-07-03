@@ -1,0 +1,9 @@
+// source/core/build.omg
+//
+// The proved kernel package. Firmware-neutral at M2 — reaches nothing yet
+// (foundation/ and contracts/ deps arrive as core grows). PROVISIONAL SYNTAX
+// (Omega build_and_package_model.md).
+
+machine build(b: &mut Build) {
+    // core reaches nothing at milestone 2.
+}

@@ -1,0 +1,96 @@
+// source/boot/uefi/own_machine.omg
+//
+// MILESTONE 2 — own the machine. Get the firmware memory map, walk it for free
+// RAM, ExitBootServices, and mint the FIRST Region from the largest free span —
+// the origin of Cathedral's authority graph. Runs after the milestone-1 greeting
+// (con_out still works before exit).
+//
+// M2 TARGET — aligned to the boot-verified M1 machinery (boundary calls,
+// transitive vouching, VtableSlot dispatch, state-machine loops). The specific
+// Omega asks it pressures are listed at the bottom + in Omega TASKS.md's M2
+// ladder; PROVISIONAL SYNTAX where those asks are unlanded.
+
+package cathedral_boot_uefi
+
+use uefi.EfiHandle
+use uefi.EfiStatus
+use uefi.EfiSystemTable
+use uefi.EfiMemoryDescriptor
+use uefi.EFI_CONVENTIONAL_MEMORY
+use uefi.MapKey
+use core.Region
+use core.mint_region
+
+// Get the map, walk it, exit, mint. `self.map_buf` is a fixed 16 KiB static field
+// (no allocator yet — real firmware maps are ~4–8 KiB); the too-small retry loop
+// is a follow-on.
+machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) {
+    let bs: addr = table.boot_services;          // transitive vouch, like con_out
+
+    let mut map_size: u64 = 16384;               // in = buffer capacity, out = actual bytes
+    let mut key: MapKey = MapKey { raw: 0 };
+    let mut desc_size: u64 = 0;                   // out = the RUNTIME descriptor stride
+    let mut desc_version: u32 = 0;
+    self.boot_svc.get_memory_map(bs, &mut map_size, &mut self.map_buf,
+                                 &mut key, &mut desc_size, &mut desc_version);
+
+    transition { _ -> walk(bs, handle, map_size, desc_size, key, 0, 0, 0) }
+
+    // Walk descriptors: stride by the RUNTIME desc_size (never sizeof), recast
+    // each slice to &EfiMemoryDescriptor, track the largest conventional-memory
+    // span.
+    state walk(bs: addr, handle: EfiHandle, map_size: u64, desc_size: u64, key: MapKey,
+               offset: u64, best_start: u64, best_pages: u64) {
+        let d: &EfiMemoryDescriptor = &self.map_buf[offset] as &EfiMemoryDescriptor;
+        let is_free: bool  = d.kind == EFI_CONVENTIONAL_MEMORY;
+        let bigger: bool   = is_free and d.number_of_pages > best_pages;
+        let more: bool     = offset + desc_size < map_size;
+        transition (bigger, more) {
+            (true,  true)  -> walk(bs, handle, map_size, desc_size, key,
+                                   offset + desc_size, d.physical_start, d.number_of_pages)
+            (true,  false) -> exit(bs, handle, key, d.physical_start, d.number_of_pages)
+            (false, true)  -> walk(bs, handle, map_size, desc_size, key,
+                                   offset + desc_size, best_start, best_pages)
+            (false, false) -> exit(bs, handle, key, best_start, best_pages)
+        }
+    }
+
+    // Exit boot services against the current key. On success firmware is gone and
+    // the map is final. (StaleMap retry = follow-on; the common case succeeds
+    // first try when nothing allocates between GetMemoryMap and here.)
+    state exit(bs: addr, handle: EfiHandle, key: MapKey, best_start: u64, best_pages: u64) {
+        self.boot_svc.exit_boot_services(bs, handle, key);
+        transition { _ -> own(best_start, best_pages) }
+    }
+
+    // We own the machine. Mint the first Region from the largest free span — every
+    // later memory authority descends from this.
+    state own(best_start: u64, best_pages: u64) {
+        let first_region: Region = mint_region(best_start, best_pages);
+        transition { _ -> idle() }
+    }
+
+    // Idle. `hlt` is milestone 3; until then a busy self-re-entering state (we own
+    // the machine; there is nothing to return to — firmware is gone).
+    state idle() {
+        transition { _ -> idle() }
+    }
+}
+
+// --- What this pressures in Omega (the M2 ladder) --------------------------
+//
+// Milestone 2 needs NO fundamentally new language features, but exercises the M1
+// machinery in new shapes (Omega TASKS.md "Cathedral milestone-2 ladder"):
+//   1. &mut params through a vtable call — get_memory_map takes five out-params;
+//      the MS-x64 lowering passes their addresses (like output_string's value
+//      args, but by-reference). Small delta on the VtableSlot encoder.
+//   2. Header-offset VtableSlot — BootServices' fn pointers begin after a 24-byte
+//      EFI_TABLE_HEADER, so VtableSlot(N) here = *(bs + 24 + N*8), not *(bs + N*8)
+//      as for a header-less protocol struct. The binding must carry the base
+//      offset (or a HeaderVtableSlot variant).
+//   3. Recast at a runtime offset — `&self.map_buf[offset] as &EfiMemoryDescriptor`
+//      is the §5b borrow-recast, indexed by a runtime `offset` with a runtime
+//      `desc_size` stride. Needs the bounds fact (offset + sizeof <= map_size).
+//   4. A larger static buffer field ([u8; 16384]) in a data value.
+//   5. `exit_boot_services` returns to a state that never returns to firmware —
+//      the busy idle loop stands in for `hlt` (milestone 3).

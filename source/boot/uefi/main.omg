@@ -34,14 +34,18 @@ use uefi.EFI_SUCCESS
 use uefi.EfiSystemTable
 use uefi.ConsolePtr
 use uefi.SimpleTextOutput
+use uefi.BootServices
 
-// Main's STATIC DATA (`&self`): the held capability (Simple Text Output) + the
-// greeting bytes. The launch inputs (handle, table) are PARAMETERS to run, not
-// fields of self — self is what the component IS, the args are what firmware
-// handed this invocation.
+// Main's STATIC DATA (`&self`): the held capabilities (Simple Text Output for
+// the greeting, Boot Services for the milestone-2 memory-map dance) + the
+// greeting bytes + the memory-map buffer. The launch inputs (handle, table) are
+// PARAMETERS to run, not fields of self — self is what the component IS, the args
+// are what firmware handed this invocation.
 data Main {
-    out: SimpleTextOutput;
-    msg: [u16; 19];        // "Hello from Omega\r\n\0" as UTF-16 CHAR16 code units
+    out:      SimpleTextOutput;
+    boot_svc: BootServices;      // milestone 2 — GetMemoryMap / ExitBootServices
+    msg:      [u16; 19];         // "Hello from Omega\r\n\0" as UTF-16 CHAR16 code units
+    map_buf:  [u8; 16384];       // static buffer for GetMemoryMap (no allocator yet)
 }
 
 // The firmware entry: an exported callable. `handle` is unused at milestone 1
@@ -55,5 +59,9 @@ boundary machine Main::run(&self, handle: EfiHandle, table: &EfiSystemTable) -> 
     // No `validate` on the boot path — the boundary vouched for `table`'s shape.
     let con_out: ConsolePtr = table.con_out;
     self.out.output_string(con_out, &self.msg);
+    // Milestone 2 — own the machine (own_machine.omg): walk the memory map, exit
+    // boot services, mint the first Region, then idle. Does NOT return (firmware
+    // is gone after exit), so the terminal below is unreachable.
+    self.own_machine(handle, table);
     transition { _ -> (EFI_SUCCESS) }
 }

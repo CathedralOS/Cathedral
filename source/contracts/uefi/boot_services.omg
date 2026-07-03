@@ -52,16 +52,20 @@ pub data MapKey { raw: u64; }   // UINTN
 // the 5th boot service, ExitBootServices the 27th.
 
 pub boundary trait BootServices {
-    // GetMemoryMap(&mut MemoryMapSize, MemoryMap, &mut MapKey,
-    //              &mut DescriptorSize, &mut DescriptorVersion) -> EFI_STATUS.
+    // GetMemoryMap(IN OUT MemoryMapSize, OUT MemoryMap, OUT MapKey,
+    //              OUT DescriptorSize, OUT DescriptorVersion) -> EFI_STATUS.
+    // `map_size` is in/out (pass the buffer capacity, get the actual size back);
     // `buffer` is written with descriptors; `descriptor_size` returns the RUNTIME
     // stride to walk them by — never sizeof(EfiMemoryDescriptor). A too-small
     // buffer returns EFI_BUFFER_TOO_SMALL with the needed size (loop-and-retry).
+    // All 5 args are in the ABI position order the firmware fn expects.
     machine get_memory_map(
-        boot_services:   BootServicesPtr,
-        buffer:          &mut [u8],
-        map_key:         &mut MapKey,
-        descriptor_size: &mut u64,
+        boot_services:      BootServicesPtr,
+        map_size:           &mut u64,
+        buffer:             &mut [u8],
+        map_key:            &mut MapKey,
+        descriptor_size:    &mut u64,
+        descriptor_version: &mut u32,
     ) -> EfiStatus
         effects device_io;
 
@@ -75,7 +79,7 @@ pub boundary trait BootServices {
         effects device_io;
 }
 
-uefi64 provides BootServices {
+uefi_x64 provides BootServices {
     get_memory_map    -> VtableSlot(4)    // 5th boot service (0-based, past the header)
     exit_boot_services -> VtableSlot(26)  // 27th boot service
 }

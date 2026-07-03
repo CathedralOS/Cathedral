@@ -8,9 +8,10 @@
 // it (calling_plans.md §7).
 
 machine build(b: &mut Build) {
-    // Reach: bind the local alias `uefi` to the boot hand-off ABI. main.omg may
-    // name `uefi` and nothing else.
+    // Reach: the boot hand-off ABI + the kernel (for Region + the first mint).
+    // The boot package may name `uefi` and `core` and nothing else.
     b.depend("uefi", path("../../contracts/uefi"));   // hash-pinned once the store exists
+    b.depend("core", path("../../core"));             // Region + mint_region (milestone 2)
 
     b.subsystem    = Subsystem::EfiApplication;   // import-free PE32+ firmware loads directly
     b.freestanding = true;                         // empty host-provider set (no host runtime)

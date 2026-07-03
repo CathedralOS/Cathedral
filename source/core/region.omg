@@ -1,0 +1,36 @@
+// source/core/region.omg
+//
+// Region — THE FIRST CAPABILITY: exclusive authority over a span of physical
+// RAM. Every later memory authority descends from a Region minted here at boot,
+// so this is the ORIGIN of the authority graph (kernel_architecture,
+// capability_lifecycle). Milestone 2 mints the first ones AFTER ExitBootServices,
+// from the firmware memory map.
+//
+// core/ stays firmware-neutral: `boot/` walks the UEFI map and calls `mint_region`
+// with plain (start, page_count) spans; core knows nothing about UEFI.
+//
+// M2 TARGET — aligned to the boot-verified M1 machinery. The generational
+// {slot, generation} arena that makes a Region unforgeable + revocable is the
+// capability_lifecycle arc; at M2 a Region is a plain value and the trusted boot
+// origin is the sole minter.
+
+package cathedral_core
+
+pub PAGE_SIZE: u64 = 4096;
+
+// A physical-memory span capability. Holding a Region is exclusive authority over
+// [physical_start, physical_start + page_count * PAGE_SIZE).
+pub data Region {
+    physical_start: u64;
+    page_count:     u64;
+}
+
+// The raw memory-authority mint. At M2 the only caller is `boot/`, which calls it
+// AFTER ExitBootServices has succeeded — so a Region is only ever minted from
+// real, owned, firmware-relinquished RAM, never conjured. The token/arena gate
+// that makes this structurally unforgeable (holding evidence of exit; the
+// generation counter) is capability_lifecycle; the layering that keeps `boot/`
+// the sole boot-time caller is the trust boundary.
+pub machine mint_region(physical_start: u64, page_count: u64) -> Region {
+    transition { _ -> (Region { physical_start: physical_start, page_count: page_count }) }
+}
