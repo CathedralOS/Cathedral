@@ -1,0 +1,94 @@
+// source/contracts/uefi/boot_services.omg
+//
+// Milestone-2 boot-services ABI: GetMemoryMap → ExitBootServices → the origin of
+// memory authority. Transcribed from the UEFI specification (cross-check:
+// reference_code/rust-osdev/uefi-rs). Same discipline as uefi.omg — foreign
+// structs are plain `data` given byte layout by the `Uefi` C-ABI policy, and
+// firmware function-pointer calls go through boundary traits bound to a slot.
+//
+// PROVISIONAL SYNTAX. Milestone 2 needs no new Omega features beyond milestone 1
+// (freestanding target, PE emission, layout mints, runtime-pointer call); this
+// is Cathedral-side code over that machinery, stubbed now so M2 has no new
+// design surface when the toolchain lands.
+
+package cathedral_contracts_uefi
+
+use uefi.EfiStatus
+use uefi.EfiHandle
+use uefi.UefiHandoff
+use uefi.BootServicesPtr
+
+// --- EFI_MEMORY_TYPE (the important values) --------------------------------
+// A UINT32 tag on each descriptor. Only the ones boot reasons about are named.
+pub EFI_LOADER_DATA:        u32 = 2;
+pub EFI_BOOT_SERVICES_CODE: u32 = 3;
+pub EFI_BOOT_SERVICES_DATA: u32 = 4;
+pub EFI_CONVENTIONAL_MEMORY: u32 = 7;   // free RAM boot may claim after exit
+pub EFI_ACPI_RECLAIM:       u32 = 9;
+
+// --- EFI_MEMORY_DESCRIPTOR -------------------------------------------------
+// The `Uefi` policy pads `kind` (u32) to 8-align `physical_start` (u64) — that
+// padding is the ABI's, not written here. sizeof is 40, BUT the array MUST be
+// strided by the runtime DescriptorSize GetMemoryMap returns (firmware may
+// append fields); see the stride note on get_memory_map.
+pub data EfiMemoryDescriptor {
+    kind:            u32;   // EFI_MEMORY_TYPE
+    physical_start:  u64;   // EFI_PHYSICAL_ADDRESS
+    virtual_start:   u64;   // EFI_VIRTUAL_ADDRESS
+    number_of_pages: u64;
+    attribute:       u64;
+}
+
+// The map key GetMemoryMap returns; ExitBootServices only succeeds against the
+// CURRENT key (the freshness contract).
+pub data MapKey { raw: u64; }   // UINTN
+
+// --- EFI_BOOT_SERVICES calls ----------------------------------------------
+//
+// EFI_BOOT_SERVICES is a table whose fields (after a 24-byte EFI_TABLE_HEADER)
+// are function pointers. Unlike a protocol struct, the callable slots begin
+// after the header — so a VtableSlot binding here counts from the first function
+// pointer, and the header offset is part of the lowering (cross-check the exact
+// byte math against the spec + uefi-rs at implementation time). GetMemoryMap is
+// the 5th boot service, ExitBootServices the 27th.
+
+pub boundary trait BootServices {
+    // GetMemoryMap(&mut MemoryMapSize, MemoryMap, &mut MapKey,
+    //              &mut DescriptorSize, &mut DescriptorVersion) -> EFI_STATUS.
+    // `buffer` is written with descriptors; `descriptor_size` returns the RUNTIME
+    // stride to walk them by — never sizeof(EfiMemoryDescriptor). A too-small
+    // buffer returns EFI_BUFFER_TOO_SMALL with the needed size (loop-and-retry).
+    machine get_memory_map(
+        boot_services:   BootServicesPtr,
+        buffer:          &mut [u8],
+        map_key:         &mut MapKey,
+        descriptor_size: &mut u64,
+    ) -> EfiStatus
+        effects device_io;
+
+    // ExitBootServices(ImageHandle, MapKey) -> EFI_STATUS. Succeeds only against
+    // the current key; on success, firmware is gone and the map is final.
+    machine exit_boot_services(
+        boot_services: BootServicesPtr,
+        image_handle:  EfiHandle,
+        map_key:       MapKey,
+    ) -> EfiStatus
+        effects device_io;
+}
+
+uefi64 provides BootServices {
+    get_memory_map    -> VtableSlot(4)    // 5th boot service (0-based, past the header)
+    exit_boot_services -> VtableSlot(26)  // 27th boot service
+}
+
+// --- Origin of memory authority -------------------------------------------
+//
+// FinalMemoryMap is private, minted only by a successful exit_boot_services, so
+// holding one is proof firmware has exited and the map is authoritative. The
+// first Region capabilities are minted FROM it (in core/, once core/ exists) —
+// every later memory authority descends from this point by construction. Stubbed
+// here as the shape; the Region type and mint live on the core side.
+pub data FinalMemoryMap {
+    buffer:          &[u8];   // the validated descriptor bytes
+    descriptor_size: u64;     // the runtime stride
+}

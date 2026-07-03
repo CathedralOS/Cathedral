@@ -28,6 +28,10 @@ pub data EfiHandle { raw: addr; }
 // A pointer to an EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL (con_out).
 pub data ConsolePtr { raw: addr; }
 
+// A pointer to the EFI_BOOT_SERVICES table (SystemTable.boot_services).
+// Reached at milestone 2 (GetMemoryMap / ExitBootServices — see boot_services.omg).
+pub data BootServicesPtr { raw: addr; }
+
 // --- Simple Text Output protocol (con_out) --------------------------------
 //
 // An EFI protocol struct embeds its function pointers as inline fields (there is
@@ -62,16 +66,23 @@ pub data EfiTableHeader {
     reserved:    u32;
 }
 
+// Every field is listed in spec order — the C-ABI (`Uefi`) policy computes each
+// offset from the field before it, so an unread field still has to be present or
+// the ones after it land at the wrong offset.
 pub data EfiSystemTable {
-    header:              EfiTableHeader;
-    firmware_vendor:     addr;
-    firmware_revision:   u32;
-    console_in_handle:   EfiHandle;
-    con_in:              addr;
-    console_out_handle:  EfiHandle;
-    con_out:             ConsolePtr;   // the field boot reads
-    // standard_error_handle, std_err, runtime_services, boot_services,
-    // number_of_table_entries, configuration_table follow (unread at M1).
+    header:                  EfiTableHeader;
+    firmware_vendor:         addr;              // CHAR16*
+    firmware_revision:       u32;
+    console_in_handle:       EfiHandle;
+    con_in:                  addr;              // EFI_SIMPLE_TEXT_INPUT_PROTOCOL*
+    console_out_handle:      EfiHandle;
+    con_out:                 ConsolePtr;        // milestone 1 reads this
+    standard_error_handle:   EfiHandle;
+    std_err:                 addr;              // EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL*
+    runtime_services:        addr;              // EFI_RUNTIME_SERVICES*
+    boot_services:           BootServicesPtr;   // milestone 2 reads this
+    number_of_table_entries: u64;               // UINTN
+    configuration_table:     addr;              // EFI_CONFIGURATION_TABLE*
 }
 
 // --- The entry provider: the firmware hand-off ----------------------------

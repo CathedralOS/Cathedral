@@ -1,0 +1,8 @@
+// source/drivers/facts/build.omg
+//
+// Hardware-fact packages hold pure data and reach nothing, so `build` augments
+// nothing. PROVISIONAL SYNTAX (Omega build_and_package_model.md).
+
+machine build(b: &mut Build) {
+    // facts reach nothing; no targets.
+}

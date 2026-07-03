@@ -289,15 +289,20 @@ adopted). Consequences:
 Status legend: **built** · **in-progress** · **planned** · **parked**.
 Current reality (2026-07-02):
 
-- **in-progress** — `source/boot/uefi/` (milestone-1 UEFI application) and
-  `source/contracts/uefi/` (the boot hand-off ABI). These are real source but do
-  **not compile yet** — they target Omega features still landing (the first-boot
-  ladder in `../../../Omega/wiki/cathedral_alignment.md` item 7). Written now as
-  the concrete pressure-test and the thing the Omega work aims at.
+- **in-progress** — `source/boot/uefi/` (milestone-1 UEFI application),
+  `source/contracts/uefi/` (the boot hand-off ABI, now with milestone-2
+  boot-services + memory-map shapes), and `source/drivers/facts/uart_16550`
+  (milestone-3 serial facts — pure data, correct without a compiler). The
+  `.omg` source does **not compile yet** — it targets Omega features still
+  landing (the first-boot ladder in
+  `../../../Omega/wiki/cathedral_alignment.md` item 7). Written now as the
+  concrete pressure-test and the thing the Omega work aims at.
   `tools/boot-harness/` boots the result under QEMU/OVMF (the QEMU invocation is
-  real; the build step is stubbed until the toolchain can emit the target).
-- **planned** — everything else (`core/`, `foundation/`, `services/`, `drivers/`,
-  `libraries/`, `applications/`). No directory exists until real code lands in it.
+  real and verified; the build step is stubbed until the toolchain can emit the
+  target).
+- **planned** — everything else (`core/`, `foundation/`, `services/`,
+  `libraries/`, and the driver *programs* under `drivers/`). No directory exists
+  until real code lands in it.
 
 ---
 
