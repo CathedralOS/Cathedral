@@ -8,7 +8,10 @@
 // Function-pointer protocol calls go through boundary traits bound to a vtable
 // slot (Omega extern_boundary_and_format_domains.md §12).
 //
-// PROVISIONAL SYNTAX — targets Omega features still being implemented.
+// BOOT-VERIFIED SHAPE (aligned to Omega samples/uefi_hello, ea51376cd,
+// 2026-07-04 — milestone 1 boots under QEMU/OVMF). Cathedral names the ABI with
+// typed wrappers where the single-file sample used raw `addr`; the typed form is
+// the target, the sample is the proven-compiling shape.
 
 package cathedral_contracts_uefi
 
@@ -45,10 +48,10 @@ pub boundary trait SimpleTextOutput {
         effects device_io;
 }
 
-// The Uefi64 target lowers the protocol call to the embedded function pointer.
-// (Placement of this binding may move into a target definition; inline here for
-// the self-contained milestone-1 slice.)
-uefi64 provides SimpleTextOutput {
+// The provides table binds the protocol call to the embedded function pointer:
+// dispatch through the vtable slot (`mov rax, [rcx+8]; call rax`), no import
+// thunk. Boot-verified.
+uefi_x64 provides SimpleTextOutput {
     output_string -> VtableSlot(1)   // OutputString = field 1 of the protocol struct
 }
 
@@ -85,29 +88,25 @@ pub data EfiSystemTable {
     configuration_table:     addr;              // EFI_CONFIGURATION_TABLE*
 }
 
-// --- The firmware hand-off: main is the entry -----------------------------
+// --- The firmware hand-off: main is an exported callable --------------------
 //
-// There is NO handoff token and NO entry-provider boundary trait (option A,
-// ratified 2026-07-03). The firmware entry is just `main`, given the two things
-// firmware hands it — the same "a main given its explicitly-handed context"
-// pattern as any launched component, with FIRMWARE as the spawner. `main` takes
-// `(image_handle: EfiHandle, system_table: SystemTablePtr) -> EfiStatus`.
-
-// A pointer to the firmware-owned EFI_SYSTEM_TABLE — main's second handed arg.
-pub data SystemTablePtr { raw: addr; }
-
-// The Uefi64 target (declared in a boot package's build.omg) carries the rest as
-// TARGET properties — never typed clauses on a machine:
-//   - empty host-provider set (no-host by absence — "a target = the boundary
-//     packages it trusts", extern brief §4);
-//   - the EFI/MS-x64 calling convention on its entry: firmware hands ImageHandle
-//     in RCX and SystemTable* in RDX, and the compiler emits the entry stub that
-//     unmarshals them into main's params (the inbound direction of the calling
-//     plan — calling_plans.md);
-//   - the AUDITED AXIOM LIST — prose checked against the UEFI spec and enumerated
-//     in the build artifact, a target invariant audited once and never threaded
-//     (freestanding_boot_and_hardware_facts.md; the world-facts deflation):
-//       axiom: CPU in long mode, paging on, identity-mapped
-//       axiom: interrupts enabled; ≥ 128 KiB of 16-aligned stack
-//       axiom: system_table points at the live EFI system table (a provenance
-//              vouch; the STRUCTURE is minted + validated by the reader).
+// There is NO handoff token, NO entry-provider trait, and NO target block. The
+// firmware entry is an EXPORTED CALLABLE — `boundary machine Main::run(&self,
+// handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus` in boot/uefi/main.omg
+// (option A, boot-verified 2026-07-04). Firmware hands ImageHandle (RCX) and the
+// SystemTable pointer (RDX); the parameter list is the boundary-trusted shape
+// over those registers, and the boundary VOUCHES TRANSITIVELY for `table`'s
+// declared layout — reading `con_out` through it needs no mint (no `validate` on
+// the trusted boot path; `validate` remains for bytes code *chooses* to check —
+// network, disk — not for the vouched firmware structure).
+//
+// The build target is set by orthogonal `Build` fields in build.omg
+// (`b.freestanding = true`, `b.subsystem = EfiApplication`); the EFI/MS-x64
+// calling plan is inferred from the subsystem (calling_plans.md §7). The
+// AUDITED AXIOM LIST survives as designed — prose checked against the UEFI spec
+// and surfaced by the build artifact next to the exported callable, never typed
+// clauses (freestanding_boot_and_hardware_facts.md; the world-facts deflation):
+//   axiom: CPU in long mode, paging on, identity-mapped
+//   axiom: interrupts enabled; ≥ 128 KiB of 16-aligned stack
+//   axiom: the SystemTable pointer is the live EFI system table (the boundary's
+//          vouch; transitive through the declared shape).

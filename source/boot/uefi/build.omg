@@ -1,25 +1,17 @@
 // source/boot/uefi/build.omg
 //
-// The build description is authored as an ordinary machine that augments a
-// mutable Build — NO config grammar, just machine calls and field assignment
-// (Omega build_and_package_model.md). The toolchain calls `build` with a fresh
-// (ZII-default) Build and reads the result. PROVISIONAL SYNTAX.
+// Milestone-1 UEFI boot application. BOOT-VERIFIED shape (aligned to the Omega
+// sample samples/uefi_hello, ea51376cd, 2026-07-04). There is NO target block:
+// `subsystem` and `freestanding` are orthogonal `Build` fields (the target block
+// was retired — Omega build_and_package_model.md addendum). The EFI/MS-x64
+// calling plan is INFERRED from the subsystem; `boundary(<Plan>)` would override
+// it (calling_plans.md §7).
 
 machine build(b: &mut Build) {
-    // Reach: bind the local alias `uefi` to a pinned source (appends to b's
-    // dependency set). main.omg may name `uefi` and nothing else.
+    // Reach: bind the local alias `uefi` to the boot hand-off ABI. main.omg may
+    // name `uefi` and nothing else.
     b.depend("uefi", path("../../contracts/uefi"));   // hash-pinned once the store exists
 
-    // A freestanding UEFI target, augmented field by field. Uefi64 is a no-host
-    // target (empty host-provider set) that implies the EFI/MS-x64 calling
-    // convention on `entry`, so firmware's two args arrive as main's params, and
-    // carries the audited axiom list (see contracts/uefi/uefi.omg). No entry
-    // provider, no handoff token — `main` is the entry (option A).
-    let target = b.target(Uefi64);
-    target.entry     = main;
-    target.subsystem = EfiApplication;   // PE32+ subsystem 10; empty import table; .reloc section
-    target.stack     = 128 * KiB;
-
-    // toolchain left default at milestone 1: build.omg is interpreted by the
-    // tool in hand, so a pin is optional until reproducibility matters.
+    b.subsystem    = Subsystem::EfiApplication;   // import-free PE32+ firmware loads directly
+    b.freestanding = true;                         // empty host-provider set (no host runtime)
 }

@@ -287,19 +287,19 @@ adopted). Consequences:
   perjuring the tree with empty folders.
 
 Status legend: **built** · **in-progress** · **planned** · **parked**.
-Current reality (2026-07-02):
+Current reality (2026-07-04):
 
-- **in-progress** — `source/boot/uefi/` (milestone-1 UEFI application),
-  `source/contracts/uefi/` (the boot hand-off ABI, now with milestone-2
-  boot-services + memory-map shapes), and `source/drivers/facts/uart_16550`
-  (milestone-3 serial facts — pure data, correct without a compiler). The
-  `.omg` source does **not compile yet** — it targets Omega features still
-  landing (the first-boot ladder in
-  `../../../Omega/wiki/cathedral_alignment.md` item 7). Written now as the
-  concrete pressure-test and the thing the Omega work aims at.
-  `tools/boot-harness/` boots the result under QEMU/OVMF (the QEMU invocation is
-  real and verified; the build step is stubbed until the toolchain can emit the
-  target).
+- **built (boot-verified)** — **milestone 1 of the first-boot ladder is
+  reached.** An Omega UEFI application boots under QEMU/OVMF and prints
+  "Hello from Omega" through the firmware's Simple Text Output protocol (Omega
+  `samples/uefi_hello`, ea51376cd — the canonical compiling reference; Cathedral
+  `source/boot/uefi/` + the milestone-1 path of `source/contracts/uefi/` are
+  aligned to that boot-verified shape). No C, no host runtime, no hand-written
+  assembly. `tools/boot-harness/` runs it end-to-end under QEMU/OVMF.
+- **in-progress** — `source/contracts/uefi/boot_services.omg` (milestone-2
+  boot-services + memory-map ABI — designed, no new language features needed,
+  Cathedral-side code over the milestone-1 machinery) and
+  `source/drivers/facts/uart_16550` (milestone-3 serial facts — pure data).
 - **planned** — everything else (`core/`, `foundation/`, `services/`,
   `libraries/`, and the driver *programs* under `drivers/`). No directory exists
   until real code lands in it.
