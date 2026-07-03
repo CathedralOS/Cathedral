@@ -294,9 +294,10 @@ Current reality (2026-07-02):
   **not compile yet** — they target Omega features still landing (the first-boot
   ladder in `../../../Omega/wiki/cathedral_alignment.md` item 7). Written now as
   the concrete pressure-test and the thing the Omega work aims at.
+  `tools/boot-harness/` boots the result under QEMU/OVMF (the QEMU invocation is
+  real; the build step is stubbed until the toolchain can emit the target).
 - **planned** — everything else (`core/`, `foundation/`, `services/`, `drivers/`,
-  `libraries/`, `applications/`, `tools/`). No directory exists until real code
-  lands in it.
+  `libraries/`, `applications/`). No directory exists until real code lands in it.
 
 ---
 

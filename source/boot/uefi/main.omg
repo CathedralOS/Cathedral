@@ -35,6 +35,11 @@ machine main(handoff: UefiHandoff) -> EfiStatus
     // view over the pointer, then project con_out. Validation checks the table
     // header (signature / CRC32); the "it is the live table" meaning is the
     // provider's axiom, not something validation conjures.
+    //
+    // `Uefi` is the C-ABI layout policy (Omega programmable_layouts.md) — a
+    // standard-library policy, universally reachable, so it is not a declared
+    // dependency (like `u16` or `[T]`). `Uefi<EfiSystemTable>` is the domain for
+    // that schema under the C ABI; `::validate` is its mint.
     transition Uefi<EfiSystemTable>::validate(handoff.system_table) {
         Valid(table) -> greet(table.con_out)
         Invalid      -> bad_handoff()
