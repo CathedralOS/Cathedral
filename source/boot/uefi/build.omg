@@ -10,7 +10,11 @@ machine build(b: &mut Build) {
     // dependency set). main.omg may name `uefi` and nothing else.
     b.depend("uefi", path("../../contracts/uefi"));   // hash-pinned once the store exists
 
-    // A freestanding UEFI target, augmented field by field.
+    // A freestanding UEFI target, augmented field by field. Uefi64 is a no-host
+    // target (empty host-provider set) that implies the EFI/MS-x64 calling
+    // convention on `entry`, so firmware's two args arrive as main's params, and
+    // carries the audited axiom list (see contracts/uefi/uefi.omg). No entry
+    // provider, no handoff token — `main` is the entry (option A).
     let target = b.target(Uefi64);
     target.entry     = main;
     target.subsystem = EfiApplication;   // PE32+ subsystem 10; empty import table; .reloc section

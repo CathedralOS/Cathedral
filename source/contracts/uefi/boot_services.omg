@@ -15,7 +15,6 @@ package cathedral_contracts_uefi
 
 use uefi.EfiStatus
 use uefi.EfiHandle
-use uefi.UefiHandoff
 use uefi.BootServicesPtr
 
 // --- EFI_MEMORY_TYPE (the important values) --------------------------------

@@ -85,29 +85,29 @@ pub data EfiSystemTable {
     configuration_table:     addr;              // EFI_CONFIGURATION_TABLE*
 }
 
-// --- The entry provider: the firmware hand-off ----------------------------
+// --- The firmware hand-off: main is the entry -----------------------------
 //
-// UefiHandoff is minted by exactly one provider (the Uefi64 entry), so holding
-// one is proof control arrived via the declared hand-off. The initial machine
-// state is an AUDITED AXIOM LIST — prose checked against the UEFI spec and
-// enumerated in the build artifact, NOT typed `ensures` clauses
-// (freestanding_boot_and_hardware_facts.md sample 1):
-//
-//   axiom: CPU in long mode, paging on, identity-mapped (the state Uefi64
-//          codegen assumes — a target invariant, audited once, never threaded)
-//   axiom: interrupts enabled; ≥ 128 KiB of 16-aligned stack
-//   axiom: system_table points at the live EFI system table (a provenance vouch;
-//          the STRUCTURE is minted + validated by the reader, not assumed here)
+// There is NO handoff token and NO entry-provider boundary trait (option A,
+// ratified 2026-07-03). The firmware entry is just `main`, given the two things
+// firmware hands it — the same "a main given its explicitly-handed context"
+// pattern as any launched component, with FIRMWARE as the spawner. `main` takes
+// `(image_handle: EfiHandle, system_table: SystemTablePtr) -> EfiStatus`.
 
-pub data UefiHandoff {
-    image_handle: EfiHandle;
-    system_table: addr;      // pointer to firmware-owned EfiSystemTable
-}
+// A pointer to the firmware-owned EFI_SYSTEM_TABLE — main's second handed arg.
+pub data SystemTablePtr { raw: addr; }
 
-pub boundary trait Uefi64Entry {
-    // Firmware calls this MS-x64: ImageHandle in RCX, SystemTable* in RDX.
-    // Nothing to prove — the guarantees are the axiom list above, accepted from
-    // the provider.
-    machine entry() -> UefiHandoff
-        effects device_io, memory_map;
-}
+// The Uefi64 target (declared in a boot package's build.omg) carries the rest as
+// TARGET properties — never typed clauses on a machine:
+//   - empty host-provider set (no-host by absence — "a target = the boundary
+//     packages it trusts", extern brief §4);
+//   - the EFI/MS-x64 calling convention on its entry: firmware hands ImageHandle
+//     in RCX and SystemTable* in RDX, and the compiler emits the entry stub that
+//     unmarshals them into main's params (the inbound direction of the calling
+//     plan — calling_plans.md);
+//   - the AUDITED AXIOM LIST — prose checked against the UEFI spec and enumerated
+//     in the build artifact, a target invariant audited once and never threaded
+//     (freestanding_boot_and_hardware_facts.md; the world-facts deflation):
+//       axiom: CPU in long mode, paging on, identity-mapped
+//       axiom: interrupts enabled; ≥ 128 KiB of 16-aligned stack
+//       axiom: system_table points at the live EFI system table (a provenance
+//              vouch; the STRUCTURE is minted + validated by the reader).

@@ -13,7 +13,8 @@
 
 package cathedral_boot_uefi
 
-use uefi.UefiHandoff
+use uefi.EfiHandle
+use uefi.SystemTablePtr
 use uefi.EfiSystemTable
 use uefi.ConsolePtr
 use uefi.EfiStatus
@@ -25,24 +26,30 @@ use uefi.SimpleTextOutput
 // form — UEFI text is UCS-2, not Omega's native UTF-8.
 GREETING: [u16] = utf16"Hello from Omega\r\n\0"
 
-// The firmware entry. `main` is named as the Uefi64 target's entry point in
-// build.omg; firmware calls it MS-x64 and it receives the hand-off minted by the
-// Uefi64Entry provider.
-machine main(handoff: UefiHandoff) -> EfiStatus
+// `main` IS the firmware entry — a main given what it is handed, exactly like any
+// launched component (a `main(context)` receiving explicitly-handed capabilities);
+// here the SPAWNER is firmware and the context is the two EFI arguments. The
+// Uefi64 target (build.omg) declares the EFI calling convention, so firmware's
+// ImageHandle (RCX) and SystemTable* (RDX) arrive as these two params — the
+// compiler emits the entry stub that unmarshals them (the inbound direction of
+// the calling plan). `image_handle` is unused at milestone 1 (milestone 2 needs
+// it for ExitBootServices). The audited machine-state axioms (long mode, paging,
+// interrupts, stack) are Uefi64-TARGET properties — see uefi.omg.
+machine main(image_handle: EfiHandle, system_table: SystemTablePtr) -> EfiStatus
     effects device_io
 {
     // system_table is firmware-owned foreign bytes: mint a validated Uefi-layout
     // view over the pointer, then project con_out. Validation checks the table
     // header (signature / CRC32); the "it is the live table" meaning is the
-    // provider's axiom, not something validation conjures.
+    // firmware axiom (a Uefi64-target property), not something validation conjures.
     //
     // `Uefi` is the C-ABI layout policy (Omega programmable_layouts.md) — a
     // standard-library policy, universally reachable, so it is not a declared
     // dependency (like `u16` or `[T]`). `Uefi<EfiSystemTable>` is the domain for
     // that schema under the C ABI; `::validate` is its mint.
-    transition Uefi<EfiSystemTable>::validate(handoff.system_table) {
+    transition Uefi<EfiSystemTable>::validate(system_table.raw) {
         Valid(table) -> greet(table.con_out)
-        Invalid      -> bad_handoff()
+        Invalid      -> bad_system_table()
     }
 
     state greet(console: ConsolePtr) -> EfiStatus {
@@ -52,7 +59,7 @@ machine main(handoff: UefiHandoff) -> EfiStatus
         EFI_SUCCESS
     }
 
-    state bad_handoff() -> EfiStatus {
+    state bad_system_table() -> EfiStatus {
         EFI_INVALID_PARAMETER
     }
 }
@@ -62,16 +69,20 @@ machine main(handoff: UefiHandoff) -> EfiStatus
 // All four are milestone-1 items on the first-boot ladder in
 // ../../../Omega/wiki/cathedral_alignment.md item 7:
 //
-//   1. A no-host freestanding target (empty host-provider set) whose entry has
-//      the EFI signature — the Uefi64 target + the Uefi64Entry provider.
-//   2. PE32+ EFI_APPLICATION emission (subsystem 10, empty import table, and a
-//      .reloc section — OVMF loads at an arbitrary base). VERIFY early.
+//   1. THE GATE — a no-host `Uefi64` target (empty host-provider set) that
+//      declares the EFI/MS-x64 calling convention on its entry, so firmware's
+//      two args arrive as main's params; the compiler emits the entry stub that
+//      unmarshals RCX/RDX (the inbound direction of the calling plan — the seed
+//      of the general entry stub used later by interrupt entry). No entry-provider
+//      boundary trait, no handoff token — main IS the entry (option A, ratified).
+//   2. PE32+ EFI_APPLICATION emission — subsystem toggle + `.reloc` DONE
+//      (Omega 623706b96, 61c7fe246); remaining: emit with no import table.
 //   3. Layout policies + validating mints over the foreign UEFI structs
 //      (`Uefi<EfiSystemTable>::validate`, field projection) —
-//      programmable_layouts.md, landing now (L0–L3).
+//      programmable_layouts.md, L4/L5 landing.
 //   4. The runtime-pointer call: the MS-x64 call encoder targeting a pointer
-//      read from a struct (VtableSlot) rather than an import symbol —
-//      calling_plans.md + extern_boundary §12.
+//      read from a struct (VtableSlot) rather than an import symbol — mostly done
+//      (`append_call_register`); calling_plans.md + extern_boundary §12.
 //
 // Milestones 2 (GetMemoryMap → ExitBootServices → first Region mint) and 3
 // (interrupts, serial, staying alive) build on this and need no new contracts.
