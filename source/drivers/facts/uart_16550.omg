@@ -7,41 +7,43 @@
 // access classes (Omega programmable_layouts.md); this file is only the
 // transcription — it holds no authority and is reviewable without hardware.
 //
-// Registers are byte-wide, at (port base + offset). DLAB (LCR bit 7) banks
-// offsets 0/1 between data/IER and the baud-divisor latch.
+// A facts file is nothing but named constants → `const` declarations (pure
+// values, no instance storage; Omega static_root_and_constants.md). Registers
+// are byte-wide, at (port base + offset). DLAB (LCR bit 7) banks offsets 0/1
+// between data/IER and the baud-divisor latch.
 
 package cathedral_drivers_facts_uart_16550
 
 // Standard PC COM-port I/O bases.
-pub COM1: u16 = 0x3F8;
-pub COM2: u16 = 0x2F8;
-pub COM3: u16 = 0x3E8;
-pub COM4: u16 = 0x2E8;
+pub const COM1: u16 = 0x3F8;
+pub const COM2: u16 = 0x2F8;
+pub const COM3: u16 = 0x3E8;
+pub const COM4: u16 = 0x2E8;
 
 // Register offsets from the port base (DLAB = 0 unless noted).
-pub REG_DATA:             u16 = 0;   // RBR (read) / THR (write)
-pub REG_INTERRUPT_ENABLE: u16 = 1;   // IER
-pub REG_DIVISOR_LOW:      u16 = 0;   // DLL, when DLAB = 1
-pub REG_DIVISOR_HIGH:     u16 = 1;   // DLM, when DLAB = 1
-pub REG_FIFO_CONTROL:     u16 = 2;   // FCR (write) / IIR (read)
-pub REG_LINE_CONTROL:     u16 = 3;   // LCR
-pub REG_MODEM_CONTROL:    u16 = 4;   // MCR
-pub REG_LINE_STATUS:      u16 = 5;   // LSR
-pub REG_MODEM_STATUS:     u16 = 6;   // MSR
-pub REG_SCRATCH:          u16 = 7;   // SCR
+pub const REG_DATA:             u16 = 0;   // RBR (read) / THR (write)
+pub const REG_INTERRUPT_ENABLE: u16 = 1;   // IER
+pub const REG_DIVISOR_LOW:      u16 = 0;   // DLL, when DLAB = 1
+pub const REG_DIVISOR_HIGH:     u16 = 1;   // DLM, when DLAB = 1
+pub const REG_FIFO_CONTROL:     u16 = 2;   // FCR (write) / IIR (read)
+pub const REG_LINE_CONTROL:     u16 = 3;   // LCR
+pub const REG_MODEM_CONTROL:    u16 = 4;   // MCR
+pub const REG_LINE_STATUS:      u16 = 5;   // LSR
+pub const REG_MODEM_STATUS:     u16 = 6;   // MSR
+pub const REG_SCRATCH:          u16 = 7;   // SCR
 
 // Line Control (LCR) bits.
-pub LCR_DLAB: u8 = 0x80;   // divisor-latch access
-pub LCR_8N1:  u8 = 0x03;   // 8 data bits, no parity, 1 stop bit
+pub const LCR_DLAB: u8 = 0x80;   // divisor-latch access
+pub const LCR_8N1:  u8 = 0x03;   // 8 data bits, no parity, 1 stop bit
 
 // Line Status (LSR) bits.
-pub LSR_DATA_READY:     u8 = 0x01;   // a byte is available to read
-pub LSR_THR_EMPTY:      u8 = 0x20;   // transmit holding register empty (ok to write)
-pub LSR_TRANSMIT_EMPTY: u8 = 0x40;   // transmitter fully idle
+pub const LSR_DATA_READY:     u8 = 0x01;   // a byte is available to read
+pub const LSR_THR_EMPTY:      u8 = 0x20;   // transmit holding register empty (ok to write)
+pub const LSR_TRANSMIT_EMPTY: u8 = 0x40;   // transmitter fully idle
 
 // FIFO Control (FCR): enable + clear both FIFOs, 14-byte trigger.
-pub FCR_ENABLE_CLEAR: u8 = 0xC7;
+pub const FCR_ENABLE_CLEAR: u8 = 0xC7;
 
 // Modem Control (MCR): DTR + RTS + OUT2 (OUT2 gates the shared IRQ line — a
 // classic "why won't my serial IRQ fire" quirk if left clear).
-pub MCR_DTR_RTS_OUT2: u8 = 0x0B;
+pub const MCR_DTR_RTS_OUT2: u8 = 0x0B;

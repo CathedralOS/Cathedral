@@ -16,7 +16,7 @@
 
 package cathedral_core
 
-pub PAGE_SIZE: u64 = 4096;
+pub const PAGE_SIZE: u64 = 4096;
 
 // A physical-memory span capability. Holding a Region is exclusive authority over
 // [physical_start, physical_start + page_count * PAGE_SIZE).

@@ -22,8 +22,8 @@ package cathedral_contracts_uefi
 // high bit set == error.
 pub data EfiStatus { code: u64; }
 
-pub EFI_SUCCESS:           EfiStatus = EfiStatus { code: 0 };
-pub EFI_INVALID_PARAMETER: EfiStatus = EfiStatus { code: 0x8000_0000_0000_0002 };
+pub const EFI_SUCCESS:           EfiStatus = EfiStatus { code: 0 };
+pub const EFI_INVALID_PARAMETER: EfiStatus = EfiStatus { code: 0x8000_0000_0000_0002 };
 
 // EFI_HANDLE — an opaque firmware handle. We never dereference it, only hold and
 // pass it (a gated token; extern brief §12.2 case 3, opaque).

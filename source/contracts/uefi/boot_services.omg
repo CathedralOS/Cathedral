@@ -14,11 +14,14 @@
 package cathedral_contracts_uefi
 
 // --- EFI_MEMORY_TYPE (the important values) --------------------------------
-pub EFI_LOADER_DATA:         u32 = 2;
-pub EFI_BOOT_SERVICES_CODE:  u32 = 3;
-pub EFI_BOOT_SERVICES_DATA:  u32 = 4;
-pub EFI_CONVENTIONAL_MEMORY: u32 = 7;   // free RAM boot may claim after exit
-pub EFI_ACPI_RECLAIM:        u32 = 9;
+// Named `const` tags (u32), not a sum — robust to firmware writing memory kinds
+// we don't model (a too-narrow EfiMemoryType sum would fail to read them). A
+// full typed EfiMemoryType via case discriminants is the alternative if wanted.
+pub const EFI_LOADER_DATA:         u32 = 2;
+pub const EFI_BOOT_SERVICES_CODE:  u32 = 3;
+pub const EFI_BOOT_SERVICES_DATA:  u32 = 4;
+pub const EFI_CONVENTIONAL_MEMORY: u32 = 7;   // free RAM boot may claim after exit
+pub const EFI_ACPI_RECLAIM:        u32 = 9;
 
 // --- EFI_MEMORY_DESCRIPTOR -------------------------------------------------
 // The `Uefi` policy pads `kind` to 8-align `physical_start`. sizeof is 40, BUT
