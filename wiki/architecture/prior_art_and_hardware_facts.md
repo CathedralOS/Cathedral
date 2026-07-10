@@ -114,7 +114,7 @@ Record provenance per facts-file, e.g.:
 | **bootloader** | boot logic | Reference for the real-mode→long-mode transition we skip by going UEFI-first — read to understand what UEFI does for us. | (study only) |
 | **multiboot2** / **pvh** / **ieee1275** | alt boot ABIs | Deferred — multiboot2 only for a coreboot-payload reference platform; pvh only for a cloud target. | (deferred) |
 | **linked-list-allocator** | primitive | Reject the model — the allocator is a capability (`Region<'r>`, no ambient heap). Reference the free-list algorithm only. | (subsumed) |
-| **volatile** | primitive | Reject entirely — volatile is a boundary operator with a contract (Omega ch19), not a wrapper type. | (subsumed) |
+| **volatile** | primitive | Reject entirely — volatile is a boundary operator with a contract (Omega ch20), not a wrapper type. | (subsumed) |
 | **spinning_top** / **mem-barrier** | primitive | Subsumed by the concurrency model (atomics-only sharing, `wait_until_nonzero`, fences-as-boundary-machines). | (subsumed) |
 | **ucs2-rs** / **endian-num** | util | UEFI strings are `u16` arrays; endianness is the layout/format machinery. Trivial/subsumed. | (subsumed) |
 | **ovmf-prebuilt** | tooling | Use directly — it *is* the test firmware (OVMF.fd) we boot under QEMU. | `tools/` |

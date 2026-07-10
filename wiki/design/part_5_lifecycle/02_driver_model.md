@@ -50,7 +50,7 @@ The confinement model (above) settles the trust question; the residue is device-
 
 ## Omega Leverage
 
-- **Drivers as components with `effects` ceilings** — `device_io`, `memory_map` — make a driver's hardware reach a checkable, audited fact, per the standard effect vocabulary in [../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md).
+- **Drivers as components with `effects` ceilings** — `device_io`, `memory_map` — make a driver's hardware reach a checkable, audited fact, per the standard effect vocabulary in [../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Capabilities as values + domains** scope MMIO/DMA/IRQ access to one device.
 - **Versioned driver APIs** via `wire data` + versioned `data` give compatible driver upgrades and a stable kernel↔driver contract.
 - **Boundary traits** model the device edge: the hardware contract is a `boundary` whose guarantees are accepted but whose effects and authority are bounded.

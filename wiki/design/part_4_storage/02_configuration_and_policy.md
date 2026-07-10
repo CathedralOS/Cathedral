@@ -88,10 +88,10 @@ The settings *type* is owned by whoever the config belongs to — a service expo
 
 ## Omega Leverage
 
-- **Typed `data` + versioned data** are a near-direct fit: config is long-lived typed state whose shape evolves, with migrations carrying old values forward — see Omega [Versioned Data And Machine Replacement](../../../../Omega/wiki/language_guide/chapter_21_versioned_data.md).
+- **Typed `data` + versioned data** are a near-direct fit: config is long-lived typed state whose shape evolves, with migrations carrying old values forward — see Omega [Versioned Data And Machine Replacement](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 - **Domains** express validity classes and policy states (`Config::Valid`, `Config::OrgAllowed`) so layering, caps, and validation are proof facts — see Omega [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - **Capabilities as values** scope read vs. write per key, so config access is an authority-flow fact, not an ambient file permission ([[capability_model]]).
-- **`wire data`** gives a stable cross-version encoding for config that must be exported, synced, or read by external tooling — see Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_20_wire_protocols.md).
+- **`wire data`** gives a stable cross-version encoding for config that must be exported, synced, or read by external tooling — see Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
 - **Build-time evaluation + the effect system** make config-as-a-machine safe: an effect-free `configure` machine is *run* to produce the settings value, and the effect system proves it did no IO — so config is code without being an opaque script — see Omega [build & package model](../../../../Omega/wiki/design_briefs/build_and_package_model.md) and [build-time evaluation](../../../../Omega/wiki/design_briefs/build_time_evaluation.md).
 
 ## Open Questions

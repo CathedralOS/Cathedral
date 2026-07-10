@@ -156,13 +156,13 @@ Some states gate whole classes of grants at once rather than revoking anything. 
 
 ## Omega Leverage
 
-- Input, clipboard, and notification access are **capabilities + domains** over surface/principal handles, audited through the same authority-flow report as everything else ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
+- Input, clipboard, and notification access are **capabilities + domains** over surface/principal handles, audited through the same authority-flow report as everything else ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - The compositor is an explicit **boundary provider**: the audited edge between proved Omega code and the raw display/input hardware.
 - Window/session lifecycle is a natural **machine with states** ([machines](../../../../Omega/wiki/language_guide/chapter_3_machines.md), [states](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)): created → mapped → focused → occluded → suspended → destroyed.
-- Restored window state is **versioned data** ([versioned data](../../../../Omega/wiki/language_guide/chapter_21_versioned_data.md)).
-- The compositor is a **trait** ([traits](../../../../Omega/wiki/language_guide/chapter_13_traits.md)) any component can implement, so nesting is one interface with many implementations; a child resolves its compositor from its environment ([modules & imports](../../../../Omega/wiki/language_guide/chapter_14_modules_imports_visibility.md)), and sub-compositing is binding that resolution to a parent endpoint.
+- Restored window state is **versioned data** ([versioned data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)).
+- The compositor is a **trait** ([traits](../../../../Omega/wiki/language_guide/chapter_14_traits.md)) any component can implement, so nesting is one interface with many implementations; a child resolves its compositor from its environment ([modules & imports](../../../../Omega/wiki/language_guide/chapter_15_modules_imports_visibility.md)), and sub-compositing is binding that resolution to a parent endpoint.
 - Surface placement classes (normal, chrome, overlay, system prompts) are **capabilities + domains**; "be the shell" is a strictly different grant from owning a normal window.
-- Legibility annotations (text runs, semantic nodes) are versioned **wire data** schemas ([wire protocols](../../../../Omega/wiki/language_guide/chapter_20_wire_protocols.md)), so the contract that stays stable is a schema, not a blessed library, and a new node kind is a compatible evolution.
+- Legibility annotations (text runs, semantic nodes) are versioned **wire data** schemas ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)), so the contract that stays stable is a schema, not a blessed library, and a new node kind is a compatible evolution.
 - Omega does **not** yet describe an unspoofable trusted-path primitive; that is a compositor + firmware obligation Cathedral defines on top of the language.
 
 ## Open Questions

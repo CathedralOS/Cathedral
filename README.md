@@ -66,9 +66,9 @@ Cathedral does not get to assume a finished language. Where a chapter needs a la
 
 Key Omega chapters Cathedral leans on heavily:
 
-- [Capabilities, Effects, And Boundaries](../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)
+- [Capabilities, Effects, And Boundaries](../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)
 - [Domains](../Omega/wiki/language_guide/chapter_8_domains.md)
 - [Machines](../Omega/wiki/language_guide/chapter_3_machines.md) and [States And Transitions](../Omega/wiki/language_guide/chapter_4_states_transitions.md)
-- [Versioned Data And Machine Replacement](../Omega/wiki/language_guide/chapter_21_versioned_data.md)
-- [Wire Protocols](../Omega/wiki/language_guide/chapter_20_wire_protocols.md)
+- [Versioned Data And Machine Replacement](../Omega/wiki/language_guide/chapter_22_versioned_data.md)
+- [Wire Protocols](../Omega/wiki/language_guide/chapter_21_wire_protocols.md)
 - [Proof Obligations](../Omega/wiki/language_guide/chapter_9_proof_obligations.md)

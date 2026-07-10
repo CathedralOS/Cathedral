@@ -155,7 +155,7 @@ The dependency law is enforced by the same discipline the OS uses at runtime:
 - **Designation is by package name, never by path.** Imports name a package and
   a symbol (`use contracts.UefiHandoff`), never a filesystem path (`../../`).
   Moving a package never breaks its importers; the tree structure does not leak
-  into the code. (Omega already resolves imports this way — chapter 14.)
+  into the code. (Omega already resolves imports this way — chapter 15.)
 - **The manifest is the reach-set.** Each package declares its dependency
   packages (by content hash, per the pinned-closure model in
   `developer_experience`). A package may import **only** from its declared

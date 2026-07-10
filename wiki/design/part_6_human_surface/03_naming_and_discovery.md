@@ -47,7 +47,7 @@ Everywhere the OS resolves to authority it uses an **unforgeable value** — a c
 
 ## Omega Leverage
 
-- Names and IDs are **values**; resolution yields a **capability + domain**, so a resolved name carries exactly its authority and no more ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
+- Names and IDs are **values**; resolution yields a **capability + domain**, so a resolved name carries exactly its authority and no more ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - Self-certifying spoof-resistance lives in a **domain / proof predicate** ([domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md)): a name is `Resolvable::Authentic` only with proof it authenticates to its key.
 - Versioned names ride on **versioned data**; wire-format names crossing boundaries are **wire data**.
 - Omega defines no global namespace authority; who arbitrates first-contact uniqueness is the parked network/security question, not a language feature.

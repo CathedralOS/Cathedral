@@ -102,7 +102,7 @@ Power management has a hard floor the OS cannot cross, and naming it is part of 
 
 ## Omega Leverage
 
-- Wakefulness, background, metering, budgets, and frequency floors are **capabilities (values + domains)** in the same authority graph as every other power ([../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
+- Wakefulness, background, metering, budgets, and frequency floors are **capabilities (values + domains)** in the same authority graph as every other power ([../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - **Leasing** ([[capability_lifecycle]]) makes bounded, expiring wake locks the default rather than the exception.
 - A component with no clock/wake capability has no means to schedule itself, and the OS **provably never dispatches** it when backgrounded — quiescence is an enforced OS property, not an app-carried proof ([[time_and_clocks]]).
 - Power-state transitions are an Omega **`state` graph** the OS schedules over.

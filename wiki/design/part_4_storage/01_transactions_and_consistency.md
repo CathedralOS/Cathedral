@@ -53,7 +53,7 @@ transaction grant_and_record {
 ## Omega Leverage
 
 - **Machines, states & transitions** model a transaction as an explicit state graph (`open -> staged -> committed | aborted`) the compiler can inspect — see Omega [States And Transitions](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md).
-- **Effects** distinguish reversible from irreversible work: an effect ceiling tells the system which participants need compensation rather than rollback — see Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md).
+- **Effects** distinguish reversible from irreversible work: an effect ceiling tells the system which participants need compensation rather than rollback — see Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Domains** name the commit lifecycle (`Txn::Staged`, `Txn::Committed`) and let `requires`/`ensures` enforce that participants reach a terminal domain — see Omega [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - **Ownership / borrowing** supplies the isolation substrate: exclusive access is already a proven fact, so pessimistic isolation can lean on the borrow checker.
 - Omega does not model distributed commit/saga coordination; that is OS runtime policy layered over the typed local primitive.

@@ -69,7 +69,7 @@ So Cathedral **prioritizes the small-inductive-cert regime** (the only kernel-on
 ## Omega Leverage
 
 - **Deterministic state graphs** make whole-component behavior reproducible.
-- **Virtual time / injectable effects** ([../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)) let the simulator own the clock, the network, and faults.
+- **Virtual time / injectable effects** ([../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)) let the simulator own the clock, the network, and faults.
 - **Effect injection** at the boundary substitutes mock providers for real ones.
 - **Proof obligations** ([../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md](../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md)) give the invariants the simulator checks against, shared with the type checker.
 - Omega may need to grow a sanctioned **adversary/scheduler-injection** surface so the simulator is part of the language story, not a bolt-on.

@@ -184,8 +184,8 @@ Three honest limits. Porting a legacy database wholesale still works but is wast
 ## Omega Leverage
 
 - **Capabilities as values + authority flow** make a realm root a held capability, a directory view a derived attenuation of it, and provenance a recorded acquisition edge. An object's realm is the root its parent chain ends at.
-- **Versioned `data`** gives file records typed historical shapes and a migration path for on-disk schema evolution, and is what makes the system realm rollback-able. See Omega [Versioned Data And Machine Replacement](../../../../Omega/wiki/language_guide/chapter_21_versioned_data.md).
-- **`wire data`** gives the at-rest and on-the-wire record/log encoding stable field numbers and explicit compatibility, so old log entries stay decodable. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_20_wire_protocols.md).
+- **Versioned `data`** gives file records typed historical shapes and a migration path for on-disk schema evolution, and is what makes the system realm rollback-able. See Omega [Versioned Data And Machine Replacement](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
+- **`wire data`** gives the at-rest and on-the-wire record/log encoding stable field numbers and explicit compatibility, so old log entries stay decodable. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
 - **Domains** express object permission shades and validity classes (`Object::Readable`, `Object::Committed`, `Snapshot::Sealed`) on one handle type. See Omega [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - Omega does not yet define a durable-log/subscription-cursor primitive; whether that is a runtime service or a language-level abstraction is open.
 

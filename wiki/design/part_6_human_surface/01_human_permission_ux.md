@@ -114,7 +114,7 @@ The picker designates a passive *resource*. An irreversible *action* — pay, se
 
 ## Omega Leverage
 
-- Picker, drop, and share results are **capabilities + domains** minted by a trusted broker and **delegated** to the app — exactly Omega's broker/acquire pattern ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
+- Picker, drop, and share results are **capabilities + domains** minted by a trusted broker and **delegated** to the app — exactly Omega's broker/acquire pattern ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - Object-scoping is **attenuation** via a tighter [domain](../../../../Omega/wiki/language_guide/chapter_8_domains.md) (`Folder::Readable` → `File::Readable`).
 - Background grants are **leases**, tied to trusted time and explicit renewal.
 - The revocation surface reads the same authority-flow / graph data as [[capability_model]] — no separate bookkeeping.

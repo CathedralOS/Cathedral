@@ -55,10 +55,10 @@ This unifies local cross-world sharing with distributed sharing — a sibling Ma
 
 ## Omega Leverage
 
-- **Capabilities as values** that can in principle serialize and transfer — the same grant that flows over local IPC flows over the network. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md).
-- **`wire data`** carries authority and state across version-skewed peers with explicit compatibility rules. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_20_wire_protocols.md).
+- **Capabilities as values** that can in principle serialize and transfer — the same grant that flows over local IPC flows over the network. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
+- **`wire data`** carries authority and state across version-skewed peers with explicit compatibility rules. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
 - **Leases** map onto Omega's leased/expired capability lifecycle states, giving distributed authority a natural expiry ([[capability_lifecycle]]).
-- **Versioned `data` + migration** carry replicated state forward as fleets upgrade out of lockstep. See Omega [Versioned Data And Machine Replacement](../../../../Omega/wiki/language_guide/chapter_21_versioned_data.md).
+- **Versioned `data` + migration** carry replicated state forward as fleets upgrade out of lockstep. See Omega [Versioned Data And Machine Replacement](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 - Omega does **not yet** define a cryptographically-bound, network-transferable capability representation, remote attestation facts, or partition-tolerant lease semantics — the central extensions Cathedral pushes onto the runtime.
 
 ## Open Questions

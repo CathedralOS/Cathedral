@@ -12,7 +12,7 @@ Legend: `[ ]` open · `[x]` closed.
 
 - [x] **Kernel architecture** — proved-SAS core, caged-or-proved dichotomy, IOMMU mandate (`62f5ca5`, `dbb29ec`)
 - [x] **Driver model** — user-mode contained-not-trusted, capability manifest, interrupt=message, restart + device-reset ladder, coverage strategy (`ea96c1b`, `62f5ca5`)
-- [x] **Hot-swap / versioned-state** — single-step `Upgradable`, reconciled with Omega ch21 (`a1c9f49`, `9c920c9`)
+- [x] **Hot-swap / versioned-state** — single-step `Upgradable`, reconciled with Omega ch22 (`a1c9f49`, `9c920c9`)
 - [x] **TCB minimization** — bootstrap seed + checker + verified translation; trusting-trust resistance canon (`7bb4e69`)
 - [x] **Side channels** — parity posture + `IsolationClass` ladder, core-enforced (`008343e`)
 - [x] **Compatibility (core)** — sandbox→VM continuum, recursive-provider, bridge-not-home (`197059b`)

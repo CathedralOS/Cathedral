@@ -67,7 +67,7 @@ Both are authoritative, in different homes: the **manifest** in the package (aut
 
 ## Omega Leverage
 
-- Authority modeled as **values + domains**, not new keywords — directly from Omega's [capabilities chapter](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md).
+- Authority modeled as **values + domains**, not new keywords — directly from Omega's [capabilities chapter](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Authority-flow inference** gives, per component, the accepts/uses/derives/ stores/acquires/returns/releases report — the static skeleton of the graph.
 - **`effects`** give the orthogonal axis: *what kind* of behavior, as a ceiling. A component can be audited on three axes at once — effect ceiling, authority- flow ceiling, boundary-provider ceiling.
 - **Domains** express permission shades on one stable handle type (`Folder::Readable`, `Folder::Writable`, `Folder::ReadWrite`) instead of a family of permission-flavored types.

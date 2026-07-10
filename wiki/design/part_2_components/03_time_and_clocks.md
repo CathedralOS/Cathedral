@@ -57,7 +57,7 @@ The consequences are deliberate. A deterministic component gets *no* wall-clock 
 
 ## Omega Leverage
 
-- Clock access is a **capability** plus the **`clock_read` effect** — both already in Omega's vocabulary, so time appears in the authority graph and effect ceiling with no new machinery ([../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
+- Clock access is a **capability** plus the **`clock_read` effect** — both already in Omega's vocabulary, so time appears in the authority graph and effect ceiling with no new machinery ([../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - A component with no clock capability is **statically** provable to be time-independent — the foundation of deterministic simulation.
 - **Virtual time** is just a different `BoundaryProvider` behind `Clock::Read`; the test harness swaps the provider, the component never knows ([[testing_and_simulation]]).
 - Omega does **not** model the *trust level* of a clock or distributed causality semantics — Cathedral adds the clock taxonomy and the trusted-time attestation as runtime/provider structure.

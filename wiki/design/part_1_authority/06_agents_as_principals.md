@@ -51,7 +51,7 @@ What the OS does own is the **authority** of the thing doing the acting:
 
 ## Omega Leverage
 
-- **Capabilities as values** are the agent's authority bundle: held, attenuable, leasable, revocable, with no ambient power ([../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
+- **Capabilities as values** are the agent's authority bundle: held, attenuable, leasable, revocable, with no ambient power ([../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - **Authority flow** already reports what a component accepts, uses, stores, and acquires; for an agent that report *is* the safety story.
 - **Effects ceilings** bound what an agent can reach regardless of what its model is told to do.
 - **The audit/event graph** makes every agent action recorded and attributable by construction.

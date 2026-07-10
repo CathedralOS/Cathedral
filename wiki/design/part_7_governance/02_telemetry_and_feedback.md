@@ -61,7 +61,7 @@ This area is **open, needing real prior-art review** (Crashpad/minidump scrubbin
 
 ## Omega Leverage
 
-- The **vendor is a principal** in the same authority graph; its telemetry flows obey capabilities, effects, and boundaries like any component ([capabilities & boundaries](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
+- The **vendor is a principal** in the same authority graph; its telemetry flows obey capabilities, effects, and boundaries like any component ([capabilities & boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - **Structured causal events** mean a telemetry stream is a typed projection of the event graph, not parsed text.
 - **Effects** bound the telemetry component (e.g. read-summaries + network) so its ceiling is auditable.
 - **Attenuation / leasing** make telemetry grants narrow and expiring by default ([[capability_lifecycle]]).

@@ -38,10 +38,10 @@ The **core itself** is the one thing on neither side of that wall — it is *tru
 
 ## Omega Leverage
 
-- **Language-level isolation** is the substrate's premise: ownership, borrowing, and effect/authority checking provide isolation that the MMU otherwise provides, per [../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md).
+- **Language-level isolation** is the substrate's premise: ownership, borrowing, and effect/authority checking provide isolation that the MMU otherwise provides, per [../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **The boundary-provider set is much of the TCB.** Omega's boundary registry makes the trusted base *enumerable* — the registered providers are precisely what must be trusted, and the build report lists them.
 - **`effects` + authority-flow ceilings** let even privileged components be bounded and audited, so "privileged" is not synonymous with "unbounded."
-- **Machines as swap points** ([../../../../Omega/wiki/language_guide/chapter_21_versioned_data.md](../../../../Omega/wiki/language_guide/chapter_21_versioned_data.md)) make even core subsystems upgradable in place.
+- **Machines as swap points** ([../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)) make even core subsystems upgradable in place.
 
 ## Open Questions
 

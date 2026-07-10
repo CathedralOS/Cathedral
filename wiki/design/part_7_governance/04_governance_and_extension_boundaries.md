@@ -56,9 +56,9 @@ The consequence: Cathedral can be **radically customizable without fragmenting**
 
 ## Omega Leverage
 
-- **Boundaries and providers** are where stable contracts live: an extension *provides* against a fixed boundary contract rather than inventing one ([capabilities & boundaries](../../../../Omega/wiki/language_guide/chapter_18_capabilities_effects_boundaries.md)).
+- **Boundaries and providers** are where stable contracts live: an extension *provides* against a fixed boundary contract rather than inventing one ([capabilities & boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - **Machines and states** pin down what "an app" or "a driver" *means* as a checked lifecycle shape, so "redefining the meaning" fails to type-check ([machines](../../../../Omega/wiki/language_guide/chapter_3_machines.md)).
-- **Wire protocols** make the IPC contract a language object that is implemented, not reinvented ([wire protocols](../../../../Omega/wiki/language_guide/chapter_20_wire_protocols.md)).
+- **Wire protocols** make the IPC contract a language object that is implemented, not reinvented ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
 - **Capability manifests** make every extension's authority reviewable at the contract boundary before it is admitted.
 - What Omega may need to grow: a notion of *frozen contract* vs. *open implementation surface* that tooling can enforce platform-wide.
 
