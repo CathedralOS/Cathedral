@@ -32,7 +32,17 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) {
     _ = self.boot_svc.get_memory_map(bs, &mut map_size, &mut self.map_buf,
                                      &mut key, &mut desc_size, &mut desc_version);
 
-    transition { _ -> walk(bs, handle, map_size, desc_size, key, 0, 0, 0) }
+    // Sanity-gate the firmware's out-values BEFORE trusting them: on
+    // EFI_BUFFER_TOO_SMALL map_size comes back as the NEEDED size (> capacity),
+    // and a zero/short stride would walk garbage. A guard — not a vouched
+    // `ensures` — because firmware genuinely can return these; the guard is
+    // also exactly the bound witness the walk's recast footprint discharges
+    // from (per-edge meet: this entry edge proves it, the loop edge forwards it).
+    let sane: bool = map_size <= 16384 && desc_size >= 40;
+    transition sane {
+        true  -> walk(bs, handle, map_size, desc_size, key, 0, 0, 0)
+        false -> idle()   // nonsense map; the too-small retry loop is a follow-on
+    }
 
     // Walk descriptors: stride by the RUNTIME desc_size (never sizeof), recast
     // each slice to &EfiMemoryDescriptor, track the largest conventional-memory
@@ -42,7 +52,10 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) {
         let d: &EfiMemoryDescriptor = &self.map_buf[offset] as &EfiMemoryDescriptor;
         let is_free: bool  = d.kind == EFI_CONVENTIONAL_MEMORY;
         let bigger: bool   = is_free && d.number_of_pages > best_pages;
-        let more: bool     = offset + desc_size < map_size;
+        // "There is a whole next descriptor": bound its END, not just its start
+        // — `offset + desc_size < map_size` would admit a tail read past the
+        // map. EDK2 maps are whole descriptors, so this is semantically free.
+        let more: bool     = offset + desc_size + desc_size <= map_size;
         transition (bigger, more) {
             (true,  true)  -> walk(bs, handle, map_size, desc_size, key,
                                    offset + desc_size, d.physical_start, d.number_of_pages)
