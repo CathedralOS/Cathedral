@@ -83,7 +83,7 @@ pub boundary trait BootServices {
         buffer:             &mut [u8],
         map_key:            &mut MapKey,
         descriptor_size:    &mut u64,
-        descriptor_version: &mut u32,
+        descriptor_version: &mut u32
     ) -> EfiStatus
         effects device_io;
 
@@ -92,7 +92,7 @@ pub boundary trait BootServices {
     machine exit_boot_services(
         table:        &BootServicesTable,
         image_handle: EfiHandle,
-        map_key:      MapKey,
+        map_key:      MapKey
     ) -> EfiStatus
         effects device_io;
 }

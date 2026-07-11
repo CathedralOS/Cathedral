@@ -1,11 +1,15 @@
 // source/boot/uefi/build.omg
 //
-// Milestone-1 UEFI boot application. BOOT-VERIFIED shape (aligned to the Omega
-// sample samples/uefi_hello, ea51376cd, 2026-07-04). There is NO target block:
-// `subsystem` and `freestanding` are orthogonal `Build` fields (the target block
-// was retired — Omega build_and_package_model.md addendum). The EFI/MS-x64
-// calling plan is INFERRED from the subsystem; `boundary(<Plan>)` would override
-// it (calling_plans.md §7).
+// The UEFI boot application. BOOT-VERIFIED shape (typed tree, 2026-07-11).
+// `target uefi_x64 {}` is the FRONTIER REGISTRATION (D15: a provides target
+// name is valid iff compiler-defined or build-defined) — an empty declaration,
+// NOT the retired target{...} config block; `subsystem` and `freestanding`
+// remain orthogonal `Build` fields (build_and_package_model.md addendum). The
+// EFI/MS-x64 calling plan is INFERRED from the subsystem; `boundary(<Plan>)`
+// would override it (calling_plans.md §7).
+
+target uefi_x64 {
+}
 
 machine build(b: &mut Build) {
     // Reach: the boot hand-off ABI + the kernel (for Region + the first mint).

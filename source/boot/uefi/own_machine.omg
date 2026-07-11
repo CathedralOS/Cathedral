@@ -10,14 +10,9 @@
 // Omega asks it pressures are listed at the bottom + in Omega TASKS.md's M2
 // ladder; PROVISIONAL SYNTAX where those asks are unlanded.
 
-use uefi::EfiHandle;
-use uefi::EfiSystemTable;
-use uefi::EfiMemoryDescriptor;
-use uefi::EFI_CONVENTIONAL_MEMORY;
-use uefi::MapKey;
-use uefi::BootServicesTable;
-use core::Region;
-use core::mint_region;
+use uefi::uefi;            // EfiHandle, EfiSystemTable
+use uefi::boot_services;   // EfiMemoryDescriptor, EFI_CONVENTIONAL_MEMORY, MapKey, BootServicesTable
+use core::region;          // Region, mint_region
 
 // Get the map, walk it, exit, mint. `self.map_buf` is a fixed 16 KiB static field
 // (no allocator yet — real firmware maps are ~4–8 KiB); the too-small retry loop
@@ -34,35 +29,52 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) {
 
     // Sanity-gate the firmware's out-values BEFORE trusting them: on
     // EFI_BUFFER_TOO_SMALL map_size comes back as the NEEDED size (> capacity),
-    // and a zero/short stride would walk garbage. A guard — not a vouched
-    // `ensures` — because firmware genuinely can return these; the guard is
-    // also exactly the bound witness the walk's recast footprint discharges
-    // from (per-edge meet: this entry edge proves it, the loop edge forwards it).
-    let sane: bool = map_size <= 16384 && desc_size >= 40;
-    transition sane {
-        true  -> walk(bs, handle, map_size, desc_size, key, 0, 0, 0)
-        false -> idle()   // nonsense map; the too-small retry loop is a follow-on
+    // a zero/short stride would walk garbage, and a stride wider than the map
+    // is nonsense. A guard — not a vouched `ensures` — because firmware
+    // genuinely can return these; the conjuncts are ALSO the bound witnesses
+    // the walk's recast footprint discharges from (per-edge meet: this entry
+    // edge proves them, the loop edge forwards them), spelled INLINE on the
+    // transition because the prover matches guard conjuncts by display.
+    transition map_size <= 16384 && desc_size >= 40 && desc_size <= 16384 {
+        true -> walk(bs, handle, map_size, desc_size, key, 0, 0, 0)
+        _    -> idle()   // nonsense map; the too-small retry loop is a follow-on
     }
 
     // Walk descriptors: stride by the RUNTIME desc_size (never sizeof), recast
     // each slice to &EfiMemoryDescriptor, track the largest conventional-memory
-    // span.
-    state walk(bs: &BootServicesTable, handle: EfiHandle, map_size: u64, desc_size: u64, key: MapKey,
-               offset: u64, best_start: u64, best_pages: u64) {
+    // span. Split walk/step so each transition carries ONE inline guard: walk
+    // decides the best-span update, step decides whether a WHOLE next
+    // descriptor fits — bounding its END (`offset + 2*desc_size <= map_size`),
+    // not just its start, which is what makes the loop edge's footprint
+    // discharge (and is semantically free: EDK2 maps are whole descriptors).
+    // The recast offset's bound discharges through the PER-EDGE MEET over the
+    // guard route: the entry edge passes the constant 0, the loop edge's
+    // argument `offset + desc_size` carries the literal guard bound <= 16344
+    // (= 16384 buffer - 40 descriptor footprint). `in Trapping` on the walk
+    // arithmetic: hostile out-values trip a trap instead of wrapping.
+    state walk(bs: &BootServicesTable, handle: EfiHandle,
+               map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
+               offset: u64 in Trapping, best_start: u64, best_pages: u64) {
         let d: &EfiMemoryDescriptor = &self.map_buf[offset] as &EfiMemoryDescriptor;
-        let is_free: bool  = d.kind == EFI_CONVENTIONAL_MEMORY;
-        let bigger: bool   = is_free && d.number_of_pages > best_pages;
-        // "There is a whole next descriptor": bound its END, not just its start
-        // — `offset + desc_size < map_size` would admit a tail read past the
-        // map. EDK2 maps are whole descriptors, so this is semantically free.
-        let more: bool     = offset + desc_size + desc_size <= map_size;
-        transition (bigger, more) {
-            (true,  true)  -> walk(bs, handle, map_size, desc_size, key,
-                                   offset + desc_size, d.physical_start, d.number_of_pages)
-            (true,  false) -> exit(bs, handle, key, d.physical_start, d.number_of_pages)
-            (false, true)  -> walk(bs, handle, map_size, desc_size, key,
-                                   offset + desc_size, best_start, best_pages)
-            (false, false) -> exit(bs, handle, key, best_start, best_pages)
+        let is_free: bool = d.kind == EFI_CONVENTIONAL_MEMORY;
+        transition is_free && d.number_of_pages > best_pages {
+            true -> step(bs, handle, map_size, desc_size, key,
+                         offset, d.physical_start, d.number_of_pages)
+            _    -> step(bs, handle, map_size, desc_size, key,
+                         offset, best_start, best_pages)
+        }
+    }
+
+    state step(bs: &BootServicesTable, handle: EfiHandle,
+               map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
+               offset: u64 in Trapping, best_start: u64, best_pages: u64) {
+        // The second conjunct is implied by the first (map_size <= 16384,
+        // desc_size >= 40) but spelled out so the loop edge's bound is a
+        // DIRECT guard fact for the prover; it costs one always-true compare.
+        transition offset + desc_size + desc_size <= map_size && offset + desc_size <= 16344 {
+            true -> walk(bs, handle, map_size, desc_size, key,
+                         offset + desc_size, best_start, best_pages)
+            _    -> exit(bs, handle, key, best_start, best_pages)
         }
     }
 

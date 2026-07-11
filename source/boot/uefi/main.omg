@@ -26,13 +26,9 @@
 // The typed form is the target as the toolchain threads typed params through the
 // vtable path; the sample is the proven-compiling shape.
 
-use uefi::EfiHandle;
-use uefi::EfiStatus;
-use uefi::EFI_SUCCESS;
-use uefi::EfiSystemTable;
-use uefi::TextOutputProtocol;
-use uefi::SimpleTextOutput;
-use uefi::BootServices;
+use uefi::uefi;            // EfiHandle, EfiStatus, EFI_SUCCESS, EfiSystemTable, TextOutputProtocol, SimpleTextOutput
+use uefi::boot_services;   // BootServices
+use own_machine;           // Main::own_machine (milestone 2, sibling module)
 
 // Main's STATIC DATA (`&self`): the held capabilities (Simple Text Output for
 // the greeting, Boot Services for the milestone-2 memory-map dance) + the
