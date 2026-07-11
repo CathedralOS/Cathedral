@@ -12,8 +12,6 @@
 // are byte-wide, at (port base + offset). DLAB (LCR bit 7) banks offsets 0/1
 // between data/IER and the baud-divisor latch.
 
-package cathedral_drivers_facts_uart_16550
-
 // Standard PC COM-port I/O bases.
 pub const COM1: u16 = 0x3F8;
 pub const COM2: u16 = 0x2F8;

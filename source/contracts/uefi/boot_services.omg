@@ -11,8 +11,6 @@
 // EfiHandle, EfiTableHeader) are visible directly, no `use`. PROVISIONAL until
 // the Omega agent lands field-model dispatch + the M2 ladder.
 
-package cathedral_contracts_uefi
-
 // --- EFI_MEMORY_TYPE (the important values) --------------------------------
 // Named `const` tags (u32), not a sum — robust to firmware writing memory kinds
 // we don't model (a too-narrow EfiMemoryType sum would fail to read them). A
@@ -103,8 +101,8 @@ pub boundary trait BootServices {
 // (get_memory_map past the 24-byte header + 4 services, exit_boot_services past
 // 26). No magic slot numbers.
 uefi_x64 provides BootServices over BootServicesTable {
-    get_memory_map     -> get_memory_map
-    exit_boot_services -> exit_boot_services
+    get_memory_map     -> get_memory_map;
+    exit_boot_services -> exit_boot_services;
 }
 
 // --- Origin of memory authority -------------------------------------------

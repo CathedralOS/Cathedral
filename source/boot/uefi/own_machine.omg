@@ -10,16 +10,14 @@
 // Omega asks it pressures are listed at the bottom + in Omega TASKS.md's M2
 // ladder; PROVISIONAL SYNTAX where those asks are unlanded.
 
-package cathedral_boot_uefi
-
-use uefi.EfiHandle
-use uefi.EfiSystemTable
-use uefi.EfiMemoryDescriptor
-use uefi.EFI_CONVENTIONAL_MEMORY
-use uefi.MapKey
-use uefi.BootServicesTable
-use core.Region
-use core.mint_region
+use uefi::EfiHandle;
+use uefi::EfiSystemTable;
+use uefi::EfiMemoryDescriptor;
+use uefi::EFI_CONVENTIONAL_MEMORY;
+use uefi::MapKey;
+use uefi::BootServicesTable;
+use core::Region;
+use core::mint_region;
 
 // Get the map, walk it, exit, mint. `self.map_buf` is a fixed 16 KiB static field
 // (no allocator yet — real firmware maps are ~4–8 KiB); the too-small retry loop
@@ -31,8 +29,8 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) {
     let mut key: MapKey = MapKey { raw: 0 };
     let mut desc_size: u64 = 0;                   // out = the RUNTIME descriptor stride
     let mut desc_version: u32 = 0;
-    self.boot_svc.get_memory_map(bs, &mut map_size, &mut self.map_buf,
-                                 &mut key, &mut desc_size, &mut desc_version);
+    _ = self.boot_svc.get_memory_map(bs, &mut map_size, &mut self.map_buf,
+                                     &mut key, &mut desc_size, &mut desc_version);
 
     transition { _ -> walk(bs, handle, map_size, desc_size, key, 0, 0, 0) }
 
@@ -43,7 +41,7 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) {
                offset: u64, best_start: u64, best_pages: u64) {
         let d: &EfiMemoryDescriptor = &self.map_buf[offset] as &EfiMemoryDescriptor;
         let is_free: bool  = d.kind == EFI_CONVENTIONAL_MEMORY;
-        let bigger: bool   = is_free and d.number_of_pages > best_pages;
+        let bigger: bool   = is_free && d.number_of_pages > best_pages;
         let more: bool     = offset + desc_size < map_size;
         transition (bigger, more) {
             (true,  true)  -> walk(bs, handle, map_size, desc_size, key,
@@ -59,7 +57,7 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) {
     // the map is final. (StaleMap retry = follow-on; the common case succeeds
     // first try when nothing allocates between GetMemoryMap and here.)
     state exit(bs: &BootServicesTable, handle: EfiHandle, key: MapKey, best_start: u64, best_pages: u64) {
-        self.boot_svc.exit_boot_services(bs, handle, key);
+        _ = self.boot_svc.exit_boot_services(bs, handle, key);
         transition { _ -> own(best_start, best_pages) }
     }
 

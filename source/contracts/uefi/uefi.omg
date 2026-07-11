@@ -14,8 +14,6 @@
 // typed wrappers where the single-file sample used raw `addr`; the typed form is
 // the target, the sample is the proven-compiling shape.
 
-package cathedral_contracts_uefi
-
 // --- Scalars (UEFI spec) --------------------------------------------------
 
 // EFI_STATUS is UINTN (pointer-width). On x86-64 that is 64-bit; 0 == success,
@@ -52,7 +50,7 @@ pub boundary trait SimpleTextOutput {
 // MS-x64, no import thunk. `over` names the struct whose fields the bindings
 // index.
 uefi_x64 provides SimpleTextOutput over TextOutputProtocol {
-    output_string -> output_string
+    output_string -> output_string;
 }
 
 // --- The System Table (firmware's root hand-off structure) ----------------

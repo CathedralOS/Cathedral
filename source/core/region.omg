@@ -14,8 +14,6 @@
 // capability_lifecycle arc; at M2 a Region is a plain value and the trusted boot
 // origin is the sole minter.
 
-package cathedral_core
-
 pub const PAGE_SIZE: u64 = 4096;
 
 // A physical-memory span capability. Holding a Region is exclusive authority over
