@@ -46,7 +46,7 @@ data Main {
 // (milestone 2 needs it for ExitBootServices). The audited machine-state axioms
 // (long mode, paging, interrupts, stack) are boot-target properties surfaced by
 // the artifact — see the uefi contracts.
-boundary machine Main::run(&self, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus {
+boundary machine Main::run(&self, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus effects device_io, machine_control {
     self.msg = utf16"Hello from Omega\r\n\0";
     // Project con_out through a frame local (the reference-param deref), then
     // dispatch OutputString(con_out, &msg) through the firmware's own vtable.

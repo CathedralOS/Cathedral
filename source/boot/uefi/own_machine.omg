@@ -17,7 +17,7 @@ use core::region;          // Region, mint_region
 // Get the map, walk it, exit, mint. `self.map_buf` is a fixed 16 KiB static field
 // (no allocator yet — real firmware maps are ~4–8 KiB); the too-small retry loop
 // is a follow-on.
-machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) {
+machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) effects device_io, machine_control {
     let bs: &BootServicesTable = table.boot_services;          // transitive vouch, like con_out
 
     let mut map_size: u64 = 16384;               // in = buffer capacity, out = actual bytes
@@ -93,9 +93,15 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) {
         transition { _ -> idle() }
     }
 
-    // Idle. `hlt` is milestone 3; until then a busy self-re-entering state (we own
-    // the machine; there is nothing to return to — firmware is gone).
+    // Idle (MILESTONE 3). We own the machine and firmware is gone — there is
+    // nothing to return to. `asm { hlt }` halts the core until the next
+    // interrupt instead of busy-spinning; the self-re-entry re-halts after any
+    // wake. `hlt` is a known-contract asm intrinsic emitting `machine_control`,
+    // which the machine declares (privileged_effects_and_binary_trust brief);
+    // it is discharged by the freestanding boundary root (v0 discharge — this
+    // boot root trivially owns the machine).
     state idle() {
+        asm { hlt }
         transition { _ -> idle() }
     }
 }
