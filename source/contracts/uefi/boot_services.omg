@@ -99,10 +99,13 @@ pub boundary trait BootServices {
 
 // Bind each method to its fn-ptr FIELD; the layout policy supplies the offsets
 // (get_memory_map past the 24-byte header + 4 services, exit_boot_services past
-// 26). No magic slot numbers.
+// 26). No magic slot numbers. TABLE FUNCTIONS, not vtable fields: EFI boot
+// services take no This -- the table pointer locates the callee and stays off
+// the wire (protocol methods like output_string DO take This and stay
+// bare-field This-call bindings).
 uefi_x64 provides BootServices over BootServicesTable {
-    get_memory_map     -> get_memory_map;
-    exit_boot_services -> exit_boot_services;
+    get_memory_map     -> TableFunction(get_memory_map);
+    exit_boot_services -> TableFunction(exit_boot_services);
 }
 
 // --- Origin of memory authority -------------------------------------------
