@@ -69,7 +69,8 @@ Consequences:
 
 - Principals are ordinary **`data`** values with **domains** expressing trust states (`Principal::Attested`, `Publisher::Revoked`); no new keyword.
 - The **authority-flow report** already names who accepts/derives/stores authority; binding those holders to typed principals turns flow into a graph of named nodes.
-- **`wire data`** with stable field numbers is the natural carrier for an identity or attestation that crosses a boundary or persists across reboot.
+- **Numbered protocol schemas + codecs** are the natural carrier for an
+  identity or attestation crossing a boundary or persisting across reboot.
 - Omega does **not** define cross-principal attestation chains or identity rotation semantics — that trust-chain machinery is something Cathedral specifies on top ([[boot_and_trust_chain]]).
 
 ## Open Questions

@@ -92,7 +92,9 @@ A breakpoint expressed against the **source state graph / `data` fields** surviv
 ## Concerns & Design Space
 
 - **Data / watchpoints.** Triggered on typed-state mutation, expressed against Omega `data` fields rather than raw addresses.
-- **Structured durable tracing.** Trace events are versioned `wire data`, written to the observability pipeline, queryable after the fact ([[observability_and_introspection]]).
+- **Structured durable tracing.** Trace events use numbered protocol schemas
+  and explicit codecs, are written to the observability pipeline, and remain
+  queryable after the fact ([[observability_and_introspection]]).
 - **State-graph debugging.** Step the *source* state graph and inspect the *lowered* graph — both are first-class Omega artifacts, so "which state am I in, which transition fired" is answerable directly, not reconstructed from a stack.
 - **Zero value.** A zero `Capability<Debug<X>>` is the inert null-object capability ([[omega_substrate]]): it holds no debug authority, so pause, step, and read are accepted and return nothing rather than crashing or escalating. Zero debug authority is the same value as least privilege, the natural default for a component handed no debug grant.
 
@@ -107,7 +109,8 @@ A breakpoint expressed against the **source state graph / `data` fields** surviv
 - **Inspectable source + lowered state graphs** ([../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)) make "where is execution, and why" a query over a real artifact.
 - **Capabilities as values** make `Capability<Debug<X>>` an ordinary, attenuable grant rather than a new privileged syscall.
 - **Virtual time + deterministic graphs** make replay debugging sound, and the debugger-as-Matrix owns clock/randomness/network/input.
-- **Versioned data + migration** let a session survive a hot swap and give cross-version breakpoints their field-correspondence.
+- **Explicit historical shapes + migration contracts** let a session survive a
+  hot swap and give cross-artifact breakpoints their field correspondence.
 - Omega likely must grow a sanctioned **in-process probe** form — compiled predicates with their own effect/authority ceiling — plus the **safe-patch metadata** the runtime patcher needs (instruction boundaries, instruction-pointer-relative sites). Foreign predicates lower to a portable bytecode the agent interprets; native predicates inline.
 
 ## Open Questions

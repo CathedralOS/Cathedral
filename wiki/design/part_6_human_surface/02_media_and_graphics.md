@@ -30,7 +30,17 @@ What Cathedral cannot do here is worth stating plainly: it cannot prove the vend
 
 Text rendering, shaping, layout, and locale formatting are userspace libraries rather than OS services. Turning codepoints and a font into positioned glyphs, and glyphs into pixels, is pure computation with no capabilities and no I/O, so it belongs in a shared standard library that renders into the app's own surface. The OS owns only two thin touchpoints, both already covered: the compositor supplies DPI and scale and composites the finished surface without ever seeing a glyph ([[windowing_and_compositor]]), and input methods are a capability-held stage in the input pipeline.
 
-Because shaping is where every string becomes glyphs, the text stack is also where legibility falls out for free. A surface may publish **text-run annotations**: small `wire data` records — source string, visibility, run and ordering ids — *retained, not streamed*. A run is announced once, updated when its string changes, removed when it dies, so steady-state legibility costs nothing and a 60 fps scene with an unchanged HUD emits nothing per frame. Geometry is pulled, never pushed: "where is this run right now" is a query the renderer answers from the transforms it already holds, and the answer is what the draw call computed, not screen boxes. The general form of that answer is per-cluster placement — every glyph cluster with its own position and orientation, which is exactly the data any layout produces to draw at all, so text on an arc or along a path answers as naturally as a flat label. A run whose clusters share one plane collapses to the compact form, string plus a single transform of its line box: the common case, an optimization rather than the model. Only text whose final geometry never exists CPU-side (warped in a shader after submission) falls back to a coarse hull with an approximate flag, with the pixel tier supplying exact geometry if anyone needs it; for reading, the string and rough location were always the payload anyway. The OS owns the *schema*, not the library: the standard text crate emits by default as a byproduct of rendering, so the annotation cannot drift from the pixels it describes, and a custom stack (a game engine's own font pipeline, text projected onto a 3D surface) emits the same schema if it wants its text legible — the renderer already holds the string and the transform, so emission is cheap and voluntary. Secure text entry emits nothing: a masked field never produces a run, so the secret is absent from the annotation stream rather than guarded inside it. The compositor brokers annotations without interpreting them; who may read them, and the tiers above text runs, live in [[windowing_and_compositor]]. The record shape and emission mechanism here are sketch, not spec; the settled commitments are only: opt-in, one standardized schema, retained rather than streamed, geometry answered on request.
+Because shaping is where every string becomes glyphs, the text stack is also
+where legibility falls out naturally. A surface may publish retained text-run
+annotations as small numbered protocol records—source string, visibility, run
+and ordering identities—updated only when content changes. Geometry is queried
+from the renderer's existing transforms, with per-cluster placement as the
+general case and a single line transform as the common compact case. The OS
+owns the schema, not the library; custom renderers emit the same protocol if
+they want their text legible. Secure text entry emits no annotation. The exact
+record and emission mechanics remain sketch; the settled commitments are
+opt-in, one standardized schema, retained rather than streamed, and geometry
+answered on request.
 
 Fonts and locale data are content-addressed shared assets ([[filesystem_as_database]]), not a special subsystem. The system ships a core UI font plus a broad Unicode coverage floor (open-licensed, with large scripts and emoji as on-demand content-addressed packs), and the chrome pins its own fonts by hash so the trusted path always renders. An app declares the fonts it renders in by hash, so the system set is a dedup cache and a coverage floor rather than an ambient dependency: a font the system already holds is shared for free, one it does not is shipped by the app, and either way the result is reproducible. That is why shipping fonts does not reintroduce the implicit-host-dependency problem realms otherwise kill.
 
@@ -63,7 +73,9 @@ Installing a font adds it to the user's font collection in the user realm, disco
 - GPU/decode/capture/audio are **capabilities + the `device_io` effect**, audited on the same axes as any other boundary ([capabilities & effects](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - The pipeline is a set of **boundary providers** wrapping firmware/vendor code; the audited edge is explicit.
 - Decode/render sessions are **machines with states** ([machines](../../../../Omega/wiki/language_guide/chapter_3_machines.md)): configured → running → flushing → drained.
-- Frame/audio buffers crossing the hardware edge are **wire data** ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
+- Frame/audio buffers crossing the hardware edge use explicit protocol schemas
+  and codecs
+  ([protocol schemas](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
 - Omega gives no GPU memory-isolation model for shared devices; that isolation guarantee is a Cathedral + hardware obligation.
 
 ## Open Questions

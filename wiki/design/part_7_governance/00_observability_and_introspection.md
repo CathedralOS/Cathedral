@@ -77,7 +77,9 @@ Full causality forever is impossible, so the event log rides the storage **retai
 - The **authority graph** is already modeled from authority-flow inference (accepts / uses / derives / stores / acquires / returns / releases); observing it is reading a structure Omega built, not adding a probe.
 - **Effects** give the orthogonal "what kind of behavior" axis as a queryable ceiling per component ([effects](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - **Provenance** of values and artifacts makes "what wrote this / what migrated this" a lookup.
-- Causal events compose with **versioned data** so "which migration touched this object" is intrinsic ([versioned data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)).
+- Causal events compose with **explicit schema and migration identities** so
+  “which migration touched this object” is intrinsic
+  ([evolution and migration](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)).
 - What Omega may need to grow: a standard, queryable *causal event graph* schema and an `Observe` capability domain that attenuates over axes.
 
 ## Open Questions

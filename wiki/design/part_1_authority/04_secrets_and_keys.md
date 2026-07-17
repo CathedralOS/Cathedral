@@ -45,7 +45,8 @@ A component that needs to authenticate gets `UseToken(T, scope)`, not the token.
 - A secret operation is a **capability value + domain** (`Key::Signing`, `Token::Scoped`) — same machinery as every other capability, no new keyword.
 - **Leasing, attenuation, and revocation** come straight from [[capability_lifecycle]]; a leased `SignWithKey` is just a capability with an expiry.
 - The crypto operation is a **`boundary`** with a hardware **provider** and a `device_io` effect; ordinary code reaches it only through the held capability.
-- **`wire data`** carries scoped tokens and certificates across boundaries with stable field numbers.
+- **Numbered protocol schemas + codecs** carry scoped tokens and certificates
+  across boundaries.
 - Omega has no native "operation handle over an at-rest, hardware-held secret that survives reboot without becoming forgeable" — this is the same serialized- capability gap flagged in [[capability_lifecycle]], sharpened for keys.
 
 ## Open Questions

@@ -58,7 +58,12 @@ The split is at the bottom. A Cathedral-native guest is intercepted at the Omega
 
 ## Input
 
-Input has two layers that stay strictly separated. At the bottom, an input device driver ([[driver_model]]) holds the device's transport capability and translates raw device reports into a normalized, typed event vocabulary (`wire data` events: key, relative pointer, absolute pointer, axis, button, touch contact, pressure, and the like). Every device quirk is absorbed at that boundary. Above it, the compositor consumes only typed events and never sees the raw device, so routing is device-agnostic.
+Input has two layers that stay strictly separated. At the bottom, an input
+device driver ([[driver_model]]) holds the transport capability and translates
+raw reports into a normalized numbered protocol event vocabulary (key, relative
+pointer, absolute pointer, axis, button, touch, pressure, and so on). Every
+device quirk is absorbed there. The compositor consumes only typed events and
+never sees the raw device.
 
 This standardizes at the event-vocabulary level even though devices do not standardize at the hardware level. HID (Human Interface Device) is a genuine self-describing bottom standard: a device declares its axes, buttons, and usages, and most input hardware speaks it, which makes input far more tractable than the GPU situation. The slop is the long tail (broken descriptors, vendor gesture processing, proprietary protocols, devices that lie), and it is contained in per-device drivers and quirk tables rather than leaking upward. A genuinely novel device ships a driver that maps its raw input to typed events, extending the vocabulary with a new kind. The normalized vocabulary follows the capability, profile, and action layering below, though the full set of capability kinds and the registry that governs them remain to be specified.
 
@@ -72,7 +77,11 @@ Two pressures shape the pipeline. Latency: the cooked stages cost *meaning-time*
 
 The vocabulary is layered so device specifics push down and meaning pushes up, and the OS core never enshrines "gamepad" or "VR controller" as a concept. Those are data, not core taxonomy.
 
-- **Capabilities (self-describing).** A device declares what it physically has in an extensible, versioned registry: buttons, axes (each typed with absolute or relative, linear or angular, range, and units), touch contacts, 6-degree-of-freedom poses, skeletal or hand poses, pressure, and haptic *outputs* (input devices are bidirectional, so rumble and force feedback are held output capabilities). HID usages are the proven model, and making the vocabulary versioned `wire data` ([[driver_model]]) makes a new capability kind a compatible schema evolution. The device describes its hardware and is never forced into a category that does not fit.
+- **Capabilities (self-describing).** A device declares what it physically has
+  in an extensible numbered protocol registry: buttons, typed axes, touch
+  contacts, poses, pressure, and haptic outputs. Stable member identities and
+  reader-tolerant codecs make compatible additions possible without a special
+  versioned type ([[driver_model]]).
 - **Profiles (semantic classes).** Recognizing a set of capabilities as a standard gamepad or a particular extended-reality controller is shared, content-addressed, updatable data, the equivalent of the SDL gamepad database or OpenXR interaction profiles. A new controller gets a stable named layout by shipping profile data rather than an OS update, so profiles stay convention rather than core.
 - **Actions (the app interface that does not age out).** An app declares abstract actions ("primary fire", "move 2D", "grab pose", "menu") and a remappable binding maps device capabilities onto them. This is OpenXR's action system: a new device works without the app changing because the binding adapts, and accessibility and remapping plug into the same indirection. The binding is a higher stage in the pipeline above.
 - **The raw escape hatch.** The unprofiled capability stream is always available by capability, so a device nobody has profiled yet is never blocked. An app picks its layer: raw, profile, or actions.
@@ -159,10 +168,13 @@ Some states gate whole classes of grants at once rather than revoking anything. 
 - Input, clipboard, and notification access are **capabilities + domains** over surface/principal handles, audited through the same authority-flow report as everything else ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - The compositor is an explicit **boundary provider**: the audited edge between proved Omega code and the raw display/input hardware.
 - Window/session lifecycle is a natural **machine with states** ([machines](../../../../Omega/wiki/language_guide/chapter_3_machines.md), [states](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)): created → mapped → focused → occluded → suspended → destroyed.
-- Restored window state is **versioned data** ([versioned data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)).
+- Restored window state uses **explicit durable schemas and migrations**
+  ([evolution and migration](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)).
 - The compositor is a **trait** ([traits](../../../../Omega/wiki/language_guide/chapter_14_traits.md)) any component can implement, so nesting is one interface with many implementations; a child resolves its compositor from its environment ([modules & imports](../../../../Omega/wiki/language_guide/chapter_15_modules_imports_visibility.md)), and sub-compositing is binding that resolution to a parent endpoint.
 - Surface placement classes (normal, chrome, overlay, system prompts) are **capabilities + domains**; "be the shell" is a strictly different grant from owning a normal window.
-- Legibility annotations (text runs, semantic nodes) are versioned **wire data** schemas ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)), so the contract that stays stable is a schema, not a blessed library, and a new node kind is a compatible evolution.
+- Legibility annotations use numbered protocol schemas and explicit codecs
+  ([protocol schemas](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)),
+  so the stable contract is the schema rather than a blessed library.
 - Omega does **not** yet describe an unspoofable trusted-path primitive; that is a compositor + firmware obligation Cathedral defines on top of the language.
 
 ## Open Questions

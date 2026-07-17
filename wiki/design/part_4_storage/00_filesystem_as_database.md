@@ -125,7 +125,7 @@ To **ship a Matrix elsewhere** ("zip it into a standalone image"), serialize the
 - **Leak-safe by confinement.** The closure is *exactly* the Matrix's reachable realm. Sibling realms — personal documents, the trash, another world's state — are not reachable (no capability, no global root), so they are not in the closure and **cannot be accidentally shipped.** The confinement *is* the scoping.
 - **Pin vs. track is the one knob.** A Matrix either **pins** a specific system snapshot (its `system:` bound to fixed hashes) or **tracks** the live system realm (the overlay falls through to current). Pinned = portable and frozen; tracking = local convenience that follows updates.
 
-**OS updates cannot silently break a Matrix.** A pinned Matrix is **immune**: an update is *additive* — it mints new hashes while the old objects the Matrix references stay alive by refcount — so the pinned closure is frozen regardless of how the system realm moves on. The cost is the reproducibility-vs-currency tradeoff made explicit: a pinned world can drift behind security fixes, which the OS can *see and surface* ("pinned to a system with newer fixes available; rebuild to re-pin"). A **tracking** Matrix takes updates, and a genuinely-breaking interface change surfaces through the versioned-interface discipline ([[versioned_state_and_migration]]): system interfaces are `wire data` with stable field numbers (forward-compatible by default), so a real break is a typed **`VersionMismatch`** carrying a migration ([[error_model_and_recovery]]), never a silent corruption.
+**OS updates cannot silently break a Matrix.** A pinned Matrix is **immune**: an update is *additive* — it mints new hashes while the old objects the Matrix references stay alive by refcount — so the pinned closure is frozen regardless of how the system realm moves on. The cost is the reproducibility-vs-currency tradeoff made explicit: a pinned world can drift behind security fixes, which the OS can *see and surface* ("pinned to a system with newer fixes available; rebuild to re-pin"). A **tracking** Matrix takes updates, and a genuinely-breaking interface change surfaces through the explicit interface-evolution discipline ([[versioned_state_and_migration]]): system interfaces use numbered protocol schemas and checked codecs, so a real break is a typed **`VersionMismatch`** carrying a migration ([[error_model_and_recovery]]), never silent corruption.
 
 ### Building a database on Cathedral
 
@@ -167,7 +167,15 @@ Three honest limits. Porting a legacy database wholesale still works but is wast
 - **`private`: opt out of bulk grants, not out of your own view.** A per-object attribute that **excludes the object from bulk enumerate/realm grants** — a folder grant handed to an app skips `private` children, so reaching one needs an `Enumerate(private)` grant or a direct per-object mint (the double-click "open this" gesture, [[human_permission_ux]]). It is **private from *delegated apps*, never from the owner**: the realm holder always sees their own `private` objects, because the file browser is just an app that was granted `Enumerate(private)`, not a blessed one. This is the deliberate inverse of the Windows/macOS "hidden" attribute, which buries files from the *user*; `private` buries nothing from you and only narrows what *bulk delegation* sweeps up — the over-granted-app threat, distinct from the at-rest "left-open laptop" threat the sealed/metadata-axis controls cover. It **composes** with sealing: `private` gates *enumeration* (metadata axis), encryption gates *content* (the decrypt-op), and a crown-jewels file is both.
 - **Provenance.** Each record carries who/what/when wrote it ([[audit_compliance_provenance]]).
 - **Schema evolution.** Records have typed, versioned shapes that migrate ([[versioned_state_and_migration]]).
-- **The on-disk format is `wire data`.** Durable, source-of-truth metadata (directory nodes, file records, log entries, the superblock) is a versioned `wire data` schema with stable field numbers, so it decodes across OS versions. Storage is the hardest compatibility case, because a node may have been written by a version that now runs nowhere: you never break decode of an old node and you keep a total migration chain ([[versioned_state_and_migration]]). The superblock is the most frozen of all, a tiny self-describing header (format version, root hash, log head) the boot chain reads before anything else is reachable. Derived structures like the `hash -> location` index are the exception: version-tagged but rebuildable, discarded and regenerated on a mismatch rather than migrated.
+- **The on-disk format uses numbered protocol schemas and explicit codecs.**
+  Durable source-of-truth metadata—directory nodes, file records, log entries,
+  and the superblock—keeps old named schema shapes decodable. Storage is the
+  hardest compatibility case because a node may have been written by an
+  artifact that now runs nowhere. The superblock is the most frozen of all, a
+  tiny self-describing header (format identity, root hash, log head) the boot
+  chain reads before anything else is reachable. Derived structures such as
+  the hash-to-location index are rebuildable and may be discarded on a schema
+  mismatch rather than migrated.
 - **Offline/online sync & conflict resolution.** Causal history makes merge and conflict detection a property of the log.
 - **Zero value.** A zero file handle is the canonical null object: it reads as a zero-byte file (valid-empty) and discards writes (inert null-object), so the all-zero hash names the empty body and a zeroed handle is accepted everywhere without a null-handle crash, the storage-side instance of ZII ([[omega_substrate]]).
 
@@ -184,8 +192,12 @@ Three honest limits. Porting a legacy database wholesale still works but is wast
 ## Omega Leverage
 
 - **Capabilities as values + authority flow** make a realm root a held capability, a directory view a derived attenuation of it, and provenance a recorded acquisition edge. An object's realm is the root its parent chain ends at.
-- **Versioned `data`** gives file records typed historical shapes and a migration path for on-disk schema evolution, and is what makes the system realm rollback-able. See Omega [Versioned Data And Machine Replacement](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
-- **`wire data`** gives the at-rest and on-the-wire record/log encoding stable field numbers and explicit compatibility, so old log entries stay decodable. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
+- **Explicit historical schema `data` + migration machines** keep old records
+  typed and make the system realm rollback-able. See Omega
+  [Evolution, Migration, And Replacement](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
+- **Stable field identities + codec policies** keep old record/log encodings
+  decodable. See Omega
+  [Protocol Schemas And Serialization](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
 - **Domains** express object permission shades and validity classes (`Object::Readable`, `Object::Committed`, `Snapshot::Sealed`) on one handle type. See Omega [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - Omega does not yet define a durable-log/subscription-cursor primitive; whether that is a runtime service or a language-level abstraction is open.
 

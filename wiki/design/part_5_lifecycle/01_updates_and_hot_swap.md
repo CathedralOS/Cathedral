@@ -8,19 +8,36 @@ Updating a live system is, almost everywhere, a controlled outage: stop the thin
 
 ## The Cathedral Model
 
-Update is a **first-class language/runtime/OS operation**, designed in from day one. Cathedral replaces a live component by: driving it to **quiescence**, migrating its live state forward, switching its protocol endpoints to the new version, observing the new version's health, and **rolling back** if it misbehaves — all without restarting the world.
+Update is a **first-class Cathedral runtime/OS operation**, designed in from day one. Cathedral replaces a live component by: driving it to **quiescence**, migrating its live state forward, switching its protocol endpoints to the new version, observing the new version's health, and **rolling back** if it misbehaves — all without restarting the world. Omega supplies the checked building blocks; whether the reusable phase protocol ultimately belongs in Cathedral, a target-neutral library Cathedral consumes, or a smaller language/runtime substrate remains deliberately consumer-driven rather than pre-decided.
 
-This chapter owns the *operational* act. The typed state-shape continuity primitive — versioned `data` and the `Upgradable` migration ([Omega ch22](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)) — lives in [[versioned_state_and_migration]]; this chapter is what *drives* that machinery across a running system. This is the domain where Cathedral is genuinely differentiated, and the chapter the whole "resumability" thesis is accountable to.
+This chapter owns the *operational* act. Explicit old/new `data` shapes and
+ordinary checked migration machines ([Omega ch22](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md))
+live in [[versioned_state_and_migration]]; this chapter drives them across a
+running system. This is the domain where Cathedral is genuinely differentiated,
+and the chapter the whole "resumability" thesis is accountable to.
 
 ### The decided mechanism
 
 The substrate is settled; the residue is one hard corner (devices).
 
 - **Quiescence is the actor's receive-loop park.** Run-to-completion actors ([[scheduler_and_resources]], [[component_model]]) hold no call stack between messages, so a parked actor is just its `self`. Quiescence stops being a research problem and becomes "wait for the next inter-message gap," which run-to-completion guarantees arrives promptly. The Omega swap obligations are discharged at that park — no stack to unwind, no scheduled re-entry.
-- **The cutover is a pointer rebind, not a code patch.** Stop delivery (messages queue, OS-held) → run the migration (`Upgradable`, with an effectful `capture` first if old state alone is not enough, [Omega ch22](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)) → rebind the instance's one code pointer to the freshly-loaded new image → resume. The resume point is a **state tag**, version-stable, not a raw instruction pointer, so the parked task re-enters the new image by dispatch and there is no raw return address to dangle. The image loads as a second copy; the old is freed at refcount-zero (a rolling swap keeps both mapped). No in-place `.text` patching, no trampolines.
+- **The cutover is a pointer rebind, not a code patch.** Stop delivery
+  (messages queue, OS-held) → run an ordinary checked migration machine, with
+  effectful capture first when needed → atomically rebind the instance's code
+  pointer to the admitted new image → resume. The resume point is a stable
+  state tag, not a raw instruction pointer. The image loads as a second copy;
+  the old is freed when its liveness pins reach zero. No in-place `.text`
+  patching and no language-level replacement syntax.
 - **The cutover atom is a swap unit bounded by reference edges.** A migration rewrites a data shape, so everything sharing that representation moves together: inline/embedded data migrates with it; references (handles, channels, capabilities) are the cut points. That blob — `data` plus the machines over it — is the unit, and in Omega the **machine** is exactly the swap point. Three axes stay separate rather than fusing into one keyword: the **package** (Omega's deployment/compile unit, [ch15](../../../../Omega/wiki/language_guide/chapter_15_modules_imports_visibility.md)) is what ships — *what Cathedral calls a component* — and one package holds many machine-granular swap points (deployment unit ≠ swap unit); **trust/isolation** is the OS's separate call (Omega-proved safety vs a hardware wall, [[kernel_architecture]]); and Omega's `boundary` ([ch19](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)) is the narrower host/FFI edge, not a swap construct. Drawing the package line sets deployment and blast radius; drawing the machine line sets swap granularity and call cost.
-- **Live upgrade is single-step.** A live component is always at the last-installed version, so the upgrade is `prev → current`. The multi-version case is persisted data = `wire data` ([[ipc_and_service_invocation]]), not this. Coexistence (old + new running, versioned dispatch) is reserved for a genuinely incompatible protocol change, used sparingly.
-- **The replacement is an owned, OS-gated plan.** `quiesce → capture → upgrade → install → resume`, gated on an upgrade capability ([[capability_lifecycle]]); the compiler verifies each phase's obligations chain. `capture` is the only fallible point and aborts before `old` is mutated, so a failed cutover is "did nothing."
+- **A live cutover names one explicit old/new artifact edge.** That does not
+  impose a universal single-step history on persisted data or protocols.
+  Bounded old/new provider coexistence is a separate runtime policy.
+- **The replacement is an owned, OS-gated protocol.** `admit → quiesce →
+  capture/prepare → commit → resume/retire`, gated on an upgrade capability
+  ([[capability_lifecycle]]). Before commit, every failure must return a still
+  meaningful old-state token; commit is the explicit point of no return and
+  installs atomically. Ordinary machine contracts and linear phase values—not
+  a compiler `replace` block—verify the chain.
 - **Failure falls down a ladder, never force-freezes.** A `Quiesce` control message asks a component to reach a swappable rest point cooperatively; the OS never freezes a running task mid-execution. Past a deadline, the backstop is the component's declared policy ([[component_model]] `QuiescePolicy`/`UpgradePath`): **live-migrate** → **kill-and-restart** (a component that declares itself safely restartable, losing in-flight state) → **defer-to-reboot** (a critical stateful component that can neither migrate nor safely restart). "Defer to reboot" is scoped to the smallest possible set — ideally just the privileged core.
 
 ## Concerns & Design Space
@@ -32,7 +49,9 @@ The substrate is settled; the residue is one hard corner (devices).
 - **Rolling, partial & planned upgrades.** Upgrading a subset; dependency-graph upgrade *planning* (what must move together, in what order); upgrades as transactions ([[transactions_and_consistency]]).
 - **Runtime rollback & in-flight draining.** Drain outstanding requests; if the new version is unhealthy, reverse the transition — including reverse migration.
 - **Leased capabilities during upgrade.** Authority a component holds must survive (or be safely re-leased across) the swap without a revocation window ([[capability_lifecycle]]).
-- **Multi-version concurrency.** When quiescence is impractical, the explicit coexistence mode: versioned dispatch and old-callback fencing, used sparingly.
+- **Multi-provider coexistence.** When quiescence is impractical, bounded old
+  and new artifacts coexist behind contract-pinned dispatch and callback
+  fencing.
 - **Upgrade observability.** Health, drain progress, and blocked-swap reasons are queryable ([[observability_and_introspection]]).
 
 ## Key Questions
@@ -40,19 +59,35 @@ The substrate is settled; the residue is one hard corner (devices).
 Quiescence (the receive-loop park) and the cutover atom (the instance bounded by reference edges) are resolved above for software actors. The residue:
 
 - **Device quiescence.** Proving a driver's *hardware* is quiescent enough to snapshot — in-flight DMA drained, interrupts masked, queue heads stable — has no run-to-completion guarantee to lean on; this is the genuinely hard corner ([[driver_model]]), and where load/swap-time checks rather than static proof likely dominate.
-- **Admitting coexistence.** Single-step covers the compatible case; what does the runtime require to *safely* admit the sparingly-used old+new mode (versioned dispatch, old-callback fencing) for a protocol-incompatible change, without it becoming a permanent fork?
+- **Admitting coexistence.** What must the runtime require to safely admit
+  bounded old/new providers behind pinned contracts without creating a
+  permanent fork?
 - **Lossy rollback.** Capture-before-mutation makes the common abort "did nothing"; but once a *forward* migration has committed and was lossy, reverse is opt-in and some upgrades are one-way — what contract tells an operator which, before they pull the trigger?
 
 ## Omega Leverage
 
-- **Versioned `data` + migration machines** (chapter_21) supply the state-continuity substrate this chapter drives — see [../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
+- **Ordinary data, sums, domains, and migration machines** supply the
+  state-continuity substrate this chapter drives — see
+  [Omega chapter 22](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 - **Quiescence / replacement obligations** — Omega already frames swap safety as borrow, invariant, effect, and scheduled-work facts; Cathedral consumes those as the precondition for a live cutover.
 - **Machines as swap points** — a machine's public states and calls are its replacement contract; the OS swaps at machine boundaries.
-- **`wire data`** gives versioned protocol endpoints for the cutover window.
-- Omega's coexistence mode is the language hook for multi-version concurrency; the *operational policy* over it is Cathedral's to define.
+- **Numbered protocol schemas and codecs** give compatible endpoints for the
+  cutover window.
+- Component artifacts, pinned import slots, and provider admission are Omega
+  runtime/toolchain substrate; coexistence policy is Cathedral's.
 
 ## Open Questions
 
+- **Where does the replacement framework live?** Cathedral is the only planned
+  consumer, so prototype the `quiesce -> capture -> prepare/upgrade -> commit ->
+  resume` protocol here rather than pre-emptively making `replace` an Omega
+  language construct. The prototype must make the point of no return explicit:
+  before commit, every failure leaves the old state resumable; commit either
+  installs atomically or returns the still-live phase tokens unchanged. Real
+  implementation pressure then decides whether the reusable protocol remains
+  Cathedral code, is extracted into a target-neutral Omega library, or exposes
+  an irreducible primitive that belongs in the language/runtime core. Verbosity
+  alone is not evidence for new language syntax.
 - Can an outstanding *borrow* of capability or state legitimately block a swap indefinitely, and is that acceptable back-pressure or a liveness bug?
 - How much swap safety is statically provable vs. necessarily a load/swap-time runtime check, and who is accountable when the runtime check fails mid-upgrade?
 - How does live migration interact with persistence and crash recovery ([[memory_and_persistence]]) if the system dies *during* a cutover?

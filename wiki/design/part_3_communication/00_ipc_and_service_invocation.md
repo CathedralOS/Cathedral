@@ -49,18 +49,27 @@ The OS owns the physical frames; the peers hold *leases* on the region, not owne
 
 ### Typed safety is an opt-in layer
 
-A safe language can wrap the raw region as a typed, single-writer channel: a `wire data` schema, capabilities passed as values, versioning. This is structure imposed on the sea of bytes — each field read is a refinement check (in range, valid tag, snapshot-then-validate so a concurrent writer cannot change the value between check and use) that re-earns a proof the boundary did not provide. Between two checked peers the compiler already knows the writer's discipline, so it elides the checks: zero-copy and race-free by construction. At a boundary with C the checks stay, validating incoming bytes on ingress. This is *how you build safety over the primitive*, not a tax the kernel imposes.
+A safe language can wrap the raw region as a typed, single-writer channel: a
+numbered protocol `data` schema, capabilities passed as values, and an explicit
+codec. This is structure imposed on the sea of bytes — each field read is a
+refinement check (in range, valid tag, snapshot-then-validate so a concurrent
+writer cannot change the value between check and use) that re-earns a proof the
+boundary did not provide. Between two checked peers the compiler already knows
+the writer's discipline, so it elides the checks: zero-copy and race-free by
+construction. At a boundary with C the checks stay, validating incoming bytes
+on ingress. This is *how you build safety over the primitive*, not a tax the
+kernel imposes.
 
 ```omega
-wire data PlaceOrder {
+data PlaceOrder {
     0: item_id: u64;
     1: quantity: u32;
     2: idempotency_key: Uuid;   // replay safety in the schema
 }
 
-protocol OrderService version v3 {
-    call place(req: PlaceOrder, pay: Capability<Payment::Charge>) -> OrderId;
-    stream watch(id: OrderId) -> Update;
+trait OrderServiceV3 {
+    machine place(req: PlaceOrder, pay: Capability<Payment::Charge>) -> OrderId;
+    machine watch(id: OrderId) -> UpdateStream;
 }
 ```
 
@@ -110,7 +119,9 @@ Whether that routing is a kernel-mediated trap or a direct call is the substrate
 ## Omega Leverage
 
 - **The region and lease managers are themselves Omega**, so the small part of IPC that must be trusted is checked code, not hand-audited C.
-- **`wire data`** is the typed layer's schema: stable field numbers, compatibility rules, generated codecs, for local and remote alike. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
+- **Numbered protocol `data` + codec policies** form the typed layer for local
+  and remote calls alike. See Omega
+  [Protocol Schemas And Serialization](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
 - **Capabilities as values** mean authority travels in the payload as a typed argument, not as an ambient sender identity. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Ownership / borrowing** give the zero-copy local hand-off: a moved buffer is statically unreachable by the sender.
 

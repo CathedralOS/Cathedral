@@ -28,7 +28,14 @@ If these are forkable at the platform level, the core contracts fragment into mu
 
 "What can be replaced" sorts into **three tiers**, by one question: *does anything else interoperate through you?*
 
-**Tier 1 — frozen semantics: the platform ABI.** The contract shapes everything is written against, served by root/the trusted core: the **capability model semantics** (what a capability is; delegation, attenuation, revocation, arena behavior), the **component/Matrix model** (what a component is; the manifest shape; spawn/lifecycle; host-chain semantics), the **IPC primitive** (shared region + endpoints + `wire data`), the **realm/filesystem semantics** (object model, CoW commit, sealing), the **package unit** (closure + manifest), the **compositor/seat contract**, the **driver contract**, and the **checker's admission requirements**. These are singular and stable the way the Win32 or Linux *syscall* ABI is stable — the anti-fragmentation commitment. The legacy failure being avoided is the **Linux userland disease**: N competing incompatible implementations of core interfaces (init systems, display protocols, package formats) until "runs on Linux" means nothing and apps target distros. Frozen semantics evolve only by the **versioned-interface discipline** (support N and N+1, migrate), never by in-place redefinition; a contract's identity is a **content-hash**, and a component's manifest declares which contract versions it targets — so compatibility is ordinary dependency versioning, and there is no separate "fork detection" problem (a system either serves the contracts a component declares or it does not).
+**Tier 1 — frozen semantics: the platform ABI.** Root serves the capability,
+component/Matrix, IPC, realm/filesystem, package, compositor, driver, and
+checker-admission contracts. These are singular and stable like a syscall ABI.
+They evolve through additive numbered protocol schemas where possible and
+distinct pinned contract/provider identities plus explicit migration when not;
+they are never redefined in place. A manifest names the normalized contracts it
+requires, so compatibility is admission/refinement rather than ambient version
+guessing.
 
 **Tier 2 — frozen contracts, open implementations.** Where components interoperate *through* an interface — drivers behind the driver contract, the compositor implementation behind the surface/seat protocol, the network stack, stores — the *interface shape* is fixed and the *implementation* swaps freely behind it. This is ordinary provider replacement.
 
@@ -58,7 +65,9 @@ The consequence: Cathedral can be **radically customizable without fragmenting**
 
 - **Boundaries and providers** are where stable contracts live: an extension *provides* against a fixed boundary contract rather than inventing one ([capabilities & boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - **Machines and states** pin down what "an app" or "a driver" *means* as a checked lifecycle shape, so "redefining the meaning" fails to type-check ([machines](../../../../Omega/wiki/language_guide/chapter_3_machines.md)).
-- **Wire protocols** make the IPC contract a language object that is implemented, not reinvented ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
+- **Protocol schemas and codecs** make the IPC contract a checked artifact that
+  is implemented rather than reinvented
+  ([protocol schemas](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
 - **Capability manifests** make every extension's authority reviewable at the contract boundary before it is admitted.
 - What Omega may need to grow: a notion of *frozen contract* vs. *open implementation surface* that tooling can enforce platform-wide.
 

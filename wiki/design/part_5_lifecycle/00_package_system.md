@@ -10,7 +10,12 @@ Linux packaging is the clearest example of the problem: a package is an archive 
 
 Installation is a **declarative state transition**, not a program. A package is an Omega artifact that *declares* everything the system needs to admit it, and the compiler/loader *checks* the declaration before anything is written. There is no install-script escape hatch — the manifest is the only way in.
 
-A package declares: exports and imports; capabilities required, stored, and delegated; protocols spoken ([[ipc_and_service_invocation]] `wire data`); persistent state schemas with their versions and migration functions; resource budgets; upgrade-compatibility facts; security invariants; and the test/proof artifacts that back them. Build provenance is signed and reproducible; dependencies are hermetic. Because all of this is structured, "install this package" reduces to: verify provenance, check the capability manifest against policy, prove the state schema migrates, allocate the budget, and atomically commit — or atomically refuse.
+A package declares exports/imports; capabilities required, stored, and
+delegated; protocol schema/codec identities; persistent named state schemas and
+migration functions; resource budgets; provider-compatibility facts; security
+invariants; and the test/proof artifacts backing them. Build provenance is
+signed and reproducible; dependencies are hermetic. Installation verifies the
+whole declaration and atomically commits or refuses.
 
 This is the core divergence: every other OS treats the package as an opaque payload whose effects are discovered only by running it; Cathedral treats it as a checkable contract whose blast radius is computed in advance.
 
@@ -49,7 +54,12 @@ Most updates are **services and drivers → live hot-swap, zero reboot** ([[upda
 
 ### Many components update independently — no OS-wide two-phase commit
 
-Each component's swap is an **atomic copy-on-write root-flip** (no half-component). *Across* components, updates flip **independently**, because **versioned interfaces make a mixed-version state valid** — a v4 service and a v3 service interoperate over compatible `wire data` schemas. So a partial update is a **working, resumable state**; a crash mid-batch leaves a valid mix and the update continues. A **coupled breaking change** between two components is made compatible across one step (support both protocols), or, if genuinely atomic, done by a **coordinated flip scoped to the coupled set** (a local OS-coordinated commit over those realms, [[transactions_and_consistency]]) — never an OS-wide 2PC. A multi-component *feature* that must appear atomic is deployed incrementally, then enabled by a final **config flag**, not a component transaction.
+Each component's swap is an **atomic copy-on-write root flip**. Across
+components, updates flip independently because pinned interface contracts and
+compatible protocol schemas make mixed-provider operation valid. A coupled
+breaking change temporarily serves both explicit contract identities or uses a
+coordinated flip scoped to the coupled set—never an OS-wide 2PC. A feature that
+must appear atomic deploys incrementally and is enabled by a final config flag.
 
 ### The setup-transition: a confined computation, not a script
 
@@ -57,13 +67,18 @@ The one place imperative code wants back in — first-run setup (seed a database
 
 ### Migration with extra inputs is the same shape — Omega's `capture` + pure `upgrade`
 
-A migration that needs more than its own old state (a v2 map that needs the editor's live data; unified contacts merging two stores) uses Omega's decided **`Upgradable<Old, New, Context>`** model: the extra source is captured **as a typed `Context` value first**, in an effectful, fallible **`capture`** phase that runs *before* the old state is touched, and the **`upgrade` is then pure over `(Old, Context)`** — provable despite needing external data. `capture` reads *committed* state (quiescence commits the live part), the `Context` type is private so capture is not skippable, and N inputs just make the `Context` a bundle. It is the identical `{ old + granted committed inputs } → new, as confined code` shape as the setup machine — see Omega [Versioned Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
+A migration needing external state captures it into an owned typed context
+before commit, then prepares the successor from explicit old/context inputs.
+This is an ordinary Cathedral framework protocol, optionally organized by an
+`Upgradable<Old, New, Context>` library trait—not privileged Omega syntax. See
+Omega [Evolution, Migration, And Replacement](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 
 ## Concerns & Design Space
 
 - **No install scripts, ever.** Any per-install side effect must be expressed as a declared state transition the loader executes under a bounded capability set, not as code the package supplies. This is the load-bearing principle of the chapter.
 - **Capability manifest.** What the package `accepts`, `uses`, `stores`, `derives`, and `acquires` (from [[capability_model]]) is the heart of the manifest. No ambient filesystem, network, or device access during install.
-- **State schemas & migration.** A package owns persistent state shapes; upgrades ship versioned data + migration machines (see [[versioned_state_and_migration]]).
+- **State schemas & migration.** A package owns explicit persistent shapes and
+  ordinary migration machines (see [[versioned_state_and_migration]]).
 - **Atomic install / uninstall.** Commit or refuse as one transaction ([[transactions_and_consistency]]); no half-installed state, no orphaned hooks.
 - **Reproducible, hermetic builds + signed provenance.** The same source yields the same artifact; the build's inputs and signer are recorded ([[audit_compliance_provenance]]).
 - **Static, hermetic linking.** A component ships with its dependencies resolved and pinned at build time, so there is no runtime symbol resolution and no dynamic-library search path. Identical code used by many instances or components is deduplicated in physical memory by content address ([[filesystem_as_database]]), so a component carrying its own dependencies does not cost extra RAM per instance.
@@ -76,14 +91,17 @@ A migration that needs more than its own old state (a v2 map that needs the edit
 - **Manifest content, build-time vs install-time — resolved:** the manifest is the authority-flow report (accepts/uses/stores/derives/acquires) + state schemas + protocols + upgrade-compatibility facts + proof certs; the **proofs are proven at build and *re-checked* at install**, and **compatibility** (schema/protocol/manifest-delta) is checked at install against the live system.
 - **Declarative install expressing legitimate side effects — resolved:** side-effect setup (register a service, an association) is **declarative** (the activator registers it, no code); *computational* setup (seed/build initial state) is a **confined setup machine** that maps a fresh realm + granted inputs → an initial-state value with no ambient authority and no side effects.
 - **Dependency model — resolved:** content-addressed, **chunked**, hermetic and pinned; versions coexist by hash (no solver, no dependency hell); fetch is a chunk-level delta.
-- **ABI stability — resolved:** the store records every published version's schemas, so admission refuses a schema-breaking update; storage/`wire data` formats are the strict case (data outlives its writers).
+- **ABI stability — resolved:** the store records every published schema and
+  codec-plan identity, so admission refuses an unaccounted breaking update;
+  durable formats are the strict case because data outlives its writers.
 
 ## Omega Leverage
 
 - **Authority-flow inference** produces the capability manifest directly — the accepts/uses/stores/derives/acquires report *is* what the package declares.
 - **`effects` ceilings** bound what an install-time transition may touch; an install with no `filesystem_io` outside its allotted folder is a checkable fact.
 - **Versioned `data` + migration machines** carry the persistent-state schema and its upgrade path as typed code with obligations.
-- **`wire data`** ([[ipc_and_service_invocation]]) declares the protocols spoken, making protocol compatibility part of the manifest.
+- **Protocol schema/codec identities** ([[ipc_and_service_invocation]]) declare
+  the protocols spoken, making compatibility part of the manifest.
 - Omega does **not yet** define a package-manifest format or a "declarative install transition" primitive — that loader contract is an extension Cathedral pushes onto the runtime.
 
 ## Open Questions

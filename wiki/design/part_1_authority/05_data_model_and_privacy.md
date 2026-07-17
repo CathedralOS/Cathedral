@@ -52,7 +52,8 @@ So **information-flow control — propagating `Secret<T>`-style labels — is *n
 
 - **Data classes** map onto **domains** over `data` (`Datum::Health`, `Datum::Contact`) — named, provable predicates rather than runtime tags.
 - **Purpose-scoped access** is a **typed capability** carrying both the class and the purpose; the authority-flow report then shows not just *what* data flows but *for what*.
-- **`wire data`** preserves class/purpose annotations across boundaries.
+- **Numbered protocol schemas + codecs** preserve class/purpose annotations
+  across boundaries.
 - This is the chapter with the clearest **Omega gap**: capabilities are values + domains today, but *purpose-tagged authority* — a purpose that rides along a capability and constrains its use and propagation — is something Omega likely needs to grow for Cathedral to enforce it rather than merely record it.
 
 ## Open Questions

@@ -42,8 +42,8 @@ The redesigned contract, in a few sentences.
 
 ## Omega Leverage
 Which language features carry this (capabilities, effects, domains, machines,
-states, versioned data, wire data, proof obligations) and what, if anything,
-Omega still needs to grow.
+states, protocol identity metadata/codecs, migration contracts, proof
+obligations) and what, if anything, Omega still needs to grow.
 
 ## Open Questions
 - What is genuinely unresolved.

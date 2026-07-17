@@ -65,7 +65,9 @@ The shape that results is a small **resident core** of latency-critical always-o
 
 - The activation **trigger** is the wait primitive ([[scheduler_and_resources]]); the registration's lifecycle is a **machine with states** (registered, activating, live, quiescing, dead) the supervisor inspects ([machines](../../../../Omega/wiki/language_guide/chapter_3_machines.md), [states](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)).
 - A service endpoint and its activation rights are **capabilities + domains**, so access-is-activation and capability-gated triggers reuse the whole authority model ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
-- The activation manifest is **wire data** with stable field numbers, so registrations decode across versions and are content-addressable ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
+- The activation manifest uses a numbered protocol schema and explicit codec,
+  so registrations decode across artifact skew and are content-addressable
+  ([protocol schemas](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
 - The trusted spawn primitive is a **boundary provider** in the privileged core; the activator above it is ordinary proved Omega.
 - Omega does not define an activation or supervision protocol; the registry, the route-or-spawn logic, and the quiesce policy are Cathedral runtime structure over Omega values.
 
