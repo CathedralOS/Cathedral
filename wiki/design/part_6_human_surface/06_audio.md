@@ -52,7 +52,9 @@ The model above composes the IPC-ring, capability, and compositor machinery; the
 - The audio server is an explicit **boundary provider**: the audited edge between proved Omega code and the raw audio hardware.
 - The mixer is a **machine with states** ([machines](../../../../Omega/wiki/language_guide/chapter_3_machines.md), [states](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)): idle, running, draining, woken on the device clock.
 - The mixer interface is a **trait** ([traits](../../../../Omega/wiki/language_guide/chapter_14_traits.md)) any component can implement, so sub-mixing is one interface with many implementations, resolved from the client's environment ([modules & imports](../../../../Omega/wiki/language_guide/chapter_15_modules_imports_visibility.md)).
-- Buffer formats (sample rate, channel layout, frame size) are **wire data** ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)) shared by client and server.
+- Buffer formats (sample rate, channel layout, frame size) use numbered
+  protocol schemas and codec plans shared by client and server
+  ([protocol schemas](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
 - Omega does not itself provide a real-time latency guarantee; that is a scheduler obligation Cathedral defines on top of the language ([[scheduler_and_resources]]).
 
 ## Open Questions

@@ -55,7 +55,9 @@ Org control is then *policy layered onto tenants* ([[configuration_and_policy]])
 
 - A tenant boundary is expressible as a **domain / proof predicate** ([domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md)): capabilities and data carry their tenant; cross-tenant flow requires explicit, audited mediation.
 - Tenant scoping rides the **capability** model — authority is reachable only if held *within* the tenant ([capabilities](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
-- Per-tenant state and wipe are **versioned data** with clean lifecycle ([versioned data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)).
+- Per-tenant state uses explicit durable schemas and migration machines with a
+  clean lifecycle
+  ([evolution and migration](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)).
 - Omega gives no built-in tenancy concept; the tenant-as-isolation-domain is a Cathedral construct layered on capabilities, domains, and storage.
 
 ## Open Questions

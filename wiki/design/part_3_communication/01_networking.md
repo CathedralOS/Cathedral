@@ -31,10 +31,10 @@ let flow = net.authorize(
 );
 
 // Transport is a library over the authorized flow. The component owns it.
-let conn = Quic::open(flow, PaymentAPI::v3);
+let conn = Quic::open(flow, PaymentAPIv3);
 ```
 
-The component never names `34.117.12.9:443`; it names a service, and authority is per-peer, so revoking "may reach this service" is a precise graph operation, not a firewall-rule edit. Because the authorized flow can carry a typed protocol, the resulting endpoint is identical in shape to a local IPC endpoint ([[ipc_and_service_invocation]]): the same `wire data` schema and capability passing work whether the peer is local or across the network. A component that wants raw authorized packets can take the flow directly and skip the typed layer.
+The component never names `34.117.12.9:443`; it names a service, and authority is per-peer, so revoking "may reach this service" is a precise graph operation, not a firewall-rule edit. Because the authorized flow can carry a typed protocol, the resulting endpoint is identical in shape to a local IPC endpoint ([[ipc_and_service_invocation]]): the same numbered schema, codec contract, and capability passing work whether the peer is local or across the network. A component that wants raw authorized packets can take the flow directly and skip the typed layer.
 
 ## Recursive networking
 
@@ -127,7 +127,10 @@ That capability is **the right to be *scheduled into* the pool, not ownership of
 
 - **Capabilities as values** make a flow authorization a held, attenuable, revocable grant rather than an ambient socket right. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **`effects` (`network_io`)** mark and account every crossing into the network, giving the boundary edge where the OS broker provides authority.
-- **`wire data`** frames the typed-library protocol with stable field numbers and compatibility rules, identical to local IPC, so cross-version interop and compatibility reports apply to the network too. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
+- **Numbered protocol schemas + codecs** frame the typed-library protocol,
+  identical to local IPC, so compatibility reports apply to the network too.
+  See Omega
+  [Protocol Schemas And Serialization](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
 - **`boundary` providers** are the home for the NIC driver below the demux and for the transport stack (TLS, QUIC, NAT traversal) below the connection API; the demux/broker itself is Omega, keeping that TCB small and checked.
 - The network provider is a **trait** any component can implement, so nesting is one interface with many implementations resolved from the child's environment; a nested provider is just that resolution bound to a parent endpoint. See Omega [Traits](../../../../Omega/wiki/language_guide/chapter_14_traits.md).
 - Omega does not yet model bandwidth as a metered effect or peer attestation as a fact; both are extensions Cathedral drives.

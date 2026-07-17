@@ -34,7 +34,9 @@ The model is **confinement over trust**: don't try to make a driver trustworthy 
 - **New-device trust.** A freshly hot-plugged device is not trusted by default. A new input device cannot drive the trusted path or inject events until authorized, the BadUSB defense, and a new storage device appears as an untrusted realm the user browses and shares from explicitly rather than something apps are auto-granted ([[human_permission_ux]], [[windowing_and_compositor]]).
 - **Peripheral classes are ordinary devices.** Printers, scanners, cameras, and USB peripherals are ordinary device-plus-driver-plus-capability instances rather than special subsystems. Printing is a userspace print service rendering to a page description, plus a printer driver, plus a "may print here" capability, with the spooler a queue component; the OS adds no print subsystem beyond the driver and the service.
 - **Foreign filesystems and removable media.** A drive formatted for another OS (FAT, exFAT, NTFS) is mounted as a realm by a translating filesystem driver that implements the realm interface over the foreign layout ([[filesystem_as_database]]). You read and write files, but the native features (content-addressing, integrity, type metadata, snapshots, sealing) are absent because the foreign format cannot hold them. So a removable drive is an interop-versus-features choice: keep it foreign so it travels to other systems, or reformat it native for the full feature set. The foreign parser runs as a confined driver, so a malicious removable filesystem degrades from a kernel compromise to a contained driver fault.
-- **Versioned driver APIs.** The kernel↔driver and driver↔client interfaces are `wire data` + versioned `data`, so driver upgrades follow the same compatibility proofs as everything else.
+- **Evolving driver APIs.** Kernel↔driver and driver↔client interfaces use
+  numbered protocol schemas, codec contracts, and explicit migration machines,
+  so driver upgrades follow the same compatibility checks as everything else.
 - **User-mode, contained not trusted.** Drivers run in user mode, confined by capabilities and the IOMMU, so a driver's *correctness is never relied on for system safety* (see the decided mechanism above). The driver↔hardware contract is a `boundary`; proved Omega is rewarded, not required.
 - **Synthetic devices.** A driver presents a device interface, so a component can serve a *synthetic* device to a child instead of real hardware: a virtual NIC, framebuffer, sound, or block device. This is the recursive-provider pattern ([[capability_model]]) at the hardware edge, and it is what lets a virtual machine present hardware to a guest and a simulator hand mock devices to code under test ([[testing_and_simulation]]).
 - **Firmware updates, device permissions & certification.** Firmware flashing is a capability-gated operation; device access is granted, not assumed; driver certification flows through the store ([[store_and_economic_control]]).
@@ -52,7 +54,8 @@ The confinement model (above) settles the trust question; the residue is device-
 
 - **Drivers as components with `effects` ceilings** — `device_io`, `memory_map` — make a driver's hardware reach a checkable, audited fact, per the standard effect vocabulary in [../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Capabilities as values + domains** scope MMIO/DMA/IRQ access to one device.
-- **Versioned driver APIs** via `wire data` + versioned `data` give compatible driver upgrades and a stable kernel↔driver contract.
+- **Protocol schemas + checked migrations** give compatible driver upgrades
+  and a stable kernel↔driver contract.
 - **Boundary traits** model the device edge: the hardware contract is a `boundary` whose guarantees are accepted but whose effects and authority are bounded.
 - **Blocking-boundary modeling** lets a driver call that waits on hardware declare what can unblock it, rather than being an opaque wait.
 

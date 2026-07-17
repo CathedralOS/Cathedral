@@ -71,7 +71,9 @@ Tasks are **structured**: a task is owned by a scope and cannot outlive it, so a
 
 - A component's internal lifecycle is an Omega **`machine`** with an explicit **`state`/`transition`** graph — quiescing and draining are real states, not flags ([../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)).
 - **`effects`** give each component a behavior ceiling; **authority flow** gives its accepts/uses/stores report — both are per-component, so the component is the natural granularity for both audits ([[capability_model]]).
-- **Versioned `data` + migration** make state identity a first-class lineage that survives code replacement ([[versioned_state_and_migration]]).
+- **Explicit state shapes + checked migration machines** let state identity
+  survive code replacement without attaching one compiler-owned lineage to the
+  runtime type ([[versioned_state_and_migration]]).
 - Omega does **not** yet define how one running `machine` instance is named, addressed, and supervised by another *as an OS-managed entity* — the component registry and supervision tree are Cathedral runtime structure over Omega values.
 
 ## Open Questions

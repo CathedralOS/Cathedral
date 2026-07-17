@@ -53,7 +53,10 @@ The wallet is the **Warden** ([[secrets_and_keys]]) pointed at credentials — a
 
 - A credential is a **capability + domain** (`Credential::Present`, `Payment::Authorize(limit, payee)`), so minimal disclosure is **attenuation** and the whole authority model applies with no new machinery ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - The secret operation is a **boundary provider** backed by the secure element, the same as a signing key ([[secrets_and_keys]]).
-- A verifiable credential and its presentation are **wire data** with stable field numbers, so they cross boundaries and verify across versions ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
+- A verifiable credential and its presentation use numbered protocol schemas
+  and explicit codecs, so they cross boundaries and remain verifiable across
+  artifact skew
+  ([protocol schemas](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
 - Issuer, holder, and verifier are **principals** ([[identity_and_principals]]); the issuer's signature is a provenance edge.
 - Omega does not define predicate-proof or verifiable-credential protocols; those are Cathedral and ecosystem structure over the capability and secret primitives.
 

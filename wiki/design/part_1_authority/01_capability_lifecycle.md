@@ -71,7 +71,8 @@ None of this depends on the holder's language. A C++ app, a JVM, and a proved Om
 - **Ownership / borrowing / moves** give borrowed vs. owned vs. consumed almost for free; the type system already tracks these for values.
 - **Domains** express attenuation: a narrower capability is a value in a tighter domain derived from a broader one (`derives` in the authority-flow report).
 - **`drop` / cleanup** semantics give release a natural home: a dropped capability is released, and cleanup obligations are added to the graph.
-- **Versioned data + migration** give migration a path: capabilities are part of the live state a migration machine must carry forward.
+- **Explicit old/new state shapes + migration machines** carry capabilities
+  forward as part of live state.
 - The arena shrinks what Omega needs to grow here to nearly nothing: the language treats handles as plain values (which it already does), and at-rest/cross-reboot semantics live in the durable arena, not the type system. What remains useful from Omega: typed redemption results (`CapabilityRevoked` as a normal value, [[error_model_and_recovery]]) and domains over handle types.
 
 ## Key Questions

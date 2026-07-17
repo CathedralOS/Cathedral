@@ -18,8 +18,16 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
 - **`domain`** — named proof predicates over values (`Folder::Writable`, `Player::Alive`). Cathedral expresses *permission shades*, *validity classes*, and *lifecycle states* as domains rather than as separate permission-flavored types. See Omega [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - **`boundary` + `effects`** — `boundary` marks where proved Omega code ends and an audited provider (syscall, firmware, loader hook) begins; `effects` are the stable, finite vocabulary of externally visible behavior (`filesystem_io`, `network_io`, `clock_read`, `device_io`, `memory_map`, …). Effects propagate transitively and form per-component ceilings. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Authority flow** — inferred from values, domains, call contracts, returns, stores, and boundary provenance. The compiler reports what a unit *accepts, uses, derives, stores, acquires, returns, releases.* This is the raw material of Cathedral's authority graph.
-- **Versioned `data` + migration + replacement** — a live component's upgrade is a single step `prev → current`: one `Upgradable<Old, New, Context>` migration carrying effect/ownership/invariant obligations, with any needed IO captured first into a private, capture-only value, and replacement expressed as an owned plan gated on quiescence and borrow-safety proofs. (Multi-version coexistence is `wire data`'s job, not live state's.) This is the spine of Cathedral's no-reboot upgrade story. See Omega [Versioned Data And Machine Replacement](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
-- **`wire data`** — external schemas with stable field numbers and explicit compatibility rules. Cathedral's IPC, networking, and persistence all want this for cross-version communication. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
+- **Evolution from ordinary mechanisms** — old formats are separately named
+  `data`, decode histories are ordinary sums, and migrations are ordinary
+  checked machines (optionally organized by a library trait). Omega has no
+  `Versioned<T>`, historical type paths, or replacement DSL. See Omega
+  [Evolution, Migration, And Replacement](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
+- **Protocol schemas + programmable codecs** — plain `data` may carry stable
+  field identities and tombstones consumed by a layout/codec policy.
+  Cathedral's IPC, networking, and persistence use that metadata without
+  acquiring a separate `wire data` type. See Omega
+  [Protocol Schemas And Serialization](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
 - **Proof obligations** — contracts (`requires` / `ensures`), bounded values, borrow facts, termination claims, and relax scopes. See Omega [Proof Obligations](../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md).
 
 ## The Division of Labor
@@ -29,7 +37,7 @@ A useful rule for every later chapter:
 | Omega owns | Cathedral owns |
 |---|---|
 | Whether authority *can* flow (types, domains, effects) | Where authority *comes from* (brokers, prompts, the store) |
-| Whether a migration is *type-safe* | When a migration *runs* and on whose schedule |
+| Whether a migration machine proves its contract | Which migration policy runs and on whose schedule |
 | What effects a component *could* reach | Whether the running system *grants* them |
 | That a protocol change is *compatible* | Which versions are *deployed* and routed |
 | That a swap is *borrow-safe* | Reaching *quiescence* in a live system |
@@ -81,4 +89,5 @@ The honest tension is bug-masking. A zero handle whose writes are silently disca
 - [[vision_and_non_goals]] — why these primitives matter.
 - [[vocabulary]] — precise terms.
 - [[capability_model]] — the first heavy user of effects + authority flow.
-- [[versioned_state_and_migration]] — the heavy user of versioned data.
+- [[versioned_state_and_migration]] — the heavy user of schema identity,
+  migration contracts, and replacement phases.

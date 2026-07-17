@@ -6,7 +6,14 @@ Nearly everything on disk is content-addressed: an object is found by the hash o
 
 ## The superblock
 
-At a fixed offset on the boot disk sits the superblock: a small record (in the versioned `wire data` serialization the rest of the store uses) holding a format version, `root_ref` (the hash of the current root object), and `log_head` (the end of the append-only log). It is written as a ring of slots, each tagged with a generation number and updated atomically, so a crash mid-write cannot destroy it: on mount you read the slots and take the highest valid generation. It is the only structure in the store kept at a fixed location, and it plays the same role as a Git ref or a ZFS uberblock.
+At a fixed offset on the boot disk sits the superblock: a small explicitly
+versioned protocol record holding a format identity, `root_ref` (the hash of the
+current root object), and `log_head` (the end of the append-only log). Its codec
+and historical shapes are part of the store package, not an Omega versioned
+type. It is written as a ring of slots, each tagged with a generation number
+and updated atomically, so a crash mid-write cannot destroy it: on mount you
+read the slots and take the highest valid generation. It is the only structure
+kept at a fixed location and plays the same role as a Git ref or ZFS uberblock.
 
 ## A hash is not a location
 
