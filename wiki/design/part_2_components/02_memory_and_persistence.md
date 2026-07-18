@@ -36,6 +36,8 @@ The sharp tension this chapter exists to face: **safe references vs. hot swappin
 
 Low-level memory has three deliberately separate concepts. `addr` is inert address-width data and grants no access. An `Extent` is authority over a concrete `[base, length)` with rights, provenance, and lifetime. A `Region` is allocation authority backed by an extent or provider; it is not proof that an arbitrary address range may be interpreted. MMIO views, imported firmware tables, shared pages, and page-table builders therefore begin from extents rather than fabricated integers.
 
+One opaque linear Extent carrier serves physical, virtual, I/O, and provider-defined spaces through sealed grant-established domains. Splitting conserves authority; merging requires common authority ancestry rather than numeric adjacency. Mapping consumes destination virtual-range authority while borrowing or consuming its source. Plan-derived field projections preserve borrow polarity: shared access reads or uses explicit atomics, while ordinary mutation requires exclusivity.
+
 Page tables use a hybrid safety model. New tables are built through typed, capability-gated field operations and become installable only after validation; imported tables are first represented as untrusted bytes and validated before qualification. Unmapping and frame reuse are separated by an acknowledged invalidation/quiescence token so a stale remote TLB entry cannot retain an invisible claim on reused memory.
 
 ## Concerns & Design Space

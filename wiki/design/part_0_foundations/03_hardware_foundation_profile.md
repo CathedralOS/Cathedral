@@ -45,6 +45,17 @@ extents. Allocators draw Regions from RAM extents. Device mappings retain device
 provenance and never become ordinary RAM merely because their virtual address is
 an integer.
 
+Space, rights, provenance, and mapping era are sealed grant-established domains
+on one opaque linear `Extent`, not distinct carrier types. Splitting consumes an
+extent and conserves its authority in disjoint children. Merge is legal only for
+contiguous compatible descendants of one authority origin; numeric adjacency
+does not combine grants. Subrange access borrows and preserves parent polarity.
+
+Fixed mapping consumes authority over its destination virtual range; a requested
+`addr` is only a hint. Its physical source may be owned or borrowed. Unmapping
+returns reusable ranges only after required shootdown/quiescence completes;
+ordinary accesses pay no generation-table probe.
+
 Page-table entries may encode ordinary address bits, but mapping operations also
 consume the frame/mapping authority that makes those bits meaningful. Locally
 built tables establish an `Installable` fact incrementally; imported tables must
@@ -60,6 +71,10 @@ Access is separate. A validated `AccessPlan` plus an authorized extent derives
 sealed register/field access values. Cathedral device packages expose semantic
 machines (`clear_status`, `ring_doorbell`, `read_counter`) over provider-private
 primitive access; W1C and FIFO behavior do not enter the compiler vocabulary.
+Projection is pure and passable. Readable fields expose exact-width snapshots,
+writable fields require exclusive access for ordinary writes, and explicitly
+atomic fields expose the checked atomic API through shared access. Two shared
+projections can never recreate ordinary unsynchronized mutation.
 
 IPC shares the extent/layout foundation but not MMIO semantics. A trusted shared
 page uses atomic protocol state and linear leases. A hostile peer that retains a
@@ -143,8 +158,8 @@ trampoline bytes are accepted as a shortcut.
 2. Omega trait-parent composition and `CallPlan + StatePlan` entry derivation.
 3. Fragmented layout/materialization and external-root ledger.
 4. Cathedral IDT + timer tick.
-5. Extent and placed-view API, then UART/MMIO migration off provisional direct
-   port/provider shapes where applicable.
+5. Implement the settled Extent and placed-view API, then migrate UART/MMIO off
+   provisional direct port/provider shapes where applicable.
 6. Correct-by-construction page tables and AP bringup.
 7. External loans, IOMMU DMA, and hostile shared-page acceptance tests.
 8. Region-backed task runtime under the carry/runtime admission model.
@@ -159,6 +174,6 @@ trampoline bytes are accepted as a shortcut.
 - the first hardware/virtual platform on which AP bringup and IOMMU guarantees
   are mandatory rather than honestly degraded.
 
-Omega-owned carrier/spelling questions remain in Omega's `OWNER_QUESTIONS.md`.
-Cathedral work should force those answers through these vertical slices rather
-than inventing private syntax.
+Omega's remaining carry-contract and executable-publication questions live in
+Omega's `OWNER_QUESTIONS.md`. Cathedral work should force those answers through
+these vertical slices rather than inventing private syntax.
