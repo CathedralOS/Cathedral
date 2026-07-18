@@ -105,4 +105,13 @@ Legend: `[ ]` open · `[x]` closed.
 - [ ] Constant-time verification (provable discipline + DIT-safe codegen; wall-clock is a hardware fact).
 - [ ] Verified-gated ML-native optimizer (`design_briefs/verified_gated_ml_optimizer.md`).
 - [ ] The standing pre-boot asks: wire data, versioned data, separate compilation, freestanding target.
-- [ ] **Concurrency / atomics** — now scoped (Omega `concurrency_atomics.md` 2026-06-15 review): real-atomic RMW + a verified memory model (one IR model → two verified x86/ARM lowerings; device/MMIO is a SECOND model Cathedral gates), `Send`/`Share` data-race typing, the `suspend` effect, and a `Scheduler` *interface* Cathedral implements. SAFETY (data-race / deadlock / protocol freedom) is proven WITHOUT a scheduler and holds against any scheduler; LIVENESS (progress / no-starvation) is conditional on Cathedral's scheduler supplying fairness. First increment is Omega task #27 (real `LOCK`/`ldxr-stxr` atomics).
+- [ ] **Concurrency / atomics** — now scoped: real-atomic RMW + a verified
+  memory model (one IR model → verified x86/ARM lowerings; device/MMIO uses a
+  separate `AccessPlan`/placed-view observation model), ownership plus
+  sanctioned shared-access contracts, four-axis carry checking, the `Suspend`
+  effect, and a `TaskRuntime` requirement Cathedral implements. `Send`/`Share`
+  marker typing is retired. SAFETY (data-race / deadlock / protocol freedom)
+  is proved independently of scheduler fairness; LIVENESS remains conditional
+  on the admitted scheduler's progress guarantees. Engineering includes the
+  portable memory model, runtime backend, carry/runtime admission, and
+  suspension-safe loans.

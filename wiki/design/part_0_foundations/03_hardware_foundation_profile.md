@@ -175,6 +175,8 @@ trampoline bytes are accepted as a shortcut.
 - the first hardware/virtual platform on which AP bringup and IOMMU guarantees
   are mandatory rather than honestly degraded.
 
-Omega's remaining carry-contract and executable-publication questions live in
-Omega's `OWNER_QUESTIONS.md`. Cathedral work should force those answers through
-these vertical slices rather than inventing private syntax.
+Omega's value-side carry contract is settled. The remaining Omega questions are
+how a provider supplies normalized runtime behavior to admission, and how first
+executable publication evidence is represented. They live in Omega's
+`OWNER_QUESTIONS.md`; Cathedral work should force those answers through these
+vertical slices rather than inventing private syntax.

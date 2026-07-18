@@ -34,7 +34,7 @@ A useful rule for every later chapter:
 | What effects a component *could* reach | Whether the running system *grants* them |
 | That a protocol change is *compatible* | Which versions are *deployed* and routed |
 | That a swap is *borrow-safe* | Reaching *quiescence* in a live system |
-| Whether concurrency is *data-race / deadlock free* (the model, `Send`/`Share`, the memory model) | Whether tasks actually *run* — the scheduler, fairness, and context switch |
+| Whether concurrency is *data-race / deadlock free* (ownership, carry policy, access contracts, and the memory model) | Whether tasks actually *run* — the scheduler, fairness, and context switch |
 
 Omega answers "is this sound?" Cathedral answers "should this happen, now, here, and for whom?"
 
@@ -79,7 +79,15 @@ important writes.
 - Quiescence proofs in the presence of interrupts, timers, async work, and hardware ([[updates_and_hot_swap]]).
 - Possibly: purpose-tagged authority (`Capability<Read<Contact.Email>, Purpose<SendMessage>>`) ([[data_model_and_privacy]]).
 - Operation-capabilities for secrets (`Capability<SignWithKey(K)>`) rather than raw key bytes ([[secrets_and_keys]]).
-- **Concurrency completion:** real atomics already lower on x86; remaining work is the portable memory model, task-runtime backend, composable suspension, carry/runtime admission, suspension-safe loans, and Cathedral's bounded Arena-backed provider. Device/MMIO is not "a second atomic model" but a separate `AccessPlan`/placed-view observation discipline ([[hardware_foundation_profile]], [Omega concurrency](../../../../Omega/wiki/language_guide/chapter_18_concurrency.md)).
+- **Concurrency completion:** real atomics already lower on x86. Omega has
+  settled carry as a compiler-built-in product over suspension, CPU affinity,
+  host-thread affinity, and address stability; it is not a `Send`/`Share`
+  marker-trait family. Remaining work is the portable memory model,
+  task-runtime backend, composable suspension, carry/runtime admission,
+  suspension-safe loans, and Cathedral's bounded Arena-backed provider.
+  Device/MMIO is not "a second atomic model" but a separate
+  `AccessPlan`/placed-view observation discipline ([[hardware_foundation_profile]],
+  [Omega concurrency](../../../../Omega/wiki/language_guide/chapter_18_concurrency.md)).
 
 ## Key Questions
 

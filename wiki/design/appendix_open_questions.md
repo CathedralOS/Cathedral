@@ -15,7 +15,12 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 
 ## Proof & Language
 
-- **Remaining Omega OS-foundation contracts.** The `Extent`/placed-view public model is settled. Omega still must settle carry-contract spelling and executable-publication evidence. Cathedral's vertical slices are the deciding customers ([[hardware_foundation_profile]]); the matching owner questions live in Omega's `OWNER_QUESTIONS.md`.
+- **Remaining Omega OS-foundation contracts.** The `Extent`/placed-view public
+  model and value-side four-axis carry policy are settled. Omega still must
+  settle provider-side runtime-behavior supply and executable-publication
+  evidence. Cathedral's vertical slices are the deciding customers
+  ([[hardware_foundation_profile]]); the matching owner questions live in
+  Omega's `OWNER_QUESTIONS.md`.
 - **Static authority flow vs. live held grants.** The compiler describes *possible* power; the runtime graph holds *actual* grants. How tightly are they reconciled, and who flags drift? ([[capability_model]], [[observability_and_introspection]].)
 - **How much hot-swap safety is statically provable** vs. load-time/runtime checked? ([[versioned_state_and_migration]], [[updates_and_hot_swap]].)
 
