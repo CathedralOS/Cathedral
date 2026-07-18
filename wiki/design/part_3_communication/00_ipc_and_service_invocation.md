@@ -36,7 +36,7 @@ The boundary proves exactly one thing — that the crossing was legitimate and t
 
 This is deliberately unopinionated: C, C++, Rust, and Omega all see the same `memcpy`-able region. People build their own framing over whatever we expose, so the floor presumes no paradigm. Even so it beats POSIX `shm`: the region is capability-scoped (not an ambient `/dev/shm` name anyone can guess), its lifetime is leased, and its mappings are MMU-enforced.
 
-### Region lifetime is a lease
+### Shared-extent lifetime is a lease
 
 The OS owns the physical frames; the peers hold *leases* on the region, not ownership. A lease is a revocable, liveness-tied grant of access: the region lives only while some lease is valid. It ends when the last holder is gone (every capability dropped, including by process death), when a holder with *revoke* authority tears it down, or when a timed lease expires without renewal. At that point the OS unmaps the region from anyone still holding it and frees the frames; a straggler that still had it mapped faults on next access, which is the safe outcome rather than a silent use-after-free. The rights differ: an ordinary use-holder can only drop its own handle, while only a revoke-capable holder can reclaim the region out from under others ([[capability_lifecycle]]). The consequence that matters: a crashed peer cannot leak the region, because its life was never the peer's to leak.
 

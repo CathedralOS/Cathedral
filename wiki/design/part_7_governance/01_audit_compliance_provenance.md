@@ -49,7 +49,7 @@ Derivable-vs-human: graph-facts derive (a query, or a PCC proof of flow-absence)
 
 - **Tamper-evidence.** Audit logs must be append-only and verifiable (hash chain / Merkle log), so "the log was edited" is detectable, ideally with external anchoring.
 - **Chain of custody.** Every artifact — build, package, record — carries provenance from origin through every transform; gaps are themselves findings.
-- **Data residency & retention as policy.** Region and lifetime are properties of data the system *enforces and proves*, not documentation ([[data_model_and_privacy]]).
+- **Data residency & retention as policy.** Residency jurisdiction and lifetime are properties of data the system *enforces and proves*, not documentation ([[data_model_and_privacy]]).
 - **Legal hold vs. secure deletion.** Two opposing obligations that must coexist; hold must suspend deletion verifiably and reversibly.
 - **Attestation scope.** Runtime attestation says "this exact, signed, proof- carrying component is running" — booted from a trusted chain ([[boot_and_trust_chain]]).
 - **Query trust.** The compliance query engine is itself in scope; its results must be reproducible and its own access audited.

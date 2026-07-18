@@ -37,7 +37,8 @@ Cathedral distinguishes three relationships:
 1. `addr` is inert numeric address data.
 2. `Extent` is authority over one concrete range with address-space, rights,
    provenance, and lifetime.
-3. `Region` is allocation authority drawing from appropriate backing extents.
+3. `Arena` is bounded, lifetime-scoped allocation authority drawing from
+   appropriate backing extents; `Allocation<T>` is the typed storage it issues.
 
 Boot firmware and the final memory map mint the initial physical extents.
 Address-space providers turn authorized physical extents into mapped virtual
@@ -125,7 +126,7 @@ plan did not save.
 ## Tasks, preemption, and affinity
 
 Omega task handles own lifecycle claims; providers own execution custody and
-may own physical activation storage. Cathedral's initial Region-backed runtime
+may own physical activation storage. Cathedral's initial Arena-backed runtime
 is one bounded implementation, not the definition of a task.
 
 Canonical value liveness feeds separate checks for linear consumption,
@@ -162,7 +163,7 @@ trampoline bytes are accepted as a shortcut.
    provisional direct port/provider shapes where applicable.
 6. Correct-by-construction page tables and AP bringup.
 7. External loans, IOMMU DMA, and hostile shared-page acceptance tests.
-8. Region-backed task runtime under the carry/runtime admission model.
+8. Arena-backed task runtime under the carry/runtime admission model.
 
 ## Cathedral-owned open decisions
 

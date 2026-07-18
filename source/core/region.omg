@@ -1,5 +1,9 @@
 // source/core/region.omg
 //
+// TRANSITIONAL NAME: this milestone predates the Extent/Arena split. Its
+// `Region` is physical-range authority and therefore migrates to `Extent`;
+// `Arena` now exclusively names bounded allocation authority.
+//
 // Region — THE FIRST CAPABILITY: exclusive authority over a span of physical
 // RAM. Every later memory authority descends from a Region minted here at boot,
 // so this is the ORIGIN of the authority graph (kernel_architecture,

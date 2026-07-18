@@ -297,10 +297,11 @@ Current reality (2026-07-04):
   aligned to that boot-verified shape). No C, no host runtime, no hand-written
   assembly. `tools/boot-harness/` runs it end-to-end under QEMU/OVMF.
 - **in-progress** — **milestone 2 (own the machine)** is under way:
-  `source/core/region.omg` (the first capability — `Region` + `mint_region`, the
-  origin of the authority graph; `core/`'s first resident) and
+  `source/core/region.omg` (the first physical-range authority; its bootstrap
+  `Region` / `mint_region` spelling predates and must migrate to the settled
+  `Extent` vocabulary) and
   `source/boot/uefi/own_machine.omg` (the memory-map dance → `ExitBootServices` →
-  first `Region` mint), over the milestone-2 ABI in
+  first physical-extent mint), over the milestone-2 ABI in
   `source/contracts/uefi/boot_services.omg`. No fundamentally new language
   features — the M2 ladder (Omega `TASKS.md`) is small deltas on the M1
   machinery. `source/drivers/facts/uart_16550` is milestone-3 serial prep.

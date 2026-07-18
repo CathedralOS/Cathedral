@@ -34,7 +34,14 @@ The sharp tension this chapter exists to face: **safe references vs. hot swappin
 
 ### Address data, extent authority, and allocation
 
-Low-level memory has three deliberately separate concepts. `addr` is inert address-width data and grants no access. An `Extent` is authority over a concrete `[base, length)` with rights, provenance, and lifetime. A `Region` is allocation authority backed by an extent or provider; it is not proof that an arbitrary address range may be interpreted. MMIO views, imported firmware tables, shared pages, and page-table builders therefore begin from extents rather than fabricated integers.
+Low-level memory has four deliberately separate concepts. `addr` is inert address-width data and grants no access. An `Extent` is authority over a concrete `[base, length)` with rights, provenance, and lifetime. An `Arena` is bounded, lifetime-scoped allocation authority backed by an extent or provider. An `Allocation<T>` is arena-bound storage carrying layout, establishment, ownership, and lifetime for `T`. MMIO views, imported firmware tables, shared pages, and page-table builders therefore begin from extents rather than fabricated integers.
+
+Allocations borrow their Arena, and typed views borrow their Allocation; reset or
+bulk reclamation is illegal while either remains live. Allocation reserves bytes
+but does not by itself establish a live `T`, and recycled bytes are not assumed
+zero. Before storage becomes visible to another principal, its provider must
+establish non-disclosure for every visible byte, including padding and page
+slack. Recipient-side initialization never discharges that prior-owner duty.
 
 One opaque linear Extent carrier serves physical, virtual, I/O, and provider-defined spaces through sealed grant-established domains. Splitting conserves authority; merging requires common authority ancestry rather than numeric adjacency. Mapping consumes destination virtual-range authority while borrowing or consuming its source. Plan-derived field projections preserve borrow polarity: shared access reads or uses explicit atomics, while ordinary mutation requires exclusivity.
 
