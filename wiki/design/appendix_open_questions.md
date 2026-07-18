@@ -15,9 +15,16 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 
 ## Proof & Language
 
-- **What must Omega grow before Cathedral can boot at all?** Tracked in [[omega_substrate]]. Candidates: serialized capabilities, quiescence proofs under interrupts/async/hardware, purpose-tagged authority, operation-capabilities for secrets.
+- **Omega OS-foundation carriers.** The primitive split is settled, but Omega still must settle the public `Extent`/placed-view API, carry-contract spelling, and executable-publication evidence. Cathedral's vertical slices are the deciding customers ([[hardware_foundation_profile]]); the matching owner questions live in Omega's `OWNER_QUESTIONS.md`.
 - **Static authority flow vs. live held grants.** The compiler describes *possible* power; the runtime graph holds *actual* grants. How tightly are they reconciled, and who flags drift? ([[capability_model]], [[observability_and_introspection]].)
 - **How much hot-swap safety is statically provable** vs. load-time/runtime checked? ([[versioned_state_and_migration]], [[updates_and_hot_swap]].)
+
+## Hardware Profile
+
+- **Privileged broker split.** How are address-space mapping, placed-view minting, executable publication, interrupt installation, and IOMMU control divided without duplicating admission or inflating one universal broker? ([[hardware_foundation_profile]], [[kernel_architecture]].)
+- **Interrupt stack/nesting policy.** Pick Cathedral's initial x86 stack classes, masking/preemption graph, and WCSU composition, then derive the concrete IST fields from that one normalized policy ([[hardware_foundation_profile]]).
+- **Executable publication target.** Which AP/I-cache/W^X guarantees are mandatory on the first real platform, which are honestly reported as unavailable or convention-only, and how does the provider distinguish dormant future executors from cores that may already be running the range? ([[hardware_foundation_profile]], [[boot_and_trust_chain]].)
+- **Device reset domains.** Where FLR is unavailable or bus-wide, how much sibling disruption is acceptable before Cathedral marks a device/domain dead? ([[driver_model]], [[updates_and_hot_swap]].)
 
 ## Trust & Governance
 

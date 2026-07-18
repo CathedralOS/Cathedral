@@ -49,19 +49,21 @@ The OS owns the physical frames; the peers hold *leases* on the region, not owne
 
 ### Typed safety is an opt-in layer
 
-A safe language can wrap the raw region as a typed, single-writer channel: a `wire data` schema, capabilities passed as values, versioning. This is structure imposed on the sea of bytes — each field read is a refinement check (in range, valid tag, snapshot-then-validate so a concurrent writer cannot change the value between check and use) that re-earns a proof the boundary did not provide. Between two checked peers the compiler already knows the writer's discipline, so it elides the checks: zero-copy and race-free by construction. At a boundary with C the checks stay, validating incoming bytes on ingress. This is *how you build safety over the primitive*, not a tax the kernel imposes.
+A safe language can wrap the raw shared extent as a typed, single-writer channel: ordinary numbered data, a selected layout/codec policy, capabilities passed as values, and an explicit lineage policy. This is structure imposed on the sea of bytes — each field read is a refinement check (in range, valid tag, snapshot-then-validate so a concurrent writer cannot change the value between check and use) that re-earns a proof the boundary did not provide. Between two checked peers the compiler already knows the writer's discipline, so it elides the checks: zero-copy and race-free by construction. At a boundary with C the checks stay, validating incoming bytes on ingress. This is *how you build safety over the primitive*, not a tax the kernel imposes.
 
 ```omega
-wire data PlaceOrder {
+data PlaceOrder {
     0: item_id: u64;
     1: quantity: u32;
     2: idempotency_key: Uuid;   // replay safety in the schema
 }
 
-protocol OrderService version v3 {
-    call place(req: PlaceOrder, pay: Capability<Payment::Charge>) -> OrderId;
-    stream watch(id: OrderId) -> Update;
+boundary trait OrderService {
+    machine place(req: PlaceOrder, pay: Capability<Payment::Charge>) -> OrderId;
+    machine watch(id: OrderId, updates: &mut UpdateChannel);
 }
+
+// The protocol package selects a transport layout/codec for PlaceOrder.
 ```
 
 Because the typed layer lowers to the same region whether the peer is local or remote, a service can move from local to remote without the caller rewriting its security model ([[distributed_boundary]]). The capability to call `place` is a held value; the payment authority is passed in the call, not ambient.
@@ -74,11 +76,19 @@ Two facts settle the "untrusted shared memory" worry.
 
 **Between two proved-Omega peers, IPC is safe by construction** — it is a *protection-domain* boundary (separate components), not a *trust* boundary. The compiler checks both sides' discipline, so the move/borrow hand-offs above are provably race-free and zero-copy. This *reads* as unsafe the way a syscall into the kernel reads as unsafe, and is safe for the same reason: the other side is Omega too. `SharedRegion<Untrusted>` exists *only* for a foreign / non-Omega peer.
 
-**At a foreign boundary, no new memory category is needed — the invariant-parameter system already does it.** Untrusted bytes arrive carrying an *empty* proven-invariant set (`&[u8, []]`), and a value may only be used through facts that have been *established*. So you cannot index without first proving in-bounds, dereference an embedded pointer without discharging its contract (`stable` / in-bounds / valid-lifetime), or treat a byte as a tag without validating it — and *establishing the fact is the validation* (snapshot a copy, check it, the proof now holds on the copy; never re-read the shared cell). Forget to validate and it does not typecheck, so adversarial pointer-chasing *cannot compile*. The earlier framing of "a third memory category Omega must grow" is overstated: `<Untrusted>` is bytes-with-no-invariants over the existing primitives, and the contracts force snapshot-then-validate structurally.
+**At a foreign boundary, no new memory category is needed — but validation
+requires stable bytes.** Untrusted bytes arrive with no proven invariants. A
+value may only use facts that have been established, so control indices,
+lengths, tags, and embedded references must be validated before use. Against a
+peer that retains a writable mapping, however, a protocol lease does not make
+those bytes stable: the peer may change them after validation. Cathedral must
+copy control bytes into private memory before validating, or revoke/remap the
+peer's write permission and complete TLB/coherence acknowledgement first.
+Protocol-only leases suffice only among compliant/proved peers.
 
 **The consequence is the validate-control / zero-copy-payload split.** Snapshot-and-validate the small *control* (indices, sizes, offsets — bounds-checked against the granted allocation); read the large *payload* zero-copy *within those validated bounds*. Where the consumer makes no memory-safety decision on payload values (a compositor blitting pixels), a concurrent adversarial write is benign (tearing), so the payload stays zero-copy even from a hostile writer. For "here, this buffer is yours" hand-off, zero-copy comes from **MMU ownership-transfer** (unmap the writer — needs no cooperation; a hostile writer faults on its stale pointer), never a defensive copy.
 
-**Local invocation is remote invocation with the same contract, not a hidden fast path.** This resolves the local-vs-remote question. Every capability call carries the *remote-grade contract* — it is an `await` (park/unpark, [[scheduler_and_resources]]), returns a *fallible* `Result`, and may take unbounded time under a caller-set deadline. This is the inverse of transparent RPC (Waldo, *A Note on Distributed Computing*): rather than hide remote's hardness behind a local-looking API, the local call *exposes* it, so a caller written against the contract works whether the provider is local, cross-wall, remote, or synthetic — and the provider stays unknowable. A timed-out call carries the **`Unknown`** outcome-disposition (maybe-happened → reconcile via idempotency key), distinct from `Rejected` (didn't-happen → safe retry) ([[error_model_and_recovery]]).
+**Local invocation is remote invocation with the same contract, not a hidden fast path.** This resolves the local-vs-remote question. Every capability call carries the *remote-grade contract* — it may suspend through an ordinary call (with no `await` marker), returns a *fallible* result, and may take unbounded time under a caller-set deadline. This is the inverse of transparent RPC (Waldo, *A Note on Distributed Computing*): rather than hide remote's hardness behind a local-looking API, the local call exposes it, so a caller written against the contract works whether the provider is local, cross-wall, remote, or synthetic. A timed-out call carries the **`Unknown`** outcome-disposition (maybe-happened → reconcile via idempotency key), distinct from `Rejected` (didn't-happen → safe retry) ([[error_model_and_recovery]]).
 
 The residual is a primitive-enumeration, not a hard problem: settle the exact *set* of trust-coordinating primitives — the Omega↔Omega move/borrow set vs. the foreign-boundary `<Untrusted>`-region + page-grant/transfer set.
 
@@ -94,23 +104,26 @@ Whether that routing is a kernel-mediated trap or a direct call is the substrate
 
 - **Cardinalities are ring disciplines, not separate mechanisms.** One ring backs them all; the cardinality is just how each side advances its index — a plain bump for a sole owner, an atomic *claim* (plus a per-slot publish flag, since claimed slots fill out of order) for many. So the primitive MUST expose the atomic claim-a-slot / claim-an-item hooks, or the multi-sided cardinalities are unbuildable on top and you've foreclosed them at the floor. The blessed set, named for legibility over SPSC/MPSC: `one_to_one` (private streams and replies — cheapest, no claim either side), `many_to_one` (the actor **mailbox** — atomic-claim writes, sole reader), `one_to_many_distribute` (a work pool — each item to exactly one worker), and `broadcast` (each item to every reader; distribute-vs-broadcast is the axis SPSC/MPSC omits). `one_to_one` can drop below a ring entirely: a single cell, a single-use oneshot, or a capacity-0 rendezvous.
 - **The mailbox is `many_to_one`, and that *is* the actor.** A single consumer processing one message at a time is what lets its `self` state mutate lock-free — only one task ever touches it. This is the blessed concurrency shape: producers post variants of one sum, the consumer does one wait + one transition (the no-select model, [Omega ch18](../../../../Omega/wiki/language_guide/chapter_18_concurrency.md)). Request/reply either rides the shared mailbox with a correlation token (to discard stale/late replies) or uses a dedicated **oneshot**, where the channel's identity *is* the correlation — ring-free and token-free, at the cost of a channel per outstanding request.
-- **No userspace async runtime.** The executor and reactor that frameworks like tokio reimplement in userspace — because the host scheduler is blind to cheap tasks — are the OS here: the scheduler natively runs stackless tasks ([[scheduler_and_resources]]) and the wait primitive natively wakes them on IO/events. With awaiting-is-calling and no function coloring ([Omega ch18](../../../../Omega/wiki/language_guide/chapter_18_concurrency.md)), what remains is lightweight stdlib channels, not a bundled runtime that owns `main`.
-- **Region lifetime.** Leases tie a region to peer liveness. In-flight slots on revoke are resolved by the arena model: a capability sitting in a message is claim-ticket bits, and it dies at *redemption* — the receiver that picks it up after revocation gets the typed `CapabilityRevoked` result, so queues never need scrubbing ([[capability_lifecycle]], [[error_model_and_recovery]]). The region itself is the mapped-grant carve-out: revoking it is an unmap, and a straggler faults.
+- **No userspace async runtime.** The executor and reactor that frameworks like tokio reimplement in userspace — because the host scheduler is blind to cheap tasks — are the OS here: an admitted task runtime starts ordinary machines and the wait provider parks them on IO/events. Suspension composes through calls without function coloring or an `await` marker ([Omega ch18](../../../../Omega/wiki/language_guide/chapter_18_concurrency.md)); channels and supervisors remain ordinary library data.
+- **Extent/mapping lifetime.** Leases tie a shared mapped extent to peer liveness. In-flight capability tickets die at redemption after revocation, but mapped bytes require an explicit provider protocol: unmap, cross-core TLB shootdown/acknowledgement, then reuse. A stale untrusted pointer faults only after that hardware transition completes.
 - **Grant/revoke cost.** Page grant/revoke costs TLB shootdowns; decide when copying a small payload is cheaper than a remap.
 - **Capability passing.** Transferring a capability is a kernel insert into the receiver's table — checked against the receiver's manifest ceiling at insert and recording the parent edge — with the handle bits riding the region as ordinary payload ([[capability_model]], [[capability_lifecycle]]). The bits alone convey nothing; only the insert moves authority.
 - **Typed-layer semantics.** Call shapes, versioned protocols, replay/idempotency, and deadlock detection over the wait-for graph are the library's concern, built on the primitive. Backpressure, deadlines, and cancellation cross into the scheduler ([[scheduler_and_resources]]).
-- **Zero value.** A zero region reads as an empty channel with no slots (shape 1, valid-empty) and a zero endpoint capability is the inert null endpoint (shape 2) whose writes are discarded rather than faulting, so a receiver draining a zeroed region simply sees no messages and a send to a dead-leased endpoint no-ops instead of crashing ([[omega_substrate]]).
+- **Zero value.** The channel/ring data may have an honest empty zero. An
+  authority-bearing mapped extent or live endpoint claim is establishment-gated;
+  optional handles use an explicit `Empty | Live` sum. Zero-fill never mints a
+  mapping, grant, lease, or silent message sink ([[omega_substrate]]).
 
 ## Key Questions
 
 - What is the exact minimal kernel surface (`grant_region`, `set_permissions`, `revoke`, `send_capability`), and is any of those itself a library? *(Sensible irreducible set; refine in implementation.)*
 - What shared-ring layout does the substrate bless, given that C must use it with a plain struct and offsets? *(Library-level interop ABI, not a kernel concern — the ring is a stdlib structure over the raw region; "blessing" one layout is just so C and Omega agree on offsets.)*
-- **Local typed invocation is remote invocation with the same contract** (decided, above): one abstraction carrying the remote-grade contract (`await` + fallible + deadline), the inverse of transparent RPC — not a hidden fast path that could diverge.
+- **Local typed invocation is remote invocation with the same contract** (decided, above): one abstraction carrying the remote-grade contract (may-suspend + fallible + deadline), the inverse of transparent RPC — not a hidden fast path that could diverge.
 
 ## Omega Leverage
 
-- **The region and lease managers are themselves Omega**, so the small part of IPC that must be trusted is checked code, not hand-audited C.
-- **`wire data`** is the typed layer's schema: stable field numbers, compatibility rules, generated codecs, for local and remote alike. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
+- **The extent/mapping and lease managers are themselves Omega**, so the small part of IPC that must be trusted is checked code, not hand-audited C.
+- **Ordinary numbered data + selected layout/codec policies** form the typed layer's schema for local and remote transport alike. There is no `wire data` declaration species. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
 - **Capabilities as values** mean authority travels in the payload as a typed argument, not as an ambient sender identity. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Ownership / borrowing** give the zero-copy local hand-off: a moved buffer is statically unreachable by the sender.
 
@@ -118,7 +131,7 @@ Whether that routing is a kernel-mediated trap or a direct call is the substrate
 
 - Can single-writer safety be more than convention when a foreign peer holds a read/write mapping, short of grant/revoke per message?
 - How much of the local fast path can be *proved* equivalent to the remote path rather than tested?
-- `SharedRegion<Untrusted>` — **resolved (above): not a new memory category.** It is bytes carrying an *empty* invariant set (`&[u8, []]`) over the existing primitives; the invariant-parameter + pointer/`Ref<T>` contract system forces snapshot-then-validate structurally (you can only use facts you have established, so a TOCTOU index/deref does not typecheck). Likely a stdlib type, not language growth. Residual: whether the empty-invariant-slice ergonomics need any compiler help.
+- `SharedRegion<Untrusted>` — **resolved: not a language memory category.** It is a package over an authorized mapped extent, ordinary byte/data layouts, and either private-copy validation or hardware-backed write revocation. Empty invariants alone do not close TOCTOU while a hostile writer remains mapped.
 
 ## Related
 - [[scheduler_and_resources]] — parking, wakeups, and the spin-versus-sleep wait path.

@@ -64,9 +64,11 @@ Learning from a studied codebase is four distinct kinds of work:
 1. **Facts extraction.** For each device/ABI on the current milestone, write a
    `source/drivers/facts/<device>.omg` (or, for an ABI, a
    `source/contracts/<abi>/…`) that transcribes register maps and struct layouts
-   as data. These drop straight into the stated-layout-plan / `Bits` machinery
-   (see Omega `programmable_layouts.md`). Cheap, zero-authority, reviewable
-   against the datasheet — this is the bulk of "learning from rust-osdev."
+   as ordinary schema data plus `LayoutPlan` geometry and, for live registers,
+   separate `AccessPlan` policy. Split fields use name-keyed fragments; device
+   semantics such as W1C remain package machines over private plan-derived
+   access. Cheap, zero-authority, reviewable against the datasheet — this is the
+   bulk of "learning from rust-osdev."
 2. **Quirk notes.** Read the crate's *comments and special-cases* and record the
    hardware-lies-about-X knowledge alongside the facts. You cannot get this from
    the spec and cannot afford to rediscover it by debugging on real silicon.
@@ -113,9 +115,9 @@ Record provenance per facts-file, e.g.:
 | **xhci** / **usb** / **vga** / **ps2-mouse** | driver logic | One exemplary port per class, later, on the count-budget. | `drivers/` |
 | **bootloader** | boot logic | Reference for the real-mode→long-mode transition we skip by going UEFI-first — read to understand what UEFI does for us. | (study only) |
 | **multiboot2** / **pvh** / **ieee1275** | alt boot ABIs | Deferred — multiboot2 only for a coreboot-payload reference platform; pvh only for a cloud target. | (deferred) |
-| **linked-list-allocator** | primitive | Reject the model — the allocator is a capability (`Region<'r>`, no ambient heap). Reference the free-list algorithm only. | (subsumed) |
-| **volatile** | primitive | Reject entirely — volatile is a boundary operator with a contract (Omega ch20), not a wrapper type. | (subsumed) |
-| **spinning_top** / **mem-barrier** | primitive | Subsumed by the concurrency model (atomics-only sharing, `wait_until_nonzero`, fences-as-boundary-machines). | (subsumed) |
+| **linked-list-allocator** | primitive | Reject the ambient model — `Extent` owns backing-range authority and `Region` owns allocation authority. Reference the free-list algorithm only. | (subsumed) |
+| **volatile** | primitive | Reject the wrapper — placed views derive sealed field operations from `Extent + LayoutPlan + AccessPlan`; volatile is an observation contract, not a type qualifier. | (subsumed) |
+| **spinning_top** / **mem-barrier** | primitive | Subsumed by the concurrency model and checked instruction catalog: atomics/waits are ordinary contracted operations; fences/cache/TLB instructions emit complete target contracts. | (subsumed) |
 | **ucs2-rs** / **endian-num** | util | UEFI strings are `u16` arrays; endianness is the layout/format machinery. Trivial/subsumed. | (subsumed) |
 | **ovmf-prebuilt** | tooling | Use directly — it *is* the test firmware (OVMF.fd) we boot under QEMU. | `tools/` |
 | **bootimage** / **cargo-xbuild** | tooling | Cargo-bound, irrelevant to the `build.omg` toolchain. Steal only the workflow idea (assemble FAT image → `\EFI\BOOT\BOOTX64.EFI` → OVMF). | (idea only) |

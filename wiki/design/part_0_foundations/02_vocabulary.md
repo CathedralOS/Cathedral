@@ -20,7 +20,7 @@ In legacy OSes the core nouns are overloaded into mush. "Process" means address 
 
 **Lease** — a capability that is valid only for a bounded time/condition and expires unless renewed. The default shape for risky or distributed authority.
 
-**Effect** — a stable, finite name for a class of externally visible behavior (`filesystem_io`, `network_io`, `device_io`, …). An Omega concept; an effect is *not* an authority by itself — it says behavior of that shape *may* occur.
+**Effect ceiling** — a normalized row of boundary-service reach and core temporal events (`Suspend`, `Block`) that an Omega machine may transitively perform. A ceiling is not authority: the corresponding capability values are still required at use sites.
 
 **Authority flow** — the inferred record of what a unit accepts, uses, derives, stores, acquires, returns, releases. The compiler-level raw material for the authority graph.
 
@@ -36,6 +36,16 @@ In legacy OSes the core nouns are overloaded into mush. "Process" means address 
 
 **Boundary** — the audited edge where proved Omega code stops and a provider (syscall, firmware, loader, broker) begins. The boundary providers Cathedral ships are a large part of its trusted computing base.
 
+**Extent** — authority over one concrete address range, including its rights, provenance, and lifetime. Address bits alone are inert; an extent is what makes a range eligible for mapping, interpretation, or attenuation.
+
+**Region** — allocation authority backed by an extent or provider. A region can produce owned storage; it is not authority to interpret an arbitrary existing range.
+
+**Placed view** — typed access derived by validating an extent against a geometry `LayoutPlan` and a behavioral `AccessPlan`. MMIO registers and shared-page protocols use the same layout substrate with different access contracts.
+
+**External root** — a machine entry installed for hardware or foreign code to invoke without an ordinary Omega caller. Installed roots participate in effect, trust, stack, preemption, and lifecycle analysis.
+
+**External loan** — a linear token representing an outstanding borrow by a party the checker cannot observe directly, such as a DMA device. Completion returns the borrow and discharges synchronization obligations.
+
 **Provider / Broker** — the trusted component that *mints* fresh authority (opens a real device, prompts the user, consults the store). Acquisition happens here; ordinary code only accepts, derives, and uses.
 
 **Provenance** — the recorded origin and history of a value, capability, package, or piece of data: who produced it, through what, when. See [[audit_compliance_provenance]].
@@ -44,7 +54,7 @@ In legacy OSes the core nouns are overloaded into mush. "Process" means address 
 
 **Tenant** — an isolation domain for data, policy, and authority on a shared device (personal vs. work, family member, kiosk session, server tenant). See [[multi_user_and_org_control]].
 
-**Zero value (Zero Is Initialization)** — the all-zero bit pattern is a valid, coherent value for every construct, accepted by all system APIs without crashing or spurious error. The coherent behavior is one of valid-empty, inert null-object, inherit/default, or recognized-invalid-fail-safe, chosen per construct. See [[omega_substrate]].
+**Zero value (Zero Is Initialization)** — a design preference that keeps representations zero-fillable and makes zero an honest value where practical. Establishment may gate a zero representation when exposing it would forge authority or validity; authority-bearing storage commonly uses an explicit `Empty | Live(value)` sum. See [[omega_substrate]].
 
 ## Concerns & Design Space
 

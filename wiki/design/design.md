@@ -41,9 +41,9 @@ The redesigned contract, in a few sentences.
 - The questions this chapter must eventually answer.
 
 ## Omega Leverage
-Which language features carry this (capabilities, effects, domains, machines,
-states, versioned data, wire data, proof obligations) and what, if anything,
-Omega still needs to grow.
+Which language features carry this (capabilities, effect rows, domains,
+machines, states, ordinary versioned schemas/layout policies, proof
+obligations) and what, if anything, Omega still needs to grow.
 
 ## Open Questions
 - What is genuinely unresolved.
@@ -65,6 +65,7 @@ A few writing rules, inherited from Omega's docs:
 - [00 — What Cathedral Is](part_0_foundations/00_vision_and_non_goals.md)
 - [01 — The Omega Substrate](part_0_foundations/01_omega_substrate.md)
 - [02 — Vocabulary](part_0_foundations/02_vocabulary.md)
+- [03 — Hardware Foundation Profile](part_0_foundations/03_hardware_foundation_profile.md)
 
 ### Part 1 — Authority & Trust
 - [00 — Capability Model & Authority Graph](part_1_authority/00_capability_model.md)

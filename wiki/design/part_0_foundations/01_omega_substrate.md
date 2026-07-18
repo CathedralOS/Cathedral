@@ -16,10 +16,11 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
 
 - **`data` / `machine` / `state` / `transition`** — state is `data`; behavior is a `machine` over state; control flow inside a machine is an explicit graph of `state`s and `transition`s. The state graph is a first-class artifact the compiler can inspect, prove over, and schedule. See Omega [Machines](../../../../Omega/wiki/language_guide/chapter_3_machines.md) and [States And Transitions](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md).
 - **`domain`** — named proof predicates over values (`Folder::Writable`, `Player::Alive`). Cathedral expresses *permission shades*, *validity classes*, and *lifecycle states* as domains rather than as separate permission-flavored types. See Omega [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
-- **`boundary` + `effects`** — `boundary` marks where proved Omega code ends and an audited provider (syscall, firmware, loader hook) begins; `effects` are the stable, finite vocabulary of externally visible behavior (`filesystem_io`, `network_io`, `clock_read`, `device_io`, `memory_map`, …). Effects propagate transitively and form per-component ceilings. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
+- **`boundary` + `effects`** — `boundary` marks external supply/trust edges; the `effects` row contains normalized boundary-trait service identities plus core operational possibilities such as `Suspend` and `Block`. Rows propagate transitively and form authored API ceilings. Authority values, trust receipts, resources, failure, and mutation remain independent axes rather than magic effect keywords. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Authority flow** — inferred from values, domains, call contracts, returns, stores, and boundary provenance. The compiler reports what a unit *accepts, uses, derives, stores, acquires, returns, releases.* This is the raw material of Cathedral's authority graph.
-- **Versioned `data` + migration + replacement** — a live component's upgrade is a single step `prev → current`: one `Upgradable<Old, New, Context>` migration carrying effect/ownership/invariant obligations, with any needed IO captured first into a private, capture-only value, and replacement expressed as an owned plan gated on quiescence and borrow-safety proofs. (Multi-version coexistence is `wire data`'s job, not live state's.) This is the spine of Cathedral's no-reboot upgrade story. See Omega [Versioned Data And Machine Replacement](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
-- **`wire data`** — external schemas with stable field numbers and explicit compatibility rules. Cathedral's IPC, networking, and persistence all want this for cross-version communication. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
+- **Ordinary data evolution** — Omega has no `Versioned<T>`, era-path type, or `replace` DSL. Historical external shapes are immutable ordinary `data`, sum envelopes, layout/codec policies, provenance domains, and checked conversion machines. Live replacement is a Cathedral/component package over artifact identities, pinned slots, liveness pins, admitted runtime operations, and ordinary phase machines. See Omega [Versioned Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
+- **Programmable schemas and layouts** — plain `data` may carry stable field identities/tombstones; layout and codec policies define external representation and compatibility. There is no separate `wire data` species. Cathedral's IPC, networking, and persistence packages select the relevant policies. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md) and [Programmable Layouts](../../../../Omega/wiki/design_briefs/programmable_layouts.md).
+- **OS memory/hardware foundation** — inert addresses, range-authority `Extent`s, allocator `Region`s, programmable layouts, separate access plans, checked assembly, boundary entry plans, symbolic materialization, external-root reporting, and external loans compose the kernel/driver substrate without interrupt/MMIO/DMA keywords. Cathedral's strict provider profile is [[hardware_foundation_profile]].
 - **Proof obligations** — contracts (`requires` / `ensures`), bounded values, borrow facts, termination claims, and relax scopes. See Omega [Proof Obligations](../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md).
 
 ## The Division of Labor
@@ -41,18 +42,30 @@ The concurrency row splits the same way the proofs do (Omega `concurrency_atomic
 
 ## Zero Is Initialization
 
-Cathedral adopts a system-wide convention: the all-zero bit pattern is a valid, coherent value for every construct, and every system API accepts a zeroed object without crashing or raising a spurious error. Zero-allocate a structure and you get something usable; reset a structure by zeroing its memory. Allocation and reset become cheap (often a `memset`, sometimes free), and an entire category of "forgot to initialize" and "null handle" crashes disappears.
+ZII is a design preference, not a claim that zero bytes must be an established
+value of every type. Keep three layers separate:
 
-The convention splits along the usual line. Omega's side is that the zero value is a valid inhabitant of every `data` type, so zeroed memory is never an illegal bit pattern. Cathedral's side is the API contract: a zeroed object is accepted everywhere and behaves coherently, where coherent means one of a small set of shapes chosen per construct.
+1. storage and layouts remain zero-representable, preserving `.bss`, bulk reset,
+   and cheap preallocation;
+2. establishment decides whether those bits are accessible as a value; and
+3. APIs prefer a meaningful zero state where that is honest and useful.
 
-- **Valid-empty.** The zero object is the empty case and operations work normally on it. A zero file handle reads as a zero-byte file; a zero collection is empty; a zero channel has no messages.
-- **Inert null-object.** Operations are accepted and do nothing. A write to a zero file handle is discarded, a no-op rather than an error.
-- **Inherit or default.** The zero value means "take the ambient default," usually inheriting the parent. A zero executor domain inherits the parent's envelope ([[scheduler_and_resources]]); a zero configuration takes the inherited defaults ([[configuration_and_policy]]).
-- **Recognized-invalid, fail-safe.** Where a silent no-op would be dangerous, the zero object is a recognized sentinel that fails safe and visibly rather than crashing or succeeding falsely. A zero signing capability does not emit a forged empty signature; it yields a clearly-invalid result ([[secrets_and_keys]]).
+Bulk data should usually have a real empty/uninstalled/unsubmitted zero. A
+zero page-table entry honestly means not present; a zero ring is empty. Optional
+handles use an explicit debt-free zero case when absence is part of the API.
 
-For capabilities this lands especially cleanly: the zero capability is the capability over the canonical null object, which is simultaneously least privilege (it reaches no real resource) and ZII-coherent (operations on it are inert rather than erroring). That is the same spirit as the Blank grant in [[human_permission_ux]], where zero is the real-looking empty version rather than a hostile denial. So default-deny and zero-is-valid turn out to be the same value seen from two sides.
+Authority and foreign validity gate instead. Zero-fill must not mint an
+`Extent`, DMA transfer, interrupt mask, signing authority, installed table, or
+must-consume obligation. A linear slot uses `Empty | Live(value)`, with the
+obligation present only in the `Live` case. A containing page table may remain
+unestablished until `finish()` proves it `Installable` even though each zero PTE
+is individually valid.
 
-The honest tension is bug-masking. A zero handle whose writes are silently discarded can hide a genuine "forgot to open the file" mistake, trading a loud failure for a quiet one. The position is that the production API stays coherent and non-crashing, while surfacing "you operated on a null object where a real one was likely intended" stays a debug and lint concern ([[debugging_and_tracing]]) rather than a runtime error path. Where the quiet failure would be a security or data-integrity hole instead of a mere logic slip, the construct uses the recognized-invalid fail-safe shape rather than the silent no-op.
+The criterion is security and honesty, not aesthetic uniformity: prefer valid
+zero unless allowing zero to reach a consumer would assert authority, validity,
+or installation that nobody established. This keeps the large static-layout
+benefit without turning a null handle into forged power or silently discarding
+important writes.
 
 ## Concerns & Design Space
 
@@ -66,7 +79,7 @@ The honest tension is bug-masking. A zero handle whose writes are silently disca
 - Quiescence proofs in the presence of interrupts, timers, async work, and hardware ([[updates_and_hot_swap]]).
 - Possibly: purpose-tagged authority (`Capability<Read<Contact.Email>, Purpose<SendMessage>>`) ([[data_model_and_privacy]]).
 - Operation-capabilities for secrets (`Capability<SignWithKey(K)>`) rather than raw key bytes ([[secrets_and_keys]]).
-- **Concurrency primitives** (Omega `concurrency_atomics.md` 2026-06-15 review): real-atomic RMW + a verified memory model (two ISA lowerings; device/MMIO as a second model), `Send`/`Share` data-race typing, the `suspend` effect, and a `Scheduler` *interface* Cathedral implements. Omega owns the model + the safety proofs; Cathedral owns the scheduler. First increment is Omega task #27 (real atomics).
+- **Concurrency completion:** real atomics already lower on x86; remaining work is the portable memory model, task-runtime backend, composable suspension, carry/runtime admission, suspension-safe loans, and Cathedral's bounded Region-backed provider. Device/MMIO is not "a second atomic model" but a separate `AccessPlan`/placed-view observation discipline ([[hardware_foundation_profile]], [Omega concurrency](../../../../Omega/wiki/language_guide/chapter_18_concurrency.md)).
 
 ## Key Questions
 
@@ -81,4 +94,5 @@ The honest tension is bug-masking. A zero handle whose writes are silently disca
 - [[vision_and_non_goals]] — why these primitives matter.
 - [[vocabulary]] — precise terms.
 - [[capability_model]] — the first heavy user of effects + authority flow.
-- [[versioned_state_and_migration]] — the heavy user of versioned data.
+- [[versioned_state_and_migration]] — explicit schema lineages, conversions, and live replacement over the substrate above.
+- [[hardware_foundation_profile]] — Cathedral's strict profile over Omega's OS primitives.
