@@ -16,9 +16,10 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 ## Proof & Language
 
 - **Remaining Omega OS-foundation contracts.** The `Extent`/placed-view public
-  model and carry/runtime admission policy are settled. Omega still must settle
-  exact admitted/installed executable-artifact evidence and final-realization
-  validation. Cathedral's vertical slices are the deciding customers
+  model, carry/runtime admission policy, and admitted executable loader ladder
+  are settled. Omega still must settle protected returns and final-artifact CFI
+  over every indirect site and admitted provider. Cathedral's vertical slices
+  are the deciding customers
   ([[hardware_foundation_profile]]); the matching owner questions live in
   Omega's `OWNER_QUESTIONS.md`.
 - **Static authority flow vs. live held grants.** The compiler describes *possible* power; the runtime graph holds *actual* grants. How tightly are they reconciled, and who flags drift? ([[capability_model]], [[observability_and_introspection]].)
@@ -29,6 +30,7 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 - **Privileged broker split.** How are address-space mapping, placed-view minting, admitted-artifact installation, interrupt installation, and IOMMU control divided without duplicating admission or inflating one universal broker? ([[hardware_foundation_profile]], [[kernel_architecture]].)
 - **Interrupt stack/nesting policy.** Pick Cathedral's initial x86 stack classes, masking/preemption graph, and WCSU composition, then derive the concrete IST fields from that one normalized policy ([[hardware_foundation_profile]]).
 - **Executable installation target.** Which AP/I-cache/W^X guarantees are mandatory on the first real platform, which are honestly reported as unavailable or convention-only, and how does the provider distinguish dormant/local installation, a future remote fetcher needing visibility, and cores that may already be running the range and therefore require replacement? ([[hardware_foundation_profile]], [[boot_and_trust_chain]].)
+- **Control-flow integrity realization.** Which protected-return mechanisms are mandatory on the first x86/AArch64 profiles, how are suspension and interrupt continuations represented, and when must admitted foreign code remain hardware-isolated rather than supplying an accepted CFI claim? ([[hardware_foundation_profile]], [[kernel_architecture]].)
 - **Device reset domains.** Where FLR is unavailable or bus-wide, how much sibling disruption is acceptable before Cathedral marks a device/domain dead? ([[driver_model]], [[updates_and_hot_swap]].)
 
 ## Trust & Governance

@@ -146,15 +146,36 @@ scheduler switch are distinct linear guards.
 Cathedral exposes no general `ExecutableMemory` capability and no conversion
 from ordinary bytes to host code. Executable eligibility is established by
 Omega's validation/admission pipeline over an immutable artifact and bound to
-its content, identity, relocations, footprint, and placement plan. The boot
-provider installs only such an artifact, under authority scoped to its
-identity, destination, and audience. It performs final validation, W^X, and
-target-specific cache/coherence and instruction-fetch synchronization.
+its content, identity, relocations, footprint, and placement plan. The reusable
+artifact is borrowed; linearity begins at extent-backed `CodePlacement`:
+
+```text
+CodePlacement(W + NX)
+    -> materialize -> FrozenPlacement(R + NX)
+    -> final validation -> ValidatedPlacement(R + NX)
+    -> install -> InstalledCode(R + X)
+```
+
+Materialization spends write authority, closing the TOCTOU window before final
+validation. The boot provider performs W^X and target-specific cache/coherence
+and instruction-fetch synchronization. V1 completes visibility synchronously.
+Component-slot binding remains a later logical dispatch/versioning operation.
 
 Correct-by-construction page-table APIs and checked assembly require the same
 artifact provenance before execute permission can appear. Device firmware is a
 device upload, not host execution. Live or template-patched host code belongs
-to quiescence/versioning instead.
+to quiescence/versioning instead. Installation prevents code injection; CFI
+over sealed entries, indirect calls, and protected returns is a separate gate.
+
+The initial trust chain is build PCC/CFI validation and signed admitted identity
+→ secure boot authentication/entry gate → measured-boot record → boot-admitted
+installer for later artifacts. Secure boot gates; measured boot records.
+
+Cathedral components use a minimal canonical Omega-native artifact container
+decoded through checked schema/layout machinery, with bounded tables, closed
+relocations, and explicit proof/contract/footprint sections. Informational
+ignorable sections carry no admission authority. UEFI's PE/COFF requirement is
+only a thin outer envelope for the initial image, never the component format.
 
 SMP AP bringup is a required acceptance case. The trampoline requires constrained
 low-memory placement, checked real/protected/long-mode regions and transition
@@ -184,9 +205,8 @@ trampoline bytes are accepted as a shortcut.
 - the first hardware/virtual platform on which AP bringup and IOMMU guarantees
   are mandatory rather than honestly degraded.
 
-Omega's carry/runtime contract is settled: suspension checks locally against
-effects, while CPU/thread/address demands join born-pessimistic provider
-behavior at admission. The remaining Omega question is the exact admitted/
-installed artifact evidence and final-realization boundary. It lives in
-Omega's `OWNER_QUESTIONS.md`; Cathedral work should force that answer through
-these vertical slices rather than inventing private syntax.
+Omega's carry/runtime and admitted-artifact installation contracts are settled.
+The remaining Omega question is final control-flow integrity, especially
+protected returns and validation of every indirect site/provider boundary. It
+lives in Omega's `OWNER_QUESTIONS.md`; Cathedral work should force that answer
+through these vertical slices rather than inventing private syntax.
