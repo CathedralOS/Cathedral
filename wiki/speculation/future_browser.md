@@ -44,15 +44,19 @@ The web's magic is *zero trust decisions* — click, it runs, it's gone, no inst
 
 Durability comes from the artifact being a **frozen, formally-specified, content-addressed core IR**. A native binary dies with its ISA; a *specified* IR can be re-implemented by any future host from the spec alone. So: freeze the core IR semantics as a permanent commons artifact; the durable web = declarative content + the frozen spec; the *programs* are ephemeral, the *format and data* eternal. (Same "freeze a small core, evolve above it" discipline as the bootstrap/TCB story.)
 
-## Runtime re-optimization (it falls out of hot-swap)
+## Profile-guided artifact replacement (it falls out of hot-swap)
 
-Because the **IR is retained** as the re-compilable source, and Cathedral has the **verified-equivalence gate** + **hot-swap** ([[updates_and_hot_swap]]), you get adaptive re-optimization as an *OS-level* capability — tiered JIT at the component level, but verified:
+Because the **IR is retained** as the re-compilable source, later package/update
+builds may use an exported workload profile to produce a better AOT artifact.
+Cathedral itself does not compile that IR into host code while the component is
+running. Every replacement arrives through ordinary artifact validation,
+admission, and quiescence ([[updates_and_hot_swap]]):
 
-1. first load: compile fast (cheap codegen) — tab starts instantly;
+1. the package ships a prebuilt baseline artifact;
 2. observe hot paths / input profile (the scheduler + observability already see them);
-3. re-optimize the retained IR in a background budgeted task (the verified-gated optimizer);
-4. verify the new build is behavior-identical;
-5. **hot-swap** the running component to it.
+3. feed an authorized profile into a later external/package build;
+4. verify, validate, and admit the resulting immutable artifact;
+5. **hot-swap** the running component to it through the normal replacement path.
 
 Better than V8/HotSpot in three ways: the **IR is the re-compilable source** (you can't re-optimize a binary you don't have the IR for — a second justification for shipping IR over native); a re-opt swap is the **trivial identity hot-swap** (same data shape, no state transform); and **hot-swap replaces deopt** — instead of speculative per-call-site guards + deoptimization, each build is *proved equivalent* (changes speed, never behavior), and on *profile drift* you swap the whole component to a build optimized for the new profile. Omega does *soundly* what V8 does *speculatively*, because the types it would speculate on are proven. Optimized builds cache by `(IR hash + profile)`, so the OS accumulates fast builds of popular artifacts over time.
 

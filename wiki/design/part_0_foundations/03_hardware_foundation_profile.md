@@ -19,7 +19,8 @@ Cathedral chooses conservative providers before Omega requires them universally:
 - stable continuation storage;
 - explicit CPU/thread affinity when a resource requires it;
 - parsed checked assembly only, with no raw-byte escape;
-- first publication of executable memory separated from live replacement;
+- installation of immutable admitted executable artifacts, with no raw
+  byte-to-code/JIT surface, separated from live replacement;
 - correct-by-construction page-table mutation, with validation available only
   for imported tables;
 - plan-derived field access rather than arbitrary-offset volatile operations;
@@ -140,16 +141,24 @@ an asynchronous provider may later be admitted with a complete context/state
 plan and stricter carry checks. Interrupt masking and suppressing an Omega
 scheduler switch are distinct linear guards.
 
-## Executable publication and multicore boot
+## Admitted executable installation and multicore boot
 
-The boot provider owns first publication of code: finalize writable bytes,
-perform W^X transition, complete target-specific cache/coherence and instruction-
-fetch synchronization, and return an executable artifact/capability. Live
-patching of already-published code belongs to quiescence/versioning instead.
+Cathedral exposes no general `ExecutableMemory` capability and no conversion
+from ordinary bytes to host code. Executable eligibility is established by
+Omega's validation/admission pipeline over an immutable artifact and bound to
+its content, identity, relocations, footprint, and placement plan. The boot
+provider installs only such an artifact, under authority scoped to its
+identity, destination, and audience. It performs final validation, W^X, and
+target-specific cache/coherence and instruction-fetch synchronization.
+
+Correct-by-construction page-table APIs and checked assembly require the same
+artifact provenance before execute permission can appear. Device firmware is a
+device upload, not host execution. Live or template-patched host code belongs
+to quiescence/versioning instead.
 
 SMP AP bringup is a required acceptance case. The trampoline requires constrained
 low-memory placement, checked real/protected/long-mode regions and transition
-instructions, post-load materialization, executable publication, cross-core
+instructions, post-load materialization, admitted-artifact installation, cross-core
 visibility, an AP external root, and per-CPU stack/state. No hand-authored raw
 trampoline bytes are accepted as a shortcut.
 
@@ -167,7 +176,7 @@ trampoline bytes are accepted as a shortcut.
 
 ## Cathedral-owned open decisions
 
-- exact privileged broker split among address-space, executable-memory,
+- exact privileged broker split among address-space, artifact-installation,
   interrupt-installation, and IOMMU providers;
 - concrete x86 interrupt stack classes and nesting policy;
 - whether the first driver path uses PIT or LAPIC for the timer milestone;
@@ -175,8 +184,9 @@ trampoline bytes are accepted as a shortcut.
 - the first hardware/virtual platform on which AP bringup and IOMMU guarantees
   are mandatory rather than honestly degraded.
 
-Omega's value-side carry contract is settled. The remaining Omega questions are
-how a provider supplies normalized runtime behavior to admission, and how first
-executable publication evidence is represented. They live in Omega's
-`OWNER_QUESTIONS.md`; Cathedral work should force those answers through these
-vertical slices rather than inventing private syntax.
+Omega's carry/runtime contract is settled: suspension checks locally against
+effects, while CPU/thread/address demands join born-pessimistic provider
+behavior at admission. The remaining Omega question is the exact admitted/
+installed artifact evidence and final-realization boundary. It lives in
+Omega's `OWNER_QUESTIONS.md`; Cathedral work should force that answer through
+these vertical slices rather than inventing private syntax.

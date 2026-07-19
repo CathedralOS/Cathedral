@@ -62,8 +62,11 @@ A task runs until it parks, reaches a selected safepoint, or is interrupted by a
 runtime whose admitted contract permits asynchronous preemption. Omega does not
 color machines with `async` and does not require an `await` call-site marker.
 Suspension, CPU/thread affinity, and address stability are independent value
-demands; the runtime separately states preemption, migration, affinity support,
-and continuation-storage behavior. Admission checks compatibility.
+demands. Suspension is checked locally against possible `Suspend` reach; the
+runtime cannot erase that ceiling. The runtime separately states preemption
+granularity, migration/affinity support, and continuation-storage behavior, and
+admission joins the CPU/thread/address demands against that behavior. Unknown
+or unreceipted host behavior is pessimistic and therefore fails closed.
 
 Cathedral's born-strict native profile uses boundary/back-edge safepoints and
 stable continuation storage. This keeps save points enumerable and cheap while
@@ -146,7 +149,7 @@ So the scheduler is the enforcement *arm*, but the arm reaches into providers, d
 
 ## Open Questions
 
-- **Preemption profile — direction resolved, implementation pending.** Cathedral starts with safe-point scheduling and stable continuation storage because it is the strict, bounded profile. Omega keeps preemption, migration, suspension, affinity, and address stability independent in normalized contracts. An asynchronous provider is admissible when its full-context machinery and runtime behavior satisfy every live value's demands; hard-real-time evidence may force that provider later. The bootstrap scheduler remains an explicitly bounded static subset, but this is a provider/package restriction rather than a `spawn`/`await` language dialect.
+- **Preemption profile — direction resolved, implementation pending.** Cathedral starts with safe-point scheduling and stable continuation storage because it is the strict, bounded profile. Omega checks suspension locally against effects and keeps CPU migration, host-thread migration, address stability, and preemption granularity independent in normalized runtime contracts. An asynchronous provider is admissible when its full-context machinery and behavior satisfy every relevant live value's demands; hard-real-time evidence may force that provider later. The bootstrap scheduler remains an explicitly bounded static subset, but this is a provider/package restriction rather than a `spawn`/`await` language dialect.
 - **The proof relationship.** This scheduler is the *trusted* provider of the fairness / atomicity / wake-correctness hypotheses that discharge Omega's *conditional* liveness theorems (progress, no starvation). Omega's *safety* theorems (data-race / deadlock / protocol freedom) hold regardless of it. So a bug here cannot break a safety proof, but it can invalidate a liveness/progress guarantee — and "Cathedral provides the scheduler" *relocates* that obligation onto this chapter, it does not discharge it. If Cathedral ever promises *enforced* real-time deadlines (vs. the `realtime_audio` best-effort above), this scheduler becomes a Ravenscar-class verified scheduler whose fairness/timing is itself proven.
 - Can budgets be expressed tightly enough to *prove* a realtime component meets its deadline, or is that always runtime best-effort?
 - How are budgets reclaimed on crash or revocation without a window where a resource leaks?

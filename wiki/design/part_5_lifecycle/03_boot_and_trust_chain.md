@@ -65,7 +65,7 @@ The honest tensions, which belong in the doc rather than glossed over:
 - **Authority-flow + boundary reports** describe the boot-time TCB: which privileged components the chain admits is an auditable fact, and measured boot can attest the same component manifest the build produced.
 - **Normalized schema/artifact identities + signed provenance** ([[package_system]]) give rollback protection permanent facts to compare without treating compatibility as identity.
 - **`effects` ceilings** bound what early-boot components may do before the full capability machinery is online.
-- **Constraint-bearing materialization + checked assembly** cover first publication of loader tables, executable regions, and AP trampolines; this is distinct from later component replacement.
+- **Constraint-bearing materialization + checked assembly** cover installation of admitted loader artifacts and AP trampolines; eligibility is established before installation and cannot be manufactured from bytes. This is distinct from later component replacement.
 - **External-root reports** make boot, exception, interrupt, and AP entries explicit analysis roots even though no ordinary Omega caller reaches them.
 - Omega does **not** model a hardware root of trust or attestation primitives; the sealing/measurement layer is a boundary Cathedral must specify against real silicon.
 
