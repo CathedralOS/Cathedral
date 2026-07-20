@@ -105,8 +105,10 @@ exclusion are independent checks over the same live value.
 Cathedral's interrupt path is a vertical slice, not a language DSL:
 
 1. x86 gate `data` plus a fragmented layout policy;
-2. a target interrupt requirement pinning `CallPlan + StatePlan`, effect ceiling,
-   stack/preemption class, and acknowledgement protocol;
+2. a target interrupt requirement carrying
+   `Calling<X86InterruptConvention>`; its open-authored, compiler-validated
+   policy evaluates the signature to the pinned `CallPlan + StatePlan`, effect
+   ceiling, stack/preemption class, and acknowledgement protocol;
 3. an ordinary `boundary machine` satisfying that requirement;
 4. build/provider selection retaining a sealed entry-stub identity;
 5. boot-time materialization of that identity into the split IDT offset;
@@ -186,7 +188,8 @@ trampoline bytes are accepted as a shortcut.
 ## Cathedral implementation order
 
 1. Omega parsed checked assembly and the initial x86 contract catalog.
-2. Omega trait-parent composition and `CallPlan + StatePlan` entry derivation.
+2. Omega `CallingPolicy::plan` source integration and `CallPlan + StatePlan`
+   entry derivation; trait-parent composition and policy semantics are settled.
 3. Fragmented layout/materialization and external-root ledger.
 4. Cathedral IDT + timer tick.
 5. Implement the settled Extent and placed-view API, then migrate UART/MMIO off
