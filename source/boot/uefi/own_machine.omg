@@ -176,7 +176,8 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) effe
         }
     }
     state ten_thousands_digit(rest: u64 in Trapping, digit: u64) {
-        asm { out 1016, digit }
+        let byte: u8 = digit as u8 in Wrapping;
+        asm { out 1016, byte }
         transition { _ -> thousands(rest, 0, 1) }
     }
 
@@ -193,7 +194,8 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) effe
         }
     }
     state thousands_digit(rest: u64 in Trapping, digit: u64) {
-        asm { out 1016, digit }
+        let byte: u8 = digit as u8 in Wrapping;
+        asm { out 1016, byte }
         transition { _ -> hundreds(rest, 0, 1) }
     }
 
@@ -210,7 +212,8 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) effe
         }
     }
     state hundreds_digit(rest: u64 in Trapping, digit: u64) {
-        asm { out 1016, digit }
+        let byte: u8 = digit as u8 in Wrapping;
+        asm { out 1016, byte }
         transition { _ -> tens(rest, 0, 1) }
     }
 
@@ -227,14 +230,16 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) effe
         }
     }
     state tens_digit(rest: u64 in Trapping, digit: u64) {
-        asm { out 1016, digit }
+        let byte: u8 = digit as u8 in Wrapping;
+        asm { out 1016, byte }
         transition { _ -> ones_digit(48 + rest) }
     }
 
     // The ones place always prints — "Owned 0 MiB" is an honest report of a
     // machine with no conventional span, never an empty number.
     state ones_digit(digit: u64) {
-        asm { out 1016, digit }
+        let byte: u8 = digit as u8 in Wrapping;
+        asm { out 1016, byte }
         transition { _ -> tail_send() }
     }
 
