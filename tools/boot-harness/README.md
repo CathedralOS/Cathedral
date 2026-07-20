@@ -38,6 +38,9 @@ prints `Hello from Omega` and its owned-memory total before idling.
   4. `reference_code/rust-osdev/ovmf-prebuilt/`.
   - On Windows, QEMU's own install supplies it — nothing extra to fetch. On
     Linux, `apt install ovmf` (or your distro's `edk2-ovmf`).
+- **Omega compiler.** The scripts use an installed `omega` command first. If
+  it is absent, they build and run `omega-cli` from a sibling `../Omega`
+  checkout with Cargo. Set `OMEGA_REPO` to use a checkout elsewhere.
 
 ## Run
 

@@ -10,6 +10,7 @@ BUILD_DIR="$REPO_ROOT/build/boot-harness"
 OMEGA_BUILD_DIR="$BUILD_DIR/omega-out"
 ESP="$BUILD_DIR/esp"
 EFI_OUT="$ESP/EFI/BOOT/BOOTX64.EFI"
+OMEGA_REPO="${OMEGA_REPO:-$REPO_ROOT/../Omega}"
 
 # --- locate QEMU (PATH, then the default Windows install) ------------------
 QEMU="$(command -v qemu-system-x86_64 || true)"
@@ -62,8 +63,13 @@ if command -v omega >/dev/null 2>&1; then
   echo "building $BOOT_PKG -> $EFI_OUT"
   omega --build-dir "$OMEGA_BUILD_DIR" --target uefi_x64 "$BOOT_PKG/main.omg"
   cp -f "$OMEGA_BUILD_DIR/omega-program.exe" "$EFI_OUT"
+elif command -v cargo >/dev/null 2>&1 && [[ -f "$OMEGA_REPO/Cargo.toml" ]]; then
+  echo "building $BOOT_PKG with sibling Omega workspace -> $EFI_OUT"
+  cargo run -q --manifest-path "$OMEGA_REPO/Cargo.toml" -p omega-cli -- \
+    --build-dir "$OMEGA_BUILD_DIR" --target uefi_x64 "$BOOT_PKG/main.omg"
+  cp -f "$OMEGA_BUILD_DIR/omega-program.exe" "$EFI_OUT"
 else
-  echo "note: no 'omega' toolchain on PATH — reusing an existing UEFI image if present" >&2
+  echo "note: no 'omega' toolchain or sibling Omega workspace — reusing an existing UEFI image if present" >&2
   if [[ ! -f "$EFI_OUT" ]]; then
     echo "      no BOOTX64.EFI is available; build Omega and put its 'omega' binary on PATH." >&2
     exit 2

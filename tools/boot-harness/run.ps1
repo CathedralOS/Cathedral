@@ -7,8 +7,10 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $BootPkg  = Join-Path $RepoRoot "source\boot\uefi"
 $BuildDir = Join-Path $RepoRoot "build\boot-harness"
+$OmegaBuildDir = Join-Path $BuildDir "omega-out"
 $Esp      = Join-Path $BuildDir "esp"
 $EfiOut   = Join-Path $Esp "EFI\BOOT\BOOTX64.EFI"
+$OmegaRepo = if ($env:OMEGA_REPO) { $env:OMEGA_REPO } else { Join-Path (Split-Path $RepoRoot) "Omega" }
 
 # --- locate QEMU (PATH, then the default Windows install) ------------------
 $Qemu = (Get-Command qemu-system-x86_64 -ErrorAction SilentlyContinue).Source
@@ -46,16 +48,22 @@ if ($env:OVMF -and (Test-Path $env:OVMF)) {
               "-drive","if=pflash,format=raw,file=$vars")
 }
 
-# --- build the boot package (STUB) -----------------------------------------
-# When the toolchain can emit the Uefi64 target (declared in build.omg):
-#     omega build $BootPkg -o $EfiOut
+# --- build the boot package ------------------------------------------------
 if (Get-Command omega -ErrorAction SilentlyContinue) {
   Write-Host "building $BootPkg -> $EfiOut"
-  & omega build $BootPkg -o $EfiOut
+  & omega --build-dir $OmegaBuildDir --target uefi_x64 (Join-Path $BootPkg "main.omg")
+  if ($LASTEXITCODE -ne 0) { throw "Omega UEFI build failed with exit code $LASTEXITCODE" }
+  Copy-Item (Join-Path $OmegaBuildDir "omega-program.exe") $EfiOut -Force
+} elseif ((Get-Command cargo -ErrorAction SilentlyContinue) -and (Test-Path (Join-Path $OmegaRepo "Cargo.toml"))) {
+  Write-Host "building $BootPkg with sibling Omega workspace -> $EfiOut"
+  & cargo run -q --manifest-path (Join-Path $OmegaRepo "Cargo.toml") -p omega-cli -- `
+      --build-dir $OmegaBuildDir --target uefi_x64 (Join-Path $BootPkg "main.omg")
+  if ($LASTEXITCODE -ne 0) { throw "Omega UEFI build failed with exit code $LASTEXITCODE" }
+  Copy-Item (Join-Path $OmegaBuildDir "omega-program.exe") $EfiOut -Force
 } else {
-  Write-Warning "no 'omega' toolchain on PATH - UEFI build not available yet (milestone 1)."
+  Write-Warning "no 'omega' toolchain or sibling Omega workspace; reusing an existing UEFI image if present."
   if (-not (Test-Path $EfiOut)) {
-    Write-Warning "no BOOTX64.EFI to boot yet. Firmware + ESP are set up and the QEMU loop is verified (empty ESP boots OVMF to its boot manager). Stopping."
+    Write-Warning "no BOOTX64.EFI to boot. Set OMEGA_REPO to an Omega checkout or install the omega CLI."
     return
   }
 }
