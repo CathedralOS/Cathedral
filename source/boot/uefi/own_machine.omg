@@ -1,7 +1,7 @@
 // source/boot/uefi/own_machine.omg
 //
 // MILESTONE 2 — own the machine. Get the firmware memory map, walk it for free
-// RAM, ExitBootServices, and mint the FIRST Region from the largest free span —
+// RAM, ExitBootServices, and mint the FIRST Extent from the largest free span —
 // the origin of Cathedral's authority graph. Runs after the milestone-1 greeting
 // (con_out still works before exit).
 //
@@ -13,7 +13,7 @@
 
 use uefi::uefi;            // EfiHandle, EfiSystemTable, EfiStatus
 use uefi::boot_services;   // EfiMemoryDescriptor, EFI_CONVENTIONAL_MEMORY, MapKey, BootServicesTable
-use core::region;          // Region, mint_region
+use core::extent;          // Extent, mint_extent
 
 // Get the map, walk it, exit, mint, report. `self.map_buf` is a fixed 16 KiB
 // static field (no allocator yet — real firmware maps are ~4–8 KiB); the
@@ -94,10 +94,10 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) effe
         }
     }
 
-    // We own the machine. Mint the first Region from the largest free span — every
+    // We own the machine. Mint the first Extent from the largest free span — every
     // later memory authority descends from this.
     state own(best_start: u64, best_pages: u64) {
-        let first_region: Region = mint_region(best_start, best_pages);
+        let first_extent: Extent = mint_extent(best_start, best_pages);
         transition { _ -> serial_init(best_pages) }
     }
 

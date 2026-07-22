@@ -1,0 +1,32 @@
+// source/core/extent.omg
+//
+// Extent -- THE FIRST CAPABILITY: exclusive authority over a span of physical
+// RAM. Every later memory authority descends from an Extent minted here at
+// boot, so this is the origin of the authority graph (kernel_architecture,
+// capability_lifecycle). Milestone 2 mints the first one after
+// ExitBootServices, from the firmware memory map.
+//
+// core/ stays firmware-neutral: boot/ walks the UEFI map and calls mint_extent
+// with plain (start, page_count) spans; core knows nothing about UEFI.
+//
+// M2 TARGET -- aligned to the boot-verified M1 machinery. The generational
+// {slot, generation} authority graph that makes an Extent unforgeable and
+// revocable is the capability_lifecycle arc; at M2 an Extent is a plain value
+// and the trusted boot origin is the sole minter.
+
+pub const PAGE_SIZE: u64 = 4096;
+
+// A physical-memory span capability. Holding an Extent is exclusive authority
+// over [physical_start, physical_start + page_count * PAGE_SIZE).
+pub data Extent {
+    physical_start: u64;
+    page_count:     u64;
+}
+
+// The raw memory-authority mint. At M2 the only caller is boot/, which calls it
+// after ExitBootServices succeeds, so an Extent is minted only from real,
+// owned, firmware-relinquished RAM. Sealed construction and admission receipts
+// replace this bootstrap trust edge when the Omega Extent surface lands.
+pub machine mint_extent(physical_start: u64, page_count: u64) -> Extent {
+    transition { _ -> (Extent { physical_start: physical_start, page_count: page_count }) }
+}

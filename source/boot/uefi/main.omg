@@ -54,7 +54,7 @@ boundary machine Main::run(&self, handle: EfiHandle, table: &EfiSystemTable) -> 
     let con_out: &TextOutputProtocol = table.con_out;
     _ = self.out.output_string(con_out, &self.msg);
     // Milestone 2 — own the machine (own_machine.omg): walk the memory map, exit
-    // boot services, mint the first Region, then idle. Does NOT return (firmware
+    // boot services, mint the first Extent, then idle. Does NOT return (firmware
     // is gone after exit), so the terminal below is unreachable.
     self.own_machine(handle, table);
     transition { _ -> (EFI_SUCCESS) }

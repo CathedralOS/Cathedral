@@ -10,15 +10,15 @@ the code they cover — never in a sibling that can lag.
 `core/` at build time** — userspace targets the ABI in `contracts/`, which
 `core/` implements, so `core/` is a leaf in the build graph. `core/` stays
 firmware-neutral: the UEFI-specific memory-map walk is `boot/`'s job; `core/`
-mints physical-range authority from firmware-neutral spans. The current
-`Region` spelling is transitional; the settled Omega vocabulary names this an
-`Extent`, while `Arena` is reserved for allocation authority.
+mints physical-range `Extent` authority from firmware-neutral spans. `Arena`
+remains reserved for bounded allocation authority over backing storage; it is
+not the concrete range capability.
 
 **Non-goals.** No device drivers, no userspace service logic, no firmware ABIs.
 If it isn't small enough to audit in full, it doesn't belong here.
 
-**Status (2026-07-04).** In-progress: `region.omg` — milestone 2, the first
-physical-range capability (transitionally `Region`, settled as `Extent`) and
-its mint, the origin of the authority graph. The generational `{slot, generation}` arena that
+**Status (2026-07-21).** In-progress: `extent.omg` — milestone 2, the first
+physical-range `Extent` and its mint, the origin of the authority graph. The
+generational `{slot, generation}` authority graph that
 makes capabilities unforgeable + revocable is the `capability_lifecycle` arc,
 later.

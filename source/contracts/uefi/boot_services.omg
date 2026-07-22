@@ -111,7 +111,7 @@ uefi_x64 provides BootServices over BootServicesTable {
 // --- Origin of memory authority -------------------------------------------
 // FinalMemoryMap is private, minted only by a successful exit_boot_services, so
 // holding one is proof firmware has exited and the map is authoritative. The
-// first Region capabilities are minted FROM it (core/) — every later memory
+// first Extent capabilities are minted FROM it (core/) — every later memory
 // authority descends from this point.
 pub data FinalMemoryMap {
     buffer:          &[u8];   // the validated descriptor bytes
