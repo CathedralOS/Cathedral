@@ -4,8 +4,8 @@
 // memory authority. Transcribed from the UEFI specification (cross-check:
 // reference_code/rust-osdev/uefi-rs). FIELD MODEL (Omega extern brief §12,
 // decided 2026-07-04): EFI_BOOT_SERVICES is a `data` struct of fn-ptr fields
-// (header + services, in spec order); the `provides` binding names the FIELD to
-// call — no magic slot index, header handled for free, audit reads by name.
+// (header + services, in spec order); attached external leaves name the FIELD
+// to call — no magic slot index, header handled for free, audit reads by name.
 //
 // Same package as uefi.omg (cathedral_contracts_uefi) → its symbols (EfiStatus,
 // EfiHandle, EfiTableHeader) are visible directly, no `use`. PROVISIONAL until
@@ -97,16 +97,26 @@ pub boundary trait BootServices {
         effects device_io;
 }
 
-// Bind each method to its fn-ptr FIELD; the layout policy supplies the offsets
-// (get_memory_map past the 24-byte header + 4 services, exit_boot_services past
-// 26). No magic slot numbers. TABLE FUNCTIONS, not vtable fields: EFI boot
-// services take no This -- the table pointer locates the callee and stays off
-// the wire (protocol methods like output_string DO take This and stay
-// bare-field This-call bindings).
-uefi_x64 provides BootServices over BootServicesTable {
-    get_memory_map     -> TableFunction(get_memory_map);
-    exit_boot_services -> TableFunction(exit_boot_services);
-}
+// Each external leaf is attached to the layout-owning table type and names its
+// fn-ptr field; the layout policy supplies the offsets (get_memory_map past the
+// 24-byte header + 4 services, exit_boot_services past 26). These are TABLE
+// FUNCTIONS, not vtable methods: the table pointer locates the callee and stays
+// off the foreign wire. Protocol methods such as output_string do take This and
+// use VtableField instead.
+uefi_x64 machine BootServicesTable::get_memory_map_leaf(
+    table:              &BootServicesTable,
+    map_size:           &mut u64,
+    buffer:             &mut [u8],
+    map_key:            &mut MapKey,
+    descriptor_size:    &mut u64,
+    descriptor_version: &mut u32
+) -> EfiStatus satisfies BootServices::get_memory_map via Binding::TableFunction(get_memory_map);
+
+uefi_x64 machine BootServicesTable::exit_boot_services_leaf(
+    table:        &BootServicesTable,
+    image_handle: EfiHandle,
+    map_key:      MapKey
+) -> EfiStatus satisfies BootServices::exit_boot_services via Binding::TableFunction(exit_boot_services);
 
 // --- Origin of memory authority -------------------------------------------
 // FinalMemoryMap is private, minted only by a successful exit_boot_services, so

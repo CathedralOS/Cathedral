@@ -5,8 +5,8 @@
 // FOREIGN structs, so they are plain `data` (firmware structs never cross a
 // schema-evolution edge → no identity numbers); their byte layout is supplied by
 // the `Uefi` C-ABI layout policy at the use site (Omega programmable_layouts.md).
-// Function-pointer protocol calls go through boundary traits bound to a named
-// fn-ptr FIELD of the table struct — the field model (Omega
+// Function-pointer protocol calls go through boundary traits whose attached
+// external leaves name a fn-ptr FIELD of the table struct — the field model (Omega
 // extern_boundary_and_format_domains.md §12, decided 2026-07-04).
 //
 // BOOT-VERIFIED SHAPE (aligned to Omega samples/uefi_hello, ea51376cd,
@@ -31,9 +31,9 @@ pub data EfiHandle { raw: addr; }
 //
 // An EFI protocol struct embeds its function pointers as inline fields — the
 // object IS the vtable. The FIELD MODEL: declare the fn-ptr fields in spec order
-// (the `Uefi` policy computes each offset), and the `provides` binding names the
-// FIELD to call — no magic slot index. `String` is a null-terminated [u16]
-// (CHAR16*, UCS-2).
+// (the `Uefi` policy computes each offset), and the attached external leaf names
+// the FIELD to call — no magic slot index. The string argument is a
+// null-terminated [u16] (CHAR16*, UCS-2).
 
 pub data TextOutputProtocol {
     reset:         addr;   // EFI_TEXT_RESET (unused; present so output_string's offset is right)
@@ -46,12 +46,13 @@ pub boundary trait SimpleTextOutput {
         effects device_io;
 }
 
-// Bind the method to the fn-ptr FIELD — dispatch reads the field and calls it
-// MS-x64, no import thunk. `over` names the struct whose fields the bindings
-// index.
-uefi_x64 provides SimpleTextOutput over TextOutputProtocol {
-    output_string -> output_string;
-}
+// The leaf is attached to the layout-owning protocol type. Dispatch reads the
+// named field and calls it under the selected UEFI/MS-x64 plan; there is no
+// provider table, magic slot index, or import thunk.
+uefi_x64 machine TextOutputProtocol::output_string_leaf(
+    console: &TextOutputProtocol,
+    string: &[u16]
+) -> EfiStatus satisfies SimpleTextOutput::output_string via Binding::VtableField(output_string);
 
 // --- The System Table (firmware's root hand-off structure) ----------------
 //

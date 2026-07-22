@@ -1,7 +1,7 @@
 // source/boot/uefi/build.omg
 //
 // The UEFI boot application. BOOT-VERIFIED shape (typed tree, 2026-07-11).
-// `target uefi_x64 {}` is the FRONTIER REGISTRATION (D15: a provides target
+// `target uefi_x64 {}` is the FRONTIER REGISTRATION (D15: a deployment target
 // name is valid iff compiler-defined or build-defined) — an empty declaration,
 // NOT the retired target{...} config block; `subsystem` and `freestanding`
 // remain orthogonal `Build` fields (build_and_package_model.md addendum). The
