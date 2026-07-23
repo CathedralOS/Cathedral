@@ -304,8 +304,12 @@ hidden behind acknowledgement. A companion stack canary derives the shared
 maskable-IRQ domain as the maximum sequential root demand plus each permitted
 current-stack fatal-fault path, keeps dedicated fault classes independent, and
 rejects cycles, missing endpoints, unknown nested stack selection, overflow,
-or re-entry of an active dedicated class. Driving the normalized execution
-binding from the concrete PIC/LAPIC provider is the next integration step.
+or re-entry of an active dedicated class. A source-level Omega acceptance test
+also authors the complete `InterruptReturn` plan with dedicated stack class,
+masked preemption, and exact saved/restored state, then pins its identity through
+the boundary schema, selected timer-provider plan, and external-root bridge.
+Driving that normalized execution binding from the concrete PIC/LAPIC provider
+is the next integration step.
 
 PIT plus remapped 8259 PIC is the first QEMU/PC provider. LAPIC one-shot timing
 is the production multicore/tickless provider; the provider changes while the
