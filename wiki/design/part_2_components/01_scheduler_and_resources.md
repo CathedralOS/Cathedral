@@ -66,7 +66,13 @@ demands. Suspension is checked locally against possible `Suspend` reach; the
 runtime cannot erase that ceiling. The runtime separately states preemption
 granularity, migration/affinity support, and continuation-storage behavior, and
 admission joins the CPU/thread/address demands against that behavior. Unknown
-or unreceipted host behavior is pessimistic and therefore fails closed.
+or unreceipted host behavior is pessimistic and therefore fails closed. Omega's
+normalized admission carrier now requires the shared provider-plan receipt to
+cover both the selected plan identity and the complete runtime-behavior
+statement; changing pinning, capacity, preemption, cancellation, or storage
+behavior is receipt drift rather than a freely asserted scheduler promise.
+Cathedral's scheduler provider must supply that receipt through ordinary
+provider admission before any activation may rely on the narrower behavior.
 
 Cathedral's born-strict native profile uses boundary/back-edge safepoints and
 stable continuation storage. This keeps save points enumerable and cheap while
