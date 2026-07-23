@@ -5,8 +5,9 @@
 // name is valid iff compiler-defined or build-defined) — an empty declaration,
 // NOT the retired target{...} config block; `subsystem` and `freestanding`
 // remain orthogonal `Build` fields (build_and_package_model.md addendum). The
-// EFI/MS-x64 calling plan is INFERRED from the subsystem; `boundary(<Plan>)`
-// would override it (calling_plans.md §7).
+// selected UEFI process-entry requirement pins the EFI/MS-x64 calling policy
+// and checks it against the exported entry; build code does not restate or
+// override that plan (calling_plans.md).
 
 target uefi_x64 {
 }

@@ -60,10 +60,13 @@ There are no locks to wait on, because mutual exclusion is ownership, enforced a
 
 A task runs until it parks, reaches a selected safepoint, or is interrupted by a
 runtime whose admitted contract permits asynchronous preemption. Omega does not
-color machines with `async` and does not require an `await` call-site marker.
+color machines with `async` or wrap results in futures. A direct call whose
+selected contract may suspend requires a source acknowledgement; Omega has
+settled that audibility rule while the exact keyword remains pending.
 Suspension, CPU/thread affinity, and address stability are independent value
-demands. Suspension is checked locally against possible `Suspend` reach; the
-runtime cannot erase that ceiling. The runtime separately states preemption
+demands. Suspension is checked locally against the selected contract's
+independent `suspends` ceiling; the runtime cannot erase that ceiling. The
+runtime separately states preemption
 granularity, migration/affinity support, and continuation-storage behavior, and
 admission joins the CPU/thread/address demands against that behavior. Unknown
 or unreceipted host behavior is pessimistic and therefore fails closed. Omega's

@@ -2,8 +2,8 @@
 
 > **Status: DRAFT (2026-07-02).** The canonical plan for how Cathedral's source
 > is organized. This document is the architecture; the filesystem grows into
-> it. No code exists yet — every directory below is described here *before* it
-> is created, and directories are created only when real code lands in them
+> it. The early boot path and its contracts now occupy the first planned
+> directories; remaining directories are created only when real code lands
 > (see [The no-scaffolds rule](#the-no-scaffolds-rule)).
 >
 > Method borrowed from Dolrus (`C:\Projects\Dolrus`): plan in one document,

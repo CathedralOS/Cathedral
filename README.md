@@ -5,12 +5,12 @@ Entire classes of frustrations, problems, and disasters are structurally impossi
 - **Instant file searching.** The underlying storage for files is a database, which means database speeds for file operations. Searching and filtering files is near-instant.
 - **Instant file copying.** Copying a file, no matter how large, is instantaneous. The folder hierarchy is decoupled from the underlying file storage, so you only pay a cost when the file is changed (copy-on-write), or when the file is copied to another storage device.
 - **Automated file history, replication.** Files have automated history checkpoints, again thanks to our copy-on-write database backing. We get this for free. Files can be set to replicate across drives, meaning your documents can exist in all of your hard drives simultaneously for reliable local backups.
-- **Zero-cost sandboxing.** Docker and virtual machines are obsoleted by design. It is trivial to spin up a zero-cost nested Cathedral instance, referred to as a Matrix. These cannot leak into the owning operating system. Even the main desktop is a Matrix. Detecting whether we are "in a Matrix" is almost impossible for malware, because everything is. We control what goes into and leaves Matrices. This works because the filesystem can share all system files as read-only.
+- **Native sandboxing without container machinery.** A nested Cathedral instance, referred to as a Matrix, replaces Docker-style isolation for native software without requiring a guest OS. These cannot leak into the owning operating system. Even the main desktop is a Matrix. Detecting whether we are "in a Matrix" is almost impossible for malware, because everything is. We control what goes into and leaves Matrices. This works because the filesystem can share all system files as read-only. Virtual machines remain a compatibility tool for foreign operating systems.
 - **No untrusted file access.** If a program wants access to a file or folder, it must be explicitly given and granted. A program can never take more than it was given.
 - **No clutter.** There are no system directories littering your hard drive. System files are a completely separate "realm". From the user's point of view, the disk is fully theirs to use. Apps do not write to global directories, they own a realm nested under their binary.
 - **A crash never corrupts your data.** Storage is one transactional, versioned object store: power loss leaves you at your last consistent commit, and any object rolls back to the state before a bad change — git-style history, built into the filesystem.
-- **Update anything without rebooting.** Drivers, services, even the privileged core hot-swap live, with rollback.
-- **Ransomware encrypts nothing.** No program can touch a file, device, or network it wasn't explicitly handed. A malicious download, a backdoored dependency, a hijacked AI agent — each reaches only what you granted, and you can revoke any grant instantly and see exactly what would break.
+- **Update almost anything without rebooting.** Drivers, services, and compatible privileged-core changes hot-swap live, with rollback. A change that cannot prove a safe live path defers to reboot.
+- **Ransomware is contained and recoverable.** No program can touch a file, device, or network it wasn't explicitly handed. A malicious download, a backdoored dependency, or a hijacked AI agent can damage only granted writable data; each grant is attributable and revocable, while versioned storage preserves recovery points.
 - **AI agents you can hand real power.** An agent holds the *right to use* a secret, never the secret's bytes. A prompt-injected agent *cannot* exfiltrate keys, because the bytes never enter its reach. The worst a compromised agent can do is limited to "use this key, read-only, rate-limited, within this sandbox."
 - **A buggy driver kills its device, not your machine.** Drivers run confined in user space behind a mandatory IOMMU.
 
@@ -28,19 +28,30 @@ One technique among these — a single address space with language-level isolati
 
 ## Status
 
-Cathedral is in the **design** phase. There is no kernel, no driver, no line of runtime code yet — on purpose. The current work is to write down the system we intend to build, one design chapter per meaningful concept, so the contracts can be argued about, challenged, and proven coherent before they harden into code.
+Cathedral is primarily in the **design and early boot** phase. The Omega-emitted
+UEFI path now boots under QEMU/OVMF, exits firmware, mints a provisional first
+physical extent, writes through a 16550 UART, and idles on `hlt`. There is not
+yet a running kernel, scheduler, component runtime, or production driver.
+Current work continues to specify each meaningful contract before the wider
+system hardens around it.
 
-If a design chapter and a future implementation disagree, the chapter is the bug report, not the law — but until code exists, the chapters are the system.
+If a design chapter and an implementation disagree, the chapter is the bug
+report, not the law. Outside the narrow boot path, the chapters remain the
+system's primary specification.
 
 ## Repository layout
 
-The source tree is planned before it is built. The root separates the OS from everything *about* it:
+The source tree is being populated milestone by milestone. The root separates the OS from everything *about* it:
 
 - **`wiki/`** — design truth (why it's built this way).
 - **`source/`** — the OS itself, split by trust: `contracts/` (the frozen ABI), `core/` (the proved kernel — the TCB), `foundation/` (the kernel-safe shared library), then userspace `services/`, `drivers/`, `libraries/`, `applications/`, and the `boot/` firmware seam.
 - **`tools/`** — host-side tooling that never ships.
 
-Nothing under `source/` exists yet — directories are created only when real code lands in them. The full plan, the dependency law, and the placement rules live in [`wiki/architecture/repository_layout.md`](wiki/architecture/repository_layout.md); the trusted set is enumerated in [`wiki/architecture/tcb.md`](wiki/architecture/tcb.md); the decision is locked in [ADR 0001](wiki/decisions/0001-repository-layout.md).
+Directories under `source/` are created only when real code or contracts land.
+The full plan, the dependency law, and the placement rules live in
+[`wiki/architecture/repository_layout.md`](wiki/architecture/repository_layout.md);
+the trusted set is enumerated in [`wiki/architecture/tcb.md`](wiki/architecture/tcb.md);
+the decision is locked in [ADR 0001](wiki/decisions/0001-repository-layout.md).
 
 ## The design wiki
 
