@@ -185,9 +185,12 @@ WCSU, nesting/acknowledgement policy, and component pins; it never exposes a
 numeric handler address. WCSU is now a sealed artifact-wide composition rather
 than a caller-authored total: provider-local demands are joined under the exact
 nesting relation, and every installed root must agree on that composition's
-fingerprint. Cathedral's concrete first x86 policy is fixed below; the remaining
-work is provider, checker, and backend implementation. No source-level `lidt`
-shortcut may bypass that ledger.
+fingerprint. Root admission also requires a sealed provider-execution binding
+over the selected provider-plan identity, exact entry/boundary/effects, and all
+three resource realizations; the manifest reports that binding and rejects its
+reuse after realization drift. Cathedral's concrete first x86 policy is fixed
+below; the remaining work is provider, checker, and backend implementation. No
+source-level `lidt` shortcut may bypass that ledger.
 
 Build and package policy is an additional outer gate. Ordinary application
 profiles reject transitive reach to normalized services such as `IdtControl`,
@@ -261,8 +264,8 @@ hidden behind acknowledgement. A companion stack canary derives the shared
 maskable-IRQ domain as the maximum sequential root demand plus each permitted
 current-stack fatal-fault path, keeps dedicated fault classes independent, and
 rejects cycles, missing endpoints, unknown nested stack selection, overflow,
-or re-entry of an active dedicated class. Concrete PIC/LAPIC provider execution
-is the next integration step.
+or re-entry of an active dedicated class. Driving the normalized execution
+binding from the concrete PIC/LAPIC provider is the next integration step.
 
 PIT plus remapped 8259 PIC is the first QEMU/PC provider. LAPIC one-shot timing
 is the production multicore/tickless provider; the provider changes while the
@@ -343,9 +346,8 @@ trampoline bytes are accepted as a shortcut.
 1. Omega parsed checked assembly and the initial x86 contract catalog.
 2. Omega `CallingPolicy::plan` source integration and `CallPlan + StatePlan`
    entry derivation; trait-parent composition and policy semantics are settled.
-3. Connect Omega's implemented normalized external-root resource columns,
-   fixed-work summaries, and artifact-wide WCSU composition to concrete
-   provider execution.
+3. Drive Omega's implemented provider-execution binding, fixed-work summaries,
+   and artifact-wide WCSU composition from Cathedral's concrete provider.
 4. Generate the direct-destination checked IDT writer over an unpublished
    mapped/pinned/writable placement and sealed boot-artifact resolver. Validate
    the software-fault-free bootstrap conjunction, mint `MaterializedIdt`, and
