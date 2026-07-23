@@ -356,6 +356,9 @@ to quiescence/versioning instead. Installation prevents code injection.
 Backward-edge returns in checked Omega derive from memory safety and compiler-
 owned, non-addressable live or parked continuation state. Forward-edge indirect
 calls separately require sealed requirement-compatible entries or descriptors.
+Omega now pins the parked half of that claim with explicit negative canaries:
+`Task<T>` exposes no continuation field, so ordinary code cannot project,
+recast, address, or mutate another activation's saved control state.
 Opaque providers without admitted call/state exits remain hardware-isolated or
 reject. Omega's external-root binding now enforces this before provider
 execution: realized return control and restored state must match the selected
