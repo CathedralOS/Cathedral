@@ -204,14 +204,17 @@ software-fault-free, code/artifact/destination/content-bound receipt.
 That path now begins with a sealed `PreparedIdtWriter` which owns the exact
 destination, normalized plan, and root set after checking placement,
 destination authority, fragment geometry, and every entry against the exact
-installed artifact. Omega lowers the proof to a generated-only address-free
-target/machine carrier containing deterministic code/artifact/destination/
-initial-content/plan/placement/root bindings, fragment geometry, and
-provider-private source slot indices. The packed private `IDTWRIT1` context ABI
-is pinned as an R10-addressed destination pointer followed by dense u64 source
-slots. Exact x86 emission and width are live with the derived RAX/RCX/RDX/R11
-plus Flags footprint; unsupported architecture, ABI, slot, and geometry
-combinations reject before emission. No numeric handler address enters
+installed artifact. An opaque non-clonable populated seal then resolves each
+distinct source once through that exact installed realization, binds the
+destination/source words by identity and fingerprint, and omits them from
+diagnostics and public accessors. Omega lowers only that populated proof to a
+generated-only address-free target/machine carrier containing deterministic
+code/artifact/destination/initial-content/plan/placement/root/context bindings,
+fragment geometry, and provider-private source slot indices. The packed private
+`IDTWRIT1` context ABI is pinned as an R10-addressed destination pointer followed
+by dense u64 source slots. Exact x86 emission and width are live with the derived
+RAX/RCX/RDX/R11 plus Flags footprint; unsupported architecture, ABI, slot, and
+geometry combinations reject before emission. No numeric handler address enters
 Cathedral or Omega source.
 Cathedral's concrete first x86 policy is fixed below. Omega now carries the
 exact validated selected provider plans through checked lowering as a canonical
@@ -220,11 +223,10 @@ selection rather than reconstructing it from declarations. Root candidates
 bind that plan identity before validation, root identity covers it, and
 execution inherits it rather than accepting a second plan input; the compiler
 bridge rejects a missing or ambiguous retained boundary slot. Cathedral's
-concrete candidate construction, provider-private writer-context population
-from the exact installed resolver, R10 context/descriptor-address
-materialization, and actual provider execution remain. Source `lidt` spelling
-still rejects before operand lowering, so no
-source-level shortcut can bypass the installed-table gate.
+concrete candidate construction, R10 context/descriptor-address materialization,
+and actual provider execution remain. Source `lidt` spelling still rejects
+before operand lowering, so no source-level shortcut can bypass the
+installed-table gate.
 
 Build and package policy is an additional outer gate. Ordinary application
 profiles reject transitive reach to normalized services such as `IdtControl`,
@@ -382,7 +384,7 @@ trampoline bytes are accepted as a shortcut.
    entry derivation; trait-parent composition and policy semantics are settled.
 3. Drive Omega's implemented provider-execution binding, fixed-work summaries,
    and artifact-wide WCSU composition from Cathedral's concrete provider.
-4. Emit the prepared direct-destination checked IDT writer over an unpublished
+4. Emit the populated direct-destination checked IDT writer over an unpublished
    mapped/pinned/writable placement and sealed boot-artifact resolver. Validate
    the software-fault-free bootstrap conjunction, mint `MaterializedIdt`, and
    issue its content-bound receipt. Provision Cathedral's complete exception
@@ -393,9 +395,9 @@ trampoline bytes are accepted as a shortcut.
    root liveness retention are already live, as are the deriver-only `lidt`
    contract, exact x86 encoding, source-rejection rail, sealed writer
    preparation, address-free generated machine carrier, pinned `IDTWRIT1`
-   context ABI, exact writer encoding/width, and derived footprint. Populating
-   the context privately, materializing R10, and executing both generated
-   operations in the concrete provider remain.
+   context ABI, exact writer encoding/width, derived footprint, and opaque
+   once-resolved context population gate. Materializing R10 and executing both
+   generated operations in the concrete provider remain.
 5. Bring up PIT/PIC under QEMU with the fixed-work timer root and coalescing
    timer-service wake; then add the LAPIC one-shot provider.
 6. Connect Omega's opaque linear Extent to provider minting and sealed range
