@@ -241,10 +241,14 @@ Omega's provider-neutral interrupt obligations are also live in
 `omega::language::core::interrupt`. A saved-mask guard and an interrupt
 acknowledgement are distinct opaque linear values with consuming `restore` and
 `complete` operations; their contracts retain `machine_control` versus
-`device_io` reach. Cathedral's interrupt provider must mint those exact values
-and wire completion to its chosen PIC/LAPIC protocol. Forgotten restoration or
-EOI, double completion, and ordinary construction already reject without any
-interrupt-specific checker rule.
+`device_io` reach. Omega's installed-root ledger now mints those values only
+from an exact provider entry receipt, rejects invocation or acknowledgement
+replay, enforces LIFO restoration of exact saved mask states, pins retirement
+while an entry remains active, and admits exit only after the matching EOI
+receipt. Cathedral's concrete interrupt provider must execute those normalized
+transitions and wire completion to its chosen PIC/LAPIC protocol. Forgotten
+restoration or EOI, double completion, and ordinary construction reject without
+any interrupt-specific checker rule.
 
 ### First x86 exception and interrupt profile
 
