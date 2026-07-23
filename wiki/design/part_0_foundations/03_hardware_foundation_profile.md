@@ -357,7 +357,10 @@ Backward-edge returns in checked Omega derive from memory safety and compiler-
 owned, non-addressable live or parked continuation state. Forward-edge indirect
 calls separately require sealed requirement-compatible entries or descriptors.
 Opaque providers without admitted call/state exits remain hardware-isolated or
-reject.
+reject. Omega's external-root binding now enforces this before provider
+execution: realized return control and restored state must match the selected
+plan under a reported trust receipt, or a reported hardware-isolation receipt
+must cover the opaque provider; missing or drifted evidence fails closed.
 
 The initial trust chain is trusted-build validation and signed admitted identity
 → secure boot authentication/entry gate → measured-boot record → boot-admitted
