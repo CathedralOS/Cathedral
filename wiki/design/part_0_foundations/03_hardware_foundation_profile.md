@@ -126,9 +126,14 @@ admits only an entry belonging to the exact installed artifact, consumes an
 owner-scoped destination slot, retains the complete evaluated boundary plan and
 all reporting/WCSU/version facts, and borrows the installed-code claim as a
 liveness pin. Removal returns the slot only after a provider receipt proves
-both entry unreachability and execution quiescence. Cathedral must still choose
-the concrete x86 stack/nesting policy and connect its interrupt provider; no
-source-level `lidt` shortcut may bypass that ledger.
+both entry unreachability and execution quiescence. The live ledger now has a
+deterministic snapshot identity and Omega's artifact layer emits
+`external_roots.json` directly from it. That manifest carries the complete
+normalized entry plan, exact artifact/slot/admission binding, effects, trust,
+WCSU, nesting/acknowledgement policy, and component pins; it never exposes a
+numeric handler address. Cathedral must still choose the concrete x86
+stack/nesting policy and connect its interrupt provider; no source-level
+`lidt` shortcut may bypass that ledger.
 
 Omega's provider-neutral interrupt obligations are also live in
 `omega::language::core::interrupt`. A saved-mask guard and an interrupt
@@ -208,9 +213,9 @@ trampoline bytes are accepted as a shortcut.
 1. Omega parsed checked assembly and the initial x86 contract catalog.
 2. Omega `CallingPolicy::plan` source integration and `CallPlan + StatePlan`
    entry derivation; trait-parent composition and policy semantics are settled.
-3. Connect Omega's live fragmented materialization and normalized external-root
-   ledger plus its linear mask/acknowledgement contracts to Cathedral's
-   interrupt provider and artifact/WCSU reports.
+3. Connect Omega's live fragmented materialization, normalized external-root
+   ledger and manifest, plus its linear mask/acknowledgement contracts to
+   Cathedral's interrupt provider and WCSU composition.
 4. Cathedral IDT + timer tick.
 5. Connect Omega's opaque linear Extent to provider minting and sealed range
    facts; implement placed views, then migrate UART/MMIO off provisional direct
