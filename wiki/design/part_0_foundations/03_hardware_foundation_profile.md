@@ -213,7 +213,7 @@ code/artifact/destination/initial-content/plan/placement/root/context bindings,
 fragment geometry, and provider-private source slot indices. The packed private
 `IDTWRIT1` context ABI is pinned as an R10-addressed destination pointer followed
 by dense u64 source slots. Exact x86 emission and width are live with the derived
-RAX/RCX/RDX/R11 plus Flags footprint; unsupported architecture, ABI, slot, and
+RAX/RCX/RDX/R10/R11 plus Flags footprint; unsupported architecture, ABI, slot, and
 geometry combinations reject before emission. No numeric handler address enters
 Cathedral or Omega source.
 Cathedral's concrete first x86 policy is fixed below. Omega now carries the
@@ -222,9 +222,13 @@ immutable fact set, so Cathedral's root execution can consume compiler
 selection rather than reconstructing it from declarations. Root candidates
 bind that plan identity before validation, root identity covers it, and
 execution inherits it rather than accepting a second plan input; the compiler
-bridge rejects a missing or ambiguous retained boundary slot. Cathedral's
-concrete candidate construction, R10 context/descriptor-address materialization,
-and actual provider execution remain. Source `lidt` spelling still rejects
+bridge rejects a missing or ambiguous retained boundary slot. The generated
+helpers now require a validated one-private-pointer invocation plan and emit
+its exact selected register into R10; their derived footprint must fit that
+same plan, including explicit control-state permission for the load. The load
+preparation owns a private packed ten-byte descriptor bound to the placed table. Cathedral's concrete
+candidate construction plus insertion and actual provider execution remain.
+Source `lidt` spelling still rejects
 before operand lowering, so no source-level shortcut can bypass the
 installed-table gate.
 
@@ -409,9 +413,10 @@ trampoline bytes are accepted as a shortcut.
    root liveness retention are already live, as are the deriver-only `lidt`
    contract, exact x86 encoding, source-rejection rail, sealed writer
    preparation, address-free generated machine carrier, pinned `IDTWRIT1`
-   context ABI, exact writer encoding/width, derived footprint, and opaque
-   once-resolved context population gate. Materializing R10 and executing both
-   generated operations in the concrete provider remain.
+   context ABI, exact writer encoding/width, derived footprint, opaque
+   once-resolved context population gate, plan-driven R10 materialization, and
+   private packed IDTR descriptor. Inserting and executing both generated
+   operations in the concrete provider remain.
 5. Bring up PIT/PIC under QEMU with the fixed-work timer root and coalescing
    timer-service wake; then add the LAPIC one-shot provider.
 6. Connect Omega's opaque linear Extent to provider minting and sealed range
