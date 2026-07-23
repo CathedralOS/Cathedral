@@ -34,6 +34,16 @@ Legend: `[ ]` open · `[x]` closed.
 ---
 
 ## Part 0 — Foundations
+- [ ] **First x86 exception/interrupt vertical slice — POLICY RESOLVED.**
+  Extend Omega's installed-root report with stack/work/state
+  ceiling-realization-receipt columns and fixed-work provider summaries;
+  materialize a diagnostic/fatal entry for every defined exception; provision
+  distinct per-CPU ISTs for double fault/NMI/machine check plus one shared
+  non-reentrant maskable-IRQ IST; connect checked `lidt`; validate save-all-GPR
+  and final no-SIMD/x87 entry code; bring up PIT/remapped-PIC under QEMU with an
+  exactly-once acknowledgement and coalescing timer-service wake; then add the
+  LAPIC one-shot provider. The hard root never drains timer registrations and
+  proves finite structural work, not WCET. See [[hardware_foundation_profile]].
 - [ ] `omega_substrate` — no decision rule for *which* ZII shape each construct adopts.
 - [ ] `vocabulary` — stub; "which terms deserve a domain vs. doc" unframed.
 

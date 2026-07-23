@@ -26,7 +26,17 @@ The shape that results is a small **resident core** of latency-critical always-o
 
 **The activator is an actor on one mailbox.** Every trigger source is normalized into a variant posted to the activator's mailbox — the core's interrupt stub turns a device interrupt into a message, the timer subsystem posts `TimerFired`, an endpoint message is already one, a watched object posts a change — so the activator does one wait on a `TriggerEvent` sum and switches to spawn the handler. There is no per-trigger task; one actor parks on its whole condition set ([[ipc_and_service_invocation]]).
 
-**Timers are tickless.** The timer subsystem keeps registered timers ordered by expiry and arms the hardware timer as a *one-shot* at the earliest — not a periodic tick. On fire it drains all due timers (pop while `expiry ≤ now`, where firing is a cheap enqueue-and-wake into each target's mailbox) and re-arms for the next future expiry, so even a thousand timers at one instant fire in a single pass. Zero work between expirations is what lets the machine deep-sleep with no polling daemon ([[power_management]]).
+**Timers are tickless, with a hard-root/deferred-task split.** The timer service
+keeps registrations ordered by expiry and arms the hardware timer as a
+*one-shot* at the earliest — not a periodic tick. The hardware root performs
+only fixed work: acknowledge, capture time, set one preallocated per-CPU
+coalescing wake state, and return. The ordinary suspend-allowed timer-service
+task then drains all deadlines with `expiry ≤ now` in bounded batches, wakes
+their endpoints, and re-arms the next future expiry. A thousand simultaneous
+deadlines therefore create schedulable service work, never an unbounded
+interrupt handler or edge queue. Zero work between expirations is what lets the
+machine deep-sleep with no polling daemon ([[power_management]],
+[[hardware_foundation_profile]]).
 
 **Quiesce is a cost model, not a timeout.** Weigh stay-warm cost against re-spawn cost — where re-spawn includes the power-cycle-as-consumable transition wear ([[power_management]]) and any state-rehydration cost — and enforce it as a scheduler budget, so hysteresis falls out and it composes with resource governance. A stateful service persists to the store and rehydrates on spawn (reattach-to-last-commit, [[memory_and_persistence]]); cheap-to-rehydrate state quiesces, expensive state stays resident.
 

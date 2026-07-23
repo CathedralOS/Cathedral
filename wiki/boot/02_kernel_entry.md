@@ -12,7 +12,12 @@ One term to fix, since the rest of the phase leans on it: virtual memory works t
 
 - **Page tables.** Build the kernel's own page tables and point the MMU at them (load `CR3` on x86, set the translation base register on ARM). Real virtual memory begins here, before any serious storage work ([memory & persistence](../design/part_2_components/02_memory_and_persistence.md)).
 - **A heap.** A dynamic allocator, so the kernel can allocate at runtime instead of from fixed buffers.
-- **Fault and interrupt handling.** Install the table the CPU jumps through when a fault or a hardware interrupt occurs, so neither halts the machine.
+- **Fault handling before the timer.** Materialize and install the complete
+  exception table before enabling external interrupts: every defined exception
+  gets at least a diagnostic/fatal entry, while double fault, NMI, and machine
+  check receive separate emergency IST stacks. Only after that debugging floor
+  exists does boot install the shared maskable-IRQ stack and enable the first
+  timer ([hardware foundation](../design/part_0_foundations/03_hardware_foundation_profile.md)).
 - **Per-CPU state and a console.** Enough to run each core and to report a diagnostic if early boot fails.
 
 ## ExitBootServices: the point of no return

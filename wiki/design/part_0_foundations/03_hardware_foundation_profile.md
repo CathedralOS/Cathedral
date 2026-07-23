@@ -131,9 +131,9 @@ deterministic snapshot identity and Omega's artifact layer emits
 `external_roots.json` directly from it. That manifest carries the complete
 normalized entry plan, exact artifact/slot/admission binding, effects, trust,
 WCSU, nesting/acknowledgement policy, and component pins; it never exposes a
-numeric handler address. Cathedral must still choose the concrete x86
-stack/nesting policy and connect its interrupt provider; no source-level
-`lidt` shortcut may bypass that ledger.
+numeric handler address. Cathedral's concrete first x86 policy is fixed below;
+the remaining work is provider, checker, and backend implementation. No
+source-level `lidt` shortcut may bypass that ledger.
 
 Omega's provider-neutral interrupt obligations are also live in
 `omega::language::core::interrupt`. A saved-mask guard and an interrupt
@@ -144,10 +144,61 @@ and wire completion to its chosen PIC/LAPIC protocol. Forgotten restoration or
 EOI, double completion, and ordinary construction already reject without any
 interrupt-specific checker rule.
 
-The timer-tick slice is the first implementation. It must reject direct-assembly
-effect laundering, user-authored `iretq`, incomplete split placement, forgotten
-or double EOI, and final generated code that uses machine state the interrupt
-plan did not save.
+### First x86 exception and interrupt profile
+
+Cathedral installs the exception floor before enabling the timer:
+
+- every architecturally defined exception vector receives at least a generated
+  diagnostic/fatal entry;
+- double fault, NMI, and machine check receive distinct per-CPU IST stacks; and
+- page fault, general-protection fault, invalid-opcode, and other ordinary
+  exceptions use the current kernel stack. A fault raised while a hard external
+  root is live is fatal in v1; its bounded current-stack handler remains a real
+  term in that root stack's WCSU.
+
+One additional per-CPU IST stack class is shared by all maskable external
+interrupt roots. The timer is its first customer. Every member uses an interrupt
+gate, keeps IF clear for the entire handler, forbids body-authored `sti`, and
+returns only through the deriver-owned exit. Members therefore cannot nest on
+the shared stack. The installed-root ledger records the actual x86
+fault/preemption relation; it does not assume that IF masks synchronous faults.
+
+The first entry stub saves all ordinary GPRs. Final placed code for the handler
+and every transitive callee must remain within a no-SIMD/x87 state ceiling.
+Exact GPR-footprint saves are an optimization after the coarse correctness
+check exists. A protocol-neutral linear acknowledgement lets legacy PIC, LAPIC,
+or x2APIC realize EOI without changing the handler requirement.
+
+Each installed root reports three independent resource columns:
+
+| column | admitted ceiling | realized artifact fact | evidence kept private |
+| --- | --- | --- | --- |
+| stack | stack class and permitted demand | composed WCSU bytes/alignment | place/frame liveness and WCSU derivation |
+| structural work | permitted hard-root work profile | composed fixed-work demand | CFG/ranking/callee/codegen proof |
+| machine state | evaluated `StatePlan` | final transitive footprint/clobbers | instruction-selection and allocation proof |
+
+The ledger and `external_roots.json` retain ceilings, realized facts, and
+validation receipts, never private ranking or codegen proof internals. The
+columns share a reporting discipline, not identity semantics: `StatePlan` is
+published boundary identity, while stack/work figures are provisioning and
+admission facts.
+
+Structural work is not WCET. V1 proves a finite admitted operation path under
+provider contracts; it does not promise a microsecond deadline, cache bound, or
+MMIO latency. The timer root is the trivial fixed-work profile: acknowledge,
+capture time, set one preallocated per-CPU coalescing wake state, and return. It
+does not drain application timer registrations. An ordinary suspend-allowed
+timer-service task reads the clock, drains due registrations in batches, wakes
+their endpoints, and rearms the next one-shot deadline.
+
+PIT plus remapped 8259 PIC is the first QEMU/PC provider. LAPIC one-shot timing
+is the production multicore/tickless provider; the provider changes while the
+root contract does not.
+
+The timer-tick slice must reject direct-assembly effect laundering,
+user-authored `iretq`, incomplete split placement, forgotten or double EOI,
+final generated code that uses machine state the interrupt plan did not save,
+and a dynamic/recursive or unbounded provider leaf behind the fixed-work root.
 
 ## Tasks, preemption, and affinity
 
@@ -213,23 +264,25 @@ trampoline bytes are accepted as a shortcut.
 1. Omega parsed checked assembly and the initial x86 contract catalog.
 2. Omega `CallingPolicy::plan` source integration and `CallPlan + StatePlan`
    entry derivation; trait-parent composition and policy semantics are settled.
-3. Connect Omega's live fragmented materialization, normalized external-root
-   ledger and manifest, plus its linear mask/acknowledgement contracts to
-   Cathedral's interrupt provider and WCSU composition.
-4. Cathedral IDT + timer tick.
-5. Connect Omega's opaque linear Extent to provider minting and sealed range
+3. Extend Omega's normalized external-root ledger and manifest with the
+   stack/work/state ceiling-realization-receipt columns and fixed-work provider
+   summaries; connect provider execution and WCSU composition.
+4. Materialize Cathedral's complete exception IDT, provision the distinct fault
+   ISTs plus shared maskable-IRQ IST, connect checked `lidt`, and validate the
+   final save-all-GPR/no-SIMD stubs.
+5. Bring up PIT/PIC under QEMU with the fixed-work timer root and coalescing
+   timer-service wake; then add the LAPIC one-shot provider.
+6. Connect Omega's opaque linear Extent to provider minting and sealed range
    facts; implement placed views, then migrate UART/MMIO off provisional direct
    port/provider shapes where applicable.
-6. Correct-by-construction page tables and AP bringup.
-7. External loans, IOMMU DMA, and hostile shared-page acceptance tests.
-8. Arena-backed task runtime under the carry/runtime admission model.
+7. Correct-by-construction page tables and AP bringup.
+8. External loans, IOMMU DMA, and hostile shared-page acceptance tests.
+9. Arena-backed task runtime under the carry/runtime admission model.
 
 ## Cathedral-owned open decisions
 
 - exact privileged broker split among address-space, artifact-installation,
   interrupt-installation, and IOMMU providers;
-- concrete x86 interrupt stack classes and nesting policy;
-- whether the first driver path uses PIT or LAPIC for the timer milestone;
 - which device reset failures require bus-wide or power-domain escalation; and
 - the first hardware/virtual platform on which AP bringup and IOMMU guarantees
   are mandatory rather than honestly degraded.
