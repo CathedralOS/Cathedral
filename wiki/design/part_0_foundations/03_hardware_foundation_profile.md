@@ -130,6 +130,15 @@ both entry unreachability and execution quiescence. Cathedral must still choose
 the concrete x86 stack/nesting policy and connect its interrupt provider; no
 source-level `lidt` shortcut may bypass that ledger.
 
+Omega's provider-neutral interrupt obligations are also live in
+`omega::language::core::interrupt`. A saved-mask guard and an interrupt
+acknowledgement are distinct opaque linear values with consuming `restore` and
+`complete` operations; their contracts retain `machine_control` versus
+`device_io` reach. Cathedral's interrupt provider must mint those exact values
+and wire completion to its chosen PIC/LAPIC protocol. Forgotten restoration or
+EOI, double completion, and ordinary construction already reject without any
+interrupt-specific checker rule.
+
 The timer-tick slice is the first implementation. It must reject direct-assembly
 effect laundering, user-authored `iretq`, incomplete split placement, forgotten
 or double EOI, and final generated code that uses machine state the interrupt
@@ -200,7 +209,8 @@ trampoline bytes are accepted as a shortcut.
 2. Omega `CallingPolicy::plan` source integration and `CallPlan + StatePlan`
    entry derivation; trait-parent composition and policy semantics are settled.
 3. Connect Omega's live fragmented materialization and normalized external-root
-   ledger to Cathedral's interrupt provider and artifact/WCSU reports.
+   ledger plus its linear mask/acknowledgement contracts to Cathedral's
+   interrupt provider and artifact/WCSU reports.
 4. Cathedral IDT + timer tick.
 5. Connect Omega's opaque linear Extent to provider minting and sealed range
    facts; implement placed views, then migrate UART/MMIO off provisional direct
