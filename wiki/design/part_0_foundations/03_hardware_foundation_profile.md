@@ -300,12 +300,18 @@ Component-slot binding remains a later logical dispatch/versioning operation.
 Correct-by-construction page-table APIs and checked assembly require the same
 artifact provenance before execute permission can appear. Device firmware is a
 device upload, not host execution. Live or template-patched host code belongs
-to quiescence/versioning instead. Installation prevents code injection; CFI
-over sealed entries, indirect calls, and protected returns is a separate gate.
+to quiescence/versioning instead. Installation prevents code injection.
+Backward-edge returns in checked Omega derive from memory safety and compiler-
+owned, non-addressable live or parked continuation state. Forward-edge indirect
+calls separately require sealed requirement-compatible entries or descriptors.
+Opaque providers without admitted call/state exits remain hardware-isolated or
+reject.
 
-The initial trust chain is build PCC/CFI validation and signed admitted identity
+The initial trust chain is trusted-build validation and signed admitted identity
 → secure boot authentication/entry gate → measured-boot record → boot-admitted
 installer for later artifacts. Secure boot gates; measured boot records.
+Independent PCC/final-byte transfer validation and CET/PAC/shadow-stack
+hardening may later reduce compiler/TCB trust; they do not block v1.
 
 Cathedral components use a minimal canonical Omega-native artifact container
 decoded through checked schema/layout machinery, with bounded tables, closed
@@ -351,8 +357,8 @@ trampoline bytes are accepted as a shortcut.
 - the first hardware/virtual platform on which AP bringup and IOMMU guarantees
   are mandatory rather than honestly degraded.
 
-Omega's carry/runtime and admitted-artifact installation contracts are settled.
-The remaining Omega question is final control-flow integrity, especially
-protected returns and validation of every indirect site/provider boundary. It
-lives in Omega's `OWNER_QUESTIONS.md`; Cathedral work should force that answer
-through these vertical slices rather than inventing private syntax.
+Omega's carry/runtime, admitted-artifact installation, and checked-return
+contracts are settled. The remaining forward-edge question is runtime sealed
+descriptor/object-safety semantics. It lives in Omega's `OWNER_QUESTIONS.md`;
+Cathedral work should force that answer through real dynamic-dispatch/component
+customers rather than inventing private syntax.
