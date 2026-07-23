@@ -37,6 +37,12 @@ The model is **confinement over trust**: don't try to make a driver trustworthy 
 - **Capability-limited hardware access.** A driver holds capabilities for its MMIO range, its DMA windows, and its IRQs — not ambient hardware power ([[capability_model]]).
 - **DMA isolation.** The dangerous core: a device that can DMA anywhere defeats every software boundary. Requires IOMMU-backed, capability-scoped DMA windows.
 - **Interrupts become messages above a real entry root.** Hardware still enters a tiny target-specific boundary root with a pinned `CallPlan + StatePlan`; installation records it in the external-root ledger. The root acknowledges/masks and signals the driver endpoint. Device-specific processing remains in the ordinary driver task. DMA extents are external loans; registers are plan-derived placed views. Interrupt delivery and outstanding loans both pin live replacement.
+- **DMA reach is per transfer, not ambient.** Omega now refuses an external
+  loan unless an admitted borrower contract or hardware-isolation receipt is
+  bound to the exact loan, borrower/direction, address-space provenance/era,
+  and lent base/length. A whole-buffer receipt cannot authorize a smaller
+  subrange transfer, so task stacks and parked control storage outside that
+  Extent remain unreachable to the agent.
 - **Crash recovery & restartability.** A driver crash is contained and recovered, not fatal ([[error_model_and_recovery]]); device state is re-established on restart.
 - **Hot plugging & device discovery/matching.** Discovery enumerates devices; matching binds a device to a driver under explicit, auditable policy.
 - **New-device trust.** A freshly hot-plugged device is not trusted by default. A new input device cannot drive the trusted path or inject events until authorized, the BadUSB defense, and a new storage device appears as an untrusted realm the user browses and shares from explicitly rather than something apps are auto-granted ([[human_permission_ux]], [[windowing_and_compositor]]).
