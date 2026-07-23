@@ -121,6 +121,15 @@ interrupt nesting, stack/IST selection, and live-replacement pins. Device-
 specific work remains outside the privileged handler: the generic root records
 the event/acknowledgement and wakes the owning driver actor.
 
+Omega's provider-neutral `omega-external-roots` foundation is now live. It
+admits only an entry belonging to the exact installed artifact, consumes an
+owner-scoped destination slot, retains the complete evaluated boundary plan and
+all reporting/WCSU/version facts, and borrows the installed-code claim as a
+liveness pin. Removal returns the slot only after a provider receipt proves
+both entry unreachability and execution quiescence. Cathedral must still choose
+the concrete x86 stack/nesting policy and connect its interrupt provider; no
+source-level `lidt` shortcut may bypass that ledger.
+
 The timer-tick slice is the first implementation. It must reject direct-assembly
 effect laundering, user-authored `iretq`, incomplete split placement, forgotten
 or double EOI, and final generated code that uses machine state the interrupt
@@ -190,7 +199,8 @@ trampoline bytes are accepted as a shortcut.
 1. Omega parsed checked assembly and the initial x86 contract catalog.
 2. Omega `CallingPolicy::plan` source integration and `CallPlan + StatePlan`
    entry derivation; trait-parent composition and policy semantics are settled.
-3. Fragmented layout/materialization and external-root ledger.
+3. Connect Omega's live fragmented materialization and normalized external-root
+   ledger to Cathedral's interrupt provider and artifact/WCSU reports.
 4. Cathedral IDT + timer tick.
 5. Connect Omega's opaque linear Extent to provider minting and sealed range
    facts; implement placed views, then migrate UART/MMIO off provisional direct
