@@ -17,8 +17,10 @@ not the concrete range capability.
 **Non-goals.** No device drivers, no userspace service logic, no firmware ABIs.
 If it isn't small enough to audit in full, it doesn't belong here.
 
-**Status (2026-07-21).** In-progress: `extent.omg` — milestone 2, the first
-physical-range `Extent` and its mint, the origin of the authority graph. The
-generational `{slot, generation}` authority graph that
-makes capabilities unforgeable + revocable is the `capability_lifecycle` arc,
-later.
+**Status (2026-07-22).** In-progress: `extent.omg` — milestone 2, the first
+physical-range `Extent` and its mint, the origin of the authority graph. Omega's
+opaque linear source carrier is live; Cathedral still uses a plainly marked
+bootstrap value until provider minting supplies its runtime representation and
+sealed Physical grant. The generational `{slot, generation}` authority graph
+that makes capabilities unforgeable + revocable is the
+`capability_lifecycle` arc, later.

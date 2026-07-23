@@ -43,9 +43,9 @@ Cathedral distinguishes three relationships:
 
 Boot firmware and the final memory map mint the initial physical extents.
 Address-space providers turn authorized physical extents into mapped virtual
-extents. Allocators draw Regions from RAM extents. Device mappings retain device
-provenance and never become ordinary RAM merely because their virtual address is
-an integer.
+extents. Allocators draw `Allocation<T>` storage from RAM-backed Arenas. Device
+mappings retain device provenance and never become ordinary RAM merely because
+their virtual address is an integer.
 
 Space, rights, provenance, and mapping era are sealed grant-established domains
 on one opaque linear `Extent`, not distinct carrier types. Splitting consumes an
@@ -192,8 +192,9 @@ trampoline bytes are accepted as a shortcut.
    entry derivation; trait-parent composition and policy semantics are settled.
 3. Fragmented layout/materialization and external-root ledger.
 4. Cathedral IDT + timer tick.
-5. Implement the settled Extent and placed-view API, then migrate UART/MMIO off
-   provisional direct port/provider shapes where applicable.
+5. Connect Omega's opaque linear Extent to provider minting and sealed range
+   facts; implement placed views, then migrate UART/MMIO off provisional direct
+   port/provider shapes where applicable.
 6. Correct-by-construction page tables and AP bringup.
 7. External loans, IOMMU DMA, and hostile shared-page acceptance tests.
 8. Arena-backed task runtime under the carry/runtime admission model.

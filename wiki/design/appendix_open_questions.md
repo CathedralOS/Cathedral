@@ -15,11 +15,14 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 
 ## Proof & Language
 
-- **Remaining Omega OS-foundation contracts.** The `Extent`/placed-view public
-  model, carry/runtime admission policy, and admitted executable loader ladder
-  are settled. Omega still must settle protected returns and final-artifact CFI
-  over every indirect site and admitted provider. Cathedral's vertical slices
-  are the deciding customers
+- **Remaining Omega OS-foundation contracts.** The opaque linear `Extent`
+  source carrier is live and the placed-view public model, carry/runtime
+  admission policy, and admitted executable loader ladder are settled. The
+  runtime capability representation, provider mint of Cathedral's first
+  Physical extent, and sealed extent-domain facts still need implementation.
+  Omega must also settle protected returns and final-artifact CFI over every
+  indirect site and admitted provider. Cathedral's vertical slices are the
+  deciding customers
   ([[hardware_foundation_profile]]); the matching owner questions live in
   Omega's `OWNER_QUESTIONS.md`.
 - **Static authority flow vs. live held grants.** The compiler describes *possible* power; the runtime graph holds *actual* grants. How tightly are they reconciled, and who flags drift? ([[capability_model]], [[observability_and_introspection]].)
