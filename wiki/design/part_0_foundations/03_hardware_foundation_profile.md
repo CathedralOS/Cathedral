@@ -191,23 +191,27 @@ three resource realizations; the manifest reports that binding and rejects its
 reuse after realization drift. The normalized IDT publication gate now also
 requires every symbolic writer entry target to have its exact ledger record and
 live handle before a content/ledger-bound successful publication receipt can
-produce `InstalledIdt`; that value retains all root liveness pins. Cathedral's
-materialization foundation now also executes the normalized writer directly
-over mapped/pinned/writable unpublished storage through the exact installed-code
-resolver, derives final-byte identity, and checks its software-fault-free,
-code/artifact/destination/content-bound receipt. Cathedral's concrete first x86
-policy is fixed below. Omega now carries the exact validated selected provider
-plans through checked lowering as a canonical immutable fact set, so Cathedral's
-root execution can consume compiler selection rather than reconstructing it
-from declarations. Root candidates now bind that plan identity before
-validation, root identity covers it, and execution inherits it rather than
-accepting a second plan input; the compiler bridge rejects a missing or
-ambiguous retained boundary slot. Cathedral's concrete candidate construction,
-checked-Omega writer lowering, and actual provider execution remain. Omega's
-`lidt` contract is now deriver-only, requires distinct `IdtControl`, uses the
-private descriptor through scratch R10 with a pinned exact encoding, and
-rejects source spelling before operand lowering. No source-level shortcut may
-bypass the installed-table gate.
+produce `InstalledIdt`; that value retains all root liveness pins. The gate now
+mints a sealed prepared-load proof only after the exact materialized
+destination/content, live handles, ledger fingerprint, and `IdtControl` agree.
+Only that proof can request Omega's generated-only target/machine `lidt [r10]`
+lowering; the carrier retains those identities, reports exact R10 plus
+control-state footprint, emits pinned `41 0f 01 1a` bytes, and rejects on
+AArch64. Cathedral's materialization foundation executes the normalized writer
+directly over mapped/pinned/writable unpublished storage through the exact
+installed-code resolver, derives final-byte identity, and checks its
+software-fault-free, code/artifact/destination/content-bound receipt.
+Cathedral's concrete first x86 policy is fixed below. Omega now carries the
+exact validated selected provider plans through checked lowering as a canonical
+immutable fact set, so Cathedral's root execution can consume compiler
+selection rather than reconstructing it from declarations. Root candidates
+bind that plan identity before validation, root identity covers it, and
+execution inherits it rather than accepting a second plan input; the compiler
+bridge rejects a missing or ambiguous retained boundary slot. Cathedral's
+concrete candidate construction, checked-Omega writer lowering,
+private-descriptor address materialization, and actual provider execution
+remain. Source `lidt` spelling still rejects before operand lowering, so no
+source-level shortcut can bypass the installed-table gate.
 
 Build and package policy is an additional outer gate. Ordinary application
 profiles reject transitive reach to normalized services such as `IdtControl`,
