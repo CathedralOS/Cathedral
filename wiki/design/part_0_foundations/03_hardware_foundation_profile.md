@@ -192,7 +192,11 @@ reuse after realization drift. The normalized IDT publication gate now also
 requires every symbolic writer entry target to have its exact ledger record and
 live handle before a content/ledger-bound successful publication receipt can
 produce `InstalledIdt`; that value retains all root liveness pins. Cathedral's
-concrete first x86 policy is fixed below; writer lowering and actual provider
+materialization foundation now also executes the normalized writer directly
+over mapped/pinned/writable unpublished storage through the exact installed-code
+resolver, derives final-byte identity, and checks its software-fault-free,
+code/artifact/destination/content-bound receipt. Cathedral's concrete first x86
+policy is fixed below; checked-Omega writer lowering and actual provider
 execution remain. No source-level `lidt` shortcut may bypass that gate.
 
 Build and package policy is an additional outer gate. Ordinary application
@@ -358,7 +362,8 @@ trampoline bytes are accepted as a shortcut.
    IDT, distinct fault ISTs, and shared maskable-IRQ IST. Connect the separate
    `IdtControl` installer, record-before-`lidt` transition, installation
    receipt, and final save-all-GPR/no-SIMD stub validation. Omega's normalized
-   record-before-publish gate and root liveness retention are already live.
+   direct-destination materialization receipt, record-before-publish gate, and
+   root liveness retention are already live.
 5. Bring up PIT/PIC under QEMU with the fixed-work timer root and coalescing
    timer-service wake; then add the LAPIC one-shot provider.
 6. Connect Omega's opaque linear Extent to provider minting and sealed range
