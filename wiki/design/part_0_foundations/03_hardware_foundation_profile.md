@@ -188,9 +188,12 @@ nesting relation, and every installed root must agree on that composition's
 fingerprint. Root admission also requires a sealed provider-execution binding
 over the selected provider-plan identity, exact entry/boundary/effects, and all
 three resource realizations; the manifest reports that binding and rejects its
-reuse after realization drift. Cathedral's concrete first x86 policy is fixed
-below; the remaining work is provider, checker, and backend implementation. No
-source-level `lidt` shortcut may bypass that ledger.
+reuse after realization drift. The normalized IDT publication gate now also
+requires every symbolic writer entry target to have its exact ledger record and
+live handle before a content/ledger-bound successful publication receipt can
+produce `InstalledIdt`; that value retains all root liveness pins. Cathedral's
+concrete first x86 policy is fixed below; writer lowering and actual provider
+execution remain. No source-level `lidt` shortcut may bypass that gate.
 
 Build and package policy is an additional outer gate. Ordinary application
 profiles reject transitive reach to normalized services such as `IdtControl`,
@@ -354,7 +357,8 @@ trampoline bytes are accepted as a shortcut.
    issue its content-bound receipt. Provision Cathedral's complete exception
    IDT, distinct fault ISTs, and shared maskable-IRQ IST. Connect the separate
    `IdtControl` installer, record-before-`lidt` transition, installation
-   receipt, and final save-all-GPR/no-SIMD stub validation.
+   receipt, and final save-all-GPR/no-SIMD stub validation. Omega's normalized
+   record-before-publish gate and root liveness retention are already live.
 5. Bring up PIT/PIC under QEMU with the fixed-work timer root and coalescing
    timer-service wake; then add the LAPIC one-shot provider.
 6. Connect Omega's opaque linear Extent to provider minting and sealed range
