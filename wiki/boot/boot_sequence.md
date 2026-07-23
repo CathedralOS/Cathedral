@@ -28,3 +28,4 @@ The recurring shape is **bootstrap**: each layer is unreadable or unrunnable unt
 - [Filesystem as Database](../design/part_4_storage/00_filesystem_as_database.md)
 - [Component Model](../design/part_2_components/00_component_model.md)
 - [Memory & Persistence](../design/part_2_components/02_memory_and_persistence.md)
+- [Early IDT handoff](02a_idt_handoff.md)

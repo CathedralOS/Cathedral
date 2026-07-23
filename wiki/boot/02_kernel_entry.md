@@ -17,12 +17,22 @@ One term to fix, since the rest of the phase leans on it: virtual memory works t
   gets at least a diagnostic/fatal entry, while double fault, NMI, and machine
   check receive separate emergency IST stacks. Only after that debugging floor
   exists does boot install the shared maskable-IRQ stack and enable the first
-  timer ([hardware foundation](../design/part_0_foundations/03_hardware_foundation_profile.md)).
+  timer ([early IDT handoff](02a_idt_handoff.md),
+  [hardware foundation](../design/part_0_foundations/03_hardware_foundation_profile.md)).
 - **Per-CPU state and a console.** Enough to run each core and to report a diagnostic if early boot fails.
 
 ## ExitBootServices: the point of no return
 
 `ExitBootServices()` is the UEFI call after which firmware's temporary drivers and services are gone for good and the kernel owns the hardware. Anything still needed from firmware, the final memory map above all, must be captured before this call. Afterward the kernel brings up its own driver for whatever disk controller is present (NVMe or AHCI on real machines, the virtio interface under virtualization), good enough to read the store in [phase 4](04_mounting_the_store.md).
+
+The IDT should normally be materialized and validated after Cathedral's final
+image and virtual placements are known but before `ExitBootServices`, while
+firmware services remain available. It is installed only after every address
+it names is stable in the page tables Cathedral will keep. This leaves a tiny
+post-exit critical interval: switch final mappings/stack where required,
+complete visibility, prepare the external-root records, execute checked
+`lidt`, and finalize the installation receipt. Maskable interrupts remain
+disabled throughout.
 
 ## What is Omega and what is not
 
