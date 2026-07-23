@@ -197,7 +197,10 @@ over mapped/pinned/writable unpublished storage through the exact installed-code
 resolver, derives final-byte identity, and checks its software-fault-free,
 code/artifact/destination/content-bound receipt. Cathedral's concrete first x86
 policy is fixed below; checked-Omega writer lowering and actual provider
-execution remain. No source-level `lidt` shortcut may bypass that gate.
+execution remain. Omega's `lidt` contract is now deriver-only, requires
+distinct `IdtControl`, uses the private descriptor through scratch R10 with a
+pinned exact encoding, and rejects source spelling before operand lowering. No
+source-level shortcut may bypass the installed-table gate.
 
 Build and package policy is an additional outer gate. Ordinary application
 profiles reject transitive reach to normalized services such as `IdtControl`,
@@ -363,7 +366,8 @@ trampoline bytes are accepted as a shortcut.
    `IdtControl` installer, record-before-`lidt` transition, installation
    receipt, and final save-all-GPR/no-SIMD stub validation. Omega's normalized
    direct-destination materialization receipt, record-before-publish gate, and
-   root liveness retention are already live.
+   root liveness retention are already live, as are the deriver-only `lidt`
+   contract, exact x86 encoding, and source-rejection rail.
 5. Bring up PIT/PIC under QEMU with the fixed-work timer root and coalescing
    timer-service wake; then add the LAPIC one-shot provider.
 6. Connect Omega's opaque linear Extent to provider minting and sealed range
