@@ -251,6 +251,12 @@ does not drain application timer registrations. An ordinary suspend-allowed
 timer-service task reads the clock, drains due registrations in batches, wakes
 their endpoints, and rearms the next one-shot deadline.
 
+Omega's provider-neutral acceptance canary now instantiates that exact shape as
+one timer root plus four one-shot leaf summaries. It pins canonical
+order-independent composition and rejects a missing wake summary or recursion
+hidden behind acknowledgement. Concrete PIC/LAPIC provider execution and WCSU
+composition remain the next integration step.
+
 PIT plus remapped 8259 PIC is the first QEMU/PC provider. LAPIC one-shot timing
 is the production multicore/tickless provider; the provider changes while the
 root contract does not.
