@@ -201,6 +201,15 @@ AArch64. Cathedral's materialization foundation executes the normalized writer
 directly over mapped/pinned/writable unpublished storage through the exact
 installed-code resolver, derives final-byte identity, and checks its
 software-fault-free, code/artifact/destination/content-bound receipt.
+That path now begins with a sealed `PreparedIdtWriter` which owns the exact
+destination, normalized plan, and root set after checking placement,
+destination authority, fragment geometry, and every entry against the exact
+installed artifact. Omega lowers the proof to a generated-only address-free
+target/machine carrier containing deterministic code/artifact/destination/
+initial-content/plan/placement/root bindings, fragment geometry, and
+provider-private source slot indices. Emission rejects until the private
+context ABI is pinned; no
+numeric handler address enters Cathedral or Omega source.
 Cathedral's concrete first x86 policy is fixed below. Omega now carries the
 exact validated selected provider plans through checked lowering as a canonical
 immutable fact set, so Cathedral's root execution can consume compiler
@@ -208,7 +217,7 @@ selection rather than reconstructing it from declarations. Root candidates
 bind that plan identity before validation, root identity covers it, and
 execution inherits it rather than accepting a second plan input; the compiler
 bridge rejects a missing or ambiguous retained boundary slot. Cathedral's
-concrete candidate construction, checked-Omega writer lowering,
+concrete candidate construction, writer-context ABI/ISA emission,
 private-descriptor address materialization, and actual provider execution
 remain. Source `lidt` spelling still rejects before operand lowering, so no
 source-level shortcut can bypass the installed-table gate.
@@ -369,7 +378,7 @@ trampoline bytes are accepted as a shortcut.
    entry derivation; trait-parent composition and policy semantics are settled.
 3. Drive Omega's implemented provider-execution binding, fixed-work summaries,
    and artifact-wide WCSU composition from Cathedral's concrete provider.
-4. Generate the direct-destination checked IDT writer over an unpublished
+4. Emit the prepared direct-destination checked IDT writer over an unpublished
    mapped/pinned/writable placement and sealed boot-artifact resolver. Validate
    the software-fault-free bootstrap conjunction, mint `MaterializedIdt`, and
    issue its content-bound receipt. Provision Cathedral's complete exception
@@ -378,7 +387,9 @@ trampoline bytes are accepted as a shortcut.
    receipt, and final save-all-GPR/no-SIMD stub validation. Omega's normalized
    direct-destination materialization receipt, record-before-publish gate, and
    root liveness retention are already live, as are the deriver-only `lidt`
-   contract, exact x86 encoding, and source-rejection rail.
+   contract, exact x86 encoding, source-rejection rail, sealed writer
+   preparation, and address-free generated machine carrier. Pinning and
+   emitting the provider-private writer context remains.
 5. Bring up PIT/PIC under QEMU with the fixed-work timer root and coalescing
    timer-service wake; then add the LAPIC one-shot provider.
 6. Connect Omega's opaque linear Extent to provider minting and sealed range
