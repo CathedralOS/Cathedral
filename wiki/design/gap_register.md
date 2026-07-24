@@ -45,8 +45,9 @@ Legend: `[ ]` open · `[x]` closed.
   LAPIC one-shot provider. The hard root never drains timer registrations and
   proves finite structural work, not WCET. The pure source facts now bind each
   of the four v1 stack-analysis classes to its hardware IST index in one record;
-  provisioning, entry contracts, and publication remain. See
-  [[hardware_foundation_profile]].
+  the core profile now composes the double-fault, NMI, machine-check, and first
+  legacy-timer vectors with those exact records. Provisioning, entry contracts,
+  and publication remain. See [[hardware_foundation_profile]].
 - [ ] `omega_substrate` — no decision rule for *which* ZII shape each construct adopts.
 - [ ] `vocabulary` — stub; "which terms deserve a domain vs. doc" unframed.
 

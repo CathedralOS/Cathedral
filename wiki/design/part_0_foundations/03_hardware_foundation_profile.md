@@ -279,6 +279,11 @@ the analysis class while IDT/TSS materialization consumes the hardware index
 from that same value. The initial assignment is double fault/NMI/machine check
 on classes and ISTs 1/2/3, with the shared maskable-IRQ class on 4. The record is
 description only and mints neither storage nor installation authority.
+Cathedral's core policy composes those records with the architectural vector
+identities for double fault, NMI, machine check, and the remapped legacy timer.
+That composition is authored once and remains pure; later root admission and
+gate materialization must consume it rather than independently pairing vectors
+with stack numbers.
 
 The first entry stub saves all ordinary GPRs. Final placed code for the handler
 and every transitive callee must remain within a no-SIMD/x87 state ceiling.

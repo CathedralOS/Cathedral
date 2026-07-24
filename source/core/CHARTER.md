@@ -30,3 +30,6 @@ port-operation helpers. They retain `PortIo` reach from parsed instruction
 contracts and deliberately stop short of installing an IDT, unmasking a live
 root, or enabling CPU interrupts. They are bootstrap provider code, not ambient
 driver access; invoking them remains ordered after exception-IDT publication.
+`x86_interrupt_profile.omg` composes the pure vector and stack facts into the
+four initial vector-to-stack assignments without minting any of those missing
+authorities.

@@ -1,0 +1,49 @@
+// source/core/x86_interrupt_profile.omg
+//
+// Cathedral's first x86-64 vector-to-stack policy. This composes pure
+// architecture facts into kernel policy; it still grants no entry identity,
+// stack storage, root admission, table publication, or machine control.
+//
+// Keeping the complete stack record beside the vector prevents the root/WCSU
+// side from selecting one analysis class while IDT/TSS materialization writes
+// a different IST index.
+
+use facts::pic_8259;
+use facts::x86_exception_vectors;
+use facts::x86_interrupt_stacks;
+
+pub data X86EntryStackAssignment {
+    vector: u8;
+    stack: X86IstStackClass;
+}
+
+pub machine x86_double_fault_entry_stack() -> X86EntryStackAssignment {
+    X86EntryStackAssignment {
+        vector: X86_EXCEPTION_DOUBLE_FAULT,
+        stack: X86_DOUBLE_FAULT_STACK,
+    }
+}
+
+pub machine x86_nmi_entry_stack() -> X86EntryStackAssignment {
+    X86EntryStackAssignment {
+        vector: X86_EXCEPTION_NON_MASKABLE_INTERRUPT,
+        stack: X86_NMI_STACK,
+    }
+}
+
+pub machine x86_machine_check_entry_stack() -> X86EntryStackAssignment {
+    X86EntryStackAssignment {
+        vector: X86_EXCEPTION_MACHINE_CHECK,
+        stack: X86_MACHINE_CHECK_STACK,
+    }
+}
+
+// The remapped legacy timer is the first member of the shared maskable-IRQ
+// class. Later PIC/APIC roots cite the same class while owning distinct vector
+// assignments.
+pub machine x86_legacy_timer_entry_stack() -> X86EntryStackAssignment {
+    X86EntryStackAssignment {
+        vector: PROTECTED_MASTER_VECTOR_BASE,
+        stack: X86_MASKABLE_IRQ_STACK,
+    }
+}

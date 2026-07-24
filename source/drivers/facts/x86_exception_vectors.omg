@@ -43,13 +43,3 @@ pub const AMD_EXCEPTION_HYPERVISOR_INJECTION:         u8 = 28;
 pub const AMD_EXCEPTION_VMM_COMMUNICATION:            u8 = 29;
 pub const AMD_EXCEPTION_SECURITY:                     u8 = 30;
 pub const X86_EXCEPTION_RESERVED_31:                  u8 = 31;
-
-// The v1 stack policy consumes these identities once: #DF, NMI, and #MC each
-// receive a distinct per-CPU IST. Other bootstrap exceptions use the current
-// stack and terminate fatally until recoverable fault policy is implemented.
-pub const X86_BOOTSTRAP_IST_DOUBLE_FAULT_VECTOR: u8 =
-    X86_EXCEPTION_DOUBLE_FAULT;
-pub const X86_BOOTSTRAP_IST_NMI_VECTOR:          u8 =
-    X86_EXCEPTION_NON_MASKABLE_INTERRUPT;
-pub const X86_BOOTSTRAP_IST_MACHINE_CHECK_VECTOR: u8 =
-    X86_EXCEPTION_MACHINE_CHECK;
