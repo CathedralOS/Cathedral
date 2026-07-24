@@ -1,0 +1,55 @@
+// source/drivers/facts/x86_exception_vectors.omg
+//
+// Architectural x86 exception-vector identities for Cathedral's pre-timer IDT
+// floor. Pure data only: naming a vector grants no IDT, entry, stack, or
+// machine-control authority. The selected CPU profile decides which optional
+// vendor exceptions are admissible; every slot 0..31 still receives a fatal
+// bootstrap gate so a reserved-vector delivery cannot reach an absent entry.
+
+pub const X86_EXCEPTION_VECTOR_COUNT: u8 = 32;
+
+pub const X86_EXCEPTION_DIVIDE_ERROR:                 u8 = 0;
+pub const X86_EXCEPTION_DEBUG:                        u8 = 1;
+pub const X86_EXCEPTION_NON_MASKABLE_INTERRUPT:       u8 = 2;
+pub const X86_EXCEPTION_BREAKPOINT:                   u8 = 3;
+pub const X86_EXCEPTION_OVERFLOW:                     u8 = 4;
+pub const X86_EXCEPTION_BOUND_RANGE_EXCEEDED:         u8 = 5;
+pub const X86_EXCEPTION_INVALID_OPCODE:               u8 = 6;
+pub const X86_EXCEPTION_DEVICE_NOT_AVAILABLE:         u8 = 7;
+pub const X86_EXCEPTION_DOUBLE_FAULT:                 u8 = 8;
+pub const X86_EXCEPTION_RESERVED_09:                  u8 = 9;
+pub const X86_EXCEPTION_INVALID_TSS:                  u8 = 10;
+pub const X86_EXCEPTION_SEGMENT_NOT_PRESENT:          u8 = 11;
+pub const X86_EXCEPTION_STACK_SEGMENT_FAULT:          u8 = 12;
+pub const X86_EXCEPTION_GENERAL_PROTECTION:           u8 = 13;
+pub const X86_EXCEPTION_PAGE_FAULT:                   u8 = 14;
+pub const X86_EXCEPTION_RESERVED_15:                  u8 = 15;
+pub const X86_EXCEPTION_X87_FLOATING_POINT:           u8 = 16;
+pub const X86_EXCEPTION_ALIGNMENT_CHECK:              u8 = 17;
+pub const X86_EXCEPTION_MACHINE_CHECK:                u8 = 18;
+pub const X86_EXCEPTION_SIMD_FLOATING_POINT:          u8 = 19;
+pub const X86_EXCEPTION_VIRTUALIZATION:               u8 = 20;
+pub const X86_EXCEPTION_CONTROL_PROTECTION:           u8 = 21;
+pub const X86_EXCEPTION_RESERVED_22:                  u8 = 22;
+pub const X86_EXCEPTION_RESERVED_23:                  u8 = 23;
+pub const X86_EXCEPTION_RESERVED_24:                  u8 = 24;
+pub const X86_EXCEPTION_RESERVED_25:                  u8 = 25;
+pub const X86_EXCEPTION_RESERVED_26:                  u8 = 26;
+pub const X86_EXCEPTION_RESERVED_27:                  u8 = 27;
+
+// AMD64 optional architectural assignments. These remain profile-qualified
+// facts rather than universal meanings because Intel reserves these vectors.
+pub const AMD_EXCEPTION_HYPERVISOR_INJECTION:         u8 = 28;
+pub const AMD_EXCEPTION_VMM_COMMUNICATION:            u8 = 29;
+pub const AMD_EXCEPTION_SECURITY:                     u8 = 30;
+pub const X86_EXCEPTION_RESERVED_31:                  u8 = 31;
+
+// The v1 stack policy consumes these identities once: #DF, NMI, and #MC each
+// receive a distinct per-CPU IST. Other bootstrap exceptions use the current
+// stack and terminate fatally until recoverable fault policy is implemented.
+pub const X86_BOOTSTRAP_IST_DOUBLE_FAULT_VECTOR: u8 =
+    X86_EXCEPTION_DOUBLE_FAULT;
+pub const X86_BOOTSTRAP_IST_NMI_VECTOR:          u8 =
+    X86_EXCEPTION_NON_MASKABLE_INTERRUPT;
+pub const X86_BOOTSTRAP_IST_MACHINE_CHECK_VECTOR: u8 =
+    X86_EXCEPTION_MACHINE_CHECK;
