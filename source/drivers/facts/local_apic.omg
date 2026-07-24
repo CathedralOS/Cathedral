@@ -1,0 +1,84 @@
+// source/drivers/facts/local_apic.omg
+//
+// Architectural local-APIC timer and acknowledgement facts for xAPIC and
+// x2APIC providers. Pure data only: these constants grant no MMIO, MSR,
+// interrupt-vector, timer, or acknowledgement authority and perform no APIC
+// enable, programming, or EOI operation.
+//
+// Transcribed from Intel 64 and IA-32 Architectures Software Developer's
+// Manual, Volume 3A, sections 13.4, 13.5.1, 13.5.4, and 13.12.1.2
+// (revision 092, June 2026).
+
+// CPUID.01H:EDX[9] reports local-APIC presence.
+pub const CPUID_FEATURE_LOCAL_APIC_BIT: u8 = 9;
+
+// IA32_APIC_BASE selects the xAPIC MMIO page and enables the architectural
+// access mode. The base-address width is CPU-profile dependent; facts do not
+// manufacture a fixed mask for it.
+pub const IA32_APIC_BASE_MSR:               u32 = 0x1B;
+pub const IA32_APIC_BASE_BSP_BIT:           u8 = 8;
+pub const IA32_APIC_BASE_X2APIC_ENABLE_BIT: u8 = 10;
+pub const IA32_APIC_BASE_GLOBAL_ENABLE_BIT: u8 = 11;
+pub const XAPIC_MMIO_PAGE_SIZE:              u16 = 0x1000;
+pub const XAPIC_RESET_BASE:                  u64 = 0xFEE00000;
+
+// Architectural xAPIC offsets within the IA32_APIC_BASE MMIO page.
+pub const XAPIC_ID_OFFSET:                   u16 = 0x020;
+pub const XAPIC_VERSION_OFFSET:              u16 = 0x030;
+pub const XAPIC_TASK_PRIORITY_OFFSET:        u16 = 0x080;
+pub const XAPIC_EOI_OFFSET:                  u16 = 0x0B0;
+pub const XAPIC_SPURIOUS_VECTOR_OFFSET:      u16 = 0x0F0;
+pub const XAPIC_LVT_TIMER_OFFSET:            u16 = 0x320;
+pub const XAPIC_TIMER_INITIAL_COUNT_OFFSET:  u16 = 0x380;
+pub const XAPIC_TIMER_CURRENT_COUNT_OFFSET:  u16 = 0x390;
+pub const XAPIC_TIMER_DIVIDE_CONFIG_OFFSET:  u16 = 0x3E0;
+
+// Corresponding x2APIC MSRs. Except for architectural exceptions such as the
+// ICR, the MSR is 0x800 + (xAPIC offset >> 4).
+pub const X2APIC_ID_MSR:                  u32 = 0x802;
+pub const X2APIC_VERSION_MSR:             u32 = 0x803;
+pub const X2APIC_TASK_PRIORITY_MSR:       u32 = 0x808;
+pub const X2APIC_EOI_MSR:                 u32 = 0x80B;
+pub const X2APIC_SPURIOUS_VECTOR_MSR:     u32 = 0x80F;
+pub const X2APIC_LVT_TIMER_MSR:           u32 = 0x832;
+pub const X2APIC_TIMER_INITIAL_COUNT_MSR: u32 = 0x838;
+pub const X2APIC_TIMER_CURRENT_COUNT_MSR: u32 = 0x839;
+pub const X2APIC_TIMER_DIVIDE_CONFIG_MSR: u32 = 0x83E;
+
+// Both xAPIC MMIO EOI and x2APIC MSR EOI require a zero write. In x2APIC
+// mode, a nonzero EOI write raises #GP(0).
+pub const LOCAL_APIC_EOI_VALUE: u32 = 0;
+
+// Spurious Interrupt Vector Register.
+pub const LOCAL_APIC_SPURIOUS_VECTOR_MASK: u32 = 0x000000FF;
+pub const LOCAL_APIC_SOFTWARE_ENABLE:      u32 = 0x00000100;
+
+// LVT Timer Register.
+pub const LOCAL_APIC_LVT_VECTOR_MASK: u32 = 0x000000FF;
+pub const LOCAL_APIC_LVT_MASKED:      u32 = 0x00010000;
+pub const LOCAL_APIC_TIMER_ONE_SHOT:   u32 = 0x00000000;
+pub const LOCAL_APIC_TIMER_PERIODIC:   u32 = 0x00020000;
+pub const LOCAL_APIC_TIMER_TSC_DEADLINE: u32 = 0x00040000;
+pub const LOCAL_APIC_TIMER_MODE_MASK:  u32 = 0x00060000;
+
+// Divide Configuration Register. Only bits 0, 1, and 3 participate in the
+// encoding; all other bits remain reserved.
+pub const LOCAL_APIC_TIMER_DIVIDE_BY_1:   u32 = 0x0B;
+pub const LOCAL_APIC_TIMER_DIVIDE_BY_2:   u32 = 0x00;
+pub const LOCAL_APIC_TIMER_DIVIDE_BY_4:   u32 = 0x01;
+pub const LOCAL_APIC_TIMER_DIVIDE_BY_8:   u32 = 0x02;
+pub const LOCAL_APIC_TIMER_DIVIDE_BY_16:  u32 = 0x03;
+pub const LOCAL_APIC_TIMER_DIVIDE_BY_32:  u32 = 0x08;
+pub const LOCAL_APIC_TIMER_DIVIDE_BY_64:  u32 = 0x09;
+pub const LOCAL_APIC_TIMER_DIVIDE_BY_128: u32 = 0x0A;
+
+// A zero initial count stops the countdown timer. Nonzero values are
+// provider-calibrated: the architectural timer rate depends on enumerated
+// platform clocks and the selected divider, so no universal frequency belongs
+// in this fact package.
+pub const LOCAL_APIC_TIMER_STOP_COUNT: u32 = 0;
+
+// Optional TSC-deadline mode is enumerated by CPUID.01H:ECX[24].
+pub const CPUID_FEATURE_TSC_DEADLINE_BIT: u8 = 24;
+pub const IA32_TSC_DEADLINE_MSR:          u32 = 0x6E0;
+pub const TSC_DEADLINE_DISARMED:          u64 = 0;

@@ -25,6 +25,8 @@ pre-timer exception floor; `facts/x86_idt_gate` for the compiler-validated
 `facts/x86_page_table_entry` for the compiler-validated packed 64-bit paging
 entry under the architectural 52-bit physical-address envelope;
 `facts/x86_interrupt_stacks` for the single-source IST/analysis-class
-assignment; and `facts/pic_8259` plus `facts/pit_8254` for the first timer path.
+assignment; `facts/pic_8259` plus `facts/pit_8254` for the first timer path; and
+`facts/local_apic` for the xAPIC/x2APIC one-shot timer and acknowledgement
+encodings used by the production timer path.
 These files grant no hardware authority and are not driver programs or
 interrupt providers.
