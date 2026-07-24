@@ -42,7 +42,14 @@ pub data TextOutputProtocol {
 }
 
 pub boundary trait SimpleTextOutput {
-    machine output_string(console: &TextOutputProtocol, string: &[u16]) -> EfiStatus;
+    // Milestone-1's exact null-terminated greeting carrier. A bare slice is
+    // deliberately not a native ABI: it leaves pointer/length/terminator
+    // choices unstated. This fixed-array reference lowers as the firmware's
+    // single CHAR16* parameter without publishing Omega's private slice shape.
+    machine output_string(
+        console: &TextOutputProtocol,
+        string: &[u16; 19]
+    ) -> EfiStatus;
 }
 
 // The leaf is attached to the layout-owning protocol type. Dispatch reads the
@@ -50,7 +57,7 @@ pub boundary trait SimpleTextOutput {
 // provider table, magic slot index, or import thunk.
 uefi_x64 machine TextOutputProtocol::output_string_leaf(
     console: &TextOutputProtocol,
-    string: &[u16]
+    string: &[u16; 19]
 ) -> EfiStatus satisfies SimpleTextOutput::output_string via Binding::VtableField(output_string);
 
 // --- The System Table (firmware's root hand-off structure) ----------------

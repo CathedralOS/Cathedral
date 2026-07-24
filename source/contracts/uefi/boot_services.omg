@@ -80,7 +80,10 @@ pub boundary trait BootServices {
     machine get_memory_map(
         table:              &BootServicesTable,
         map_size:           &mut u64,
-        buffer:             &mut [u8],
+        // Cathedral's pre-allocation bootstrap buffer is exactly 16 KiB.
+        // The fixed-array reference supplies the native pointer shape; the
+        // adjacent map_size parameter remains the firmware's runtime bound.
+        buffer:             &mut [u8; 16384],
         map_key:            &mut MapKey,
         descriptor_size:    &mut u64,
         descriptor_version: &mut u32
@@ -104,7 +107,7 @@ pub boundary trait BootServices {
 uefi_x64 machine BootServicesTable::get_memory_map_leaf(
     table:              &BootServicesTable,
     map_size:           &mut u64,
-    buffer:             &mut [u8],
+    buffer:             &mut [u8; 16384],
     map_key:            &mut MapKey,
     descriptor_size:    &mut u64,
     descriptor_version: &mut u32
