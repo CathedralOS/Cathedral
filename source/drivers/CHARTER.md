@@ -18,5 +18,7 @@ are **count-budgeted**: virtio/simulated devices plus one exemplary real driver
 per class first; broad hardware support is a deliberate later purchase, never an
 ambient accretion.
 
-**Status (2026-07-02).** In-progress: `facts/uart_16550` (milestone-3 serial
-prep — transcription, no driver program yet).
+**Status (2026-07-24).** In-progress hardware transcription:
+`facts/uart_16550` for serial and `facts/pic_8259` plus `facts/pit_8254` for the
+first exception/timer path. These files grant no hardware authority and are
+not driver programs or interrupt providers.

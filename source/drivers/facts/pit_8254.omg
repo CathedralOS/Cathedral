@@ -1,0 +1,37 @@
+// source/drivers/facts/pit_8254.omg
+//
+// Intel 8254-compatible programmable-interval-timer facts for the legacy
+// PC/QEMU path. Pure data only: these constants neither grant PortIo nor choose
+// Cathedral's timer policy.
+
+pub const PIT_CHANNEL0_PORT: u16 = 0x40;
+pub const PIT_CHANNEL1_PORT: u16 = 0x41;
+pub const PIT_CHANNEL2_PORT: u16 = 0x42;
+pub const PIT_COMMAND_PORT:  u16 = 0x43;
+
+// PC-compatible PIT clock, in hertz.
+pub const PIT_INPUT_HZ: u32 = 1_193_182;
+
+// Control-word channel selection.
+pub const PIT_SELECT_CHANNEL0: u8 = 0x00;
+pub const PIT_SELECT_CHANNEL1: u8 = 0x40;
+pub const PIT_SELECT_CHANNEL2: u8 = 0x80;
+pub const PIT_READ_BACK:       u8 = 0xC0;
+
+// Counter access format.
+pub const PIT_LATCH_COUNT:      u8 = 0x00;
+pub const PIT_ACCESS_LOW_BYTE:  u8 = 0x10;
+pub const PIT_ACCESS_HIGH_BYTE: u8 = 0x20;
+pub const PIT_ACCESS_LOW_HIGH:  u8 = 0x30;
+
+// Operating-mode fields in their control-word positions.
+pub const PIT_MODE_INTERRUPT_ON_TERMINAL_COUNT: u8 = 0x00;
+pub const PIT_MODE_HARDWARE_ONE_SHOT:           u8 = 0x02;
+pub const PIT_MODE_RATE_GENERATOR:               u8 = 0x04;
+pub const PIT_MODE_SQUARE_WAVE:                  u8 = 0x06;
+pub const PIT_MODE_SOFTWARE_STROBE:              u8 = 0x08;
+pub const PIT_MODE_HARDWARE_STROBE:              u8 = 0x0A;
+
+pub const PIT_BINARY_COUNTER: u8 = 0x00;
+pub const PIT_BCD_COUNTER:    u8 = 0x01;
+

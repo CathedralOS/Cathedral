@@ -1,0 +1,46 @@
+// source/drivers/facts/pic_8259.omg
+//
+// Cascaded Intel 8259A-compatible interrupt-controller facts for the legacy
+// PC/QEMU path. Pure data only: these constants grant no port-I/O authority and
+// perform no remap, masking, or acknowledgement operation.
+//
+// The master owns IRQ0..7. Its IRQ2 input is the cascade from the slave, which
+// owns IRQ8..15. Initialization consumes ICW1 through ICW4 in order; ordinary
+// operation then uses OCW1 masks and OCW2 commands.
+
+pub const PIC_MASTER_COMMAND_PORT: u16 = 0x20;
+pub const PIC_MASTER_DATA_PORT:    u16 = 0x21;
+pub const PIC_SLAVE_COMMAND_PORT:  u16 = 0xA0;
+pub const PIC_SLAVE_DATA_PORT:     u16 = 0xA1;
+
+pub const PIC_MASTER_IRQ_BASE: u8 = 0;
+pub const PIC_SLAVE_IRQ_BASE:  u8 = 8;
+pub const PIC_IRQ_COUNT:       u8 = 16;
+
+// ICW1: start initialization and require ICW4.
+pub const ICW1_INITIALIZE: u8 = 0x10;
+pub const ICW1_HAS_ICW4:   u8 = 0x01;
+// Literal form of INITIALIZE | HAS_ICW4; const-v0 intentionally does not
+// evaluate expressions.
+pub const ICW1_PC_CASCADE: u8 = 0x11;
+
+// ICW3: the slave is wired to the master's IRQ2 input.
+pub const MASTER_ICW3_SLAVE_ON_IRQ2: u8 = 0x04;
+pub const SLAVE_ICW3_CASCADE_ID:     u8 = 0x02;
+
+// ICW4: 8086/88 mode. Cathedral does not use automatic EOI; acknowledgement
+// remains an explicit linear provider obligation.
+pub const ICW4_8086_MODE: u8 = 0x01;
+
+// OCW2 non-specific end-of-interrupt command.
+pub const OCW2_END_OF_INTERRUPT: u8 = 0x20;
+
+// OCW1 masks: one bit per input, with 1 meaning masked.
+pub const OCW1_MASK_NONE: u8 = 0x00;
+pub const OCW1_MASK_ALL:  u8 = 0xFF;
+
+// Conventional protected-mode vector placement. The provider still owns the
+// remap operation and must validate these ranges against Cathedral's admitted
+// exception/root plan before writing them.
+pub const PROTECTED_MASTER_VECTOR_BASE: u8 = 0x20;
+pub const PROTECTED_SLAVE_VECTOR_BASE:  u8 = 0x28;
