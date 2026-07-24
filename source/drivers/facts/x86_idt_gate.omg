@@ -1,0 +1,96 @@
+// source/drivers/facts/x86_idt_gate.omg
+//
+// Pure x86-64 interrupt-gate schema and programmable layout policy. This file
+// describes bytes only: it grants no entry identity, resolver access, root
+// admission, table publication, or IdtControl authority.
+//
+// One logical 64-bit entry identity is fragmented into the three address
+// fields dictated by the architecture. The compiler validates complete source
+// tiling and destination overlap before its post-handoff materializer may use
+// the plan.
+
+use omega::language::std::layout;
+
+pub const PRESENT_RING0_INTERRUPT_GATE: u8 = 0x8E;
+pub const NO_IST: u8 = 0;
+pub const RESERVED_ZERO: u32 = 0;
+
+pub data X86IdtGate {
+    entry: u64;
+    selector: u16;
+    ist: u8 [0..=7];
+    type_attributes: u8;
+    reserved: u32 [0..=0];
+}
+
+pub data X86IdtGateLayout {
+    entries: [FieldEntry; 64];
+}
+
+pub machine X86IdtGateLayout::plan(
+    &mut self,
+    schema: Schema
+) -> Plan
+{
+    // offset[15:0]
+    self.entries[0] = FieldEntry {
+        key: schema.fields[0].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 16,
+            destination_lsb: 0,
+            source_lsb: 0,
+            width: 16,
+        },
+    };
+    // segment selector
+    self.entries[1] = FieldEntry {
+        key: schema.fields[1].key,
+        placement: FieldPlan::At { offset: 2 },
+    };
+    // IST index; the field domain guarantees the architecturally reserved
+    // upper five bits stay zero.
+    self.entries[2] = FieldEntry {
+        key: schema.fields[2].key,
+        placement: FieldPlan::At { offset: 4 },
+    };
+    // gate type, DPL, and present bit
+    self.entries[3] = FieldEntry {
+        key: schema.fields[3].key,
+        placement: FieldPlan::At { offset: 5 },
+    };
+    // offset[31:16]
+    self.entries[4] = FieldEntry {
+        key: schema.fields[0].key,
+        placement: FieldPlan::Bits {
+            container: 6,
+            container_width: 16,
+            destination_lsb: 0,
+            source_lsb: 16,
+            width: 16,
+        },
+    };
+    // offset[63:32]
+    self.entries[5] = FieldEntry {
+        key: schema.fields[0].key,
+        placement: FieldPlan::Bits {
+            container: 8,
+            container_width: 32,
+            destination_lsb: 0,
+            source_lsb: 32,
+            width: 32,
+        },
+    };
+    self.entries[6] = FieldEntry {
+        key: schema.fields[4].key,
+        placement: FieldPlan::At { offset: 12 },
+    };
+
+    Plan {
+        entries: self.entries,
+        entry_count: 7,
+        size_fixed: 16,
+        size_is_dynamic: false,
+        align: 16,
+    }
+}
