@@ -21,7 +21,7 @@ pub machine Pit8254::program_channel0_rate_generator(
 )
 effects PortIo
 {
-    asm where clobbers r10, r11 {
+    asm where clobbers r10, r11, r15, rax, rdx {
         out PIT_COMMAND_PORT, 0x34;
         out PIT_CHANNEL0_PORT, divisor_low;
         out PIT_CHANNEL0_PORT, divisor_high

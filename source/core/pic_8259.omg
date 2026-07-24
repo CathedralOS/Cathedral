@@ -18,7 +18,7 @@ pub data Pic8259 {
 pub machine Pic8259::remap_masked(&mut self)
 effects PortIo
 {
-    asm where clobbers r10, r11 {
+    asm where clobbers r10, r11, r15, rax, rdx {
         out PIC_MASTER_COMMAND_PORT, ICW1_PC_CASCADE;
         out PIC_SLAVE_COMMAND_PORT, ICW1_PC_CASCADE;
 
@@ -41,7 +41,7 @@ effects PortIo
 pub machine Pic8259::unmask_timer(&mut self)
 effects PortIo
 {
-    asm where clobbers r10, r11 {
+    asm where clobbers r10, r11, r15, rax, rdx {
         out PIC_MASTER_DATA_PORT, 0xFE;
         out PIC_SLAVE_DATA_PORT, OCW1_MASK_ALL
     }
@@ -53,8 +53,7 @@ effects PortIo
 pub machine Pic8259::complete_timer_acknowledgement(&mut self)
 effects PortIo
 {
-    asm where clobbers r10, r11 {
+    asm where clobbers r10, r11, r15, rax, rdx {
         out PIC_MASTER_COMMAND_PORT, OCW2_END_OF_INTERRUPT
     }
 }
-
