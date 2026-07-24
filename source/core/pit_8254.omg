@@ -1,0 +1,29 @@
+// source/core/pit_8254.omg
+//
+// Checked legacy-PIT programming for Cathedral's first QEMU timer provider.
+// This helper configures channel 0 but does not unmask IRQ0, publish an entry,
+// or enable CPU interrupts. The caller supplies the already-validated divisor
+// bytes; timer policy remains above the hardware operation.
+
+use facts::pit_8254;
+use omega::language::core::assembly;
+
+pub data Pit8254 {
+}
+
+// Program channel 0 as a binary rate generator. The 8254 consumes the low
+// divisor byte first and the high byte second after the 0x34 control word:
+// channel 0, low/high access, mode 2, binary counting.
+pub machine Pit8254::program_channel0_rate_generator(
+    &mut self,
+    divisor_low: u8,
+    divisor_high: u8
+)
+effects PortIo
+{
+    asm where clobbers r10, r11 {
+        out PIT_COMMAND_PORT, 0x34;
+        out PIT_CHANNEL0_PORT, divisor_low;
+        out PIT_CHANNEL0_PORT, divisor_high
+    }
+}

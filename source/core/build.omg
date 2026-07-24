@@ -5,7 +5,7 @@
 // (Omega build_and_package_model.md).
 
 machine build(b: &mut Build) {
-    // Pure hardware facts grant no authority. Checked PIC helpers retain
+    // Pure hardware facts grant no authority. Checked PIC/PIT helpers retain
     // PortIo reach from their instruction contracts; the eventual boot/root
     // provider must still be granted that service explicitly.
     b.depend("facts", path("../drivers/facts"));
