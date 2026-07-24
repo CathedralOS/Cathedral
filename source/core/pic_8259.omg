@@ -1,0 +1,60 @@
+// source/core/pic_8259.omg
+//
+// Checked legacy-PIC port sequences for Cathedral's first QEMU timer provider.
+// These helpers are intentionally narrower than an interrupt provider: they
+// expose no raw port primitive, install no entry, mint no acknowledgement, and
+// cannot enable CPU interrupts. Every call retains canonical PortIo reach from
+// the parsed `out` instruction contracts.
+
+use facts::pic_8259;
+use omega::language::core::assembly;
+
+pub data Pic8259 {
+}
+
+// Remap both controllers away from the architectural exception range, select
+// 8086 mode, and leave every IRQ masked. IDT/root publication must complete
+// before a separate provider operation unmasks the timer input.
+pub machine Pic8259::remap_masked(&mut self)
+effects PortIo
+{
+    asm where clobbers r10, r11 {
+        out PIC_MASTER_COMMAND_PORT, ICW1_PC_CASCADE;
+        out PIC_SLAVE_COMMAND_PORT, ICW1_PC_CASCADE;
+
+        out PIC_MASTER_DATA_PORT, PROTECTED_MASTER_VECTOR_BASE;
+        out PIC_SLAVE_DATA_PORT, PROTECTED_SLAVE_VECTOR_BASE;
+
+        out PIC_MASTER_DATA_PORT, MASTER_ICW3_SLAVE_ON_IRQ2;
+        out PIC_SLAVE_DATA_PORT, SLAVE_ICW3_CASCADE_ID;
+
+        out PIC_MASTER_DATA_PORT, ICW4_8086_MODE;
+        out PIC_SLAVE_DATA_PORT, ICW4_8086_MODE;
+
+        out PIC_MASTER_DATA_PORT, OCW1_MASK_ALL;
+        out PIC_SLAVE_DATA_PORT, OCW1_MASK_ALL
+    }
+}
+
+// First-provider policy: admit only the master timer input (IRQ0). Slave IRQs
+// remain masked, so the cascade input remains masked too.
+pub machine Pic8259::unmask_timer(&mut self)
+effects PortIo
+{
+    asm where clobbers r10, r11 {
+        out PIC_MASTER_DATA_PORT, 0xFE;
+        out PIC_SLAVE_DATA_PORT, OCW1_MASK_ALL
+    }
+}
+
+// Protocol-specific realization used only after the normalized interrupt
+// acknowledgement transition has admitted this provider. The public root
+// contract stays PIC/LAPIC-neutral.
+pub machine Pic8259::complete_timer_acknowledgement(&mut self)
+effects PortIo
+{
+    asm where clobbers r10, r11 {
+        out PIC_MASTER_COMMAND_PORT, OCW2_END_OF_INTERRUPT
+    }
+}
+
