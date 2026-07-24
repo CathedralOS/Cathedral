@@ -1,0 +1,39 @@
+// source/drivers/facts/x86_interrupt_stacks.omg
+//
+// Cathedral's first x86-64 IST assignment. This is pure policy data: it grants
+// no stack storage, TSS/IDT access, entry identity, or interrupt authority.
+//
+// The stack class and hardware IST index deliberately travel in one record.
+// WCSU/root analysis consumes `stack_class`; IDT/TSS materialization consumes
+// `ist_index`. Authoring them independently would let the checker provision one
+// stack while the gate bytes selected another.
+
+pub data X86IstStackClass {
+    stack_class: i64 [1..=7];
+    ist_index: u8 [1..=7];
+}
+
+// Three non-maskable/fatal roots each receive a private per-CPU IST.
+pub const X86_DOUBLE_FAULT_STACK: X86IstStackClass = X86IstStackClass {
+    stack_class: 1,
+    ist_index: 1,
+};
+
+pub const X86_NMI_STACK: X86IstStackClass = X86IstStackClass {
+    stack_class: 2,
+    ist_index: 2,
+};
+
+pub const X86_MACHINE_CHECK_STACK: X86IstStackClass = X86IstStackClass {
+    stack_class: 3,
+    ist_index: 3,
+};
+
+// Maskable external roots share one non-reentrant per-CPU stack class. The
+// interrupt-gate policy keeps IF clear until the deriver-owned return, so two
+// members cannot nest on this IST. Synchronous faults remain separate ledger
+// edges rather than being wished away by this fact.
+pub const X86_MASKABLE_IRQ_STACK: X86IstStackClass = X86IstStackClass {
+    stack_class: 4,
+    ist_index: 4,
+};

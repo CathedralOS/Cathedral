@@ -21,6 +21,8 @@ ambient accretion.
 **Status (2026-07-24).** In-progress hardware transcription:
 `facts/uart_16550` for serial; `facts/x86_exception_vectors` for the complete
 pre-timer exception floor; `facts/x86_idt_gate` for the compiler-validated
-16-byte gate layout and symbolic entry fragmentation; and `facts/pic_8259`
-plus `facts/pit_8254` for the first timer path. These files grant no hardware
-authority and are not driver programs or interrupt providers.
+16-byte gate layout and symbolic entry fragmentation;
+`facts/x86_interrupt_stacks` for the single-source IST/analysis-class
+assignment; and `facts/pic_8259` plus `facts/pit_8254` for the first timer path.
+These files grant no hardware authority and are not driver programs or
+interrupt providers.

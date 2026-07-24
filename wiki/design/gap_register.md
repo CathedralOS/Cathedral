@@ -43,7 +43,10 @@ Legend: `[ ]` open · `[x]` closed.
   and final no-SIMD/x87 entry code; bring up PIT/remapped-PIC under QEMU with an
   exactly-once acknowledgement and coalescing timer-service wake; then add the
   LAPIC one-shot provider. The hard root never drains timer registrations and
-  proves finite structural work, not WCET. See [[hardware_foundation_profile]].
+  proves finite structural work, not WCET. The pure source facts now bind each
+  of the four v1 stack-analysis classes to its hardware IST index in one record;
+  provisioning, entry contracts, and publication remain. See
+  [[hardware_foundation_profile]].
 - [ ] `omega_substrate` — no decision rule for *which* ZII shape each construct adopts.
 - [ ] `vocabulary` — stub; "which terms deserve a domain vs. doc" unframed.
 

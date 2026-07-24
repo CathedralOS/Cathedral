@@ -273,6 +273,13 @@ returns only through the deriver-owned exit. Members therefore cannot nest on
 the shared stack. The installed-root ledger records the actual x86
 fault/preemption relation; it does not assume that IF masks synchronous faults.
 
+The source fact package now records each dedicated class as one
+`X86IstStackClass { stack_class, ist_index }` value. Root/WCSU admission consumes
+the analysis class while IDT/TSS materialization consumes the hardware index
+from that same value. The initial assignment is double fault/NMI/machine check
+on classes and ISTs 1/2/3, with the shared maskable-IRQ class on 4. The record is
+description only and mints neither storage nor installation authority.
+
 The first entry stub saves all ordinary GPRs. Final placed code for the handler
 and every transitive callee must remain within a no-SIMD/x87 state ceiling.
 Exact GPR-footprint saves are an optimization after the coarse correctness
