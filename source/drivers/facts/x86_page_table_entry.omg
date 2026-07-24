@@ -1,0 +1,193 @@
+// source/drivers/facts/x86_page_table_entry.omg
+//
+// Pure x86-64 paging-entry geometry for the 52-bit architectural physical
+// address envelope. This is a programmable layout policy, not page-table
+// authority: it cannot mint an Extent, prove a frame owned, install a table,
+// invalidate a TLB, or make arbitrary address bits meaningful.
+//
+// The semantic provider derives `frame_number` from an aligned physical `addr`
+// under frame/mapping authority. Runtime-known addresses are ordinary data;
+// unlike IDT entry identities, they need no symbolic relocation source.
+
+use omega::language::std::layout;
+
+pub const X86_PAGE_SHIFT: u8 = 12;
+pub const X86_PAGE_BYTES: u64 = 4096;
+pub const X86_MAX_PHYSICAL_ADDRESS_BITS: u8 = 52;
+pub const X86_PAGE_FRAME_NUMBER_MAX: u64 = 1099511627775;
+
+pub data X86PageTableEntry {
+    present: bool;
+    writable: bool;
+    user: bool;
+    write_through: bool;
+    cache_disable: bool;
+    accessed: bool;
+    dirty: bool;
+    page_size_or_pat: bool;
+    global: bool;
+    software_low: u8 [0..=7];
+    frame_number: u64 [0..=1099511627775];
+    software_high: u8 [0..=127];
+    protection_key: u8 [0..=15];
+    no_execute: bool;
+}
+
+pub data X86PageTableEntryLayout {
+    entries: [FieldEntry; 64];
+}
+
+pub machine X86PageTableEntryLayout::plan(
+    &mut self,
+    schema: Schema
+) -> Plan
+{
+    self.entries[0] = FieldEntry {
+        key: schema.fields[0].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 0,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    self.entries[1] = FieldEntry {
+        key: schema.fields[1].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 1,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    self.entries[2] = FieldEntry {
+        key: schema.fields[2].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 2,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    self.entries[3] = FieldEntry {
+        key: schema.fields[3].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 3,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    self.entries[4] = FieldEntry {
+        key: schema.fields[4].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 4,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    self.entries[5] = FieldEntry {
+        key: schema.fields[5].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 5,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    self.entries[6] = FieldEntry {
+        key: schema.fields[6].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 6,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    self.entries[7] = FieldEntry {
+        key: schema.fields[7].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 7,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    self.entries[8] = FieldEntry {
+        key: schema.fields[8].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 8,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    self.entries[9] = FieldEntry {
+        key: schema.fields[9].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 9,
+            source_lsb: 0,
+            width: 3,
+        },
+    };
+    self.entries[10] = FieldEntry {
+        key: schema.fields[10].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 12,
+            source_lsb: 0,
+            width: 40,
+        },
+    };
+    self.entries[11] = FieldEntry {
+        key: schema.fields[11].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 52,
+            source_lsb: 0,
+            width: 7,
+        },
+    };
+    self.entries[12] = FieldEntry {
+        key: schema.fields[12].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 59,
+            source_lsb: 0,
+            width: 4,
+        },
+    };
+    self.entries[13] = FieldEntry {
+        key: schema.fields[13].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 63,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+
+    Plan {
+        entries: self.entries,
+        entry_count: 14,
+        size_fixed: 8,
+        size_is_dynamic: false,
+        align: 8,
+    }
+}

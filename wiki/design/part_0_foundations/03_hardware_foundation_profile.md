@@ -63,6 +63,13 @@ consume the frame/mapping authority that makes those bits meaningful. Locally
 built tables establish an `Installable` fact incrementally; imported tables must
 be scanned and validated before installation.
 
+The first x86-64 entry schema is live as pure facts plus an ordinary
+programmable layout policy. Its `bool` and range-constrained integer fields tile
+the complete 64-bit paging word, including the 40-bit page-frame number for
+physical address bits 12 through 51. A checked provider derives that number
+from an aligned physical `addr` while holding the frame/mapping authority; the
+fact package itself grants no memory, mapping, installation, or TLB authority.
+
 ## Layout, MMIO, and shared pages
 
 All hardware geometry uses Omega's programmable layouts. IDT/GDT gates, page

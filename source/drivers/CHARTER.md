@@ -22,6 +22,8 @@ ambient accretion.
 `facts/uart_16550` for serial; `facts/x86_exception_vectors` for the complete
 pre-timer exception floor; `facts/x86_idt_gate` for the compiler-validated
 16-byte gate layout and symbolic entry fragmentation;
+`facts/x86_page_table_entry` for the compiler-validated packed 64-bit paging
+entry under the architectural 52-bit physical-address envelope;
 `facts/x86_interrupt_stacks` for the single-source IST/analysis-class
 assignment; and `facts/pic_8259` plus `facts/pit_8254` for the first timer path.
 These files grant no hardware authority and are not driver programs or
