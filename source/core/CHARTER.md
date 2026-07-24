@@ -17,7 +17,7 @@ not the concrete range capability.
 **Non-goals.** No device drivers, no userspace service logic, no firmware ABIs.
 If it isn't small enough to audit in full, it doesn't belong here.
 
-**Status (2026-07-22).** In-progress: `extent.omg` — milestone 2, the first
+**Status (2026-07-24).** In-progress: `extent.omg` — milestone 2, the first
 physical-range `Extent` and its mint, the origin of the authority graph. Omega's
 opaque linear source carrier is live; Cathedral still uses a plainly marked
 bootstrap value until provider minting supplies its runtime representation and
@@ -25,11 +25,13 @@ sealed Physical grant. The generational `{slot, generation}` authority graph
 that makes capabilities unforgeable + revocable is the
 `capability_lifecycle` arc, later.
 
-The first interrupt-provider bootstrap also has checked 8259 PIC and 8254 PIT
-port-operation helpers. They retain `PortIo` reach from parsed instruction
-contracts and deliberately stop short of installing an IDT, unmasking a live
-root, or enabling CPU interrupts. They are bootstrap provider code, not ambient
-driver access; invoking them remains ordered after exception-IDT publication.
+The interrupt-provider bootstrap also has checked 8259 PIC and 8254 PIT
+port-operation helpers plus checked x2APIC one-shot, stop, and acknowledgement
+MSR helpers. They retain `PortIo` or `MachineControl` reach from parsed
+instruction contracts and deliberately stop short of installing an IDT,
+unmasking a live root, enabling CPU interrupts, or asserting a platform timer
+frequency. They are provider code, not ambient driver access; invoking them
+remains ordered after exception-IDT publication.
 `x86_interrupt_profile.omg` composes the pure vector and stack facts into the
 four initial vector-to-stack assignments without minting any of those missing
 authorities.

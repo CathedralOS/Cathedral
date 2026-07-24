@@ -1,0 +1,63 @@
+// source/core/x2apic_timer.omg
+//
+// Checked x2APIC one-shot timer operations for Cathedral's production timer
+// provider. These helpers expose no raw MSR primitive, choose no root, publish
+// no IDT entry, and cannot enable CPU interrupts. Their parsed `wrmsr`
+// instruction contracts retain canonical MachineControl reach.
+//
+// The caller must already hold the platform-admitted fact that x2APIC mode is
+// active and must calibrate the count against the enumerated platform clock.
+
+use facts::local_apic;
+use omega::language::core::assembly;
+
+pub data X2ApicTimer {
+}
+
+// Select one-shot mode, leave the timer unmasked on the caller-selected
+// admitted vector, and use divide-by-16 for the first production profile.
+// Writing the initial count is intentionally separate: configuration does not
+// start the architectural countdown.
+pub machine X2ApicTimer::configure_one_shot_divide_by_16(
+    &mut self,
+    vector: u64 [32..=255]
+)
+effects MachineControl
+{
+    asm where clobbers rax, rcx, rdx, r10, r11, r15 {
+        wrmsr X2APIC_TIMER_DIVIDE_CONFIG_MSR, X2APIC_TIMER_DIVIDE_BY_16;
+        wrmsr X2APIC_LVT_TIMER_MSR, vector
+    }
+}
+
+// A nonzero initial count arms one architectural one-shot. Platform
+// enumeration/calibration owns the mapping from time to this count.
+pub machine X2ApicTimer::arm_one_shot(
+    &mut self,
+    initial_count: u64 [1..=4294967295]
+)
+effects MachineControl
+{
+    asm where clobbers rax, rcx, rdx, r10, r11, r15 {
+        wrmsr X2APIC_TIMER_INITIAL_COUNT_MSR, initial_count
+    }
+}
+
+pub machine X2ApicTimer::stop(&mut self)
+effects MachineControl
+{
+    asm where clobbers rax, rcx, rdx, r10, r11, r15 {
+        wrmsr X2APIC_TIMER_INITIAL_COUNT_MSR, X2APIC_TIMER_STOP
+    }
+}
+
+// Protocol-specific realization used only after the normalized interrupt
+// acknowledgement transition admits this provider. The public root contract
+// remains PIC/LAPIC/x2APIC-neutral.
+pub machine X2ApicTimer::complete_timer_acknowledgement(&mut self)
+effects MachineControl
+{
+    asm where clobbers rax, rcx, rdx, r10, r11, r15 {
+        wrmsr X2APIC_EOI_MSR, X2APIC_EOI_ZERO
+    }
+}

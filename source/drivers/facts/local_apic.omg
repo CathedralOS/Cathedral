@@ -82,3 +82,10 @@ pub const LOCAL_APIC_TIMER_STOP_COUNT: u32 = 0;
 pub const CPUID_FEATURE_TSC_DEADLINE_BIT: u8 = 24;
 pub const IA32_TSC_DEADLINE_MSR:          u32 = 0x6E0;
 pub const TSC_DEADLINE_DISARMED:          u64 = 0;
+
+// Exact zero-extended x2APIC MSR payloads used by Cathedral's first checked
+// provider. They are transport-width aliases of the architectural 32-bit
+// register values above, not additional policy.
+pub const X2APIC_EOI_ZERO:           u64 = 0;
+pub const X2APIC_TIMER_STOP:         u64 = 0;
+pub const X2APIC_TIMER_DIVIDE_BY_16: u64 = 3;
