@@ -14,11 +14,14 @@
 use uefi::uefi;            // EfiHandle, EfiSystemTable, EfiStatus
 use uefi::boot_services;   // EfiMemoryDescriptor, EFI_CONVENTIONAL_MEMORY, MapKey, BootServicesTable
 use core::extent;          // Extent, mint_extent
+use omega::language::core::assembly; // PortIo, MachineControl
 
 // Get the map, walk it, exit, mint, report. `self.map_buf` is a fixed 16 KiB
 // static field (no allocator yet — real firmware maps are ~4–8 KiB); the
 // too-small retry loop is a follow-on.
-machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) effects device_io, machine_control {
+machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable)
+effects BootServices + PortIo + MachineControl
+{
     let bs: &BootServicesTable = table.boot_services;          // transitive vouch, like con_out
 
     let mut map_size: u64 = 16384;               // in = buffer capacity, out = actual bytes
@@ -256,7 +259,7 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable) effe
     // Idle. We own the machine and firmware is gone — there is nothing to
     // return to. `asm { hlt }` halts the core until the next interrupt instead
     // of busy-spinning; the self-re-entry re-halts after any wake. `hlt` is a
-    // known-contract asm intrinsic emitting `machine_control`, which the
+    // known-contract asm intrinsic reaching `MachineControl`, which the
     // machine declares (privileged_effects_and_binary_trust brief); it is
     // discharged by the freestanding boundary root (v0 discharge — this boot
     // root trivially owns the machine).

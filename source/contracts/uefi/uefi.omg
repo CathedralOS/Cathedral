@@ -42,8 +42,7 @@ pub data TextOutputProtocol {
 }
 
 pub boundary trait SimpleTextOutput {
-    machine output_string(console: &TextOutputProtocol, string: &[u16]) -> EfiStatus
-        effects device_io;
+    machine output_string(console: &TextOutputProtocol, string: &[u16]) -> EfiStatus;
 }
 
 // The leaf is attached to the layout-owning protocol type. Dispatch reads the

@@ -29,6 +29,7 @@
 use uefi::uefi;            // EfiHandle, EfiStatus, EFI_SUCCESS, EfiSystemTable, TextOutputProtocol, SimpleTextOutput
 use uefi::boot_services;   // BootServices
 use own_machine;           // Main::own_machine (milestone 2, sibling module)
+use omega::language::core::assembly; // PortIo, MachineControl
 
 // Main's STATIC DATA (`&self`): the held capabilities (Simple Text Output for
 // the greeting, Boot Services for the milestone-2 memory-map dance) + the
@@ -46,7 +47,9 @@ data Main {
 // (milestone 2 needs it for ExitBootServices). The audited machine-state axioms
 // (long mode, paging, interrupts, stack) are boot-target properties surfaced by
 // the artifact — see the uefi contracts.
-boundary machine Main::run(&self, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus effects device_io, machine_control {
+boundary machine Main::run(&self, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
+effects SimpleTextOutput + BootServices + PortIo + MachineControl
+{
     self.msg = utf16"Hello from Omega\r\n\0";
     // Project con_out through a frame local (the reference-param deref), then
     // dispatch OutputString(con_out, &msg) through the firmware's own vtable.

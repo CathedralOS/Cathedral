@@ -84,8 +84,7 @@ pub boundary trait BootServices {
         map_key:            &mut MapKey,
         descriptor_size:    &mut u64,
         descriptor_version: &mut u32
-    ) -> EfiStatus
-        effects device_io;
+    ) -> EfiStatus;
 
     // ExitBootServices(ImageHandle, MapKey). Succeeds only against the current
     // key; on success firmware is gone and the map is final.
@@ -93,8 +92,7 @@ pub boundary trait BootServices {
         table:        &BootServicesTable,
         image_handle: EfiHandle,
         map_key:      MapKey
-    ) -> EfiStatus
-        effects device_io;
+    ) -> EfiStatus;
 }
 
 // Each external leaf is attached to the layout-owning table type and names its
