@@ -193,11 +193,10 @@ as ordinary package data and machines over Omega's generic fragmented
 materializer, admitted resolver, mapped placement, external-root ledger, and
 checked instruction contracts.
 
-The current compiler still contains an IDT-named lifecycle specialization.
-Omega `TASKS.md` P0 tracks removing it. Cathedral must not depend on that Rust
-model: if the source implementation cannot express a step, it reports the
-missing general primitive instead of promoting the IDT lifecycle back into the
-compiler.
+The compiler contains no IDT-named lifecycle specialization. Cathedral must
+not recreate one in Rust: if the source implementation cannot express a step,
+it reports the missing general primitive instead of promoting the IDT
+lifecycle back into the compiler.
 
 Build and package policy is an additional outer gate. Ordinary application
 profiles reject transitive reach to normalized services such as `IdtControl`,
