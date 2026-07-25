@@ -11,7 +11,12 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 - **Single address space vs. hardware isolation.** Theseus-style language-level isolation buys zero-copy IPC and clean hot swap, but interacts with untrusted code, the driver model, and the kernel's trusted base. Recurs across [[kernel_architecture]], [[memory_and_persistence]], [[ipc_and_service_invocation]], [[driver_model]].
 - **What is the runtime representation of a held capability** — and its serialized, at-rest, and over-the-wire forms — such that it stays unforgeable and revocable across IPC, reboot, and migration? Drives [[capability_lifecycle]], [[ipc_and_service_invocation]], [[distributed_boundary]], [[updates_and_hot_swap]].
 - **Eager vs. lazy revocation**, and whether revoking a capability revokes its delegated sub-tree by default. Cost model unknown ([[capability_model]], [[capability_lifecycle]]).
-- **What is the unit?** The component family ([[component_model]]) deliberately splits isolation / restart / swap / authority / scheduling / persistence / upgrade. Which of these genuinely need distinct units, and which collapse?
+- **Replaceable-realization representation.** The semantic unit is settled: a
+  selected provider realization plus its owned code/state/resource closure,
+  distinct from package, boundary, task, and principal. Cathedral still must
+  choose its binding-era algorithm, live-era bound, replacement/disposition
+  receipts, mapping-cohort manifest, stack-provision strategy, and migration/
+  cancellation interfaces ([[component_model]], [[updates_and_hot_swap]]).
 
 ## Proof & Language
 
@@ -27,7 +32,11 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
   ([[hardware_foundation_profile]]), and the matching owner question lives in
   Omega's `OWNER_QUESTIONS.md`.
 - **Static authority flow vs. live held grants.** The compiler describes *possible* power; the runtime graph holds *actual* grants. How tightly are they reconciled, and who flags drift? ([[capability_model]], [[observability_and_introspection]].)
-- **How much hot-swap safety is statically provable** vs. load-time/runtime checked? ([[versioned_state_and_migration]], [[updates_and_hot_swap]].)
+- **Hot-swap evidence split.** Omega statically supplies closure, contract,
+  representation, resource-demand, and liveness facts. Cathedral still must
+  define which era, device, health, drain, transfer, and reclamation facts are
+  provider receipts versus runtime-ledger observations
+  ([[versioned_state_and_migration]], [[updates_and_hot_swap]]).
 
 ## Hardware Profile
 

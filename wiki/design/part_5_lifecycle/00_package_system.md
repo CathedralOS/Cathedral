@@ -10,7 +10,15 @@ Linux packaging is the clearest example of the problem: a package is an archive 
 
 Installation is a **declarative state transition**, not a program. A package is an Omega artifact that *declares* everything the system needs to admit it, and the compiler/loader *checks* the declaration before anything is written. There is no install-script escape hatch — the manifest is the only way in.
 
-A package declares: exports and imports; capabilities required, stored, and delegated; protocols spoken ([[ipc_and_service_invocation]] `wire data`); persistent state schemas with their versions and migration functions; resource budgets; upgrade-compatibility facts; security invariants; and the test/proof artifacts that back them. Build provenance is signed and reproducible; dependencies are hermetic. Because all of this is structured, "install this package" reduces to: verify provenance, check the capability manifest against policy, prove the state schema migrates, allocate the budget, and atomically commit — or atomically refuse.
+A package declares exports and imports; capabilities required, stored, and
+delegated; protocols spoken; persistent state schemas and migration functions;
+candidate resource demands and optional fixed policy budgets;
+upgrade-compatibility facts; security invariants; and the test/proof artifacts
+that back them. Build provenance is signed and reproducible; dependencies are
+hermetic. Because all of this is structured, installation reduces to verifying
+provenance, checking policy, validating state migration and component
+representations, provisioning the selected realization, and committing—or
+refusing without running an ambient install script.
 
 This is the core divergence: every other OS treats the package as an opaque payload whose effects are discovered only by running it; Cathedral treats it as a checkable contract whose blast radius is computed in advance.
 
@@ -49,7 +57,14 @@ Most updates are **services and drivers → live hot-swap, zero reboot** ([[upda
 
 ### Many components update independently — no OS-wide two-phase commit
 
-Each component's swap is an **atomic copy-on-write root-flip** (no half-component). *Across* components, updates flip **independently**, because **versioned interfaces make a mixed-version state valid** — a v4 service and a v3 service interoperate over compatible `wire data` schemas. So a partial update is a **working, resumable state**; a crash mid-batch leaves a valid mix and the update continues. A **coupled breaking change** between two components is made compatible across one step (support both protocols), or, if genuinely atomic, done by a **coordinated flip scoped to the coupled set** (a local OS-coordinated commit over those realms, [[transactions_and_consistency]]) — never an OS-wide 2PC. A multi-component *feature* that must appear atomic is deployed incrementally, then enabled by a final **config flag**, not a component transaction.
+Each replacement publishes a new requirement-binding era and then drains or
+retains the old era; publication and reclamation are separate completion
+states. Across components, updates proceed independently when their versioned
+interfaces permit a mixed-version state. A coupled breaking change is made
+compatible across one step or uses a coordinated commit scoped to the coupled
+set—never an OS-wide two-phase commit. A multi-component feature that must
+appear atomically is deployed incrementally and enabled by a final
+configuration transition.
 
 ### The setup-transition: a confined computation, not a script
 
@@ -57,7 +72,13 @@ The one place imperative code wants back in — first-run setup (seed a database
 
 ### Migration with extra inputs is the same shape — Omega's `capture` + pure `upgrade`
 
-A migration that needs more than its own old state (a v2 map that needs the editor's live data; unified contacts merging two stores) uses Omega's decided **`Upgradable<Old, New, Context>`** model: the extra source is captured **as a typed `Context` value first**, in an effectful, fallible **`capture`** phase that runs *before* the old state is touched, and the **`upgrade` is then pure over `(Old, Context)`** — provable despite needing external data. `capture` reads *committed* state (quiescence commits the live part), the `Context` type is private so capture is not skippable, and N inputs just make the `Context` a bundle. It is the identical `{ old + granted committed inputs } → new, as confined code` shape as the setup machine — see Omega [Versioned Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
+A migration needing external information captures an owned typed context first,
+while the old state remains recoverable. An ordinary checked migration machine
+then transforms `(old, context)` into new state under deterministic contracts.
+A package may expose an `Upgradable<Old, New, Context>` convenience trait, but
+Omega does not bless that trait or a migration DSL. The semantic requirement is
+the capture-before-point-of-no-return discipline described in [Omega Versioned
+Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 
 ## Concerns & Design Space
 
@@ -66,7 +87,12 @@ A migration that needs more than its own old state (a v2 map that needs the edit
 - **State schemas & migration.** A package owns persistent state shapes; upgrades ship versioned data + migration machines (see [[versioned_state_and_migration]]).
 - **Atomic install / uninstall.** Commit or refuse as one transaction ([[transactions_and_consistency]]); no half-installed state, no orphaned hooks.
 - **Reproducible, hermetic builds + signed provenance.** The same source yields the same artifact; the build's inputs and signer are recorded ([[audit_compliance_provenance]]).
-- **Static, hermetic linking.** A component ships with its dependencies resolved and pinned at build time, so there is no runtime symbol resolution and no dynamic-library search path. Identical code used by many instances or components is deduplicated in physical memory by content address ([[filesystem_as_database]]), so a component carrying its own dependencies does not cost extra RAM per instance.
+- **Hermetic realization closure.** A package is not automatically a component.
+  When Cathedral selects a provider realization for independent deployment, the
+  compiler validates its closed code/state/resource graph and its
+  requirement-bound imports. There is no ambient dynamic-library search path.
+  Identical immutable cohorts may still deduplicate by content address
+  ([[filesystem_as_database]]).
 - **Machine-checkable compatibility.** ABI/protocol/schema compatibility with the installed world is a checked fact, not a version-string heuristic. The baseline it is checked against exists by construction: the distribution plane records every published version's declared schemas ([[store_and_economic_control]]), so admission can refuse a package whose wire schemas break what came before, instead of relying on a developer to supply the old schema by hand. Storage formats are the strict case, since on-disk data can outlive every version that could write it ([[versioned_state_and_migration]]).
 - **Revocation & staged rollout.** Package-level revocation, staged/canary rollout, and rollback are first-class, gated by the store/control plane ([[store_and_economic_control]]).
 - **Zero value.** A zero package is the empty manifest (valid-empty): it declares no exports and an empty capability manifest, so it requires zero authority and installs as a no-op, which is both the least-privilege admission case and ZII-coherent ([[omega_substrate]]).

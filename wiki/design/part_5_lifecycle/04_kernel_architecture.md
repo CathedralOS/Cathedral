@@ -46,7 +46,10 @@ The **core itself** is the one thing on neither side of that wall — it is *tru
   layout/access plans, checked instructions, entry roots, and external loans, so
   low-level code does not regain C's "number equals power" escape
   ([[hardware_foundation_profile]]).
-- **Machines as swap points** ([../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)) make even core subsystems upgradable in place.
+- **Replaceable provider realizations** ([../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md))
+  make core subsystems upgradable where their owned closure, resource provision,
+  entry accounting, and state-disposition policy can be validated. A package or
+  arbitrary machine is not a swap point merely by existing.
 
 ## Open Questions
 

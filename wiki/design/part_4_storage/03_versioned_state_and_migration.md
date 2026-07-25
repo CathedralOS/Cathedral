@@ -8,7 +8,12 @@ Traditional systems mix several unrelated meanings of “version”: an in-memor
 
 ## The Cathedral Model
 
-Omega has no builtin `Versioned<T>`, `.prev` type path, or `replace` DSL. Cathedral builds each lineage from ordinary immutable schema data, ordinary sums, layout/codec policies, provenance domains, and migration machines. Live component replacement is a separate package protocol over admitted artifacts, slots, pins, and runtime capabilities.
+Omega has no builtin `Versioned<T>`, `.prev` type path, or `replace` DSL.
+Cathedral builds each lineage from ordinary immutable schema data, ordinary
+sums, layout/codec policies, provenance domains, and migration machines. Live
+replacement is a separate Cathedral protocol over admitted artifacts,
+requirement bindings, era/liveness pins, candidate resource provision, and
+runtime capabilities.
 
 ### External format lineages
 
@@ -68,13 +73,21 @@ Machines written today over `CounterV1` are current code over an old shape. They
 The operational protocol is a Cathedral/library concern:
 
 1. validate and admit the candidate artifact;
-2. quiesce or coexist according to the selected runtime policy;
+2. provision peak coexistence and declare drain/disposition policy;
 3. capture effectful external context;
 4. run the deterministic state transform;
-5. install/handoff atomically, or restore while restoration remains meaningful;
-6. retain old artifacts until all liveness pins retire.
+5. publish through an era-safe requirement binding, or restore while
+   restoration remains meaningful;
+6. drain, retain, migrate, restart/cancel, redirect, or acknowledge-transfer
+   every old-era obligation; and
+7. reclaim each lifetime cohort only when its residual population is empty.
 
-Linear phase tokens make skipped cleanup or double completion compile errors. The runtime substrate supplies artifact loading, versioned dispatch slots, liveness pins, atomic selection, and admission receipts; a package supplies orchestration policy. Cathedral is the first planned consumer, so the framework belongs here until a second customer proves a smaller reusable package boundary.
+Linear phase tokens can make local skipped cleanup or double completion compile
+errors. The live population also includes runtime entities the source checker
+cannot see, so Cathedral maintains an era ledger with provider receipts. The
+runtime supplies artifact loading, requirement binding, liveness pins, era-safe
+selection, resource admission, and reclamation; Cathedral supplies
+orchestration policy.
 
 ## Safety Properties
 
@@ -84,7 +97,8 @@ Linear phase tokens make skipped cleanup or double completion compile errors. Th
 - **Future data misread as current:** explicit unknown-era policy.
 - **Forged boundary provenance:** owner-evidenced decode domain; constructing a shape does not mint provenance.
 - **Nondeterministic migration:** capture/upgrade separation plus ownership, access, and callee-contract checks.
-- **Wrong live provider after replacement:** pinned slot identity, admission refinement, and liveness pins.
+- **Wrong live provider after replacement:** requirement/provider/era identity,
+  admission refinement, and liveness pins.
 - **Semantic drift without a changed declared contract:** residual risk; the language cannot infer durable meaning the author never stated.
 
 ## Ergonomics

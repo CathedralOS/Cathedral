@@ -18,7 +18,14 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
 - **`domain`** — named proof predicates over values (`Folder::Writable`, `Player::Alive`). Cathedral expresses *permission shades*, *validity classes*, and *lifecycle states* as domains rather than as separate permission-flavored types. See Omega [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - **`boundary` + service and operational contracts** — `boundary` marks external supply/trust edges; the `effects` row contains only normalized boundary-trait service identities. Independent `suspends` and `blocks` clauses publish operational may-ceilings. Each axis propagates transitively and forms an authored API ceiling. Authority values, trust receipts, resources, failure, termination, and mutation remain independent axes rather than magic effect keywords. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Authority flow** — inferred from values, domains, call contracts, returns, stores, and boundary provenance. The compiler reports what a unit *accepts, uses, derives, stores, acquires, returns, releases.* This is the raw material of Cathedral's authority graph.
-- **Ordinary data evolution** — Omega has no `Versioned<T>`, era-path type, or `replace` DSL. Historical external shapes are immutable ordinary `data`, sum envelopes, layout/codec policies, provenance domains, and checked conversion machines. Live replacement is a Cathedral/component package over artifact identities, pinned slots, liveness pins, admitted runtime operations, and ordinary phase machines. See Omega [Versioned Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
+- **Ordinary data evolution** — Omega has no `Versioned<T>`, era-path type, or
+  `replace` DSL. Historical external shapes are immutable ordinary `data`, sum
+  envelopes, layout/codec policies, provenance domains, and checked conversion
+  machines. Live replacement is Cathedral orchestration over requirement-bound
+  provider realizations, artifact/era identities, liveness pins, candidate
+  resource demands, admitted runtime operations, and ordinary phase machines.
+  There is no `slot` keyword. See Omega [Versioned
+  Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 - **Programmable schemas and layouts** — plain `data` may carry stable field identities/tombstones; layout and codec policies define external representation and compatibility. There is no separate `wire data` species. Cathedral's IPC, networking, and persistence packages select the relevant policies. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md) and [Programmable Layouts](../../../../Omega/wiki/design_briefs/programmable_layouts.md).
 - **OS memory/hardware foundation** — inert addresses, range-authority `Extent`s, allocator `Arena`s and arena-bound `Allocation<T>` storage, programmable layouts, separate access plans, checked assembly, boundary entry plans, symbolic materialization, external-root reporting, and external loans compose the kernel/driver substrate without interrupt/MMIO/DMA keywords. Cathedral's strict provider profile is [[hardware_foundation_profile]].
 - **Proof obligations** — contracts (`requires` / `ensures`), bounded values, borrow facts, termination claims, and relax scopes. See Omega [Proof Obligations](../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md).
@@ -34,6 +41,7 @@ A useful rule for every later chapter:
 | What effects a component *could* reach | Whether the running system *grants* them |
 | That a protocol change is *compatible* | Which versions are *deployed* and routed |
 | That a swap is *borrow-safe* | Reaching *quiescence* in a live system |
+| Candidate-specific stack/work/state demand and general admission facts | Provisioning peak coexistence, choosing drain policy, and reclaiming old eras |
 | Whether concurrency is *data-race safe* and free of internal deadlock under the selected proof mode (ownership, carry policy, wait contracts, and the memory model) | Whether tasks actually *run* — the scheduler, fairness, and context switch |
 
 Omega answers "is this sound?" Cathedral answers "should this happen, now, here, and for whom?"
@@ -77,6 +85,9 @@ important writes.
 
 - A serialized capability representation — largely dissolved by the grant arena: the durable arena is the at-rest representation and handles are inert bits, so the ask on Omega shrinks to typed redemption results and domains over handle types ([[capability_lifecycle]]).
 - Quiescence proofs in the presence of interrupts, timers, async work, and hardware ([[updates_and_hot_swap]]).
+- A Cathedral loader/runtime for replaceable realizations: era-safe requirement
+  binding, resource provision, disposition accounting, lifetime-cohort
+  mappings, and state coexistence/migration ([[updates_and_hot_swap]]).
 - Possibly: purpose-tagged authority (`Capability<Read<Contact.Email>, Purpose<SendMessage>>`) ([[data_model_and_privacy]]).
 - Operation-capabilities for secrets (`Capability<SignWithKey(K)>`) rather than raw key bytes ([[secrets_and_keys]]).
 - **Concurrency completion:** real atomics already lower on x86. Omega has

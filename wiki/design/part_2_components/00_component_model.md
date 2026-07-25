@@ -10,7 +10,9 @@ The Unix process is one of computing's great overloaded nouns. A single `pid` si
 
 Stop pretending one noun fits. Cathedral models an explicit **family** of units and lets each concern pick the granularity it needs:
 
-- **Component** — the unit of *code identity and deployment* (what the store ships, what the loader instantiates).
+- **Component** — a provider realization selected for independent deployment
+  or replacement, plus the closed code, state, resource, and metadata graph it
+  owns. The store ships its artifact; the loader instantiates an era of it.
 - **Instance** — a live running occurrence of a component, with its own state.
 - **Task** — the unit of *concurrent execution*; a single running state machine. An instance is one or more tasks.
 - **Actor / Service** — the unit of *protocol identity* (what others invoke).
@@ -18,10 +20,17 @@ Stop pretending one noun fits. Cathedral models an explicit **family** of units 
 - **Session / Transaction / Job** — units of *work* with their own lifetime.
 - **Tenant** — the unit of *isolation and accounting* across users/orgs.
 
-The point is that the unit of isolation, of restart, of hot swap, of authority, of scheduling, of persistence, and of upgrade are *separately chosen axes*, not synonyms forced to coincide. A component therefore carries far richer identity than a `pid`:
+The point is that the unit of isolation, restart, hot swap, authority,
+scheduling, persistence, and upgrade are separately chosen axes. Package,
+component, and boundary also remain separate: a package is source/dependency
+organization, a component is a deployment/replacement closure, and a boundary
+is a trust/ABI/external crossing.
+
+A live instance record joins those axes without pretending they are one
+identity:
 
 ```omega
-data ComponentIdentity {
+data ComponentInstance {
     code:      CodeId;        // which versioned component artifact
     state:     StateId;       // which live state lineage (survives upgrade)
     authority: PrincipalRef;  // who it acts as / what it holds
@@ -32,6 +41,16 @@ data ComponentIdentity {
     quiesce:   QuiescePolicy; // how it reaches a swappable rest state
 }
 ```
+
+This record is Cathedral policy, not an Omega language primitive. In
+particular, candidate resource demand is not frozen forever in `ProtocolId`.
+The loader admits each realization against current provision unless the
+protocol deliberately declares a non-renegotiable budget.
+
+Calls within a component may name concrete machines. Every incoming call from
+outside a replaceable closure names a requirement contract; the build may fuse
+the same requirement statically elsewhere. Cathedral needs no `slot` keyword or
+hot-swap call syntax.
 
 ### Concurrency: tasks that share nothing
 
@@ -58,25 +77,36 @@ Tasks are **structured**: a task is owned by a scope and cannot outlive it, so a
 - **Persistence identity.** Which components are stateless and respawnable, which own durable state, and which *are* their state (a database).
 - **Authority binding.** A component holds capabilities; spawning a child grants *nothing* ambient — every authority is explicitly passed ([[capability_model]]).
 - **Resource identity.** Each instance is a billable, budgetable entity, and the schedulable execution unit within it is the **task** ([[scheduler_and_resources]]); scheduling granularity need not equal isolation granularity.
-- **Zero value.** A zeroed `ComponentIdentity` is the canonical null instance: it holds the zero authority (the inert capability over the null object) and names no live state or code, so a reference to it is an inert null-object (shape 2) that accepts operations as no-ops, keeping the family's handles ZII-coherent without a forgeable ambient identity ([[omega_substrate]]).
+- **Zero value.** Zero-filled storage names no established live component.
+  APIs needing optionality use an explicit debt-free `Empty | Live(instance)`
+  sum. Zero bytes never mint authority, state ownership, or a reclamation
+  obligation ([[omega_substrate]]).
 
 ## Key Questions
 
-- What is the *minimal* component — and is there a single base concept the rest are refinements of, or are these genuinely distinct kinds?
+- Which concrete artifact/manifest representation records the settled
+  provider-realization closure without equating it to a package?
 - Does the OS isolate components by address space, by Omega's language-level isolation in one space, or a mix decided per component ([[kernel_architecture]])?
-- When code identity and state identity diverge during an upgrade, who owns the bridge, and how long may old and new coexist?
+- Which binding-era and ledger implementation realizes the replacement
+  protocol, and what live-era bound does Cathedral admit?
 - Can authority, scheduling, and persistence identity be reassigned on a live instance, or only at instantiation?
 
 ## Omega Leverage
 
-- A component's internal lifecycle is an Omega **`machine`** with an explicit **`state`/`transition`** graph — quiescing and draining are real states, not flags ([../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)).
+- Cathedral's component lifecycle is implemented by ordinary Omega
+  **machines** with explicit **state/transition** graphs. Omega supplies the
+  substrate; Cathedral owns the lifecycle and policy
+  ([../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)).
 - **`effects`** give each component a behavior ceiling; **authority flow** gives its accepts/uses/stores report — both are per-component, so the component is the natural granularity for both audits ([[capability_model]]).
 - **Versioned `data` + migration** make state identity a first-class lineage that survives code replacement ([[versioned_state_and_migration]]).
-- Omega does **not** yet define how one running `machine` instance is named, addressed, and supervised by another *as an OS-managed entity* — the component registry and supervision tree are Cathedral runtime structure over Omega values.
+- Omega does **not** define an OS-managed component registry, supervision tree,
+  drain policy, or migration scheduler. Those remain Cathedral runtime
+  structures over Omega values and admitted providers.
 
 ## Open Questions
 
-- Is "component" one type with many roles, or a small zoo of related types? The whole of Part 2 leans on this answer.
+- What runtime records represent a component definition, one live era, one
+  instance, and the owned-closure ledger without fusing those identities?
 - Can the crash boundary be strictly smaller than the address space without hardware isolation, relying on Omega's safety alone — and is that trusted enough for drivers?
 - How does a component's identity persist across reboot and device migration without becoming an ambient, forgeable handle?
 
