@@ -18,6 +18,12 @@ Legend: `[ ]` open · `[x]` closed.
   disposition precede cohort reclamation. Concrete era binding, ledger/receipt
   encoding, migration interfaces, and loader implementation remain runtime
   work. No `replace`, `slot`, or package-equals-component semantics.
+- [x] **Opaque-runtime package admission semantics** — Omega pins and validates
+  erased/inline/sealed-handle representation plus published introductions;
+  Cathedral admits the final resolved artifact's transitive reachable-authority
+  set. Complete manifests remain machine-readable and human diffs rank severity
+  so inert checked tokens stay quiet while new system authority blocks. Exact
+  Omega source spelling and Cathedral manifest/UI encoding remain engineering.
 - [x] **TCB minimization** — bootstrap seed + checker + verified translation; trusting-trust resistance canon (`7bb4e69`)
 - [x] **Side channels** — parity posture + `IsolationClass` ladder, core-enforced (`008343e`)
 - [x] **Compatibility (core)** — sandbox→VM continuum, recursive-provider, bridge-not-home (`197059b`)

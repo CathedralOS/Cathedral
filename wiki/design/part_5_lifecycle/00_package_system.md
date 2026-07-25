@@ -14,9 +14,11 @@ A package declares exports and imports; capabilities required, stored, and
 delegated; protocols spoken; persistent state schemas and migration functions;
 candidate resource demands and optional fixed policy budgets;
 upgrade-compatibility facts; security invariants; and the test/proof artifacts
-that back them. Build provenance is signed and reproducible; dependencies are
-hermetic. Because all of this is structured, installation reduces to verifying
-provenance, checking policy, validating state migration and component
+that back them. Runtime opaque values additionally publish their normalized
+carrier class, introduction contracts, backing/provider requirements, and
+reachable authority. Build provenance is signed and reproducible; dependencies
+are hermetic. Because all of this is structured, installation reduces to
+verifying provenance, checking policy, validating state migration and component
 representations, provisioning the selected realization, and committing—or
 refusing without running an ambient install script.
 
@@ -37,6 +39,10 @@ An update **stages additively** — new closures written beside the old, nothing
 - **Integrity** — a chunk whose hash mismatches is rejected by construction.
 - **Attestation + proof re-check** — the closure signature verifies and the local checker **re-verifies the proof certs**; you never trust the publisher's "it's proven," so a forged proof dies here (Thompson-resistance).
 - **Manifest delta** — a **widened** ceiling (authority the old version didn't declare) requires fresh consent; it cannot land silently.
+- **Opaque-representation delta** — inline/handle changes, new introduction
+  contracts, mutable carrier access, admitted backing, generation/revocation,
+  and their transitive authority consequences are compared from normalized
+  manifests. New privileged reach requires policy approval.
 - **Migration totality** — a state-schema change ships a migration proven **total**; absent that, the swap is refused and the old state is left intact.
 
 Refuse at any gate → you stay on the working old version, nothing half-installed.
@@ -84,6 +90,14 @@ Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 
 - **No install scripts, ever.** Any per-install side effect must be expressed as a declared state transition the loader executes under a bounded capability set, not as code the package supplies. This is the load-bearing principle of the chapter.
 - **Capability manifest.** What the package `accepts`, `uses`, `stores`, `derives`, and `acquires` (from [[capability_model]]) is the heart of the manifest. No ambient filesystem, network, or device access during install.
+- **Final-artifact admission.** Policy compares the transitive
+  reachable-authority set after exact dependency resolution, not only direct
+  package declarations. A dependency path identifies who introduced every new
+  privileged reach.
+- **Severity-ranked review.** The complete normalized manifest remains
+  machine-readable. Human diffs collapse checked local inline tokens and make
+  system authority, admitted foreign providers, mutable carrier access,
+  sealed-handle backing, and revocation machinery loud or blocking.
 - **State schemas & migration.** A package owns persistent state shapes; upgrades ship versioned data + migration machines (see [[versioned_state_and_migration]]).
 - **Atomic install / uninstall.** Commit or refuse as one transaction ([[transactions_and_consistency]]); no half-installed state, no orphaned hooks.
 - **Reproducible, hermetic builds + signed provenance.** The same source yields the same artifact; the build's inputs and signer are recorded ([[audit_compliance_provenance]]).
@@ -100,6 +114,10 @@ Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 ## Key Questions
 
 - **Manifest content, build-time vs install-time — resolved:** the manifest is the authority-flow report (accepts/uses/stores/derives/acquires) + state schemas + protocols + upgrade-compatibility facts + proof certs; the **proofs are proven at build and *re-checked* at install**, and **compatibility** (schema/protocol/manifest-delta) is checked at install against the live system.
+- **Opaque runtime admission — resolved:** Omega validates the carrier and
+  introduction contract; Cathedral admits the final artifact's transitive
+  trust/authority expansion. Policy selects who may receive authority and never
+  substitutes for the contract constraining its later use.
 - **Declarative install expressing legitimate side effects — resolved:** side-effect setup (register a service, an association) is **declarative** (the activator registers it, no code); *computational* setup (seed/build initial state) is a **confined setup machine** that maps a fresh realm + granted inputs → an initial-state value with no ambient authority and no side effects.
 - **Dependency model — resolved:** content-addressed, **chunked**, hermetic and pinned; versions coexist by hash (no solver, no dependency hell); fetch is a chunk-level delta.
 - **ABI stability — resolved:** the store records every published version's schemas, so admission refuses a schema-breaking update; storage/`wire data` formats are the strict case (data outlives its writers).
@@ -107,6 +125,10 @@ Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 ## Omega Leverage
 
 - **Authority-flow inference** produces the capability manifest directly — the accepts/uses/stores/derives/acquires report *is* what the package declares.
+- **Opaque runtime representation manifests** expose normalized inline/handle
+  carriers, published introductions, provider/backing requirements, and
+  transitive authority without exposing private carrier fields or proof
+  evidence ([Omega opaque runtime representation](../../../../Omega/wiki/design_briefs/opaque_runtime_representation.md)).
 - **`effects` ceilings** bound what an install-time transition may touch; an install with no `filesystem_io` outside its allotted folder is a checkable fact.
 - **Versioned `data` + migration machines** carry the persistent-state schema and its upgrade path as typed code with obligations.
 - **`wire data`** ([[ipc_and_service_invocation]]) declares the protocols spoken, making protocol compatibility part of the manifest.

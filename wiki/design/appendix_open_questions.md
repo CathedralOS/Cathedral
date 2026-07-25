@@ -21,9 +21,11 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 ## Proof & Language
 
 - **Remaining Omega OS-foundation contracts.** The opaque linear `Extent`
-  source carrier is live and the placed-view public model, carry/runtime
-  admission policy, and admitted executable loader ladder are settled. The
-  runtime capability representation, provider mint of Cathedral's first
+  source carrier is live; opaque runtime representation is settled as a
+  type-owner-pinned erased/inline/sealed-handle property with type-owned
+  introductions; and the placed-view public model, carry/runtime admission
+  policy, and admitted executable loader ladder are settled. Exact Omega
+  representation/introduction spelling, provider mint of Cathedral's first
   Physical extent, and sealed extent-domain facts still need implementation.
   Checked-Omega return integrity is settled as a consequence of memory safety
   plus non-addressable live/parked continuation state. Forward-edge dynamic
