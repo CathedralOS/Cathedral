@@ -10,11 +10,11 @@
 // with plain (start, page_count) spans; core knows nothing about UEFI.
 //
 // M2 TARGET -- aligned to the boot-verified M1 machinery. Omega now exposes
-// the real opaque linear `omega::language::core::Extent`, but Cathedral cannot
-// adopt it until the provider-minted runtime carrier and sealed Physical grant
-// are wired through the boot boundary. Until then this file remains an
-// explicitly temporary plain value and the trusted boot origin is its sole
-// minter; it must not be mistaken for the final capability representation.
+// the real linear `omega::language::core::Extent`, but Cathedral cannot adopt
+// it until bodyless/boundary domain evidence and qualified resource
+// transformations are wired through the boot boundary. Until then this file
+// remains an explicitly temporary plain value and the trusted boot origin is
+// its sole minter; it must not be mistaken for the final capability contract.
 
 pub const PAGE_SIZE: u64 = 4096;
 

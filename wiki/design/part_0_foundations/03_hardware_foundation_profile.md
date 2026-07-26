@@ -41,17 +41,20 @@ Cathedral distinguishes three relationships:
 3. `Arena` is bounded, lifetime-scoped allocation authority drawing from
    appropriate backing extents; `Allocation<T>` is the typed storage it issues.
 
-Boot firmware and the final memory map mint the initial physical extents.
+Boot firmware and the final memory map supply the initial physical extents
+through Cathedral's admitted platform receipt.
 Address-space providers turn authorized physical extents into mapped virtual
 extents. Allocators draw `Allocation<T>` storage from RAM-backed Arenas. Device
 mappings retain device provenance and never become ordinary RAM merely because
 their virtual address is an integer.
 
-Space, rights, provenance, and mapping era are sealed grant-established domains
-on one opaque linear `Extent`, not distinct carrier types. Splitting consumes an
-extent and conserves its authority in disjoint children. Merge is legal only for
-contiguous compatible descendants of one authority origin; numeric adjacency
-does not combine grants. Subrange access borrows and preserves parent polarity.
+One linear `Extent` data shape carries runtime base and `u64` length. Space,
+rights, provenance, and mapping era are domain facts on that shape. Rebuilding
+the fields does not reproduce those facts. Splitting consumes a qualified
+extent and conserves its authority in disjoint children. Merge is legal only
+for contiguous compatible descendants of one authority origin; numeric
+adjacency does not combine grants. Subrange access borrows and preserves parent
+polarity.
 
 Fixed mapping consumes authority over its destination virtual range; a requested
 `addr` is only a hint. Its physical source may be owned or borrowed. Unmapping
@@ -209,7 +212,7 @@ reach, so a dependency cannot hide this authority behind an `asm` wrapper.
 
 Omega's provider-neutral interrupt obligations are also live in
 `omega::language::core::interrupt`. A saved-mask guard and an interrupt
-acknowledgement are distinct opaque linear values with consuming `restore` and
+acknowledgement are distinct linear data values with consuming `restore` and
 `complete` operations; their contracts retain `machine_control` versus
 `device_io` reach. Omega's installed-root ledger now mints those values only
 from an exact provider entry receipt, rejects invocation or acknowledgement
@@ -395,9 +398,9 @@ trampoline bytes are accepted as a shortcut.
    instruction contract.
 5. Bring up PIT/PIC under QEMU with the fixed-work timer root and coalescing
    timer-service wake; then add the LAPIC one-shot provider.
-6. Connect Omega's opaque linear Extent to provider minting and sealed range
-   facts; implement placed views, then migrate UART/MMIO off provisional direct
-   port/provider shapes where applicable.
+6. Connect Omega's linear Extent data to Cathedral's boundary receipt and
+   qualified range facts; implement checked resource transformations and placed
+   views, then migrate UART/MMIO onto those providers.
 7. Correct-by-construction page tables and AP bringup.
 8. External loans, IOMMU DMA, and hostile shared-page acceptance tests.
 9. Arena-backed task runtime under the carry/runtime admission model.

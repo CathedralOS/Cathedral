@@ -43,7 +43,15 @@ zero. Before storage becomes visible to another principal, its provider must
 establish non-disclosure for every visible byte, including padding and page
 slack. Recipient-side initialization never discharges that prior-owner duty.
 
-One opaque linear Extent carrier serves physical, virtual, I/O, and provider-defined spaces through sealed grant-established domains. Splitting conserves authority; merging requires common authority ancestry rather than numeric adjacency. Mapping consumes destination virtual-range authority while borrowing or consuming its source. Plan-derived field projections preserve borrow polarity: shared access reads or uses explicit atomics, while ordinary mutation requires exclusivity.
+One linear Extent data shape carries runtime base and `u64` length. Domain
+evidence distinguishes physical, virtual, I/O, rights, provenance, and mapping
+facts without changing that layout. Cathedral's platform boundary originates
+root membership under a receipt; checked split and mapping transformations
+conserve the claim. Merging requires common authority ancestry rather than
+numeric adjacency. Mapping consumes destination virtual-range authority while
+borrowing or consuming its source. Plan-derived field projections preserve
+borrow polarity: shared access reads or uses explicit atomics, while ordinary
+mutation requires exclusivity.
 
 Page tables use a hybrid safety model. New tables are built through typed, capability-gated field operations and become installable only after validation; imported tables are first represented as untrusted bytes and validated before qualification. Unmapping and frame reuse are separated by an acknowledged invalidation/quiescence token so a stale remote TLB entry cannot retain an invisible claim on reused memory.
 

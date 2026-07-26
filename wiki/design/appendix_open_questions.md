@@ -20,13 +20,15 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 
 ## Proof & Language
 
-- **Remaining Omega OS-foundation contracts.** The opaque linear `Extent`
-  source carrier is live; opaque runtime representation is settled as a
-  type-owner-pinned erased/inline/sealed-handle property with type-owned
-  introductions; and the placed-view public model, carry/runtime admission
-  policy, and admitted executable loader ladder are settled. Exact Omega
-  representation/introduction spelling, provider mint of Cathedral's first
-  Physical extent, and sealed extent-domain facts still need implementation.
+- **Remaining Omega OS-foundation contracts.** `Extent` is linear ordinary data
+  carrying base and `u64` length; abstract domain evidence carries grant,
+  address-space, rights, and provenance facts. Cathedral's platform provider
+  originates its first Physical/Granted extent under an admitted receipt, and
+  checked transformations conserve that claim. Bodyless/boundary-domain
+  spelling, resource-frontier outcome mappings, and the fail-closed carry
+  default for boundary-origin authority still need implementation. The
+  placed-view public model, carry/runtime admission policy, and admitted
+  executable loader ladder are otherwise specified.
   Checked-Omega return integrity is settled as a consequence of memory safety
   plus non-addressable live/parked continuation state. Forward-edge dynamic
   targeting still depends on Omega's sealed descriptor/object-safety work;

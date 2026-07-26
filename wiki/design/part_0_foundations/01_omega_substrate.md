@@ -28,12 +28,12 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
   Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 - **Programmable schemas and layouts** — plain `data` may carry stable field identities/tombstones; layout and codec policies define external representation and compatibility. There is no separate `wire data` species. Cathedral's IPC, networking, and persistence packages select the relevant policies. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md) and [Programmable Layouts](../../../../Omega/wiki/design_briefs/programmable_layouts.md).
 - **OS memory/hardware foundation** — inert addresses, range-authority `Extent`s, allocator `Arena`s and arena-bound `Allocation<T>` storage, programmable layouts, separate access plans, checked assembly, boundary entry plans, symbolic materialization, external-root reporting, and external loans compose the kernel/driver substrate without interrupt/MMIO/DMA keywords. Cathedral's strict provider profile is [[hardware_foundation_profile]].
-- **Opaque runtime representation** — provider-minted values select a
-  type-owner-pinned erased, inline-layout, or sealed-handle carrier. Declared
-  introduction operations carry their own entitlement; providers never receive
-  a raw public constructor. The normalized representation and published
-  introductions enter compatibility and package-admission artifacts
-  ([Omega brief](../../../../Omega/wiki/design_briefs/opaque_runtime_representation.md)).
+- **Authority values and boundary evidence** — runtime authority uses ordinary
+  data fields plus abstract domain facts. A `boundary domain` permits admitted
+  receipts to originate membership; checked transformations conserve existing
+  claims. Artifacts distinguish checked, transformed, validated, and accepted
+  evidence origins
+  ([Omega brief](../../../../Omega/wiki/design_briefs/authority_values_and_boundary_evidence.md)).
 - **Proof obligations** — contracts (`requires` / `ensures`), bounded values, borrow facts, termination claims, and relax scopes. See Omega [Proof Obligations](../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md).
 
 ## The Division of Labor

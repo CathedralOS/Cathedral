@@ -19,9 +19,9 @@ If it isn't small enough to audit in full, it doesn't belong here.
 
 **Status (2026-07-24).** In-progress: `extent.omg` — milestone 2, the first
 physical-range `Extent` and its mint, the origin of the authority graph. Omega's
-opaque linear source carrier is live; Cathedral still uses a plainly marked
-bootstrap value until provider minting supplies its runtime representation and
-sealed Physical grant. The generational `{slot, generation}` authority graph
+linear source carrier is live; Cathedral still uses a plainly marked
+bootstrap value until boundary evidence supplies its qualified Physical grant.
+The generational `{slot, generation}` authority graph
 that makes capabilities unforgeable + revocable is the
 `capability_lifecycle` arc, later.
 
