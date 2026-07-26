@@ -104,8 +104,9 @@ important writes.
 - Operation-capabilities for secrets (`Capability<SignWithKey(K)>`) rather than raw key bytes ([[secrets_and_keys]]).
 - **Concurrency completion:** real atomics already lower on x86. Omega has
   settled carry as a compiler-built-in product over suspension, CPU affinity,
-  host-thread affinity, and address stability; it is not a `Send`/`Share`
-  marker-trait family. Remaining work is the portable memory model,
+  host-thread affinity, and address stability. Accepted resource claims begin
+  strict; checked claims derive from provenance; positive result facts grant
+  portability per axis. Remaining work is the portable memory model,
   task-runtime backend, composable suspension, carry/runtime admission,
   suspension-safe loans, and Cathedral's bounded Arena-backed provider.
   Device/MMIO is not "a second atomic model" but a separate

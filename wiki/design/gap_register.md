@@ -142,8 +142,9 @@ Legend: `[ ]` open · `[x]` closed.
   memory model (one IR model → verified x86/ARM lowerings; device/MMIO uses a
   separate `AccessPlan`/placed-view observation model), ownership plus
   sanctioned shared-access contracts, four-axis carry checking, the `Suspend`
-  effect, and a `TaskRuntime` requirement Cathedral implements. `Send`/`Share`
-  marker typing is retired. SAFETY (data-race / deadlock / protocol freedom)
+  effect, and a `TaskRuntime` requirement Cathedral implements. Ownership,
+  sharing protocols, and CPU/thread/address carry remain independent. SAFETY
+  (data-race / deadlock / protocol freedom)
   is proved independently of scheduler fairness; LIVENESS remains conditional
   on the admitted scheduler's progress guarantees. Engineering includes the
   portable memory model, runtime backend, carry/runtime admission, and

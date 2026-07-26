@@ -318,6 +318,11 @@ permissions/external loans, suspension carry, CPU/thread affinity, address
 stability, and WCSU. Cathedral's scheduler publishes a runtime contract and
 admission joins it against each activation plan.
 
+Platform-originated resource claims begin with strict carry. Provider result
+contracts grant the positive permissions they support; `Carry::Portable`
+expands to suspension, CPU, host-thread, and address mobility. Checked
+transformations inherit those permissions through their resource provenance.
+
 Safe-point scheduling is the born-strict native profile because it keeps save
 points enumerable and cheap. The hardware timer remains the delivery mechanism;
 an asynchronous provider may later be admitted with a complete context/state
