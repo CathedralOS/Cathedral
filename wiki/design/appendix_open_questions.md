@@ -25,9 +25,10 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
   address-space, rights, and provenance facts. Cathedral's platform provider
   originates its first Physical/Granted extent under an admitted receipt, and
   checked transformations conserve that claim. Bodyless/boundary-domain
-  spelling and exact boundary-result authorization are implemented;
-  package-owner coherence, transparent predicate aliases, and
-  resource-frontier inference still need implementation. Accepted resource
+  spelling, exact boundary-result authorization, and transparent
+  declared-domain aliases are implemented; package-owner coherence,
+  compiler-owned per-claim carry atoms, and resource-frontier inference still
+  need implementation. Accepted resource
   claims begin with strict carry and gain positive per-claim permissions
   through their provider contracts. The placed-view public model,
   carry/runtime admission policy, and admitted executable loader ladder are

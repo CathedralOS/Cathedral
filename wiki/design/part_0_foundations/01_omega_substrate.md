@@ -15,7 +15,13 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
 ## What Omega Already Provides
 
 - **`data` / `machine` / `state` / `transition`** — state is `data`; behavior is a `machine` over state; control flow inside a machine is an explicit graph of `state`s and `transition`s. The state graph is a first-class artifact the compiler can inspect, prove over, and schedule. See Omega [Machines](../../../../Omega/wiki/language_guide/chapter_3_machines.md) and [States And Transitions](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md).
-- **`domain`** — named proof predicates over values (`Folder::Writable`, `Player::Alive`). Cathedral expresses *permission shades*, *validity classes*, and *lifecycle states* as domains rather than as separate permission-flavored types. See Omega [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
+- **`domain`** — named proof predicates over values (`Folder::Writable`,
+  `Player::Alive`). Transparent declared-domain aliases expand to their atomic
+  conjunction before type/contract identity, compatibility, admission, and
+  executable predicate checks; diagnostics name the unmet atom. Cathedral
+  expresses *permission shades*, *validity classes*, and *lifecycle states* as
+  domains rather than as separate permission-flavored types. See Omega
+  [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - **`boundary` + service and operational contracts** — `boundary` marks external supply/trust edges; the `effects` row contains only normalized boundary-trait service identities. Independent `suspends` and `blocks` clauses publish operational may-ceilings. Each axis propagates transitively and forms an authored API ceiling. Authority values, trust receipts, resources, failure, termination, and mutation remain independent axes rather than magic effect keywords. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Authority flow** — inferred from values, domains, call contracts, returns, stores, and boundary provenance. The compiler reports what a unit *accepts, uses, derives, stores, acquires, returns, releases.* This is the raw material of Cathedral's authority graph.
 - **Ordinary data evolution** — Omega has no `Versioned<T>`, era-path type, or
