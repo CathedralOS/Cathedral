@@ -25,11 +25,13 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
   address-space, rights, and provenance facts. Cathedral's platform provider
   originates its first Physical/Granted extent under an admitted receipt, and
   checked transformations conserve that claim. Bodyless/boundary-domain
-  spelling, transparent predicate aliases, and resource-frontier inference
-  still need implementation. Accepted resource claims begin with strict carry
-  and gain positive per-claim permissions through their provider contracts. The
-  placed-view public model, carry/runtime admission policy, and admitted
-  executable loader ladder are otherwise specified.
+  spelling and exact boundary-result authorization are implemented;
+  package-owner coherence, transparent predicate aliases, and
+  resource-frontier inference still need implementation. Accepted resource
+  claims begin with strict carry and gain positive per-claim permissions
+  through their provider contracts. The placed-view public model,
+  carry/runtime admission policy, and admitted executable loader ladder are
+  otherwise specified.
   Checked-Omega return integrity is settled as a consequence of memory safety
   plus non-addressable live/parked continuation state. Forward-edge dynamic
   targeting still depends on Omega's sealed descriptor/object-safety work;

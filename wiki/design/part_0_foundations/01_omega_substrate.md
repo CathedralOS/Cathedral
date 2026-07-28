@@ -31,9 +31,11 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
 - **Authority values and boundary evidence** — runtime authority uses ordinary
   data fields plus bodyless domain facts. An admitted provider originates a
   root by satisfying an owner-authored boundary requirement whose result names
-  the exact qualified subject; admission records the receipt. Checked
-  transformations conserve existing claims. Artifacts distinguish checked,
-  transformed, validated, and accepted evidence origins
+  the exact qualified subject; admission records the receipt. Omega rejects
+  direct accepted-machine membership claims and retains the exact authorizing
+  requirement signature with the admitted evidence. Checked transformations
+  conserve existing claims. Artifacts distinguish checked, transformed,
+  validated, and accepted evidence origins
   ([Omega brief](../../../../Omega/wiki/design_briefs/authority_values_and_boundary_evidence.md)).
 - **Proof obligations** — contracts (`requires` / `ensures`), bounded values, borrow facts, termination claims, and relax scopes. See Omega [Proof Obligations](../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md).
 
