@@ -24,7 +24,7 @@ Web integration composes almost entirely from already-decided machinery, so the 
 
 **WebView confused-deputy dies by nesting.** An embedded WebView is recursive composition: the host hosts the web content as a *child Matrix* holding its **own** attenuated capabilities, never the host's, so host authority cannot ambiently leak in (identity does not propagate through intermediaries — [[identity_and_principals]]).
 
-**Deferred residue:** origin authentication = first-pin (security bucket); the legacy web is vast and runs contained (near-zero *native* coverage at launch — the same adoption-gradient honesty as networking); WebGPU/WebCodecs bridge under `device_io` but GPU is deferred. The full mechanics are intentionally left for a later pass.
+**Deferred residue:** origin authentication = first-pin (security bucket); the legacy web is vast and runs contained (near-zero *native* coverage at launch — the same adoption-gradient honesty as networking); WebGPU/WebCodecs bridge through device-service capabilities, but GPU is deferred. The full mechanics are intentionally left for a later pass.
 
 ## Concerns & Design Space
 
@@ -35,7 +35,7 @@ Web integration composes almost entirely from already-decided machinery, so the 
 - **Filesystem access.** The web File System Access API expressed as the OS picker minting a narrow capability — same mint as native.
 - **Web app installation & service workers.** Installed web apps as registered principals; background service workers as leased, consented background tasks.
 - **Notifications & media DRM.** Routed through the same compositor/media surfaces ([[windowing_and_compositor]], [[media_and_graphics]]).
-- **WebGPU / WebCodecs.** Bridged to the native media capabilities under the same `device_io` gating.
+- **WebGPU / WebCodecs.** Bridged to native media capabilities and their device-service reach.
 - **Sandboxing & native capability bridge.** A typed bridge so an origin gains native authority only by held capability, never ambiently.
 
 ## Key Questions
@@ -51,7 +51,7 @@ Web integration composes almost entirely from already-decided machinery, so the 
 
 - An origin is a **principal** holding **capabilities + domains** — no new mechanism, just a new kind of node in the authority graph ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - The native bridge is a **boundary provider**; crossing it requires a held capability and shows up in the authority-flow report.
-- Web messages and wire formats are **wire data** ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
+- Web messages use ordinary numbered schemas and selected wire codecs ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
 - Origin-scoped authority is **attenuation** via [domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - Omega does not model HTTP/TLS origin semantics; mapping origin identity onto a principal is Cathedral's bridge work atop the capability model.
 

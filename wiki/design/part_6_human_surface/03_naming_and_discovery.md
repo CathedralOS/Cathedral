@@ -22,7 +22,7 @@ Human names *do* appear locally — a realm path is a chain of filenames, an env
 
 ### 3. Human-memorable global names — the one hard case, and it is the parked network problem
 
-The single place a name must resolve to authority you do *not* already hold, by something a human can type / remember / share, is **first contact with a stranger**: a URL, a person's handle, a remote service. This — and only this — is naming-as-a-security-primitive (homograph, squatting, hijack), because here the string genuinely stands in for authority you have no prior reference to. And it is **not an OS naming system; it is the network trust-bootstrap** — the **first-pin** problem, parked in the security bucket and explored in [[networking]] / [post_dns_resolution](../speculation/post_dns_resolution.md). The self-certifying half is clear: a name that *is* a key resolves by authenticating end-to-end to that key, no third party. The hard, parked half is binding a **human-memorable** string to a key for a **cold stranger**. The theoretical direction floated for the "reference a known remote endpoint" case is an **untrusted distributed hash table of public keys** — recorded as a possible approach, not a near-term commitment.
+The single place a name must resolve to authority you do *not* already hold, by something a human can type / remember / share, is **first contact with a stranger**: a URL, a person's handle, a remote service. This — and only this — is naming-as-a-security-primitive (homograph, squatting, hijack), because here the string genuinely stands in for authority you have no prior reference to. And it is **not an OS naming system; it is the network trust-bootstrap** — the **first-pin** problem, parked in the security bucket and explored in [[networking]] / [post_dns_resolution](../../speculation/post_dns_resolution.md). The self-certifying half is clear: a name that *is* a key resolves by authenticating end-to-end to that key, no third party. The hard, parked half is binding a **human-memorable** string to a key for a **cold stranger**. The theoretical direction floated for the "reference a known remote endpoint" case is an **untrusted distributed hash table of public keys** — recorded as a possible approach, not a near-term commitment.
 
 ## The through-line
 
@@ -49,12 +49,12 @@ Everywhere the OS resolves to authority it uses an **unforgeable value** — a c
 
 - Names and IDs are **values**; resolution yields a **capability + domain**, so a resolved name carries exactly its authority and no more ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - Self-certifying spoof-resistance lives in a **domain / proof predicate** ([domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md)): a name is `Resolvable::Authentic` only with proof it authenticates to its key.
-- Versioned names ride on **versioned data**; wire-format names crossing boundaries are **wire data**.
+- Versioned names ride on historical ordinary data; names crossing boundaries use the selected numbered schema and wire codec.
 - Omega defines no global namespace authority; who arbitrates first-contact uniqueness is the parked network/security question, not a language feature.
 
 ## Open Questions
 
-- **Human-memorable global name → cold-stranger key (first-pin)** — the only genuinely-hard residual, parked in the security bucket. The self-certifying (name-is-a-key) part is decided; the human-memorable-binding part needs the security expert. The untrusted-DHT-of-public-keys is the recorded speculative approach, not a near-term commitment ([post_dns_resolution](../speculation/post_dns_resolution.md)).
+- **Human-memorable global name → cold-stranger key (first-pin)** — the only genuinely-hard residual, parked in the security bucket. The self-certifying (name-is-a-key) part is decided; the human-memorable-binding part needs the security expert. The untrusted-DHT-of-public-keys is the recorded speculative approach, not a near-term commitment ([post_dns_resolution](../../speculation/post_dns_resolution.md)).
 
 ## Related
 - [[capability_model]] — designation by reference; per-principal resolution.

@@ -11,7 +11,7 @@ The chain has to start in something software cannot fake: a tamper-resistant chi
 At each handoff the current stage does two things before passing control on. It **verifies** the next stage's signature, and it **measures** it: extends a running hash of what has booted into a special hardware register that boot code can only add to, never overwrite. The sequence of measurements is a tamper-evident record of exactly what ran.
 
 - Firmware verifies and measures the kernel image (Secure Boot, [phase 1](01_firmware.md)).
-- The kernel verifies the provenance of the system realm and of each component it admits, against signed, reproducible build records ([package system](../design/part_5_lifecycle/00_package_system.md), [distribution](../design/part_7_governance/03_store_and_economic_control.md)).
+- The kernel verifies the provenance of the system realm and of each component it admits against signed build records, including the realized host-input receipts and graph-wide reproducibility classification ([package system](../design/part_5_lifecycle/00_package_system.md), [distribution](../design/part_7_governance/03_store_and_economic_control.md)).
 
 ## Sealing: keys that exist only on a good boot
 

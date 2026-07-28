@@ -35,7 +35,7 @@ Tier B proves *anything* (`hash(secret) ∈ set` ∧ `secret[3] > 5` ∧ …) be
 
 The wallet invents no crypto; it exposes three things over the primitives above:
 
-1. **Credential** = an issuer-signed attribute vector (ZK-friendly signature, e.g. BBS+), held in the Warden, a `wire data` object.
+1. **Credential** = an issuer-signed attribute vector (ZK-friendly signature, e.g. BBS+), held in the Warden and encoded from an ordinary numbered schema under a selected wire codec.
 2. **`present(predicate)`** — a proving operation taking a *public predicate* (Tier-A menu, or a Tier-B circuit/program) plus the *hidden credential*, emitting a **proof**.
 3. **Verification** — the verifier checks `{statement, proof}` against the **issuer's public key**.
 

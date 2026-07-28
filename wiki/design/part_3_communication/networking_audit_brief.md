@@ -74,7 +74,7 @@
    doesn't own the browser's chrome, so a self-reported navigation is an
    untrusted claim, not a mint. The client is *just a Matrix*: **full net + zero
    ambient local authority**, so broad reach is harmless because the sandbox is
-   empty of anything to steal (the conjunction ceiling, `network_io` ∧ no
+   empty of anything to steal (the conjunction ceiling, `Network` reach ∧ no
    `Read<sensitive>`, in canonical form). Picker is the only inbound bridge;
    per-trust-domain browser instances (throwaway vs banking) are the cheap
    isolation win. Honest residual: it can still leak *what you actively put into
@@ -103,7 +103,8 @@
 ## Honest ceilings (cannot be engineered away)
 - **Tunnel-over-authorized-flow exfil is NOT closeable** — capabilities bound the
   *peer set*, not the *bytes*. Permanent ceiling of the whole capability model;
-  only conjunction ceilings (`deny Read<Photo> ∧ network_io`) structurally help.
+  only conjunction ceilings (for example, deny `Read<Photo>` plus `Network`
+  reach) structurally help.
 - **Metadata always leaks** — pinning hides content/identity, never
   existence-of-flow, timing, or the social graph.
 - **Per-peer egress is unenforceable at the legacy CDN edge** — one IP fronts

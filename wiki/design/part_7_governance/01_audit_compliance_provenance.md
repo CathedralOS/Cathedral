@@ -10,7 +10,7 @@ On legacy systems, compliance is theater performed *around* the OS, not *by* it.
 
 Compliance deserves its own domain because it can be made **mechanically derivable** rather than reconstructed by hand. Because Cathedral already records authority and a causal event graph ([[observability_and_introspection]]), the artifacts an auditor needs are either first-class or one query away:
 
-- signed builds and **reproducible** builds
+- signed builds with hermetic/content-replayable/volatile input receipts
 - SBOMs and component provenance ([[package_system]])
 - proof artifacts and capability manifests per component
 - data-access logs tied to the accessing principal and authority path
@@ -43,7 +43,7 @@ Retention is a **policy knob**: a personal machine keeps a modest rolling window
 
 ### The rest composes
 
-Derivable-vs-human: graph-facts derive (a query, or a PCC proof of flow-absence); **intent** — is the classification *correct*, is the policy the *right* policy — needs human attestation (the spec-vs-intent gap, irreducible, [[kernel_architecture]]); more tagging shrinks the human boundary but never to zero. The compliance query is an **`Observe`-family capability** (host-chain-scoped, no god-mode), and because observing is itself an authority the query is **self-audited**; an external auditor gets a scoped, time-boxed query cap. Evidence strength is a gradient — **proven-absent → anchored-witness-trail → human-attested** — already stronger than legacy's screenshots; reproducible builds are reproducible *given a pinned toolchain closure* and bottom out at the bootstrap seed.
+Derivable-vs-human: graph-facts derive (a query, or a PCC proof of flow-absence); **intent** — is the classification *correct*, is the policy the *right* policy — needs human attestation (the spec-vs-intent gap, irreducible, [[kernel_architecture]]); more tagging shrinks the human boundary but never to zero. The compliance query is an **`Observe`-family capability** (host-chain-scoped, no god-mode), and because observing is itself an authority the query is **self-audited**; an external auditor gets a scoped, time-boxed query cap. Evidence strength is a gradient — **proven-absent → anchored-witness-trail → human-attested** — already stronger than legacy's screenshots. Build reports distinguish replay from a recorded dependency artifact graph from independent reproducibility from source: the latter requires a pinned toolchain closure and no volatile input anywhere in the graph, then bottoms out at the bootstrap seed.
 
 ## Concerns & Design Space
 
@@ -73,7 +73,7 @@ Derivable-vs-human: graph-facts derive (a query, or a PCC proof of flow-absence)
 ## Open Questions
 
 - **Proven vs witnessed — resolved (a gradient):** proven-absent (PCC) → anchored-witness-trail → human-attested, already stronger than legacy's screenshots; whether a given regulator *accepts* a witness trail is a mapping/governance question, not an OS mechanism.
-- **Reproducible builds — resolved-direction:** reproducible *given a pinned toolchain closure* (the toolchain is content-addressed, part of the build closure); the residual is the bootstrap seed — the trusting-trust TCB residual already named in [[kernel_architecture]].
+- **Build reproducibility — resolved-direction:** hermetic evaluation is deterministic over source and target; scoped host operations carry hermetic/content-replayable/volatile receipts. A build may be replayable from its recorded dependency artifacts without being independently reproducible from source when an upstream artifact used volatile input. Source reproducibility is a graph policy over pinned toolchain and dependency closures; the residual is the bootstrap seed named in [[kernel_architecture]].
 
 ## Related
 - [[observability_and_introspection]] — the event/authority graph audit queries.

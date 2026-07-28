@@ -20,7 +20,7 @@ In legacy OSes the core nouns are overloaded into mush. "Process" means address 
 
 **Lease** — a capability that is valid only for a bounded time/condition and expires unless renewed. The default shape for risky or distributed authority.
 
-**Effect ceiling** — a normalized row of boundary-service reach and core temporal events (`Suspend`, `Block`) that an Omega machine may transitively perform. A ceiling is not authority: the corresponding capability values are still required at use sites.
+**Effect ceiling** — a normalized row of boundary-service reach that an Omega machine may transitively perform. Independent `suspends` and `blocks` clauses carry operational may-ceilings. None of these ceilings is authority: the corresponding capability values are still required at use sites.
 
 **Authority flow** — the inferred record of what a unit accepts, uses, derives, stores, acquires, returns, releases. The compiler-level raw material for the authority graph.
 
@@ -30,7 +30,22 @@ In legacy OSes the core nouns are overloaded into mush. "Process" means address 
 
 **Instance** — a live, running incarnation of a component with its own state.
 
-**Quiescence** — a proven condition where no thread, callback, interrupt continuation, or queued transition is executing inside a unit, making it safe to migrate or replace. See [[updates_and_hot_swap]].
+**Quiescence** — a proven condition where no thread, callback, interrupt activation, parked task, or queued transition can execute inside a retiring realization, making it safe to reclaim it. Publication of a replacement and reclamation of the old era are separate events. See [[updates_and_hot_swap]].
+
+**Architectural preemption** — the scheduler stops execution at an arbitrary
+instruction, saves opaque target state, and later resumes the same instruction.
+It provides fairness but is not a source-level suspension or lifecycle
+transition.
+
+**Semantic safe point** — an explicitly authored `suspend` call or scheduler
+poll where the program exposes a structured lifecycle transition. Cancellation,
+migration, and replacement may be delivered here; the compiler does not invent
+safe points on loop backedges.
+
+**StackPlan / WorkPlan** — separate compiler-derived resource facts. `StackPlan`
+is the fixed nonmoving stack capacity/alignment needed by one activation.
+`WorkPlan` bounds execution work and distance to semantic response points; WCSU
+does not imply a work bound.
 
 **Migration** — typed code (an Omega migration machine) that transforms old state into new state across a version change, with effect/ownership/invariant obligations. See [[versioned_state_and_migration]].
 
@@ -43,6 +58,11 @@ In legacy OSes the core nouns are overloaded into mush. "Process" means address 
 **Allocation** — arena-bound typed storage carrying layout, establishment, ownership, and lifetime. Allocation reserves storage; establishment determines when those bytes are a live value.
 
 **Placed view** — typed access derived by validating an extent against a geometry `LayoutPlan` and a behavioral `AccessPlan`. MMIO registers and shared-page protocols use the same layout substrate with different access contracts.
+
+**Boundary binding** — a value naming a selected service/component entry under
+its published ABI, operational contract, lease, and replacement-era protocol.
+It is not a local `dyn Trait` vtable; local dynamic descriptors never cross a
+replaceable component edge.
 
 **External root** — a machine entry installed for hardware or foreign code to invoke without an ordinary Omega caller. Installed roots participate in effect, trust, stack, preemption, and lifecycle analysis.
 

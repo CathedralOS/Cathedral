@@ -1,6 +1,6 @@
 # Chapter 00: IPC & Service Invocation
 
-> One IPC primitive: a capability-scoped shared memory region. Every named pattern (pipes, sockets, queues, pub/sub, RPC) is a library over it. Notification and blocking belong to the scheduler; typed safety is an opt-in layer.
+> One IPC primitive: a capability-scoped shared memory region. Every named pattern (pipes, sockets, queues, pub/sub, RPC) is a library over it. Notification and blocking belong to the scheduler; protocol semantics are a library layer, while placed-access safety is mandatory.
 
 ## The Legacy Model
 
@@ -8,20 +8,29 @@ Unix offers a bazaar of half-overlapping IPC mechanisms: pipes, FIFOs, Unix doma
 
 ## The Cathedral Model
 
-One mechanism: a **capability-scoped shared memory region**. The OS maps it once, gated by a capability to the endpoint. After that, communication is plain reads and writes plus atomics, with no kernel in the hot path: the producer writes a slot and advances an index with a release store, the consumer reads it. That is the entire data path. Pipes, sockets, queues, pub/sub, and RPC are libraries over this, not kernel features, so the mechanism count stops growing.
+One mechanism: a **capability-scoped shared memory region**. The OS maps it once,
+gated by a capability to the endpoint. It does not hand either peer an
+unrestricted `&mut [u8]`: the mapping yields an Extent loan with an admitted
+offset-keyed profile, and the protocol package places a validated
+`LayoutPlan + AccessPlan` view over it. Atomic control words use exact declared
+granularity; slot payloads become writable/readable only under the protocol's
+ownership handoff. After placement, the hot path is accessor operations over
+shared memory with no kernel intervention: the producer claims and writes a
+slot, publishes it with a release store, and the consumer acquires and reads it.
+Pipes, sockets, queues, pub/sub, and RPC are libraries over this, not kernel
+features, so the mechanism count stops growing.
 
 The point is that **communication is not an OS concept**. A shared page and atomics are a complete message-passing mechanism on their own. The OS is involved only at the edges:
 - **The region is mapped once**, because only the OS can map the same physical pages into two protection domains, and it gates that on a capability;
 - **The OS leases the lifetime of the region**, so a dead peer's memory is reclaimed instead of leaked.
 
-The map is the one declared **`boundary`** in the whole mechanism (the [ch19](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md) keyword, not just the discipline): only the kernel can map the same frames into two protection domains, so it is a `boundary trait` with the `memory_map` effect, capability-gated.
+The map is the one declared **`boundary`** in the whole mechanism (the [ch19](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md) keyword, not just the discipline): only the kernel can map the same frames into two protection domains, so it is a capability-gated `MemoryMap` boundary service. Calling it contributes that service identity to the effects row; there is no global `memory_map` keyword.
 
 ```omega
-// The map is a boundary: capability-scoped, memory_map effect, kernel-provided.
-boundary trait RegionMap {
+// The map is a capability-scoped, kernel-provided boundary service.
+boundary trait MemoryMap {
     machine grant_region(channel: Channel, slots: usize) -> SharedRegion<Untrusted>
     requires channel in Channel::Mappable
-    effects memory_map;
 }
 
 // What it hands back is access, not truth: a sea of bytes another principal
@@ -104,7 +113,7 @@ Whether that routing is a kernel-mediated trap or a direct call is the substrate
 
 - **Cardinalities are ring disciplines, not separate mechanisms.** One ring backs them all; the cardinality is just how each side advances its index — a plain bump for a sole owner, an atomic *claim* (plus a per-slot publish flag, since claimed slots fill out of order) for many. So the primitive MUST expose the atomic claim-a-slot / claim-an-item hooks, or the multi-sided cardinalities are unbuildable on top and you've foreclosed them at the floor. The blessed set, named for legibility over SPSC/MPSC: `one_to_one` (private streams and replies — cheapest, no claim either side), `many_to_one` (the actor **mailbox** — atomic-claim writes, sole reader), `one_to_many_distribute` (a work pool — each item to exactly one worker), and `broadcast` (each item to every reader; distribute-vs-broadcast is the axis SPSC/MPSC omits). `one_to_one` can drop below a ring entirely: a single cell, a single-use oneshot, or a capacity-0 rendezvous.
 - **The mailbox is `many_to_one`, and that *is* the actor.** A single consumer processing one message at a time is what lets its `self` state mutate lock-free — only one task ever touches it. This is the blessed concurrency shape: producers post variants of one sum, the consumer does one wait + one transition (the no-select model, [Omega ch18](../../../../Omega/wiki/language_guide/chapter_18_concurrency.md)). Request/reply either rides the shared mailbox with a correlation token (to discard stale/late replies) or uses a dedicated **oneshot**, where the channel's identity *is* the correlation — ring-free and token-free, at the cost of a channel per outstanding request.
-- **No userspace async runtime.** The executor and reactor that frameworks like tokio reimplement in userspace — because the host scheduler is blind to cheap tasks — are the OS here: an admitted task runtime starts ordinary machines and the wait provider parks them on IO/events. Suspension composes through calls without function coloring or an `await` marker ([Omega ch18](../../../../Omega/wiki/language_guide/chapter_18_concurrency.md)); channels and supervisors remain ordinary library data.
+- **No userspace async runtime.** The executor and reactor that frameworks like tokio reimplement in userspace — because the host scheduler is blind to cheap tasks — are the OS here: an admitted start/scheduling provider starts ordinary machines and the wait provider parks their fixed stacks on IO/events. Omega has no `async` machine species and no `Future` wrapper. A direct call whose contract may suspend is acknowledged with `suspend`; a call that may stop the current thread is acknowledged with `block`. Those markers expose wait sites without creating a second function type ([Omega ch18](../../../../Omega/wiki/language_guide/chapter_18_concurrency.md)); channels and supervisors remain ordinary library data.
 - **Extent/mapping lifetime.** Leases tie a shared mapped extent to peer liveness. In-flight capability tickets die at redemption after revocation, but mapped bytes require an explicit provider protocol: unmap, cross-core TLB shootdown/acknowledgement, then reuse. A stale untrusted pointer faults only after that hardware transition completes.
 - **Grant/revoke cost.** Page grant/revoke costs TLB shootdowns; decide when copying a small payload is cheaper than a remap.
 - **Capability passing.** Transferring a capability is a kernel insert into the receiver's table — checked against the receiver's manifest ceiling at insert and recording the parent edge — with the handle bits riding the region as ordinary payload ([[capability_model]], [[capability_lifecycle]]). The bits alone convey nothing; only the insert moves authority.

@@ -8,7 +8,7 @@ A traditional OS ends at the machine. Crossing to another node means leaving the
 
 ## The Cathedral Model
 
-Make the machine boundary a *seam*, not a cliff. Because IPC is already typed, versioned, capability-bearing protocol invocation ([[ipc_and_service_invocation]]), and networking already carries protocol schemas and identity ([[networking]]), a remote call is the *same operation* as a local one with a longer, lossier, partition-prone path. A capability serializes and transfers; `wire data` carries it across versions; a **lease** bounds remote authority so a dropped or hostile peer cannot hold power forever.
+Make the machine boundary a *seam*, not a cliff. Because IPC is already typed, versioned, capability-bearing protocol invocation ([[ipc_and_service_invocation]]), and networking already carries protocol schemas and identity ([[networking]]), a remote call is the *same operation* as a local one with a longer, lossier, partition-prone path. A capability serializes and transfers; ordinary numbered data under the selected wire codec crosses versions; a **lease** bounds remote authority so a dropped or hostile peer cannot hold power forever.
 
 ```omega
 // A capability granted to a remote principal, time-bounded by a lease.
@@ -39,7 +39,7 @@ This unifies local cross-world sharing with distributed sharing — a sibling Ma
 - **Remote capabilities.** Authority that serializes and transfers without becoming forgeable, preserving its attenuation and revocation binding ([[capability_lifecycle]]). Cryptographic binding to a principal is the likely mechanism.
 - **Distributed identity & attestation.** A principal must be recognizable across nodes; remote attestation lets a node trust *what code* it is talking to ([[identity_and_principals]]).
 - **Leases for distributed authority.** Remote grants default to time/condition bounds so partition or compromise can't grant unbounded power; expiry semantics must be well-defined under partition.
-- **Secure RPC & protocol migration.** The wire is `wire data`; peers on different versions negotiate via compatibility rules; rolling fleet upgrades are a protocol-migration story, not an outage.
+- **Secure RPC & protocol migration.** The wire uses selected codecs over ordinary numbered schemas; peers on different versions negotiate via compatibility rules; rolling fleet upgrades are a protocol-migration story, not an outage.
 - **Object replication & conflict resolution.** Shared state replicated across nodes needs a convergence model (CRDT-like or explicit merge), with conflicts surfaced as typed obligations rather than silent last-writer-wins.
 - **Offline-first state.** Components keep working partitioned and reconcile on reconnect; the model must say which operations are safe offline.
 - **Causal ordering.** Cross-node happens-before is carried in call metadata so distributed reasoning and tracing hold across the seam.
@@ -56,9 +56,9 @@ This unifies local cross-world sharing with distributed sharing — a sibling Ma
 ## Omega Leverage
 
 - **Capabilities as values** that can in principle serialize and transfer — the same grant that flows over local IPC flows over the network. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
-- **`wire data`** carries authority and state across version-skewed peers with explicit compatibility rules. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
+- **Selected wire codecs over ordinary numbered schemas** carry authority and state across version-skewed peers with explicit compatibility rules. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
 - **Leases** map onto Omega's leased/expired capability lifecycle states, giving distributed authority a natural expiry ([[capability_lifecycle]]).
-- **Versioned `data` + migration** carry replicated state forward as fleets upgrade out of lockstep. See Omega [Versioned Data And Machine Replacement](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
+- **Immutable historical schemas + checked conversions** carry replicated state forward as fleets upgrade out of lockstep. See Omega [Historical Data And Component Replacement](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 - Omega does **not yet** define a cryptographically-bound, network-transferable capability representation, remote attestation facts, or partition-tolerant lease semantics — the central extensions Cathedral pushes onto the runtime.
 
 ## Open Questions

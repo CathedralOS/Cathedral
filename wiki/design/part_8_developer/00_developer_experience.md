@@ -18,15 +18,15 @@ Most of the SDK is *surfacing facts the compiler already produces* (debugger, si
 
 ### Stable-for-tooling = the frozen tier-1 contracts, nothing new
 
-The artifacts durable enough to build tooling on are exactly the ones already frozen for platform-identity reasons ([[governance_and_extension_boundaries]]): the **manifest** (the authority-flow report made durable), **`wire data` schemas**, **proof certs**, **versioned-`data` shapes + migrations**, and the **source state graph**. Churning them would fork the ABI, so their stability is a commitment that already exists. Compiler *internals* (IR, lowering) stay unstable; formats like debug-info are tooling-side builds over exported raw material (the RDI lesson).
+The artifacts durable enough to build tooling on are exactly the ones already frozen for platform-identity reasons ([[governance_and_extension_boundaries]]): the **manifest** (the authority-flow report made durable), **numbered external schemas and selected codecs**, **proof certs**, **historical `data` shapes + conversions**, and the **source state graph**. Churning them would fork the ABI, so their stability is a commitment that already exists. Compiler *internals* (IR, lowering) stay unstable; formats like debug-info are tooling-side builds over exported raw material (the RDI lesson).
 
 ### Every report is a typed artifact; the IDE, CI, and an agent are three lenses
 
-Each surface — authority graph, protocol diff, migration totality, quiescence — is a **typed `wire data` artifact**, consumed identically by a human GUI, **CI gates**, and **LLM agents**. Given the LLM-authors-the-proofs bet, the agent is arguably the *primary* consumer, which is why structured typed output — not human-formatted text — is canonical, and the IDE is a renderer over it. "Fused view vs separate lenses" dissolves: one fact base, and a fused view is just a saved query.
+Each surface — authority graph, protocol diff, migration totality, quiescence — is a **typed artifact encoded from an ordinary numbered schema**, consumed identically by a human GUI, **CI gates**, and **LLM agents**. Given the LLM-authors-the-proofs bet, the agent is arguably the *primary* consumer, which is why structured typed output — not human-formatted text — is canonical, and the IDE is a renderer over it. "Fused view vs separate lenses" dissolves: one fact base, and a fused view is just a saved query.
 
 ### Opinionated about facts and gates, permissive about tools
 
-The OS is opinionated about exactly one thing — the **facts are canonical and the gates re-check them**: the manifest is the enforced ceiling, proofs are re-verified at admission, wire schemas must be compatible, migrations must be total. CI runs these and the store's admission gate re-runs them *regardless of the tool used*, so a bad fact **cannot ship**. Everything else — editor, frontend language, GUI vs CLI, whether you use the reference IDE — is free. So "a strong default becomes a wall devs route around" is defanged: you can only route around **presentation** (harmless), never **facts** (re-checked). N loose tools sharing one canonical typed fact base is not the Unix disease, because the coordination lives in the fact base, not the tools — identity frozen, surface free.
+The OS is opinionated about exactly one thing — the **facts are canonical and the gates re-check them**: the manifest is the enforced ceiling, proofs are re-verified at admission, published external schemas and selected codecs must be compatible, migrations must be total. CI runs these and the store's admission gate re-runs them *regardless of the tool used*, so a bad fact **cannot ship**. Everything else — editor, frontend language, GUI vs CLI, whether you use the reference IDE — is free. So "a strong default becomes a wall devs route around" is defanged: you can only route around **presentation** (harmless), never **facts** (re-checked). N loose tools sharing one canonical typed fact base is not the Unix disease, because the coordination lives in the fact base, not the tools — identity frozen, surface free.
 
 ### A tool is a core component + thin frontends — there is no library-vs-CLI distinction
 
@@ -40,14 +40,14 @@ A Cathedral program **cannot** "expect grep on the system" and dynamically link 
 
 ### ABI evolution: additive by default, versioned-coexistence for breaks
 
-Tier-1 contracts still evolve. **Additive** changes (new `wire data` fields, stable numbers, reader tolerance) are forward-compatible — most evolution, no break. A genuine **breaking** change is a **new contract version**, and the OS serves both over a **bounded deprecation window**; components pin their target version in the manifest, so the OS enumerates *exactly* which installed components still target the old contract and migrates/auto-ports them (proof-carrying migration machines), then drops it. This threads between Linux fragmentation (avoided — one versioned contract set, not N variants) and Win32 cruft (avoided — deprecation is bounded and *legible*, because you can see who is affected). Mechanically it is the same versioned-interface + multi-component-update machinery as [[package_system]].
+Tier-1 contracts still evolve. **Additive** changes (new numbered fields, stable identities, reader tolerance) are forward-compatible — most evolution, no break. A genuine **breaking** change is a **new contract version**, and the OS serves both over a **bounded deprecation window**; components pin their target version in the manifest, so the OS enumerates *exactly* which installed components still target the old contract and migrates/auto-ports them (proof-carrying conversion machines), then drops it. This threads between Linux fragmentation (avoided — one versioned contract set, not N variants) and Win32 cruft (avoided — deprecation is bounded and *legible*, because you can see who is affected). Mechanically it is the same versioned-interface + multi-component-update machinery as [[package_system]].
 
 ## Concerns & Design Space
 
 - **SDK & package tooling.** One toolchain that builds components, resolves versioned dependencies, and publishes to a local store ([[package_system]], [[store_and_economic_control]]) — not N disconnected tools.
 - **Proof tooling.** Surface Omega's obligations as developer feedback: which `requires`/`ensures` are discharged, which need a `relax` scope, where a proof is the thing blocking the build.
 - **Capability visualizer.** Render the per-component authority-flow report as a graph: accepts / uses / derives / **stores** / acquires / returns / releases. Stored authority is highlighted because it is the dangerous, long-lived case ([[capability_model]]).
-- **Protocol explorer.** Diff `wire data` schemas across versions and *name the breaking change* before publish — the field that moved, the compatibility rule that broke ([[ipc_and_service_invocation]]).
+- **Protocol explorer.** Diff numbered schemas and their selected wire policies across versions and *name the breaking change* before publish — the field that moved, the compatibility rule that broke ([[ipc_and_service_invocation]]).
 - **Migration tester.** Prove a versioned-state migration is total over the prior shape, and flag the case it does not cover ([[versioned_state_and_migration]]).
 - **Deadlock / quiescence checker.** Show whether an upgrade can reach quiescence, and which outstanding borrow or wait blocks the swap ([[updates_and_hot_swap]]).
 - **Debugger, tracer, simulator, deterministic replay.** First-class, shared, and capability-governed — detailed in [[debugging_and_tracing]] and [[testing_and_simulation]].
@@ -56,15 +56,15 @@ Tier-1 contracts still evolve. **Additive** changes (new `wire data` fields, sta
 
 ## Key Questions
 
-- **Stable-for-tooling artifacts — resolved:** the frozen tier-1 contracts (manifest, `wire data` schemas, proof certs, versioned-`data` + migrations, source state graph); compiler internals stay unstable, and formats like debug-info are tooling-side builds over exported raw material.
-- **One-product surface — resolved:** every report is a typed `wire data` artifact over one fact base; the IDE, CI, and an LLM agent are three lenses, and a "fused view" is a saved query, not a monolithic UI.
+- **Stable-for-tooling artifacts — resolved:** the frozen tier-1 contracts (manifest, numbered external schemas and codec policies, proof certs, historical data + conversions, source state graph); compiler internals stay unstable, and formats like debug-info are tooling-side builds over exported raw material.
+- **One-product surface — resolved:** every report is a typed, schema-encoded artifact over one fact base; the IDE, CI, and an LLM agent are three lenses, and a "fused view" is a saved query, not a monolithic UI.
 - **GUI vs structured output — resolved:** structured typed artifacts are canonical (the agent is arguably the primary consumer); the GUI is a renderer. A tool is a core component + thin frontends in one package (`import`/`run`/`gui` materialize their subset); there is no library-vs-CLI binary distinction — "runnable" is just the `main` interface.
 
 ## Omega Leverage
 
 - **Authority-flow reports** are the capability visualizer's data, unmodified.
 - **Effect ceilings** drive the resource profiler and certification checklist.
-- **Versioned `data` + migration reports** drive the migration tester and protocol explorer ([../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)).
+- **Historical-schema + conversion reports** drive the migration tester and protocol explorer ([../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)).
 - **Quiescence / borrow-safety facts** drive the deadlock checker.
 - **Proof obligations** ([../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md](../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md)) are the proof tooling's content. The tooling's job is *surfacing*, not deriving.
 

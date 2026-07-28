@@ -18,7 +18,7 @@ Capability<Clock::Virtual(timeline)>  // simulation / test time
 Capability<Clock::Wake>               // arm a wakeup on a clock; a power event
 ```
 
-The consequences are deliberate. A deterministic component gets *no* wall-clock access, so it cannot accidentally become non-reproducible. A test runner gets a **virtual** clock and drives time by hand. A security-sensitive protocol demands a **trusted** clock and refuses to validate certificates against an attacker-influenced one ([[secrets_and_keys]]). Reading a clock is an **effect** (`clock_read`), so the authority graph shows exactly which components depend on time and which clock.
+The consequences are deliberate. A deterministic component gets *no* wall-clock access, so it cannot accidentally become non-reproducible. A test runner gets a **virtual** clock and drives time by hand. A security-sensitive protocol demands a **trusted** clock and refuses to validate certificates against an attacker-influenced one ([[secrets_and_keys]]). Reading a clock reaches the selected `Clock` boundary service, so the authority/effect reports show exactly which components depend on time and which provider supplies it.
 
 ### The decided mechanism
 
@@ -57,7 +57,7 @@ The consequences are deliberate. A deterministic component gets *no* wall-clock 
 
 ## Omega Leverage
 
-- Clock access is a **capability** plus the **`clock_read` effect** — both already in Omega's vocabulary, so time appears in the authority graph and effect ceiling with no new machinery ([../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
+- Clock access is a **capability** plus reach to the **`Clock` boundary-service identity** — both already in Omega's vocabulary, so time appears in the authority graph and effect ceiling with no new machinery ([../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - A component with no clock capability is **statically** provable to be time-independent — the foundation of deterministic simulation.
 - **Virtual time** is just a different `BoundaryProvider` behind `Clock::Read`; the test harness swaps the provider, the component never knows ([[testing_and_simulation]]).
 - Omega does **not** model the *trust level* of a clock or distributed causality semantics — Cathedral adds the clock taxonomy and the trusted-time attestation as runtime/provider structure.

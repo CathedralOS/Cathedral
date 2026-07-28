@@ -60,7 +60,7 @@ admission, and quiescence ([[updates_and_hot_swap]]):
 
 Better than V8/HotSpot in three ways: the **IR is the re-compilable source** (you can't re-optimize a binary you don't have the IR for — a second justification for shipping IR over native); a re-opt swap is the **trivial identity hot-swap** (same data shape, no state transform); and **hot-swap replaces deopt** — instead of speculative per-call-site guards + deoptimization, each build is *proved equivalent* (changes speed, never behavior), and on *profile drift* you swap the whole component to a build optimized for the new profile. Omega does *soundly* what V8 does *speculatively*, because the types it would speculate on are proven. Optimized builds cache by `(IR hash + profile)`, so the OS accumulates fast builds of popular artifacts over time.
 
-Constraints: swaps happen at **quiescence** (between messages / at `await` — constant for event-driven tabs, not mid-compute-loop); only worth it for **hot, long-lived** components (`remaining runtime × speedup > recompile cost`). Determinism/TCB intact: re-optimization moves *timing*, never *behavior*.
+Constraints: swaps happen at **quiescence** (between messages or at an explicit semantic suspension point—not merely wherever the timer can preempt); only worth it for **hot, long-lived** components (`remaining runtime × speedup > recompile cost`). Determinism/TCB intact: re-optimization moves *timing*, never *behavior*.
 
 ## Non-goals / honest limits
 

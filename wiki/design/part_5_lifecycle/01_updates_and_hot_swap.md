@@ -49,6 +49,49 @@ Cathedral owns:
 `boundary` remains a trust, ABI, or externally supplied entry marker. It is not
 a replacement marker.
 
+## Local dispatch does not cross the replacement boundary
+
+Omega's `dyn Trait` is local dispatch inside one compiled artifact: a borrowed
+value is an instance pointer plus a selected-conformance table pointer. Its
+per-requirement operational envelope is compile-time contract information, not
+extra runtime words. A local descriptor never crosses a replaceable component
+edge because its table uses artifact-local calling conventions and its code or
+state may be reclaimed.
+
+A boundary-trait value instead names Cathedral's selected binding. Calls enter
+through the binding's published boundary plan and era protocol. Application
+code that wants a local `dyn` interface over a replaceable provider owns a
+proxy in its own artifact; the proxy holds the boundary binding and implements
+the ordinary trait by making real boundary calls. This concentrates ABI,
+effect, lease, and replacement cost at one named seam without laundering a
+local table across it.
+
+Binding multiplicity uses Omega's ordinary multiplicity vocabulary and is
+affine unless the boundary trait author permits copying or requires linear
+release. A rebindable binding normally resolves the current era on each call; a
+pin is a separate linear value that intentionally retains one era. Binding
+entry publishes its operational/resource ceiling, and Cathedral's admitted
+entry algorithm must fit it.
+
+Provider-originated session claims may retain an old era even after new calls
+route elsewhere. Each such claim records immutable origin separately from its
+current custodian. Only checked transfer to a named receiver, a boundary
+receipt, or preservation under moves changes custody. Replacement reports name
+retention paths rather than merely saying “not quiescent.”
+
+Cathedral supports three explicit capability tiers:
+
+1. **drain/coexist** — new calls route to the new era while old sessions finish
+   or keep their old provider alive;
+2. **explicit migration** — application/provider code cooperates to replace
+   existing session values;
+3. **stable object identity** — an object table may redirect handles without
+   application cooperation, but only alongside a proved state migration and a
+   defined racing-call disposition.
+
+Tier 3 is not implied by indirection and is not required for short-lived
+sessions.
+
 ## Replacement protocol
 
 Replacement is a checked Cathedral state machine over admitted providers:
@@ -67,7 +110,7 @@ Before publication, the replacement plan declares:
 - its point of no return;
 - its drain policy: bounded cancellation backed by a real contract, or accepted
   indefinite coexistence and its retention cost;
-- the disposition of owned state, live activations, continuations,
+- the disposition of owned state, live activations and their retained stacks,
   registrations, authorities, and device claims; and
 - enough resource provision for every retained era plus the candidate.
 
@@ -118,9 +161,12 @@ era counts or conservative summaries rather than enumerate every activation
 individually, but reclamation requires proof that the relevant residual
 population is empty.
 
-A parked continuation normally pins its code, unwind metadata, and state era.
-It must resume and drain, cancel validly, migrate through a separately validated
-continuation transformation, or retain that era indefinitely.
+A parked activation retains its fixed stack and normally pins its code, unwind
+metadata, provider-owned session claims, and state era. It must resume and
+drain, cancel validly, migrate through a separately validated activation/state
+transformation, or retain that era indefinitely. Architectural preemption does
+not create a lifecycle transition and therefore cannot substitute for one of
+those dispositions.
 
 “New routing is active” and “the old era is reclaimed” are separate completion
 states.
@@ -131,18 +177,15 @@ Semantic compatibility does not freeze implementation resource demand.
 Every candidate carries target-specific realized demand; Cathedral admits it
 against current provision.
 
-A replacement needing a larger stack is legal when Cathedral can provision
-that stack before publication. A fixed budget belongs to the requirement only
+A replacement needing a larger `StackPlan` is legal for new activations when
+Cathedral can provision matching fixed stacks before publication. Existing
+activations keep their old stacks and code era until disposition; a live stack
+is never resized underneath them. A fixed budget belongs to a requirement only
 when policy intentionally promises replacement without reprovisioning—for
 example, an already-provisioned hard-root class.
 
-Caller-owned stacks tend toward fixed budgets, safe grow/probe contracts,
-per-call headroom checks, or replacement rejection. Freely renegotiable demand
-requires an independently provisionable execution domain; a component-owned
-stack is the straightforward realization, not an Omega language rule.
-
 Admission covers peak coexistence, not just the candidate: old and new code,
-state pools, continuation metadata, stacks, and device claims may all be live
+state pools, activation metadata, stacks, and device claims may all be live
 during drain.
 
 The ledger is a set of live eras keyed by identity. Cathedral declares a
@@ -153,7 +196,7 @@ first restriction; increasing the bound only admits more replacements.
 
 The reclaimable unit is a mapping lifetime cohort, not a source section or
 entire component. Code, immutable data, mutable state, relocation/unwind
-metadata, and continuation pools may have different lifetimes. Objects that
+metadata, and activation-stack pools may have different lifetimes. Objects that
 must be unmapped independently cannot share a page.
 
 Nothing outside the component may retain an untracked concrete code address or
@@ -180,8 +223,8 @@ must report which policy blocked reclamation.
 - concrete era-acquisition implementation;
 - replacement-plan, migration, and disposition receipt schemas;
 - maximum-live-era and eviction policy;
-- outbound calls from old continuations;
-- component-owned stack switching;
+- outbound calls from old activations;
+- activation migration across stack plans;
 - crash recovery across a committed replacement; and
 - device-specific quiescence protocols.
 

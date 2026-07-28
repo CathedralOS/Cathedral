@@ -87,12 +87,12 @@ Replay, time-travel, and fault injection are one mechanism: the debugger **hosts
 
 ## Cross-version breakpoints: the OS supplies material, the debugger author builds the format
 
-A breakpoint expressed against the **source state graph / `data` fields** survives a hot-swap by riding the **migration's field-correspondence** (stable field numbers V1↔V2). A field the migration *removes* flags its breakpoint; a migration that **restructures** state (splits a field, computes one) needs a **debug projection** carried alongside it — how a V1 watchpoint maps onto V2. Turning this into a versioned, fast debug-info *format* is a complex **debugger-author follow-up**, **not an OS deliverable**: the OS supplies the raw material (native IR, the versioned `data` schema with stable field numbers, the migration function). RAD Debugger's RDI is the prior art to study — it discarded PDB/DWARF for exactly these speed-and-structure reasons.
+A breakpoint expressed against the **source state graph / `data` fields** survives a hot-swap by riding the **migration's field-correspondence** (stable field numbers V1↔V2). A field the migration *removes* flags its breakpoint; a migration that **restructures** state (splits a field, computes one) needs a **debug projection** carried alongside it — how a V1 watchpoint maps onto V2. Turning this into an evolving, fast debug-info *format* is a complex **debugger-author follow-up**, **not an OS deliverable**: the OS supplies the raw material (native IR, immutable historical schemas with stable field numbers, and checked conversion/replacement machines). RAD Debugger's RDI is the prior art to study — it discarded PDB/DWARF for exactly these speed-and-structure reasons.
 
 ## Concerns & Design Space
 
 - **Data / watchpoints.** Triggered on typed-state mutation, expressed against Omega `data` fields rather than raw addresses.
-- **Structured durable tracing.** Trace events are versioned `wire data`, written to the observability pipeline, queryable after the fact ([[observability_and_introspection]]).
+- **Structured durable tracing.** Trace events use ordinary numbered schemas with a selected durable codec, are written to the observability pipeline, and remain queryable after the fact ([[observability_and_introspection]]).
 - **State-graph debugging.** Step the *source* state graph and inspect the *lowered* graph — both are first-class Omega artifacts, so "which state am I in, which transition fired" is answerable directly, not reconstructed from a stack.
 - **Zero value.** A zero `Capability<Debug<X>>` is the inert null-object capability ([[omega_substrate]]): it holds no debug authority, so pause, step, and read are accepted and return nothing rather than crashing or escalating. Zero debug authority is the same value as least privilege, the natural default for a component handed no debug grant.
 
@@ -107,7 +107,7 @@ A breakpoint expressed against the **source state graph / `data` fields** surviv
 - **Inspectable source + lowered state graphs** ([../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)) make "where is execution, and why" a query over a real artifact.
 - **Capabilities as values** make `Capability<Debug<X>>` an ordinary, attenuable grant rather than a new privileged syscall.
 - **Virtual time + deterministic graphs** make replay debugging sound, and the debugger-as-Matrix owns clock/randomness/network/input.
-- **Versioned data + migration** let a session survive a hot swap and give cross-version breakpoints their field-correspondence.
+- **Historical state schemas + checked replacement** let a session survive a hot swap and give cross-era breakpoints their field-correspondence.
 - Omega likely must grow a sanctioned **in-process probe** form — compiled predicates with their own effect/authority ceiling — plus the **safe-patch metadata** the runtime patcher needs (instruction boundaries, instruction-pointer-relative sites). Foreign predicates lower to a portable bytecode the agent interprets; native predicates inline.
 
 ## Open Questions

@@ -36,7 +36,7 @@ So **information-flow control — propagating `Secret<T>`-style labels — is *n
 - **Purpose as a first-class scope.** Purposes form a vocabulary the OS and apps share; a capability binds class × operation × purpose. The hard part is keeping purposes meaningful rather than a checkbox an app self-asserts.
 - **Field-level granularity.** `Contact.Email` is reachable without `Contact.*`; classification and access must reach into the shape of a datum, not just its type name.
 - **Derived and shared data.** Data produced *from* classified data inherits class and purpose constraints; "shared data" and "organization data" are classes with their own propagation rules ([[multi_user_and_org_control]]).
-- **Interaction with combination rules.** Data class is what [[security_policy_and_sandboxing]]'s dangerous-combination reasoning ranges over — `Read<Photo>` + `network_io` is dangerous *because* of the class.
+- **Interaction with combination rules.** Data class is what [[security_policy_and_sandboxing]]'s dangerous-combination reasoning ranges over — `Read<Photo>` plus reach to the `Network` service is dangerous *because* of the class.
 - **Telemetry and credentials as classes.** Telemetry ([[telemetry_and_feedback]]) and credentials ([[secrets_and_keys]]) are data classes too; the OS vendor's own collection is bound by the same purpose-scoped model.
 - **Minimization and expiry.** Purpose-scoping naturally supports "read for this task, then the grant lapses" — purpose plus leasing ([[capability_lifecycle]]).
 - **Zero value.** A zeroed purpose is no declared purpose, which authorizes no use (shape 4 in [[omega_substrate]]): a purpose check against it fails safe, so unclassified or uninitialized data defaults to the most-restrictive class and an unpurposed read is denied rather than treated as universally permitted.
@@ -52,7 +52,7 @@ So **information-flow control — propagating `Secret<T>`-style labels — is *n
 
 - **Data classes** map onto **domains** over `data` (`Datum::Health`, `Datum::Contact`) — named, provable predicates rather than runtime tags.
 - **Purpose-scoped access** is a **typed capability** carrying both the class and the purpose; the authority-flow report then shows not just *what* data flows but *for what*.
-- **`wire data`** preserves class/purpose annotations across boundaries.
+- **Selected wire codecs over ordinary numbered schemas** preserve class/purpose annotations across boundaries.
 - This is the chapter with the clearest **Omega gap**: capabilities are values + domains today, but *purpose-tagged authority* — a purpose that rides along a capability and constrains its use and propagation — is something Omega likely needs to grow for Cathedral to enforce it rather than merely record it.
 
 ## Open Questions

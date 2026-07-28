@@ -15,8 +15,9 @@ admitted providers with receipts.
 
 Cathedral chooses conservative providers before Omega requires them universally:
 
-- safe-point scheduling for native tasks;
-- stable continuation storage;
+- arbitrary architectural timer preemption for fairness;
+- fixed, nonmoving WCSU-sized stacks retained across suspension;
+- explicit semantic safe points for cancellation, migration, and replacement;
 - explicit CPU/thread affinity when a resource requires it;
 - parsed checked assembly only, with no raw-byte escape;
 - installation of immutable admitted executable artifacts, with no raw
@@ -27,9 +28,9 @@ Cathedral chooses conservative providers before Omega requires them universally:
 - IOMMU-backed DMA isolation; and
 - hardware-backed mapping revocation or private copying at hostile IPC seams.
 
-An admitted runtime with asynchronous preemption or another storage policy is
-legal only when its runtime contract refines every live value's carry demands.
-Cathedral does not bake the reference provider into Omega's language semantics.
+Cathedral's scheduling operations discharge live CPU/thread carry obligations
+or reject the start. This is demand-driven admission, not a runtime supply
+record. Cathedral policy does not become Omega language semantics.
 
 ## Memory authority
 
@@ -50,11 +51,29 @@ their virtual address is an integer.
 
 One linear `Extent` data shape carries runtime base and `u64` length. Space,
 rights, provenance, and mapping era are domain facts on that shape. Rebuilding
-the fields does not reproduce those facts. Splitting consumes a qualified
-extent and conserves its authority in disjoint children. Merge is legal only
-for contiguous compatible descendants of one authority origin; numeric
-adjacency does not combine grants. Subrange access borrows and preserves parent
-polarity.
+the fields does not reproduce those facts.
+
+Content conservation is symbolic linearity over the range rather than numeric
+length accounting. The Granted claim projects to an `Interval<addr>` in
+Omega's closed content algebra. A split must prove:
+
+```text
+content(parent) = content(left) • content(right)
+```
+
+where partial composition `•` is defined only for compatible disjoint pieces.
+Thus two overlapping half-length children do not pass merely because their
+lengths add correctly. Access obligations range over that same content
+projection, and an admitted root receipt is denominated in the same algebra.
+Ordinary permissions are orthogonal: discarding write permission is attenuation
+and does not duplicate or retire bytes.
+
+Merge is legal only for contiguous compatible descendants of one authority
+origin; numeric adjacency does not combine grants. Subrange access normally
+borrows and preserves parent polarity. Independent virtual and physical
+conservation is insufficient when their correspondence matters, so owned
+virtual/physical decomposition remains unavailable until Omega has a symbolic
+joint mapping algebra; Cathedral's current mapping path uses loans instead.
 
 Fixed mapping consumes authority over its destination virtual range; a requested
 `addr` is only a hint. Its physical source may be owned or borrowed. Unmapping
@@ -79,14 +98,75 @@ All hardware geometry uses Omega's programmable layouts. IDT/GDT gates, page
 entries, firmware records, protocol headers, and device blocks are policies over
 ordinary `data`. Fragmented placements handle split logical fields.
 
-Access is separate. A validated `AccessPlan` plus an authorized extent derives
-sealed register/field access values. Cathedral device packages expose semantic
-machines (`clear_status`, `ring_doorbell`, `read_counter`) over provider-private
-primitive access; W1C and FIFO behavior do not enter the compiler vocabulary.
-Projection is pure and passable. Readable fields expose exact-width snapshots,
-writable fields require exclusive access for ordinary writes, and explicitly
-atomic fields expose the checked atomic API through shared access. Two shared
-projections can never recreate ordinary unsynchronized mutation.
+This machinery appears only when structure is imposed on an `Extent`.
+Ordinary owned RAM values use normal construction, references, field lvalues,
+and value recasts. A Stable placed view is the unusual case where RAM still
+needs field-level access restrictions or must retain placement provenance.
+
+Access is separate because a field declaration says what a value *is*, while a
+placement says what this backing permits. The same geometry may describe owned
+RAM, a shared page, or MMIO without pretending those accesses have the same
+semantics.
+
+The provider admits an offset-keyed `ResourceProfile`: which ranges support
+Stable, External, or Atomic observation; legal transfer widths and alignments;
+whole-container read/write permission; atomic granularity and operation
+families; and physical read behavior such as repeatable versus destructive.
+This is a capability set, not a selected mode. An `AccessPlan<Schema>` starts
+all fields `Inaccessible` and selects one admitted mode per compiler-issued
+field identity. A normalized placement joins:
+
+```text
+Extent loan + LayoutPlan + AccessPlan + restricted ResourceProfile
+    -> validated placement
+    -> Placed<Binding, Shape>
+```
+
+The extent is the authority gate. Reconstructing extent-shaped bits, a view-
+shaped record, or a plan does not establish the placement claim. Projection is
+pure and yields a sealed accessor; only an accessor operation touches storage.
+Borrow polarity and the retained source loan both matter: a generic write
+requires plan permission, an exclusive borrow of the view, and an exclusive
+source loan. Reborrowing a view mutably cannot upgrade a placement made from a
+shared loan.
+
+Observation compatibility is attenuation, not relabeling. Stable backing may
+be accessed through a more conservative External plan for byte-exact testing;
+External backing can never be treated as Stable. External means one declared,
+non-elidable transfer in program order with other External accesses to that
+region. It does **not** promise that a posted write has reached the device:
+fences, read-back-to-flush, and similar completion protocols remain explicit
+device operations. Atomic access additionally must match the profile's one
+granularity for every overlapping location, preventing mixed-size atomics.
+
+Alignment is checked in two stages. Plan validation combines the fields'
+relative power-of-two congruence requirements and rejects mutually impossible
+layouts. Placement then checks the runtime base unless the extent grant already
+establishes sufficient base alignment.
+
+Derived operations are deliberately small:
+
+- Stable + writable permits ordinary compound update under exclusive access.
+- External never synthesizes generic read-modify-write. A sub-container field
+  may project from one whole-container read, but writing it rejects unless the
+  transfer itself covers the complete writable container.
+- Atomic fields expose only their declared load/store/exchange/compare-
+  exchange/arithmetic families at the profile's exact granularity.
+- A destructive container derives `DestructiveRead`, never ordinary
+  `Readable`; the operation consumes through an exclusive borrow.
+
+Exposure is independent of those rules. A FIFO pop may be public and
+destructive; a read-to-clear status register is normally binding-private and
+wrapped by one authored snapshot operation. Cathedral device packages expose
+semantic machines (`acknowledge_irq`, `ring_doorbell`, `take_status`) over those
+primitive accessors. W1C, FIFO, posted-write completion, and protocol meaning
+stay in the package or a richer admitted device contract rather than accreting
+into `AccessPlan`.
+
+Recast applies to detached values, never to placed views. A whole-container
+snapshot can be recast into an ordinary record using the same layout; reshaping
+a live view could expose plan-inaccessible bytes or launder External storage
+into Stable storage and is rejected.
 
 IPC shares the extent/layout foundation but not MMIO semantics. A trusted shared
 page uses atomic protocol state and linear leases. A hostile peer that retains a
@@ -108,7 +188,15 @@ invisible borrower:
   before the memory can be reused.
 
 The token may survive task suspension. Scheduler carry safety and CPU permission
-exclusion are independent checks over the same live value.
+exclusion are independent checks over the same live value. The child's
+offset-keyed profile is the parent's profile restricted to the loaned range; it
+can never acquire facts the parent lacked.
+
+Observation can change with ownership phase. While a device owns a descriptor
+buffer, the CPU sees an External profile or no CPU view. Consuming the device's
+completion token ends that loan and permits a new Stable placement only if the
+returned profile establishes ordinary RAM observation. The transition is two
+phase-scoped placements, not one plan claiming mutually incompatible behavior.
 
 ## Interrupts and the IDT
 
@@ -214,7 +302,7 @@ Omega's provider-neutral interrupt obligations are also live in
 `omega::language::core::interrupt`. A saved-mask guard and an interrupt
 acknowledgement are distinct linear data values with consuming `restore` and
 `complete` operations; their contracts retain `machine_control` versus
-`device_io` reach. Omega's installed-root ledger now mints those values only
+reach to the relevant device boundary. Omega's installed-root ledger now mints those values only
 from an exact provider entry receipt, rejects invocation or acknowledgement
 replay, enforces LIFO restoration of exact saved mask states, pins retirement
 while an entry remains active, and admits exit only after the matching EOI
@@ -315,19 +403,60 @@ is one bounded implementation, not the definition of a task.
 
 Canonical value liveness feeds separate checks for linear consumption,
 permissions/external loans, suspension carry, CPU/thread affinity, address
-stability, and WCSU. Cathedral's scheduler publishes a runtime contract and
-admission joins it against each activation plan.
+stability, and WCSU. Omega derives one fixed nonmoving `StackPlan` for each
+local activation; Cathedral's start operation reserves the matching
+`StackLease`, and parking retains that stack.
 
 Platform-originated resource claims begin with strict carry. Provider result
 contracts grant the positive permissions they support; `Carry::Portable`
 expands to suspension, CPU, host-thread, and address mobility. Checked
 transformations inherit those permissions through their resource provenance.
 
-Safe-point scheduling is the born-strict native profile because it keeps save
-points enumerable and cheap. The hardware timer remains the delivery mechanism;
-an asynchronous provider may later be admitted with a complete context/state
-plan and stricter carry checks. Interrupt masking and suppressing an Omega
-scheduler switch are distinct linear guards.
+The hardware timer may preempt native code at any instruction and the checked
+context-switch plan restores opaque machine state exactly. This provides
+fairness without compiler-inserted back-edge polls. Semantic safe points are
+only explicit `suspend` calls or authored scheduler polls; cancellation,
+migration, and replacement happen there, not at arbitrary preemption points.
+Interrupt masking and suppressing an Omega scheduler switch remain distinct
+linear guards.
+
+## Foreign calls and callbacks
+
+Omega-to-Omega calls within one artifact enter ordinary WCSU composition.
+Calls across an Omega component boundary use the callee's published boundary
+plan and independent stack provision. A hosted OS service reached through a
+checked boundary binding has the same shape: the caller pays the published
+entry contract, while the provider runs on provider-owned stack. Code entered
+through an opaque native ABI cannot supply either proof, so its binding must
+choose an explicit execution mode:
+
+- a same-stack call contributes an admitted foreign stack ceiling to the
+  caller's `StackPlan`; that ceiling excludes any Omega callback frames;
+- a gateway call suspends the Omega activation and executes on a pooled native
+  worker stack with its own capacity, queue, and exhaustion contract.
+
+Cathedral's transitional UEFI boot path uses the first form with a conservative,
+over-provisioned boot stack and an attributed firmware admission. Building a
+general hosted FFI worker pool is not a boot prerequisite. It becomes valuable
+for permanent native-library interop, where many cheap Omega activations should
+not each reserve a worst-case C stack. A guard page can contain stack
+exhaustion on that worker stack, but it neither proves the foreign call returns
+nor makes it cancellable; hanging calls still consume workers and can cause
+head-of-line blocking.
+
+Callbacks are accounted by entry mode, not by a special callback species. A
+same-stack callback adds its Omega WCSU to the active foreign chain; an
+independently dispatched callback starts under a fresh `StackPlan`. Synchronous
+re-entry is preferably removed statically: the callback's effect ceiling
+excludes every foreign entry that may invoke it. The foreign callback-
+invocation set is itself admitted provider knowledge, so the resulting bound
+retains that provenance. If a real protocol requires a cycle, it needs an
+explicit measured-re-entry policy and a protocol-valid overflow outcome; no
+silent drop or guessed nesting number is accepted.
+
+Trust composes by its weakest input. A derived Omega WCSU plus an admitted
+foreign ceiling or callback-invocation set produces an admitted composite, and
+the artifact reports which provider supplied the limiting fact.
 
 ## Admitted executable installation and multicore boot
 
@@ -355,11 +484,10 @@ artifact provenance before execute permission can appear. Device firmware is a
 device upload, not host execution. Live or template-patched host code belongs
 to quiescence/versioning instead. Installation prevents code injection.
 Backward-edge returns in checked Omega derive from memory safety and compiler-
-owned, non-addressable live or parked continuation state. Forward-edge indirect
-calls separately require sealed requirement-compatible entries or descriptors.
-Omega now pins the parked half of that claim with explicit negative canaries:
-`Task<T>` exposes no continuation field, so ordinary code cannot project,
-recast, address, or mutate another activation's saved control state.
+owned, non-addressable live stack/control state. Forward-edge indirect calls
+separately require sealed requirement-compatible entries or descriptors.
+`Task<T>` exposes no stack or saved-control-state field, so ordinary code cannot
+project, recast, address, or mutate another activation's execution state.
 Opaque providers without admitted call/state exits remain hardware-isolated or
 reject. Omega's external-root binding now enforces this before provider
 execution: realized return control and restored state must match the selected

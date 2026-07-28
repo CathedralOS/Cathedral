@@ -115,7 +115,8 @@ important writes.
 ## What Omega Still Needs to Grow (driven by Cathedral)
 
 - A serialized capability representation — largely dissolved by the grant arena: the durable arena is the at-rest representation and handles are inert bits, so the ask on Omega shrinks to typed redemption results and domains over handle types ([[capability_lifecycle]]).
-- Quiescence proofs in the presence of interrupts, timers, async work, and hardware ([[updates_and_hot_swap]]).
+- Quiescence proofs in the presence of interrupts, timers, parked activations,
+  foreign retention, and hardware ([[updates_and_hot_swap]]).
 - A Cathedral loader/runtime for replaceable realizations: era-safe requirement
   binding, resource provision, disposition accounting, lifetime-cohort
   mappings, and state coexistence/migration ([[updates_and_hot_swap]]).
@@ -125,8 +126,11 @@ important writes.
   settled carry as a compiler-built-in product over suspension, CPU affinity,
   host-thread affinity, and address stability. Accepted resource claims begin
   strict; checked claims derive from provenance; positive result facts grant
-  portability per axis. Remaining work is the portable memory model,
-  task-runtime backend, composable suspension, carry/runtime admission,
+  portability per axis. Local activations use fixed nonmoving stacks derived
+  by `StackPlan`; `suspend`/`block` acknowledge independent may-wait ceilings;
+  scheduling operations discharge live carry demands rather than advertising a
+  supply lattice. Remaining work is the portable memory model, context-switch
+  and park/resume lowering, `StackLease` provisioning, normalized `WorkPlan`,
   suspension-safe loans, and Cathedral's bounded Arena-backed provider.
   Device/MMIO is not "a second atomic model" but a separate
   `AccessPlan`/placed-view observation discipline ([[hardware_foundation_profile]],

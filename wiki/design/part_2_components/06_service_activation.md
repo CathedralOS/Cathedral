@@ -22,7 +22,7 @@ The shape that results is a small **resident core** of latency-critical always-o
 
 ## The decided mechanics
 
-**The endpoint is a small dispatch object.** Invoking a service loads the endpoint's live-instance pointer and branches: live → a direct call (a virtual call, cheap); cold → the slow path, which calls the activator, `await`s the spawn, fills the pointer, and proceeds. The warm path is a plain dispatch with no kernel in the SAS; the cold path routes through the activator and the core's spawn provider — still function calls in the SAS (no ring transition), a trap when the target is hardware-walled. The unavoidable cold cost is the spawn *work*, and whether spawn is object-cheap or pays MMU domain-setup is the same SAS-vs-walled question as [[kernel_architecture]] — so the resident-core ↔ demand-tail balance shifts with the isolation substrate.
+**The endpoint is a small boundary binding, not a cross-component vtable.** Invoking a service resolves the binding's current era and branches: live → enter through its published boundary plan; cold → call the activator, `suspend` while the instance starts, publish the live era, and proceed. Inside one statically linked SAS artifact the live path may optimize to a near-direct call; across a replaceable or hardware wall it retains the real boundary ABI and lease protocol. Local `dyn Trait` descriptors never cross this seam ([[updates_and_hot_swap]]). The unavoidable cold cost is the start *work*, and whether activation is object-cheap or pays MMU domain-setup is the same SAS-vs-walled question as [[kernel_architecture]] — so the resident-core ↔ demand-tail balance shifts with it.
 
 **The activator is an actor on one mailbox.** Every trigger source is normalized into a variant posted to the activator's mailbox — the core's interrupt stub turns a device interrupt into a message, the timer subsystem posts `TimerFired`, an endpoint message is already one, a watched object posts a change — so the activator does one wait on a `TriggerEvent` sum and switches to spawn the handler. There is no per-trigger task; one actor parks on its whole condition set ([[ipc_and_service_invocation]]).
 
@@ -65,7 +65,7 @@ machine deep-sleep with no polling daemon ([[power_management]],
 
 ## Key Questions
 
-- **Cold-spawn cost — resolved (rides the substrate):** warm invocation is a direct dispatch (a virtual call in the SAS); cold pays the spawn *work* plus an activator/core-spawn hop, which is function-calls in the SAS and a domain-setup trap when the spawned service is hardware-walled — so the actual number is the same SAS-vs-walled question as [[kernel_architecture]], and the resident-core/demand-tail balance shifts with it.
+- **Cold-start cost — resolved (rides the substrate):** warm invocation is an era-safe boundary-binding entry that the statically composed SAS case may optimize to a direct call; cold pays start work plus an activator/core-start hop, and a hardware-walled provider additionally pays domain crossing/setup. The actual number is the same SAS-vs-walled question as [[kernel_architecture]], so the resident-core/demand-tail balance shifts with it.
 - **Quiesce policy — resolved:** a cost model (stay-warm vs re-spawn, the latter charging power-cycle transition wear and rehydration), enforced as a scheduler budget, so hysteresis falls out and it composes with resource governance.
 - **Stateful rehydration — resolved:** persist to the store and reattach-to-last-commit; the rehydration cost is a term in the re-spawn cost, so the cost model keeps expensive-state services resident and quiesces cheap ones.
 - **Resident-core membership — resolved (mechanism), parked (declaration):** a base set plus adaptive promotion of hot services; *how* the base set is declared per Matrix is the parked boot-manifest protocol.
@@ -75,7 +75,7 @@ machine deep-sleep with no polling daemon ([[power_management]],
 
 - The activation **trigger** is the wait primitive ([[scheduler_and_resources]]); the registration's lifecycle is a **machine with states** (registered, activating, live, quiescing, dead) the supervisor inspects ([machines](../../../../Omega/wiki/language_guide/chapter_3_machines.md), [states](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)).
 - A service endpoint and its activation rights are **capabilities + domains**, so access-is-activation and capability-gated triggers reuse the whole authority model ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
-- The activation manifest is **wire data** with stable field numbers, so registrations decode across versions and are content-addressable ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
+- The activation manifest is ordinary numbered data under a selected durable codec, so registrations decode across versions and are content-addressable ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
 - The trusted spawn primitive is a **boundary provider** in the privileged core; the activator above it is ordinary proved Omega.
 - Omega does not define an activation or supervision protocol; the registry, the route-or-spawn logic, and the quiesce policy are Cathedral runtime structure over Omega values.
 

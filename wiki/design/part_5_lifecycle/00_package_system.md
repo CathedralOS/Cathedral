@@ -16,8 +16,9 @@ candidate resource demands and optional fixed policy budgets;
 upgrade-compatibility facts; security invariants; and the test/proof artifacts
 that back them. Runtime opaque values additionally publish their normalized
 carrier class, introduction contracts, backing/provider requirements, and
-reachable authority. Build provenance is signed and reproducible; dependencies
-are hermetic. Because all of this is structured, installation reduces to
+reachable authority. Build provenance is signed and carries an input-
+reproducibility classification; dependencies are pinned by content identity.
+Because all of this is structured, installation reduces to
 verifying provenance, checking policy, validating state migration and component
 representations, provisioning the selected realization, and committing—or
 refusing without running an ambient install script.
@@ -51,15 +52,15 @@ Refuse at any gate → you stay on the working old version, nothing half-install
 
 Whether a component (or the core) can be updated **in place** is not guessed — you **prove live-patchability, or you reboot.** Three checkable gates:
 
-1. **Quiescence** — the checker proves the component reaches a safepoint in bounded time (the preemptibility proof, [[scheduler_and_resources]]).
+1. **Quiescence** — no entrant can reach the retiring era and every existing activation is drained, validly cancelled, migrated, or retained. A promise of bounded drain requires an explicit semantic safe point plus bounded work and finite wait ceilings on every path; architectural timer preemption alone does not establish quiescence ([[scheduler_and_resources]], [[updates_and_hot_swap]]).
 2. **Total migration** — the new version's state migration is proven total over the old committed state.
-3. **Containment** — the change touches only the component's own code + `data`, not a **foundational representation every live thing embodies.** A normal component *can't* change the substrate (it is built on it), so its updates are contained by construction; the reboot class is specifically a change to a core foundational primitive whose **in-memory layout** changed — the memory model (MMU/SAS/CHERI), the capability-arena format, the task/continuation representation, the IPC region layout, the trap-vector model. Detected by whether a foundational layout changed vs. only code/policy.
+3. **Containment** — the change touches only the component's own code + `data`, not a **foundational representation every live thing embodies.** A normal component *can't* change the substrate (it is built on it), so its updates are contained by construction; the reboot class is specifically a change to a core foundational primitive whose **in-memory layout** changed — the memory model (MMU/SAS/CHERI), the capability-arena format, the task/stack representation, the IPC region layout, the trap-vector model. Detected by whether a foundational layout changed vs. only code/policy.
 
 All three pass → **live hot-swap.** Any fail or absent → **staged reboot** — always correct, so an unsure classification safely defaults to reboot. (Changing the memory model provably fails gate 3 by inspection: its purpose is to re-lay-out what all live state embodies — [[kernel_architecture]].)
 
 ### A/B applies on the next natural reboot — never forced
 
-Most updates are **services and drivers → live hot-swap, zero reboot** ([[updates_and_hot_swap]]). A small core fix (a single-function security patch) can be **live-patched** into the running core at a safepoint (Linux-`livepatch`-style, cleaner here because the core *is* the hot-swap machinery). Only a **wholesale core replacement** (a foundational-layout change) needs the A/B path — and even then it **stages into the inactive slot and applies on the next reboot the user takes anyway**, with automatic fallback to the old slot if the new one fails to boot-measure-good ([[boot_and_trust_chain]]). No forced reboot; at most a *nudge* for a critical security fix. Reboots are therefore rare (only deep core rewrites) and never imposed.
+Most updates are **services and drivers → live hot-swap, zero reboot** ([[updates_and_hot_swap]]). A small core fix can publish a new binding era once entrants are redirected and the old population has an explicit disposition; it is not authorized merely because the timer can stop execution. Only a **wholesale core replacement** (a foundational-layout change) needs the A/B path — and even then it **stages into the inactive slot and applies on the next reboot the user takes anyway**, with automatic fallback to the old slot if the new one fails to boot-measure-good ([[boot_and_trust_chain]]). No forced reboot; at most a *nudge* for a critical security fix. Reboots are therefore rare (only deep core rewrites) and never imposed.
 
 ### Many components update independently — no OS-wide two-phase commit
 
@@ -98,16 +99,16 @@ Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
   machine-readable. Human diffs collapse checked local inline tokens and make
   system authority, admitted foreign providers, boundary-domain evidence,
   provider-owned backing, and revocation machinery loud or blocking.
-- **State schemas & migration.** A package owns persistent state shapes; upgrades ship versioned data + migration machines (see [[versioned_state_and_migration]]).
+- **State schemas & migration.** A package owns immutable historical state shapes; upgrades add envelope cases and checked conversion/replacement machines (see [[versioned_state_and_migration]]).
 - **Atomic install / uninstall.** Commit or refuse as one transaction ([[transactions_and_consistency]]); no half-installed state, no orphaned hooks.
-- **Reproducible, hermetic builds + signed provenance.** The same source yields the same artifact; the build's inputs and signer are recorded ([[audit_compliance_provenance]]).
+- **Receipted builds + signed provenance.** Hermetic evaluation is deterministic over source and target. `build.omg` may separately use scoped host providers; each reached operation records a receipt classified as hermetic, content-replayable, or volatile. Release policy checks the statically reachable class before execution and records the realized class and receipts. Graph-wide reproducibility from source additionally requires every dependency artifact to have been produced without volatile inputs ([[audit_compliance_provenance]]).
 - **Hermetic realization closure.** A package is not automatically a component.
   When Cathedral selects a provider realization for independent deployment, the
   compiler validates its closed code/state/resource graph and its
   requirement-bound imports. There is no ambient dynamic-library search path.
   Identical immutable cohorts may still deduplicate by content address
   ([[filesystem_as_database]]).
-- **Machine-checkable compatibility.** ABI/protocol/schema compatibility with the installed world is a checked fact, not a version-string heuristic. The baseline it is checked against exists by construction: the distribution plane records every published version's declared schemas ([[store_and_economic_control]]), so admission can refuse a package whose wire schemas break what came before, instead of relying on a developer to supply the old schema by hand. Storage formats are the strict case, since on-disk data can outlive every version that could write it ([[versioned_state_and_migration]]).
+- **Machine-checkable compatibility.** ABI/protocol/schema compatibility with the installed world is a checked fact, not a version-string heuristic. The baseline it is checked against exists by construction: the distribution plane records every published era's declared external schemas and selected codec/layout policies ([[store_and_economic_control]]), so admission can refuse a package whose published format breaks what came before, instead of relying on a developer to supply the old schema by hand. Storage formats are the strict case, since on-disk data can outlive every implementation that could write it ([[versioned_state_and_migration]]).
 - **Revocation & staged rollout.** Package-level revocation, staged/canary rollout, and rollback are first-class, gated by the store/control plane ([[store_and_economic_control]]).
 - **Zero value.** A zero package is the empty manifest (valid-empty): it declares no exports and an empty capability manifest, so it requires zero authority and installs as a no-op, which is both the least-privilege admission case and ZII-coherent ([[omega_substrate]]).
 
@@ -120,8 +121,8 @@ Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
   Policy selects who may receive authority and never substitutes for the
   contract constraining its later use.
 - **Declarative install expressing legitimate side effects — resolved:** side-effect setup (register a service, an association) is **declarative** (the activator registers it, no code); *computational* setup (seed/build initial state) is a **confined setup machine** that maps a fresh realm + granted inputs → an initial-state value with no ambient authority and no side effects.
-- **Dependency model — resolved:** content-addressed, **chunked**, hermetic and pinned; versions coexist by hash (no solver, no dependency hell); fetch is a chunk-level delta.
-- **ABI stability — resolved:** the store records every published version's schemas, so admission refuses a schema-breaking update; storage/`wire data` formats are the strict case (data outlives its writers).
+- **Dependency model — resolved:** content-addressed, **chunked**, and pinned; versions coexist by hash (no solver, no dependency hell); fetch is a chunk-level delta. Whether the complete source graph is hermetic/reproducible follows the recorded build-input classes rather than content addressing alone.
+- **ABI stability — resolved:** the store records every published version's schemas, so admission refuses a schema-breaking update; durable and wire-selected formats are the strict case (data outlives its writers).
 
 ## Omega Leverage
 
@@ -131,9 +132,9 @@ Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
   requirements, and transitive authority while keeping proof evidence behind
   the evidence firewall
   ([Omega authority-value brief](../../../../Omega/wiki/design_briefs/authority_values_and_boundary_evidence.md)).
-- **`effects` ceilings** bound what an install-time transition may touch; an install with no `filesystem_io` outside its allotted folder is a checkable fact.
-- **Versioned `data` + migration machines** carry the persistent-state schema and its upgrade path as typed code with obligations.
-- **`wire data`** ([[ipc_and_service_invocation]]) declares the protocols spoken, making protocol compatibility part of the manifest.
+- **`effects` ceilings** bound which services an install-time transition may reach; excluding ambient `Storage` reach outside the supplied setup capability is a checkable fact.
+- **Immutable historical `data` shapes + checked conversion machines** carry persistent format lineages and upgrade paths as ordinary typed code with obligations.
+- **Ordinary numbered schemas plus selected wire codecs** ([[ipc_and_service_invocation]]) declare the protocols spoken, making protocol compatibility part of the manifest.
 - Omega does **not yet** define a package-manifest format or a "declarative install transition" primitive — that loader contract is an extension Cathedral pushes onto the runtime.
 
 ## Open Questions
@@ -145,6 +146,6 @@ Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 - [[capability_model]] — the capability manifest is authority-flow made durable.
 - [[transactions_and_consistency]] — atomic install/uninstall.
 - [[updates_and_hot_swap]] — the operational act the package enables.
-- [[audit_compliance_provenance]] — signed, reproducible build provenance.
+- [[audit_compliance_provenance]] — signed, receipted build provenance and reproducibility policy.
 - [[store_and_economic_control]] — distribution, revocation, staged rollout.
 - [[governance_and_extension_boundaries]] — what a package may and may not be.
