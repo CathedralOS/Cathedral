@@ -19,6 +19,8 @@ Cathedral chooses conservative providers before Omega requires them universally:
 - fixed, nonmoving WCSU-sized stacks retained across suspension;
 - explicit semantic safe points for cancellation, migration, and replacement;
 - explicit CPU/thread affinity when a resource requires it;
+- permanent binary32/binary64 meanings realized under one canonical masked
+  floating-control configuration;
 - parsed checked assembly only, with no raw-byte escape;
 - installation of immutable admitted executable artifacts, with no raw
   byte-to-code/JIT surface, separated from live replacement;
@@ -420,6 +422,13 @@ migration, and replacement happen there, not at arbitrary preemption points.
 Interrupt masking and suppressing an Omega scheduler switch remain distinct
 linear guards.
 
+All checked Omega activations use the same semantic floating-control bits:
+nearest-even, gradual underflow, and the target's canonical exception-mask
+policy. Sticky status flags remain ordinary changing machine state. Because
+the semantic mode is activation-invariant, Cathedral does not switch rounding
+or FTZ/DAZ policy between Omega tasks; selected float-instruction providers
+instead require the canonical state as an entry precondition.
+
 ## Foreign calls and callbacks
 
 Omega-to-Omega calls within one artifact enter ordinary WCSU composition.
@@ -457,6 +466,13 @@ silent drop or guessed nesting number is accepted.
 Trust composes by its weakest input. A derived Omega WCSU plus an admitted
 foreign ceiling or callback-invocation set produces an admitted composite, and
 the artifact reports which provider supplied the limiting fact.
+
+Foreign bindings also own the floating-control seam. A preserving binding may
+prove that its target leaves the relevant MXCSR/FPCR controls unchanged;
+otherwise the direct-call or gateway trampoline saves and restores them.
+Inbound callbacks establish Cathedral's canonical Omega state before checked
+code runs and restore the foreign state on exit. A native library enabling
+FTZ/DAZ cannot silently change the meaning of later `f32` operations.
 
 ## Admitted executable installation and multicore boot
 

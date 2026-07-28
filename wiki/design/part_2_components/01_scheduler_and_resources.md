@@ -87,6 +87,12 @@ cancellation, migration, replacement, or observation of program state.
 The target's checked context-switch plan is responsible for restoring exactly
 the interrupted state.
 
+Every checked Omega activation uses the same canonical semantic
+floating-control configuration. The scheduler saves floating register contents
+when the selected state plan requires them, but it does not carry a per-task
+rounding or FTZ/DAZ mode. Foreign-call and callback trampolines are the
+save/restore boundary for code that may clobber those controls.
+
 A **semantic safe point** is deliberately authored: normally a `suspend` call,
 or an explicit scheduler poll that may suspend. It is where the program exposes
 a lifecycle transition and where Cathedral may deliver structured cancellation,
