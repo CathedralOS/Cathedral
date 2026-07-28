@@ -24,8 +24,10 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
   conjunction before type/contract identity, compatibility, admission, and
   executable predicate checks; diagnostics name the unmet atom. Cathedral
   expresses *permission shades*, *validity classes*, and *lifecycle states* as
-  domains rather than as separate permission-flavored types. Normalized
-  establishment-route identities remain Omega work. See Omega
+  domains rather than as separate permission-flavored types. Omega now
+  normalizes exact owner-machine, domain-operator, and boundary-requirement
+  establishment identities independently; canonical qualification and
+  package-owner coherence remain. See Omega
   [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - **`boundary` + service and operational contracts** — `boundary` marks external supply/trust edges; the `effects` row contains only normalized boundary-trait service identities. Independent `suspends` and `blocks` clauses publish operational may-ceilings. Each axis propagates transitively and forms an authored API ceiling. Authority values, trust receipts, resources, failure, termination, and mutation remain independent axes rather than magic effect keywords. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Authority flow** — inferred from values, domains, call contracts, returns, stores, and boundary provenance. The compiler reports what a unit *accepts, uses, derives, stores, acquires, returns, releases.* This is the raw material of Cathedral's authority graph.
