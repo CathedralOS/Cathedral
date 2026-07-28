@@ -287,7 +287,7 @@ adopted). Consequences:
   perjuring the tree with empty folders.
 
 Status legend: **built** · **in-progress** · **planned** · **parked**.
-Current reality (2026-07-04):
+Current reality (2026-07-28):
 
 - **built (boot-verified)** — **milestone 1 of the first-boot ladder is
   reached.** An Omega UEFI application boots under QEMU/OVMF and prints
@@ -296,14 +296,16 @@ Current reality (2026-07-04):
   `source/boot/uefi/` + the milestone-1 path of `source/contracts/uefi/` are
   aligned to that boot-verified shape). No C, no host runtime, no hand-written
   assembly. `tools/boot-harness/` runs it end-to-end under QEMU/OVMF.
-- **in-progress** — **milestone 2 (own the machine)** is under way:
-  `source/core/extent.omg` (the first physical-range `Extent` authority and its
-  bootstrap `mint_extent`) and
+- **built (boot-verified)** — **milestone 2 (own the machine) is reached**:
+  `source/core/extent.omg` (the checked adapter for Omega's shared linear
+  `Extent` and owner-authored root-provider requirement) and
   `source/boot/uefi/own_machine.omg` (the memory-map dance → `ExitBootServices` →
-  first physical-extent mint), over the milestone-2 ABI in
-  `source/contracts/uefi/boot_services.omg`. No fundamentally new language
-  features — the M2 ladder (Omega `TASKS.md`) is small deltas on the M1
-  machinery. `source/drivers/facts/uart_16550` is milestone-3 serial prep.
+  one receipt-backed `Extent in Granted`, carried through the post-firmware
+  graph into owned idle), over the milestone-2 ABI in
+  `source/contracts/uefi/boot_services.omg`. QEMU/OVMF prints the owned-memory
+  report after that crossing. Map-resize/stale-key retry and richer
+  physical-space/right/backing facts remain follow-on hardening rather than
+  substitutes for the live qualified root.
 - **planned** — everything else (`foundation/`, `services/`, `libraries/`, and
   the driver *programs* under `drivers/`). No directory exists until real code
   lands in it.

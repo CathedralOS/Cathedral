@@ -30,6 +30,7 @@ use uefi::uefi;            // EfiHandle, EfiStatus, EFI_SUCCESS, EfiSystemTable,
 use uefi::boot_services;   // BootServices
 use own_machine;           // Main::own_machine (milestone 2, sibling module)
 use omega::language::core::assembly; // PortIo, MachineControl
+use omega::language::core::extent;   // ExtentRootProvider
 
 // Main's STATIC DATA (`&self`): the held capabilities (Simple Text Output for
 // the greeting, Boot Services for the milestone-2 memory-map dance) + the
@@ -39,6 +40,7 @@ use omega::language::core::assembly; // PortIo, MachineControl
 data Main {
     out:      SimpleTextOutput;
     boot_svc: BootServices;      // milestone 2 — GetMemoryMap / ExitBootServices
+    memory:   ExtentRootProvider; // admitted one-root-at-a-time memory provider
     msg:      [u16; 19];         // "Hello from Omega\r\n\0" as UTF-16 CHAR16 code units
     map_buf:  [u8; 16384];       // static buffer for GetMemoryMap (no allocator yet)
 }
@@ -48,7 +50,7 @@ data Main {
 // (long mode, paging, interrupts, stack) are boot-target properties surfaced by
 // the artifact — see the uefi contracts.
 boundary machine Main::run(&self, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
-effects SimpleTextOutput + BootServices + PortIo + MachineControl
+effects SimpleTextOutput + BootServices + ExtentRootProvider + PortIo + MachineControl
 {
     self.msg = utf16"Hello from Omega\r\n\0";
     // Project con_out through a frame local (the reference-param deref), then
@@ -57,8 +59,9 @@ effects SimpleTextOutput + BootServices + PortIo + MachineControl
     let con_out: &TextOutputProtocol = table.con_out;
     _ = self.out.output_string(con_out, &self.msg);
     // Milestone 2 — own the machine (own_machine.omg): walk the memory map, exit
-    // boot services, mint the first Extent, then idle. Does NOT return (firmware
-    // is gone after exit), so the terminal below is unreachable.
+    // boot services, obtain the first qualified Extent, then idle while
+    // retaining it. Does NOT return (firmware is gone after exit), so the
+    // terminal below is unreachable.
     self.own_machine(handle, table);
     transition { _ -> (EFI_SUCCESS) }
 }

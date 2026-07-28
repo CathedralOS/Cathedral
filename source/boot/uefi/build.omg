@@ -13,10 +13,11 @@ target uefi_x64 {
 }
 
 machine build(b: &mut Build) {
-    // Reach: the boot hand-off ABI + the kernel (for Extent + the first mint).
+    // Reach: the boot hand-off ABI + the kernel's checked Extent provider.
     // The boot package may name `uefi` and `core` and nothing else.
     b.depend("uefi", path("../../contracts/uefi"));   // hash-pinned once the store exists
-    b.depend("core", path("../../core"));             // Extent + mint_extent (milestone 2)
+    b.depend("core", path("../../core"));              // shared Extent provider (milestone 2)
+    b.accept_boundary<ExtentRootProvider>();           // exact selected root-provider receipt
 
     b.subsystem    = Subsystem::EfiApplication;   // import-free PE32+ firmware loads directly
     b.freestanding = true;                         // empty host-provider set (no host runtime)

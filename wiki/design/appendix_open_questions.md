@@ -23,10 +23,12 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 - **Remaining Omega OS-foundation contracts.** `Extent` is linear ordinary data
   carrying base and `u64` length; abstract domain evidence carries grant,
   address-space, rights, and provenance facts. Cathedral's platform provider
-  originates its first Physical/Granted extent under an admitted receipt, and
-  checked transformations conserve that claim. Bodyless/boundary-domain
-  spelling, exact boundary-result authorization, and transparent
-  declared-domain aliases are implemented; package-owner coherence,
+  now originates its first `Granted` extent under an admitted provider-plan
+  receipt and carries it linearly into owned idle. Physical-space and rights
+  qualification plus checked transformations that conserve the claim remain.
+  Bodyless/boundary-domain spelling, exact boundary-result authorization,
+  transparent declared-domain aliases, and state-local constrained-parameter
+  obligations are implemented; package-owner coherence,
   compiler-owned per-claim carry atoms, and resource-frontier inference still
   need implementation. Accepted resource
   claims begin with strict carry and gain positive per-claim permissions

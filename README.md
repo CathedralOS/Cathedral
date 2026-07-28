@@ -29,9 +29,11 @@ One technique among these — a single address space with language-level isolati
 ## Status
 
 Cathedral is primarily in the **design and early boot** phase. The Omega-emitted
-UEFI path now boots under QEMU/OVMF, exits firmware, mints a provisional first
-physical extent, writes through a 16550 UART, and idles on `hlt`. There is not
-yet a running kernel, scheduler, component runtime, or production driver.
+UEFI path now boots under QEMU/OVMF, exits firmware, obtains one qualified
+linear `Extent` under its admitted memory-provider receipt, writes through a
+16550 UART while carrying that root, and idles on `hlt` while retaining it.
+There is not yet a running kernel, scheduler, component runtime, or production
+driver.
 Current work continues to specify each meaningful contract before the wider
 system hardens around it.
 

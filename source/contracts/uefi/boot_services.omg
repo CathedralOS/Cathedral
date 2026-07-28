@@ -120,10 +120,11 @@ uefi_x64 machine BootServicesTable::exit_boot_services_leaf(
 ) -> EfiStatus satisfies BootServices::exit_boot_services via Binding::TableFunction(exit_boot_services);
 
 // --- Origin of memory authority -------------------------------------------
-// FinalMemoryMap is private, minted only by a successful exit_boot_services, so
-// holding one is proof firmware has exited and the map is authoritative. The
-// first Extent capabilities are minted FROM it (core/) — every later memory
-// authority descends from this point.
+// FinalMemoryMap is the reserved carrier for the complete post-exit map. The M2
+// path currently carries its guarded best-span geometry across a successful
+// exit directly, then obtains the first qualified Extent through core/'s
+// admitted provider adapter. Every later memory authority descends from that
+// receipt-backed root.
 pub data FinalMemoryMap {
     buffer:          &[u8];   // the validated descriptor bytes
     descriptor_size: u64;     // the runtime stride

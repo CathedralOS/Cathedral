@@ -1,37 +1,23 @@
 // source/core/extent.omg
 //
-// Extent -- THE FIRST CAPABILITY: exclusive authority over a span of physical
-// RAM. Every later memory authority descends from an Extent rooted here at
-// boot, so this is the origin of the authority graph (kernel_architecture,
-// capability_lifecycle). Milestone 2 establishes the first one after
-// ExitBootServices, from the firmware memory map.
+// Extent -- THE FIRST CAPABILITY: exclusive authority over a concrete address
+// span. Every later memory authority descends from a qualified Extent rooted
+// here at boot, so this is the origin of the authority graph
+// (kernel_architecture, capability_lifecycle). Milestone 2 establishes the
+// first one after ExitBootServices, from the firmware memory map.
 //
-// core/ stays firmware-neutral. The admitted platform-memory provider owns the
-// firmware map and issues one qualified root at a time; core knows nothing
-// about UEFI.
-//
-// M2 TARGET -- aligned to the boot-verified M1 machinery. Omega now exposes
-// the real linear `omega::language::core::Extent`, but Cathedral cannot adopt
-// it until bodyless establishment and receipt-backed qualified results are
-// wired through the platform-memory requirement. Until then this file remains
-// an explicitly temporary plain value and the trusted boot origin is its sole
-// authority source; it must not be mistaken for the final capability contract.
+// core/ stays firmware-neutral. The boot package supplies ordinary geometry
+// discovered from its platform, then crosses Omega's owner-authored
+// ExtentRootProvider requirement. This checked adapter is the selected provider
+// implementation; the build admission receipt, not a direct call to this
+// machine, establishes Extent::Granted on exactly one returned root.
+
+use omega::language::core::extent;
 
 pub const PAGE_SIZE: u64 = 4096;
 
-// A physical-memory span capability. Holding an Extent is exclusive authority
-// over [physical_start, physical_start + page_count * PAGE_SIZE).
-pub data Extent {
-    physical_start: u64;
-    page_count:     u64;
-}
-
-// The temporary memory-authority root. At M2 the only caller is boot/, which
-// calls it after ExitBootServices succeeds. The final carrier remains
-// structurally constructible, but only `Extent in Extent::Granted` conveys
-// authority; reconstructing the fields produces inert geometry. A provider
-// satisfying the owner-authored memory requirement plus its admission receipt
-// replaces this bootstrap trust edge before Cathedral imports that carrier.
-pub machine mint_extent(physical_start: u64, page_count: u64) -> Extent {
-    transition { _ -> (Extent { physical_start: physical_start, page_count: page_count }) }
+pub machine grant_root(root: Extent) -> Extent
+satisfies ExtentRootProvider::grant
+{
+    root
 }

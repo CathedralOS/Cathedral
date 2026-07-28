@@ -1,26 +1,27 @@
 // source/boot/uefi/own_machine.omg
 //
 // MILESTONE 2 — own the machine. Get the firmware memory map, walk it for free
-// RAM, ExitBootServices, and mint the FIRST Extent from the largest free span —
-// the origin of Cathedral's authority graph. Runs after the milestone-1 greeting
-// (con_out still works before exit).
+// RAM, ExitBootServices, and obtain the FIRST qualified Extent from the largest
+// free span — the origin of Cathedral's authority graph. Runs after the
+// milestone-1 greeting (con_out still works before exit).
 //
-// MILESTONE 3 — the first driver speaks. After the mint, the 16550 UART (COM1)
+// MILESTONE 3 — the first driver speaks. After the grant, the 16550 UART (COM1)
 // we now drive DIRECTLY — no firmware, no protocol — reports "Owned N MiB",
 // then the core parks on `hlt`. Reaching the report is itself the proof of the
 // M2 chain: the machine only arrives there after a successful map walk, a
-// successful ExitBootServices, and the mint.
+// successful ExitBootServices, and the admitted grant.
 
 use uefi::uefi;            // EfiHandle, EfiSystemTable, EfiStatus
 use uefi::boot_services;   // EfiMemoryDescriptor, EFI_CONVENTIONAL_MEMORY, MapKey, BootServicesTable
-use core::extent;          // Extent, mint_extent
+use core::extent;          // PAGE_SIZE + checked ExtentRootProvider adapter
 use omega::language::core::assembly; // PortIo, MachineControl
+use omega::language::core::extent;   // Extent, Granted, ExtentRootProvider
 
-// Get the map, walk it, exit, mint, report. `self.map_buf` is a fixed 16 KiB
+// Get the map, walk it, exit, grant, report. `self.map_buf` is a fixed 16 KiB
 // static field (no allocator yet — real firmware maps are ~4–8 KiB); the
 // too-small retry loop is a follow-on.
 machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable)
-effects BootServices + PortIo + MachineControl
+effects BootServices + ExtentRootProvider + PortIo + MachineControl
 {
     let bs: &BootServicesTable = table.boot_services;          // transitive vouch, like con_out
 
@@ -85,7 +86,7 @@ effects BootServices + PortIo + MachineControl
     }
 
     // Exit boot services against the current key. On success firmware is gone
-    // and the map is final; on failure (stale key) do NOT mint — the machine is
+    // and the map is final; on failure (stale key) do NOT grant — the machine is
     // not ours. (StaleMap retry = follow-on; the common case succeeds first try
     // when nothing allocates between GetMemoryMap and here.)
     state exit(bs: &BootServicesTable, handle: EfiHandle, key: MapKey, best_start: u64, best_pages: u64) {
@@ -97,11 +98,17 @@ effects BootServices + PortIo + MachineControl
         }
     }
 
-    // We own the machine. Mint the first Extent from the largest free span — every
-    // later memory authority descends from this.
+    // We own the machine. Construct inert range geometry from the largest free
+    // span, then cross the admitted owner-authored provider requirement.
+    // Reconstructing these fields alone does not grant authority; exactly this
+    // selected trait-slot call establishes the first qualified root.
     state own(best_start: u64, best_pages: u64) {
-        let first_extent: Extent = mint_extent(best_start, best_pages);
-        transition { _ -> serial_init(best_pages) }
+        let checked_pages: u64 in Trapping = best_pages as u64 in Trapping;
+        let length: u64 in Trapping = checked_pages * PAGE_SIZE;
+        let base: addr = best_start as addr;
+        let geometry: Extent = Extent { base: base, length: length };
+        let first_extent: Extent = self.memory.grant(geometry);
+        transition { _ -> serial_init(first_extent, best_pages) }
     }
 
     // --- MILESTONE 3: the serial report ------------------------------------
@@ -110,23 +117,24 @@ effects BootServices + PortIo + MachineControl
     // Register map = drivers/facts/uart_16550 (COM1 base 0x3F8 = 1016):
     // +1 IER (1017), +2 FCR (1018), +3 LCR (1019), +4 MCR (1020),
     // +5 LSR (1021). 115200 8N1, FIFOs enabled (16-byte) + cleared.
-    state serial_init(best_pages: u64 in Trapping) {
+    state serial_init(extent: Extent in Granted, best_pages: u64 in Trapping) {
         asm { out 1019, 128 }   // LCR: DLAB on — divisor latch reachable
         asm { out 1016, 1 }     // divisor low  = 1 -> 115200 baud
         asm { out 1017, 0 }     // divisor high = 0
         asm { out 1019, 3 }     // LCR: 8N1, DLAB off
         asm { out 1018, 7 }     // FCR: enable + clear both FIFOs
         asm { out 1020, 11 }    // MCR: DTR | RTS | OUT2
-        transition { _ -> to_mib(best_pages, 0) }
+        transition { _ -> to_mib(extent, best_pages, 0) }
     }
 
     // Pages -> MiB by repeated subtraction (256 pages = 1 MiB; the runtime
     // lowering has no division yet). Bounded by the span size: ~4096 rounds
     // for a 4 GiB span.
-    state to_mib(pages: u64 in Trapping, mib: u64 in Trapping) {
+    state to_mib(extent: Extent in Granted,
+                 pages: u64 in Trapping, mib: u64 in Trapping) {
         transition pages >= 256 {
-            true -> to_mib(pages - 256, mib + 1)
-            _    -> owned_wait(mib)
+            true -> to_mib(extent, pages - 256, mib + 1)
+            _    -> owned_wait(extent, mib)
         }
     }
 
@@ -135,30 +143,30 @@ effects BootServices + PortIo + MachineControl
     // then at most 16 data bytes. Burst 1 = "Owned " (6 bytes); burst 2 = the
     // decimal digits + " MiB\r\n" (<= 11 bytes). That is the 16550's real
     // hardware handshake — no firmware ever polls for us again.
-    state owned_wait(mib: u64 in Trapping) {
+    state owned_wait(extent: Extent in Granted, mib: u64 in Trapping) {
         let mut lsr: u8 = 0;
         asm { in lsr, 1021 }
         transition (lsr & 32) == 0 {
-            true -> owned_wait(mib)     // transmitter busy: keep polling
-            _    -> owned_send(mib)
+            true -> owned_wait(extent, mib)     // transmitter busy: keep polling
+            _    -> owned_send(extent, mib)
         }
     }
-    state owned_send(mib: u64 in Trapping) {
+    state owned_send(extent: Extent in Granted, mib: u64 in Trapping) {
         asm { out 1016, 79 }    // 'O'
         asm { out 1016, 119 }   // 'w'
         asm { out 1016, 110 }   // 'n'
         asm { out 1016, 101 }   // 'e'
         asm { out 1016, 100 }   // 'd'
         asm { out 1016, 32 }    // ' '
-        transition { _ -> digits_wait(mib) }
+        transition { _ -> digits_wait(extent, mib) }
     }
 
-    state digits_wait(mib: u64 in Trapping) {
+    state digits_wait(extent: Extent in Granted, mib: u64 in Trapping) {
         let mut lsr: u8 = 0;
         asm { in lsr, 1021 }
         transition (lsr & 32) == 0 {
-            true -> digits_wait(mib)
-            _    -> ten_thousands(mib, 0)
+            true -> digits_wait(extent, mib)
+            _    -> ten_thousands(extent, mib, 0)
         }
     }
 
@@ -166,106 +174,124 @@ effects BootServices + PortIo + MachineControl
     // how many times it fits, emits its digit, forwards the remainder.
     // `printed` suppresses leading zeros; the ones place always prints. Caps
     // at 5 digits (99999 MiB ≈ 97 GiB) — wider machines are a follow-on.
-    state ten_thousands(rest: u64 in Trapping, count: u64 in Trapping) {
+    state ten_thousands(extent: Extent in Granted,
+                        rest: u64 in Trapping, count: u64 in Trapping) {
         transition rest >= 10000 {
-            true -> ten_thousands(rest - 10000, count + 1)
-            _    -> ten_thousands_emit(rest, count)
+            true -> ten_thousands(extent, rest - 10000, count + 1)
+            _    -> ten_thousands_emit(extent, rest, count)
         }
     }
-    state ten_thousands_emit(rest: u64 in Trapping, count: u64 in Trapping) {
+    state ten_thousands_emit(extent: Extent in Granted,
+                             rest: u64 in Trapping, count: u64 in Trapping) {
         transition count == 0 {
-            true -> thousands(rest, 0, 0)
-            _    -> ten_thousands_digit(rest, 48 + count)
+            true -> thousands(extent, rest, 0, 0)
+            _    -> ten_thousands_digit(extent, rest, 48 + count)
         }
     }
-    state ten_thousands_digit(rest: u64 in Trapping, digit: u64) {
+    state ten_thousands_digit(extent: Extent in Granted,
+                              rest: u64 in Trapping, digit: u64) {
         let byte: u8 = digit as u8 in Wrapping;
         asm { out 1016, byte }
-        transition { _ -> thousands(rest, 0, 1) }
+        transition { _ -> thousands(extent, rest, 0, 1) }
     }
 
-    state thousands(rest: u64 in Trapping, count: u64 in Trapping, printed: u64) {
+    state thousands(extent: Extent in Granted, rest: u64 in Trapping,
+                    count: u64 in Trapping, printed: u64) {
         transition rest >= 1000 {
-            true -> thousands(rest - 1000, count + 1, printed)
-            _    -> thousands_emit(rest, count, printed)
+            true -> thousands(extent, rest - 1000, count + 1, printed)
+            _    -> thousands_emit(extent, rest, count, printed)
         }
     }
-    state thousands_emit(rest: u64 in Trapping, count: u64 in Trapping, printed: u64) {
+    state thousands_emit(extent: Extent in Granted, rest: u64 in Trapping,
+                         count: u64 in Trapping, printed: u64) {
         transition count == 0 && printed == 0 {
-            true -> hundreds(rest, 0, 0)
-            _    -> thousands_digit(rest, 48 + count)
+            true -> hundreds(extent, rest, 0, 0)
+            _    -> thousands_digit(extent, rest, 48 + count)
         }
     }
-    state thousands_digit(rest: u64 in Trapping, digit: u64) {
+    state thousands_digit(extent: Extent in Granted,
+                          rest: u64 in Trapping, digit: u64) {
         let byte: u8 = digit as u8 in Wrapping;
         asm { out 1016, byte }
-        transition { _ -> hundreds(rest, 0, 1) }
+        transition { _ -> hundreds(extent, rest, 0, 1) }
     }
 
-    state hundreds(rest: u64 in Trapping, count: u64 in Trapping, printed: u64) {
+    state hundreds(extent: Extent in Granted, rest: u64 in Trapping,
+                   count: u64 in Trapping, printed: u64) {
         transition rest >= 100 {
-            true -> hundreds(rest - 100, count + 1, printed)
-            _    -> hundreds_emit(rest, count, printed)
+            true -> hundreds(extent, rest - 100, count + 1, printed)
+            _    -> hundreds_emit(extent, rest, count, printed)
         }
     }
-    state hundreds_emit(rest: u64 in Trapping, count: u64 in Trapping, printed: u64) {
+    state hundreds_emit(extent: Extent in Granted, rest: u64 in Trapping,
+                        count: u64 in Trapping, printed: u64) {
         transition count == 0 && printed == 0 {
-            true -> tens(rest, 0, 0)
-            _    -> hundreds_digit(rest, 48 + count)
+            true -> tens(extent, rest, 0, 0)
+            _    -> hundreds_digit(extent, rest, 48 + count)
         }
     }
-    state hundreds_digit(rest: u64 in Trapping, digit: u64) {
+    state hundreds_digit(extent: Extent in Granted,
+                         rest: u64 in Trapping, digit: u64) {
         let byte: u8 = digit as u8 in Wrapping;
         asm { out 1016, byte }
-        transition { _ -> tens(rest, 0, 1) }
+        transition { _ -> tens(extent, rest, 0, 1) }
     }
 
-    state tens(rest: u64 in Trapping, count: u64 in Trapping, printed: u64) {
+    state tens(extent: Extent in Granted, rest: u64 in Trapping,
+               count: u64 in Trapping, printed: u64) {
         transition rest >= 10 {
-            true -> tens(rest - 10, count + 1, printed)
-            _    -> tens_emit(rest, count, printed)
+            true -> tens(extent, rest - 10, count + 1, printed)
+            _    -> tens_emit(extent, rest, count, printed)
         }
     }
-    state tens_emit(rest: u64 in Trapping, count: u64 in Trapping, printed: u64) {
+    state tens_emit(extent: Extent in Granted, rest: u64 in Trapping,
+                    count: u64 in Trapping, printed: u64) {
         transition count == 0 && printed == 0 {
-            true -> ones_digit(48 + rest)
-            _    -> tens_digit(rest, 48 + count)
+            true -> ones_digit(extent, 48 + rest)
+            _    -> tens_digit(extent, rest, 48 + count)
         }
     }
-    state tens_digit(rest: u64 in Trapping, digit: u64) {
+    state tens_digit(extent: Extent in Granted,
+                     rest: u64 in Trapping, digit: u64) {
         let byte: u8 = digit as u8 in Wrapping;
         asm { out 1016, byte }
-        transition { _ -> ones_digit(48 + rest) }
+        transition { _ -> ones_digit(extent, 48 + rest) }
     }
 
     // The ones place always prints — "Owned 0 MiB" is an honest report of a
     // machine with no conventional span, never an empty number.
-    state ones_digit(digit: u64) {
+    state ones_digit(extent: Extent in Granted, digit: u64) {
         let byte: u8 = digit as u8 in Wrapping;
         asm { out 1016, byte }
-        transition { _ -> tail_send() }
+        transition { _ -> tail_send(extent) }
     }
 
-    state tail_send() {
+    state tail_send(extent: Extent in Granted) {
         asm { out 1016, 32 }    // ' '
         asm { out 1016, 77 }    // 'M'
         asm { out 1016, 105 }   // 'i'
         asm { out 1016, 66 }    // 'B'
         asm { out 1016, 13 }    // CR
         asm { out 1016, 10 }    // LF
-        transition { _ -> idle() }
+        transition { _ -> owned_idle(extent) }
     }
 
-    // Idle. We own the machine and firmware is gone — there is nothing to
-    // return to. `asm { hlt }` halts the core until the next interrupt instead
-    // of busy-spinning; the self-re-entry re-halts after any wake. `hlt` is a
-    // known-contract asm intrinsic reaching `MachineControl`, which the
-    // machine declares (privileged_effects_and_binary_trust brief); it is
-    // discharged by the freestanding boundary root (v0 discharge — this boot
-    // root trivially owns the machine).
+    // Failure park. This route owns no Extent and may still be inside firmware
+    // after a bad map or stale key. `asm { hlt }` avoids an unbounded busy loop;
+    // the self-re-entry re-halts after any wake. `hlt` is a known-contract asm
+    // intrinsic reaching `MachineControl`, discharged by the freestanding boot
+    // boundary.
     state idle() {
         asm { hlt }
         transition { _ -> idle() }
+    }
+
+    // The first qualified root remains live for the owned machine's lifetime.
+    // This is the no-split/no-merge M2 endpoint: one admitted root enters this
+    // state and each wake transfers the same claim into the next iteration.
+    state owned_idle(extent: Extent in Granted) {
+        asm { hlt }
+        transition { _ -> owned_idle(extent) }
     }
 }
 
@@ -286,6 +312,9 @@ effects BootServices + PortIo + MachineControl
 //   4. A larger static buffer field ([u8; 16384]) in a data value.
 //   5. Captured boundary-call results (`let status = ...`) — the result place
 //      rides the call's operand list and stores through the import-call tail.
+//   6. Owner-authorized bodyless authority — the build admits the selected
+//      ExtentRootProvider plan, then state-local constrained parameters carry
+//      its one linear `Granted` root without making it an entry prerequisite.
 //
 // Milestone 3 adds the privileged asm intrinsics (hlt / out / in — the
 // privileged_effects_and_binary_trust brief) and drives the 16550 with them:

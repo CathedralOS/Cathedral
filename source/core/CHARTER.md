@@ -10,17 +10,22 @@ the code they cover — never in a sibling that can lag.
 `core/` at build time** — userspace targets the ABI in `contracts/`, which
 `core/` implements, so `core/` is a leaf in the build graph. `core/` stays
 firmware-neutral: the UEFI-specific memory-map walk is `boot/`'s job; `core/`
-mints physical-range `Extent` authority from firmware-neutral spans. `Arena`
+provides the checked adapter for Omega's owner-authored `ExtentRootProvider`;
+the admitted boot build supplies firmware-neutral geometry and receives one
+qualified root at a time. `Arena`
 remains reserved for bounded allocation authority over backing storage; it is
 not the concrete range capability.
 
 **Non-goals.** No device drivers, no userspace service logic, no firmware ABIs.
 If it isn't small enough to audit in full, it doesn't belong here.
 
-**Status (2026-07-24).** In-progress: `extent.omg` — milestone 2, the first
-physical-range `Extent` and its mint, the origin of the authority graph. Omega's
-linear source carrier is live; Cathedral still uses a plainly marked
-bootstrap value until boundary evidence supplies its qualified Physical grant.
+**Status (2026-07-28).** In-progress: `extent.omg` — milestone 2 now imports
+Omega's linear `{ base: addr, length: u64 }` carrier and supplies the selected
+checked `ExtentRootProvider::grant` adapter. The UEFI boot build admits that
+exact provider plan, obtains one `Extent in Granted` after successful
+`ExitBootServices`, and carries it through the serial-report graph into the
+owned-idle loop. Physical-space, rights, backing-containment, and checked
+split/merge facts remain later resource-frontier work.
 The generational `{slot, generation}` authority graph
 that makes capabilities unforgeable + revocable is the
 `capability_lifecycle` arc, later.

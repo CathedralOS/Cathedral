@@ -403,9 +403,10 @@ trampoline bytes are accepted as a shortcut.
    instruction contract.
 5. Bring up PIT/PIC under QEMU with the fixed-work timer root and coalescing
    timer-service wake; then add the LAPIC one-shot provider.
-6. Connect Omega's linear Extent data to Cathedral's boundary receipt and
-   qualified range facts; implement checked resource transformations and placed
-   views, then migrate UART/MMIO onto those providers.
+6. The shared linear Extent carrier and Cathedral's first receipt-backed
+   `Granted` root are live. Add physical-space/right facts and admitted backing,
+   implement checked resource transformations and placed views, then migrate
+   UART/MMIO onto those providers.
 7. Correct-by-construction page tables and AP bringup.
 8. External loans, IOMMU DMA, and hostile shared-page acceptance tests.
 9. Arena-backed task runtime under the carry/runtime admission model.
