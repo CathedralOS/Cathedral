@@ -108,7 +108,14 @@ Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
   requirement-bound imports. There is no ambient dynamic-library search path.
   Identical immutable cohorts may still deduplicate by content address
   ([[filesystem_as_database]]).
-- **Machine-checkable compatibility.** ABI/protocol/schema compatibility with the installed world is a checked fact, not a version-string heuristic. The baseline it is checked against exists by construction: the distribution plane records every published era's declared external schemas and selected codec/layout policies ([[store_and_economic_control]]), so admission can refuse a package whose published format breaks what came before, instead of relying on a developer to supply the old schema by hand. Storage formats are the strict case, since on-disk data can outlive every implementation that could write it ([[versioned_state_and_migration]]).
+- **Machine-checkable compatibility.** Each installed channel or store publishes
+  its directional compatibility demand together with selected schema and codec
+  identities. The distribution plane retains those demands and every published
+  historical shape, so admission checks a candidate against the actual rolling,
+  relay, or persistence horizon it must satisfy
+  ([[store_and_economic_control]]). Storage formats commonly demand the longest
+  readable history because on-disk data can outlive every implementation that
+  wrote it ([[versioned_state_and_migration]]).
 - **Revocation & staged rollout.** Package-level revocation, staged/canary rollout, and rollback are first-class, gated by the store/control plane ([[store_and_economic_control]]).
 - **Zero value.** A zero package is the empty manifest (valid-empty): it declares no exports and an empty capability manifest, so it requires zero authority and installs as a no-op, which is both the least-privilege admission case and ZII-coherent ([[omega_substrate]]).
 

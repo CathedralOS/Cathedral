@@ -1,6 +1,7 @@
 # Chapter 03: Schema Lineages & State Migration
 
-> Runtime identity, durable-format identity, and component-artifact identity are different things. Cathedral composes them explicitly instead of asking one magical versioning construct to stand for all three.
+> Runtime identity, durable-format identity, and component-artifact identity are
+> independent. Cathedral composes them explicitly at each deployment edge.
 
 ## The Legacy Model
 
@@ -8,7 +9,6 @@ Traditional systems mix several unrelated meanings of “version”: an in-memor
 
 ## The Cathedral Model
 
-Omega has no builtin `Versioned<T>`, `.prev` type path, or `replace` DSL.
 Cathedral builds each lineage from ordinary immutable schema data, ordinary
 sums, layout/codec policies, provenance domains, and migration machines. Live
 replacement is a separate Cathedral protocol over admitted artifacts,
@@ -17,22 +17,23 @@ runtime capabilities.
 
 ### External format lineages
 
-Each published era has a permanent shape. The runtime type may evolve freely because it is never persisted directly:
+Each published era has a permanent shape. Runtime state uses a separate shape
+and an authored conversion:
 
 ```omega
 data CounterV1 {
-    counter: i32;
+    #1 counter: i32;
 }
 
 data CounterV2 {
-    counter: i32;
-    timestamp_ticks: u64;
+    #1 counter: i32;
+    #2 timestamp_ticks: u64;
 }
 
 data CounterEnvelope {
-    case V1(value: CounterV1);
-    case V2(value: CounterV2);
-    case Unknown(era: EraId, bytes: Vec<u8>);
+    case #1 V1(value: CounterV1);
+    case #2 V2(value: CounterV2);
+    case #3 Unknown(era: EraId, bytes: Vec<u8>);
 }
 
 data Counter {
@@ -47,7 +48,8 @@ A schema identity is not merely a shape hash. It is a normalized typed identity 
 
 ### Migration
 
-Migration remains an ordinary trait and ordinary machines. There is no magic era dispatch:
+Migration remains an ordinary trait and ordinary machines. A lineage package
+selects the decoder and migration route for each accepted historical shape:
 
 ```omega
 trait Upgradable<Old, New, Context = Nothing> {

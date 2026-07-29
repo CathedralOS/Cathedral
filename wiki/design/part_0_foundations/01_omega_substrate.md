@@ -34,15 +34,19 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
   [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - **`boundary` + service and operational contracts** — `boundary` marks external supply/trust edges; the `effects` row contains only normalized boundary-trait service identities. Independent `suspends` and `blocks` clauses publish operational may-ceilings. Each axis propagates transitively and forms an authored API ceiling. Authority values, trust receipts, resources, failure, termination, and mutation remain independent axes rather than magic effect keywords. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Authority flow** — inferred from values, domains, call contracts, returns, stores, and boundary provenance. The compiler reports what a unit *accepts, uses, derives, stores, acquires, returns, releases.* This is the raw material of Cathedral's authority graph.
-- **Ordinary data evolution** — Omega has no `Versioned<T>`, era-path type, or
-  `replace` DSL. Historical external shapes are immutable ordinary `data`, sum
-  envelopes, layout/codec policies, provenance domains, and checked conversion
-  machines. Live replacement is Cathedral orchestration over requirement-bound
+- **Ordinary data evolution** — historical external shapes are immutable
+  ordinary `data`, sum envelopes, layout/codec policies, provenance domains,
+  and checked conversion machines. Live replacement is Cathedral orchestration over requirement-bound
   provider realizations, artifact/era identities, liveness pins, candidate
   resource demands, admitted runtime operations, and ordinary phase machines.
-  There is no `slot` keyword. See Omega [Versioned
+  See Omega [Versioned
   Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
-- **Programmable schemas and layouts** — plain `data` may carry stable field identities/tombstones; layout and codec policies define external representation and compatibility. There is no separate `wire data` species. Cathedral's IPC, networking, and persistence packages select the relevant policies. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md) and [Programmable Layouts](../../../../Omega/wiki/design_briefs/programmable_layouts.md).
+- **Programmable schemas and layouts** — plain `data` may carry stable `#N`
+  field/case identities and tombstones; layout and codec policies define
+  external representation. Cathedral's IPC, networking, and persistence edges
+  declare their compatibility demands and select the relevant policies. See
+  Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)
+  and [Programmable Layouts](../../../../Omega/wiki/design_briefs/programmable_layouts.md).
 - **OS memory/hardware foundation** — inert addresses, range-authority `Extent`s, allocator `Arena`s and arena-bound `Allocation<T>` storage, programmable layouts, separate access plans, checked assembly, boundary entry plans, symbolic materialization, external-root reporting, and external loans compose the kernel/driver substrate without interrupt/MMIO/DMA keywords. Cathedral's strict provider profile is [[hardware_foundation_profile]].
 - **Authority values and boundary evidence** — runtime authority uses ordinary
   data fields plus bodyless domain facts. An admitted provider originates a

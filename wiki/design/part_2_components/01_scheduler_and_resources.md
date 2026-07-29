@@ -15,7 +15,7 @@ data ResourceIntent {
     class:    WorkloadClass;   // latency_sensitive | interactive_ui |
                                // realtime_audio | background_sync |
                                // batch_compute | power_saving
-    deadline: Option<Duration>;
+    deadline: Optional<Duration>;
     priority: LatencyPriority;
 }
 ```

@@ -62,9 +62,9 @@ A safe language can wrap the raw shared extent as a typed, single-writer channel
 
 ```omega
 data PlaceOrder {
-    0: item_id: u64;
-    1: quantity: u32;
-    2: idempotency_key: Uuid;   // replay safety in the schema
+    #1 item_id: u64;
+    #2 quantity: u32;
+    #3 idempotency_key: Uuid;   // replay safety in the schema
 }
 
 boundary trait OrderService {
@@ -132,7 +132,10 @@ Whether that routing is a kernel-mediated trap or a direct call is the substrate
 ## Omega Leverage
 
 - **The extent/mapping and lease managers are themselves Omega**, so the small part of IPC that must be trusted is checked code, not hand-audited C.
-- **Ordinary numbered data + selected layout/codec policies** form the typed layer's schema for local and remote transport alike. There is no `wire data` declaration species. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
+- **Ordinary numbered data + selected layout/codec policies** form the typed
+  layer's schema for local and remote transport alike. Each channel declares
+  its compatibility window and unknown-member behavior. See Omega
+  [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
 - **Capabilities as values** mean authority travels in the payload as a typed argument, not as an ambient sender identity. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Ownership / borrowing** give the zero-copy local hand-off: a moved buffer is statically unreachable by the sender.
 
