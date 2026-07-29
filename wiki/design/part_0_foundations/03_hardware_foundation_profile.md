@@ -453,19 +453,37 @@ exhaustion on that worker stack, but it neither proves the foreign call returns
 nor makes it cancellable; hanging calls still consume workers and can cause
 head-of-line blocking.
 
-Callbacks are accounted by entry mode, not by a special callback species. A
-same-stack callback adds its Omega WCSU to the active foreign chain; an
-independently dispatched callback starts under a fresh `StackPlan`. Synchronous
-re-entry is preferably removed statically: the callback's effect ceiling
-excludes every foreign entry that may invoke it. The foreign callback-
-invocation set is itself admitted provider knowledge, so the resulting bound
-retains that provenance. If a real protocol requires a cycle, it needs an
-explicit measured-re-entry policy and a protocol-valid overflow outcome; no
-silent drop or guessed nesting number is accepted.
+Foreign callback protocols are exposed as boundary requirements carrying their
+target `Calling<C>` policy. A named static Cathedral machine satisfies the
+requirement; the binding validates its `CallPlan + StatePlan` and emits the
+native thunk privately. Durable installation returns a linear registration
+value whose terminal operation unregisters before releasing any installed-code
+or component lease.
+
+The callback entry plan selects provider-stack continuation, provider-stack
+preflight against the exact Omega WCSU plus reserved entry margin, or a
+target-supported owned stack. Preflight proves that the predicted segment fits;
+a hard-limited owned stack also detects WCSU underestimation at its own
+boundary. Opaque foreign frames stay in their provider stack domain.
+
+A platform adapter handles native re-entry locally. It classifies which of its
+own exposed operations may synchronously re-enter, gives applications a
+restricted handler requirement, and checks each ordinary Omega handler's reach
+without inferring the firmware or host's internal call graph. Synchronous
+platform queries use bounded handlers; ordinary notifications may be queued
+until the outermost dispatch returns. Direct raw callbacks retain the
+provider's admitted behavior and resource provenance.
 
 Trust composes by its weakest input. A derived Omega WCSU plus an admitted
-foreign ceiling or callback-invocation set produces an admitted composite, and
-the artifact reports which provider supplied the limiting fact.
+foreign stack or behavior premise produces an admitted composite, and the
+artifact reports which provider supplied the limiting fact.
+
+Cathedral does not treat an opaque in-process native binary as protected by
+these adapters: that binary joins the partition's trusted computing base and
+can modify its memory directly. Permanent unverified native services belong
+behind a process, address-space, or hardware isolation boundary. The UEFI boot
+surface remains a transitional admitted platform dependency that disappears
+with boot services.
 
 Foreign bindings also own the floating-control seam. A preserving binding may
 prove that its target leaves the relevant MXCSR/FPCR controls unchanged;

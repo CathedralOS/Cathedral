@@ -156,9 +156,12 @@ Legend: `[ ]` open · `[x]` closed.
   `block` wait ceilings, attributed unbounded paths, and explicit semantic-
   safe-point distance for cancellation/replacement promises. Wall-clock
   conversion remains an admitted target fact.
-- [ ] **Foreign entry and hosted FFI** — same-stack foreign calls contribute an
-  admitted ceiling excluding callback frames; callback entry mode determines
-  whether WCSU composes on the current stack or starts a fresh `StackPlan`.
-  Cathedral's UEFI boot can over-provision directly. General hosted native
-  libraries additionally need a gateway profile with pooled guarded stacks,
-  queue/exhaustion policy, and honest unbounded cancellation.
+- [ ] **Foreign entry and hosted FFI** — registered callback entry is settled:
+  a named static machine satisfies a `Calling<C>` callback requirement, the
+  binding emits its private thunk, and a durable protocol returns a linear
+  registration value. Target entry plans choose provider-stack continuation,
+  capacity preflight, or a supported owned stack. Cathedral's UEFI boot can
+  over-provision directly. General hosted native libraries additionally need a
+  gateway profile with pooled guarded stacks, queue/exhaustion policy, and
+  honest unbounded cancellation. Opaque in-process binaries remain part of the
+  partition TCB; safety profiles isolate or reject them.

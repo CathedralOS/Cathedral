@@ -37,17 +37,25 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
   Checked-Omega return integrity is settled as a consequence of memory safety
   plus non-addressable live stack/control state. Local `dyn Trait` dispatch is
   settled as an artifact-local selected-conformance descriptor and cannot cross
-  a replaceable boundary. External callbacks still require sealed external-entry
-  identity, registration, stack/calling plans, and revocation
+  a replaceable boundary. External callback entry is settled as a named static
+  machine satisfying a `Calling<C>` boundary requirement, with plan-driven
+  thunk lowering and linear durable registration. The Windows/platform adapter
+  canary and exact target stack policies remain implementation work
   ([[hardware_foundation_profile]]); component calls use boundary bindings and
   the era protocol in [[updates_and_hot_swap]].
 - **Work and foreign-entry completion.** WCSU answers stack space, not work or
   response latency. Cathedral still depends on Omega's normalized `WorkPlan`
-  for distance-to-semantic-safe-point reporting, plus external-entry/callback
-  contracts and the hosted-FFI gateway profile. Same-stack firmware calls use
-  admitted ceilings; permanent hosted native libraries need separately
+  for distance-to-semantic-safe-point reporting and complete callback work
+  attribution, plus the hosted-FFI gateway profile. Same-stack firmware calls
+  use admitted ceilings; permanent hosted native libraries need separately
   provisioned worker stacks, bounded queues, and attributable exhaustion
   ([[hardware_foundation_profile]], [[scheduler_and_resources]]).
+- **Opaque executable trust and contained failure.** Omega owner questions #20
+  and #21 must settle root-level TCB visibility/profile rejection for
+  in-process opaque binaries and reclamation after a contained execution dies
+  with outstanding obligations. Cathedral's safety profiles will isolate or
+  reject unverified native providers rather than treating callback adaptation
+  as memory containment.
 - **Static authority flow vs. live held grants.** The compiler describes *possible* power; the runtime graph holds *actual* grants. How tightly are they reconciled, and who flags drift? ([[capability_model]], [[observability_and_introspection]].)
 - **Hot-swap evidence split.** Omega statically supplies closure, contract,
   representation, resource-demand, and liveness facts. Cathedral still must
