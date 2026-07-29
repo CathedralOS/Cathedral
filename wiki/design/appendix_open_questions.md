@@ -50,8 +50,8 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
   use admitted ceilings; permanent hosted native libraries need separately
   provisioned worker stacks, bounded queues, and attributable exhaustion
   ([[hardware_foundation_profile]], [[scheduler_and_resources]]).
-- **Opaque executable trust and contained failure.** Omega owner questions #20
-  and #21 must settle root-level TCB visibility/profile rejection for
+- **Opaque executable trust and contained failure.** Omega owner questions #8
+  and #9 must settle root-level TCB visibility/profile rejection for
   in-process opaque binaries and reclamation after a contained execution dies
   with outstanding obligations. Cathedral's safety profiles will isolate or
   reject unverified native providers rather than treating callback adaptation
