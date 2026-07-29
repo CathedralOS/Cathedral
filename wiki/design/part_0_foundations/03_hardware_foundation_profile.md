@@ -581,8 +581,8 @@ trampoline bytes are accepted as a shortcut.
 - the first hardware/virtual platform on which AP bringup and IOMMU guarantees
   are mandatory rather than honestly degraded.
 
-Omega's carry/runtime, admitted-artifact installation, and checked-return
-contracts are settled. The remaining forward-edge question is runtime sealed
-descriptor/object-safety semantics. It lives in Omega's `OWNER_QUESTIONS.md`;
-Cathedral work should force that answer through real dynamic-dispatch/component
-customers rather than inventing private syntax.
+Omega's carry/runtime, admitted-artifact installation, checked-return, local
+dynamic-descriptor, and object-safety contracts are settled. Local dynamic
+values remain artifact-local; Cathedral component boundaries use bindings and
+local proxies rather than exporting those descriptors. Remaining work is
+implementation, not Cathedral-private syntax.
