@@ -30,9 +30,9 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
   `RepresentationQualification<Q>` relationship now normalizes canonical
   routes, enforces package-owner coherence, records the selected satisfier, and
   erases both shorthand and named uses. Explicit cross-package delegation
-  fails closed pending Omega owner question #3. See Omega
+  fails closed pending Omega owner question #2. See Omega
   [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
-- **`boundary` + service and operational contracts** — `boundary` marks external supply/trust edges; the `effects` row contains only normalized boundary-trait service identities. Independent `suspends` and `blocks` clauses publish operational may-ceilings. Each axis propagates transitively and forms an authored API ceiling. Authority values, trust receipts, resources, failure, termination, and mutation remain independent axes rather than magic effect keywords. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
+- **`boundary` + service and operational contracts** — `boundary` marks external supply/trust edges; the `reaches` row contains only normalized boundary-trait service identities. Independent `invokes`, `suspends`, and `blocks` clauses preserve synchronous entry and operational may-ceilings. Each axis propagates under its own rules and forms an authored API ceiling. Authority values, trust receipts, resources, failure, termination, and mutation remain independent axes. See Omega [Capabilities, Reach, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Authority flow** — inferred from values, domains, call contracts, returns, stores, and boundary provenance. The compiler reports what a unit *accepts, uses, derives, stores, acquires, returns, releases.* This is the raw material of Cathedral's authority graph.
 - **Ordinary data evolution** — historical external shapes are immutable
   ordinary `data`, sum envelopes, layout/codec policies, provenance domains,
@@ -65,9 +65,9 @@ A useful rule for every later chapter:
 
 | Omega owns | Cathedral owns |
 |---|---|
-| Whether authority *can* flow (types, domains, effects) | Where authority *comes from* (brokers, prompts, the store) |
+| Whether authority *can* flow (types, domains, reach) | Where authority *comes from* (brokers, prompts, the store) |
 | Whether a migration is *type-safe* | When a migration *runs* and on whose schedule |
-| What effects a component *could* reach | Whether the running system *grants* them |
+| Which services a component *could* reach | Whether the running system *grants* them |
 | That a protocol change is *compatible* | Which versions are *deployed* and routed |
 | That a swap is *borrow-safe* | Reaching *quiescence* in a live system |
 | Candidate-specific stack/work/state demand and general admission facts | Provisioning peak coexistence, choosing drain policy, and reclaiming old eras |
@@ -152,6 +152,6 @@ important writes.
 ## Related
 - [[vision_and_non_goals]] — why these primitives matter.
 - [[vocabulary]] — precise terms.
-- [[capability_model]] — the first heavy user of effects + authority flow.
+- [[capability_model]] — the first heavy user of reach + authority flow.
 - [[versioned_state_and_migration]] — explicit schema lineages, conversions, and live replacement over the substrate above.
 - [[hardware_foundation_profile]] — Cathedral's strict profile over Omega's OS primitives.

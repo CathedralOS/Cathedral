@@ -125,7 +125,7 @@ admitted target timing model.
 
 ### The decided mechanism: the budget-check path
 
-**There is no central budget-check trap; the check rides existing mediation, split in two.** The **authority** half — "no budget capability → no effect" — is the **effect ceiling + an arena lookup** (the `{slot, generation}` handle), already gated at the boundary you cross; nothing new. The **quantity** half is distributed by resource kind to wherever the resource is *already* mediated:
+**There is no central budget-check trap; the check rides existing mediation, split in two.** The **authority** half — "no budget capability → no effect" — is the **reach ceiling + an arena lookup** (the `{slot, generation}` handle), already gated at the boundary you cross; nothing new. The **quantity** half is distributed by resource kind to wherever the resource is *already* mediated:
 
 - **Metered (bytes / cycles — storage-write, network, NPU):** the **provider** does an atomic *decrement-if-sufficient* on the caller's budget counter as it serves; folded into the serve path, billed per-instance.
 - **Share (CPU / GPU time):** the **scheduler** honors the weight in dispatch — no per-op check; the share *is* the enforcement.
@@ -183,7 +183,7 @@ and reported only when a contract promises such a response.
 ## Omega Leverage
 
 - Resource rights as **capabilities (values + domains)** — `Storage::Writable` with a budget domain — reuse the whole authority machinery ([../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
-- **`effects`** already name the reachable resource services (`Storage`, `Network`, device providers); a budget capability is the runtime gate on each.
+- **`reaches`** already names the reachable resource services (`Storage`, `Network`, device providers); a budget capability is the runtime gate on each.
 - A component's lifecycle **`state` graph** exposes natural scheduling points — the scheduler can see *which state* an instance is in, not just that it's runnable.
 - Omega does **not** model resource *quantities* or deadlines as proof obligations; budget arithmetic, accounting, and enforcement are Cathedral runtime — a candidate for bounded-value contracts to grow into.
 

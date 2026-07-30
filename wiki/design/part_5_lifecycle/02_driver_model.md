@@ -1,6 +1,6 @@
 # Chapter 02: Driver Model
 
-> Drivers are ordinary components — isolated, capability-limited, and restartable — with hard effect ceilings on the hardware they touch, never privileged kernel blobs.
+> Drivers are ordinary components — isolated, capability-limited, and restartable — with hard reach ceilings on the hardware they touch, never privileged kernel blobs.
 
 ## The Legacy Model
 
@@ -8,7 +8,7 @@ A traditional driver is a binary blob loaded into the kernel's address space wit
 
 ## The Cathedral Model
 
-Drivers are components like any other ([[component_model]]): isolated, holding only the specific capabilities for *their* device, restartable after a crash without taking down the system, and upgradable in place via the hot-swap machinery ([[updates_and_hot_swap]]). A driver's hardware reach is an **effect ceiling of boundary-trait service identities** plus narrow capabilities over its register extents, DMA loans/IOMMU domain, and interrupt line. There are no ambient `device_io`/`memory_map` keyword powers and no arbitrary kernel driver blobs.
+Drivers are components like any other ([[component_model]]): isolated, holding only the specific capabilities for *their* device, restartable after a crash without taking down the system, and upgradable in place via the hot-swap machinery ([[updates_and_hot_swap]]). A driver's hardware reach is an **reach ceiling of boundary-trait service identities** plus narrow capabilities over its register extents, DMA loans/IOMMU domain, and interrupt line. There are no ambient `device_io`/`memory_map` keyword powers and no arbitrary kernel driver blobs.
 
 **Coverage is the deciding constraint — but confinement makes it an *effort* problem, not a *safety* one.** Driver surface area is what kills OS projects, but a bad or foreign driver is always *safe* (contained), so the combinatorics of arbitrary hardware no longer threaten the system's isolation — only *who writes and maintains each driver*. The strategy follows: **tolerate freely, reward Omega, lead with class drivers.** Most hardware speaks a standard *class* protocol (USB HID / mass-storage, NVMe, AHCI, XHCI, HD Audio), so one proved-Omega driver per class covers the bulk with no per-device work; the proprietary long tail (a GPU blob) runs *confined and second-class* — which still beats an in-kernel blob. Proved-Omega drivers earn the premium (proof, zero-copy, live-upgrade, more trust); confined C/blob drivers work and stay safe but lose it, and their faults still cost *their own* device's availability, data, and performance (contained ≠ harmless). LLM-assisted authoring and porting lower the native cost further; the real bottleneck for the tail is undocumented *hardware specs*, not code volume.
 
@@ -68,7 +68,7 @@ The confinement model (above) settles the trust question; the residue is device-
 
 ## Omega Leverage
 
-- **Drivers as components with boundary-trait effect ceilings** make hardware reach a checkable, audited fact without blessed lowercase keywords. See [Omega effects](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
+- **Drivers as components with boundary-trait reach ceilings** make hardware reach a checkable, audited fact without blessed lowercase keywords. See [Omega reach](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Extents, placed views, linear external loans, and entry-root plans** scope MMIO/DMA/IRQ access to one device ([[hardware_foundation_profile]]).
 - **Ordinary numbered schemas + layout/codec policies** give compatible driver APIs; component identities and quiescence govern live replacement.
 - **Boundary traits** model the device edge: the hardware contract is a `boundary` whose guarantees are accepted but whose effects and authority are bounded.

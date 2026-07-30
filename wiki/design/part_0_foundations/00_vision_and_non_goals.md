@@ -14,7 +14,7 @@ The blueprint for the Cathedral has already been drafted. This project simply ai
 
 Cathedral is built with [Omega](../../../../Omega/wiki/language_guide/language_guide.md), a programming language co-developed with this operating system and designed specifically for systems and kernel development. Omega is heavily inspired by Rust, Lean, TLA+, and Dafny. In other words, this language ensures memory safety, thread safety, and logic safety at compile time with zero-cost abstractions.
 
-Omega makes capabilities, effects, typed protocols, and versioned state first-class and compiler-checked. The problems we solve are structural results of this, not features bolted onto an unsafe base.
+Omega makes capabilities, service reach, typed protocols, and versioned state first-class and compiler-checked. The problems we solve are structural results of this, not features bolted onto an unsafe base.
 
 Other operating systems cannot do this cleanly because the languages underneath them do not model authority, behavior, or state change. See [[omega_substrate]].
 
@@ -31,7 +31,7 @@ Other operating systems cannot do this cleanly because the languages underneath 
 Every chapter is accountable to these:
 
 1. **Capability flow.** Authority can be held, passed, narrowed, revoked, and never ambient. [[capability_model]]
-2. **Proof-carrying components.** Code ships with a checked account of its own authority and effects.
+2. **Proof-carrying components.** Code ships with a checked account of its own authority and service reach.
 3. **Resumability.** Restart, upgrade, and migration are designed operations. [[updates_and_hot_swap]]
 4. **Explicit state migration.** A shape change is typed code, not an assumption the bytes still line up. [[versioned_state_and_migration]]
 

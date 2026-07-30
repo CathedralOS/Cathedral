@@ -109,7 +109,7 @@ That capability is **the right to be *scheduled into* the pool, not ownership of
 - **Naming, DNS & discovery.** Resolution is a brokered, auditable step that yields a verified peer, not a bare address; discovery is local-first and registry-backed ([[naming_and_discovery]]).
 - **Peer identity.** Connections bind to identities on both ends ([[identity_and_principals]]); pinning and attestation are part of `authorize`, not bolted on after `connect`.
 - **Firewall as capability ceilings.** Egress/ingress policy is a ceiling over the network capability graph, not a parallel ambient ruleset.
-- **Bandwidth & budgets.** Network is a metered resource; budgets are accounted via effects and governed by the scheduler ([[scheduler_and_resources]]). Congestion fairness may have to be enforced at the demux even though the transport is a library (see below).
+- **Bandwidth & budgets.** Network is a metered resource; reach makes use visible, while budget capabilities and provider accounting enforce quantity under scheduler policy ([[scheduler_and_resources]]). Congestion fairness may have to be enforced at the demux even though the transport is a library (see below).
 - **Transport as a library.** QUIC, TLS, multipath, connection migration, and NAT traversal are libraries over an authorized flow, so mobility and multihoming are normal cases the model handles, and the choice of stack is the component's.
 - **Observability.** Every flow is attributable by construction: which principal, which peer identity, which protocol, how much bandwidth ([[observability_and_introspection]]).
 - **Nested providers.** A component can implement the network interface for its children (VPN, firewall, NAT, a VM's NIC, or terminating flows locally), with reach bounded by attenuation and confidentiality bounded by the child's end-to-end crypto.
@@ -125,8 +125,8 @@ That capability is **the right to be *scheduled into* the pool, not ownership of
 
 ## Omega Leverage
 
-- **Capabilities as values** make a flow authorization a held, attenuable, revocable grant rather than an ambient socket right. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
-- **`effects` reach to the `Network` boundary service** marks and accounts every crossing into the network, naming the boundary edge where the OS broker provides authority.
+- **Capabilities as values** make a flow authorization a held, attenuable, revocable grant rather than an ambient socket right. See Omega [Capabilities, Reach, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
+- **`reaches Network`** marks and accounts every crossing into the network, naming the boundary edge where the OS broker provides authority.
 - **Selected wire codecs over ordinary numbered schemas** frame the typed-library protocol with stable identities and compatibility rules, identical to local IPC, so cross-version interop and compatibility reports apply to the network too. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
 - **`boundary` providers** are the home for the NIC driver below the demux and for the transport stack (TLS, QUIC, NAT traversal) below the connection API; the demux/broker itself is Omega, keeping that TCB small and checked.
 - The network provider is a **trait** any component can implement, so nesting is one interface with many implementations resolved from the child's environment; a nested provider is just that resolution bound to a parent endpoint. See Omega [Traits](../../../../Omega/wiki/language_guide/chapter_14_traits.md).

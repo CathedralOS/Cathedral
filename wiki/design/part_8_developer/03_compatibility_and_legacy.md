@@ -40,7 +40,7 @@ The safe pattern across all of these: the legacy box is *isolated*, its authorit
 
 ## Omega Leverage
 
-- **Effects + boundary** make the compatibility box a `boundary` provider with a hard effect ceiling — its blast radius is a compiler-checked fact.
+- **Reach + boundary** make the compatibility box a `boundary` provider with a hard service-reach ceiling — its blast radius is a compiler-checked fact.
 - **Capabilities as values** let the box receive exactly the authority it is granted and nothing ambient, even while emulating an ambient API internally.
 - **Component model + sandboxing** host the box as an ordinary isolated tenant.
 - Omega/Cathedral may need an **authority-shim** layer that maps a frozen legacy syscall surface onto held capabilities without re-exporting ambient authority.

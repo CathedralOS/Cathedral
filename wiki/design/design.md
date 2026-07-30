@@ -41,7 +41,7 @@ The redesigned contract, in a few sentences.
 - The questions this chapter must eventually answer.
 
 ## Omega Leverage
-Which language features carry this (capabilities, effect rows, domains,
+Which language features carry this (capabilities, reach rows, domains,
 machines, states, ordinary versioned schemas/layout policies, proof
 obligations) and what, if anything, Omega still needs to grow.
 

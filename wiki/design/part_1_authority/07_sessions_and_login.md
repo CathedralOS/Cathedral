@@ -33,7 +33,7 @@ Login runs as a **transient, confined broker** — holding only a `Capability<Ve
 3. The broker **hands that authorization back to root.** Root performs the unseal (releasing the key into the new Matrix's domain) and **spawns the Matrix as a direct child of root.**
 4. Root **reclaims the seat and binds it to the Matrix.** The broker exits.
 
-The Matrix is therefore a **sibling of the broker, both children of root** — the broker does *not* host or run the Matrix. Hosting it would interpose the login program permanently in the session's trusted base, seeing all input and output forever; root is already the irreducible root of trust, so the Matrix is a child of *root*, not of the broker. "The broker holds no user authority" is then **structural** (provable from its effect ceiling — it never holds the realm root, and the mint delivers into the seat/Matrix, not through the broker), not a discipline.
+The Matrix is therefore a **sibling of the broker, both children of root** — the broker does *not* host or run the Matrix. Hosting it would interpose the login program permanently in the session's trusted base, seeing all input and output forever; root is already the irreducible root of trust, so the Matrix is a child of *root*, not of the broker. "The broker holds no user authority" is then **structural** (provable from its reach ceiling — it never holds the realm root, and the mint delivers into the seat/Matrix, not through the broker), not a discipline.
 
 This confinement is exactly what makes a **swappable or corporate login program safe**: it can only *fail to authenticate*, never exfiltrate the realm. Two anti-phishing details complete it:
 
@@ -83,7 +83,7 @@ The recursion ends where authority stops being *forwarded from above* and starts
 - A session is a **principal** ([[identity_and_principals]]) holding **capabilities** ([[capability_model]]) under a **lease** ([[capability_lifecycle]]); no new machinery.
 - Credentials as **operation-capabilities** (`Capability<VerifyCredential>`) reuse the secrets model ([[secrets_and_keys]]).
 - Sealing binds to the boot **measurement**, the trust-chain artifact ([[boot_and_trust_chain]]).
-- The broker's "no user authority" is an **effect-ceiling** fact, not a runtime promise.
+- The broker's "no user authority" is an **reach-ceiling** fact, not a runtime promise.
 - Omega does not define credential or attestation protocols; those are runtime and provider structure Cathedral specifies.
 
 ## Open Questions

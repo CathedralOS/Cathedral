@@ -97,7 +97,7 @@ Tasks are **structured**: a task is owned by a scope and cannot outlive it, so a
   **machines** with explicit **state/transition** graphs. Omega supplies the
   substrate; Cathedral owns the lifecycle and policy
   ([../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)).
-- **`effects`** give each component a behavior ceiling; **authority flow** gives its accepts/uses/stores report — both are per-component, so the component is the natural granularity for both audits ([[capability_model]]).
+- **`reaches`** gives each component a service-reach ceiling; **authority flow** gives its accepts/uses/stores report — both are per-component, so the component is the natural granularity for both audits ([[capability_model]]).
 - **Immutable historical state shapes + checked replacement machines** make state lineage explicit and let state identity survive code replacement ([[versioned_state_and_migration]]).
 - Omega does **not** define an OS-managed component registry, supervision tree,
   drain policy, or migration scheduler. Those remain Cathedral runtime

@@ -55,7 +55,7 @@ This unifies local cross-world sharing with distributed sharing — a sibling Ma
 
 ## Omega Leverage
 
-- **Capabilities as values** that can in principle serialize and transfer — the same grant that flows over local IPC flows over the network. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
+- **Capabilities as values** that can in principle serialize and transfer — the same grant that flows over local IPC flows over the network. See Omega [Capabilities, Reach, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Selected wire codecs over ordinary numbered schemas** carry authority and state across version-skewed peers with explicit compatibility rules. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
 - **Leases** map onto Omega's leased/expired capability lifecycle states, giving distributed authority a natural expiry ([[capability_lifecycle]]).
 - **Immutable historical schemas + checked conversions** carry replicated state forward as fleets upgrade out of lockstep. See Omega [Historical Data And Component Replacement](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).

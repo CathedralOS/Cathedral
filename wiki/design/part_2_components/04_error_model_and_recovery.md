@@ -64,7 +64,7 @@ Four properties every failure must have: **typed** (a known cause, not an intege
 - **Errors as typed values** — `Failure` is ordinary `data`, so causes, causality, and recovery are inspectable, matchable, and total, not an integer to guess at.
 - **Traps** give the abrupt-failure path a typed home distinct from expected errors; the boundary between the two is a design decision Omega makes expressible.
 - **`state`/`transition` graphs** model recovery directly — `failed`, `restarting`, `migrating`, `escalated` are real states a supervisor inspects ([../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)).
-- **Effects + authority flow** make `CapabilityRevoked` and `ResourceExhausted` predictable: the graph already knows which authorities and budgets a component depends on, so it knows what can fail.
+- **Reach + authority flow** make `CapabilityRevoked` and `ResourceExhausted` predictable: the graph already knows which authorities and budgets a component depends on, so it knows what can fail.
 - Omega does **not** define a standard causality-chain representation or a supervision model — both are Cathedral runtime structure over typed failures.
 
 ## Open Questions

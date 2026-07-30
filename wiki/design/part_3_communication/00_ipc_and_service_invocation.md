@@ -24,7 +24,7 @@ The point is that **communication is not an OS concept**. A shared page and atom
 - **The region is mapped once**, because only the OS can map the same physical pages into two protection domains, and it gates that on a capability;
 - **The OS leases the lifetime of the region**, so a dead peer's memory is reclaimed instead of leaked.
 
-The map is the one declared **`boundary`** in the whole mechanism (the [ch19](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md) keyword, not just the discipline): only the kernel can map the same frames into two protection domains, so it is a capability-gated `MemoryMap` boundary service. Calling it contributes that service identity to the effects row; there is no global `memory_map` keyword.
+The map is the one declared **`boundary`** in the whole mechanism (the [ch19](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md) keyword, not just the discipline): only the kernel can map the same frames into two protection domains, so it is a capability-gated `MemoryMap` boundary service. Calling it contributes that service identity to the reach row; there is no global `memory_map` keyword.
 
 ```omega
 // The map is a capability-scoped, kernel-provided boundary service.
@@ -136,7 +136,7 @@ Whether that routing is a kernel-mediated trap or a direct call is the substrate
   layer's schema for local and remote transport alike. Each channel declares
   its compatibility window and unknown-member behavior. See Omega
   [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
-- **Capabilities as values** mean authority travels in the payload as a typed argument, not as an ambient sender identity. See Omega [Capabilities, Effects, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
+- **Capabilities as values** mean authority travels in the payload as a typed argument, not as an ambient sender identity. See Omega [Capabilities, Reach, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Ownership / borrowing** give the zero-copy local hand-off: a moved buffer is statically unreachable by the sender.
 
 ## Open Questions

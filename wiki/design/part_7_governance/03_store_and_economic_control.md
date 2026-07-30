@@ -20,7 +20,7 @@ A Matrix sees and kills only its own children; to reach anything outside it send
 
 **A store kills only what it hosts.** "Can the store kill it?" is not a special question — it is the host-chain rule. If the store *launched* the app into a store-owned Matrix (the **Steam model** — Steam runs your game as its child), the store is in the host chain and may kill it, like any host. If you merely *installed from* a store and run the app in *your own* realm, the store is **not** in the host chain and cannot touch it. It can only **de-list** the app from its own catalog (its shelf — new users can't get it *there*; installed copies untouched; other sources unaffected) and **publish an advisory** ("this version is malicious"), which *you* — or a policy you opted into — choose whether to act on. So there is no delist-equals-dead and no remote kill of your sovereign realm; the monopoly is structurally absent, because there is no mandatory single host-of-everything.
 
-**Admission is a mechanical, sovereign gate.** Because a package is proof-carrying ([[package_system]]), admission is a cheap **re-check** of the declared contract — the capability manifest against policy, the effect ceilings, the proof certs (de-Bruijn cheap; proving happened at build), the provenance binding — run once at install, not per run. The gate is **held by the machine owner**, layered by an **org ceiling** over the work realm ([[configuration_and_policy]], [[multi_user_and_org_control]]); a store is *a provider* of attested packages, not *the* mandatory gate. That single choice — admission authority is sovereign, not central — is what prevents the walled-garden monopoly, and it is the only genuinely "economic" decision here. Commercial terms (revenue splits, curation as a business) are out of scope.
+**Admission is a mechanical, sovereign gate.** Because a package is proof-carrying ([[package_system]]), admission is a cheap **re-check** of the declared contract — the capability manifest against policy, the reach ceilings, the proof certs (de-Bruijn cheap; proving happened at build), the provenance binding — run once at install, not per run. The gate is **held by the machine owner**, layered by an **org ceiling** over the work realm ([[configuration_and_policy]], [[multi_user_and_org_control]]); a store is *a provider* of attested packages, not *the* mandatory gate. That single choice — admission authority is sovereign, not central — is what prevents the walled-garden monopoly, and it is the only genuinely "economic" decision here. Commercial terms (revenue splits, curation as a business) are out of scope.
 
 ## The one thing that does not derive: trusting the advisory
 
@@ -30,7 +30,7 @@ Everything mechanical falls out of host-chain + capabilities. The single residua
 
 ## Concerns & Design Space
 
-- **Admission is a re-check, not a review.** The gate mechanically re-verifies the manifest, effect ceilings, and proof certs against policy before first run — no human source review, cheap enough to sit at install.
+- **Admission is a re-check, not a review.** The gate mechanically re-verifies the manifest, reach ceilings, and proof certs against policy before first run — no human source review, cheap enough to sit at install.
 - **Admission authority is sovereign.** The machine owner holds the gate; the org holds a scoped ceiling over the work realm; a store is a provider, never the mandatory gate — so no single party can be the walled-garden bottleneck.
 - **Kill = stop + revoke, along the host chain.** Stop the instances (supervisor) and withdraw the grants (authority graph); who may do it is host-chain membership.
 - **Revocation cost.** Lazy by default (O(1) generation-bump → fail on next authority use) plus active teardown for the kill case — the same machinery as any capability ([[capability_lifecycle]]).
@@ -40,7 +40,7 @@ Everything mechanical falls out of host-chain + capabilities. The single residua
 
 ## Key Questions
 
-- **What the gate checks / speed — resolved:** a mechanical re-check of {manifest vs policy, effect ceilings, re-verified proof certs, provenance}, cheap because it re-checks rather than re-proves, run once at install.
+- **What the gate checks / speed — resolved:** a mechanical re-check of {manifest vs policy, reach ceilings, re-verified proof certs, provenance}, cheap because it re-checks rather than re-proves, run once at install.
 - **Revocation eager vs lazy — resolved:** lazy O(1) bump + fail-on-next-use by default, active teardown for the kill case ([[capability_lifecycle]]).
 - **Kill-switch abuse — resolved:** kill authority *is* host-chain membership, so a remote store can kill only what it hosts (the Steam model) and never your sovereign realm; it holds advisories and shelf-withdrawal, you hold the kill.
 
@@ -53,7 +53,7 @@ Everything mechanical falls out of host-chain + capabilities. The single residua
 ## Open Questions
 
 - **Trusting an "app is evil" advisory — parked:** acting is derived (host-chain kill); grounding trust in the claim's source is the first-pin / trust-bootstrap keystone, parked in the security bucket.
-- Continuous re-evaluation of a running component is the **live effect ceiling** doing the work (a tightened policy clamps its authority, [[configuration_and_policy]]), not a re-run of the admission gate; revocation mid-migration is clean because migration is an atomic transaction ([[package_system]]).
+- Continuous re-evaluation of a running component is the **live reach ceiling** doing the work (a tightened policy clamps its authority, [[configuration_and_policy]]), not a re-run of the admission gate; revocation mid-migration is clean because migration is an atomic transaction ([[package_system]]).
 
 ## Related
 - [[package_system]] — the proof-carrying package the gate evaluates.

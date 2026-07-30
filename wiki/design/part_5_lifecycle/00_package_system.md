@@ -139,7 +139,7 @@ Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
   requirements, and transitive authority while keeping proof evidence behind
   the evidence firewall
   ([Omega authority-value brief](../../../../Omega/wiki/design_briefs/authority_values_and_boundary_evidence.md)).
-- **`effects` ceilings** bound which services an install-time transition may reach; excluding ambient `Storage` reach outside the supplied setup capability is a checkable fact.
+- **`reaches` ceilings** bound which services an install-time transition may reach; excluding ambient `Storage` reach outside the supplied setup capability is a checkable fact.
 - **Immutable historical `data` shapes + checked conversion machines** carry persistent format lineages and upgrade paths as ordinary typed code with obligations.
 - **Ordinary numbered schemas plus selected wire codecs** ([[ipc_and_service_invocation]]) declare the protocols spoken, making protocol compatibility part of the manifest.
 - Omega does **not yet** define a package-manifest format or a "declarative install transition" primitive — that loader contract is an extension Cathedral pushes onto the runtime.

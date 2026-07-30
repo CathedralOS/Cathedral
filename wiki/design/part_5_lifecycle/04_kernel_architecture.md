@@ -41,7 +41,7 @@ The **core itself** is the one thing on neither side of that wall — it is *tru
 
 - **Language-level isolation** is the substrate's premise: ownership, borrowing, and effect/authority checking provide isolation that the MMU otherwise provides, per [../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **The boundary-provider set is much of the TCB.** Omega's boundary registry makes the trusted base *enumerable* — the registered providers are precisely what must be trusted, and the build report lists them.
-- **`effects` + authority-flow ceilings** let even privileged components be bounded and audited, so "privileged" is not synonymous with "unbounded."
+- **`reaches` + authority-flow ceilings** let even privileged components be bounded and audited, so "privileged" is not synonymous with "unbounded."
 - **The hardware foundation** separates inert addresses, extent authority,
   layout/access plans, checked instructions, entry roots, and external loans, so
   low-level code does not regain C's "number equals power" escape

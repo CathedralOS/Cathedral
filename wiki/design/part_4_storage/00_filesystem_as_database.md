@@ -105,7 +105,7 @@ This is how Cathedral subsumes Docker. A container is a stack of Linux namespace
 - the visible component set ("what is running") is capability-scoped already ([[observability_and_introspection]]), so a process listing inside shows a fabricated or empty set;
 - the network is flow authorizations to specific peers ([[networking]]); a private or synthetic network is a provider answering them;
 - resource limits are budgets ([[scheduler_and_resources]]);
-- syscall filtering is the effect ceiling.
+- syscall filtering is the reach ceiling.
 
 So a "container" is an app handed synthetic or attenuated roots and a scoped capability set. There is no container runtime and no image format: the sandbox is the default you get by not handing over the real roots, and it **nests**, because a sandboxed component can hand its own children further-attenuated roots. It is the same machinery as the deterministic test world ([[testing_and_simulation]]) and live migration: a container, a hostile simulator (lie about time with a virtual clock, lie about the network, inject faults), and a snapshot-and-move are all "the component's world is the capabilities and roots you gave it."
 
