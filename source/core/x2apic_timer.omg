@@ -22,7 +22,7 @@ pub machine X2ApicTimer::configure_one_shot_divide_by_16(
     &mut self,
     vector: u64 [32..=255]
 )
-effects MachineControl
+reaches MachineControl
 {
     asm where clobbers rax, rcx, rdx, r10, r11, r15 {
         wrmsr X2APIC_TIMER_DIVIDE_CONFIG_MSR, X2APIC_TIMER_DIVIDE_BY_16;
@@ -36,7 +36,7 @@ pub machine X2ApicTimer::arm_one_shot(
     &mut self,
     initial_count: u64 [1..=4294967295]
 )
-effects MachineControl
+reaches MachineControl
 {
     asm where clobbers rax, rcx, rdx, r10, r11, r15 {
         wrmsr X2APIC_TIMER_INITIAL_COUNT_MSR, initial_count
@@ -44,7 +44,7 @@ effects MachineControl
 }
 
 pub machine X2ApicTimer::stop(&mut self)
-effects MachineControl
+reaches MachineControl
 {
     asm where clobbers rax, rcx, rdx, r10, r11, r15 {
         wrmsr X2APIC_TIMER_INITIAL_COUNT_MSR, X2APIC_TIMER_STOP
@@ -55,7 +55,7 @@ effects MachineControl
 // acknowledgement transition admits this provider. The public root contract
 // remains PIC/LAPIC/x2APIC-neutral.
 pub machine X2ApicTimer::complete_timer_acknowledgement(&mut self)
-effects MachineControl
+reaches MachineControl
 {
     asm where clobbers rax, rcx, rdx, r10, r11, r15 {
         wrmsr X2APIC_EOI_MSR, X2APIC_EOI_ZERO

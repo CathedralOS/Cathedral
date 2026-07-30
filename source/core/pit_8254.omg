@@ -19,7 +19,7 @@ pub machine Pit8254::program_channel0_rate_generator(
     divisor_low: u8,
     divisor_high: u8
 )
-effects PortIo
+reaches PortIo
 {
     asm where clobbers r10, r11, r15, rax, rdx {
         out PIT_COMMAND_PORT, 0x34;

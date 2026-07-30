@@ -21,7 +21,7 @@ use omega::language::core::extent;   // Extent, Granted, ExtentRootProvider
 // static field (no allocator yet — real firmware maps are ~4–8 KiB); the
 // too-small retry loop is a follow-on.
 machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable)
-effects BootServices + ExtentRootProvider + PortIo + MachineControl
+reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 {
     let bs: &BootServicesTable = table.boot_services;          // transitive vouch, like con_out
 

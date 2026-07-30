@@ -16,7 +16,7 @@ pub data Pic8259 {
 // 8086 mode, and leave every IRQ masked. IDT/root publication must complete
 // before a separate provider operation unmasks the timer input.
 pub machine Pic8259::remap_masked(&mut self)
-effects PortIo
+reaches PortIo
 {
     asm where clobbers r10, r11, r15, rax, rdx {
         out PIC_MASTER_COMMAND_PORT, ICW1_PC_CASCADE;
@@ -39,7 +39,7 @@ effects PortIo
 // First-provider policy: admit only the master timer input (IRQ0). Slave IRQs
 // remain masked, so the cascade input remains masked too.
 pub machine Pic8259::unmask_timer(&mut self)
-effects PortIo
+reaches PortIo
 {
     asm where clobbers r10, r11, r15, rax, rdx {
         out PIC_MASTER_DATA_PORT, 0xFE;
@@ -51,7 +51,7 @@ effects PortIo
 // acknowledgement transition has admitted this provider. The public root
 // contract stays PIC/LAPIC-neutral.
 pub machine Pic8259::complete_timer_acknowledgement(&mut self)
-effects PortIo
+reaches PortIo
 {
     asm where clobbers r10, r11, r15, rax, rdx {
         out PIC_MASTER_COMMAND_PORT, OCW2_END_OF_INTERRUPT
