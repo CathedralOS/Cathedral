@@ -53,10 +53,10 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 - **Formal atomics and modular protocols.** Cathedral's mailbox, scheduler, and
   reclamation proofs depend on Omega defining its complete atomic-event model,
   proving the x86-64/AArch64 mappings, and settling separately compiled
-  environment premises in Omega owner question #8. Existing instruction
+  environment premises in Omega owner question #7. Existing instruction
   selection is not yet that proof.
-- **Opaque executable trust and contained failure.** Omega owner questions #6
-  and #7 must settle root-level TCB visibility/profile rejection for
+- **Opaque executable trust and contained failure.** Omega owner questions #5
+  and #6 must settle root-level TCB visibility/profile rejection for
   in-process opaque binaries and reclamation after a contained execution dies
   with outstanding obligations. Cathedral's safety profiles will isolate or
   reject unverified native providers rather than treating callback adaptation

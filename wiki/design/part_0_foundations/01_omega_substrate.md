@@ -30,7 +30,7 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
   `RepresentationQualification<Q>` relationship now normalizes canonical
   routes, enforces package-owner coherence, records the selected satisfier, and
   erases both shorthand and named uses. Explicit cross-package delegation
-  fails closed pending Omega owner question #2. See Omega
+  fails closed pending Omega owner question #1. See Omega
   [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - **`boundary` + service and operational contracts** — `boundary` marks external supply/trust edges; the `reaches` row contains only normalized boundary-trait service identities. Independent `invokes`, `suspends`, and `blocks` clauses preserve synchronous entry and operational may-ceilings. Each axis propagates under its own rules and forms an authored API ceiling. Authority values, trust receipts, resources, failure, termination, and mutation remain independent axes. See Omega [Capabilities, Reach, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Authority flow** — inferred from values, domains, call contracts, returns, stores, and boundary provenance. The compiler reports what a unit *accepts, uses, derives, stores, acquires, returns, releases.* This is the raw material of Cathedral's authority graph.
