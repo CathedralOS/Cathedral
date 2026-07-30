@@ -18,11 +18,20 @@ data Failure {
     recoverable: Recovery;      // retry | restart | migrate | escalate | fatal
 }
 
-domain FailureCause {
-    ComponentCrash | CapabilityRevoked | ResourceExhausted |
-    StorageUnavailable | MigrationFailed | VersionMismatch |
-    ProtocolViolation | DeadlineExceeded | UserDeniedAuthority |
-    DeviceDisappeared | NetworkPartition | PowerLoss | CorruptionDetected
+data FailureCause {
+    case ComponentCrash;
+    case CapabilityRevoked;
+    case ResourceExhausted;
+    case StorageUnavailable;
+    case MigrationFailed;
+    case VersionMismatch;
+    case ProtocolViolation;
+    case DeadlineExceeded;
+    case UserDeniedAuthority;
+    case DeviceDisappeared;
+    case NetworkPartition;
+    case PowerLoss;
+    case CorruptionDetected;
 }
 ```
 

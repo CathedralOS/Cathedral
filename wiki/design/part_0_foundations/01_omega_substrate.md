@@ -27,10 +27,12 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
   domains rather than as separate permission-flavored types. Omega now
   normalizes exact owner-machine, domain-operator, and boundary-requirement
   establishment identities independently. Its trusted
-  `RepresentationQualification<Q>` relationship now normalizes canonical
-  routes, enforces package-owner coherence, records the selected satisfier, and
-  erases both shorthand and named uses. Explicit cross-package delegation
-  fails closed pending Omega owner question #1. See Omega
+  domain predicates live in ordinary `requires`; exact trait requirements
+  named in the domain body authorize routed establishment; empty declarations
+  permit explicit qualification from the bare carrier; and exact `as`
+  coercions preserve denotation without invoking arbitrary user code. Trait
+  and machine visibility control who may conform and invoke, while admitted
+  boundary routes retain selected-provider receipts. See Omega
   [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
 - **`boundary` + service and operational contracts** — `boundary` marks external supply/trust edges; the `reaches` row contains only normalized boundary-trait service identities. Independent `invokes`, `suspends`, and `blocks` clauses preserve synchronous entry and operational may-ceilings. Each axis propagates under its own rules and forms an authored API ceiling. Authority values, trust receipts, resources, failure, termination, and mutation remain independent axes. See Omega [Capabilities, Reach, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Authority flow** — inferred from values, domains, call contracts, returns, stores, and boundary provenance. The compiler reports what a unit *accepts, uses, derives, stores, acquires, returns, releases.* This is the raw material of Cathedral's authority graph.
@@ -49,9 +51,9 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
   and [Programmable Layouts](../../../../Omega/wiki/design_briefs/programmable_layouts.md).
 - **OS memory/hardware foundation** — inert addresses, range-authority `Extent`s, allocator `Arena`s and arena-bound `Allocation<T>` storage, programmable layouts, separate access plans, checked assembly, boundary entry plans, symbolic materialization, external-root reporting, and external loans compose the kernel/driver substrate without interrupt/MMIO/DMA keywords. Cathedral's strict provider profile is [[hardware_foundation_profile]].
 - **Authority values and boundary evidence** — runtime authority uses ordinary
-  data fields plus bodyless domain facts. An admitted provider originates a
-  root by satisfying an owner-authored boundary requirement whose result names
-  the exact qualified subject; admission records the receipt. Omega rejects
+  data fields plus routed domain facts. An admitted provider originates a root
+  by satisfying an exact boundary requirement named by the domain declaration;
+  admission records the receipt. Omega rejects
   direct accepted-machine membership claims and retains the exact authorizing
   requirement signature with the admitted evidence. Checked transformations
   conserve existing claims. Artifacts distinguish checked, transformed,

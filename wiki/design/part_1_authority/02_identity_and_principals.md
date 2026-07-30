@@ -19,7 +19,8 @@ data Principal {
     provenance: Attestation; // who vouches, and how it was established
 }
 
-domain Principal::Attested { self.provenance in Attestation::Verified; }
+domain Principal::Attested
+    requires self.provenance in Attestation::Verified;
 ```
 
 ### The decided mechanism: identity is the confined-world primitive
