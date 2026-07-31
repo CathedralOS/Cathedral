@@ -435,25 +435,21 @@ instead require the canonical state as an entry precondition.
 
 Omega-to-Omega calls within one artifact enter ordinary WCSU composition.
 Calls across an Omega component boundary use the callee's published boundary
-plan and independent stack provision. A hosted OS service reached through a
-checked boundary binding has the same shape: the caller pays the published
-entry contract, while the provider runs on provider-owned stack. Code entered
-through an opaque native ABI cannot supply either proof, so its binding must
-choose an explicit execution mode:
+plan and independent stack provision. A hosted native call may instead continue
+on its host-managed current stack according to the selected calling plan. Code
+entered through an opaque native ABI cannot supply checked WCSU. Its boundary
+declaration publishes the calling/state plan, blocking, affinity, invocation,
+custody, and admitted stack facts; the selected runtime context must satisfy
+them. A fixed-stack same-stack call contributes an admitted foreign ceiling to
+the caller's `StackPlan`; that ceiling excludes any Omega callback frames.
 
-- a same-stack call contributes an admitted foreign stack ceiling to the
-  caller's `StackPlan`; that ceiling excludes any Omega callback frames;
-- a gateway call suspends the Omega activation and executes on a pooled native
-  worker stack with its own capacity, queue, and exhaustion contract.
-
-Cathedral's transitional UEFI boot path uses the first form with a conservative,
-over-provisioned boot stack and an attributed firmware admission. Building a
-general hosted FFI worker pool is not a boot prerequisite. It becomes valuable
-for permanent native-library interop, where many cheap Omega activations should
-not each reserve a worst-case C stack. A guard page can contain stack
-exhaustion on that worker stack, but it neither proves the foreign call returns
-nor makes it cancellable; hanging calls still consume workers and can cause
-head-of-line blocking.
+Cathedral's transitional UEFI boot path uses a fixed-stack same-stack call with
+a conservative, over-provisioned boot stack and an attributed firmware
+admission. A general hosted blocking executor is not a boot prerequisite. Such
+an executor is an ordinary package for calls that should not occupy a no-block
+scheduler worker. A guard page can contain exhaustion on its worker stack, but
+it neither proves the foreign call returns nor makes it cancellable; hanging
+calls still consume workers and can cause head-of-line blocking.
 
 Foreign callback protocols are exposed as boundary requirements carrying their
 target `Calling<C>` policy. A named static Cathedral machine satisfies the
@@ -489,7 +485,7 @@ with boot services.
 
 Foreign bindings also own the floating-control seam. A preserving binding may
 prove that its target leaves the relevant MXCSR/FPCR controls unchanged;
-otherwise the direct-call or gateway trampoline saves and restores them.
+otherwise the direct-call or blocking-executor adapter saves and restores them.
 Inbound callbacks establish Cathedral's canonical Omega state before checked
 code runs and restore the foreign state on exit. A native library enabling
 FTZ/DAZ cannot silently change the meaning of later `f32` operations.

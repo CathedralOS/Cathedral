@@ -161,7 +161,7 @@ Legend: `[ ]` open · `[x]` closed.
   binding emits its private thunk, and a durable protocol returns a linear
   registration value. Target entry plans choose provider-stack continuation,
   capacity preflight, or a supported owned stack. Cathedral's UEFI boot can
-  over-provision directly. General hosted native libraries additionally need a
-  gateway profile with pooled guarded stacks, queue/exhaustion policy, and
-  honest unbounded cancellation. Opaque in-process binaries remain part of the
-  partition TCB; safety profiles isolate or reject them.
+  over-provision directly. A hosted blocking executor is an optional ordinary
+  package built from activations, bounded queues, moved custody, suspension,
+  and provider selection—not a language FFI mode. Opaque in-process binaries
+  remain part of the partition TCB; safety profiles isolate or reject them.

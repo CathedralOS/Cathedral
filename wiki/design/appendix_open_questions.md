@@ -46,18 +46,18 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 - **Fuel, fixed work, and foreign-entry completion.** WCSU answers stack
   space, not work or response latency. Cathedral depends on Omega's canonical
   IR fuel meter, restricted fixed-work checking for hard roots and safe-point
-  segments, attributed unbounded-edge reporting, and the hosted-FFI gateway
-  profile. Same-stack firmware calls use admitted ceilings; permanent hosted
-  native libraries need separately provisioned worker stacks, bounded queues,
+  segments, and attributed unbounded-edge reporting. Same-stack firmware calls
+  use admitted ceilings. A hosted blocking executor, where needed, is an
+  ordinary package with separately provisioned worker stacks, bounded queues,
   and attributable exhaustion ([[hardware_foundation_profile]],
   [[scheduler_and_resources]]).
 - **Formal atomics and modular protocols.** Cathedral's mailbox, scheduler, and
   reclamation proofs depend on Omega defining its complete atomic-event model,
   proving the x86-64/AArch64 mappings, and settling separately compiled
-  environment premises in Omega owner question #5. Existing instruction
+  environment premises in Omega owner question #4. Existing instruction
   selection is not yet that proof.
-- **Opaque executable trust and contained failure.** Omega owner questions #3
-  and #4 must settle root-level TCB visibility/profile rejection for
+- **Opaque executable trust and contained failure.** Omega owner questions #2
+  and #3 must settle root-level TCB visibility/profile rejection for
   in-process opaque binaries and reclamation after a contained execution dies
   with outstanding obligations. Cathedral's safety profiles will isolate or
   reject unverified native providers rather than treating callback adaptation
