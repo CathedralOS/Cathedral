@@ -24,8 +24,11 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
   carrying base and `u64` length; abstract domain evidence carries grant,
   address-space, rights, and provenance facts. Cathedral's platform provider
   now originates its first `Granted` extent under an admitted provider-plan
-  receipt and carries it linearly into owned idle. Physical-space and rights
-  qualification plus checked transformations that conserve the claim remain.
+  receipt and carries it linearly into owned idle. The settled qualification
+  also requires proof that embedded `base + length` fits the target address
+  space, and its owner-unique content projection uses proof-level natural
+  interval bounds. Physical-space and rights qualification plus checked
+  transformations that conserve the claim remain.
   Bodyless/boundary-domain spelling, exact boundary-result authorization,
   transparent declared-domain aliases, and state-local constrained-parameter
   obligations are implemented; package-owner coherence,
@@ -54,10 +57,10 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 - **Formal atomics and modular protocols.** Cathedral's mailbox, scheduler, and
   reclamation proofs depend on Omega defining its complete atomic-event model,
   proving the x86-64/AArch64 mappings, and settling separately compiled
-  environment premises in Omega owner question #4. Existing instruction
+  environment premises in Omega owner question #3. Existing instruction
   selection is not yet that proof.
-- **Opaque executable trust and contained failure.** Omega owner questions #2
-  and #3 must settle root-level TCB visibility/profile rejection for
+- **Opaque executable trust and contained failure.** Omega owner questions #1
+  and #2 must settle root-level TCB visibility/profile rejection for
   in-process opaque binaries and reclamation after a contained execution dies
   with outstanding obligations. Cathedral's safety profiles will isolate or
   reject unverified native providers rather than treating callback adaptation

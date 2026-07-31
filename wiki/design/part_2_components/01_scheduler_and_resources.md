@@ -141,7 +141,8 @@ resource kind:
 - **Share (CPU / GPU time):** the **scheduler** honors the weight in dispatch — no per-op check; the share *is* the enforcement.
 - **Memory:** the sponsor provisions bounded `Region` or allocator
   capabilities; the allocator checks them at allocation. Bump/arena residual
-  capacity may be conserved as `CountedQuantity<Bytes>`. Fragmented heaps
+  capacity may be conserved as `CountedQuantity<Bytes>`, with a proof-level
+  natural magnitude and `Bytes` as the quantity identity. Fragmented heaps
   remain fallible unless they carry placement or reservation evidence.
 
 So the scheduler is the enforcement *arm*, but the arm reaches into providers, dispatch, and the allocator rather than trapping centrally.

@@ -56,8 +56,12 @@ rights, provenance, and mapping era are domain facts on that shape. Rebuilding
 the fields does not reproduce those facts.
 
 Content conservation is symbolic linearity over the range rather than numeric
-length accounting. The Granted claim projects to an `Interval<addr>` in
-Omega's closed content algebra. A split must prove:
+length accounting. The `Granted` qualification requires `base + length` to fit
+the target address space after embedding both values into proof-level natural
+arithmetic. Its owner-unique content conformance projects the claim to a
+half-open interval with proof-level natural bounds; the end may equal the
+address-space bound even when that one-past value is not representable as an
+`addr`. A split must prove:
 
 ```text
 content(parent) = content(left) • content(right)
