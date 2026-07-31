@@ -106,7 +106,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         let checked_pages: u64 in Trapping = best_pages as u64 in Trapping;
         let length: u64 in Trapping = checked_pages * PAGE_SIZE;
         let base: addr = best_start as addr;
-        let geometry: Extent = Extent { base: base, length: length };
+        let geometry: Extent = Extent { base: base, length: length as u64 };
         let first_extent: Extent = self.memory.grant(geometry);
         transition { _ -> serial_init(first_extent, best_pages) }
     }
@@ -190,7 +190,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     }
     state ten_thousands_digit(extent: Extent in Granted,
                               rest: u64 in Trapping, digit: u64) {
-        let byte: u8 = digit as u8 in Wrapping;
+        let byte: u8 = (digit as u8 in Wrapping) as u8;
         asm { out 1016, byte }
         transition { _ -> thousands(extent, rest, 0, 1) }
     }
@@ -211,7 +211,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     }
     state thousands_digit(extent: Extent in Granted,
                           rest: u64 in Trapping, digit: u64) {
-        let byte: u8 = digit as u8 in Wrapping;
+        let byte: u8 = (digit as u8 in Wrapping) as u8;
         asm { out 1016, byte }
         transition { _ -> hundreds(extent, rest, 0, 1) }
     }
@@ -232,7 +232,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     }
     state hundreds_digit(extent: Extent in Granted,
                          rest: u64 in Trapping, digit: u64) {
-        let byte: u8 = digit as u8 in Wrapping;
+        let byte: u8 = (digit as u8 in Wrapping) as u8;
         asm { out 1016, byte }
         transition { _ -> tens(extent, rest, 0, 1) }
     }
@@ -253,7 +253,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     }
     state tens_digit(extent: Extent in Granted,
                      rest: u64 in Trapping, digit: u64) {
-        let byte: u8 = digit as u8 in Wrapping;
+        let byte: u8 = (digit as u8 in Wrapping) as u8;
         asm { out 1016, byte }
         transition { _ -> ones_digit(extent, 48 + rest) }
     }
@@ -261,7 +261,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // The ones place always prints — "Owned 0 MiB" is an honest report of a
     // machine with no conventional span, never an empty number.
     state ones_digit(extent: Extent in Granted, digit: u64) {
-        let byte: u8 = digit as u8 in Wrapping;
+        let byte: u8 = (digit as u8 in Wrapping) as u8;
         asm { out 1016, byte }
         transition { _ -> tail_send(extent) }
     }

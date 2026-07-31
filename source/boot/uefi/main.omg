@@ -51,6 +51,9 @@ data Main {
 // the artifact — see the uefi contracts.
 boundary machine Main::run(&self, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
 reaches SimpleTextOutput + BootServices + ExtentRootProvider + PortIo + MachineControl
+invokes SimpleTextOutput;
+invokes BootServices;
+invokes ExtentRootProvider;
 {
     self.msg = utf16"Hello from Omega\r\n\0";
     // Project con_out through a frame local (the reference-param deref), then
