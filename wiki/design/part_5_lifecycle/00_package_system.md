@@ -95,6 +95,13 @@ Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
   reachable-authority set after exact dependency resolution, not only direct
   package declarations. A dependency path identifies who introduced every new
   privileged reach.
+- **Executable TCB manifest.** Provider selection independently contributes
+  exact known executable identities, static versus Cathedral-mediated runtime
+  origin, implementation evidence, execution scope, and separately evidenced
+  memory/termination/fault/resource containment. The manifest states whether
+  its known entry set is complete for that scope and attributes every cause of
+  incompleteness. Platform baselines are explicit policy allowlists, not hidden
+  exceptions.
 - **Severity-ranked review.** The complete normalized manifest remains
   machine-readable. Human diffs collapse checked local inline tokens and make
   system authority, admitted foreign providers, boundary-domain evidence,
@@ -147,7 +154,13 @@ Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
 ## Open Questions
 
 - **Setup machine — resolved:** a confined setup machine *is* used (not everything is pure-declarative), and it is kept from becoming the postinstall hole by tight confinement — only a fresh blank realm + explicitly-granted input capabilities, no ambient authority, no side effects (side effects are declarative). It can only compute a value, never act on the system.
-- **Foreign/native components — resolved-direction:** a legacy/foreign package is a **walled closure with an attested-but-unproven manifest**, contained-not-trusted ([[compatibility_and_legacy]]); it cannot prove quiescence, so its updates are **restart/reboot-class, not live hot-swap** — legacy-language drivers are disadvantaged on update, an accepted cost.
+- **Foreign/native components — resolved-direction:** the package manager
+  rejects opaque native execution by default. An explicitly admitted legacy
+  package is a **walled closure with an attested-but-unproven manifest**,
+  contained-not-trusted ([[compatibility_and_legacy]]); it cannot prove
+  quiescence, so its updates are **restart/reboot-class, not live hot-swap**.
+  An uncontained opaque in-process provider makes its address-space manifest
+  incomplete and is unavailable to Cathedral safety profiles.
 
 ## Related
 - [[capability_model]] — the capability manifest is authority-flow made durable.

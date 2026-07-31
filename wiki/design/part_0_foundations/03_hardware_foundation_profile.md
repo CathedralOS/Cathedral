@@ -487,6 +487,26 @@ behind a process, address-space, or hardware isolation boundary. The UEFI boot
 surface remains a transitional admitted platform dependency that disappears
 with boot services.
 
+Selected-provider closure produces a scope-relative executable TCB manifest,
+independently of source `reaches`. Known entries retain exact
+provider/executable identity, implementation evidence, static-selection versus
+Omega-runtime-admission origin, and individually evidenced memory,
+termination, fault, and resource containment guarantees. The manifest reports
+`Complete(scope, evidence)` separately from attributed `Incomplete`: any
+uncontained opaque in-process provider makes that address-space inventory
+incomplete because it may introduce executable code outside Cathedral's
+admission path. Cathedral's runtime ledger reports what Cathedral admitted,
+not an exhaustive claim about an opaque process.
+
+Cathedral's native safety profile requires acceptable scope completeness,
+evidence, known identities, and containment guarantees before installation.
+Portable Omega IR, including IR-level proof-carrying evidence, is verified and
+then interpreted or locally lowered through Cathedral's trusted installation
+path. Vendor-supplied host bytes require a separate accepted native-refinement
+route, enforced isolation, or rejection. The transitional UEFI dependency
+remains explicitly admitted beneath the post-boot component world rather than
+becoming a reusable package escape hatch.
+
 Foreign bindings also own the floating-control seam. A preserving binding may
 prove that its target leaves the relevant MXCSR/FPCR controls unchanged;
 otherwise the direct-call or blocking-executor adapter saves and restores them.

@@ -204,6 +204,40 @@ raw pointer into a reclaimable cohort. Cross-component calls use requirement
 identity; state crossing the edge uses validated component representations and
 version-aware ownership.
 
+Checked Omega eras do not instantiate private ambient runtimes. Allocators,
+output, cleanup, failure, and other services are explicit capabilities or
+process-static custodians rooted outside the component. Coexisting eras are
+therefore separate owned subtrees. Shared process-static services still publish
+era-aware contracts: queued work and callbacks retain the era they may enter,
+registrations and named resources remain claims, and each service defines
+whether a duplicate logical key rejects, versions, coexists, or transfers
+atomically.
+
+Candidate admission checks the selected-provider executable TCB manifest before
+publication. While eras coexist, the live report contains the union of their
+known entries and the weakest applicable completeness and containment evidence.
+A process-static platform provider remains part of the deployment baseline
+rather than becoming private to either era.
+
+An uncontained opaque library private to a component is not reliably
+hot-swappable. Its hidden threads, callbacks, TLS, loader state, native
+pointers, and process-global resources cannot enter Omega's quiescence proof;
+coexisting versions may also collide through those hidden resources. A
+replaceable component therefore uses checked Omega or verified portable IR
+interpreted or locally lowered through Cathedral's trusted path, or an enforced
+containment scope that Cathedral can retire. A foreign callback into
+replaceable Omega code targets a process-lifetime gateway unless an accepted
+unregister/quiescence contract proves the direct entry unreachable.
+
+Virtual-address reuse follows one rule: Cathedral reuses a retired mapping only
+after proof that no live authority reaches it. Inert `addr` and sealed inert
+`Ptr<T>` values cannot recreate memory or execution authority, so a fully
+checked graph may reuse immediately after quiescence. An incomplete or poisoned
+drain, or a possible opaque holder, leaves the range reserved and
+unmapped/trapping until a wider isolation domain retires. This quarantine
+detects stale entry but discharges no lock, claim, or protocol obligation;
+repeated poisoned replacements report their reserved-address capacity loss.
+
 ## Devices
 
 Software activation quiescence does not prove device quiescence. A driver

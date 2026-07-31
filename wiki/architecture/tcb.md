@@ -25,6 +25,20 @@ what it was granted, and revocation contains it. The compositor is trusted, not
 because it is important, but because it *mints* seats and surfaces: a bug in it
 can hand authority nobody granted.
 
+Every execution scope carries a selected-provider executable manifest. Its
+known entries retain exact identity and evidence, while a separate
+`Complete(scope, evidence)` or attributed `Incomplete` result states whether
+the list is exhaustive. Containment is reported as independent guarantees:
+memory isolation outside explicitly shared authority, forcible termination,
+fault containment, and bounded resource use. A mechanism receives only the
+guarantees its admitted enforcement establishes.
+
+An uncontained opaque in-process binary is necessarily in that address space's
+TCB and makes its executable inventory incomplete: it may introduce or generate
+code outside Cathedral's admission path. A checked adapter does not change that
+fact. Cathedral safety profiles require acceptable completeness, evidence,
+known identities, and containment before installation.
+
 The trusted set is the union of six regions. Read top to bottom: it descends
 from what sits below us, through the anchor, into the proved core, and out to
 the distributed minters.
@@ -131,7 +145,10 @@ Everything else, confined by construction:
   the machine.
 - **All applications** — capability-confined; hold only granted, revocable
   authority (file browser, shell, task manager, browser, legibility agent).
-- **All libraries** — ordinary linked code with no ambient authority.
+- **All checked Omega libraries** — ordinary linked code with no ambient
+  authority. Opaque native libraries are rejected or isolated; an explicitly
+  admitted uncontained one joins the containing scope's TCB and marks its
+  manifest incomplete.
 - **The inference model / AI agents** — the model is a *tool* holding no
   authority; the agent is the principal, and injection is contained by
   minimizing its standing authority (never eliminated, but bounded).
