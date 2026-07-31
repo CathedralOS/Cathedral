@@ -42,10 +42,11 @@ poll where the program exposes a structured lifecycle transition. Cancellation,
 migration, and replacement may be delivered here; the compiler does not invent
 safe points on loop backedges.
 
-**StackPlan / WorkPlan** — separate compiler-derived resource facts. `StackPlan`
-is the fixed nonmoving stack capacity/alignment needed by one activation.
-`WorkPlan` bounds execution work and distance to semantic response points; WCSU
-does not imply a work bound.
+**StackPlan / canonical-IR fuel** — separate spatial and logical-work facts.
+`StackPlan` is the fixed nonmoving stack capacity/alignment needed by one
+activation. Canonical-IR fuel meters executed logical work; a restricted
+checker proves fixed-fuel ceilings for hard roots or safe-point segments.
+Neither is wall-clock time, and WCSU does not imply either fact.
 
 **Migration** — typed code (an Omega migration machine) that transforms old state into new state across a version change, with effect/ownership/invariant obligations. See [[versioned_state_and_migration]].
 

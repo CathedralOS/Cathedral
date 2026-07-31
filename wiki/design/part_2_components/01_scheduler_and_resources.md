@@ -116,20 +116,33 @@ operation supplied by a cancellable runtime conformance, never a boolean in a
 freely authored plan.
 
 Totality rules out infinite computation; it does not by itself bound the time
-to the next semantic safe point. That requires the normalized `WorkPlan`, the
-termination/ranking evidence behind loops, and finite wait ceilings on every
-reached `block`. Reports preserve attribution: an unbounded path names the
-blocking call that made it unbounded and still reports the bounded work before
-that call. Converting work units to wall-clock time additionally depends on an
-admitted target timing model.
+to the next semantic safe point. Omega's restricted fixed-work checker can
+close constant-bounded segments in canonical-IR fuel units. Other segments
+report `Unknown`, while a reached `block` or foreign edge without a finite
+response contract reports `NoFiniteGuarantee` and names the edge. Converting
+logical fuel to wall-clock time additionally depends on a derived or admitted
+target timing model; a future WCET analysis must re-search target paths rather
+than treating fuel as cycles.
 
 ### The decided mechanism: the budget-check path
 
-**There is no central budget-check trap; the check rides existing mediation, split in two.** The **authority** half — "no budget capability → no effect" — is the **reach ceiling + an arena lookup** (the `{slot, generation}` handle), already gated at the boundary you cross; nothing new. The **quantity** half is distributed by resource kind to wherever the resource is *already* mediated:
+**There is no program-visible central budget-check trap; checks ride existing
+mediation.** The **authority** half — "no budget capability → no effect" — is
+the **reach ceiling + an arena lookup** (the `{slot, generation}` handle),
+already gated at the boundary crossed. The **quantity** half is distributed by
+resource kind:
 
-- **Metered (bytes / cycles — storage-write, network, NPU):** the **provider** does an atomic *decrement-if-sufficient* on the caller's budget counter as it serves; folded into the serve path, billed per-instance.
+- **Logical execution:** the sponsor meters canonical-IR fuel. Exhaustion is
+  sponsor policy, not a catchable machine result.
+- **Metered service quantity (bytes / device work — storage-write, network,
+  NPU):** the **provider** does an atomic *decrement-if-sufficient* on the
+  caller's budget counter as it serves; folded into the serve path and billed
+  per instance.
 - **Share (CPU / GPU time):** the **scheduler** honors the weight in dispatch — no per-op check; the share *is* the enforcement.
-- **Ceiling (memory working-set):** the **allocator** checks the envelope at the allocation boundary (a `suspend` call when satisfying it may wait).
+- **Memory:** the sponsor provisions bounded `Region` or allocator
+  capabilities; the allocator checks them at allocation. Bump/arena residual
+  capacity may be conserved as `CountedQuantity<Bytes>`. Fragmented heaps
+  remain fallible unless they carry placement or reservation evidence.
 
 So the scheduler is the enforcement *arm*, but the arm reaches into providers, dispatch, and the allocator rather than trapping centrally.
 
@@ -137,7 +150,12 @@ So the scheduler is the enforcement *arm*, but the arm reaches into providers, d
 
 **A budget is a ceiling, a share, or a reservation — by resource kind** (ceiling for depletable quantities; weighted share for time-multiplexed engines; reservation for latency-guaranteed work). Not one shape.
 
-**Declared intent is *proven* for Omega code, *measured* only for legacy — and is a soft optimization either way.** Cathedral-native code can *prove* its resource behavior (the WCET/bounded-runtime proof generalized — PCC), so its declared class is **trusted because proven, not measured-and-demoted**; the **measure-and-demote heuristic is the legacy-only fallback** for code that declares nothing. And honestly, intent is a *soft scheduling optimization of uncertain marginal value* (modern schedulers do well with little of it). **The load-bearing part is the budget *capability* — the hard ceiling that bounds safety and isolation; intent only tunes preference *within* it.** Lying (legacy) costs scheduling preference, never the budget.
+**Declared intent is checked where Omega has the corresponding theorem and
+measured otherwise; it remains a soft optimization.** Canonical-IR PCC can
+carry fixed-fuel facts. It is not a WCET proof: a hard real-time profile needs
+a separate target analysis whose path search and timing model cover the whole
+dependency graph. The load-bearing part remains the budget capability and its
+provider or scheduler enforcement; intent only tunes preference within it.
 
 **Preemption needs no source cooperation.** The hardware timer is always armed,
 and Cathedral's checked context-switch path can stop either native or foreign
@@ -185,11 +203,15 @@ and reported only when a contract promises such a response.
 - Resource rights as **capabilities (values + domains)** — `Storage::Writable` with a budget domain — reuse the whole authority machinery ([../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - **`reaches`** already names the reachable resource services (`Storage`, `Network`, device providers); a budget capability is the runtime gate on each.
 - A component's lifecycle **`state` graph** exposes natural scheduling points — the scheduler can see *which state* an instance is in, not just that it's runnable.
-- Omega does **not** model resource *quantities* or deadlines as proof obligations; budget arithmetic, accounting, and enforcement are Cathedral runtime — a candidate for bounded-value contracts to grow into.
+- Omega models logical execution fuel and can conserve selected quantities such
+  as bounded arena capacity. Cathedral still owns runtime shares, service
+  accounting, physical reservations, and deadline policy. A hard deadline
+  becomes an authored contract only in a profile that also supplies target
+  WCET evidence.
 
 ## Open Questions
 
-- **Execution profile — semantics resolved, implementation pending.** Cathedral uses fixed nonmoving WCSU-sized stacks, arbitrary timer preemption for fairness, and explicit semantic safe points for structured lifecycle actions. `suspend` and `block` are source acknowledgements over independent operational ceilings; CPU/thread/address restrictions are discharged demand-by-demand by the selected start/scheduling operation. Remaining work is the context-switch implementation, `StackLease` provisioning, `WorkPlan` analysis, and bounded-response reporting—not a separate async language dialect or a runtime supply record.
+- **Execution profile — semantics resolved, implementation pending.** Cathedral uses fixed nonmoving WCSU-sized stacks, arbitrary timer preemption for fairness, and explicit semantic safe points for structured lifecycle actions. `suspend` and `block` are source acknowledgements over independent operational ceilings; CPU/thread/address restrictions are discharged demand-by-demand by the selected start/scheduling operation. Remaining work is the context-switch implementation, `StackLease` provisioning, canonical-IR fuel metering, restricted fixed-work segment checking, and attributed response reporting—not a separate async language dialect or a runtime supply record.
 - **The proof relationship.** This scheduler is the *trusted* provider of the fairness / atomicity / wake-correctness hypotheses that discharge Omega's *conditional* liveness theorems (progress, no starvation). Omega's *safety* theorems (data-race / deadlock / protocol freedom) hold regardless of it. So a bug here cannot break a safety proof, but it can invalidate a liveness/progress guarantee — and "Cathedral provides the scheduler" *relocates* that obligation onto this chapter, it does not discharge it. If Cathedral ever promises *enforced* real-time deadlines (vs. the `realtime_audio` best-effort above), this scheduler becomes a Ravenscar-class verified scheduler whose fairness/timing is itself proven.
 - Can budgets be expressed tightly enough to *prove* a realtime component meets its deadline, or is that always runtime best-effort?
 - How are budgets reclaimed on crash or revocation without a window where a resource leaks?

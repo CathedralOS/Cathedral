@@ -355,20 +355,22 @@ Each installed root reports three independent resource columns:
 | column | policy or installed provision | realized artifact fact | evidence kept private |
 | --- | --- | --- | --- |
 | stack | selected stack class/provision; optional fixed policy ceiling | composed WCSU bytes/alignment | place/frame liveness and WCSU derivation |
-| structural work | installed execution budget; optional fixed policy ceiling | composed fixed-work demand | CFG/ranking/callee/codegen proof |
+| logical work | installed fuel provision; optional fixed policy ceiling | canonical-IR fixed-fuel ceiling | IR CFG/ranking/callee proof |
 | machine state | evaluated `StatePlan` | final transitive footprint/clobbers | instruction-selection and allocation proof |
 
 The ledger and report retain applicable policy ceilings, installed provision,
 realized facts, and validation receipts, never private ranking or codegen proof
 internals. The columns share a reporting discipline, not identity semantics:
-`StatePlan` is published boundary identity, while stack/work figures normally
+`StatePlan` is published boundary identity, while stack/fuel figures normally
 belong to candidate admission and current provision. They enter requirement
 identity only when Cathedral deliberately promises replacement without
 reprovisioning.
 
-Structural work is not WCET. V1 proves a finite admitted operation path under
-provider contracts; it does not promise a microsecond deadline, cache bound, or
-MMIO latency. The timer root is the trivial fixed-work profile: acknowledge,
+Canonical-IR fuel is not WCET. V1 proves a fixed logical-fuel ceiling under
+provider contracts; it does not promise a microsecond deadline, cache bound,
+or MMIO latency. Meter-free native execution additionally requires trusted
+provenance from the certified IR to the installed bytes. The timer root is the
+trivial fixed-work profile: acknowledge,
 capture time, set one preallocated per-CPU coalescing wake state, and return. It
 does not drain application timer registrations. An ordinary suspend-allowed
 timer-service task reads the clock, drains due registrations in batches, wakes

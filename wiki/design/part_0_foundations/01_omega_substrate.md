@@ -136,8 +136,9 @@ important writes.
   by `StackPlan`; `suspend`/`block` acknowledge independent may-wait ceilings;
   scheduling operations discharge live carry demands rather than advertising a
   supply lattice. Remaining work is the portable memory model, context-switch
-  and park/resume lowering, `StackLease` provisioning, normalized `WorkPlan`,
-  suspension-safe loans, and Cathedral's bounded Arena-backed provider.
+  and park/resume lowering, `StackLease` provisioning, canonical-IR fuel and
+  restricted fixed-work checking, suspension-safe loans, and Cathedral's
+  bounded Arena-backed provider.
   Device/MMIO is not "a second atomic model" but a separate
   `AccessPlan`/placed-view observation discipline ([[hardware_foundation_profile]],
   [Omega concurrency](../../../../Omega/wiki/language_guide/chapter_18_concurrency.md)).
