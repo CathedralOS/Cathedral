@@ -124,7 +124,7 @@ A few writing rules, inherited from Omega's docs:
 ### Part 8 — Developer & Verification
 - [00 — Developer Experience](part_8_developer/00_developer_experience.md)
 - [01 — Debugging & Tracing](part_8_developer/01_debugging_and_tracing.md)
-- [02 — Testing, Model Checking & Simulation](part_8_developer/02_testing_and_simulation.md)
+- [02 — Testing, Proof & Simulation](part_8_developer/02_testing_and_simulation.md)
 - [03 — Compatibility & Legacy Execution](part_8_developer/03_compatibility_and_legacy.md)
 
 ## Appendix

@@ -55,10 +55,11 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
   and attributable exhaustion ([[hardware_foundation_profile]],
   [[scheduler_and_resources]]).
 - **Formal atomics and modular protocols.** Cathedral's mailbox, scheduler, and
-  reclamation proofs depend on Omega defining its complete atomic-event model,
-  proving the x86-64/AArch64 mappings, and settling separately compiled
-  environment premises in Omega owner question #1. Existing instruction
-  selection is not yet that proof.
+  reclamation proofs first depend on Omega defining its complete atomic-event
+  model and proving the x86-64/AArch64 mappings. Whole-composition protocol
+  certificates will later consume Omega's deferred compiler-issued sealed
+  composition model; no current Cathedral milestone requires implementing it.
+  Existing instruction selection is not yet the atomic proof.
 - **Static authority flow vs. live held grants.** The compiler describes *possible* power; the runtime graph holds *actual* grants. How tightly are they reconciled, and who flags drift? ([[capability_model]], [[observability_and_introspection]].)
 - **Hot-swap evidence split.** Omega statically supplies closure, contract,
   representation, resource-demand, and liveness facts. Cathedral still must

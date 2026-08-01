@@ -73,11 +73,19 @@ A useful rule for every later chapter:
 | That a protocol change is *compatible* | Which versions are *deployed* and routed |
 | That a swap is *borrow-safe* | Reaching *quiescence* in a live system |
 | Candidate-specific stack/work/state demand and general admission facts | Provisioning peak coexistence, choosing drain policy, and reclaiming old eras |
-| Whether concurrency is *data-race safe* and free of internal deadlock under the selected proof mode (ownership, carry policy, wait contracts, and the memory model) | Whether tasks actually *run* — the scheduler, fairness, and context switch |
+| Whether concurrency is data-race safe, whether protocol operations preserve their specifications, and whether a selected composition proof is valid | Scheduling policy, core placement, fairness, context switching, and target timing evidence |
 
 Omega answers "is this sound?" Cathedral answers "should this happen, now, here, and for whom?"
 
-The concurrency row splits the same way the proofs do (Omega `concurrency_atomics.md` 2026-06-15 review): Omega proves SAFETY (no data race or protocol violation, plus the internal wait-cycle obligations selected by the build) against *every* scheduler including adversarial. Opaque external waits remain explicit assumptions or rejected boundaries. Cathedral supplies the scheduler, which is the *trusted* provider of the fairness/atomicity hypotheses that discharge Omega's *conditional* LIVENESS theorems (progress, no starvation). A bug in Cathedral's scheduler cannot break a safety proof; it can invalidate a liveness guarantee.
+The concurrency row is intentionally asymmetric. Omega's ownership and
+sanctioned-access rules prove race freedom against every scheduler, and
+protocol proofs establish the properties they actually state. Whole-system
+deadlock, starvation, memory, and response guarantees belong to a selected
+deployment composition and depend on Cathedral's scheduler, placement, timing,
+and provider evidence. The future Omega bridge is a compiler-issued sealed
+composition model consumed by ordinary proof machines; it is recorded and
+deferred until a concrete profile needs it. Cathedral does not turn an opaque
+wait or missing fairness fact into a theorem merely by supplying a scheduler.
 
 ## Zero Is Initialization
 

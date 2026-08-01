@@ -12,7 +12,7 @@ The blueprint for the Cathedral has already been drafted. This project simply ai
 
 ## Why It Can
 
-Cathedral is built with [Omega](../../../../Omega/wiki/language_guide/language_guide.md), a programming language co-developed with this operating system and designed specifically for systems and kernel development. Omega is heavily inspired by Rust, Lean, TLA+, and Dafny. In other words, this language ensures memory safety, thread safety, and logic safety at compile time with zero-cost abstractions.
+Cathedral is built with [Omega](../../../../Omega/wiki/language_guide/language_guide.md), a programming language co-developed with this operating system and designed specifically for systems and kernel development. Omega draws from ownership-oriented systems languages, proof assistants, transition-system verification, and contract-based verification. In other words, this language ensures memory safety, thread safety, and logic safety at compile time with zero-cost abstractions.
 
 Omega makes capabilities, service reach, typed protocols, and versioned state first-class and compiler-checked. The problems we solve are structural results of this, not features bolted onto an unsafe base.
 

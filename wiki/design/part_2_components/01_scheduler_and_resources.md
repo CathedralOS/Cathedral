@@ -171,6 +171,46 @@ and reported only when a contract promises such a response.
 
 *(Global energy/thermal as a true shared budget — arbitration under contention — is deferred to [[power_management]].)*
 
+### Deferred hard-control profile direction
+
+Cathedral's general scheduler remains an ordinary multicore scheduler optimized
+for utilization and responsiveness. A future hard-control profile is a stricter
+deployment selection, not Cathedral's universal execution model and not new
+Omega syntax.
+
+The first credible hard-control profile should use fixed core assignment, no
+task migration, fixed-priority scheduling within each core, and only core-local
+blocking resources. Cross-core application interaction uses certified bounded
+channels that transfer ownership; devices and globally mutable services belong
+to a designated core and are reached through those channels. The channel may
+use proved atomics internally, but applications do not acquire a blocking lock
+shared across cores. Bounded activation pools and queues make exhaustion an
+explicit admission failure or backpressure outcome.
+
+Single-core priority-ceiling reasoning applies only inside one partition. It
+does not justify cross-core sharing. A later profile may select one proved
+multiprocessor resource protocol, but that selection changes scheduler
+semantics and blocking equations and therefore revalidates every affected
+deadlock and response-time certificate. The language does not name particular
+real-time locking protocols.
+
+Dynamic spawning remains legal generally. Quantitative guarantees require a
+closed interference envelope: fixed topology, creation bounded by conserved
+permits, an enforced admission rate, or a proof quantified over the dynamic
+structure. Externally generated arrival rates are admitted facts unless an
+ingress limiter enforces the admitted-work rate; receiving and rejecting excess
+traffic still consumes separately bounded work.
+
+Partitioning trades opportunistic load balancing for stable locality and tight
+latency bounds. To avoid turning that profile into an application-architecture
+retrofit, Cathedral should build bounded ownership-transfer channels before it
+encourages shared-memory locks. The scheduler/provider remains replaceable;
+changing it invalidates scheduling evidence, not ordinary source or ABI.
+
+Core partitioning alone does not bound shared-cache, memory-bus, interconnect,
+or interrupt interference. A hard-control platform profile must isolate those
+resources or publish derived/admitted target timing bounds for them.
+
 ## Concerns & Design Space
 
 - **Capability-gated resource access.** A held budget is required to *touch* a resource, not just to be prioritized within it. Absence of budget = absence of the effect, audited like any capability.
@@ -213,7 +253,14 @@ and reported only when a contract promises such a response.
 ## Open Questions
 
 - **Execution profile — semantics resolved, implementation pending.** Cathedral uses fixed nonmoving WCSU-sized stacks, arbitrary timer preemption for fairness, and explicit semantic safe points for structured lifecycle actions. `suspend` and `block` are source acknowledgements over independent operational ceilings; CPU/thread/address restrictions are discharged demand-by-demand by the selected start/scheduling operation. Remaining work is the context-switch implementation, `StackLease` provisioning, canonical-IR fuel metering, restricted fixed-work segment checking, and attributed response reporting—not a separate async language dialect or a runtime supply record.
-- **The proof relationship.** This scheduler is the *trusted* provider of the fairness / atomicity / wake-correctness hypotheses that discharge Omega's *conditional* liveness theorems (progress, no starvation). Omega's *safety* theorems (data-race / deadlock / protocol freedom) hold regardless of it. So a bug here cannot break a safety proof, but it can invalidate a liveness/progress guarantee — and "Cathedral provides the scheduler" *relocates* that obligation onto this chapter, it does not discharge it. If Cathedral ever promises *enforced* real-time deadlines (vs. the `realtime_audio` best-effort above), this scheduler becomes a Ravenscar-class verified scheduler whose fairness/timing is itself proven.
+- **The proof relationship.** This scheduler supplies the fairness,
+  wake-correctness, placement, and timing evidence used by Omega's conditional
+  progress theorems. Ownership and sanctioned access remain race-safe under an
+  adversarial scheduler; quantitative deadlock, starvation, memory, and
+  response properties belong to the selected deployment composition. A future
+  enforced real-time profile must prove its scheduler and target premises. Its
+  initial multicore architecture is the partitioned profile above, not an
+  unqualified lift of a single-core priority-ceiling theorem.
 - Can budgets be expressed tightly enough to *prove* a realtime component meets its deadline, or is that always runtime best-effort?
 - How are budgets reclaimed on crash or revocation without a window where a resource leaks?
 - Is global energy/thermal a true shared budget all components draw from, and how is that arbitrated fairly under contention?
