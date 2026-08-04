@@ -14,6 +14,8 @@
 // typed wrappers where the single-file sample used raw `addr`; the typed form is
 // the target, the sample is the proven-compiling shape.
 
+use omega::language::core::extent; // ProgramStorageEntry
+
 // --- Scalars (UEFI spec) --------------------------------------------------
 
 // EFI_STATUS is UINTN (pointer-width). On x86-64 that is 64-bit; 0 == success,
@@ -93,12 +95,19 @@ pub data EfiSystemTable {
     configuration_table:     addr;              // EFI_CONFIGURATION_TABLE*
 }
 
-// --- The firmware hand-off: main is an exported callable --------------------
+// --- The firmware hand-off and semantic program-storage entry ---------------
 //
-// There is NO handoff token, NO entry-provider trait, and NO target block. The
-// firmware entry is an EXPORTED CALLABLE — `boundary machine Main::run(&self,
+// UEFI owns one target-entry schema, but it inherits the core requirement
+// rather than restating image/initial-storage authority under UEFI names. The
+// selected target policy and generated firmware stub must bind these semantic
+// positions to the emitted image and initial-storage geometry.
+pub boundary trait UefiApplication: ProgramStorageEntry {
+}
+
+// The currently boot-verified bootstrap entry is still an EXPORTED CALLABLE —
+// `boundary machine Main::run(&self,
 // handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus` in boot/uefi/main.omg
-// (option A, boot-verified 2026-07-04). Firmware hands ImageHandle (RCX) and the
+// (boot-verified 2026-07-04). Firmware hands ImageHandle (RCX) and the
 // SystemTable pointer (RDX); the parameter list is the boundary-trusted shape
 // over those registers, and the boundary VOUCHES TRANSITIVELY for `table`'s
 // declared layout — reading `con_out` through it needs no mint (no `validate` on
@@ -115,3 +124,6 @@ pub data EfiSystemTable {
 //   axiom: interrupts enabled; ≥ 128 KiB of 16-aligned stack
 //   axiom: the SystemTable pointer is the live EFI system table (the boundary's
 //          vouch; transitive through the declared shape).
+// Connecting this raw callable to the selected UefiApplication schema remains
+// Build/stub engineering. Until then it does not originate program-storage
+// roots, and the compiler must not recognize Main::run by name.

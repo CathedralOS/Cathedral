@@ -4,10 +4,11 @@
 // `target uefi_x64 {}` is the FRONTIER REGISTRATION (D15: a deployment target
 // name is valid iff compiler-defined or build-defined) — an empty declaration,
 // NOT the retired target{...} config block; `subsystem` and `freestanding`
-// remain orthogonal `Build` fields (build_and_package_model.md addendum). The
-// selected UEFI process-entry requirement pins the EFI/MS-x64 calling policy
-// and checks it against the exported entry; build code does not restate or
-// override that plan (calling_plans.md).
+// remain orthogonal `Build` fields (build_and_package_model.md addendum).
+// `UefiApplication` now inherits the stable core ProgramStorageEntry
+// requirement. Build entry-schema selection and the generated stub/geometry
+// bridge are still compiler engineering; the current exported Main::run keeps
+// the already-booted EFI/MS-x64 firmware ABI until that bridge is connected.
 
 target uefi_x64 {
 }

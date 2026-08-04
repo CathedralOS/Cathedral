@@ -6,6 +6,14 @@
 
 The kernel starts in the CPU's most privileged mode (ring 0 on x86, exception level 1, "EL1", on ARM). On x86-64 the firmware has already enabled paging with a flat **identity map**: a trivial page table where each virtual address equals its physical address. So the kernel is not running without virtual memory, it is running on the firmware's throwaway page tables and needs its own. Firmware's temporary services, including its disk-read driver, are still available for now.
 
+The UEFI contract declares `UefiApplication: ProgramStorageEntry`, inheriting
+the stable core image and initial-storage requirement. Those semantic roots are
+not extra arguments supplied by firmware. The generated target stub must bind
+the final emitted image/storage geometry to the inherited positions, then
+forward the real UEFI `ImageHandle` and `SystemTable` invocation. Cathedral's
+current `Main::run(handle, table)` remains the directly booted transitional
+callable until Build entry selection and that stub bridge are connected.
+
 One term to fix, since the rest of the phase leans on it: virtual memory works through **page tables**, the in-memory structures the CPU's memory management unit (MMU) walks to translate a virtual address to a physical one. Owning your page tables means owning the address space.
 
 ## First jobs
