@@ -12,9 +12,9 @@ the code they cover — never in a sibling that can lag.
 firmware-neutral: the UEFI-specific memory-map walk is `boot/`'s job; `core/`
 provides the checked adapter for Omega's owner-authored `ExtentRootProvider`;
 the admitted boot build supplies firmware-neutral geometry and receives one
-qualified root at a time. `Arena`
-remains reserved for bounded allocation authority over backing storage; it is
-not the concrete range capability.
+qualified root at a time. Allocation strategies remain ordinary packages over
+qualified backing extents; no compiler-owned `Arena` competes with the concrete
+range capability.
 
 **Non-goals.** No device drivers, no userspace service logic, no firmware ABIs.
 If it isn't small enough to audit in full, it doesn't belong here.

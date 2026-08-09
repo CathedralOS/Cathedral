@@ -41,13 +41,14 @@ Cathedral distinguishes three relationships:
 1. `addr` is inert numeric address data.
 2. `Extent` is authority over one concrete range with address-space, rights,
    provenance, and lifetime.
-3. `Arena` is bounded, lifetime-scoped allocation authority drawing from
-   appropriate backing extents; `Allocation<T>` is the typed storage it issues.
+3. An allocation-strategy package partitions qualified backing extents and
+   returns package-defined owned storage claims. No strategy or allocation
+   carrier is an Omega language primitive.
 
 Boot firmware and the final memory map supply the initial physical extents
 through Cathedral's admitted platform receipt.
 Address-space providers turn authorized physical extents into mapped virtual
-extents. Allocators draw `Allocation<T>` storage from RAM-backed Arenas. Device
+extents. Allocators draw storage from qualified RAM-backed extents. Device
 mappings retain device provenance and never become ordinary RAM merely because
 their virtual address is an integer.
 
@@ -406,8 +407,9 @@ and a dynamic/recursive or unbounded provider leaf behind the fixed-work root.
 ## Tasks, preemption, and affinity
 
 Omega task handles own lifecycle claims; providers own execution custody and
-may own physical activation storage. Cathedral's initial Arena-backed runtime
-is one bounded implementation, not the definition of a task.
+may own physical activation storage. Cathedral's initial runtime reserves
+bounded stack and activation storage from qualified backing extents; that
+package strategy is not the definition of a task.
 
 Canonical value liveness feeds separate checks for linear consumption,
 permissions/external loans, suspension carry, CPU/thread affinity, address
@@ -593,7 +595,7 @@ trampoline bytes are accepted as a shortcut.
    UART/MMIO onto those providers.
 7. Correct-by-construction page tables and AP bringup.
 8. External loans, IOMMU DMA, and hostile shared-page acceptance tests.
-9. Arena-backed task runtime under the carry/runtime admission model.
+9. Extent-backed task runtime under the carry/runtime admission model.
 
 ## Cathedral-owned open decisions
 

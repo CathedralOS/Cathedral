@@ -49,7 +49,12 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
   declare their compatibility demands and select the relevant policies. See
   Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)
   and [Programmable Layouts](../../../../Omega/wiki/design_briefs/programmable_layouts.md).
-- **OS memory/hardware foundation** — inert addresses, range-authority `Extent`s, allocator `Arena`s and arena-bound `Allocation<T>` storage, programmable layouts, separate access plans, checked assembly, boundary entry plans, symbolic materialization, external-root reporting, and external loans compose the kernel/driver substrate without interrupt/MMIO/DMA keywords. Cathedral's strict provider profile is [[hardware_foundation_profile]].
+- **OS memory/hardware foundation** — inert addresses, range-authority
+  `Extent`s, ordinary allocation-strategy packages, programmable layouts,
+  separate access plans, checked assembly, boundary entry plans, symbolic
+  materialization, external-root reporting, and external loans compose the
+  kernel/driver substrate without interrupt/MMIO/DMA/allocator keywords.
+  Cathedral's strict provider profile is [[hardware_foundation_profile]].
 - **Authority values and boundary evidence** — runtime authority uses ordinary
   data fields plus routed domain facts. An admitted provider originates a root
   by satisfying an exact boundary requirement named by the domain declaration;
@@ -146,7 +151,7 @@ important writes.
   supply lattice. Remaining work is the portable memory model, context-switch
   and park/resume lowering, `StackLease` provisioning, canonical-IR fuel and
   restricted fixed-work checking, suspension-safe loans, and Cathedral's
-  bounded Arena-backed provider.
+  bounded extent-backed runtime provider.
   Device/MMIO is not "a second atomic model" but a separate
   `AccessPlan`/placed-view observation discipline ([[hardware_foundation_profile]],
   [Omega concurrency](../../../../Omega/wiki/language_guide/chapter_18_concurrency.md)).

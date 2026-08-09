@@ -54,9 +54,10 @@ Neither is wall-clock time, and WCSU does not imply either fact.
 
 **Extent** — authority over one concrete address range, including its rights, provenance, and lifetime. Address bits alone are inert; an extent is what makes a range eligible for mapping, interpretation, or attenuation.
 
-**Arena** — bounded, lifetime-scoped allocation authority backed by an extent or provider. It can issue allocations; it is not authority to interpret an arbitrary existing range.
-
-**Allocation** — arena-bound typed storage carrying layout, establishment, ownership, and lifetime. Allocation reserves storage; establishment determines when those bytes are a live value.
+**Allocation strategy** — an ordinary checked package that partitions qualified
+backing extents and returns package-defined owned storage claims. Bump, pool,
+slab, and general allocators are strategies rather than different meanings of
+`Extent` or language primitives.
 
 **Placed view** — typed access derived by validating an extent against a geometry `LayoutPlan` and a behavioral `AccessPlan`. MMIO registers and shared-page protocols use the same layout substrate with different access contracts.
 
