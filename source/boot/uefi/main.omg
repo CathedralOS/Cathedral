@@ -8,8 +8,8 @@
 // compiling reference, Omega samples/uefi_hello (ea51376cd).
 //
 // The chain, all here + build.omg + the uefi contracts:
-//   * build.omg sets efi_application + freestanding → an import-free PE32+ that
-//     firmware loads directly.
+//   * build.omg independently selects PE subsystem 10 and a freestanding
+//     trust baseline → an import-free PE32+ that firmware loads directly.
 //   * `boundary machine Main::run` is the EXPORTED CALLABLE: firmware calls it,
 //     and the parameter list is the boundary-trusted shape over the registers it
 //     hands us (handle in RCX, the SystemTable pointer in RDX). The boundary

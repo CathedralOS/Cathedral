@@ -114,9 +114,10 @@ pub boundary trait UefiApplication: ProgramStorageEntry {
 // the trusted boot path; `validate` remains for bytes code *chooses* to check —
 // network, disk — not for the vouched firmware structure).
 //
-// The build target is set by orthogonal `Build` fields in build.omg
-// (`b.freestanding = true`, `b.subsystem = EfiApplication`); the EFI/MS-x64
-// calling plan is inferred from the subsystem (calling_plans.md §7). The
+// The build image and trust baseline are set by orthogonal `Build` fields in
+// build.omg (`b.freestanding = true`, `b.subsystem = EfiApplication`). Neither
+// field selects the entry ABI: the target-owned `ProgramEntry` schema must
+// retain its explicit UEFI x86-64 calling policy and generated bridge. The
 // AUDITED AXIOM LIST survives as designed — prose checked against the UEFI spec
 // and surfaced by the build artifact next to the exported callable, never typed
 // clauses (freestanding_boot_and_hardware_facts.md; the world-facts deflation):
