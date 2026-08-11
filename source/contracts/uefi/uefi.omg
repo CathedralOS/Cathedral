@@ -15,6 +15,7 @@
 // the target, the sample is the proven-compiling shape.
 
 use omega::language::core::extent; // ProgramStorageEntry
+use omega::language::std::calling;
 
 // --- Scalars (UEFI spec) --------------------------------------------------
 
@@ -99,9 +100,106 @@ pub data EfiSystemTable {
 //
 // UEFI owns one target-entry schema, but it inherits the core requirement
 // rather than restating image/initial-storage authority under UEFI names. The
-// selected target policy and generated firmware stub must bind these semantic
-// positions to the emitted image and initial-storage geometry.
-pub boundary trait UefiApplication: ProgramStorageEntry {
+// selected target retains and validates this evaluated calling policy. The
+// generated firmware stub must still bind these semantic positions to the
+// emitted image and initial-storage geometry.
+pub data UefiX86_64 { }
+UefiX86_64 satisfies CallingPolicy;
+
+machine UefiX86_64::plan(
+    signature: BoundarySignature
+) -> BoundaryPlanResult
+    satisfies CallingPolicy::plan
+{
+    transition signature.parameter_count == 2 && !signature.has_result {
+        true -> accept(
+            signature,
+            signature.parameters[0],
+            signature.parameters[1]
+        )
+        _ -> reject()
+    }
+
+    state accept(
+        signature: BoundarySignature,
+        image: u64,
+        initial_storage: u64
+    ) -> BoundaryPlanResult {
+        transition image < 256 && initial_storage < 256 {
+            true -> build(signature, image, initial_storage)
+            _ -> reject()
+        }
+    }
+
+    state build(
+        signature: BoundarySignature,
+        image: u64,
+        initial_storage: u64
+    ) -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan;
+        output.call.convention = CallingConvention::MicrosoftX64;
+        output.call.parameter_count = 2;
+
+        output.call.parameters[0].shape.class = AbiValueClass::Integer;
+        output.call.parameters[0].shape.byte_size = signature.shapes[image].byte_size;
+        output.call.parameters[0].shape.alignment = signature.shapes[image].alignment;
+        output.call.parameters[0].location_count = 1;
+        output.call.parameters[0].locations[0] = ValueLocation::Indirect {
+            pointer: IndirectPointerLocation::Register {
+                register: MachineRegister::X86Rcx,
+            },
+            has_copy: true,
+            copy_stack_byte_offset: 32,
+            byte_size: signature.shapes[image].byte_size,
+            alignment: signature.shapes[image].alignment,
+        };
+
+        output.call.parameters[1].shape.class = AbiValueClass::Integer;
+        output.call.parameters[1].shape.byte_size = signature.shapes[initial_storage].byte_size;
+        output.call.parameters[1].shape.alignment = signature.shapes[initial_storage].alignment;
+        output.call.parameters[1].location_count = 1;
+        output.call.parameters[1].locations[0] = ValueLocation::Indirect {
+            pointer: IndirectPointerLocation::Register {
+                register: MachineRegister::X86Rdx,
+            },
+            has_copy: true,
+            copy_stack_byte_offset: 48,
+            byte_size: signature.shapes[initial_storage].byte_size,
+            alignment: signature.shapes[initial_storage].alignment,
+        };
+
+        output.call.ordinary_clobbers.register_count = 7;
+        output.call.ordinary_clobbers.registers[0] = MachineRegister::X86Rax;
+        output.call.ordinary_clobbers.registers[1] = MachineRegister::X86Rcx;
+        output.call.ordinary_clobbers.registers[2] = MachineRegister::X86Rdx;
+        output.call.ordinary_clobbers.registers[3] = MachineRegister::X86R8;
+        output.call.ordinary_clobbers.registers[4] = MachineRegister::X86R9;
+        output.call.ordinary_clobbers.registers[5] = MachineRegister::X86R10;
+        output.call.ordinary_clobbers.registers[6] = MachineRegister::X86R11;
+        output.call.stack_alignment = 16;
+        output.call.shadow_bytes = 32;
+        output.call.entry_control = EntryControl::CallReturn;
+
+        output.state.initial_regime = MachineRegime::X86Long64;
+        output.state.permitted_transitive_use.general_registers = true;
+        output.state.permitted_transitive_use.flags = true;
+        output.state.stack = EntryStack::ProviderSelected;
+        output.state.preemption = Preemption::NotApplicable;
+        BoundaryPlanResult::Accepted { plan: output }
+    }
+
+    state reject() -> BoundaryPlanResult {
+        BoundaryPlanResult::Rejected {
+            reason: CallingPolicyRejection {
+                reason: "UefiApplication requires two program-storage roots",
+            },
+        }
+    }
+}
+
+pub boundary trait UefiApplication:
+    ProgramStorageEntry + Calling<UefiX86_64>
+{
 }
 
 // The currently boot-verified bootstrap entry is still an EXPORTED CALLABLE —
@@ -117,7 +215,8 @@ pub boundary trait UefiApplication: ProgramStorageEntry {
 // The build image and trust baseline are set by orthogonal `Build` fields in
 // build.omg (`b.freestanding = true`, `b.subsystem = EfiApplication`). Neither
 // field selects the entry ABI: the target-owned `ProgramEntry` schema must
-// retain its explicit UEFI x86-64 calling policy and generated bridge. The
+// retain its explicit UEFI x86-64 calling policy; that retention is live, while
+// the generated bridge remains outstanding. The
 // AUDITED AXIOM LIST survives as designed — prose checked against the UEFI spec
 // and surfaced by the build artifact next to the exported callable, never typed
 // clauses (freestanding_boot_and_hardware_facts.md; the world-facts deflation):

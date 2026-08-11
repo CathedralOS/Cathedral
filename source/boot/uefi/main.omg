@@ -46,11 +46,12 @@ data Main {
 }
 
 // The firmware entry: the currently booted raw exported callable. The UEFI
-// contract also declares `UefiApplication: ProgramStorageEntry`; the future
-// selected target stub will bind its exact image/initial-storage positions to
-// emitted geometry before forwarding this firmware invocation. Until that
-// Build/stub bridge exists, this callable does not itself originate those
-// roots. `handle` is unused at milestone 1 (milestone 2 needs it for
+// contract declares `UefiApplication: ProgramStorageEntry +
+// Calling<UefiX86_64>`, and Omega retains and validates that evaluated policy.
+// The future selected target stub will bind its exact image/initial-storage
+// positions to emitted geometry before forwarding this firmware invocation.
+// Until that Build/stub bridge exists, this callable does not itself originate
+// those roots. `handle` is unused at milestone 1 (milestone 2 needs it for
 // ExitBootServices). The audited machine-state axioms (long mode, paging,
 // interrupts, stack) are boot-target properties surfaced by the artifact.
 boundary machine Main::run(&self, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus

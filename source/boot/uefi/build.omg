@@ -6,9 +6,10 @@
 // NOT the retired target{...} config block; `subsystem` and `freestanding`
 // remain orthogonal `Build` fields (build_and_package_model.md addendum).
 // `UefiApplication` now inherits the stable core ProgramStorageEntry
-// requirement. Build entry-schema selection and the generated stub/geometry
-// bridge are still compiler engineering; the current exported Main::run keeps
-// the already-booted EFI/MS-x64 firmware ABI until that bridge is connected.
+// requirement and contributes the retained UEFI x86-64 calling policy. Build
+// entry-schema selection and the generated stub/geometry bridge are still
+// compiler engineering; the current exported Main::run keeps the already-booted
+// EFI/MS-x64 firmware ABI until that bridge is connected.
 
 target uefi_x64 {
 }
