@@ -1,0 +1,9 @@
+// Compile-only acceptance root for source/core/legacy_timer_root.omg.
+
+use core::legacy_timer_root;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}

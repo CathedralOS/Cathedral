@@ -1,0 +1,6 @@
+// Host-side source canary package. It imports Cathedral core but installs no
+// external root and performs no hardware operation.
+
+machine build(b: &mut Build) {
+    b.depend("core", path("../../source/core"));
+}

@@ -1,0 +1,110 @@
+// source/core/legacy_timer_root.omg
+//
+// Source-level acceptance shape for Cathedral's first maskable x86 interrupt
+// root. This stops at the normalized entry/provider contract: it publishes no
+// IDT, owns no stack storage, unmasks no IRQ, and enables no CPU interrupts.
+// The later installer must bind this exact plan to the materialized gate and
+// provisioned stack before the existing PIC/PIT operations can make it live.
+
+use facts::x86_interrupt_stacks;
+use omega::language::core::interrupt;
+use omega::language::std::calling;
+
+// Cathedral owns the target policy. The core InterruptEntry requirement owns
+// the semantic acknowledgement parameter; this policy owns only the x86
+// arrival ABI and machine-state contract.
+pub data CathedralX86InterruptPolicy {
+}
+
+CathedralX86InterruptPolicyCallingPolicy:
+    CathedralX86InterruptPolicy satisfies CallingPolicy;
+
+pub machine CathedralX86InterruptPolicy::plan(
+    signature: BoundarySignature
+) -> BoundaryPlanResult
+    satisfies CallingPolicy::plan
+{
+    transition signature.parameter_count == 1 && !signature.has_result {
+        true -> accept(signature, signature.parameters[0])
+        _    -> reject()
+    }
+
+    state accept(signature: BoundarySignature, acknowledgement: u64) -> BoundaryPlanResult {
+        transition acknowledgement < 256 {
+            true -> build(signature, acknowledgement)
+            _    -> reject()
+        }
+    }
+
+    state build(signature: BoundarySignature, acknowledgement: u64) -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan;
+        output.call.convention = CallingConvention::SystemVAMD64;
+        output.call.parameter_count = 1;
+        output.call.parameters[0].shape.class = AbiValueClass::Integer;
+        output.call.parameters[0].shape.byte_size = signature.shapes[acknowledgement].byte_size;
+        output.call.parameters[0].shape.alignment = signature.shapes[acknowledgement].alignment;
+        output.call.parameters[0].location_count = 1;
+        output.call.parameters[0].locations[0] = ValueLocation::Stack {
+            stack_byte_offset: 0,
+            value_byte_offset: 0,
+            byte_size: signature.shapes[acknowledgement].byte_size,
+            alignment: 8,
+        };
+        output.call.stack_alignment = 16;
+        output.call.entry_control = EntryControl::InterruptReturn;
+
+        output.state.initial_regime = MachineRegime::X86Long64;
+        output.state.interrupted_state.general_registers = true;
+        output.state.interrupted_state.vector_registers = true;
+        output.state.interrupted_state.flags = true;
+        output.state.interrupted_state.instruction_pointer = true;
+        output.state.interrupted_state.stack_pointer = true;
+        output.state.saved_state.general_registers = true;
+        output.state.saved_state.flags = true;
+        output.state.saved_state.instruction_pointer = true;
+        output.state.saved_state.stack_pointer = true;
+        output.state.restored_state.general_registers = true;
+        output.state.restored_state.flags = true;
+        output.state.restored_state.instruction_pointer = true;
+        output.state.restored_state.stack_pointer = true;
+        output.state.stack = EntryStack::Dedicated {
+            class: X86_MASKABLE_IRQ_STACK.stack_class,
+        };
+        output.state.preemption = Preemption::Masked;
+        BoundaryPlanResult::Accepted { plan: output }
+    }
+
+    state reject() -> BoundaryPlanResult {
+        BoundaryPlanResult::Rejected {
+            reason: CallingPolicyRejection {
+                reason: "Cathedral's x86 interrupt root requires one acknowledgement",
+            },
+        }
+    }
+}
+
+// The root schema stays PIC/LAPIC-neutral. Changing the acknowledgement
+// provider does not change this handler requirement or entry plan.
+pub boundary trait CathedralTimerRoot:
+    InterruptEntry + Calling<CathedralX86InterruptPolicy>
+{
+}
+
+// Cathedral's first selected root provider. Its deliberately tiny body proves
+// the hard-root contract shape: settle the one linear acknowledgement and
+// return through the deriver-owned interrupt exit. Clock capture and the
+// preallocated coalescing wake are later fixed-work leaves.
+pub data LegacyPicTimerRoot {
+}
+
+LegacyPicTimerRootCathedralTimerRoot:
+    LegacyPicTimerRoot satisfies CathedralTimerRoot;
+
+pub machine LegacyPicTimerRoot::enter(
+    acknowledgement: InterruptAcknowledgement in Pending
+)
+    satisfies InterruptEntry::enter
+    reaches PortIo
+{
+    acknowledgement.complete();
+}

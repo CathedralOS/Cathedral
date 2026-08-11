@@ -65,8 +65,10 @@ Legend: `[ ]` open · `[x]` closed.
   proves finite structural work, not WCET. The pure source facts now bind each
   of the four v1 stack-analysis classes to its hardware IST index in one record;
   the core profile now composes the double-fault, NMI, machine-check, and first
-  legacy-timer vectors with those exact records. Provisioning, entry contracts,
-  and publication remain. See [[hardware_foundation_profile]].
+  legacy-timer vectors with those exact records. The first legacy timer root now
+  publishes its exact source entry contract and selected provider plan; concrete
+  acknowledgement execution binding, provisioning, and publication remain. See
+  [[hardware_foundation_profile]].
 - [ ] `omega_substrate` — no decision rule for *which* ZII shape each construct adopts.
 - [ ] `vocabulary` — stub; "which terms deserve a domain vs. doc" unframed.
 
