@@ -54,20 +54,16 @@ Legend: `[ ]` open · `[x]` closed.
 
 ## Part 0 — Foundations
 - [ ] **First x86 exception/interrupt vertical slice — POLICY RESOLVED.**
-  Extend Omega's installed-root report with stack/work/state
-  ceiling-realization-receipt columns and fixed-work provider summaries;
-  materialize a diagnostic/fatal entry for every defined exception; provision
-  distinct per-CPU ISTs for double fault/NMI/machine check plus one shared
-  non-reentrant maskable-IRQ IST; connect checked `lidt`; validate save-all-GPR
-  and final no-SIMD/x87 entry code; bring up PIT/remapped-PIC under QEMU with an
-  exactly-once acknowledgement and coalescing timer-service wake; then add the
-  LAPIC one-shot provider. The hard root never drains timer registrations and
-  proves finite structural work, not WCET. The pure source facts now bind each
-  of the four v1 stack-analysis classes to its hardware IST index in one record;
-  the core profile now composes the double-fault, NMI, machine-check, and first
-  legacy-timer vectors with those exact records. The first legacy timer root now
-  publishes its exact source entry contract and selected provider plan; concrete
-  acknowledgement execution binding, provisioning, and publication remain. See
+  Pure source facts bind the four v1 stack-analysis classes to their hardware
+  IST indices and compose the initial fault/timer vectors with those records.
+  The first legacy timer root publishes its exact entry and selected provider;
+  its checked PIC body now emits the master EOI before consuming normalized
+  acknowledgement completion. The next blocker is Omega deriving fixed-fuel
+  and artifact-wide WCSU evidence from that source path into the installed-root
+  report. After that, materialize every exception entry, provision the distinct
+  fault and shared maskable-IRQ ISTs, connect checked `lidt`, validate final
+  save-all-GPR/no-SIMD code, and bring up PIT/PIC then LAPIC. The hard root never
+  drains timer registrations and proves finite structural work, not WCET. See
   [[hardware_foundation_profile]].
 - [ ] `omega_substrate` — no decision rule for *which* ZII shape each construct adopts.
 - [ ] `vocabulary` — stub; "which terms deserve a domain vs. doc" unframed.
