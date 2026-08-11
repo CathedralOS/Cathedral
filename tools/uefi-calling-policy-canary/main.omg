@@ -1,0 +1,10 @@
+// Compile-only acceptance root for the UEFI calling-policy contract.
+
+use uefi::uefi;
+use uefi::boot_services;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}

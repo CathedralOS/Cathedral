@@ -1,0 +1,6 @@
+// Host-side source canary package. It imports the UEFI contract only; no boot
+// image, provider grant, or firmware operation is installed.
+
+machine build(b: &mut Build) {
+    b.depend("uefi", path("../../source/contracts/uefi"));
+}

@@ -104,7 +104,8 @@ pub data EfiSystemTable {
 // generated firmware stub must still bind these semantic positions to the
 // emitted image and initial-storage geometry.
 pub data UefiX86_64 { }
-UefiX86_64 satisfies CallingPolicy;
+// Stable evidence identity for the policy selected by Calling<UefiX86_64>.
+UefiX86_64CallingPolicy: UefiX86_64 satisfies CallingPolicy;
 
 machine UefiX86_64::plan(
     signature: BoundarySignature
