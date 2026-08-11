@@ -8,6 +8,7 @@
 
 use facts::pic_8259;
 use omega::language::core::assembly;
+use omega::language::core::interrupt;
 
 pub data Pic8259 {
 }
@@ -47,13 +48,17 @@ reaches PortIo
     }
 }
 
-// Protocol-specific realization used only after the normalized interrupt
-// acknowledgement transition has admitted this provider. The public root
-// contract stays PIC/LAPIC-neutral.
-pub machine Pic8259::complete_timer_acknowledgement(&mut self)
+// Protocol-specific realization for one admitted legacy-timer occurrence. The
+// hardware EOI and normalized linear settlement stay in the same checked body:
+// successful completion cannot be reported without executing the selected PIC
+// protocol first. The public root contract stays PIC/LAPIC-neutral.
+pub machine Pic8259::complete_timer_acknowledgement(
+    acknowledgement: InterruptAcknowledgement in Pending
+)
 reaches PortIo
 {
     asm where clobbers r10, r11, r15, rax, rdx {
         out PIC_MASTER_COMMAND_PORT, OCW2_END_OF_INTERRUPT
     }
+    acknowledgement.complete();
 }

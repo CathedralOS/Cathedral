@@ -7,6 +7,7 @@
 // provisioned stack before the existing PIC/PIT operations can make it live.
 
 use facts::x86_interrupt_stacks;
+use core::pic_8259;
 use omega::language::core::interrupt;
 use omega::language::std::calling;
 
@@ -106,5 +107,5 @@ pub machine LegacyPicTimerRoot::enter(
     satisfies InterruptEntry::enter
     reaches PortIo
 {
-    acknowledgement.complete();
+    Pic8259::complete_timer_acknowledgement(acknowledgement);
 }
