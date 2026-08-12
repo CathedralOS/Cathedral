@@ -84,7 +84,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                    map_size <= attempted_capacity && map_size <= 65536 &&
                    map_size % desc_size == 0 {
             true -> walk(bs, handle, stale_retry_used,
-                         map_size, desc_size, key, 0, 0, 0)
+                         map_size, desc_size, key, 0, 0, 0, 0)
             _    -> map_failed(bs, handle, stale_retry_used,
                                attempted_capacity, status_code, map_size)
         }
@@ -119,30 +119,33 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     state walk(bs: &BootServicesTable, handle: EfiHandle,
                stale_retry_used: u64 [0..=1],
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
-               offset: u64 in Trapping, best_start: u64, best_pages: u64) {
+               offset: u64 in Trapping, best_start: u64, best_pages: u64,
+               best_offset: u64 in Trapping) {
         let d: &EfiMemoryDescriptor = &self.map_buf.bytes[offset] as &EfiMemoryDescriptor;
         let is_free: bool = d.kind == EFI_CONVENTIONAL_MEMORY &&
                             (d.attribute & EFI_MEMORY_RUNTIME.bits) == 0;
         transition is_free && d.number_of_pages > best_pages {
             true -> step(bs, handle, stale_retry_used, map_size, desc_size, key,
-                         offset, d.physical_start, d.number_of_pages)
+                         offset, d.physical_start, d.number_of_pages, offset)
             _    -> step(bs, handle, stale_retry_used, map_size, desc_size, key,
-                         offset, best_start, best_pages)
+                         offset, best_start, best_pages, best_offset)
         }
     }
 
     state step(bs: &BootServicesTable, handle: EfiHandle,
                stale_retry_used: u64 [0..=1],
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
-               offset: u64 in Trapping, best_start: u64, best_pages: u64) {
+               offset: u64 in Trapping, best_start: u64, best_pages: u64,
+               best_offset: u64 in Trapping) {
         // The second conjunct is implied by the first (map_size <= 65536,
         // desc_size >= 40) but spelled out so the loop edge's bound is a
         // DIRECT guard fact for the prover; it costs one always-true compare.
         transition offset + desc_size + desc_size <= map_size && offset + desc_size <= 65496 {
             true -> walk(bs, handle, stale_retry_used, map_size, desc_size, key,
-                         offset + desc_size, best_start, best_pages)
+                         offset + desc_size, best_start, best_pages, best_offset)
             _    -> validate_candidate(bs, handle, stale_retry_used,
-                                       key, best_start, best_pages)
+                                       map_size, desc_size, key,
+                                       best_start, best_pages, best_offset)
         }
     }
 
@@ -154,28 +157,198 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // than trusted from raw descriptor bytes.
     state validate_candidate(bs: &BootServicesTable, handle: EfiHandle,
                              stale_retry_used: u64 [0..=1],
-                             key: MapKey, best_start: u64, best_pages: u64) {
+                             map_size: u64 in Trapping,
+                             desc_size: u64 in Trapping, key: MapKey,
+                             best_start: u64, best_pages: u64,
+                             best_offset: u64 in Trapping) {
         transition best_pages > 0 &&
                    best_pages <= MAX_BOOTSTRAP_PAGE_COUNT &&
                    best_start % PAGE_SIZE == 0 {
             true -> validate_candidate_end(bs, handle, stale_retry_used,
-                                           key, best_start, best_pages)
+                                           map_size, desc_size, key,
+                                           best_start, best_pages, best_offset)
             _ -> idle()
         }
     }
 
     state validate_candidate_end(bs: &BootServicesTable, handle: EfiHandle,
                                  stale_retry_used: u64 [0..=1],
-                                 key: MapKey, best_start: u64,
-                                 best_pages: u64 [1..=4503599627370495]) {
+                                 map_size: u64 in Trapping,
+                                 desc_size: u64 in Trapping, key: MapKey,
+                                 best_start: u64,
+                                 best_pages: u64 [1..=4503599627370495],
+                                 best_offset: u64 in Trapping) {
         let checked_pages: u64 in Trapping = best_pages as u64 in Trapping;
         let checked_length: u64 in Trapping = checked_pages * PAGE_SIZE;
         let length: u64 = checked_length as u64;
         let max_address: u64 = 0xFFFF_FFFF_FFFF_FFFF;
         transition best_start <= max_address - length {
-            true -> exit(bs, handle, stale_retry_used,
-                         key, best_start, best_pages, length)
+            true -> prepare_audit(bs, handle, stale_retry_used,
+                                  map_size, desc_size, key, best_start,
+                                  best_pages, length, best_offset)
             _ -> idle()
+        }
+    }
+
+    // A descriptor's local type does not prove that its physical range is
+    // disjoint from every other map record. Re-scan the same fresh map before
+    // exit, skipping only the selected record's exact byte offset. Every other
+    // range must have valid physical geometry and lie wholly to one side of the
+    // chosen conventional span. No ordering assumption is made.
+    state prepare_audit(bs: &BootServicesTable, handle: EfiHandle,
+                        stale_retry_used: u64 [0..=1],
+                        map_size: u64 in Trapping,
+                        desc_size: u64 in Trapping, key: MapKey,
+        best_start: u64, best_pages: u64, length: u64,
+                        best_offset: u64 in Trapping) {
+        let checked_start: u64 in Trapping = best_start as u64 in Trapping;
+        let checked_length: u64 in Trapping = length as u64 in Trapping;
+        let best_end: u64 in Trapping = checked_start + checked_length;
+        transition { _ -> audit_descriptor(bs, handle, stale_retry_used,
+                                           map_size, desc_size, key, best_start,
+                                           best_pages, length, best_end,
+                                           best_offset, 0) }
+    }
+
+    state audit_descriptor(bs: &BootServicesTable, handle: EfiHandle,
+                           stale_retry_used: u64 [0..=1],
+                           map_size: u64 in Trapping,
+                           desc_size: u64 in Trapping, key: MapKey,
+                           best_start: u64, best_pages: u64, length: u64,
+                           best_end: u64 in Trapping,
+                           best_offset: u64 in Trapping,
+                           audit_offset: u64 in Trapping) {
+        let d: &EfiMemoryDescriptor = &self.map_buf.bytes[audit_offset] as &EfiMemoryDescriptor;
+        transition audit_offset == best_offset {
+            true -> audit_step(bs, handle, stale_retry_used,
+                               map_size, desc_size, key, best_start, best_pages,
+                               length, best_end, best_offset, audit_offset)
+            _ -> audit_geometry(bs, handle, stale_retry_used,
+                                map_size, desc_size, key, best_start, best_pages,
+                                length, best_end, best_offset, audit_offset,
+                                d.physical_start, d.number_of_pages)
+        }
+    }
+
+    state audit_geometry(bs: &BootServicesTable, handle: EfiHandle,
+                         stale_retry_used: u64 [0..=1],
+                         map_size: u64 in Trapping,
+                         desc_size: u64 in Trapping, key: MapKey,
+                         best_start: u64, best_pages: u64, length: u64,
+                         best_end: u64 in Trapping,
+                         best_offset: u64 in Trapping,
+                         audit_offset: u64 in Trapping,
+                         other_start: u64, other_pages: u64) {
+        transition other_pages > 0 &&
+                   other_pages <= MAX_BOOTSTRAP_PAGE_COUNT &&
+                   other_start % PAGE_SIZE == 0 {
+            true -> audit_geometry_end(bs, handle, stale_retry_used,
+                                       map_size, desc_size, key,
+                                       best_start, best_pages, length, best_end,
+                                       best_offset, audit_offset,
+                                       other_start, other_pages)
+            _ -> idle()
+        }
+    }
+
+    state audit_geometry_end(bs: &BootServicesTable, handle: EfiHandle,
+                             stale_retry_used: u64 [0..=1],
+                             map_size: u64 in Trapping,
+                             desc_size: u64 in Trapping, key: MapKey,
+                             best_start: u64, best_pages: u64, length: u64,
+                             best_end: u64 in Trapping,
+                             best_offset: u64 in Trapping,
+                             audit_offset: u64 in Trapping,
+                             other_start: u64,
+                             other_pages: u64 [1..=4503599627370495]) {
+        let checked_pages: u64 in Trapping = other_pages as u64 in Trapping;
+        let checked_length: u64 in Trapping = checked_pages * PAGE_SIZE;
+        let other_length: u64 = checked_length as u64;
+        let checked_other_length: u64 in Trapping = other_length as u64 in Trapping;
+        let last_offset: u64 in Trapping = checked_other_length - 1;
+        let max_address: u64 = 0xFFFF_FFFF_FFFF_FFFF;
+        transition other_start <= max_address - last_offset {
+            true -> audit_overlap(bs, handle, stale_retry_used,
+                                  map_size, desc_size, key,
+                                  best_start, best_pages, length, best_end,
+                                  best_offset, audit_offset,
+                                  other_start, last_offset)
+            _ -> idle()
+        }
+    }
+
+    state audit_overlap(bs: &BootServicesTable, handle: EfiHandle,
+                        stale_retry_used: u64 [0..=1],
+                        map_size: u64 in Trapping,
+                        desc_size: u64 in Trapping, key: MapKey,
+                        best_start: u64, best_pages: u64, length: u64,
+                        best_end: u64 in Trapping,
+                        best_offset: u64 in Trapping,
+                        audit_offset: u64 in Trapping,
+                        other_start: u64, last_offset: u64 in Trapping) {
+        let checked_start: u64 in Trapping = other_start as u64 in Trapping;
+        let other_last: u64 in Trapping = checked_start + last_offset;
+        transition other_start < best_start {
+            true -> audit_left(bs, handle, stale_retry_used,
+                               map_size, desc_size, key,
+                               best_start, best_pages, length, best_end,
+                               best_offset, audit_offset, other_last)
+            _ -> audit_right(bs, handle, stale_retry_used,
+                             map_size, desc_size, key,
+                             best_start, best_pages, length, best_end,
+                             best_offset, audit_offset, other_start)
+        }
+    }
+
+    state audit_left(bs: &BootServicesTable, handle: EfiHandle,
+                     stale_retry_used: u64 [0..=1],
+                     map_size: u64 in Trapping,
+                     desc_size: u64 in Trapping, key: MapKey,
+                     best_start: u64, best_pages: u64, length: u64,
+                     best_end: u64 in Trapping,
+                     best_offset: u64 in Trapping,
+                     audit_offset: u64 in Trapping,
+                     other_last: u64 in Trapping) {
+        transition other_last < best_start {
+            true -> audit_step(bs, handle, stale_retry_used,
+                               map_size, desc_size, key, best_start, best_pages,
+                               length, best_end, best_offset, audit_offset)
+            _ -> idle()
+        }
+    }
+
+    state audit_right(bs: &BootServicesTable, handle: EfiHandle,
+                      stale_retry_used: u64 [0..=1],
+                      map_size: u64 in Trapping,
+                      desc_size: u64 in Trapping, key: MapKey,
+                      best_start: u64, best_pages: u64, length: u64,
+                      best_end: u64 in Trapping,
+                      best_offset: u64 in Trapping,
+                      audit_offset: u64 in Trapping, other_start: u64) {
+        transition other_start >= best_end {
+            true -> audit_step(bs, handle, stale_retry_used,
+                               map_size, desc_size, key, best_start, best_pages,
+                               length, best_end, best_offset, audit_offset)
+            _ -> idle()
+        }
+    }
+
+    state audit_step(bs: &BootServicesTable, handle: EfiHandle,
+                     stale_retry_used: u64 [0..=1],
+                     map_size: u64 in Trapping,
+                     desc_size: u64 in Trapping, key: MapKey,
+                     best_start: u64, best_pages: u64, length: u64,
+                     best_end: u64 in Trapping,
+                     best_offset: u64 in Trapping,
+                     audit_offset: u64 in Trapping) {
+        transition audit_offset + desc_size + desc_size <= map_size &&
+                   audit_offset + desc_size <= 65496 {
+            true -> audit_descriptor(bs, handle, stale_retry_used,
+                                     map_size, desc_size, key,
+                                     best_start, best_pages, length, best_end,
+                                     best_offset, audit_offset + desc_size)
+            _ -> exit(bs, handle, stale_retry_used,
+                      key, best_start, best_pages, length)
         }
     }
 

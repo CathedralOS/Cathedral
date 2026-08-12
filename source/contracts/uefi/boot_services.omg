@@ -144,9 +144,11 @@ uefi_x64 machine BootServicesTable::exit_boot_services_leaf(
 // FinalMemoryMap is the reserved carrier for the complete post-exit map. The M2
 // path currently requires the best span to be nonempty, page-aligned, exactly
 // convertible to bytes, and conservatively representable through its one-past
-// end. It carries that guarded geometry across a successful exit directly,
-// then obtains the first qualified Extent through core/'s admitted provider
-// adapter. Every later memory authority descends from that receipt-backed root.
+// end. Before exit, a second pass requires every other descriptor to have
+// bounded physical geometry and lie wholly outside that span. It then carries
+// the guarded geometry across a successful exit directly and obtains the first
+// qualified Extent through core/'s admitted provider adapter. Every later
+// memory authority descends from that receipt-backed root.
 pub data FinalMemoryMap {
     buffer:          &[u8];   // the validated descriptor bytes
     descriptor_size: u64;     // the runtime stride

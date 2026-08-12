@@ -13,8 +13,11 @@ Before the irreversible exit, the selected conventional span must not carry
 `EFI_MEMORY_RUNTIME`; it must be nonempty, page-aligned, small enough for exact
 page-to-byte conversion, and have a representable one-past end. Runtime-marked
 descriptors remain ineligible. The validated byte length stays in the same
-map/key transaction through successful exit and becomes the exact grant
-geometry. Rejection parks inside firmware without calling the provider.
+map/key transaction while a second full-map pass validates each other physical
+range and requires strict disjointness from the chosen span. Only completion of
+that audit may reach `ExitBootServices`; malformed geometry or overlap parks
+inside firmware without calling the provider. Successful exit makes the checked
+span the exact grant geometry.
 
 Map storage is a fixed 64-KiB zero-initialized field, not an allocation or
 memory capability. An explicit leading `u64` makes the byte view 8-byte

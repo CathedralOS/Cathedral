@@ -30,6 +30,8 @@ descriptor revision.
 Repeated stale-key rejection fails closed rather than looping indefinitely.
 Before exiting firmware it excludes runtime-marked descriptors and rejects an
 empty, unaligned, page-count-overflowing, or non-representable conventional
-span; the exact validated length then flows into the admitted grant. The
-generated target-entry bridge, physical-space/right/backing facts, and actual
-handoff into the proved core remain outstanding.
+span. A second full-map pass also requires every other descriptor to have valid
+physical geometry and be disjoint from the selected span; the exact validated
+length then flows into the admitted grant. The generated target-entry bridge,
+physical-space/right/backing facts, and actual handoff into the proved core
+remain outstanding.
