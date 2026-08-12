@@ -15,7 +15,10 @@ map/key transaction through successful exit and becomes the exact grant
 geometry. Rejection parks inside firmware without calling the provider.
 
 Map storage is a fixed 64-KiB zero-initialized field, not an allocation or
-memory capability. Cathedral advertises 16 KiB first; only exact
+memory capability. An explicit leading `u64` makes the byte view 8-byte
+aligned; successful map results additionally require an 8-byte-multiple
+descriptor stride and a whole number of descriptors before any typed recast.
+Cathedral advertises 16 KiB first; only exact
 `EFI_BUFFER_TOO_SMALL` with a reported requirement in `(16 KiB, 64 KiB]`
 permits one retry advertising the full backing. A second capacity failure,
 oversize requirement, malformed success, or unrelated error parks unowned.

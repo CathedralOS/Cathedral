@@ -54,6 +54,10 @@ Its zero-initialized image storage reserves 64 KiB, advertises 16 KiB first,
 and expands the usable window once only on exact `EFI_BUFFER_TOO_SMALL`; this is
 bounded storage policy, not allocator or extent authority. Requirements above
 the fixed ceiling fail closed.
+Its descriptor byte view is explicitly 8-byte-aligned. The runtime stride must
+be an 8-byte multiple and the map size an exact multiple of that stride before
+typed descriptor traversal, so neither a misaligned next descriptor nor a
+trailing partial descriptor is silently accepted.
 Before the irreversible firmware exit, Cathedral conservatively requires the
 selected conventional span to be nonempty, page-aligned, exactly convertible
 to bytes, and representable through its one-past end. That exact byte length

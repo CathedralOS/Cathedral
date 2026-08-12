@@ -91,14 +91,37 @@ def has_granted_extent_parameter:
     | objects
     | select(.name? == "Main" and has("members"))
   ) as $main_type
+| first(
+    $typed
+    | ..
+    | objects
+    | select(.name? == "UefiMemoryMapStorage" and has("members"))
+  ) as $map_storage_type
 | $machines[0] as $machine
 | $machine_contracts[0] as $machine_contract
 | require(first($main_type.members[] | select(.name == "map_buf") | .type_reference) == {
-      kind: "fixed_array",
-      element_type: {kind: "named", name: "u8"},
-      length: "65536"
-    };
-    "owned-machine bootstrap map backing is no longer exactly 64 KiB")
+      kind: "named",
+      name: "UefiMemoryMapStorage"
+    } and
+    $map_storage_type.members == [
+      {
+        kind: "field",
+        identity: null,
+        name: "alignment_anchor",
+        type_reference: {kind: "named", name: "u64"}
+      },
+      {
+        kind: "field",
+        identity: null,
+        name: "bytes",
+        type_reference: {
+          kind: "fixed_array",
+          element_type: {kind: "named", name: "u8"},
+          length: "65536"
+        }
+      }
+    ];
+    "owned-machine map backing lost its 8-byte anchor or exact 64-KiB bytes")
 | state($machine; "own_machine") as $entry
 | state($machine; "refresh_map") as $refresh_map
 | state($machine; "get_map") as $get_map
@@ -158,13 +181,37 @@ def has_granted_extent_parameter:
             kind: "mutable",
             value: {
               kind: "member",
-              receiver: {kind: "name", path: ["self"]},
-              member: "map_buf"
+              receiver: {
+                kind: "member",
+                receiver: {kind: "name", path: ["self"]},
+                member: "map_buf"
+              },
+              member: "bytes"
             }
           }) and
           ($get_map.statements[6].guard.value.left | conjunct_signatures) == [
             {
               left: {kind: "path", path: ["status_code"]},
+              operator: "==",
+              right: {kind: "integer", text: "0"}
+            },
+            {
+              left: {kind: "path", path: ["desc_size"]},
+              operator: ">=",
+              right: {kind: "integer", text: "40"}
+            },
+            {
+              left: {kind: "path", path: ["desc_size"]},
+              operator: "<=",
+              right: {kind: "integer", text: "65536"}
+            },
+            {
+              left: {
+                kind: "binary",
+                left: {kind: "path", path: ["desc_size"]},
+                operator: "%",
+                right: {kind: "integer", text: "8"}
+              },
               operator: "==",
               right: {kind: "integer", text: "0"}
             },
@@ -184,14 +231,14 @@ def has_granted_extent_parameter:
               right: {kind: "integer", text: "65536"}
             },
             {
-              left: {kind: "path", path: ["desc_size"]},
-              operator: ">=",
-              right: {kind: "integer", text: "40"}
-            },
-            {
-              left: {kind: "path", path: ["desc_size"]},
-              operator: "<=",
-              right: {kind: "integer", text: "65536"}
+              left: {
+                kind: "binary",
+                left: {kind: "path", path: ["map_size"]},
+                operator: "%",
+                right: {kind: "path", path: ["desc_size"]}
+              },
+              operator: "==",
+              right: {kind: "integer", text: "0"}
             }
           ] and
           (transition_targets($get_map) == [
@@ -268,6 +315,19 @@ def has_granted_extent_parameter:
       .target.path[0] == "step"
       and .target.arguments[4] == {kind: "name", path: ["key"]}
     ) and
+    ($walk.statements[0].initial_value.value == {
+      kind: "indexed",
+      collection: {
+        kind: "member",
+        receiver: {
+          kind: "member",
+          receiver: {kind: "name", path: ["self"]},
+          member: "map_buf"
+        },
+        member: "bytes"
+      },
+      index: {kind: "name", path: ["offset"]}
+    }) and
     ($step.statements[0].target.path[0] == "walk") and
     ($step.statements[0].guard.value.left.right.right.text == "65496") and
     ($step.statements[0].target.arguments[4] == {kind: "name", path: ["key"]}) and

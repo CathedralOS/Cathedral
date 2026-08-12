@@ -24,7 +24,9 @@ pub const EFI_ACPI_RECLAIM:        u32 = 9;
 // --- EFI_MEMORY_DESCRIPTOR -------------------------------------------------
 // The `Uefi` policy pads `kind` to 8-align `physical_start`. sizeof is 40, BUT
 // the map array MUST be strided by the runtime DescriptorSize (firmware may
-// append fields) — never sizeof.
+// append fields) — never sizeof. Cathedral's consumer also requires that
+// runtime stride and its byte backing preserve the descriptor's 8-byte
+// alignment before performing a reference recast.
 pub data EfiMemoryDescriptor {
     kind:            u32;   // EFI_MEMORY_TYPE
     physical_start:  u64;   // EFI_PHYSICAL_ADDRESS
@@ -84,6 +86,8 @@ pub boundary trait BootServices {
         // advertises only 16 KiB through map_size. The fixed-array reference
         // supplies the native pointer shape; map_size remains the firmware's
         // actual runtime bound and may be raised only by checked source policy.
+        // The boot package supplies this view from explicitly 8-byte-aligned
+        // storage; this ABI shape alone asserts no storage authority.
         buffer:             &mut [u8; 65536],
         map_key:            &mut MapKey,
         descriptor_size:    &mut u64,

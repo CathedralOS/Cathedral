@@ -10,7 +10,7 @@ use omega::language::core::extent;
 data Main {
     boot_svc: BootServices;
     memory: ExtentRootProvider;
-    map_buf: [u8; 65536];
+    map_buf: UefiMemoryMapStorage;
 }
 
 machine Main::main(&mut self) {

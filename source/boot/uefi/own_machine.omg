@@ -24,10 +24,20 @@ use omega::language::core::extent;   // Extent, Granted, ExtentRootProvider
 // valid architectural edge ending exactly at 2^64.
 const MAX_BOOTSTRAP_PAGE_COUNT: u64 = 4503599627370495;
 
-// Get the map, walk it, exit, grant, report. `self.map_buf` is a fixed 64-KiB
-// static field, not allocated memory and not an Extent. Cathedral advertises
-// 16 KiB first and uses the remaining provision only after an exact
-// EFI_BUFFER_TOO_SMALL result reports a requirement within the fixed ceiling.
+// The leading u64 gives the following byte array an 8-byte-aligned base under
+// Omega's ordinary record layout. UEFI writes only `bytes`; `alignment_anchor`
+// is representation padding made explicit in Cathedral source and carries no
+// capability or validity fact.
+pub data UefiMemoryMapStorage {
+    alignment_anchor: u64;
+    bytes: [u8; 65536];
+}
+
+// Get the map, walk it, exit, grant, report. `self.map_buf.bytes` is fixed
+// 64-KiB static storage behind an explicit 8-byte alignment anchor, not
+// allocated memory and not an Extent. Cathedral advertises 16 KiB first and
+// uses the remaining provision only after an exact EFI_BUFFER_TOO_SMALL result
+// reports a requirement within the fixed ceiling.
 machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable)
 reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 {
@@ -50,7 +60,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         let status: EfiStatus = self.boot_svc.get_memory_map(
             bs,
             &mut map_size,
-            &mut self.map_buf,
+            &mut self.map_buf.bytes,
             &mut key,
             &mut desc_size,
             &mut desc_version
@@ -59,11 +69,16 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 
         // Sanity-gate the firmware's out-values BEFORE trusting them: the call
         // must report SUCCESS, fit both the advertised capacity and physical
-        // backing, and contain at least one whole runtime-sized descriptor. A
-        // guard — not a vouched `ensures` — because firmware genuinely can
-        // return malformed values; these conjuncts are also the bound witnesses
-        // for the walk's recast footprint.
-        transition status_code == 0 && map_size >= desc_size && map_size <= attempted_capacity && map_size <= 65536 && desc_size >= 40 && desc_size <= 65536 {
+        // backing, and contain a whole number of naturally aligned runtime-
+        // sized descriptors. A guard — not a vouched `ensures` — because
+        // firmware genuinely can return malformed values; these conjuncts are
+        // also the bound and alignment witnesses for the walk's recast.
+        transition status_code == 0 &&
+                   desc_size >= 40 && desc_size <= 65536 &&
+                   desc_size % 8 == 0 &&
+                   map_size >= desc_size &&
+                   map_size <= attempted_capacity && map_size <= 65536 &&
+                   map_size % desc_size == 0 {
             true -> walk(bs, handle, map_size, desc_size, key, 0, 0, 0)
             _    -> map_failed(bs, handle, attempted_capacity, status_code, map_size)
         }
@@ -81,9 +96,9 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         }
     }
 
-    // Walk descriptors: stride by the RUNTIME desc_size (never sizeof), recast
-    // each slice to &EfiMemoryDescriptor, track the largest conventional-memory
-    // span. Split walk/step so each transition carries ONE inline guard: walk
+    // Walk descriptors: stride by the aligned RUNTIME desc_size (never sizeof),
+    // recast each slice to &EfiMemoryDescriptor, and track the largest
+    // conventional-memory span. Split walk/step so each transition carries ONE inline guard: walk
     // decides the best-span update, step decides whether a WHOLE next
     // descriptor fits — bounding its END (`offset + 2*desc_size <= map_size`),
     // not just its start, which is what makes the loop edge's footprint
@@ -96,7 +111,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     state walk(bs: &BootServicesTable, handle: EfiHandle,
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64) {
-        let d: &EfiMemoryDescriptor = &self.map_buf[offset] as &EfiMemoryDescriptor;
+        let d: &EfiMemoryDescriptor = &self.map_buf.bytes[offset] as &EfiMemoryDescriptor;
         let is_free: bool = d.kind == EFI_CONVENTIONAL_MEMORY;
         transition is_free && d.number_of_pages > best_pages {
             true -> step(bs, handle, map_size, desc_size, key,
@@ -376,7 +391,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 //      through their FIELDS at plan offsets, and the table pointer stays OFF
 //      the wire (EFI table services take no This — protocol methods like
 //      output_string do, and stay This-call `VtableField` bindings).
-//   3. Recast at a runtime offset — `&self.map_buf[offset] as &EfiMemoryDescriptor`
+//   3. Recast at a runtime offset — `&self.map_buf.bytes[offset] as &EfiMemoryDescriptor`
 //      is the §5b borrow-recast, indexed by a runtime `offset` with a runtime
 //      `desc_size` stride, bounds-guarded on the transitions.
 //   4. A large static buffer field ([u8; 65536]) with a smaller runtime capacity

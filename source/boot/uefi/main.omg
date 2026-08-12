@@ -34,7 +34,7 @@ use omega::language::core::extent;   // ExtentRootProvider
 
 // Main's STATIC DATA (`&self`): the held capabilities (Simple Text Output for
 // the greeting, Boot Services for the milestone-2 memory-map dance) + the
-// greeting bytes + the memory-map buffer. The launch inputs (handle, table) are
+// greeting bytes + aligned memory-map storage. The launch inputs (handle, table) are
 // PARAMETERS to run, not fields of self — self is what the component IS, the args
 // are what firmware handed this invocation.
 data Main {
@@ -42,7 +42,7 @@ data Main {
     boot_svc: BootServices;      // milestone 2 — GetMemoryMap / ExitBootServices
     memory:   ExtentRootProvider; // admitted one-root-at-a-time memory provider
     msg:      [u16; 19];         // "Hello from Omega\r\n\0" as UTF-16 CHAR16 code units
-    map_buf:  [u8; 65536];       // bounded GetMemoryMap growth, no allocator/authority
+    map_buf:  UefiMemoryMapStorage; // aligned bounded map backing, no authority
 }
 
 // The firmware entry: the currently booted raw exported callable. The UEFI
