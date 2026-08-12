@@ -1,0 +1,8 @@
+// Isolated admission frontier for Cathedral's checked extent-root adapter.
+
+machine build(b: &mut Build) {
+    b.depend("core", path("core"));
+    b.accept_boundary<ExtentRootProvider>();
+    b.select_provider<ExtentRootProvider, CathedralExtentRootProvider>();
+    b.freestanding = true;
+}
