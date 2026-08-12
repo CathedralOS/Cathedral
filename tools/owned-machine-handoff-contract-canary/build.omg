@@ -1,0 +1,9 @@
+// Isolated source frontier for the already-implemented owned-machine handoff.
+
+machine build(b: &mut Build) {
+    b.depend("uefi", path("uefi"));
+    b.depend("core", path("core"));
+    b.accept_boundary<ExtentRootProvider>();
+    b.select_provider<ExtentRootProvider, CathedralExtentRootProvider>();
+    b.freestanding = true;
+}

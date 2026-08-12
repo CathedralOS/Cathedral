@@ -1,0 +1,17 @@
+// Compile-only host for Main::own_machine. This supplies its existing receiver
+// shape without importing or selecting the transitional firmware entry.
+
+use own_machine;
+use uefi::uefi;
+use uefi::boot_services;
+use omega::language::core::assembly;
+use omega::language::core::extent;
+
+data Main {
+    boot_svc: BootServices;
+    memory: ExtentRootProvider;
+    map_buf: [u8; 16384];
+}
+
+machine Main::main(&mut self) {
+}
