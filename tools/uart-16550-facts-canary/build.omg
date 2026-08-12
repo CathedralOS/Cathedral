@@ -1,0 +1,5 @@
+// Isolated pure-fact frontier for Cathedral's first UART register map.
+
+machine build(b: &mut Build) {
+    b.depend("facts", path("facts"));
+}

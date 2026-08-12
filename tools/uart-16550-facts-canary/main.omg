@@ -1,0 +1,50 @@
+// Compile-only acceptance root that makes the UART constants visible in the
+// typed artifact without performing hardware access.
+
+use facts::uart_16550;
+
+data Uart16550FactSnapshot {
+    com1: u16;
+    data_offset: u16;
+    interrupt_enable_offset: u16;
+    divisor_low_offset: u16;
+    divisor_high_offset: u16;
+    fifo_control_offset: u16;
+    line_control_offset: u16;
+    modem_control_offset: u16;
+    line_status_offset: u16;
+    scratch_offset: u16;
+    lcr_dlab: u8;
+    lcr_8n1: u8;
+    lsr_data_ready: u8;
+    lsr_thr_empty: u8;
+    fcr_enable_clear: u8;
+    mcr_dtr_rts_out2: u8;
+}
+
+machine uart_16550_fact_snapshot() -> Uart16550FactSnapshot {
+    Uart16550FactSnapshot {
+        com1: COM1,
+        data_offset: REG_DATA,
+        interrupt_enable_offset: REG_INTERRUPT_ENABLE,
+        divisor_low_offset: REG_DIVISOR_LOW,
+        divisor_high_offset: REG_DIVISOR_HIGH,
+        fifo_control_offset: REG_FIFO_CONTROL,
+        line_control_offset: REG_LINE_CONTROL,
+        modem_control_offset: REG_MODEM_CONTROL,
+        line_status_offset: REG_LINE_STATUS,
+        scratch_offset: REG_SCRATCH,
+        lcr_dlab: LCR_DLAB,
+        lcr_8n1: LCR_8N1,
+        lsr_data_ready: LSR_DATA_READY,
+        lsr_thr_empty: LSR_THR_EMPTY,
+        fcr_enable_clear: FCR_ENABLE_CLEAR,
+        mcr_dtr_rts_out2: MCR_DTR_RTS_OUT2,
+    }
+}
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}
