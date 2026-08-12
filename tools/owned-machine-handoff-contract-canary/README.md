@@ -13,7 +13,9 @@ The owned-memory report remains exact through 99,999 MiB. Larger roots take a
 separate `99999+ MiB` route rather than overflowing the five-digit formatter;
 page-to-MiB conversion saturates at 100,000 subtraction rounds because no larger
 exact value affects that route. Both outputs fit the 16550's 16-byte FIFO burst
-and retain the same qualified extent through owned idle.
+and retain the same qualified extent through owned idle. Each burst gets at
+most 1,000,000 readiness reads; a stuck transmitter parks without writing into
+the busy UART and retains the qualified root.
 
 Before the irreversible exit, the selected conventional span must not carry
 `EFI_MEMORY_RUNTIME`, `EFI_MEMORY_HOT_PLUGGABLE`, or `EFI_MEMORY_SP`; it must be

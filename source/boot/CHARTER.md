@@ -30,7 +30,9 @@ descriptor revision.
 The serial report is exact through 99,999 MiB and emits the honest bounded form
 `99999+ MiB` for larger roots, so its five-digit formatter cannot wrap into
 non-digit bytes. Page-to-MiB conversion saturates at 100,000 rounds because no
-larger exact value affects that report.
+larger exact value affects that report. Each FIFO-readiness wait is capped at
+1,000,000 status reads; exhaustion abandons the optional report and parks while
+retaining the root.
 Repeated stale-key rejection fails closed rather than looping indefinitely.
 Before exiting firmware it excludes runtime-marked, hot-pluggable, and
 specific-purpose descriptors and rejects an empty, unaligned,

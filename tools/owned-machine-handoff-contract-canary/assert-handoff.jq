@@ -150,7 +150,11 @@ def has_granted_extent_parameter:
 | state($machine; "own") as $own
 | state($machine; "serial_init") as $serial_init
 | state($machine; "to_mib") as $to_mib
+| state($machine; "owned_wait") as $owned_wait
+| state($machine; "owned_wait_busy") as $owned_wait_busy
+| state($machine; "owned_send") as $owned_send
 | state($machine; "digits_wait") as $digits_wait
+| state($machine; "digits_wait_busy") as $digits_wait_busy
 | state($machine; "report_size") as $report_size
 | state($machine; "oversized_mib") as $oversized_mib
 | state($machine; "tail_send") as $tail_send
@@ -1032,7 +1036,8 @@ def has_granted_extent_parameter:
         target: "owned_wait",
         arguments: [
           {kind: "name", path: ["extent"]},
-          {kind: "name", path: ["mib"]}
+          {kind: "name", path: ["mib"]},
+          {kind: "integer", text: "1000000"}
         ],
         guard: "always"
       }
@@ -1050,12 +1055,90 @@ def has_granted_extent_parameter:
       right: {kind: "integer", text: "1"}
     });
     "page-to-MiB conversion no longer saturates after at most 100000 rounds")
-| require((transition_targets($digits_wait) == [
+| require(((first($owned_wait.statements[] | select(.kind == "transition")).guard.value.left
+             | conjunct_signatures) == [{
+      left: {
+        kind: "binary",
+        left: {kind: "path", path: ["lsr"]},
+        operator: "&",
+        right: {kind: "integer", text: "32"}
+      },
+      operator: "==",
+      right: {kind: "integer", text: "0"}
+    }]) and
+    (transition_targets($owned_wait) == [
       {
-        target: "digits_wait",
+        target: "owned_wait_busy",
+        arguments: [
+          {kind: "name", path: ["extent"]},
+          {kind: "name", path: ["mib"]},
+          {kind: "name", path: ["remaining_polls"]}
+        ],
+        guard: "when"
+      },
+      {
+        target: "owned_send",
         arguments: [
           {kind: "name", path: ["extent"]},
           {kind: "name", path: ["mib"]}
+        ],
+        guard: "always"
+      }
+    ]) and
+    (($owned_wait_busy.statements[0].guard.value.left | conjunct_signatures) == [{
+      left: {kind: "path", path: ["remaining_polls"]},
+      operator: ">",
+      right: {kind: "integer", text: "1"}
+    }]) and
+    (transition_targets($owned_wait_busy) == [
+      {
+        target: "owned_wait",
+        arguments: [
+          {kind: "name", path: ["extent"]},
+          {kind: "name", path: ["mib"]},
+          {kind: "binary"}
+        ],
+        guard: "when"
+      },
+      {
+        target: "owned_idle",
+        arguments: [{kind: "name", path: ["extent"]}],
+        guard: "always"
+      }
+    ]) and
+    ($owned_wait_busy.statements[0].target.arguments[2] == {
+      kind: "binary",
+      left: {kind: "name", path: ["remaining_polls"]},
+      operator: "-",
+      right: {kind: "integer", text: "1"}
+    }) and
+    (transition_targets($owned_send) == [{
+      target: "digits_wait",
+      arguments: [
+        {kind: "name", path: ["extent"]},
+        {kind: "name", path: ["mib"]},
+        {kind: "integer", text: "1000000"}
+      ],
+      guard: "always"
+    }]) and
+    ((first($digits_wait.statements[] | select(.kind == "transition")).guard.value.left
+       | conjunct_signatures) == [{
+      left: {
+        kind: "binary",
+        left: {kind: "path", path: ["lsr"]},
+        operator: "&",
+        right: {kind: "integer", text: "32"}
+      },
+      operator: "==",
+      right: {kind: "integer", text: "0"}
+    }]) and
+    (transition_targets($digits_wait) == [
+      {
+        target: "digits_wait_busy",
+        arguments: [
+          {kind: "name", path: ["extent"]},
+          {kind: "name", path: ["mib"]},
+          {kind: "name", path: ["remaining_polls"]}
         ],
         guard: "when"
       },
@@ -1068,6 +1151,33 @@ def has_granted_extent_parameter:
         guard: "always"
       }
     ]) and
+    (($digits_wait_busy.statements[0].guard.value.left | conjunct_signatures) == [{
+      left: {kind: "path", path: ["remaining_polls"]},
+      operator: ">",
+      right: {kind: "integer", text: "1"}
+    }]) and
+    (transition_targets($digits_wait_busy) == [
+      {
+        target: "digits_wait",
+        arguments: [
+          {kind: "name", path: ["extent"]},
+          {kind: "name", path: ["mib"]},
+          {kind: "binary"}
+        ],
+        guard: "when"
+      },
+      {
+        target: "owned_idle",
+        arguments: [{kind: "name", path: ["extent"]}],
+        guard: "always"
+      }
+    ]) and
+    ($digits_wait_busy.statements[0].target.arguments[2] == {
+      kind: "binary",
+      left: {kind: "name", path: ["remaining_polls"]},
+      operator: "-",
+      right: {kind: "integer", text: "1"}
+    }) and
     (($report_size.statements[0].guard.value.left | conjunct_signatures) == [{
       left: {kind: "path", path: ["mib"]},
       operator: "<=",
@@ -1106,7 +1216,7 @@ def has_granted_extent_parameter:
       arguments: [{kind: "name", path: ["extent"]}],
       guard: "always"
     }]);
-    "large owned-memory report no longer emits the honest 99999+ MiB bound")
+    "serial report no longer bounds UART polling, preserves the owned root on exhaustion, or emits the honest large bound")
 | [
     $machine.states[]
     | select(has_granted_extent_parameter)
@@ -1116,8 +1226,10 @@ def has_granted_extent_parameter:
     "serial_init",
     "to_mib",
     "owned_wait",
+    "owned_wait_busy",
     "owned_send",
     "digits_wait",
+    "digits_wait_busy",
     "report_size",
     "oversized_mib",
     "ten_thousands",

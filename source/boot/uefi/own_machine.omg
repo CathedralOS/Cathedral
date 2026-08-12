@@ -24,6 +24,11 @@ use omega::language::core::extent;   // Extent, Granted, ExtentRootProvider
 // valid architectural edge ending exactly at 2^64.
 const MAX_BOOTSTRAP_PAGE_COUNT: u64 = 4503599627370495;
 
+// Per-burst work budget for a stuck or absent 16550. This bounds status reads,
+// not elapsed time; exhaustion abandons the optional report and retains the
+// granted root in owned idle without writing into a busy transmitter.
+const MAX_UART_STATUS_POLLS: u64 = 1000000;
+
 // The leading u64 gives the following byte array an 8-byte-aligned base under
 // Omega's ordinary record layout. UEFI writes only `bytes`; `alignment_anchor`
 // is representation padding made explicit in Cathedral source and carries no
@@ -453,7 +458,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                  pages: u64 in Trapping, mib: u64 in Trapping) {
         transition pages >= 256 && mib < 100000 {
             true -> to_mib(extent, pages - 256, mib + 1)
-            _    -> owned_wait(extent, mib)
+            _    -> owned_wait(extent, mib, MAX_UART_STATUS_POLLS)
         }
     }
 
@@ -461,13 +466,23 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // (bit 5 = transmitter empty — with FIFOs on, the whole FIFO has drained),
     // then at most 16 data bytes. Burst 1 = "Owned " (6 bytes); burst 2 = the
     // decimal digits + " MiB\r\n" (<= 11 bytes). That is the 16550's real
-    // hardware handshake — no firmware ever polls for us again.
-    state owned_wait(extent: Extent in Granted, mib: u64 in Trapping) {
+    // hardware handshake — no firmware ever polls for us again. Each wait has
+    // a finite status-read budget; an absent or wedged UART parks owned rather
+    // than spinning forever or writing while the transmitter remains busy.
+    state owned_wait(extent: Extent in Granted, mib: u64 in Trapping,
+                     remaining_polls: u64 in Trapping) {
         let mut lsr: u8 = 0;
         asm { in lsr, 1021 }
         transition (lsr & 32) == 0 {
-            true -> owned_wait(extent, mib)     // transmitter busy: keep polling
+            true -> owned_wait_busy(extent, mib, remaining_polls)
             _    -> owned_send(extent, mib)
+        }
+    }
+    state owned_wait_busy(extent: Extent in Granted, mib: u64 in Trapping,
+                          remaining_polls: u64 in Trapping) {
+        transition remaining_polls > 1 {
+            true -> owned_wait(extent, mib, remaining_polls - 1)
+            _    -> owned_idle(extent)
         }
     }
     state owned_send(extent: Extent in Granted, mib: u64 in Trapping) {
@@ -477,15 +492,23 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         asm { out 1016, 101 }   // 'e'
         asm { out 1016, 100 }   // 'd'
         asm { out 1016, 32 }    // ' '
-        transition { _ -> digits_wait(extent, mib) }
+        transition { _ -> digits_wait(extent, mib, MAX_UART_STATUS_POLLS) }
     }
 
-    state digits_wait(extent: Extent in Granted, mib: u64 in Trapping) {
+    state digits_wait(extent: Extent in Granted, mib: u64 in Trapping,
+                      remaining_polls: u64 in Trapping) {
         let mut lsr: u8 = 0;
         asm { in lsr, 1021 }
         transition (lsr & 32) == 0 {
-            true -> digits_wait(extent, mib)
+            true -> digits_wait_busy(extent, mib, remaining_polls)
             _    -> report_size(extent, mib)
+        }
+    }
+    state digits_wait_busy(extent: Extent in Granted, mib: u64 in Trapping,
+                           remaining_polls: u64 in Trapping) {
+        transition remaining_polls > 1 {
+            true -> digits_wait(extent, mib, remaining_polls - 1)
+            _    -> owned_idle(extent)
         }
     }
 
