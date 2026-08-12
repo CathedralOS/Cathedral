@@ -35,8 +35,10 @@ One term to fix, since the rest of the phase leans on it: virtual memory works t
 
 The map and its `MapKey` form one transaction. Cathedral's current boot source
 first gates the EFI System Table and Boot Services table on their standard
-signatures, minimum consumed-prefix sizes, and zero common reserved header
-fields; malformed metadata parks before any Boot Services dispatch. It then
+signatures, one well-formed shared UEFI revision at or above the x86-64
+profile's 2.0 floor, minimum consumed-prefix sizes, and zero common reserved
+header fields; malformed metadata parks before any Boot Services dispatch.
+Whole-table CRC validation is not implemented yet. It then
 discards the entire descriptor-derived candidate and refreshes the map/key pair
 once when `ExitBootServices` reports a stale key; a second stale rejection parks
 without a grant. Only a successful exit can reach the first extent grant. The

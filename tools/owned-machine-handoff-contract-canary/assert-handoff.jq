@@ -184,6 +184,19 @@ def has_granted_extent_parameter:
             receiver: {kind: "path", path: ["table"]},
             member: "header"
           },
+          member: "revision"
+        },
+        operator: ">=",
+        right: {kind: "integer", text: "0x20000"}
+      },
+      {
+        left: {
+          kind: "member",
+          receiver: {
+            kind: "member",
+            receiver: {kind: "path", path: ["table"]},
+            member: "header"
+          },
           member: "header_size"
         },
         operator: ">=",
@@ -238,6 +251,27 @@ def has_granted_extent_parameter:
         },
         operator: "==",
         right: {kind: "integer", text: "0x56524553544f4f42"}
+      },
+      {
+        left: {
+          kind: "member",
+          receiver: {
+            kind: "member",
+            receiver: {kind: "path", path: ["bs"]},
+            member: "hdr"
+          },
+          member: "revision"
+        },
+        operator: "==",
+        right: {
+          kind: "member",
+          receiver: {
+            kind: "member",
+            receiver: {kind: "path", path: ["table"]},
+            member: "header"
+          },
+          member: "revision"
+        }
       },
       {
         left: {

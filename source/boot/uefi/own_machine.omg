@@ -51,6 +51,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // Services unless the enclosing table has its standard identity, covers
     // the complete prefix Cathedral declares, and keeps Reserved zero.
     transition table.header.signature == EFI_SYSTEM_TABLE_SIGNATURE &&
+               table.header.revision >= EFI_MIN_SUPPORTED_REVISION &&
                table.header.header_size >= EFI_SYSTEM_TABLE_REQUIRED_SIZE &&
                table.header.reserved == 0 {
         true -> validate_boot_services(handle, table)
@@ -61,6 +62,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                                  table: &EfiSystemTable) {
         let bs: &BootServicesTable = table.boot_services;
         transition bs.hdr.signature == EFI_BOOT_SERVICES_SIGNATURE &&
+                   bs.hdr.revision == table.header.revision &&
                    bs.hdr.header_size >= EFI_BOOT_SERVICES_REQUIRED_SIZE &&
                    bs.hdr.reserved == 0 {
             true -> refresh_map(bs, handle, 0)

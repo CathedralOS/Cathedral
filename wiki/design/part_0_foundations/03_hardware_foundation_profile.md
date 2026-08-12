@@ -49,8 +49,10 @@ Boot firmware and the final memory map supply the initial physical extents
 through Cathedral's admitted platform receipt.
 The current UEFI source first admits the firmware dispatch path only when the
 EFI System Table and Boot Services table carry their standard signatures,
-advertise headers covering every field Cathedral consumes, and keep the common
-reserved header field zero. Failure parks before a Boot Services call. It then
+agree on a well-formed UEFI revision at or above the x86-64 profile's 2.0
+floor, advertise headers covering every field Cathedral consumes, and keep the
+common reserved header field zero. Failure parks before a Boot Services call;
+whole-table CRC validation remains outstanding. It then
 treats the map and `MapKey` as one transaction: a stale
 key from `ExitBootServices` discards every descriptor-derived candidate and
 refreshes both once before retry, while only success reaches the first root

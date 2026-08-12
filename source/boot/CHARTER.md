@@ -27,9 +27,11 @@ allocation or authority creation. The byte view has an explicit 8-byte
 alignment anchor, and map acceptance requires an aligned stride and exact
 descriptor count before typed traversal, as well as the exact supported UEFI
 descriptor revision. Before any Boot Services dispatch, the enclosing system
-table and Boot Services table must carry their standard signatures, advertise
+table and Boot Services table must carry their standard signatures, agree on a
+well-formed UEFI revision at or above the x86-64 profile's 2.0 floor, advertise
 headers covering every field Cathedral reads, and keep the common reserved
 header field zero; malformed table metadata parks without a firmware call.
+Whole-table CRC validation remains outstanding.
 The serial report is exact through 99,999 MiB and emits the honest bounded form
 `99999+ MiB` for larger roots, so its five-digit formatter cannot wrap into
 non-digit bytes. Page-to-MiB conversion saturates at 100,000 rounds because no

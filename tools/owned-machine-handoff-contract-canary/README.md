@@ -11,9 +11,11 @@ successful grant.
 
 Before any Boot Services dispatch, the enclosing EFI System Table and the Boot
 Services table must carry their standard signatures, advertise headers large
-enough to cover every field Cathedral reads, and keep the common reserved
-header field zero. The canary pins both fail-closed gates and permits the first
-fresh map transaction only after they succeed.
+enough to cover every field Cathedral reads, agree on a well-formed UEFI
+revision at or above the x86-64 profile's 2.0 floor, and keep the common
+reserved header field zero. The canary pins both fail-closed gates and permits
+the first fresh map transaction only after they succeed. It does not yet claim
+whole-table CRC validation.
 
 The owned-memory report remains exact through 99,999 MiB. Larger roots take a
 separate `99999+ MiB` route rather than overflowing the five-digit formatter;

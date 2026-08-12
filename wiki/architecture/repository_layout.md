@@ -307,9 +307,10 @@ Current reality (2026-07-28):
   the exact value exceeds its five-digit FIFO-sized formatter and saturating the
   conversion after 100,000 subtraction rounds. Each FIFO-readiness wait is
   capped at 1,000,000 status reads and parks owned on exhaustion. Bounded map
-  resize, fail-closed System/Boot Services table-header admission, a single
-  whole-transaction stale-key refresh, revision-pinned aligned whole-descriptor
-  traversal,
+  resize, fail-closed System/Boot Services table-header metadata admission
+  (signature, shared well-formed UEFI revision, consumed-prefix size, and
+  reserved zero; CRC still outstanding), a single whole-transaction stale-key
+  refresh, revision-pinned aligned whole-descriptor traversal,
   runtime-region exclusion, descriptor type/attribute/geometry checks,
   selected-span disjointness auditing, and conservative numeric root-geometry
   validation are live; richer physical-space/right/backing facts remain

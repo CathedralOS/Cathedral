@@ -84,6 +84,9 @@ pub data EfiTableHeader {
 // projects BootServices from the firmware-vouched reference.
 pub const EFI_SYSTEM_TABLE_SIGNATURE: u64 = 0x5453_5953_2049_4249;
 pub const EFI_SYSTEM_TABLE_REQUIRED_SIZE: u32 = 120;
+// Cathedral's x86-64 calling profile begins at UEFI 2.0. Later revisions are
+// prefix-compatible when HeaderSize covers every consumed field.
+pub const EFI_MIN_SUPPORTED_REVISION: u32 = 0x0002_0000;
 
 // Every field is listed in spec order — the C-ABI (`Uefi`) policy computes each
 // offset from the field before it, so an unread field still has to be present or
