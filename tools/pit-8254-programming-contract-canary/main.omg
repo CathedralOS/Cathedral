@@ -1,0 +1,9 @@
+// Compile-only acceptance root for the PIT channel-0 programming operation.
+
+use core::pit_8254;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}
