@@ -48,13 +48,13 @@ references. Cathedral currently understands UEFI descriptor revision 1 only;
 any other reported revision fails closed before interpretation.
 
 The selected conventional-memory descriptor is also checked before the
-irreversible exit: it must not carry `EFI_MEMORY_RUNTIME` or
-`EFI_MEMORY_HOT_PLUGGABLE`, its span must contain at least one page, begin on a
-4-KiB boundary, convert from pages to bytes without overflow, and have a
-representable one-past end. Runtime-marked and removable descriptors remain
-ineligible. The exact checked length crosses successful `ExitBootServices`
-with its map-derived start
-and is the geometry presented to the admitted root provider. Before exit, a
+irreversible exit: it must not carry `EFI_MEMORY_RUNTIME`,
+`EFI_MEMORY_HOT_PLUGGABLE`, or `EFI_MEMORY_SP`; its span must contain at least
+one page, begin on a 4-KiB boundary, convert from pages to bytes without
+overflow, and have a representable one-past end. Runtime-marked, removable, and
+specific-purpose descriptors remain ineligible. The exact checked length
+crosses successful `ExitBootServices` with its map-derived start and is the
+geometry presented to the admitted root provider. Before exit, a
 second stride-bounded pass validates every descriptor's physical and virtual
 alignment, range end, and standard/OEM/OS-loader memory-type range, then
 rejects both attribute bits outside the revision-1 standard and ISA-specific

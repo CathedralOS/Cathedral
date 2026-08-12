@@ -16,11 +16,11 @@ exact value affects that route. Both outputs fit the 16550's 16-byte FIFO burst
 and retain the same qualified extent through owned idle.
 
 Before the irreversible exit, the selected conventional span must not carry
-`EFI_MEMORY_RUNTIME` or `EFI_MEMORY_HOT_PLUGGABLE`; it must be nonempty,
-page-aligned, small enough for exact page-to-byte conversion, and have a
-representable one-past end. Runtime-marked and removable descriptors remain
-ineligible. The validated byte length stays in the same map/key transaction
-while a second full-map pass validates every descriptor's
+`EFI_MEMORY_RUNTIME`, `EFI_MEMORY_HOT_PLUGGABLE`, or `EFI_MEMORY_SP`; it must be
+nonempty, page-aligned, small enough for exact page-to-byte conversion, and have
+a representable one-past end. Runtime-marked, removable, and specific-purpose
+descriptors remain ineligible. The validated byte length stays in the same
+map/key transaction while a second full-map pass validates every descriptor's
 standard/vendor memory-type range, physical and virtual alignment, and range
 end. It also rejects attribute bits outside the revision-1 standard and ISA-
 specific masks, rejects ISA-specific bits without their validity flag, then

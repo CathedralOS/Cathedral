@@ -63,11 +63,12 @@ layout, a misaligned next descriptor, or a trailing partial descriptor is not
 silently accepted.
 Before the irreversible firmware exit, Cathedral conservatively requires the
 selected conventional span to lack `EFI_MEMORY_RUNTIME` and
-`EFI_MEMORY_HOT_PLUGGABLE`, be nonempty, page-aligned, exactly convertible to
-bytes, and representable through its one-past end. Runtime-marked and removable
-descriptors stay unavailable to the retained bootstrap root. That exact byte
-length then remains attached to the current map/key transaction while a second
-pass validates every descriptor's aligned,
+`EFI_MEMORY_HOT_PLUGGABLE`, and `EFI_MEMORY_SP`; it must be nonempty,
+page-aligned, exactly convertible to bytes, and representable through its
+one-past end. Runtime-marked, removable, and specific-purpose descriptors stay
+unavailable to the retained bootstrap root. That exact byte length then remains
+attached to the current map/key transaction while a second pass validates every
+descriptor's aligned,
 representable physical and virtual geometry plus its standard/vendor memory-
 type range and revision-1 standard/ISA attribute mask, requires every
 ISA-specific attribute to carry its validity flag, and requires every other

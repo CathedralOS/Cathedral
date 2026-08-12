@@ -106,7 +106,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // Walk descriptors: stride by the aligned RUNTIME desc_size (never sizeof),
     // recast each slice to &EfiMemoryDescriptor, and track the largest
     // conventional-memory span that is neither reserved for UEFI runtime
-    // mapping nor removable hot-plug memory.
+    // mapping, removable, nor earmarked for a specific-purpose consumer.
     // Split walk/step so each transition carries ONE inline guard: walk
     // decides the best-span update, step decides whether a WHOLE next
     // descriptor fits — bounding its END (`offset + 2*desc_size <= map_size`),
@@ -125,7 +125,8 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         let d: &EfiMemoryDescriptor = &self.map_buf.bytes[offset] as &EfiMemoryDescriptor;
         let is_free: bool = d.kind == EFI_CONVENTIONAL_MEMORY &&
                             (d.attribute & EFI_MEMORY_RUNTIME.bits) == 0 &&
-                            (d.attribute & EFI_MEMORY_HOT_PLUGGABLE.bits) == 0;
+                            (d.attribute & EFI_MEMORY_HOT_PLUGGABLE.bits) == 0 &&
+                            (d.attribute & EFI_MEMORY_SP.bits) == 0;
         transition is_free && d.number_of_pages > best_pages {
             true -> step(bs, handle, stale_retry_used, map_size, desc_size, key,
                          offset, d.physical_start, d.number_of_pages, offset)

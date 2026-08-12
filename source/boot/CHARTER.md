@@ -32,11 +32,12 @@ The serial report is exact through 99,999 MiB and emits the honest bounded form
 non-digit bytes. Page-to-MiB conversion saturates at 100,000 rounds because no
 larger exact value affects that report.
 Repeated stale-key rejection fails closed rather than looping indefinitely.
-Before exiting firmware it excludes runtime-marked and hot-pluggable descriptors
-and rejects an empty, unaligned, page-count-overflowing, or non-representable
-conventional span. A second full-map pass also requires every descriptor to
-have aligned, representable physical and virtual geometry and a valid
-standard/OEM/OS-loader memory type, permits only revision-1 standard/ISA attribute bits, requires
+Before exiting firmware it excludes runtime-marked, hot-pluggable, and
+specific-purpose descriptors and rejects an empty, unaligned,
+page-count-overflowing, or non-representable conventional span. A second
+full-map pass also requires every descriptor to have aligned, representable
+physical and virtual geometry and a valid standard/OEM/OS-loader memory type,
+permits only revision-1 standard/ISA attribute bits, requires
 ISA-specific bits to carry their validity flag, and requires every other
 physical range to be disjoint from the selected span. The exact
 validated length then flows into the admitted grant. The

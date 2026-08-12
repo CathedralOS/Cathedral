@@ -417,6 +417,25 @@ def has_granted_extent_parameter:
         },
         operator: "==",
         right: {kind: "integer", text: "0"}
+      },
+      {
+        left: {
+          kind: "binary",
+          left: {
+            kind: "member",
+            receiver: {kind: "path", path: ["d"]},
+            member: "attribute"
+          },
+          operator: "&",
+          right: {
+            kind: "constant_member",
+            type_name: "EfiMemoryAttribute",
+            member: "bits",
+            value: "0x40000"
+          }
+        },
+        operator: "==",
+        right: {kind: "integer", text: "0"}
       }
     ]) and
     ($walk_edges[0].target.arguments[9] == {kind: "name", path: ["offset"]}) and
@@ -437,7 +456,7 @@ def has_granted_extent_parameter:
       {kind: "name", path: ["best_pages"]},
       {kind: "name", path: ["best_offset"]}
     ]);
-    "descriptor walk no longer excludes runtime/hot-plug memory or carries its exact key")
+    "descriptor walk no longer excludes runtime/hot-plug/specific-purpose memory or carries its exact key")
 | require(($validate_candidate.statements[0].guard.value.left | conjunct_signatures) == [
       {
         left: {kind: "path", path: ["best_pages"]},
