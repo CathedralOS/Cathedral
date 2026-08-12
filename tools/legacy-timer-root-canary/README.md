@@ -9,10 +9,13 @@ non-suspending/non-blocking `PortIo` provider body. It also uses Omega's generic
 `inspect-terminal --machine LegacyPicTimerRoot::enter` surface to verify the
 actual checked hard-root closure: root claim transfer to `Pic8259`, exact
 `PortWrite(0x20, 0x20)` authority, acknowledgement boundary settlement, and
-value-less normal return. Claim identities are interpreted in their owning
-terminal machine rather than as closure-global ordinals. The closure cardinality
-is pinned as well as its ordering, so an extra machine, port write, settlement,
-or terminator fails the canary instead of hiding behind the required rows.
+value-less normal return. The same surface independently verifies terminal Psi,
+recomputes and validates the current fixed-fuel certificate, and pins this
+closure's exact five-unit ceiling. Claim identities are interpreted in their
+owning terminal machine rather than as closure-global ordinals. The closure
+cardinality is pinned as well as its ordering, so an extra machine, port write,
+settlement, terminator, or fixed-fuel row fails the canary instead of hiding
+behind the required rows.
 
 Run:
 
@@ -26,4 +29,6 @@ builds that sibling with Cargo, in that order.
 
 The canary installs no IDT, executes no `lidt`, unmasks no IRQ, enables no CPU
 interrupts, and does not boot QEMU. Those steps remain ordered after table and
-stack materialization.
+stack materialization. It does not claim WCSU: Omega's terminal native artifact
+must first retain and seal emitter-derived per-function and per-call stack facts
+before an installed-root report can derive an artifact-wide bound.

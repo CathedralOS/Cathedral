@@ -172,16 +172,20 @@ assert_prefix_count "$TERMINAL_SUMMARY" 'parameter ' 2
 assert_prefix_count "$TERMINAL_SUMMARY" 'claim ' 2
 assert_prefix_count "$TERMINAL_SUMMARY" 'operation ' 3
 assert_prefix_count "$TERMINAL_SUMMARY" 'terminator ' 2
+assert_prefix_count "$TERMINAL_SUMMARY" 'fixed_fuel ' 1
 assert_line_count "$TERMINAL_SUMMARY" 'kind=CallUnit ' 1
 assert_line_count "$TERMINAL_SUMMARY" 'kind=PortWrite ' 1
 assert_line_count "$TERMINAL_SUMMARY" 'kind=BoundaryCallUnit ' 1
 assert_line_count "$TERMINAL_SUMMARY" 'kind=ReturnUnit ' 2
+assert_contains "$TERMINAL_SUMMARY" 'fixed_fuel terminal_vocabulary=2 '
+assert_contains "$TERMINAL_SUMMARY" ' schedule=1 entry=machine:1 ceiling_units=5 relevant_preconditions=0'
 assert_ordered_lines "$TERMINAL_SUMMARY" \
   'machine id=machine:1 attachment=named(name(LegacyPicTimerRoot)) result=unit' \
   'kind=CallUnit callee=machine:2 callee_attachment=named(name(Pic8259))' \
   'machine id=machine:2 attachment=named(name(Pic8259)) result=unit' \
   'kind=PortWrite service=service:1 service_identity=PortIo port=0x0020 value=0x20' \
   'kind=BoundaryCallUnit boundary=boundary:1 boundary_identity=InterruptAcknowledgement::complete' \
-  'terminator machine=machine:2 block=block:2 kind=ReturnUnit edge=edge:2'
+  'terminator machine=machine:2 block=block:2 kind=ReturnUnit edge=edge:2' \
+  'fixed_fuel terminal_vocabulary=2 '
 
 echo "Cathedral legacy timer-root canary passed"

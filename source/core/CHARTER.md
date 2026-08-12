@@ -53,6 +53,7 @@ the source-level normalized entry/provider canary under Cathedral's
 maskable-IRQ stack and masked `InterruptReturn` plan. Its checked PIC path emits
 the master EOI, then consumes the exact pending acknowledgement through
 normalized completion.
-Omega-derived fixed-fuel and artifact-wide WCSU integration is the next
-blocker. The package still publishes no IDT, provisions no stack, unmasks no
-IRQ, and performs no installation.
+Omega independently verifies that terminal closure and derives its exact
+five-unit fixed-fuel certificate. Emitter-derived stack facts and artifact-wide
+WCSU integration are the next blocker. The package still publishes no IDT,
+provisions no stack, unmasks no IRQ, and performs no installation.

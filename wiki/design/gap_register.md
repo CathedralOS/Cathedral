@@ -69,9 +69,11 @@ Legend: `[ ]` open · `[x]` closed.
   integration and boot segment facts.
   The first legacy timer root publishes its exact entry and selected provider;
   its checked PIC body now emits the master EOI before consuming normalized
-  acknowledgement completion. The next blocker is Omega deriving fixed-fuel
-  and artifact-wide WCSU evidence from that source path into the installed-root
-  report. After that, materialize every exception entry, provision the distinct
+  acknowledgement completion. Omega now independently verifies that terminal
+  closure and derives its exact five-unit fixed-fuel certificate. The next
+  blocker is retaining emitter-derived stack facts and composing artifact-wide
+  WCSU evidence from that source path into the installed-root report. After
+  that, materialize every exception entry, provision the distinct
   fault and shared maskable-IRQ ISTs, connect checked `lidt`, validate final
   save-all-GPR/no-SIMD code, and bring up PIT/PIC then LAPIC. The hard root never
   drains timer registrations and proves finite structural work, not WCET. See
