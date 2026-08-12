@@ -1055,6 +1055,43 @@ def has_granted_extent_parameter:
       right: {kind: "integer", text: "1"}
     });
     "page-to-MiB conversion no longer saturates after at most 100000 rounds")
+| require(([$owned_wait.statements[] | .kind] == [
+      "local_data", "assignment", "transition", "transition"
+    ]) and
+    ($owned_wait.statements[1] == {
+      kind: "assignment",
+      target: {kind: "name", path: ["lsr"]},
+      value: {
+        kind: "call",
+        receiver: null,
+        target: "asm#port_in",
+        machine_arguments: [],
+        arguments: [{kind: "integer", text: "1021"}],
+        acknowledgement_synthesized: false,
+        acknowledges_suspend: false,
+        acknowledges_block: false
+      }
+    }) and
+    ([$owned_wait_busy.statements[] | .kind] == ["transition", "transition"]) and
+    ([$digits_wait.statements[] | .kind] == [
+      "local_data", "assignment", "transition", "transition"
+    ]) and
+    ($digits_wait.statements[1] == {
+      kind: "assignment",
+      target: {kind: "name", path: ["lsr"]},
+      value: {
+        kind: "call",
+        receiver: null,
+        target: "asm#port_in",
+        machine_arguments: [],
+        arguments: [{kind: "integer", text: "1021"}],
+        acknowledgement_synthesized: false,
+        acknowledges_suspend: false,
+        acknowledges_block: false
+      }
+    }) and
+    ([$digits_wait_busy.statements[] | .kind] == ["transition", "transition"]);
+    "UART readiness paths no longer perform exactly one LSR read and no busy-path writes")
 | require(((first($owned_wait.statements[] | select(.kind == "transition")).guard.value.left
              | conjunct_signatures) == [{
       left: {
