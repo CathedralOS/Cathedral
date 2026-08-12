@@ -68,12 +68,14 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         let status_code: u64 = status.code;
 
         // Sanity-gate the firmware's out-values BEFORE trusting them: the call
-        // must report SUCCESS, fit both the advertised capacity and physical
-        // backing, and contain a whole number of naturally aligned runtime-
-        // sized descriptors. A guard — not a vouched `ensures` — because
+        // must report SUCCESS with the exact descriptor revision this source
+        // understands, fit both the advertised capacity and physical backing,
+        // and contain a whole number of naturally aligned runtime-sized
+        // descriptors. A guard — not a vouched `ensures` — because
         // firmware genuinely can return malformed values; these conjuncts are
         // also the bound and alignment witnesses for the walk's recast.
         transition status_code == 0 &&
+                   desc_version == EFI_MEMORY_DESCRIPTOR_VERSION &&
                    desc_size >= 40 && desc_size <= 65536 &&
                    desc_size % 8 == 0 &&
                    map_size >= desc_size &&

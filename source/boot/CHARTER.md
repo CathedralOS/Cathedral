@@ -25,7 +25,8 @@ parks while retaining the root. Its fixed 64-KiB bootstrap storage advertises
 16 KiB first and grows once on exact `EFI_BUFFER_TOO_SMALL`, without allocation
 or authority creation. The byte view has an explicit 8-byte alignment anchor,
 and map acceptance requires an aligned stride and exact descriptor count before
-typed traversal. Before exiting firmware it rejects an empty, unaligned,
+typed traversal, as well as the exact supported UEFI descriptor revision.
+Before exiting firmware it rejects an empty, unaligned,
 page-count-overflowing, or non-representable conventional span; the exact
 validated length then flows into the admitted grant. The generated target-entry
 bridge, physical-space/right/backing facts, and actual handoff into the proved

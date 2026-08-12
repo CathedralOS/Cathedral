@@ -21,6 +21,10 @@ pub const EFI_BOOT_SERVICES_DATA:  u32 = 4;
 pub const EFI_CONVENTIONAL_MEMORY: u32 = 7;   // free RAM boot may claim after exit
 pub const EFI_ACPI_RECLAIM:        u32 = 9;
 
+// Revision of the descriptor prefix Cathedral currently knows how to read.
+// Unknown revisions fail closed in boot source before any typed recast.
+pub const EFI_MEMORY_DESCRIPTOR_VERSION: u32 = 1;
+
 // --- EFI_MEMORY_DESCRIPTOR -------------------------------------------------
 // The `Uefi` policy pads `kind` to 8-align `physical_start`. sizeof is 40, BUT
 // the map array MUST be strided by the runtime DescriptorSize (firmware may
@@ -77,8 +81,11 @@ pub data BootServicesTable {
 pub boundary trait BootServices {
     // GetMemoryMap(IN OUT MemoryMapSize, OUT MemoryMap, OUT MapKey,
     //              OUT DescriptorSize, OUT DescriptorVersion). `map_size` is
-    // in/out; `descriptor_size` returns the RUNTIME stride (never sizeof); a
-    // too-small buffer returns EFI_BUFFER_TOO_SMALL with the needed size.
+    // in/out; `descriptor_size` returns the RUNTIME stride (never sizeof), and
+    // `descriptor_version` identifies the descriptor layout revision. The
+    // current Cathedral consumer accepts only EFI_MEMORY_DESCRIPTOR_VERSION
+    // before interpreting bytes. A too-small buffer returns
+    // EFI_BUFFER_TOO_SMALL with the needed size.
     machine get_memory_map(
         table:              &BootServicesTable,
         map_size:           &mut u64,

@@ -17,7 +17,9 @@ geometry. Rejection parks inside firmware without calling the provider.
 Map storage is a fixed 64-KiB zero-initialized field, not an allocation or
 memory capability. An explicit leading `u64` makes the byte view 8-byte
 aligned; successful map results additionally require an 8-byte-multiple
-descriptor stride and a whole number of descriptors before any typed recast.
+descriptor stride, a whole number of descriptors, and the exact supported UEFI
+descriptor revision (version 1) before any typed recast. An unknown revision is
+a malformed success and parks unowned.
 Cathedral advertises 16 KiB first; only exact
 `EFI_BUFFER_TOO_SMALL` with a reported requirement in `(16 KiB, 64 KiB]`
 permits one retry advertising the full backing. A second capacity failure,

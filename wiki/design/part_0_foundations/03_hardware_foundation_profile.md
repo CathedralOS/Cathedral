@@ -56,8 +56,10 @@ bounded storage policy, not allocator or extent authority. Requirements above
 the fixed ceiling fail closed.
 Its descriptor byte view is explicitly 8-byte-aligned. The runtime stride must
 be an 8-byte multiple and the map size an exact multiple of that stride before
-typed descriptor traversal, so neither a misaligned next descriptor nor a
-trailing partial descriptor is silently accepted.
+typed descriptor traversal. The reported descriptor revision must also be the
+exact revision Cathedral supports (currently UEFI version 1), so an unknown
+layout, a misaligned next descriptor, or a trailing partial descriptor is not
+silently accepted.
 Before the irreversible firmware exit, Cathedral conservatively requires the
 selected conventional span to be nonempty, page-aligned, exactly convertible
 to bytes, and representable through its one-past end. That exact byte length

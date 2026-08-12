@@ -43,7 +43,8 @@ and malformed results or requirements above 64 KiB fail closed.
 The byte backing starts behind an explicit 8-byte alignment anchor; the runtime
 descriptor stride must preserve that alignment, and the reported map size must
 contain a whole number of descriptors before Cathedral forms typed descriptor
-references.
+references. Cathedral currently understands UEFI descriptor revision 1 only;
+any other reported revision fails closed before interpretation.
 
 The selected conventional-memory descriptor is also checked before the
 irreversible exit: its span must contain at least one page, begin on a 4-KiB

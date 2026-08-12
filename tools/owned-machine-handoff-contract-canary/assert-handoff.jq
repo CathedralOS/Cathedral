@@ -196,6 +196,11 @@ def has_granted_extent_parameter:
               right: {kind: "integer", text: "0"}
             },
             {
+              left: {kind: "path", path: ["desc_version"]},
+              operator: "==",
+              right: {kind: "integer", text: "1"}
+            },
+            {
               left: {kind: "path", path: ["desc_size"]},
               operator: ">=",
               right: {kind: "integer", text: "40"}
