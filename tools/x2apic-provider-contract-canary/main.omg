@@ -1,0 +1,9 @@
+// Compile-only acceptance root for source/core/x2apic_timer.omg.
+
+use core::x2apic_timer;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}
