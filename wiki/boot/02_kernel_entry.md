@@ -56,9 +56,10 @@ checked length crosses successful `ExitBootServices` with its map-derived start
 and is the geometry presented to the admitted root provider. Before exit, a
 second stride-bounded pass validates every descriptor's physical and virtual
 alignment, range end, and standard/OEM/OS-loader memory-type range, then
-rejects attribute bits outside the revision-1 standard and ISA-specific masks
-and requires every other physical range to lie strictly before or after the
-selected span. Invalid type `16..0x6fffffff`, reserved attributes, misalignment,
+rejects both attribute bits outside the revision-1 standard and ISA-specific
+masks and ISA-specific bits without their validity flag, and requires every
+other physical range to lie strictly before or after the selected span. Invalid
+type `16..0x6fffffff`, reserved attributes, misalignment,
 overflow, or overlap parks without a grant. These checks reject malformed
 firmware data; they do not themselves establish physical-space, rights, backing,
 or ownership.

@@ -68,7 +68,8 @@ one-past end. Runtime-marked descriptors stay reserved for the firmware mapping
 lifecycle. That exact byte length then remains attached to the current map/key
 transaction while a second pass validates every descriptor's aligned,
 representable physical and virtual geometry plus its standard/vendor memory-
-type range and revision-1 standard/ISA attribute mask, and requires every other
+type range and revision-1 standard/ISA attribute mask, requires every
+ISA-specific attribute to carry its validity flag, and requires every other
 physical range to be strictly disjoint from the selected span. Only after that
 map-wide comparison may successful exit reach the provider call. These checks
 reject malformed input;

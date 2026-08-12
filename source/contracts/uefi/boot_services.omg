@@ -35,6 +35,15 @@ pub data EfiMemoryAttribute { bits: u64; }
 pub const EFI_MEMORY_RUNTIME: EfiMemoryAttribute = EfiMemoryAttribute {
     bits: 0x8000_0000_0000_0000,
 };
+// ISA-specific cacheability bits describe a region only when their validity
+// flag is present. The boot audit enforces this relation before consuming the
+// map as authority-bearing input.
+pub const EFI_MEMORY_ISA_VALID: EfiMemoryAttribute = EfiMemoryAttribute {
+    bits: 0x4000_0000_0000_0000,
+};
+pub const EFI_MEMORY_ISA_MASK: EfiMemoryAttribute = EfiMemoryAttribute {
+    bits: 0x0FFF_F000_0000_0000,
+};
 // Complement of every standard revision-1 attribute bit, EFI_MEMORY_ISA_MASK,
 // EFI_MEMORY_ISA_VALID, and EFI_MEMORY_RUNTIME. Any intersection is reserved.
 pub const EFI_MEMORY_RESERVED_MASK: EfiMemoryAttribute = EfiMemoryAttribute {

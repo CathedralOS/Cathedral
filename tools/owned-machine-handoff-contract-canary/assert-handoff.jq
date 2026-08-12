@@ -627,6 +627,34 @@ def has_granted_extent_parameter:
         right: {kind: "integer", text: "0"}
       },
       {
+        left: {
+          kind: "binary",
+          left: {kind: "path", path: ["other_attribute"]},
+          operator: "&",
+          right: {
+            kind: "constant_member",
+            type_name: "EfiMemoryAttribute",
+            member: "bits",
+            value: "0xffff00000000000"
+          }
+        },
+        operator: "<=",
+        right: {
+          left: {
+            kind: "path",
+            path: ["other_attribute"]
+          },
+          operator: "&",
+          right: {
+            kind: "constant_member",
+            type_name: "EfiMemoryAttribute",
+            member: "bits",
+            value: "0x4000000000000000"
+          },
+          kind: "binary"
+        }
+      },
+      {
         left: {kind: "path", path: ["other_pages"]},
         operator: ">",
         right: {kind: "integer", text: "0"}
@@ -665,7 +693,7 @@ def has_granted_extent_parameter:
       {target: "audit_geometry_end", guard: "when"},
       {target: "idle", guard: "always"}
     ]);
-    "descriptor type, attribute mask, or physical/virtual alignment no longer fails closed")
+    "descriptor type, attribute validity, or physical/virtual alignment no longer fails closed")
 | require(($audit_geometry_end.parameters[14].name == "other_pages") and
     ($audit_geometry_end.parameters[14].type_reference == {
       kind: "constrained",

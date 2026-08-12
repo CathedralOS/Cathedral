@@ -22,9 +22,10 @@ descriptors remain ineligible. The validated byte length stays in the same
 map/key transaction while a second full-map pass validates every descriptor's
 standard/vendor memory-type range, physical and virtual alignment, and range
 end. It also rejects attribute bits outside the revision-1 standard and ISA-
-specific masks, then requires every other physical range to be strictly
-disjoint from the chosen span. Invalid type `16..0x6fffffff`, reserved
-attributes, malformed geometry, or overlap parks inside firmware without
+specific masks, rejects ISA-specific bits without their validity flag, then
+requires every other physical range to be strictly disjoint from the chosen
+span. Invalid type `16..0x6fffffff`, reserved or unflagged ISA attributes,
+malformed geometry, or overlap parks inside firmware without
 calling the provider. Only completion of that audit may reach
 `ExitBootServices`; successful exit makes the checked span the exact grant
 geometry.

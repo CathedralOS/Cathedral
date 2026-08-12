@@ -246,6 +246,8 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         transition (other_kind < EFI_MAX_MEMORY_TYPE ||
                     other_kind >= EFI_OEM_MEMORY_TYPE_MIN) &&
                    (other_attribute & EFI_MEMORY_RESERVED_MASK.bits) == 0 &&
+                   (other_attribute & EFI_MEMORY_ISA_MASK.bits) <=
+                       (other_attribute & EFI_MEMORY_ISA_VALID.bits) &&
                    other_pages > 0 &&
                    other_pages <= MAX_BOOTSTRAP_PAGE_COUNT &&
                    other_start % PAGE_SIZE == 0 &&
