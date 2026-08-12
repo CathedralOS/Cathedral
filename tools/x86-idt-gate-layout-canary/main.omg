@@ -1,0 +1,9 @@
+// Compile-only acceptance root for the x86 IDT gate layout.
+
+use facts::x86_idt_gate;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}

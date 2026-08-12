@@ -1,0 +1,5 @@
+// Isolated pure-fact frontier for Cathedral's x86 IDT gate layout.
+
+machine build(b: &mut Build) {
+    b.depend("facts", path("facts"));
+}
