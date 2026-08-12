@@ -11,6 +11,74 @@
 use facts::pic_8259;
 use facts::x86_exception_vectors;
 use facts::x86_interrupt_stacks;
+use omega::language::std::calling;
+
+// The complete pre-timer exception floor is deliberately fatal. Later
+// recovery policy may replace individual entries only through a fresh root
+// admission; the bootstrap table never leaves an absent or silently returning
+// architectural slot.
+pub data X86BootstrapExceptionDisposition {
+    case FatalDiagnostic;
+}
+
+// One record is consumed by both sides of exception admission: `stack` is the
+// normalized WCSU/nesting policy and `ist_index` is the x86 gate/TSS choice.
+// Current-stack entries pair `Interrupted` with IST zero. Dedicated entries
+// derive both fields from one X86IstStackClass so they cannot drift.
+pub data X86BootstrapExceptionEntryPolicy {
+    vector: u8 [0..=31];
+    stack: EntryStack;
+    ist_index: u8 [0..=7];
+    disposition: X86BootstrapExceptionDisposition;
+}
+
+// Total policy for all architectural exception slots. Reserved and
+// profile-optional vectors intentionally receive the same fatal current-stack
+// floor as ordinary exceptions, so unexpected delivery cannot target an
+// absent descriptor.
+pub machine x86_bootstrap_exception_entry_policy(
+    vector: u8 [0..=31]
+) -> X86BootstrapExceptionEntryPolicy {
+    transition vector == X86_EXCEPTION_NON_MASKABLE_INTERRUPT {
+        true -> dedicated(vector, X86_NMI_STACK)
+        _ -> double_fault(vector)
+    }
+
+    state double_fault(vector: u8 [0..=31]) -> X86BootstrapExceptionEntryPolicy {
+        transition vector == X86_EXCEPTION_DOUBLE_FAULT {
+            true -> dedicated(vector, X86_DOUBLE_FAULT_STACK)
+            _ -> machine_check(vector)
+        }
+    }
+
+    state machine_check(vector: u8 [0..=31]) -> X86BootstrapExceptionEntryPolicy {
+        transition vector == X86_EXCEPTION_MACHINE_CHECK {
+            true -> dedicated(vector, X86_MACHINE_CHECK_STACK)
+            _ -> current_stack(vector)
+        }
+    }
+
+    state dedicated(
+        vector: u8 [0..=31],
+        selected: X86IstStackClass
+    ) -> X86BootstrapExceptionEntryPolicy {
+        X86BootstrapExceptionEntryPolicy {
+            vector: vector,
+            stack: EntryStack::Dedicated { class: selected.stack_class },
+            ist_index: selected.ist_index,
+            disposition: X86BootstrapExceptionDisposition::FatalDiagnostic,
+        }
+    }
+
+    state current_stack(vector: u8 [0..=31]) -> X86BootstrapExceptionEntryPolicy {
+        X86BootstrapExceptionEntryPolicy {
+            vector: vector,
+            stack: EntryStack::Interrupted,
+            ist_index: 0,
+            disposition: X86BootstrapExceptionDisposition::FatalDiagnostic,
+        }
+    }
+}
 
 pub data X86EntryStackAssignment {
     vector: u8;

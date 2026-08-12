@@ -57,6 +57,7 @@ def portio_contract:
 | typed_machine($typed; "x86_nmi_entry_stack") as $nmi
 | typed_machine($typed; "x86_machine_check_entry_stack") as $machine_check
 | typed_machine($typed; "x86_legacy_timer_entry_stack") as $timer
+| typed_machine($typed; "x86_bootstrap_exception_entry_policy") as $exception_policy
 | typed_machine($typed; "X86IdtGateLayout::plan") as $gate_layout
 | typed_machine($typed; "Pic8259::remap_masked") as $pic_remap
 | typed_machine($typed; "Pic8259::unmask_timer") as $pic_unmask
@@ -66,6 +67,7 @@ def portio_contract:
       $nmi,
       $machine_check,
       $timer,
+      $exception_policy,
       $gate_layout,
       $pic_remap,
       $pic_unmask,
@@ -82,6 +84,26 @@ def portio_contract:
         ist_index: (field_value(field_value(.; "stack"); "ist_index").text | tonumber)
       }
   ] as $dedicated_assignments
+| [
+    $exception_policy.states[0:3][]
+    | {
+        vector: (.statements[0].guard.value.left.right.text | tonumber),
+        stack_class: (
+          field_value(.statements[0].target.arguments[1]; "stack_class").text
+          | tonumber
+        ),
+        ist_index: (
+          field_value(.statements[0].target.arguments[1]; "ist_index").text
+          | tonumber
+        ),
+        fallback: .statements[1].target.path[0]
+      }
+  ] as $exception_policy_branches
+| (
+    $exception_policy.states[]
+    | select(.name == "current_stack")
+    | .statements[0].value
+  ) as $current_stack_policy
 | assignment($timer) as $timer_assignment
 | field_value($timer_assignment; "vector").text as $timer_vector
 | field_value($timer_assignment; "stack") as $timer_stack
@@ -95,6 +117,25 @@ def portio_contract:
     ] and
     all($dedicated_assignments[]; .vector < 32);
     "dedicated fatal exception assignments no longer occupy the exception floor")
+| require(($exception_policy.states | map(.name)) == [
+      "entry",
+      "double_fault",
+      "machine_check",
+      "dedicated",
+      "current_stack"
+    ] and
+    $exception_policy_branches == [
+      { vector: 2,  stack_class: 2, ist_index: 2, fallback: "double_fault" },
+      { vector: 8,  stack_class: 1, ist_index: 1, fallback: "machine_check" },
+      { vector: 18, stack_class: 3, ist_index: 3, fallback: "current_stack" }
+    ] and
+    field_value($current_stack_policy; "stack").path == ["EntryStack", "Interrupted"] and
+    field_value($current_stack_policy; "ist_index").text == "0" and
+    field_value($current_stack_policy; "disposition").path == [
+      "X86BootstrapExceptionDisposition",
+      "FatalDiagnostic"
+    ];
+    "complete exception policy no longer covers the fatal 0-31 floor")
 | require($timer_vector == $remap_operations[2].arguments[1].text and
           $timer_vector == "0x20" and
           field_value($timer_stack; "stack_class").text == "4" and
@@ -174,6 +215,7 @@ def portio_contract:
     "x86_nmi_entry_stack",
     "x86_machine_check_entry_stack",
     "x86_legacy_timer_entry_stack",
+    "x86_bootstrap_exception_entry_policy",
     "X86IdtGateLayout::plan"
     | contract_machine($contracts; .)
   ] as $pure_contracts

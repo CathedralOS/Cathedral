@@ -56,6 +56,10 @@ Legend: `[ ]` open · `[x]` closed.
 - [ ] **First x86 exception/interrupt vertical slice — POLICY RESOLVED.**
   Pure source facts bind the four v1 stack-analysis classes to their hardware
   IST indices and compose the initial fault/timer vectors with those records.
+  Cathedral's source policy now also makes all exception slots 0–31 total:
+  NMI/double fault/machine check select their coupled dedicated class/IST,
+  while every other slot selects the current stack with IST zero, and every
+  bootstrap disposition remains fatal-diagnostic.
   The first legacy timer root publishes its exact entry and selected provider;
   its checked PIC body now emits the master EOI before consuming normalized
   acknowledgement completion. The next blocker is Omega deriving fixed-fuel

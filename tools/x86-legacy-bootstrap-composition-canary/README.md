@@ -8,6 +8,8 @@ checked PIC-remap, PIT-programming, and timer-unmask provider leaves.
 The canary pins these cross-package facts:
 
 - dedicated exception assignments remain within vectors 0–31;
+- the complete 0–31 exception policy selects those dedicated assignments and a
+  fatal current-stack/IST-zero fallback for every other slot;
 - the timer assignment and the PIC master remap both select vector `0x20`;
 - that timer uses the shared maskable-IRQ stack/IST class 4;
 - the IDT gate remains a pure fixed 16-byte plan;

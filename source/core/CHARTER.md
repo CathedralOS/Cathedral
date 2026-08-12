@@ -38,11 +38,13 @@ unmasking a live root, enabling CPU interrupts, or asserting a platform timer
 frequency. They are provider code, not ambient driver access; invoking them
 remains ordered after exception-IDT publication.
 `x86_interrupt_profile.omg` composes the pure vector and stack facts into the
-four initial vector-to-stack assignments without minting any of those missing
-authorities. `legacy_timer_root.omg` now supplies the source-level normalized
-entry/provider canary under Cathedral's maskable-IRQ stack and masked
-`InterruptReturn` plan. Its checked PIC path emits the master EOI, then consumes
-the exact pending acknowledgement through normalized completion. Omega-derived
-fixed-fuel and artifact-wide WCSU integration is the next blocker. The package
-still publishes no IDT, provisions no stack, unmasks no IRQ, and performs no
-installation.
+four initial vector-to-stack assignments and one total fatal-diagnostic
+bootstrap exception-floor policy over slots 0–31. The latter couples each
+normalized stack choice to the exact hardware IST index without minting any of
+those missing authorities. `legacy_timer_root.omg` now supplies the source-level
+normalized entry/provider canary under Cathedral's maskable-IRQ stack and
+masked `InterruptReturn` plan. Its checked PIC path emits the master EOI, then
+consumes the exact pending acknowledgement through normalized completion.
+Omega-derived fixed-fuel and artifact-wide WCSU integration is the next
+blocker. The package still publishes no IDT, provisions no stack, unmasks no
+IRQ, and performs no installation.
