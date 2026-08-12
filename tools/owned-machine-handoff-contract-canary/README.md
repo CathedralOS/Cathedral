@@ -11,8 +11,9 @@ successful grant.
 
 The owned-memory report remains exact through 99,999 MiB. Larger roots take a
 separate `99999+ MiB` route rather than overflowing the five-digit formatter;
-both routes fit the 16550's 16-byte FIFO burst and retain the same qualified
-extent through owned idle.
+page-to-MiB conversion saturates at 100,000 subtraction rounds because no larger
+exact value affects that route. Both outputs fit the 16550's 16-byte FIFO burst
+and retain the same qualified extent through owned idle.
 
 Before the irreversible exit, the selected conventional span must not carry
 `EFI_MEMORY_RUNTIME`; it must be nonempty, page-aligned, small enough for exact

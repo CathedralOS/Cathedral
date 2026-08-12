@@ -143,6 +143,7 @@ def has_granted_extent_parameter:
 | state($machine; "exit_failed") as $exit_failed
 | state($machine; "own") as $own
 | state($machine; "serial_init") as $serial_init
+| state($machine; "to_mib") as $to_mib
 | state($machine; "digits_wait") as $digits_wait
 | state($machine; "report_size") as $report_size
 | state($machine; "oversized_mib") as $oversized_mib
@@ -903,6 +904,50 @@ def has_granted_extent_parameter:
             }
           ]);
     "qualified extent no longer remains on the owned path or leaked onto failure idle")
+| require((($to_mib.statements[0].guard.value.left | conjunct_signatures) == [
+      {
+        left: {kind: "path", path: ["pages"]},
+        operator: ">=",
+        right: {kind: "integer", text: "256"}
+      },
+      {
+        left: {kind: "path", path: ["mib"]},
+        operator: "<",
+        right: {kind: "integer", text: "100000"}
+      }
+    ]) and
+    (transition_targets($to_mib) == [
+      {
+        target: "to_mib",
+        arguments: [
+          {kind: "name", path: ["extent"]},
+          {kind: "binary"},
+          {kind: "binary"}
+        ],
+        guard: "when"
+      },
+      {
+        target: "owned_wait",
+        arguments: [
+          {kind: "name", path: ["extent"]},
+          {kind: "name", path: ["mib"]}
+        ],
+        guard: "always"
+      }
+    ]) and
+    ($to_mib.statements[0].target.arguments[1] == {
+      kind: "binary",
+      left: {kind: "name", path: ["pages"]},
+      operator: "-",
+      right: {kind: "integer", text: "256"}
+    }) and
+    ($to_mib.statements[0].target.arguments[2] == {
+      kind: "binary",
+      left: {kind: "name", path: ["mib"]},
+      operator: "+",
+      right: {kind: "integer", text: "1"}
+    });
+    "page-to-MiB conversion no longer saturates after at most 100000 rounds")
 | require((transition_targets($digits_wait) == [
       {
         target: "digits_wait",

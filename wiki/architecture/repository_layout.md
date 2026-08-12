@@ -304,8 +304,9 @@ Current reality (2026-07-28):
   graph into owned idle), over the milestone-2 ABI in
   `source/contracts/uefi/boot_services.omg`. QEMU/OVMF prints the owned-memory
   report after that crossing, using `99999+ MiB` as an honest lower bound when
-  the exact value exceeds its five-digit FIFO-sized formatter. Bounded map
-  resize, a single whole-transaction stale-key refresh, revision-pinned aligned
+  the exact value exceeds its five-digit FIFO-sized formatter and saturating the
+  conversion after 100,000 subtraction rounds. Bounded map resize, a single
+  whole-transaction stale-key refresh, revision-pinned aligned
   whole-descriptor traversal,
   runtime-region exclusion, complete descriptor-geometry checks, selected-span
   disjointness auditing, and conservative numeric root-geometry validation are

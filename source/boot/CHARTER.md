@@ -29,7 +29,8 @@ descriptor count before typed traversal, as well as the exact supported UEFI
 descriptor revision.
 The serial report is exact through 99,999 MiB and emits the honest bounded form
 `99999+ MiB` for larger roots, so its five-digit formatter cannot wrap into
-non-digit bytes.
+non-digit bytes. Page-to-MiB conversion saturates at 100,000 rounds because no
+larger exact value affects that report.
 Repeated stale-key rejection fails closed rather than looping indefinitely.
 Before exiting firmware it excludes runtime-marked descriptors and rejects an
 empty, unaligned, page-count-overflowing, or non-representable conventional

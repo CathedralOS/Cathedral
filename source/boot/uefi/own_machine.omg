@@ -434,11 +434,12 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     }
 
     // Pages -> MiB by repeated subtraction (256 pages = 1 MiB; the runtime
-    // lowering has no division yet). Bounded by the span size: ~4096 rounds
-    // for a 4 GiB span.
+    // lowering has no division yet). Stop at 100000 MiB because every larger
+    // value shares the honest `99999+ MiB` report. The conversion therefore
+    // takes at most 100000 rounds regardless of a hostile-but-valid span size.
     state to_mib(extent: Extent in Granted,
                  pages: u64 in Trapping, mib: u64 in Trapping) {
-        transition pages >= 256 {
+        transition pages >= 256 && mib < 100000 {
             true -> to_mib(extent, pages - 256, mib + 1)
             _    -> owned_wait(extent, mib)
         }
