@@ -1,0 +1,5 @@
+// Isolated pure-fact frontier for Cathedral's initial x86 interrupt profile.
+
+machine build(b: &mut Build) {
+    b.depend("core", path("core"));
+}

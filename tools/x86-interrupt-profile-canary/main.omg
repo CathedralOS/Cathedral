@@ -1,0 +1,9 @@
+// Compile-only acceptance root for source/core/x86_interrupt_profile.omg.
+
+use core::x86_interrupt_profile;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}
