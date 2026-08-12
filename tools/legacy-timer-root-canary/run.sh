@@ -153,7 +153,10 @@ assert_contains "$TERMINAL_SUMMARY" 'kind=CallUnit callee=machine:2 callee_attac
 assert_contains "$TERMINAL_SUMMARY" 'transfers=[claim:1->argument:0]'
 assert_contains "$TERMINAL_SUMMARY" 'kind=PortWrite service=service:1 service_identity=PortIo port=0x0020 value=0x20'
 assert_contains "$TERMINAL_SUMMARY" 'kind=BoundaryCallUnit boundary=boundary:1 boundary_identity=InterruptAcknowledgement::complete'
-assert_contains "$TERMINAL_SUMMARY" 'settlements=[claim:2->argument:0]'
+# Claim identities are dense within each terminal machine. The callee therefore
+# settles its own `claim:1`; the separate closure-cardinality checks below still
+# require one caller claim and one callee claim overall.
+assert_contains "$TERMINAL_SUMMARY" 'settlements=[claim:1->argument:0]'
 
 # Presence and relative order are insufficient for an exactly-once interrupt
 # acknowledgement: those checks would still accept an extra provider machine,
