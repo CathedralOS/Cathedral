@@ -9,7 +9,9 @@ non-suspending/non-blocking `PortIo` provider body. It also uses Omega's generic
 `inspect-terminal --machine LegacyPicTimerRoot::enter` surface to verify the
 actual checked hard-root closure: root claim transfer to `Pic8259`, exact
 `PortWrite(0x20, 0x20)` authority, acknowledgement boundary settlement, and
-value-less normal return.
+value-less normal return. The closure cardinality is pinned as well as its
+ordering, so an extra machine, port write, settlement, or terminator fails the
+canary instead of hiding behind the required rows.
 
 Run:
 

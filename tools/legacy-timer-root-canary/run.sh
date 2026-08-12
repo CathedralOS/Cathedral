@@ -87,6 +87,30 @@ assert_ordered_lines() {
   done
 }
 
+assert_line_count() {
+  local artifact="$1"
+  local text="$2"
+  local expected="$3"
+  local actual
+  actual="$(grep -F -c -- "$text" "$artifact" || true)"
+  if [[ "$actual" != "$expected" ]]; then
+    echo "error: $(basename "$artifact") contains $actual line(s), expected $expected: $text" >&2
+    exit 1
+  fi
+}
+
+assert_prefix_count() {
+  local artifact="$1"
+  local prefix="$2"
+  local expected="$3"
+  local actual
+  actual="$(awk -v prefix="$prefix" 'index($0, prefix) == 1 { count += 1 } END { print count + 0 }' "$artifact")"
+  if [[ "$actual" != "$expected" ]]; then
+    echo "error: $(basename "$artifact") contains $actual line(s), expected $expected, beginning with: $prefix" >&2
+    exit 1
+  fi
+}
+
 # Selected provider and exact accepted authority route.
 assert_contains "$QUALIFICATION" '"boundary": "CathedralTimerRoot"'
 assert_contains "$QUALIFICATION" '"requirement": "InterruptEntry::enter"'
@@ -130,6 +154,25 @@ assert_contains "$TERMINAL_SUMMARY" 'transfers=[claim:1->argument:0]'
 assert_contains "$TERMINAL_SUMMARY" 'kind=PortWrite service=service:1 service_identity=PortIo port=0x0020 value=0x20'
 assert_contains "$TERMINAL_SUMMARY" 'kind=BoundaryCallUnit boundary=boundary:1 boundary_identity=InterruptAcknowledgement::complete'
 assert_contains "$TERMINAL_SUMMARY" 'settlements=[claim:2->argument:0]'
+
+# Presence and relative order are insufficient for an exactly-once interrupt
+# acknowledgement: those checks would still accept an extra provider machine,
+# hardware write, or settlement. Pin the complete terminal closure cardinality
+# so later fixed-fuel/WCSU work starts from one root call, one PIC EOI, one
+# normalized acknowledgement settlement, and two value-less returns.
+assert_prefix_count "$TERMINAL_SUMMARY" 'type ' 3
+assert_prefix_count "$TERMINAL_SUMMARY" 'domain ' 1
+assert_prefix_count "$TERMINAL_SUMMARY" 'service ' 1
+assert_prefix_count "$TERMINAL_SUMMARY" 'boundary ' 1
+assert_prefix_count "$TERMINAL_SUMMARY" 'machine ' 2
+assert_prefix_count "$TERMINAL_SUMMARY" 'parameter ' 2
+assert_prefix_count "$TERMINAL_SUMMARY" 'claim ' 2
+assert_prefix_count "$TERMINAL_SUMMARY" 'operation ' 3
+assert_prefix_count "$TERMINAL_SUMMARY" 'terminator ' 2
+assert_line_count "$TERMINAL_SUMMARY" 'kind=CallUnit ' 1
+assert_line_count "$TERMINAL_SUMMARY" 'kind=PortWrite ' 1
+assert_line_count "$TERMINAL_SUMMARY" 'kind=BoundaryCallUnit ' 1
+assert_line_count "$TERMINAL_SUMMARY" 'kind=ReturnUnit ' 2
 assert_ordered_lines "$TERMINAL_SUMMARY" \
   'machine id=machine:1 attachment=named(name(LegacyPicTimerRoot)) result=unit' \
   'kind=CallUnit callee=machine:2 callee_attachment=named(name(Pic8259))' \
