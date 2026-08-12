@@ -42,16 +42,18 @@ machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable)
 reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 {
     let bs: &BootServicesTable = table.boot_services;          // transitive vouch, like con_out
-    transition { _ -> refresh_map(bs, handle) }
+    transition { _ -> refresh_map(bs, handle, 0) }
 
     // Get a fresh map and its inseparable key. This state is also the only
     // retry target after ExitBootServices reports EFI_INVALID_PARAMETER: the
     // old key and every descriptor-derived candidate are discarded together.
-    state refresh_map(bs: &BootServicesTable, handle: EfiHandle) {
-        transition { _ -> get_map(bs, handle, 16384) }
+    state refresh_map(bs: &BootServicesTable, handle: EfiHandle,
+                      stale_retry_used: u64 [0..=1]) {
+        transition { _ -> get_map(bs, handle, stale_retry_used, 16384) }
     }
 
     state get_map(bs: &BootServicesTable, handle: EfiHandle,
+                  stale_retry_used: u64 [0..=1],
                   attempted_capacity: u64 [16384..=65536]) {
         let mut map_size: u64 = attempted_capacity; // in = capacity, out = actual/needed
         let mut key: MapKey = MapKey { raw: 0 };
@@ -81,8 +83,10 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                    map_size >= desc_size &&
                    map_size <= attempted_capacity && map_size <= 65536 &&
                    map_size % desc_size == 0 {
-            true -> walk(bs, handle, map_size, desc_size, key, 0, 0, 0)
-            _    -> map_failed(bs, handle, attempted_capacity, status_code, map_size)
+            true -> walk(bs, handle, stale_retry_used,
+                         map_size, desc_size, key, 0, 0, 0)
+            _    -> map_failed(bs, handle, stale_retry_used,
+                               attempted_capacity, status_code, map_size)
         }
     }
 
@@ -90,10 +94,11 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // only once. Key, descriptor size/version, and all buffer contents from the
     // failed call are ignored. A requirement above the static ceiling parks.
     state map_failed(bs: &BootServicesTable, handle: EfiHandle,
+                     stale_retry_used: u64 [0..=1],
                      attempted_capacity: u64 [16384..=65536],
                      status_code: u64, required_size: u64) {
         transition attempted_capacity == 16384 && status_code == EFI_BUFFER_TOO_SMALL.code && required_size > 16384 && required_size <= 65536 {
-            true -> get_map(bs, handle, 65536)
+            true -> get_map(bs, handle, stale_retry_used, 65536)
             _    -> idle()
         }
     }
@@ -111,28 +116,31 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // (= 65536 buffer - 40 descriptor footprint). `in Trapping` on the walk
     // arithmetic: hostile out-values trip a trap instead of wrapping.
     state walk(bs: &BootServicesTable, handle: EfiHandle,
+               stale_retry_used: u64 [0..=1],
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64) {
         let d: &EfiMemoryDescriptor = &self.map_buf.bytes[offset] as &EfiMemoryDescriptor;
         let is_free: bool = d.kind == EFI_CONVENTIONAL_MEMORY;
         transition is_free && d.number_of_pages > best_pages {
-            true -> step(bs, handle, map_size, desc_size, key,
+            true -> step(bs, handle, stale_retry_used, map_size, desc_size, key,
                          offset, d.physical_start, d.number_of_pages)
-            _    -> step(bs, handle, map_size, desc_size, key,
+            _    -> step(bs, handle, stale_retry_used, map_size, desc_size, key,
                          offset, best_start, best_pages)
         }
     }
 
     state step(bs: &BootServicesTable, handle: EfiHandle,
+               stale_retry_used: u64 [0..=1],
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64) {
         // The second conjunct is implied by the first (map_size <= 65536,
         // desc_size >= 40) but spelled out so the loop edge's bound is a
         // DIRECT guard fact for the prover; it costs one always-true compare.
         transition offset + desc_size + desc_size <= map_size && offset + desc_size <= 65496 {
-            true -> walk(bs, handle, map_size, desc_size, key,
+            true -> walk(bs, handle, stale_retry_used, map_size, desc_size, key,
                          offset + desc_size, best_start, best_pages)
-            _    -> validate_candidate(bs, handle, key, best_start, best_pages)
+            _    -> validate_candidate(bs, handle, stale_retry_used,
+                                       key, best_start, best_pages)
         }
     }
 
@@ -143,16 +151,19 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // exact; alignment follows the UEFI page contract but is checked rather
     // than trusted from raw descriptor bytes.
     state validate_candidate(bs: &BootServicesTable, handle: EfiHandle,
+                             stale_retry_used: u64 [0..=1],
                              key: MapKey, best_start: u64, best_pages: u64) {
         transition best_pages > 0 &&
                    best_pages <= MAX_BOOTSTRAP_PAGE_COUNT &&
                    best_start % PAGE_SIZE == 0 {
-            true -> validate_candidate_end(bs, handle, key, best_start, best_pages)
+            true -> validate_candidate_end(bs, handle, stale_retry_used,
+                                           key, best_start, best_pages)
             _ -> idle()
         }
     }
 
     state validate_candidate_end(bs: &BootServicesTable, handle: EfiHandle,
+                                 stale_retry_used: u64 [0..=1],
                                  key: MapKey, best_start: u64,
                                  best_pages: u64 [1..=4503599627370495]) {
         let checked_pages: u64 in Trapping = best_pages as u64 in Trapping;
@@ -160,7 +171,8 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         let length: u64 = checked_length as u64;
         let max_address: u64 = 0xFFFF_FFFF_FFFF_FFFF;
         transition best_start <= max_address - length {
-            true -> exit(bs, handle, key, best_start, best_pages, length)
+            true -> exit(bs, handle, stale_retry_used,
+                         key, best_start, best_pages, length)
             _ -> idle()
         }
     }
@@ -168,20 +180,26 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // Exit boot services against the current key. On success firmware is gone
     // and the map is final. EFI_INVALID_PARAMETER means the key became stale:
     // do not grant, discard the old map-derived candidate, and obtain a new map
-    // and key before retrying. Any other firmware error parks unowned.
-    state exit(bs: &BootServicesTable, handle: EfiHandle, key: MapKey,
+    // and key before the one permitted retry. Any other firmware error parks
+    // unowned.
+    state exit(bs: &BootServicesTable, handle: EfiHandle,
+               stale_retry_used: u64 [0..=1], key: MapKey,
                best_start: u64, best_pages: u64, length: u64) {
         let exit_status: EfiStatus = self.boot_svc.exit_boot_services(bs, handle, key);
         let exit_code: u64 = exit_status.code;
         transition exit_code == 0 {
             true -> own(best_start, best_pages, length)
-            _    -> exit_failed(bs, handle, exit_code)
+            _    -> exit_failed(bs, handle, stale_retry_used, exit_code)
         }
     }
 
-    state exit_failed(bs: &BootServicesTable, handle: EfiHandle, exit_code: u64) {
-        transition exit_code == EFI_INVALID_PARAMETER.code {
-            true -> refresh_map(bs, handle)
+    // The first stale key gets the spec-required fresh map/exit pair. A second
+    // stale rejection parks: hostile or broken firmware cannot keep Cathedral
+    // in an unbounded bootstrap loop, and no rejected transaction can grant.
+    state exit_failed(bs: &BootServicesTable, handle: EfiHandle,
+                      stale_retry_used: u64 [0..=1], exit_code: u64) {
+        transition stale_retry_used == 0 && exit_code == EFI_INVALID_PARAMETER.code {
+            true -> refresh_map(bs, handle, 1)
             _    -> idle()
         }
     }

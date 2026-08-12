@@ -142,7 +142,8 @@ def has_granted_extent_parameter:
         target: "refresh_map",
         arguments: [
           { kind: "name", path: ["bs"] },
-          { kind: "name", path: ["handle"] }
+          { kind: "name", path: ["handle"] },
+          { kind: "integer", text: "0" }
         ],
         guard: "always"
       }
@@ -154,6 +155,7 @@ def has_granted_extent_parameter:
         arguments: [
           { kind: "name", path: ["bs"] },
           { kind: "name", path: ["handle"] },
+          { kind: "name", path: ["stale_retry_used"] },
           { kind: "integer", text: "16384" }
         ],
         guard: "always"
@@ -166,8 +168,14 @@ def has_granted_extent_parameter:
   ) as $map_call
 | require(($map_call.initial_value.kind == "call") and
           ($map_call.initial_value.target == "get_memory_map") and
-          ($get_map.parameters[2].name == "attempted_capacity") and
+          ($get_map.parameters[2].name == "stale_retry_used") and
           ($get_map.parameters[2].type_reference.constraints[0] == {
+            kind: "range",
+            minimum: {kind: "integer", text: "0"},
+            maximum: {kind: "integer", text: "1"}
+          }) and
+          ($get_map.parameters[3].name == "attempted_capacity") and
+          ($get_map.parameters[3].type_reference.constraints[0] == {
             kind: "range",
             minimum: {kind: "integer", text: "16384"},
             maximum: {kind: "integer", text: "65536"}
@@ -252,6 +260,7 @@ def has_granted_extent_parameter:
               arguments: [
                 { kind: "name", path: ["bs"] },
                 { kind: "name", path: ["handle"] },
+                { kind: "name", path: ["stale_retry_used"] },
                 { kind: "name", path: ["map_size"] },
                 { kind: "name", path: ["desc_size"] },
                 { kind: "name", path: ["key"] },
@@ -266,6 +275,7 @@ def has_granted_extent_parameter:
               arguments: [
                 { kind: "name", path: ["bs"] },
                 { kind: "name", path: ["handle"] },
+                { kind: "name", path: ["stale_retry_used"] },
                 { kind: "name", path: ["attempted_capacity"] },
                 { kind: "name", path: ["status_code"] },
                 { kind: "name", path: ["map_size"] }
@@ -307,6 +317,7 @@ def has_granted_extent_parameter:
         arguments: [
           { kind: "name", path: ["bs"] },
           { kind: "name", path: ["handle"] },
+          { kind: "name", path: ["stale_retry_used"] },
           { kind: "integer", text: "65536" }
         ],
         guard: "when"
@@ -318,7 +329,8 @@ def has_granted_extent_parameter:
       $walk.statements[]
       | select(.kind == "transition");
       .target.path[0] == "step"
-      and .target.arguments[4] == {kind: "name", path: ["key"]}
+      and .target.arguments[2] == {kind: "name", path: ["stale_retry_used"]}
+      and .target.arguments[5] == {kind: "name", path: ["key"]}
     ) and
     ($walk.statements[0].initial_value.value == {
       kind: "indexed",
@@ -335,11 +347,13 @@ def has_granted_extent_parameter:
     }) and
     ($step.statements[0].target.path[0] == "walk") and
     ($step.statements[0].guard.value.left.right.right.text == "65496") and
-    ($step.statements[0].target.arguments[4] == {kind: "name", path: ["key"]}) and
+    ($step.statements[0].target.arguments[2] == {kind: "name", path: ["stale_retry_used"]}) and
+    ($step.statements[0].target.arguments[5] == {kind: "name", path: ["key"]}) and
     ($step.statements[1].target.path[0] == "validate_candidate") and
     ($step.statements[1].target.arguments == [
       {kind: "name", path: ["bs"]},
       {kind: "name", path: ["handle"]},
+      {kind: "name", path: ["stale_retry_used"]},
       {kind: "name", path: ["key"]},
       {kind: "name", path: ["best_start"]},
       {kind: "name", path: ["best_pages"]}
@@ -373,6 +387,7 @@ def has_granted_extent_parameter:
         arguments: [
           {kind: "name", path: ["bs"]},
           {kind: "name", path: ["handle"]},
+          {kind: "name", path: ["stale_retry_used"]},
           {kind: "name", path: ["key"]},
           {kind: "name", path: ["best_start"]},
           {kind: "name", path: ["best_pages"]}
@@ -382,7 +397,7 @@ def has_granted_extent_parameter:
       {target: "idle", arguments: [], guard: "always"}
     ];
     "empty, oversized, or unaligned firmware spans no longer fail closed")
-| require(($validate_candidate_end.parameters[4].type_reference == {
+| require(($validate_candidate_end.parameters[5].type_reference == {
       kind: "constrained",
       base_type: {kind: "named", name: "u64"},
       constraints: [{
@@ -419,6 +434,7 @@ def has_granted_extent_parameter:
         arguments: [
           {kind: "name", path: ["bs"]},
           {kind: "name", path: ["handle"]},
+          {kind: "name", path: ["stale_retry_used"]},
           {kind: "name", path: ["key"]},
           {kind: "name", path: ["best_start"]},
           {kind: "name", path: ["best_pages"]},
@@ -451,30 +467,49 @@ def has_granted_extent_parameter:
               arguments: [
                 { kind: "name", path: ["bs"] },
                 { kind: "name", path: ["handle"] },
+                { kind: "name", path: ["stale_retry_used"] },
                 { kind: "name", path: ["exit_code"] }
               ],
               guard: "always"
             }
           ]);
     "ExitBootServices no longer separates successful ownership from failure handling")
-| ($exit_failed.statements[0].guard.value.left.right) as $invalid_parameter
-| require(($invalid_parameter.kind == "member") and
-          ($invalid_parameter.member == "code") and
-          ($invalid_parameter.receiver.type_name == "EfiStatus") and
-          (($invalid_parameter.receiver | field_value(.; "code") | .text)
-            == "0x8000000000000002") and
+| require(($exit_failed.parameters[2].name == "stale_retry_used") and
+          ($exit_failed.parameters[2].type_reference.constraints[0] == {
+            kind: "range",
+            minimum: {kind: "integer", text: "0"},
+            maximum: {kind: "integer", text: "1"}
+          }) and
+          (($exit_failed.statements[0].guard.value.left | conjunct_signatures) == [
+            {
+              left: {kind: "path", path: ["stale_retry_used"]},
+              operator: "==",
+              right: {kind: "integer", text: "0"}
+            },
+            {
+              left: {kind: "path", path: ["exit_code"]},
+              operator: "==",
+              right: {
+                kind: "constant_member",
+                type_name: "EfiStatus",
+                member: "code",
+                value: "0x8000000000000002"
+              }
+            }
+          ]) and
           (transition_targets($exit_failed) == [
             {
               target: "refresh_map",
               arguments: [
                 { kind: "name", path: ["bs"] },
-                { kind: "name", path: ["handle"] }
+                { kind: "name", path: ["handle"] },
+                { kind: "integer", text: "1" }
               ],
               guard: "when"
             },
             { target: "idle", arguments: [], guard: "always" }
           ]);
-    "stale ExitBootServices key no longer refreshes the whole map/key transaction")
+    "stale ExitBootServices retry is no longer one bounded whole-map transaction")
 | first(
     $own.statements[]
     | select(.kind == "local_data" and .name == "first_extent")

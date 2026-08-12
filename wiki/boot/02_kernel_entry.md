@@ -35,8 +35,9 @@ One term to fix, since the rest of the phase leans on it: virtual memory works t
 
 The map and its `MapKey` form one transaction. Cathedral's current boot source
 discards the entire descriptor-derived candidate and refreshes the map/key pair
-when `ExitBootServices` reports a stale key; only a successful exit can reach
-the first extent grant. The bootstrap image statically provisions 64 KiB but
+once when `ExitBootServices` reports a stale key; a second stale rejection parks
+without a grant. Only a successful exit can reach the first extent grant. The
+bootstrap image statically provisions 64 KiB but
 advertises 16 KiB first; an exact `EFI_BUFFER_TOO_SMALL` result may raise that
 window once to the fixed ceiling. No allocator or memory authority participates,
 and malformed results or requirements above 64 KiB fail closed.

@@ -2,11 +2,12 @@
 
 This compile-only harness checks Cathedral's existing milestone-2/3 handoff
 machine independently of the unresolved UEFI target-entry bridge. It pins each
-fresh memory map to its returned key, requires a stale-key
+fresh memory map to its returned key and permits exactly one stale-key
 `EFI_INVALID_PARAMETER` result from `ExitBootServices` to discard the old
-candidate and restart that whole transaction, and admits the qualified extent
-grant only after success. Other failures park without acquiring an extent; the
-post-firmware serial/owned-idle graph retains the one successful grant.
+candidate and restart that whole transaction. A second stale rejection parks;
+only success admits the qualified extent grant. Other failures park without
+acquiring an extent; the post-firmware serial/owned-idle graph retains the one
+successful grant.
 
 Before the irreversible exit, the selected conventional span must be nonempty,
 page-aligned, small enough for exact page-to-byte conversion, and have a
