@@ -48,12 +48,14 @@ references. Cathedral currently understands UEFI descriptor revision 1 only;
 any other reported revision fails closed before interpretation.
 
 The selected conventional-memory descriptor is also checked before the
-irreversible exit: its span must contain at least one page, begin on a 4-KiB
-boundary, convert from pages to bytes without overflow, and have a
-representable one-past end. The exact checked length crosses successful
-`ExitBootServices` with its map-derived start and is the geometry presented to
-the admitted root provider. These checks reject malformed firmware data; they
-do not themselves establish physical-space, rights, backing, or ownership.
+irreversible exit: it must not carry `EFI_MEMORY_RUNTIME`, its span must contain
+at least one page, begin on a 4-KiB boundary, convert from pages to bytes without
+overflow, and have a representable one-past end. Runtime-marked descriptors are
+reserved for the firmware mapping lifecycle and remain ineligible. The exact
+checked length crosses successful `ExitBootServices` with its map-derived start
+and is the geometry presented to the admitted root provider. These checks reject
+malformed firmware data; they do not themselves establish physical-space,
+rights, backing, or ownership.
 
 The IDT should normally be materialized and validated after Cathedral's final
 image and virtual placements are known but before `ExitBootServices`, while

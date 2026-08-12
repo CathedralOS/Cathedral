@@ -25,6 +25,13 @@ pub const EFI_ACPI_RECLAIM:        u32 = 9;
 // Unknown revisions fail closed in boot source before any typed recast.
 pub const EFI_MEMORY_DESCRIPTOR_VERSION: u32 = 1;
 
+// Memory that must retain an OS virtual mapping for firmware runtime services.
+// Cathedral's current bootstrap cannot admit such a region as ordinary RAM.
+pub data EfiMemoryAttribute { bits: u64; }
+pub const EFI_MEMORY_RUNTIME: EfiMemoryAttribute = EfiMemoryAttribute {
+    bits: 0x8000_0000_0000_0000,
+};
+
 // --- EFI_MEMORY_DESCRIPTOR -------------------------------------------------
 // The `Uefi` policy pads `kind` to 8-align `physical_start`. sizeof is 40, BUT
 // the map array MUST be strided by the runtime DescriptorSize (firmware may
@@ -36,7 +43,7 @@ pub data EfiMemoryDescriptor {
     physical_start:  u64;   // EFI_PHYSICAL_ADDRESS
     virtual_start:   u64;   // EFI_VIRTUAL_ADDRESS
     number_of_pages: u64;
-    attribute:       u64;
+    attribute:       u64;   // EFI_MEMORY_* bit set
 }
 
 // The map key GetMemoryMap returns; ExitBootServices only succeeds against the

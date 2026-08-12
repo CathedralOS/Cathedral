@@ -9,9 +9,10 @@ only success admits the qualified extent grant. Other failures park without
 acquiring an extent; the post-firmware serial/owned-idle graph retains the one
 successful grant.
 
-Before the irreversible exit, the selected conventional span must be nonempty,
-page-aligned, small enough for exact page-to-byte conversion, and have a
-representable one-past end. The validated byte length stays in the same
+Before the irreversible exit, the selected conventional span must not carry
+`EFI_MEMORY_RUNTIME`; it must be nonempty, page-aligned, small enough for exact
+page-to-byte conversion, and have a representable one-past end. Runtime-marked
+descriptors remain ineligible. The validated byte length stays in the same
 map/key transaction through successful exit and becomes the exact grant
 geometry. Rejection parks inside firmware without calling the provider.
 

@@ -325,6 +325,10 @@ def has_granted_extent_parameter:
       { target: "idle", arguments: [], guard: "always" }
     ]);
     "map growth is no longer one exact bounded EFI_BUFFER_TOO_SMALL retry")
+| first(
+    $walk.statements[]
+    | select(.kind == "local_data" and .name == "is_free")
+  ) as $is_free
 | require(all(
       $walk.statements[]
       | select(.kind == "transition");
@@ -345,6 +349,46 @@ def has_granted_extent_parameter:
       },
       index: {kind: "name", path: ["offset"]}
     }) and
+    ($is_free.initial_value == {
+      kind: "binary",
+      left: {
+        kind: "binary",
+        left: {
+          kind: "member",
+          receiver: {kind: "name", path: ["d"]},
+          member: "kind"
+        },
+        operator: "==",
+        right: {kind: "integer", text: "7"}
+      },
+      operator: "&&",
+      right: {
+        kind: "binary",
+        left: {
+          kind: "binary",
+          left: {
+            kind: "member",
+            receiver: {kind: "name", path: ["d"]},
+            member: "attribute"
+          },
+          operator: "&",
+          right: {
+            kind: "member",
+            receiver: {
+              kind: "struct_literal",
+              type_name: "EfiMemoryAttribute",
+              fields: [{
+                name: "bits",
+                value: {kind: "integer", text: "0x8000000000000000"}
+              }]
+            },
+            member: "bits"
+          }
+        },
+        operator: "==",
+        right: {kind: "integer", text: "0"}
+      }
+    }) and
     ($step.statements[0].target.path[0] == "walk") and
     ($step.statements[0].guard.value.left.right.right.text == "65496") and
     ($step.statements[0].target.arguments[2] == {kind: "name", path: ["stale_retry_used"]}) and
@@ -358,7 +402,7 @@ def has_granted_extent_parameter:
       {kind: "name", path: ["best_start"]},
       {kind: "name", path: ["best_pages"]}
     ]);
-    "descriptor walk no longer carries exactly the key returned with its map")
+    "descriptor walk no longer excludes runtime memory or carries its exact key")
 | require(($validate_candidate.statements[0].guard.value.left | conjunct_signatures) == [
       {
         left: {kind: "path", path: ["best_pages"]},

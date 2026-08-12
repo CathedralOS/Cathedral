@@ -105,7 +105,8 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 
     // Walk descriptors: stride by the aligned RUNTIME desc_size (never sizeof),
     // recast each slice to &EfiMemoryDescriptor, and track the largest
-    // conventional-memory span. Split walk/step so each transition carries ONE inline guard: walk
+    // conventional-memory span that is not reserved for UEFI runtime mapping.
+    // Split walk/step so each transition carries ONE inline guard: walk
     // decides the best-span update, step decides whether a WHOLE next
     // descriptor fits — bounding its END (`offset + 2*desc_size <= map_size`),
     // not just its start, which is what makes the loop edge's footprint
@@ -120,7 +121,8 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64) {
         let d: &EfiMemoryDescriptor = &self.map_buf.bytes[offset] as &EfiMemoryDescriptor;
-        let is_free: bool = d.kind == EFI_CONVENTIONAL_MEMORY;
+        let is_free: bool = d.kind == EFI_CONVENTIONAL_MEMORY &&
+                            (d.attribute & EFI_MEMORY_RUNTIME.bits) == 0;
         transition is_free && d.number_of_pages > best_pages {
             true -> step(bs, handle, stale_retry_used, map_size, desc_size, key,
                          offset, d.physical_start, d.number_of_pages)
