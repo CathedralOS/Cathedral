@@ -8,13 +8,14 @@ records 2, 1, and 3 respectively, and every other slot uses the interrupted
 kernel stack with IST zero. The harness also pins the first remapped legacy
 timer to the shared maskable-IRQ class/index 4.
 
-The same harness pins Cathedral's pure gate-policy validator. A
-`PolicyConsistent` candidate matches the total policy derived internally for
-the requested table slot: exact vector, IST, and fatal disposition plus the
-fixed present/ring-0/interrupt-gate attributes and zero reserved field. The
-result intentionally says nothing about the candidate's handler entry identity
-or selector: those require the admitted source resolver and boot-selected
-code-segment fact before materialization.
+The same harness pins Cathedral's pure gate-policy validators. The single-slot
+helper checks exact vector, IST, fatal disposition, fixed
+present/ring-0/interrupt-gate attributes, and zero reserved field. The
+table-level validator accepts only a fixed 32-entry candidate after a checked,
+terminating scan accumulates that decision for every slot; a failure cannot
+return a partially checked table. Neither result says anything about handler
+entry identity or selector: those require the admitted source resolver and
+boot-selected code-segment fact before materialization.
 
 Run:
 
@@ -28,6 +29,7 @@ builds that sibling with Cargo, in that order. Typed-artifact validation uses
 `jq` and fails with an explicit dependency error when it is unavailable.
 
 This canary grants no stack storage, root admission, IDT/TSS access, interrupt
-authority, or machine control. It validates authored policy data and a partial
-prepublication check that later WCSU/root admission and gate materialization
-must consume with the still-missing identity and selector evidence.
+authority, or machine control. It validates authored policy data and a
+complete-floor but still partial-field prepublication check that later
+WCSU/root admission and gate materialization must consume with the
+still-missing identity and selector evidence.

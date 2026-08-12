@@ -361,12 +361,14 @@ derives the total policy internally from the requested table slot, pairs an
 `X86IdtGate` candidate with its vector and fatal disposition, then rejects any
 mismatch in vector, coupled IST, disposition, fixed present/ring-0 interrupt-
 gate attributes, or reserved-zero field. Success yields only ordinary
-`PolicyConsistent` data; it is not sealed and carries no destination,
-materialization, or publication authority. The handler entry identity and code
-selector remain unchecked until Omega's admitted resolver/source carrier and
-Cathedral's boot-selected segment fact can supply authoritative inputs. That
-missing integration is an engineering seam, not a new IDT lifecycle or an open
-language-design decision.
+`PolicyConsistent` data. The table-level form accepts one fixed 32-entry
+candidate only after a checked decreasing-fuel scan accumulates that decision
+for every slot; it cannot return a partial floor. Neither result is sealed or
+carries destination, materialization, or publication authority. Handler entry
+identities and code selectors remain unchecked until Omega's admitted
+resolver/source carrier and Cathedral's boot-selected segment fact can supply
+authoritative inputs. That missing integration is an engineering seam, not a
+new IDT lifecycle or an open language-design decision.
 
 The first entry stub saves all ordinary GPRs. Final placed code for the handler
 and every transitive callee must remain within a no-SIMD/x87 state ceiling.

@@ -51,6 +51,21 @@ pub data X86BootstrapExceptionGatePolicyCheck {
     case PolicyConsistent(candidate: X86BootstrapExceptionGateCandidate);
 }
 
+// One complete candidate floor. The fixed array makes absence unrepresentable:
+// callers cannot ask Cathedral to bless a sparse subset and later publish the
+// unchecked holes. This is still ordinary unpublished data, not IDT storage.
+pub data X86BootstrapExceptionTableCandidate {
+    entries: [X86BootstrapExceptionGateCandidate; 32];
+}
+
+// Table-level consistency means only that every slot passed the same decided
+// policy check as the single-entry helper below. It does not validate handler
+// identity or selector and does not grant materialization/install authority.
+pub data X86BootstrapExceptionTablePolicyCheck {
+    case Rejected;
+    case PolicyConsistent(candidate: X86BootstrapExceptionTableCandidate);
+}
+
 // Total policy for all architectural exception slots. Reserved and
 // profile-optional vectors intentionally receive the same fatal current-stack
 // floor as ordinary exceptions, so unexpected delivery cannot target an
@@ -165,6 +180,69 @@ pub machine x86_validate_bootstrap_exception_gate_policy(
 
     state reject() -> X86BootstrapExceptionGatePolicyCheck {
         X86BootstrapExceptionGatePolicyCheck::Rejected
+    }
+}
+
+// Validate the whole 0..31 exception floor as one transaction. A failure in
+// any slot rejects the complete candidate; no partially checked table escapes.
+// The bounded index is ordinary source control flow over fixed package data.
+pub machine x86_validate_bootstrap_exception_table_policy(
+    candidate: X86BootstrapExceptionTableCandidate
+) -> X86BootstrapExceptionTablePolicyCheck {
+    x86_scan_bootstrap_exception_table_policy(candidate, 32, true)
+}
+
+// The scanner always performs exactly 32 iterations. Accumulating the verdict
+// instead of exiting early leaves one simple decreasing-fuel back edge whose
+// ranking is checked by Omega. The table index is derived from that bounded
+// fuel and therefore remains in 0..31.
+machine x86_scan_bootstrap_exception_table_policy(
+    candidate: X86BootstrapExceptionTableCandidate,
+    remaining: u64 [1..=32],
+    valid_so_far: bool
+)
+terminates by remaining;
+-> X86BootstrapExceptionTablePolicyCheck
+{
+    let expected_vector: u64 [0..=31] = 32 - remaining;
+    let vector: u8 = (expected_vector as u8 in Trapping) as u8;
+    let entry: X86BootstrapExceptionGateCandidate =
+        candidate.entries[expected_vector];
+    let policy: X86BootstrapExceptionEntryPolicy =
+        x86_bootstrap_exception_entry_policy(vector);
+    let still_valid: bool = valid_so_far &&
+        entry.vector == policy.vector &&
+        entry.gate.ist == policy.ist_index &&
+        entry.disposition == policy.disposition &&
+        entry.gate.type_attributes == PRESENT_RING0_INTERRUPT_GATE &&
+        entry.gate.reserved == RESERVED_ZERO;
+    transition remaining > 1 {
+        true -> x86_scan_bootstrap_exception_table_policy(
+            candidate,
+            remaining - 1,
+            still_valid
+        )
+        _ -> settle_table(candidate, still_valid)
+    }
+
+    state settle_table(
+        candidate: X86BootstrapExceptionTableCandidate,
+        valid: bool
+    ) -> X86BootstrapExceptionTablePolicyCheck {
+        transition valid {
+            true -> accept_table(candidate)
+            _ -> reject_table()
+        }
+    }
+
+    state accept_table(
+        candidate: X86BootstrapExceptionTableCandidate
+    ) -> X86BootstrapExceptionTablePolicyCheck {
+        X86BootstrapExceptionTablePolicyCheck::PolicyConsistent { candidate: candidate }
+    }
+
+    state reject_table() -> X86BootstrapExceptionTablePolicyCheck {
+        X86BootstrapExceptionTablePolicyCheck::Rejected
     }
 }
 

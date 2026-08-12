@@ -170,6 +170,64 @@ def expression_path:
     $contracts.machines[]
     | select(.machine == "x86_validate_bootstrap_exception_gate_policy")
   ] as $gate_policy_validator_contracts
+| first(
+    $typed
+    | ..
+    | objects
+    | select(
+        .name? == "X86BootstrapExceptionTableCandidate"
+        and has("members")
+      )
+  ) as $table_candidate_type
+| first(
+    $typed
+    | ..
+    | objects
+    | select(
+        .name? == "X86BootstrapExceptionTablePolicyCheck"
+        and has("members")
+      )
+  ) as $table_policy_check_type
+| first(
+    $typed
+    | ..
+    | objects
+    | select(
+        .name? == "x86_validate_bootstrap_exception_table_policy"
+        and has("states")
+      )
+  ) as $table_policy_validator
+| first(
+    $typed
+    | ..
+    | objects
+    | select(
+        .name? == "x86_scan_bootstrap_exception_table_policy"
+        and has("states")
+      )
+  ) as $table_policy_scanner
+| [
+    $contracts.machines[]
+    | select(
+        .machine == "x86_validate_bootstrap_exception_table_policy"
+        or .machine == "x86_scan_bootstrap_exception_table_policy"
+      )
+  ] as $table_policy_contracts
+| $table_policy_scanner.states[0] as $table_scan_entry
+| $table_scan_entry.statements[4].initial_value as $table_scan_verdict
+| [
+    $table_scan_verdict
+    | ..
+    | objects
+    | select(.kind? == "binary" and .operator? == "==")
+    | {
+        left: (.left | expression_path),
+        right: (
+          .right
+          | if .kind == "integer" then .text else expression_path end
+        )
+      }
+  ] as $table_scan_checks
 | [
     {
       name: "exact four vector/stack records",
@@ -515,6 +573,176 @@ def expression_path:
             and .paths == []
           )
         )
+      )
+    },
+    {
+      name: "complete fixed exception-table candidate and partial-result shapes",
+      ok: (
+        $table_candidate_type.members == [
+          {
+            kind: "field",
+            identity: null,
+            name: "entries",
+            type_reference: {
+              kind: "fixed_array",
+              element_type: {
+                kind: "named",
+                name: "X86BootstrapExceptionGateCandidate"
+              },
+              length: "32"
+            }
+          }
+        ]
+        and ($table_policy_check_type.members | map(.name)) == [
+          "Rejected",
+          "PolicyConsistent"
+        ]
+        and $table_policy_check_type.members[0].payload == []
+        and $table_policy_check_type.members[1].payload == [
+          {
+            identity: null,
+            name: "candidate",
+            type_reference: {
+              kind: "named",
+              name: "X86BootstrapExceptionTableCandidate"
+            }
+          }
+        ]
+      )
+    },
+    {
+      name: "table validator starts one complete 32-slot scan",
+      ok: (
+        ($table_policy_validator.states | map(.name)) == ["entry"]
+        and $table_policy_validator.states[0].statements[0].initial_value == {
+          kind: "call",
+          receiver: null,
+          target: "x86_scan_bootstrap_exception_table_policy",
+          machine_arguments: [],
+          arguments: [
+            {kind: "name", path: ["candidate"]},
+            {kind: "integer", text: "32"},
+            {kind: "boolean", value: true}
+          ],
+          acknowledgement_synthesized: false,
+          acknowledges_suspend: false,
+          acknowledges_block: false
+        }
+      )
+    },
+    {
+      name: "table scan derives every slot and accumulates all decided checks",
+      ok: (
+        ($table_policy_scanner.states | map(.name)) == [
+          "entry",
+          "settle_table",
+          "accept_table",
+          "reject_table"
+        ]
+        and $table_policy_scanner.termination_witness == {
+          subjects: ["remaining"],
+          ranking_view: 1,
+          view_path: "Nat::Descending",
+          view_arguments: [],
+          rank_range: null
+        }
+        and ($table_scan_entry.parameters[1].type_reference == {
+          kind: "constrained",
+          base_type: {kind: "named", name: "u64"},
+          constraints: [{
+            kind: "range",
+            minimum: {kind: "integer", text: "1"},
+            maximum: {kind: "integer", text: "32"}
+          }]
+        })
+        and $table_scan_entry.statements[0].initial_value == {
+          kind: "binary",
+          left: {kind: "integer", text: "32"},
+          operator: "-",
+          right: {kind: "name", path: ["remaining"]}
+        }
+        and $table_scan_entry.statements[2].initial_value == {
+          kind: "indexed",
+          collection: {
+            kind: "member",
+            receiver: {kind: "name", path: ["candidate"]},
+            member: "entries"
+          },
+          index: {kind: "name", path: ["expected_vector"]}
+        }
+        and $table_scan_entry.statements[3].initial_value.target ==
+          "x86_bootstrap_exception_entry_policy"
+        and $table_scan_entry.statements[3].initial_value.arguments == [
+          {kind: "name", path: ["vector"]}
+        ]
+        and ($table_scan_verdict.left.left.left.left.left | expression_path) ==
+          ["valid_so_far"]
+        and $table_scan_checks == [
+          {left: ["entry", "vector"], right: ["policy", "vector"]},
+          {left: ["entry", "gate", "ist"], right: ["policy", "ist_index"]},
+          {left: ["entry", "disposition"], right: ["policy", "disposition"]},
+          {left: ["entry", "gate", "type_attributes"], right: "0x8e"},
+          {left: ["entry", "gate", "reserved"], right: "0"}
+        ]
+      )
+    },
+    {
+      name: "table scan cannot publish a partial candidate",
+      ok: (
+        $table_scan_entry.statements[5].guard.value.left == {
+          kind: "binary",
+          left: {kind: "name", path: ["remaining"]},
+          operator: ">",
+          right: {kind: "integer", text: "1"}
+        }
+        and $table_scan_entry.statements[5].target.path == [
+          "x86_scan_bootstrap_exception_table_policy"
+        ]
+        and $table_scan_entry.statements[5].target.arguments[1] == {
+          kind: "binary",
+          left: {kind: "name", path: ["remaining"]},
+          operator: "-",
+          right: {kind: "integer", text: "1"}
+        }
+        and $table_scan_entry.statements[5].target.arguments[2] == {
+          kind: "name",
+          path: ["still_valid"]
+        }
+        and $table_scan_entry.statements[6].target.path == ["settle_table"]
+        and $table_scan_entry.statements[6].target.arguments[1] == {
+          kind: "name",
+          path: ["still_valid"]
+        }
+        and $table_policy_scanner.states[1].statements[0].guard.value.left == {
+          kind: "name",
+          path: ["valid"]
+        }
+        and $table_policy_scanner.states[1].statements[0].target.path == [
+          "accept_table"
+        ]
+        and $table_policy_scanner.states[1].statements[1].target.path == [
+          "reject_table"
+        ]
+      )
+    },
+    {
+      name: "complete exception-table validation is pure and terminating",
+      ok: (
+        ($table_policy_contracts | length) == 2
+        and all($table_policy_contracts[];
+          .implementation.checked_may_suspend == false
+          and .implementation.checked_may_block == false
+          and .implementation.checked_service_reach == []
+          and .implementation.checked_synchronous_invocations == []
+          and .implementation.checked_crash_sites == []
+          and .implementation.checked_termination.kind == "terminates"
+          and all(.implementation.inferred_write_frames[]; .paths == [])
+        )
+        and (
+          $table_policy_contracts[]
+          | select(.machine == "x86_scan_bootstrap_exception_table_policy")
+          | .implementation.resolved_ranking_view
+        ) == "Nat::Descending"
       )
     }
   ]

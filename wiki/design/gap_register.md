@@ -62,9 +62,11 @@ Legend: `[ ]` open · `[x]` closed.
   bootstrap disposition remains fatal-diagnostic. A pure Cathedral validator
   now derives that policy internally for the requested table slot and rejects
   drift in those fields plus the fixed ring-0 interrupt-gate attributes and
-  reserved-zero field, producing only an ordinary policy-consistent candidate.
-  Entry identity and selector evidence still await the admitted resolver/source
-  carrier integration and boot segment facts.
+  reserved-zero field, producing only an ordinary policy-consistent candidate;
+  its table-level form scans one fixed 32-entry candidate and accepts only when
+  every slot passes, so no partial exception floor escapes. Entry identity and
+  selector evidence still await the admitted resolver/source carrier
+  integration and boot segment facts.
   The first legacy timer root publishes its exact entry and selected provider;
   its checked PIC body now emits the master EOI before consuming normalized
   acknowledgement completion. The next blocker is Omega deriving fixed-fuel

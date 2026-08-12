@@ -44,9 +44,11 @@ normalized stack choice to the exact hardware IST index without minting any of
 those missing authorities. Its pure gate-policy validator internally derives
 that policy for the requested table slot, rejects vector, IST, disposition,
 gate-attribute, or reserved-field drift, and returns only an ordinary
-`PolicyConsistent` candidate. It deliberately does not vouch for the handler
-entry identity or selector; those still need the admitted resolver and
-boot-selected code-segment source facts. `legacy_timer_root.omg` now supplies
+`PolicyConsistent` candidate. A table-level wrapper now scans one fixed
+32-entry candidate with checked decreasing fuel and accepts only after every
+slot passes; no partial table escapes. It deliberately does not vouch for the
+handler entry identities or selectors; those still need the admitted resolver
+and boot-selected code-segment source facts. `legacy_timer_root.omg` now supplies
 the source-level normalized entry/provider canary under Cathedral's
 maskable-IRQ stack and masked `InterruptReturn` plan. Its checked PIC path emits
 the master EOI, then consumes the exact pending acknowledgement through
