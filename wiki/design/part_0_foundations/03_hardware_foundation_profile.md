@@ -66,10 +66,11 @@ selected conventional span to lack `EFI_MEMORY_RUNTIME`, be nonempty,
 page-aligned, exactly convertible to bytes, and representable through its
 one-past end. Runtime-marked descriptors stay reserved for the firmware mapping
 lifecycle. That exact byte length then remains attached to the current map/key
-transaction while a second pass validates every other descriptor's physical
-geometry and requires strict disjointness from the selected span. Only after
-that map-wide comparison may successful exit reach the provider call. These
-numeric checks reject malformed input;
+transaction while a second pass validates every descriptor's aligned,
+representable physical and virtual geometry and requires every other physical
+range to be strictly disjoint from the selected span. Only after that map-wide
+comparison may successful exit reach the provider call. These numeric checks
+reject malformed input;
 they establish no physical-space, rights, provenance, backing, or ownership
 fact.
 Address-space providers turn authorized physical extents into mapped virtual

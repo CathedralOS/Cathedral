@@ -135,6 +135,7 @@ def has_granted_extent_parameter:
 | state($machine; "audit_geometry") as $audit_geometry
 | state($machine; "audit_geometry_end") as $audit_geometry_end
 | state($machine; "audit_overlap") as $audit_overlap
+| state($machine; "audit_classify") as $audit_classify
 | state($machine; "audit_left") as $audit_left
 | state($machine; "audit_right") as $audit_right
 | state($machine; "audit_step") as $audit_step
@@ -557,30 +558,29 @@ def has_granted_extent_parameter:
       },
       index: {kind: "name", path: ["audit_offset"]}
     }) and
-    (($audit_descriptor.statements[1].guard.value.left | conjunct_signatures) == [{
-      left: {kind: "path", path: ["audit_offset"]},
-      operator: "==",
-      right: {kind: "path", path: ["best_offset"]}
-    }]) and
     ([
       $audit_descriptor.statements[]
       | select(.kind == "transition")
       | {target: .target.path[0], guard: .guard.kind}
     ] == [
-      {target: "audit_step", guard: "when"},
       {target: "audit_geometry", guard: "always"}
     ]) and
-    ($audit_descriptor.statements[2].target.arguments[12] == {
+    ($audit_descriptor.statements[1].target.arguments[12] == {
       kind: "member",
       receiver: {kind: "name", path: ["d"]},
       member: "physical_start"
     }) and
-    ($audit_descriptor.statements[2].target.arguments[13] == {
+    ($audit_descriptor.statements[1].target.arguments[13] == {
+      kind: "member",
+      receiver: {kind: "name", path: ["d"]},
+      member: "virtual_start"
+    }) and
+    ($audit_descriptor.statements[1].target.arguments[14] == {
       kind: "member",
       receiver: {kind: "name", path: ["d"]},
       member: "number_of_pages"
     });
-    "overlap audit no longer skips only the selected descriptor offset")
+    "map audit no longer submits every descriptor to complete geometry validation")
 | require((($audit_geometry.statements[0].guard.value.left | conjunct_signatures) == [
       {
         left: {kind: "path", path: ["other_pages"]},
@@ -601,6 +601,16 @@ def has_granted_extent_parameter:
         },
         operator: "==",
         right: {kind: "integer", text: "0"}
+      },
+      {
+        left: {
+          kind: "binary",
+          left: {kind: "path", path: ["other_virtual_start"]},
+          operator: "%",
+          right: {kind: "integer", text: "4096"}
+        },
+        operator: "==",
+        right: {kind: "integer", text: "0"}
       }
     ]) and
     ([
@@ -611,9 +621,9 @@ def has_granted_extent_parameter:
       {target: "audit_geometry_end", guard: "when"},
       {target: "idle", guard: "always"}
     ]);
-    "non-selected descriptor geometry no longer fails closed before overlap comparison")
-| require(($audit_geometry_end.parameters[13].name == "other_pages") and
-    ($audit_geometry_end.parameters[13].type_reference == {
+    "descriptor physical or virtual alignment no longer fails closed")
+| require(($audit_geometry_end.parameters[14].name == "other_pages") and
+    ($audit_geometry_end.parameters[14].type_reference == {
       kind: "constrained",
       base_type: {kind: "named", name: "u64"},
       constraints: [{
@@ -634,16 +644,28 @@ def has_granted_extent_parameter:
       operator: "-",
       right: {kind: "integer", text: "1"}
     }) and
-    (($audit_geometry_end.statements[6].guard.value.left | conjunct_signatures) == [{
-      left: {kind: "path", path: ["other_start"]},
-      operator: "<=",
-      right: {
-        kind: "binary",
-        left: {kind: "path", path: ["max_address"]},
-        operator: "-",
-        right: {kind: "path", path: ["last_offset"]}
+    (($audit_geometry_end.statements[6].guard.value.left | conjunct_signatures) == [
+      {
+        left: {kind: "path", path: ["other_start"]},
+        operator: "<=",
+        right: {
+          kind: "binary",
+          left: {kind: "path", path: ["max_address"]},
+          operator: "-",
+          right: {kind: "path", path: ["last_offset"]}
+        }
+      },
+      {
+        left: {kind: "path", path: ["other_virtual_start"]},
+        operator: "<=",
+        right: {
+          kind: "binary",
+          left: {kind: "path", path: ["max_address"]},
+          operator: "-",
+          right: {kind: "path", path: ["last_offset"]}
+        }
       }
-    }]) and
+    ]) and
     ([
       $audit_geometry_end.statements[]
       | select(.kind == "transition")
@@ -652,20 +674,34 @@ def has_granted_extent_parameter:
       {target: "audit_overlap", guard: "when"},
       {target: "idle", guard: "always"}
     ]);
-    "non-selected descriptor end no longer rejects arithmetic overflow exactly")
-| require(($audit_overlap.statements[1].initial_value == {
+    "descriptor physical or virtual end no longer rejects arithmetic overflow exactly")
+| require((($audit_overlap.statements[0].guard.value.left | conjunct_signatures) == [{
+      left: {kind: "path", path: ["audit_offset"]},
+      operator: "==",
+      right: {kind: "path", path: ["best_offset"]}
+    }]) and
+    ([
+      $audit_overlap.statements[]
+      | select(.kind == "transition")
+      | {target: .target.path[0], guard: .guard.kind}
+    ] == [
+      {target: "audit_step", guard: "when"},
+      {target: "audit_classify", guard: "always"}
+    ]);
+    "selected descriptor no longer skips only overlap comparison after validation")
+| require(($audit_classify.statements[1].initial_value == {
       kind: "binary",
       left: {kind: "name", path: ["checked_start"]},
       operator: "+",
       right: {kind: "name", path: ["last_offset"]}
     }) and
-    (($audit_overlap.statements[2].guard.value.left | conjunct_signatures) == [{
+    (($audit_classify.statements[2].guard.value.left | conjunct_signatures) == [{
       left: {kind: "path", path: ["other_start"]},
       operator: "<",
       right: {kind: "path", path: ["best_start"]}
     }]) and
     ([
-      $audit_overlap.statements[]
+      $audit_classify.statements[]
       | select(.kind == "transition")
       | {target: .target.path[0], guard: .guard.kind}
     ] == [
