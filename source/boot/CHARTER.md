@@ -21,6 +21,8 @@ the repository.
 QEMU/OVMF, obtains and validates the runtime-strided memory map, refreshes the
 whole map/key transaction when `ExitBootServices` rejects a stale key, admits
 one receipt-backed root extent after success, reports it through the 16550, and
-parks while retaining the root. The generated target-entry bridge, larger
-memory-map capacity fallback, physical-space/right/backing facts, and actual
-handoff into the proved core remain outstanding.
+parks while retaining the root. Its fixed 64-KiB bootstrap storage advertises
+16 KiB first and grows once on exact `EFI_BUFFER_TOO_SMALL`, without allocation
+or authority creation. The generated target-entry bridge,
+physical-space/right/backing facts, and actual handoff into the proved core
+remain outstanding.

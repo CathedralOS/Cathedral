@@ -7,6 +7,34 @@ def state($machine; $name):
 def field_value($literal; $name):
   first($literal.fields[] | select(.name == $name) | .value);
 
+def expression_signature:
+  if .kind == "name" then
+    {kind: "path", path}
+  elif .kind == "integer" then
+    {kind: "integer", text}
+  elif .kind == "member" and .receiver.kind == "struct_literal" then
+    .member as $member
+    | {
+        kind: "constant_member",
+        type_name: .receiver.type_name,
+        member: $member,
+        value: (.receiver | field_value(.; $member) | .text)
+      }
+  else
+    {kind}
+  end;
+
+def conjunct_signatures:
+  if .kind == "binary" and .operator == "&&" then
+    [(.left | conjunct_signatures)[], (.right | conjunct_signatures)[]]
+  else
+    [{
+      left: (.left | expression_signature),
+      operator,
+      right: (.right | expression_signature)
+    }]
+  end;
+
 def transition_targets($state):
   [
     $state.statements[]
@@ -50,10 +78,24 @@ def has_granted_extent_parameter:
     "expected exactly one typed Main::own_machine machine")
 | require(($machine_contracts | length) == 1;
     "expected exactly one Main::own_machine contract")
+| first(
+    $typed
+    | ..
+    | objects
+    | select(.name? == "Main" and has("members"))
+  ) as $main_type
 | $machines[0] as $machine
 | $machine_contracts[0] as $machine_contract
+| require(first($main_type.members[] | select(.name == "map_buf") | .type_reference) == {
+      kind: "fixed_array",
+      element_type: {kind: "named", name: "u8"},
+      length: "65536"
+    };
+    "owned-machine bootstrap map backing is no longer exactly 64 KiB")
 | state($machine; "own_machine") as $entry
 | state($machine; "refresh_map") as $refresh_map
+| state($machine; "get_map") as $get_map
+| state($machine; "map_failed") as $map_failed
 | state($machine; "walk") as $walk
 | state($machine; "step") as $step
 | state($machine; "exit") as $exit
@@ -74,13 +116,76 @@ def has_granted_extent_parameter:
       }
     ];
     "owned-machine entry no longer begins with one fresh map/key transaction")
+| require(transition_targets($refresh_map) == [
+      {
+        target: "get_map",
+        arguments: [
+          { kind: "name", path: ["bs"] },
+          { kind: "name", path: ["handle"] },
+          { kind: "integer", text: "16384" }
+        ],
+        guard: "always"
+      }
+    ];
+    "fresh map/key transaction no longer starts at the 16-KiB capacity")
 | first(
-    $refresh_map.statements[]
+    $get_map.statements[]
     | select(.kind == "local_data" and .name == "status")
   ) as $map_call
 | require(($map_call.initial_value.kind == "call") and
           ($map_call.initial_value.target == "get_memory_map") and
-          (transition_targets($refresh_map) == [
+          ($get_map.parameters[2].name == "attempted_capacity") and
+          ($get_map.parameters[2].type_reference.constraints[0] == {
+            kind: "range",
+            minimum: {kind: "integer", text: "16384"},
+            maximum: {kind: "integer", text: "65536"}
+          }) and
+          ($get_map.statements[0].name == "map_size") and
+          ($get_map.statements[0].initial_value == {
+            kind: "name",
+            path: ["attempted_capacity"]
+          }) and
+          ($map_call.initial_value.arguments[2] == {
+            kind: "mutable",
+            value: {
+              kind: "member",
+              receiver: {kind: "name", path: ["self"]},
+              member: "map_buf"
+            }
+          }) and
+          ($get_map.statements[6].guard.value.left | conjunct_signatures) == [
+            {
+              left: {kind: "path", path: ["status_code"]},
+              operator: "==",
+              right: {kind: "integer", text: "0"}
+            },
+            {
+              left: {kind: "path", path: ["map_size"]},
+              operator: ">=",
+              right: {kind: "path", path: ["desc_size"]}
+            },
+            {
+              left: {kind: "path", path: ["map_size"]},
+              operator: "<=",
+              right: {kind: "path", path: ["attempted_capacity"]}
+            },
+            {
+              left: {kind: "path", path: ["map_size"]},
+              operator: "<=",
+              right: {kind: "integer", text: "65536"}
+            },
+            {
+              left: {kind: "path", path: ["desc_size"]},
+              operator: ">=",
+              right: {kind: "integer", text: "40"}
+            },
+            {
+              left: {kind: "path", path: ["desc_size"]},
+              operator: "<=",
+              right: {kind: "integer", text: "65536"}
+            }
+          ] and
+          (transition_targets($get_map) == [
             {
               target: "walk",
               arguments: [
@@ -95,9 +200,59 @@ def has_granted_extent_parameter:
               ],
               guard: "when"
             },
-            { target: "idle", arguments: [], guard: "always" }
+            {
+              target: "map_failed",
+              arguments: [
+                { kind: "name", path: ["bs"] },
+                { kind: "name", path: ["handle"] },
+                { kind: "name", path: ["attempted_capacity"] },
+                { kind: "name", path: ["status_code"] },
+                { kind: "name", path: ["map_size"] }
+              ],
+              guard: "always"
+            }
           ]);
     "fresh map/key transaction no longer gates descriptor walking")
+| require(($map_failed.statements[0].guard.value.left | conjunct_signatures) == [
+      {
+        left: {kind: "path", path: ["attempted_capacity"]},
+        operator: "==",
+        right: {kind: "integer", text: "16384"}
+      },
+      {
+        left: {kind: "path", path: ["status_code"]},
+        operator: "==",
+        right: {
+          kind: "constant_member",
+          type_name: "EfiStatus",
+          member: "code",
+          value: "0x8000000000000005"
+        }
+      },
+      {
+        left: {kind: "path", path: ["required_size"]},
+        operator: ">",
+        right: {kind: "integer", text: "16384"}
+      },
+      {
+        left: {kind: "path", path: ["required_size"]},
+        operator: "<=",
+        right: {kind: "integer", text: "65536"}
+      }
+    ] and
+    (transition_targets($map_failed) == [
+      {
+        target: "get_map",
+        arguments: [
+          { kind: "name", path: ["bs"] },
+          { kind: "name", path: ["handle"] },
+          { kind: "integer", text: "65536" }
+        ],
+        guard: "when"
+      },
+      { target: "idle", arguments: [], guard: "always" }
+    ]);
+    "map growth is no longer one exact bounded EFI_BUFFER_TOO_SMALL retry")
 | require(all(
       $walk.statements[]
       | select(.kind == "transition");
@@ -105,6 +260,7 @@ def has_granted_extent_parameter:
       and .target.arguments[4] == {kind: "name", path: ["key"]}
     ) and
     ($step.statements[0].target.path[0] == "walk") and
+    ($step.statements[0].guard.value.left.right.right.text == "65496") and
     ($step.statements[0].target.arguments[4] == {kind: "name", path: ["key"]}) and
     ($step.statements[1].target.path[0] == "exit") and
     ($step.statements[1].target.arguments[2] == {kind: "name", path: ["key"]});

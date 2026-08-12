@@ -17,9 +17,10 @@ use core::extent;          // PAGE_SIZE + checked ExtentRootProvider adapter
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // Extent, Granted, ExtentRootProvider
 
-// Get the map, walk it, exit, grant, report. `self.map_buf` is a fixed 16 KiB
-// static field (no allocator yet — real firmware maps are ~4–8 KiB); a
-// larger-capacity fallback remains a follow-on.
+// Get the map, walk it, exit, grant, report. `self.map_buf` is a fixed 64-KiB
+// static field, not allocated memory and not an Extent. Cathedral advertises
+// 16 KiB first and uses the remaining provision only after an exact
+// EFI_BUFFER_TOO_SMALL result reports a requirement within the fixed ceiling.
 machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable)
 reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 {
@@ -30,7 +31,12 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // retry target after ExitBootServices reports EFI_INVALID_PARAMETER: the
     // old key and every descriptor-derived candidate are discarded together.
     state refresh_map(bs: &BootServicesTable, handle: EfiHandle) {
-        let mut map_size: u64 = 16384;             // in = capacity, out = actual bytes
+        transition { _ -> get_map(bs, handle, 16384) }
+    }
+
+    state get_map(bs: &BootServicesTable, handle: EfiHandle,
+                  attempted_capacity: u64 [16384..=65536]) {
+        let mut map_size: u64 = attempted_capacity; // in = capacity, out = actual/needed
         let mut key: MapKey = MapKey { raw: 0 };
         let mut desc_size: u64 = 0;                 // out = the RUNTIME descriptor stride
         let mut desc_version: u32 = 0;
@@ -45,17 +51,26 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         let status_code: u64 = status.code;
 
         // Sanity-gate the firmware's out-values BEFORE trusting them: the call
-        // must report SUCCESS (on EFI_BUFFER_TOO_SMALL map_size comes back as
-        // the NEEDED size, > capacity), a zero/short stride would walk garbage,
-        // and a stride wider than the map is nonsense. A guard — not a vouched
-        // `ensures` — because firmware genuinely can return these; the
-        // conjuncts are ALSO the bound witnesses the walk's recast footprint
-        // discharges from (per-edge meet: this entry edge proves them, the loop
-        // edge forwards them), spelled INLINE on the transition because the
-        // prover matches guard conjuncts by display.
-        transition status_code == 0 && map_size <= 16384 && desc_size >= 40 && desc_size <= 16384 {
+        // must report SUCCESS, fit both the advertised capacity and physical
+        // backing, and contain at least one whole runtime-sized descriptor. A
+        // guard — not a vouched `ensures` — because firmware genuinely can
+        // return malformed values; these conjuncts are also the bound witnesses
+        // for the walk's recast footprint.
+        transition status_code == 0 && map_size >= desc_size && map_size <= attempted_capacity && map_size <= 65536 && desc_size >= 40 && desc_size <= 65536 {
             true -> walk(bs, handle, map_size, desc_size, key, 0, 0, 0)
-            _    -> idle()   // malformed/oversize map; larger storage is a follow-on
+            _    -> map_failed(bs, handle, attempted_capacity, status_code, map_size)
+        }
+    }
+
+    // Only the exact capacity signal may expand the advertised window, and
+    // only once. Key, descriptor size/version, and all buffer contents from the
+    // failed call are ignored. A requirement above the static ceiling parks.
+    state map_failed(bs: &BootServicesTable, handle: EfiHandle,
+                     attempted_capacity: u64 [16384..=65536],
+                     status_code: u64, required_size: u64) {
+        transition attempted_capacity == 16384 && status_code == EFI_BUFFER_TOO_SMALL.code && required_size > 16384 && required_size <= 65536 {
+            true -> get_map(bs, handle, 65536)
+            _    -> idle()
         }
     }
 
@@ -68,8 +83,8 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // discharge (and is semantically free: EDK2 maps are whole descriptors).
     // The recast offset's bound discharges through the PER-EDGE MEET over the
     // guard route: the entry edge passes the constant 0, the loop edge's
-    // argument `offset + desc_size` carries the literal guard bound <= 16344
-    // (= 16384 buffer - 40 descriptor footprint). `in Trapping` on the walk
+    // argument `offset + desc_size` carries the literal guard bound <= 65496
+    // (= 65536 buffer - 40 descriptor footprint). `in Trapping` on the walk
     // arithmetic: hostile out-values trip a trap instead of wrapping.
     state walk(bs: &BootServicesTable, handle: EfiHandle,
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
@@ -87,10 +102,10 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     state step(bs: &BootServicesTable, handle: EfiHandle,
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64) {
-        // The second conjunct is implied by the first (map_size <= 16384,
+        // The second conjunct is implied by the first (map_size <= 65536,
         // desc_size >= 40) but spelled out so the loop edge's bound is a
         // DIRECT guard fact for the prover; it costs one always-true compare.
-        transition offset + desc_size + desc_size <= map_size && offset + desc_size <= 16344 {
+        transition offset + desc_size + desc_size <= map_size && offset + desc_size <= 65496 {
             true -> walk(bs, handle, map_size, desc_size, key,
                          offset + desc_size, best_start, best_pages)
             _    -> exit(bs, handle, key, best_start, best_pages)
@@ -295,11 +310,11 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         transition { _ -> owned_idle(extent) }
     }
 
-    // Failure park. This route owns no Extent and may still be inside firmware
-    // after a bad map or stale key. `asm { hlt }` avoids an unbounded busy loop;
-    // the self-re-entry re-halts after any wake. `hlt` is a known-contract asm
-    // intrinsic reaching `MachineControl`, discharged by the freestanding boot
-    // boundary.
+    // Failure park. This route owns no Extent and remains inside firmware after
+    // an unrecoverable map or exit error. `asm { hlt }` avoids an unbounded busy
+    // loop; the self-re-entry re-halts after any wake. `hlt` is a known-contract
+    // asm intrinsic reaching `MachineControl`, discharged by the freestanding
+    // boot boundary.
     state idle() {
         asm { hlt }
         transition { _ -> idle() }
@@ -328,7 +343,8 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 //   3. Recast at a runtime offset — `&self.map_buf[offset] as &EfiMemoryDescriptor`
 //      is the §5b borrow-recast, indexed by a runtime `offset` with a runtime
 //      `desc_size` stride, bounds-guarded on the transitions.
-//   4. A larger static buffer field ([u8; 16384]) in a data value.
+//   4. A large static buffer field ([u8; 65536]) with a smaller runtime capacity
+//      window in a data value.
 //   5. Captured boundary-call results (`let status = ...`) — the result place
 //      rides the call's operand list and stores through the import-call tail.
 //   6. Owner-authorized bodyless authority — the build admits the selected

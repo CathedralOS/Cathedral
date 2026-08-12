@@ -42,7 +42,7 @@ data Main {
     boot_svc: BootServices;      // milestone 2 — GetMemoryMap / ExitBootServices
     memory:   ExtentRootProvider; // admitted one-root-at-a-time memory provider
     msg:      [u16; 19];         // "Hello from Omega\r\n\0" as UTF-16 CHAR16 code units
-    map_buf:  [u8; 16384];       // static buffer for GetMemoryMap (no allocator yet)
+    map_buf:  [u8; 65536];       // bounded GetMemoryMap growth, no allocator/authority
 }
 
 // The firmware entry: the currently booted raw exported callable. The UEFI

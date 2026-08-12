@@ -50,7 +50,10 @@ through Cathedral's admitted platform receipt.
 The current UEFI source treats the map and `MapKey` as one transaction: a stale
 key from `ExitBootServices` discards every descriptor-derived candidate and
 refreshes both before retry, while only success reaches the first root grant.
-Its fixed bootstrap buffer still fails closed on oversize maps.
+Its zero-initialized image storage reserves 64 KiB, advertises 16 KiB first,
+and expands the usable window once only on exact `EFI_BUFFER_TOO_SMALL`; this is
+bounded storage policy, not allocator or extent authority. Requirements above
+the fixed ceiling fail closed.
 Address-space providers turn authorized physical extents into mapped virtual
 extents. Allocators draw storage from qualified RAM-backed extents. Device
 mappings retain device provenance and never become ordinary RAM merely because
