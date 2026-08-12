@@ -62,11 +62,12 @@ exact revision Cathedral supports (currently UEFI version 1), so an unknown
 layout, a misaligned next descriptor, or a trailing partial descriptor is not
 silently accepted.
 Before the irreversible firmware exit, Cathedral conservatively requires the
-selected conventional span to lack `EFI_MEMORY_RUNTIME`, be nonempty,
-page-aligned, exactly convertible to bytes, and representable through its
-one-past end. Runtime-marked descriptors stay reserved for the firmware mapping
-lifecycle. That exact byte length then remains attached to the current map/key
-transaction while a second pass validates every descriptor's aligned,
+selected conventional span to lack `EFI_MEMORY_RUNTIME` and
+`EFI_MEMORY_HOT_PLUGGABLE`, be nonempty, page-aligned, exactly convertible to
+bytes, and representable through its one-past end. Runtime-marked and removable
+descriptors stay unavailable to the retained bootstrap root. That exact byte
+length then remains attached to the current map/key transaction while a second
+pass validates every descriptor's aligned,
 representable physical and virtual geometry plus its standard/vendor memory-
 type range and revision-1 standard/ISA attribute mask, requires every
 ISA-specific attribute to carry its validity flag, and requires every other

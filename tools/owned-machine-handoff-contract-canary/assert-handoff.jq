@@ -27,6 +27,12 @@ def expression_signature:
         member: $member,
         value: (.receiver | field_value(.; $member) | .text)
       }
+  elif .kind == "member" then
+    {
+      kind: "member",
+      receiver: (.receiver | expression_signature),
+      member
+    }
   else
     {kind}
   end;
@@ -364,46 +370,55 @@ def has_granted_extent_parameter:
       },
       index: {kind: "name", path: ["offset"]}
     }) and
-    ($is_free.initial_value == {
-      kind: "binary",
-      left: {
-        kind: "binary",
+    (($is_free.initial_value | conjunct_signatures) == [
+      {
         left: {
           kind: "member",
-          receiver: {kind: "name", path: ["d"]},
+          receiver: {kind: "path", path: ["d"]},
           member: "kind"
         },
         operator: "==",
         right: {kind: "integer", text: "7"}
       },
-      operator: "&&",
-      right: {
-        kind: "binary",
+      {
         left: {
           kind: "binary",
           left: {
             kind: "member",
-            receiver: {kind: "name", path: ["d"]},
+            receiver: {kind: "path", path: ["d"]},
             member: "attribute"
           },
           operator: "&",
           right: {
+            kind: "constant_member",
+            type_name: "EfiMemoryAttribute",
+            member: "bits",
+            value: "0x8000000000000000"
+          }
+        },
+        operator: "==",
+        right: {kind: "integer", text: "0"}
+      },
+      {
+        left: {
+          kind: "binary",
+          left: {
             kind: "member",
-            receiver: {
-              kind: "struct_literal",
-              type_name: "EfiMemoryAttribute",
-              fields: [{
-                name: "bits",
-                value: {kind: "integer", text: "0x8000000000000000"}
-              }]
-            },
-            member: "bits"
+            receiver: {kind: "path", path: ["d"]},
+            member: "attribute"
+          },
+          operator: "&",
+          right: {
+            kind: "constant_member",
+            type_name: "EfiMemoryAttribute",
+            member: "bits",
+            value: "0x100000"
           }
         },
         operator: "==",
         right: {kind: "integer", text: "0"}
       }
-    }) and
+    ]) and
     ($walk_edges[0].target.arguments[9] == {kind: "name", path: ["offset"]}) and
     ($walk_edges[1].target.arguments[9] == {kind: "name", path: ["best_offset"]}) and
     ($step.statements[0].target.path[0] == "walk") and
@@ -422,7 +437,7 @@ def has_granted_extent_parameter:
       {kind: "name", path: ["best_pages"]},
       {kind: "name", path: ["best_offset"]}
     ]);
-    "descriptor walk no longer excludes runtime memory or carries its exact key")
+    "descriptor walk no longer excludes runtime/hot-plug memory or carries its exact key")
 | require(($validate_candidate.statements[0].guard.value.left | conjunct_signatures) == [
       {
         left: {kind: "path", path: ["best_pages"]},

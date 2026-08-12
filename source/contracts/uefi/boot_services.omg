@@ -35,6 +35,11 @@ pub data EfiMemoryAttribute { bits: u64; }
 pub const EFI_MEMORY_RUNTIME: EfiMemoryAttribute = EfiMemoryAttribute {
     bits: 0x8000_0000_0000_0000,
 };
+// Memory that the platform may dynamically remove. Cathedral's retained,
+// non-relocatable bootstrap root must not originate from such a descriptor.
+pub const EFI_MEMORY_HOT_PLUGGABLE: EfiMemoryAttribute = EfiMemoryAttribute {
+    bits: 0x0000_0000_0010_0000,
+};
 // ISA-specific cacheability bits describe a region only when their validity
 // flag is present. The boot audit enforces this relation before consuming the
 // map as authority-bearing input.
@@ -160,10 +165,11 @@ uefi_x64 machine BootServicesTable::exit_boot_services_leaf(
 
 // --- Origin of memory authority -------------------------------------------
 // FinalMemoryMap is the reserved carrier for the complete post-exit map. The M2
-// path currently requires the best span to be nonempty, page-aligned, exactly
-// convertible to bytes, and conservatively representable through its one-past
-// end. Before exit, a second pass requires every descriptor to have bounded,
-// aligned physical and virtual geometry, and every other physical range to lie
+// path currently requires the best span to be non-runtime, non-hot-pluggable,
+// nonempty, page-aligned, exactly convertible to bytes, and conservatively
+// representable through its one-past end. Before exit, a second pass requires
+// every descriptor to have bounded, aligned physical and virtual geometry, and
+// every other physical range to lie
 // wholly outside that span. It then carries the guarded geometry across a
 // successful exit directly and obtains the first qualified Extent through
 // core/'s admitted provider adapter. Every later memory authority descends from
