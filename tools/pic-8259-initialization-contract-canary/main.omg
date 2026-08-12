@@ -1,0 +1,9 @@
+// Compile-only acceptance root for the PIC remap/mask provider operations.
+
+use core::pic_8259;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}

@@ -1,0 +1,6 @@
+// Isolated checked-provider frontier for Cathedral's PIC initialization.
+
+machine build(b: &mut Build) {
+    b.depend("core", path("core"));
+    b.freestanding = true;
+}
