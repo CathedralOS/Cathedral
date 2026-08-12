@@ -192,11 +192,11 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 
     // A descriptor's local type does not prove complete UEFI geometry or that
     // its physical range is disjoint from every other map record. Re-scan the
-    // same fresh map before exit. Every record must have aligned, representable
-    // physical and virtual geometry; after that validation, skip only the
-    // selected record's own overlap comparison. Every other range must lie
-    // wholly to one side of the chosen conventional span. No ordering
-    // assumption is made.
+    // same fresh map before exit. Every record must use a standard or vendor-
+    // reserved memory type and have aligned, representable physical and virtual
+    // geometry; after that validation, skip only the selected record's own
+    // overlap comparison. Every other range must lie wholly to one side of the
+    // chosen conventional span. No ordering assumption is made.
     state prepare_audit(bs: &BootServicesTable, handle: EfiHandle,
                         stale_retry_used: u64 [0..=1],
                         map_size: u64 in Trapping,
@@ -225,7 +225,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                                          map_size, desc_size, key,
                                          best_start, best_pages, length,
                                          best_end, best_offset, audit_offset,
-                                         d.physical_start, d.virtual_start,
+                                         d.kind, d.physical_start, d.virtual_start,
                                          d.number_of_pages) }
     }
 
@@ -237,9 +237,12 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                          best_end: u64 in Trapping,
                          best_offset: u64 in Trapping,
                          audit_offset: u64 in Trapping,
-                         other_start: u64, other_virtual_start: u64,
+                         other_kind: u32, other_start: u64,
+                         other_virtual_start: u64,
                          other_pages: u64) {
-        transition other_pages > 0 &&
+        transition (other_kind < EFI_MAX_MEMORY_TYPE ||
+                    other_kind >= EFI_OEM_MEMORY_TYPE_MIN) &&
+                   other_pages > 0 &&
                    other_pages <= MAX_BOOTSTRAP_PAGE_COUNT &&
                    other_start % PAGE_SIZE == 0 &&
                    other_virtual_start % PAGE_SIZE == 0 {

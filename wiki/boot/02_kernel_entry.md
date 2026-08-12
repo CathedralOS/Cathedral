@@ -55,8 +55,9 @@ reserved for the firmware mapping lifecycle and remain ineligible. The exact
 checked length crosses successful `ExitBootServices` with its map-derived start
 and is the geometry presented to the admitted root provider. Before exit, a
 second stride-bounded pass validates every descriptor's physical and virtual
-alignment and range end, then requires every other physical range to lie
-strictly before or after the selected span. Misalignment, overflow, or overlap
+alignment, range end, and standard/OEM/OS-loader memory-type range, then
+requires every other physical range to lie strictly before or after the
+selected span. Invalid type `16..0x6fffffff`, misalignment, overflow, or overlap
 parks without a grant. These checks reject malformed firmware data; they do not
 themselves establish physical-space, rights, backing, or ownership.
 

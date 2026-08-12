@@ -20,11 +20,12 @@ Before the irreversible exit, the selected conventional span must not carry
 page-to-byte conversion, and have a representable one-past end. Runtime-marked
 descriptors remain ineligible. The validated byte length stays in the same
 map/key transaction while a second full-map pass validates every descriptor's
-physical and virtual alignment and range end, then requires every other physical
-range to be strictly disjoint from the chosen span. Only completion of that
-audit may reach `ExitBootServices`; malformed geometry or overlap parks inside
-firmware without calling the provider. Successful exit makes the checked span
-the exact grant geometry.
+standard/vendor memory-type range, physical and virtual alignment, and range
+end, then requires every other physical range to be strictly disjoint from the
+chosen span. Invalid type `16..0x6fffffff`, malformed geometry, or overlap parks
+inside firmware without calling the provider. Only completion of that audit may
+reach `ExitBootServices`; successful exit makes the checked span the exact grant
+geometry.
 
 Map storage is a fixed 64-KiB zero-initialized field, not an allocation or
 memory capability. An explicit leading `u64` makes the byte view 8-byte

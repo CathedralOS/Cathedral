@@ -12,14 +12,18 @@
 // the Omega agent lands field-model dispatch + the M2 ladder.
 
 // --- EFI_MEMORY_TYPE (the important values) --------------------------------
-// Named `const` tags (u32), not a sum — robust to firmware writing memory kinds
-// we don't model (a too-narrow EfiMemoryType sum would fail to read them). A
-// full typed EfiMemoryType via case discriminants is the alternative if wanted.
+// Named `const` tags (u32), not a sum — robust to valid OEM/OS-loader memory
+// kinds we don't model (a too-narrow EfiMemoryType sum would fail to read them).
+// The boot audit accepts standard values below EFI_MAX_MEMORY_TYPE and the
+// vendor ranges beginning at EFI_OEM_MEMORY_TYPE_MIN; the reserved middle
+// interval fails closed.
 pub const EFI_LOADER_DATA:         u32 = 2;
 pub const EFI_BOOT_SERVICES_CODE:  u32 = 3;
 pub const EFI_BOOT_SERVICES_DATA:  u32 = 4;
 pub const EFI_CONVENTIONAL_MEMORY: u32 = 7;   // free RAM boot may claim after exit
 pub const EFI_ACPI_RECLAIM:        u32 = 9;
+pub const EFI_MAX_MEMORY_TYPE:     u32 = 16;          // exclusive standard bound
+pub const EFI_OEM_MEMORY_TYPE_MIN: u32 = 0x7000_0000; // OEM then OS-loader ranges
 
 // Revision of the descriptor prefix Cathedral currently knows how to read.
 // Unknown revisions fail closed in boot source before any typed recast.

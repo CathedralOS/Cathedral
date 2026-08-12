@@ -35,8 +35,9 @@ Repeated stale-key rejection fails closed rather than looping indefinitely.
 Before exiting firmware it excludes runtime-marked descriptors and rejects an
 empty, unaligned, page-count-overflowing, or non-representable conventional
 span. A second full-map pass also requires every descriptor to have aligned,
-representable physical and virtual geometry, and every other physical range to
-be disjoint from the selected span. The exact validated length then flows into
-the admitted grant. The generated target-entry bridge,
+representable physical and virtual geometry and a valid standard/OEM/OS-loader
+memory type, and every other physical range to be disjoint from the selected
+span. The exact validated length then flows into the admitted grant. The
+generated target-entry bridge,
 physical-space/right/backing facts, and actual handoff into the proved core
 remain outstanding.

@@ -572,20 +572,40 @@ def has_granted_extent_parameter:
     ($audit_descriptor.statements[1].target.arguments[12] == {
       kind: "member",
       receiver: {kind: "name", path: ["d"]},
-      member: "physical_start"
+      member: "kind"
     }) and
     ($audit_descriptor.statements[1].target.arguments[13] == {
       kind: "member",
       receiver: {kind: "name", path: ["d"]},
-      member: "virtual_start"
+      member: "physical_start"
     }) and
     ($audit_descriptor.statements[1].target.arguments[14] == {
+      kind: "member",
+      receiver: {kind: "name", path: ["d"]},
+      member: "virtual_start"
+    }) and
+    ($audit_descriptor.statements[1].target.arguments[15] == {
       kind: "member",
       receiver: {kind: "name", path: ["d"]},
       member: "number_of_pages"
     });
     "map audit no longer submits every descriptor to complete geometry validation")
 | require((($audit_geometry.statements[0].guard.value.left | conjunct_signatures) == [
+      {
+        left: {
+          kind: "binary",
+          left: {kind: "path", path: ["other_kind"]},
+          operator: "<",
+          right: {kind: "integer", text: "16"}
+        },
+        operator: "||",
+        right: {
+          kind: "binary",
+          left: {kind: "path", path: ["other_kind"]},
+          operator: ">=",
+          right: {kind: "integer", text: "0x70000000"}
+        }
+      },
       {
         left: {kind: "path", path: ["other_pages"]},
         operator: ">",
@@ -625,7 +645,7 @@ def has_granted_extent_parameter:
       {target: "audit_geometry_end", guard: "when"},
       {target: "idle", guard: "always"}
     ]);
-    "descriptor physical or virtual alignment no longer fails closed")
+    "descriptor type or physical/virtual alignment no longer fails closed")
 | require(($audit_geometry_end.parameters[14].name == "other_pages") and
     ($audit_geometry_end.parameters[14].type_reference == {
       kind: "constrained",
