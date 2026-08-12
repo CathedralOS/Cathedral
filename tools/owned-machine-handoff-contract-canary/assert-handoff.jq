@@ -12,6 +12,13 @@ def expression_signature:
     {kind: "path", path}
   elif .kind == "integer" then
     {kind: "integer", text}
+  elif .kind == "binary" then
+    {
+      kind: "binary",
+      left: (.left | expression_signature),
+      operator,
+      right: (.right | expression_signature)
+    }
   elif .kind == "member" and .receiver.kind == "struct_literal" then
     .member as $member
     | {
@@ -98,6 +105,8 @@ def has_granted_extent_parameter:
 | state($machine; "map_failed") as $map_failed
 | state($machine; "walk") as $walk
 | state($machine; "step") as $step
+| state($machine; "validate_candidate") as $validate_candidate
+| state($machine; "validate_candidate_end") as $validate_candidate_end
 | state($machine; "exit") as $exit
 | state($machine; "exit_failed") as $exit_failed
 | state($machine; "own") as $own
@@ -262,18 +271,113 @@ def has_granted_extent_parameter:
     ($step.statements[0].target.path[0] == "walk") and
     ($step.statements[0].guard.value.left.right.right.text == "65496") and
     ($step.statements[0].target.arguments[4] == {kind: "name", path: ["key"]}) and
-    ($step.statements[1].target.path[0] == "exit") and
-    ($step.statements[1].target.arguments[2] == {kind: "name", path: ["key"]});
+    ($step.statements[1].target.path[0] == "validate_candidate") and
+    ($step.statements[1].target.arguments == [
+      {kind: "name", path: ["bs"]},
+      {kind: "name", path: ["handle"]},
+      {kind: "name", path: ["key"]},
+      {kind: "name", path: ["best_start"]},
+      {kind: "name", path: ["best_pages"]}
+    ]);
     "descriptor walk no longer carries exactly the key returned with its map")
+| require(($validate_candidate.statements[0].guard.value.left | conjunct_signatures) == [
+      {
+        left: {kind: "path", path: ["best_pages"]},
+        operator: ">",
+        right: {kind: "integer", text: "0"}
+      },
+      {
+        left: {kind: "path", path: ["best_pages"]},
+        operator: "<=",
+        right: {kind: "integer", text: "4503599627370495"}
+      },
+      {
+        left: {
+          kind: "binary",
+          left: {kind: "path", path: ["best_start"]},
+          operator: "%",
+          right: {kind: "integer", text: "4096"}
+        },
+        operator: "==",
+        right: {kind: "integer", text: "0"}
+      }
+    ] and
+    transition_targets($validate_candidate) == [
+      {
+        target: "validate_candidate_end",
+        arguments: [
+          {kind: "name", path: ["bs"]},
+          {kind: "name", path: ["handle"]},
+          {kind: "name", path: ["key"]},
+          {kind: "name", path: ["best_start"]},
+          {kind: "name", path: ["best_pages"]}
+        ],
+        guard: "when"
+      },
+      {target: "idle", arguments: [], guard: "always"}
+    ];
+    "empty, oversized, or unaligned firmware spans no longer fail closed")
+| require(($validate_candidate_end.parameters[4].type_reference == {
+      kind: "constrained",
+      base_type: {kind: "named", name: "u64"},
+      constraints: [{
+        kind: "range",
+        minimum: {kind: "integer", text: "1"},
+        maximum: {kind: "integer", text: "4503599627370495"}
+      }]
+    }) and
+    ($validate_candidate_end.statements[1].initial_value == {
+      kind: "binary",
+      left: {kind: "name", path: ["checked_pages"]},
+      operator: "*",
+      right: {kind: "integer", text: "4096"}
+    }) and
+    ($validate_candidate_end.statements[3].initial_value == {
+      kind: "integer",
+      text: "0xffffffffffffffff"
+    }) and
+    ($validate_candidate_end.statements[4].guard.value.left | conjunct_signatures) == [
+      {
+        left: {kind: "path", path: ["best_start"]},
+        operator: "<=",
+        right: {
+          kind: "binary",
+          left: {kind: "path", path: ["max_address"]},
+          operator: "-",
+          right: {kind: "path", path: ["length"]}
+        }
+      }
+    ] and
+    transition_targets($validate_candidate_end) == [
+      {
+        target: "exit",
+        arguments: [
+          {kind: "name", path: ["bs"]},
+          {kind: "name", path: ["handle"]},
+          {kind: "name", path: ["key"]},
+          {kind: "name", path: ["best_start"]},
+          {kind: "name", path: ["best_pages"]},
+          {kind: "name", path: ["length"]}
+        ],
+        guard: "when"
+      },
+      {target: "idle", arguments: [], guard: "always"}
+    ];
+    "validated span length or representable-end gate no longer reaches exit exactly")
 | require(($exit.statements[0].kind == "local_data") and
           ($exit.statements[0].initial_value.kind == "call") and
           ($exit.statements[0].initial_value.target == "exit_boot_services") and
+          ($exit.statements[0].initial_value.arguments[2] == {
+            kind: "name",
+            path: ["key"]
+          }) and
           (transition_targets($exit) == [
             {
               target: "own",
               arguments: [
                 { kind: "name", path: ["best_start"] },
-                { kind: "name", path: ["best_pages"] }
+                { kind: "name", path: ["best_pages"] },
+                { kind: "name", path: ["length"] }
               ],
               guard: "when"
             },
@@ -313,6 +417,22 @@ def has_granted_extent_parameter:
 | require(($grant.initial_value.kind == "call") and
           ($grant.initial_value.target == "grant") and
           ($grant.initial_value.arguments == [{ kind: "name", path: ["geometry"] }]) and
+          ($own.statements[0].initial_value == {
+            kind: "cast",
+            value: {kind: "name", path: ["best_start"]},
+            target_type: {kind: "named", name: "addr"},
+            semantic_domain: [],
+            semantic_domain_symbol: 0,
+            semantic_domain_id: 0
+          }) and
+          ($own.statements[1].initial_value | field_value(.; "base")) == {
+            kind: "name",
+            path: ["base"]
+          } and
+          ($own.statements[1].initial_value | field_value(.; "length")) == {
+            kind: "name",
+            path: ["length"]
+          } and
           (transition_targets($own) == [
             {
               target: "serial_init",

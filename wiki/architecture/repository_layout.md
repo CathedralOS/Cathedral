@@ -303,9 +303,10 @@ Current reality (2026-07-28):
   one receipt-backed `Extent in Granted`, carried through the post-firmware
   graph into owned idle), over the milestone-2 ABI in
   `source/contracts/uefi/boot_services.omg`. QEMU/OVMF prints the owned-memory
-  report after that crossing. Map-resize/stale-key retry and richer
-  physical-space/right/backing facts remain follow-on hardening rather than
-  substitutes for the live qualified root.
+  report after that crossing. Bounded map resize, whole-transaction stale-key
+  refresh, and conservative numeric root-geometry validation are live; richer
+  physical-space/right/backing facts remain follow-on hardening rather than a
+  substitute for the qualified root.
 - **planned** — everything else (`foundation/`, `services/`, `libraries/`, and
   the driver *programs* under `drivers/`). No directory exists until real code
   lands in it.

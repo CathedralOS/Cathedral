@@ -41,6 +41,14 @@ advertises 16 KiB first; an exact `EFI_BUFFER_TOO_SMALL` result may raise that
 window once to the fixed ceiling. No allocator or memory authority participates,
 and malformed results or requirements above 64 KiB fail closed.
 
+The selected conventional-memory descriptor is also checked before the
+irreversible exit: its span must contain at least one page, begin on a 4-KiB
+boundary, convert from pages to bytes without overflow, and have a
+representable one-past end. The exact checked length crosses successful
+`ExitBootServices` with its map-derived start and is the geometry presented to
+the admitted root provider. These checks reject malformed firmware data; they
+do not themselves establish physical-space, rights, backing, or ownership.
+
 The IDT should normally be materialized and validated after Cathedral's final
 image and virtual placements are known but before `ExitBootServices`, while
 firmware services remain available. It is installed only after every address

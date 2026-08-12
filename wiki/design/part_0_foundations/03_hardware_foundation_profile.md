@@ -54,6 +54,13 @@ Its zero-initialized image storage reserves 64 KiB, advertises 16 KiB first,
 and expands the usable window once only on exact `EFI_BUFFER_TOO_SMALL`; this is
 bounded storage policy, not allocator or extent authority. Requirements above
 the fixed ceiling fail closed.
+Before the irreversible firmware exit, Cathedral conservatively requires the
+selected conventional span to be nonempty, page-aligned, exactly convertible
+to bytes, and representable through its one-past end. That exact byte length
+then remains attached to the current map/key transaction through successful
+exit and into the provider call. These numeric checks reject malformed input;
+they establish no physical-space, rights, provenance, backing, or ownership
+fact.
 Address-space providers turn authorized physical extents into mapped virtual
 extents. Allocators draw storage from qualified RAM-backed extents. Device
 mappings retain device provenance and never become ordinary RAM merely because

@@ -17,6 +17,13 @@ use core::extent;          // PAGE_SIZE + checked ExtentRootProvider adapter
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // Extent, Granted, ExtentRootProvider
 
+// Conservative runtime geometry ceiling for one page-count multiplication.
+// This is ordinary Cathedral policy over firmware data, not evidence that the
+// described pages are RAM or owned. The final end check below also requires a
+// representable u64 one-past address, intentionally rejecting the otherwise
+// valid architectural edge ending exactly at 2^64.
+const MAX_BOOTSTRAP_PAGE_COUNT: u64 = 4503599627370495;
+
 // Get the map, walk it, exit, grant, report. `self.map_buf` is a fixed 64-KiB
 // static field, not allocated memory and not an Extent. Cathedral advertises
 // 16 KiB first and uses the remaining provision only after an exact
@@ -108,7 +115,36 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         transition offset + desc_size + desc_size <= map_size && offset + desc_size <= 65496 {
             true -> walk(bs, handle, map_size, desc_size, key,
                          offset + desc_size, best_start, best_pages)
-            _    -> exit(bs, handle, key, best_start, best_pages)
+            _    -> validate_candidate(bs, handle, key, best_start, best_pages)
+        }
+    }
+
+    // Before making the irreversible firmware exit, reject an absent or
+    // malformed best span. These are only numeric consistency checks over the
+    // current map transaction: they mint no RAM, physical-space, rights, or
+    // backing fact. Page-count bounding makes the following multiplication
+    // exact; alignment follows the UEFI page contract but is checked rather
+    // than trusted from raw descriptor bytes.
+    state validate_candidate(bs: &BootServicesTable, handle: EfiHandle,
+                             key: MapKey, best_start: u64, best_pages: u64) {
+        transition best_pages > 0 &&
+                   best_pages <= MAX_BOOTSTRAP_PAGE_COUNT &&
+                   best_start % PAGE_SIZE == 0 {
+            true -> validate_candidate_end(bs, handle, key, best_start, best_pages)
+            _ -> idle()
+        }
+    }
+
+    state validate_candidate_end(bs: &BootServicesTable, handle: EfiHandle,
+                                 key: MapKey, best_start: u64,
+                                 best_pages: u64 [1..=4503599627370495]) {
+        let checked_pages: u64 in Trapping = best_pages as u64 in Trapping;
+        let checked_length: u64 in Trapping = checked_pages * PAGE_SIZE;
+        let length: u64 = checked_length as u64;
+        let max_address: u64 = 0xFFFF_FFFF_FFFF_FFFF;
+        transition best_start <= max_address - length {
+            true -> exit(bs, handle, key, best_start, best_pages, length)
+            _ -> idle()
         }
     }
 
@@ -116,11 +152,12 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // and the map is final. EFI_INVALID_PARAMETER means the key became stale:
     // do not grant, discard the old map-derived candidate, and obtain a new map
     // and key before retrying. Any other firmware error parks unowned.
-    state exit(bs: &BootServicesTable, handle: EfiHandle, key: MapKey, best_start: u64, best_pages: u64) {
+    state exit(bs: &BootServicesTable, handle: EfiHandle, key: MapKey,
+               best_start: u64, best_pages: u64, length: u64) {
         let exit_status: EfiStatus = self.boot_svc.exit_boot_services(bs, handle, key);
         let exit_code: u64 = exit_status.code;
         transition exit_code == 0 {
-            true -> own(best_start, best_pages)
+            true -> own(best_start, best_pages, length)
             _    -> exit_failed(bs, handle, exit_code)
         }
     }
@@ -132,15 +169,14 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         }
     }
 
-    // We own the machine. Construct inert range geometry from the largest free
-    // span, then cross the admitted owner-authored provider requirement.
+    // We own the machine. Construct inert range geometry from the exact
+    // validated largest-span values, then cross the admitted owner-authored
+    // provider requirement.
     // Reconstructing these fields alone does not grant authority; exactly this
     // selected trait-slot call establishes the first qualified root.
-    state own(best_start: u64, best_pages: u64) {
-        let checked_pages: u64 in Trapping = best_pages as u64 in Trapping;
-        let length: u64 in Trapping = checked_pages * PAGE_SIZE;
+    state own(best_start: u64, best_pages: u64, length: u64) {
         let base: addr = best_start as addr;
-        let geometry: Extent = Extent { base: base, length: length as u64 };
+        let geometry: Extent = Extent { base: base, length: length };
         let first_extent: Extent = self.memory.grant(geometry);
         transition { _ -> serial_init(first_extent, best_pages) }
     }

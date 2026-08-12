@@ -8,6 +8,12 @@ candidate and restart that whole transaction, and admits the qualified extent
 grant only after success. Other failures park without acquiring an extent; the
 post-firmware serial/owned-idle graph retains the one successful grant.
 
+Before the irreversible exit, the selected conventional span must be nonempty,
+page-aligned, small enough for exact page-to-byte conversion, and have a
+representable one-past end. The validated byte length stays in the same
+map/key transaction through successful exit and becomes the exact grant
+geometry. Rejection parks inside firmware without calling the provider.
+
 Map storage is a fixed 64-KiB zero-initialized field, not an allocation or
 memory capability. Cathedral advertises 16 KiB first; only exact
 `EFI_BUFFER_TOO_SMALL` with a reported requirement in `(16 KiB, 64 KiB]`
