@@ -90,7 +90,8 @@ pub boundary trait BootServices {
     ) -> EfiStatus;
 
     // ExitBootServices(ImageHandle, MapKey). Succeeds only against the current
-    // key; on success firmware is gone and the map is final.
+    // key; EFI_INVALID_PARAMETER requires obtaining a whole new map/key pair
+    // before retry. On success firmware is gone and the map is final.
     machine exit_boot_services(
         table:        &BootServicesTable,
         image_handle: EfiHandle,

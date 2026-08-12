@@ -47,6 +47,10 @@ Cathedral distinguishes three relationships:
 
 Boot firmware and the final memory map supply the initial physical extents
 through Cathedral's admitted platform receipt.
+The current UEFI source treats the map and `MapKey` as one transaction: a stale
+key from `ExitBootServices` discards every descriptor-derived candidate and
+refreshes both before retry, while only success reaches the first root grant.
+Its fixed bootstrap buffer still fails closed on oversize maps.
 Address-space providers turn authorized physical extents into mapped virtual
 extents. Allocators draw storage from qualified RAM-backed extents. Device
 mappings retain device provenance and never become ordinary RAM merely because

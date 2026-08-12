@@ -18,33 +18,45 @@ use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // Extent, Granted, ExtentRootProvider
 
 // Get the map, walk it, exit, grant, report. `self.map_buf` is a fixed 16 KiB
-// static field (no allocator yet — real firmware maps are ~4–8 KiB); the
-// too-small retry loop is a follow-on.
+// static field (no allocator yet — real firmware maps are ~4–8 KiB); a
+// larger-capacity fallback remains a follow-on.
 machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable)
 reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 {
     let bs: &BootServicesTable = table.boot_services;          // transitive vouch, like con_out
+    transition { _ -> refresh_map(bs, handle) }
 
-    let mut map_size: u64 = 16384;               // in = buffer capacity, out = actual bytes
-    let mut key: MapKey = MapKey { raw: 0 };
-    let mut desc_size: u64 = 0;                   // out = the RUNTIME descriptor stride
-    let mut desc_version: u32 = 0;
-    let status: EfiStatus = self.boot_svc.get_memory_map(bs, &mut map_size, &mut self.map_buf,
-                                                         &mut key, &mut desc_size, &mut desc_version);
-    let status_code: u64 = status.code;
+    // Get a fresh map and its inseparable key. This state is also the only
+    // retry target after ExitBootServices reports EFI_INVALID_PARAMETER: the
+    // old key and every descriptor-derived candidate are discarded together.
+    state refresh_map(bs: &BootServicesTable, handle: EfiHandle) {
+        let mut map_size: u64 = 16384;             // in = capacity, out = actual bytes
+        let mut key: MapKey = MapKey { raw: 0 };
+        let mut desc_size: u64 = 0;                 // out = the RUNTIME descriptor stride
+        let mut desc_version: u32 = 0;
+        let status: EfiStatus = self.boot_svc.get_memory_map(
+            bs,
+            &mut map_size,
+            &mut self.map_buf,
+            &mut key,
+            &mut desc_size,
+            &mut desc_version
+        );
+        let status_code: u64 = status.code;
 
-    // Sanity-gate the firmware's out-values BEFORE trusting them: the call must
-    // report SUCCESS (on EFI_BUFFER_TOO_SMALL map_size comes back as the NEEDED
-    // size, > capacity), a zero/short stride would walk garbage, and a stride
-    // wider than the map is nonsense. A guard — not a vouched `ensures` —
-    // because firmware genuinely can return these; the conjuncts are ALSO the
-    // bound witnesses the walk's recast footprint discharges from (per-edge
-    // meet: this entry edge proves them, the loop edge forwards them), spelled
-    // INLINE on the transition because the prover matches guard conjuncts by
-    // display.
-    transition status_code == 0 && map_size <= 16384 && desc_size >= 40 && desc_size <= 16384 {
-        true -> walk(bs, handle, map_size, desc_size, key, 0, 0, 0)
-        _    -> idle()   // nonsense map; the too-small retry loop is a follow-on
+        // Sanity-gate the firmware's out-values BEFORE trusting them: the call
+        // must report SUCCESS (on EFI_BUFFER_TOO_SMALL map_size comes back as
+        // the NEEDED size, > capacity), a zero/short stride would walk garbage,
+        // and a stride wider than the map is nonsense. A guard — not a vouched
+        // `ensures` — because firmware genuinely can return these; the
+        // conjuncts are ALSO the bound witnesses the walk's recast footprint
+        // discharges from (per-edge meet: this entry edge proves them, the loop
+        // edge forwards them), spelled INLINE on the transition because the
+        // prover matches guard conjuncts by display.
+        transition status_code == 0 && map_size <= 16384 && desc_size >= 40 && desc_size <= 16384 {
+            true -> walk(bs, handle, map_size, desc_size, key, 0, 0, 0)
+            _    -> idle()   // malformed/oversize map; larger storage is a follow-on
+        }
     }
 
     // Walk descriptors: stride by the RUNTIME desc_size (never sizeof), recast
@@ -86,14 +98,21 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     }
 
     // Exit boot services against the current key. On success firmware is gone
-    // and the map is final; on failure (stale key) do NOT grant — the machine is
-    // not ours. (StaleMap retry = follow-on; the common case succeeds first try
-    // when nothing allocates between GetMemoryMap and here.)
+    // and the map is final. EFI_INVALID_PARAMETER means the key became stale:
+    // do not grant, discard the old map-derived candidate, and obtain a new map
+    // and key before retrying. Any other firmware error parks unowned.
     state exit(bs: &BootServicesTable, handle: EfiHandle, key: MapKey, best_start: u64, best_pages: u64) {
         let exit_status: EfiStatus = self.boot_svc.exit_boot_services(bs, handle, key);
         let exit_code: u64 = exit_status.code;
         transition exit_code == 0 {
             true -> own(best_start, best_pages)
+            _    -> exit_failed(bs, handle, exit_code)
+        }
+    }
+
+    state exit_failed(bs: &BootServicesTable, handle: EfiHandle, exit_code: u64) {
+        transition exit_code == EFI_INVALID_PARAMETER.code {
+            true -> refresh_map(bs, handle)
             _    -> idle()
         }
     }

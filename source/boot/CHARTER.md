@@ -17,7 +17,10 @@ service logic. Boot's job ends the moment control transfers to `core/` with the
 capability world constructed — the single most important documented boundary in
 the repository.
 
-**Status (2026-07-02).** In-progress: `uefi/` — milestone 1 of the first-boot
-ladder (an Omega UEFI application that prints and returns, under QEMU/OVMF). Does
-not compile yet; it targets Omega features still being implemented (see
-`uefi/main.omg` and `../../../Omega/wiki/cathedral_alignment.md` item 7).
+**Status (2026-08-12).** In-progress: `uefi/` boots the Omega image under
+QEMU/OVMF, obtains and validates the runtime-strided memory map, refreshes the
+whole map/key transaction when `ExitBootServices` rejects a stale key, admits
+one receipt-backed root extent after success, reports it through the 16550, and
+parks while retaining the root. The generated target-entry bridge, larger
+memory-map capacity fallback, physical-space/right/backing facts, and actual
+handoff into the proved core remain outstanding.

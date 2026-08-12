@@ -33,6 +33,13 @@ One term to fix, since the rest of the phase leans on it: virtual memory works t
 
 `ExitBootServices()` is the UEFI call after which firmware's temporary drivers and services are gone for good and the kernel owns the hardware. Anything still needed from firmware, the final memory map above all, must be captured before this call. Afterward the kernel brings up its own driver for whatever disk controller is present (NVMe or AHCI on real machines, the virtio interface under virtualization), good enough to read the store in [phase 4](04_mounting_the_store.md).
 
+The map and its `MapKey` form one transaction. Cathedral's current boot source
+discards the entire descriptor-derived candidate and refreshes the map/key pair
+when `ExitBootServices` reports a stale key; only a successful exit can reach
+the first extent grant. Malformed maps and maps larger than the fixed 16-KiB
+bootstrap buffer still fail closed, with dynamic capacity left to the allocator
+milestone.
+
 The IDT should normally be materialized and validated after Cathedral's final
 image and virtual placements are known but before `ExitBootServices`, while
 firmware services remain available. It is installed only after every address

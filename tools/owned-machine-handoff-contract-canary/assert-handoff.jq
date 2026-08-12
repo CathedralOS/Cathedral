@@ -4,6 +4,9 @@ def require($condition; $message):
 def state($machine; $name):
   first($machine.states[] | select(.name == $name));
 
+def field_value($literal; $name):
+  first($literal.fields[] | select(.name == $name) | .value);
+
 def transition_targets($state):
   [
     $state.statements[]
@@ -49,12 +52,63 @@ def has_granted_extent_parameter:
     "expected exactly one Main::own_machine contract")
 | $machines[0] as $machine
 | $machine_contracts[0] as $machine_contract
+| state($machine; "own_machine") as $entry
+| state($machine; "refresh_map") as $refresh_map
+| state($machine; "walk") as $walk
+| state($machine; "step") as $step
 | state($machine; "exit") as $exit
+| state($machine; "exit_failed") as $exit_failed
 | state($machine; "own") as $own
 | state($machine; "serial_init") as $serial_init
 | state($machine; "tail_send") as $tail_send
 | state($machine; "idle") as $idle
 | state($machine; "owned_idle") as $owned_idle
+| require(transition_targets($entry) == [
+      {
+        target: "refresh_map",
+        arguments: [
+          { kind: "name", path: ["bs"] },
+          { kind: "name", path: ["handle"] }
+        ],
+        guard: "always"
+      }
+    ];
+    "owned-machine entry no longer begins with one fresh map/key transaction")
+| first(
+    $refresh_map.statements[]
+    | select(.kind == "local_data" and .name == "status")
+  ) as $map_call
+| require(($map_call.initial_value.kind == "call") and
+          ($map_call.initial_value.target == "get_memory_map") and
+          (transition_targets($refresh_map) == [
+            {
+              target: "walk",
+              arguments: [
+                { kind: "name", path: ["bs"] },
+                { kind: "name", path: ["handle"] },
+                { kind: "name", path: ["map_size"] },
+                { kind: "name", path: ["desc_size"] },
+                { kind: "name", path: ["key"] },
+                { kind: "integer", text: "0" },
+                { kind: "integer", text: "0" },
+                { kind: "integer", text: "0" }
+              ],
+              guard: "when"
+            },
+            { target: "idle", arguments: [], guard: "always" }
+          ]);
+    "fresh map/key transaction no longer gates descriptor walking")
+| require(all(
+      $walk.statements[]
+      | select(.kind == "transition");
+      .target.path[0] == "step"
+      and .target.arguments[4] == {kind: "name", path: ["key"]}
+    ) and
+    ($step.statements[0].target.path[0] == "walk") and
+    ($step.statements[0].target.arguments[4] == {kind: "name", path: ["key"]}) and
+    ($step.statements[1].target.path[0] == "exit") and
+    ($step.statements[1].target.arguments[2] == {kind: "name", path: ["key"]});
+    "descriptor walk no longer carries exactly the key returned with its map")
 | require(($exit.statements[0].kind == "local_data") and
           ($exit.statements[0].initial_value.kind == "call") and
           ($exit.statements[0].initial_value.target == "exit_boot_services") and
@@ -67,9 +121,35 @@ def has_granted_extent_parameter:
               ],
               guard: "when"
             },
+            {
+              target: "exit_failed",
+              arguments: [
+                { kind: "name", path: ["bs"] },
+                { kind: "name", path: ["handle"] },
+                { kind: "name", path: ["exit_code"] }
+              ],
+              guard: "always"
+            }
+          ]);
+    "ExitBootServices no longer separates successful ownership from failure handling")
+| ($exit_failed.statements[0].guard.value.left.right) as $invalid_parameter
+| require(($invalid_parameter.kind == "member") and
+          ($invalid_parameter.member == "code") and
+          ($invalid_parameter.receiver.type_name == "EfiStatus") and
+          (($invalid_parameter.receiver | field_value(.; "code") | .text)
+            == "0x8000000000000002") and
+          (transition_targets($exit_failed) == [
+            {
+              target: "refresh_map",
+              arguments: [
+                { kind: "name", path: ["bs"] },
+                { kind: "name", path: ["handle"] }
+              ],
+              guard: "when"
+            },
             { target: "idle", arguments: [], guard: "always" }
           ]);
-    "ExitBootServices no longer gates ownership success from failure idle")
+    "stale ExitBootServices key no longer refreshes the whole map/key transaction")
 | first(
     $own.statements[]
     | select(.kind == "local_data" and .name == "first_extent")
