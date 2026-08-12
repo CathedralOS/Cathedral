@@ -35,6 +35,11 @@ pub data EfiMemoryAttribute { bits: u64; }
 pub const EFI_MEMORY_RUNTIME: EfiMemoryAttribute = EfiMemoryAttribute {
     bits: 0x8000_0000_0000_0000,
 };
+// Complement of every standard revision-1 attribute bit, EFI_MEMORY_ISA_MASK,
+// EFI_MEMORY_ISA_VALID, and EFI_MEMORY_RUNTIME. Any intersection is reserved.
+pub const EFI_MEMORY_RESERVED_MASK: EfiMemoryAttribute = EfiMemoryAttribute {
+    bits: 0x3000_0FFF_FFE0_0FE0,
+};
 
 // --- EFI_MEMORY_DESCRIPTOR -------------------------------------------------
 // The `Uefi` policy pads `kind` to 8-align `physical_start`. sizeof is 40, BUT
@@ -47,7 +52,7 @@ pub data EfiMemoryDescriptor {
     physical_start:  u64;   // EFI_PHYSICAL_ADDRESS
     virtual_start:   u64;   // EFI_VIRTUAL_ADDRESS
     number_of_pages: u64;
-    attribute:       u64;   // EFI_MEMORY_* bit set
+    attribute:       u64;   // revision-1 standard/ISA EFI_MEMORY_* bits only
 }
 
 // The map key GetMemoryMap returns; ExitBootServices only succeeds against the

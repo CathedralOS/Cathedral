@@ -308,10 +308,10 @@ Current reality (2026-07-28):
   conversion after 100,000 subtraction rounds. Bounded map resize, a single
   whole-transaction stale-key refresh, revision-pinned aligned
   whole-descriptor traversal,
-  runtime-region exclusion, descriptor type/geometry checks, selected-span
-  disjointness auditing, and conservative numeric root-geometry validation are
-  live; richer physical-space/right/backing facts remain follow-on hardening
-  rather than a substitute for the qualified root.
+  runtime-region exclusion, descriptor type/attribute/geometry checks,
+  selected-span disjointness auditing, and conservative numeric root-geometry
+  validation are live; richer physical-space/right/backing facts remain
+  follow-on hardening rather than a substitute for the qualified root.
 - **planned** — everything else (`foundation/`, `services/`, `libraries/`, and
   the driver *programs* under `drivers/`). No directory exists until real code
   lands in it.

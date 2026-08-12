@@ -21,10 +21,12 @@ page-to-byte conversion, and have a representable one-past end. Runtime-marked
 descriptors remain ineligible. The validated byte length stays in the same
 map/key transaction while a second full-map pass validates every descriptor's
 standard/vendor memory-type range, physical and virtual alignment, and range
-end, then requires every other physical range to be strictly disjoint from the
-chosen span. Invalid type `16..0x6fffffff`, malformed geometry, or overlap parks
-inside firmware without calling the provider. Only completion of that audit may
-reach `ExitBootServices`; successful exit makes the checked span the exact grant
+end. It also rejects attribute bits outside the revision-1 standard and ISA-
+specific masks, then requires every other physical range to be strictly
+disjoint from the chosen span. Invalid type `16..0x6fffffff`, reserved
+attributes, malformed geometry, or overlap parks inside firmware without
+calling the provider. Only completion of that audit may reach
+`ExitBootServices`; successful exit makes the checked span the exact grant
 geometry.
 
 Map storage is a fixed 64-KiB zero-initialized field, not an allocation or
