@@ -1,0 +1,55 @@
+// Compile-only acceptance root that makes every named x86 exception vector
+// visible in the typed artifact without establishing an interrupt entry.
+
+use facts::x86_exception_vectors;
+
+data X86ExceptionVectorSnapshot {
+    vector_count: u8;
+    vectors: [u8; 32];
+}
+
+machine x86_exception_vector_snapshot() -> X86ExceptionVectorSnapshot {
+    X86ExceptionVectorSnapshot {
+        vector_count: X86_EXCEPTION_VECTOR_COUNT,
+        vectors: [
+            X86_EXCEPTION_DIVIDE_ERROR,
+            X86_EXCEPTION_DEBUG,
+            X86_EXCEPTION_NON_MASKABLE_INTERRUPT,
+            X86_EXCEPTION_BREAKPOINT,
+            X86_EXCEPTION_OVERFLOW,
+            X86_EXCEPTION_BOUND_RANGE_EXCEEDED,
+            X86_EXCEPTION_INVALID_OPCODE,
+            X86_EXCEPTION_DEVICE_NOT_AVAILABLE,
+            X86_EXCEPTION_DOUBLE_FAULT,
+            X86_EXCEPTION_RESERVED_09,
+            X86_EXCEPTION_INVALID_TSS,
+            X86_EXCEPTION_SEGMENT_NOT_PRESENT,
+            X86_EXCEPTION_STACK_SEGMENT_FAULT,
+            X86_EXCEPTION_GENERAL_PROTECTION,
+            X86_EXCEPTION_PAGE_FAULT,
+            X86_EXCEPTION_RESERVED_15,
+            X86_EXCEPTION_X87_FLOATING_POINT,
+            X86_EXCEPTION_ALIGNMENT_CHECK,
+            X86_EXCEPTION_MACHINE_CHECK,
+            X86_EXCEPTION_SIMD_FLOATING_POINT,
+            X86_EXCEPTION_VIRTUALIZATION,
+            X86_EXCEPTION_CONTROL_PROTECTION,
+            X86_EXCEPTION_RESERVED_22,
+            X86_EXCEPTION_RESERVED_23,
+            X86_EXCEPTION_RESERVED_24,
+            X86_EXCEPTION_RESERVED_25,
+            X86_EXCEPTION_RESERVED_26,
+            X86_EXCEPTION_RESERVED_27,
+            AMD_EXCEPTION_HYPERVISOR_INJECTION,
+            AMD_EXCEPTION_VMM_COMMUNICATION,
+            AMD_EXCEPTION_SECURITY,
+            X86_EXCEPTION_RESERVED_31
+        ],
+    }
+}
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}
