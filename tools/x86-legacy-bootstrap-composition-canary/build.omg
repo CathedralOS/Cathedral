@@ -1,0 +1,8 @@
+// Isolated pre-installation composition frontier for Cathedral's first x86
+// exception floor and legacy timer provider.
+
+machine build(b: &mut Build) {
+    b.depend("core", path("core"));
+    b.depend("facts", path("facts"));
+    b.freestanding = true;
+}

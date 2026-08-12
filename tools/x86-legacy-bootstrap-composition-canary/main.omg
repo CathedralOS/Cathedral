@@ -1,0 +1,13 @@
+// Compile-only acceptance root for the existing bootstrap pieces. No wrapper
+// machine composes authority or implies that installation has occurred.
+
+use core::pic_8259;
+use core::pit_8254;
+use core::x86_interrupt_profile;
+use facts::x86_idt_gate;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}
