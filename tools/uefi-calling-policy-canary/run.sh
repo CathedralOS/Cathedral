@@ -26,13 +26,19 @@ fi
 SYNTAX="$BUILD_DIR/02_syntax_trees.json"
 TYPED="$BUILD_DIR/04_typed_trees.json"
 CONTRACTS="$BUILD_DIR/05_machine_contracts.json"
+POLICY_ASSERTIONS="$CANARY_ROOT/assert-policy.jq"
 
-for artifact in "$SYNTAX" "$TYPED" "$CONTRACTS"; do
+for artifact in "$SYNTAX" "$TYPED" "$CONTRACTS" "$POLICY_ASSERTIONS"; do
   [[ -f "$artifact" ]] || {
     echo "error: expected compiler artifact is missing: $artifact" >&2
     exit 1
   }
 done
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "error: jq is required to validate the typed UEFI calling policy" >&2
+  exit 2
+fi
 
 assert_contains() {
   local artifact="$1"
@@ -56,5 +62,10 @@ assert_contains "$CONTRACTS" '"machine": "UefiX86_64::plan"'
 assert_contains "$CONTRACTS" '"checked_may_suspend": false'
 assert_contains "$CONTRACTS" '"checked_may_block": false'
 assert_contains "$CONTRACTS" '"checked_termination": {"kind": "terminates"'
+
+# Isolate the typed policy machine and validate Cathedral's actual firmware
+# entry plan. Merely finding these vocabulary names elsewhere in the artifact
+# would not prove that UefiX86_64::plan selected them.
+jq -e -f "$POLICY_ASSERTIONS" "$TYPED" >/dev/null
 
 echo "Cathedral UEFI calling-policy canary passed"
