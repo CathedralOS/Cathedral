@@ -10,6 +10,7 @@
 
 use facts::pic_8259;
 use facts::x86_exception_vectors;
+use facts::x86_idt_gate;
 use facts::x86_interrupt_stacks;
 use omega::language::std::calling;
 
@@ -30,6 +31,24 @@ pub data X86BootstrapExceptionEntryPolicy {
     stack: EntryStack;
     ist_index: u8 [0..=7];
     disposition: X86BootstrapExceptionDisposition;
+}
+
+// A proposed gate paired with the semantic fields that are not encoded in the
+// 16-byte descriptor itself. This remains ordinary data: `entry` and
+// `selector` inside `gate` have not yet been vouched for by the admitted-root
+// resolver or the boot-selected code-segment fact.
+pub data X86BootstrapExceptionGateCandidate {
+    vector: u8 [0..=31];
+    gate: X86IdtGate;
+    disposition: X86BootstrapExceptionDisposition;
+}
+
+// `PolicyConsistent` reports only the Cathedral-owned checks performed below.
+// It is deliberately not a MaterializedIdt, receipt, publication token, or
+// assertion that the candidate's entry identity and selector are admitted.
+pub data X86BootstrapExceptionGatePolicyCheck {
+    case Rejected;
+    case PolicyConsistent(candidate: X86BootstrapExceptionGateCandidate);
 }
 
 // Total policy for all architectural exception slots. Reserved and
@@ -77,6 +96,75 @@ pub machine x86_bootstrap_exception_entry_policy(
             ist_index: 0,
             disposition: X86BootstrapExceptionDisposition::FatalDiagnostic,
         }
+    }
+}
+
+// Pure prepublication validation of the fields Cathedral can already decide.
+// The later source-carrier integration must additionally bind `gate.entry` to
+// the exact admitted root and `gate.selector` to the boot-selected ring-0 code
+// segment before materialization can establish a table.
+pub machine x86_validate_bootstrap_exception_gate_policy(
+    expected_vector: u8 [0..=31],
+    candidate: X86BootstrapExceptionGateCandidate
+) -> X86BootstrapExceptionGatePolicyCheck {
+    // Derive the policy internally from the requested table slot; callers
+    // cannot obtain consistency merely by supplying a matching invented
+    // policy record.
+    let policy: X86BootstrapExceptionEntryPolicy =
+        x86_bootstrap_exception_entry_policy(expected_vector);
+    transition candidate.vector == policy.vector {
+        true -> check_ist(policy, candidate)
+        _ -> reject()
+    }
+
+    state check_ist(
+        policy: X86BootstrapExceptionEntryPolicy,
+        candidate: X86BootstrapExceptionGateCandidate
+    ) -> X86BootstrapExceptionGatePolicyCheck {
+        transition candidate.gate.ist == policy.ist_index {
+            true -> check_disposition(policy, candidate)
+            _ -> reject()
+        }
+    }
+
+    state check_disposition(
+        policy: X86BootstrapExceptionEntryPolicy,
+        candidate: X86BootstrapExceptionGateCandidate
+    ) -> X86BootstrapExceptionGatePolicyCheck {
+        transition candidate.disposition == policy.disposition {
+            true -> check_attributes(candidate)
+            _ -> reject()
+        }
+    }
+
+    state check_attributes(
+        candidate: X86BootstrapExceptionGateCandidate
+    ) -> X86BootstrapExceptionGatePolicyCheck {
+        transition candidate.gate.type_attributes == PRESENT_RING0_INTERRUPT_GATE {
+            true -> check_reserved(candidate)
+            _ -> reject()
+        }
+    }
+
+    state check_reserved(
+        candidate: X86BootstrapExceptionGateCandidate
+    ) -> X86BootstrapExceptionGatePolicyCheck {
+        transition candidate.gate.reserved == RESERVED_ZERO {
+            true -> accept(candidate)
+            _ -> reject()
+        }
+    }
+
+    state accept(
+        candidate: X86BootstrapExceptionGateCandidate
+    ) -> X86BootstrapExceptionGatePolicyCheck {
+        X86BootstrapExceptionGatePolicyCheck::PolicyConsistent {
+            candidate: candidate,
+        }
+    }
+
+    state reject() -> X86BootstrapExceptionGatePolicyCheck {
+        X86BootstrapExceptionGatePolicyCheck::Rejected
     }
 }
 

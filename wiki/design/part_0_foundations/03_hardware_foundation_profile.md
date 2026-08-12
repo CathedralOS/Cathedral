@@ -349,6 +349,18 @@ That composition is authored once and remains pure; later root admission and
 gate materialization must consume it rather than independently pairing vectors
 with stack numbers.
 
+Cathedral's first source-level gate-policy check is intentionally partial. It
+derives the total policy internally from the requested table slot, pairs an
+`X86IdtGate` candidate with its vector and fatal disposition, then rejects any
+mismatch in vector, coupled IST, disposition, fixed present/ring-0 interrupt-
+gate attributes, or reserved-zero field. Success yields only ordinary
+`PolicyConsistent` data; it is not sealed and carries no destination,
+materialization, or publication authority. The handler entry identity and code
+selector remain unchecked until Omega's admitted resolver/source carrier and
+Cathedral's boot-selected segment fact can supply authoritative inputs. That
+missing integration is an engineering seam, not a new IDT lifecycle or an open
+language-design decision.
+
 The first entry stub saves all ordinary GPRs. Final placed code for the handler
 and every transitive callee must remain within a no-SIMD/x87 state ceiling.
 Exact GPR-footprint saves are an optimization after the coarse correctness

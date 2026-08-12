@@ -41,10 +41,16 @@ remains ordered after exception-IDT publication.
 four initial vector-to-stack assignments and one total fatal-diagnostic
 bootstrap exception-floor policy over slots 0–31. The latter couples each
 normalized stack choice to the exact hardware IST index without minting any of
-those missing authorities. `legacy_timer_root.omg` now supplies the source-level
-normalized entry/provider canary under Cathedral's maskable-IRQ stack and
-masked `InterruptReturn` plan. Its checked PIC path emits the master EOI, then
-consumes the exact pending acknowledgement through normalized completion.
+those missing authorities. Its pure gate-policy validator internally derives
+that policy for the requested table slot, rejects vector, IST, disposition,
+gate-attribute, or reserved-field drift, and returns only an ordinary
+`PolicyConsistent` candidate. It deliberately does not vouch for the handler
+entry identity or selector; those still need the admitted resolver and
+boot-selected code-segment source facts. `legacy_timer_root.omg` now supplies
+the source-level normalized entry/provider canary under Cathedral's
+maskable-IRQ stack and masked `InterruptReturn` plan. Its checked PIC path emits
+the master EOI, then consumes the exact pending acknowledgement through
+normalized completion.
 Omega-derived fixed-fuel and artifact-wide WCSU integration is the next
 blocker. The package still publishes no IDT, provisions no stack, unmasks no
 IRQ, and performs no installation.

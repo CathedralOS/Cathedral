@@ -59,7 +59,12 @@ Legend: `[ ]` open · `[x]` closed.
   Cathedral's source policy now also makes all exception slots 0–31 total:
   NMI/double fault/machine check select their coupled dedicated class/IST,
   while every other slot selects the current stack with IST zero, and every
-  bootstrap disposition remains fatal-diagnostic.
+  bootstrap disposition remains fatal-diagnostic. A pure Cathedral validator
+  now derives that policy internally for the requested table slot and rejects
+  drift in those fields plus the fixed ring-0 interrupt-gate attributes and
+  reserved-zero field, producing only an ordinary policy-consistent candidate.
+  Entry identity and selector evidence still await the admitted resolver/source
+  carrier integration and boot segment facts.
   The first legacy timer root publishes its exact entry and selected provider;
   its checked PIC body now emits the master EOI before consuming normalized
   acknowledgement completion. The next blocker is Omega deriving fixed-fuel
