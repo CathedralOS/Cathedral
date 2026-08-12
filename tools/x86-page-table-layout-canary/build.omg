@@ -1,0 +1,5 @@
+// Isolated pure-fact frontier for Cathedral's first x86 paging-word layout.
+
+machine build(b: &mut Build) {
+    b.depend("facts", path("facts"));
+}

@@ -9,7 +9,7 @@
 // under frame/mapping authority. Runtime-known addresses are ordinary data;
 // unlike IDT entry identities, they need no symbolic relocation source.
 
-use omega::language::std::layout;
+use omega::language::core::layout;
 
 pub const X86_PAGE_SHIFT: u8 = 12;
 pub const X86_PAGE_BYTES: u64 = 4096;

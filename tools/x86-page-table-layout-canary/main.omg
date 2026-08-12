@@ -1,0 +1,11 @@
+// Compile-only acceptance root for the x86 page-table entry layout. The IDT
+// fact shares the same current core-layout dependency and remains compile-live.
+
+use facts::x86_idt_gate;
+use facts::x86_page_table_entry;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}

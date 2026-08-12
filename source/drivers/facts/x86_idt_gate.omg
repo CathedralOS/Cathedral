@@ -9,7 +9,7 @@
 // tiling and destination overlap before its post-handoff materializer may use
 // the plan.
 
-use omega::language::std::layout;
+use omega::language::core::layout;
 
 pub const PRESENT_RING0_INTERRUPT_GATE: u8 = 0x8E;
 pub const NO_IST: u8 = 0;
