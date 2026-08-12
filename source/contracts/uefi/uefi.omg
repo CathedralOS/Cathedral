@@ -78,6 +78,13 @@ pub data EfiTableHeader {
     reserved:    u32;
 }
 
+// Standard table identity plus the complete x86-64 prefix Cathedral reads.
+// HeaderSize may grow in a later compatible revision, but it must cover every
+// declared EFI_SYSTEM_TABLE field through ConfigurationTable before boot
+// projects BootServices from the firmware-vouched reference.
+pub const EFI_SYSTEM_TABLE_SIGNATURE: u64 = 0x5453_5953_2049_4249;
+pub const EFI_SYSTEM_TABLE_REQUIRED_SIZE: u32 = 120;
+
 // Every field is listed in spec order — the C-ABI (`Uefi`) policy computes each
 // offset from the field before it, so an unread field still has to be present or
 // the ones after it land at the wrong offset.

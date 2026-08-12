@@ -9,6 +9,12 @@ only success admits the qualified extent grant. Other failures park without
 acquiring an extent; the post-firmware serial/owned-idle graph retains the one
 successful grant.
 
+Before any Boot Services dispatch, the enclosing EFI System Table and the Boot
+Services table must carry their standard signatures, advertise headers large
+enough to cover every field Cathedral reads, and keep the common reserved
+header field zero. The canary pins both fail-closed gates and permits the first
+fresh map transaction only after they succeed.
+
 The owned-memory report remains exact through 99,999 MiB. Larger roots take a
 separate `99999+ MiB` route rather than overflowing the five-digit formatter;
 page-to-MiB conversion saturates at 100,000 subtraction rounds because no larger

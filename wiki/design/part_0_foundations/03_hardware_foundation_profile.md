@@ -47,7 +47,11 @@ Cathedral distinguishes three relationships:
 
 Boot firmware and the final memory map supply the initial physical extents
 through Cathedral's admitted platform receipt.
-The current UEFI source treats the map and `MapKey` as one transaction: a stale
+The current UEFI source first admits the firmware dispatch path only when the
+EFI System Table and Boot Services table carry their standard signatures,
+advertise headers covering every field Cathedral consumes, and keep the common
+reserved header field zero. Failure parks before a Boot Services call. It then
+treats the map and `MapKey` as one transaction: a stale
 key from `ExitBootServices` discards every descriptor-derived candidate and
 refreshes both once before retry, while only success reaches the first root
 grant. A second stale rejection parks unowned instead of looping indefinitely.

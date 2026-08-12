@@ -79,9 +79,10 @@ pub data EfiMemoryDescriptor {
 pub data MapKey { raw: u64; }   // UINTN
 
 // --- EFI_BOOT_SERVICES table (field model) ---------------------------------
-// EFI_TABLE_HEADER then the boot services, in spec order — declared in full so
-// the layout policy computes each field's offset and the FFI audit reads by
-// NAME. We call get_memory_map (5th) and exit_boot_services (27th).
+// EFI_TABLE_HEADER then the boot services in spec order through the last field
+// Cathedral currently binds. Keeping the complete consumed prefix lets the
+// layout policy compute each offset and the FFI audit read by NAME. We call
+// get_memory_map (5th) and exit_boot_services (27th).
 pub data BootServicesTable {
     hdr:                          EfiTableHeader;
     raise_tpl:                    addr;
@@ -112,6 +113,13 @@ pub data BootServicesTable {
     unload_image:                 addr;
     exit_boot_services:           addr;   // bound
 }
+
+// Standard table identity plus the x86-64 prefix through ExitBootServices.
+// Cathedral does not read the later EFI_BOOT_SERVICES fields yet, so its
+// minimum is the end of the last bound field rather than a claim that this
+// provisional source type models the complete revision-specific table.
+pub const EFI_BOOT_SERVICES_SIGNATURE: u64 = 0x5652_4553_544F_4F42;
+pub const EFI_BOOT_SERVICES_REQUIRED_SIZE: u32 = 240;
 
 pub boundary trait BootServices {
     // GetMemoryMap(IN OUT MemoryMapSize, OUT MemoryMap, OUT MapKey,

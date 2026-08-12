@@ -129,6 +129,7 @@ def has_granted_extent_parameter:
     ];
     "owned-machine map backing lost its 8-byte anchor or exact 64-KiB bytes")
 | state($machine; "own_machine") as $entry
+| state($machine; "validate_boot_services") as $validate_boot_services
 | state($machine; "refresh_map") as $refresh_map
 | state($machine; "get_map") as $get_map
 | state($machine; "map_failed") as $map_failed
@@ -160,18 +161,128 @@ def has_granted_extent_parameter:
 | state($machine; "tail_send") as $tail_send
 | state($machine; "idle") as $idle
 | state($machine; "owned_idle") as $owned_idle
-| require(transition_targets($entry) == [
+| require(
+    (($entry.statements[0].guard.value.left | conjunct_signatures) == [
+      {
+        left: {
+          kind: "member",
+          receiver: {
+            kind: "member",
+            receiver: {kind: "path", path: ["table"]},
+            member: "header"
+          },
+          member: "signature"
+        },
+        operator: "==",
+        right: {kind: "integer", text: "0x5453595320494249"}
+      },
+      {
+        left: {
+          kind: "member",
+          receiver: {
+            kind: "member",
+            receiver: {kind: "path", path: ["table"]},
+            member: "header"
+          },
+          member: "header_size"
+        },
+        operator: ">=",
+        right: {kind: "integer", text: "120"}
+      },
+      {
+        left: {
+          kind: "member",
+          receiver: {
+            kind: "member",
+            receiver: {kind: "path", path: ["table"]},
+            member: "header"
+          },
+          member: "reserved"
+        },
+        operator: "==",
+        right: {kind: "integer", text: "0"}
+      }
+    ]) and
+    (transition_targets($entry) == [
+      {
+        target: "validate_boot_services",
+        arguments: [
+          { kind: "name", path: ["handle"] },
+          { kind: "name", path: ["table"] }
+        ],
+        guard: "when"
+      },
+      {
+        target: "idle",
+        arguments: [],
+        guard: "always"
+      }
+    ]);
+    "owned-machine entry no longer gates the firmware system-table prefix")
+| require(
+    ($validate_boot_services.statements[0].initial_value == {
+      kind: "member",
+      receiver: {kind: "name", path: ["table"]},
+      member: "boot_services"
+    }) and
+    (($validate_boot_services.statements[1].guard.value.left | conjunct_signatures) == [
+      {
+        left: {
+          kind: "member",
+          receiver: {
+            kind: "member",
+            receiver: {kind: "path", path: ["bs"]},
+            member: "hdr"
+          },
+          member: "signature"
+        },
+        operator: "==",
+        right: {kind: "integer", text: "0x56524553544f4f42"}
+      },
+      {
+        left: {
+          kind: "member",
+          receiver: {
+            kind: "member",
+            receiver: {kind: "path", path: ["bs"]},
+            member: "hdr"
+          },
+          member: "header_size"
+        },
+        operator: ">=",
+        right: {kind: "integer", text: "240"}
+      },
+      {
+        left: {
+          kind: "member",
+          receiver: {
+            kind: "member",
+            receiver: {kind: "path", path: ["bs"]},
+            member: "hdr"
+          },
+          member: "reserved"
+        },
+        operator: "==",
+        right: {kind: "integer", text: "0"}
+      }
+    ]) and
+    (transition_targets($validate_boot_services) == [
       {
         target: "refresh_map",
         arguments: [
-          { kind: "name", path: ["bs"] },
-          { kind: "name", path: ["handle"] },
-          { kind: "integer", text: "0" }
+          {kind: "name", path: ["bs"]},
+          {kind: "name", path: ["handle"]},
+          {kind: "integer", text: "0"}
         ],
+        guard: "when"
+      },
+      {
+        target: "idle",
+        arguments: [],
         guard: "always"
       }
-    ];
-    "owned-machine entry no longer begins with one fresh map/key transaction")
+    ]);
+    "Boot Services projection no longer gates its required table prefix before dispatch")
 | require(transition_targets($refresh_map) == [
       {
         target: "get_map",

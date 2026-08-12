@@ -34,6 +34,9 @@ One term to fix, since the rest of the phase leans on it: virtual memory works t
 `ExitBootServices()` is the UEFI call after which firmware's temporary drivers and services are gone for good and the kernel owns the hardware. Anything still needed from firmware, the final memory map above all, must be captured before this call. Afterward the kernel brings up its own driver for whatever disk controller is present (NVMe or AHCI on real machines, the virtio interface under virtualization), good enough to read the store in [phase 4](04_mounting_the_store.md).
 
 The map and its `MapKey` form one transaction. Cathedral's current boot source
+first gates the EFI System Table and Boot Services table on their standard
+signatures, minimum consumed-prefix sizes, and zero common reserved header
+fields; malformed metadata parks before any Boot Services dispatch. It then
 discards the entire descriptor-derived candidate and refreshes the map/key pair
 once when `ExitBootServices` reports a stale key; a second stale rejection parks
 without a grant. Only a successful exit can reach the first extent grant. The
