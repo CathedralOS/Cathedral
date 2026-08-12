@@ -9,6 +9,11 @@ only success admits the qualified extent grant. Other failures park without
 acquiring an extent; the post-firmware serial/owned-idle graph retains the one
 successful grant.
 
+The owned-memory report remains exact through 99,999 MiB. Larger roots take a
+separate `99999+ MiB` route rather than overflowing the five-digit formatter;
+both routes fit the 16550's 16-byte FIFO burst and retain the same qualified
+extent through owned idle.
+
 Before the irreversible exit, the selected conventional span must not carry
 `EFI_MEMORY_RUNTIME`; it must be nonempty, page-aligned, small enough for exact
 page-to-byte conversion, and have a representable one-past end. Runtime-marked

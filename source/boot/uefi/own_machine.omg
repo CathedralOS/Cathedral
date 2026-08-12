@@ -472,14 +472,34 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         asm { in lsr, 1021 }
         transition (lsr & 32) == 0 {
             true -> digits_wait(extent, mib)
-            _    -> ten_thousands(extent, mib, 0)
+            _    -> report_size(extent, mib)
         }
+    }
+
+    // Five digits plus the tail fit in one 16-byte FIFO burst. Larger roots
+    // take an explicit lower-bound route instead of wrapping `48 + count` into
+    // a non-digit byte.
+    state report_size(extent: Extent in Granted, mib: u64 in Trapping) {
+        transition mib <= 99999 {
+            true -> ten_thousands(extent, mib, 0)
+            _ -> oversized_mib(extent)
+        }
+    }
+
+    state oversized_mib(extent: Extent in Granted) {
+        asm { out 1016, 57 }    // '9'
+        asm { out 1016, 57 }    // '9'
+        asm { out 1016, 57 }    // '9'
+        asm { out 1016, 57 }    // '9'
+        asm { out 1016, 57 }    // '9'
+        asm { out 1016, 43 }    // '+'
+        transition { _ -> tail_send(extent) }
     }
 
     // Decimal by PLACE SUBTRACTION, most-significant first: each place counts
     // how many times it fits, emits its digit, forwards the remainder.
-    // `printed` suppresses leading zeros; the ones place always prints. Caps
-    // at 5 digits (99999 MiB ≈ 97 GiB) — wider machines are a follow-on.
+    // `printed` suppresses leading zeros; the ones place always prints. This
+    // route receives only values that fit its five decimal places.
     state ten_thousands(extent: Extent in Granted,
                         rest: u64 in Trapping, count: u64 in Trapping) {
         transition rest >= 10000 {

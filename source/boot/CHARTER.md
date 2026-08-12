@@ -27,6 +27,9 @@ allocation or authority creation. The byte view has an explicit 8-byte
 alignment anchor, and map acceptance requires an aligned stride and exact
 descriptor count before typed traversal, as well as the exact supported UEFI
 descriptor revision.
+The serial report is exact through 99,999 MiB and emits the honest bounded form
+`99999+ MiB` for larger roots, so its five-digit formatter cannot wrap into
+non-digit bytes.
 Repeated stale-key rejection fails closed rather than looping indefinitely.
 Before exiting firmware it excludes runtime-marked descriptors and rejects an
 empty, unaligned, page-count-overflowing, or non-representable conventional

@@ -143,6 +143,9 @@ def has_granted_extent_parameter:
 | state($machine; "exit_failed") as $exit_failed
 | state($machine; "own") as $own
 | state($machine; "serial_init") as $serial_init
+| state($machine; "digits_wait") as $digits_wait
+| state($machine; "report_size") as $report_size
+| state($machine; "oversized_mib") as $oversized_mib
 | state($machine; "tail_send") as $tail_send
 | state($machine; "idle") as $idle
 | state($machine; "owned_idle") as $owned_idle
@@ -877,6 +880,8 @@ def has_granted_extent_parameter:
           ]);
     "qualified extent grant no longer immediately gates post-firmware serial initialization")
 | require(($serial_init | has_granted_extent_parameter) and
+          ($report_size | has_granted_extent_parameter) and
+          ($oversized_mib | has_granted_extent_parameter) and
           ($tail_send | has_granted_extent_parameter) and
           ($owned_idle | has_granted_extent_parameter) and
           (($idle | has_granted_extent_parameter) | not) and
@@ -898,6 +903,63 @@ def has_granted_extent_parameter:
             }
           ]);
     "qualified extent no longer remains on the owned path or leaked onto failure idle")
+| require((transition_targets($digits_wait) == [
+      {
+        target: "digits_wait",
+        arguments: [
+          {kind: "name", path: ["extent"]},
+          {kind: "name", path: ["mib"]}
+        ],
+        guard: "when"
+      },
+      {
+        target: "report_size",
+        arguments: [
+          {kind: "name", path: ["extent"]},
+          {kind: "name", path: ["mib"]}
+        ],
+        guard: "always"
+      }
+    ]) and
+    (($report_size.statements[0].guard.value.left | conjunct_signatures) == [{
+      left: {kind: "path", path: ["mib"]},
+      operator: "<=",
+      right: {kind: "integer", text: "99999"}
+    }]) and
+    (transition_targets($report_size) == [
+      {
+        target: "ten_thousands",
+        arguments: [
+          {kind: "name", path: ["extent"]},
+          {kind: "name", path: ["mib"]},
+          {kind: "integer", text: "0"}
+        ],
+        guard: "when"
+      },
+      {
+        target: "oversized_mib",
+        arguments: [{kind: "name", path: ["extent"]}],
+        guard: "always"
+      }
+    ]) and
+    ([
+      $oversized_mib.statements[]
+      | select(.kind == "call")
+      | {target, arguments: [.arguments[] | {kind, text}]}
+    ] == [
+      {target: "asm#port_out", arguments: [{kind: "integer", text: "1016"}, {kind: "integer", text: "57"}]},
+      {target: "asm#port_out", arguments: [{kind: "integer", text: "1016"}, {kind: "integer", text: "57"}]},
+      {target: "asm#port_out", arguments: [{kind: "integer", text: "1016"}, {kind: "integer", text: "57"}]},
+      {target: "asm#port_out", arguments: [{kind: "integer", text: "1016"}, {kind: "integer", text: "57"}]},
+      {target: "asm#port_out", arguments: [{kind: "integer", text: "1016"}, {kind: "integer", text: "57"}]},
+      {target: "asm#port_out", arguments: [{kind: "integer", text: "1016"}, {kind: "integer", text: "43"}]}
+    ]) and
+    (transition_targets($oversized_mib) == [{
+      target: "tail_send",
+      arguments: [{kind: "name", path: ["extent"]}],
+      guard: "always"
+    }]);
+    "large owned-memory report no longer emits the honest 99999+ MiB bound")
 | [
     $machine.states[]
     | select(has_granted_extent_parameter)
@@ -909,6 +971,8 @@ def has_granted_extent_parameter:
     "owned_wait",
     "owned_send",
     "digits_wait",
+    "report_size",
+    "oversized_mib",
     "ten_thousands",
     "ten_thousands_emit",
     "ten_thousands_digit",
