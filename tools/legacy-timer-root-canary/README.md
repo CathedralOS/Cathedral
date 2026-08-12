@@ -5,7 +5,11 @@ schema and checks the compiler artifacts that later installation must consume.
 It pins the core `InterruptEntry::enter` requirement, exact linear
 `InterruptAcknowledgement::Pending` admission, Cathedral's maskable-IRQ stack
 class, masked preemption, deriver-owned interrupt return, and the selected
-non-suspending/non-blocking `PortIo` provider body.
+non-suspending/non-blocking `PortIo` provider body. It also uses Omega's generic
+`inspect-terminal --machine LegacyPicTimerRoot::enter` surface to verify the
+actual checked hard-root closure: root claim transfer to `Pic8259`, exact
+`PortWrite(0x20, 0x20)` authority, acknowledgement boundary settlement, and
+value-less normal return.
 
 Run:
 

@@ -26,19 +26,25 @@ printf '%s\n' \
   '}' > "$PROJECT_DIR/build.omg"
 CANARY_MAIN="$PROJECT_DIR/main.omg"
 
-if [[ -n "${OMEGA_BIN:-}" && -x "${OMEGA_BIN:-}" ]]; then
-  "$OMEGA_BIN" --check --build-dir "$BUILD_DIR" "$CANARY_MAIN"
-elif command -v omega >/dev/null 2>&1; then
-  omega --check --build-dir "$BUILD_DIR" "$CANARY_MAIN"
-elif [[ -x "$OMEGA_REPO/target/debug/omega" ]]; then
-  "$OMEGA_REPO/target/debug/omega" --check --build-dir "$BUILD_DIR" "$CANARY_MAIN"
-elif command -v cargo >/dev/null 2>&1 && [[ -f "$OMEGA_REPO/Cargo.toml" ]]; then
-  cargo run -q --manifest-path "$OMEGA_REPO/Cargo.toml" -p omega-cli -- \
-    --check --build-dir "$BUILD_DIR" "$CANARY_MAIN"
-else
-  echo "error: no 'omega' toolchain or sibling Omega workspace" >&2
-  exit 2
-fi
+run_omega() {
+  if [[ -n "${OMEGA_BIN:-}" && -x "${OMEGA_BIN:-}" ]]; then
+    "$OMEGA_BIN" "$@"
+  elif command -v omega >/dev/null 2>&1; then
+    omega "$@"
+  elif [[ -x "$OMEGA_REPO/target/debug/omega" ]]; then
+    "$OMEGA_REPO/target/debug/omega" "$@"
+  elif command -v cargo >/dev/null 2>&1 && [[ -f "$OMEGA_REPO/Cargo.toml" ]]; then
+    cargo run -q --manifest-path "$OMEGA_REPO/Cargo.toml" -p omega-cli -- "$@"
+  else
+    echo "error: no 'omega' toolchain or sibling Omega workspace" >&2
+    exit 2
+  fi
+}
+
+run_omega --check --build-dir "$BUILD_DIR" "$CANARY_MAIN"
+TERMINAL_SUMMARY="$BUILD_DIR/terminal-summary.txt"
+run_omega inspect-terminal --machine LegacyPicTimerRoot::enter "$CANARY_MAIN" \
+  > "$TERMINAL_SUMMARY"
 
 QUALIFICATION="$BUILD_DIR/05_qualification_evidence.json"
 SYNTAX="$BUILD_DIR/02_syntax_trees.json"
@@ -59,6 +65,26 @@ assert_contains() {
     echo "error: $(basename "$artifact") does not contain: $text" >&2
     exit 1
   fi
+}
+
+assert_ordered_lines() {
+  local artifact="$1"
+  shift
+  local previous=0
+  local text
+  local line
+  for text in "$@"; do
+    line="$(grep -n -F -m 1 -- "$text" "$artifact" | cut -d: -f1 || true)"
+    if [[ -z "$line" ]]; then
+      echo "error: $(basename "$artifact") does not contain ordered item: $text" >&2
+      exit 1
+    fi
+    if (( line <= previous )); then
+      echo "error: $(basename "$artifact") has out-of-order item: $text" >&2
+      exit 1
+    fi
+    previous="$line"
+  done
 }
 
 # Selected provider and exact accepted authority route.
@@ -93,5 +119,23 @@ assert_contains "$REPO_ROOT/source/core/legacy_timer_root.omg" 'Pic8259::complet
 assert_contains "$SYNTAX" 'Pic8259::complete_timer_acknowledgement'
 assert_contains "$SYNTAX" 'OCW2_END_OF_INTERRUPT'
 assert_contains "$CONTRACTS" '{"state": "complete_timer_acknowledgement", "statement_ordinal": 1, "call_ordinal": 0, "target_machine": "InterruptAcknowledgement::complete"'
+
+# The independently validated terminal summary is the acceptance surface for
+# the hard-root executable closure. It must preserve the exact checked
+# root-to-PIC transfer, symbol-backed PortIo operation, acknowledgement
+# settlement, and value-less return without rebinding ProgramEntry.
+assert_contains "$TERMINAL_SUMMARY" 'terminal selected_machine=LegacyPicTimerRoot::enter entry=machine:1'
+assert_contains "$TERMINAL_SUMMARY" 'kind=CallUnit callee=machine:2 callee_attachment=named(name(Pic8259))'
+assert_contains "$TERMINAL_SUMMARY" 'transfers=[claim:1->argument:0]'
+assert_contains "$TERMINAL_SUMMARY" 'kind=PortWrite service=service:1 service_identity=PortIo port=0x0020 value=0x20'
+assert_contains "$TERMINAL_SUMMARY" 'kind=BoundaryCallUnit boundary=boundary:1 boundary_identity=InterruptAcknowledgement::complete'
+assert_contains "$TERMINAL_SUMMARY" 'settlements=[claim:2->argument:0]'
+assert_ordered_lines "$TERMINAL_SUMMARY" \
+  'machine id=machine:1 attachment=named(name(LegacyPicTimerRoot)) result=unit' \
+  'kind=CallUnit callee=machine:2 callee_attachment=named(name(Pic8259))' \
+  'machine id=machine:2 attachment=named(name(Pic8259)) result=unit' \
+  'kind=PortWrite service=service:1 service_identity=PortIo port=0x0020 value=0x20' \
+  'kind=BoundaryCallUnit boundary=boundary:1 boundary_identity=InterruptAcknowledgement::complete' \
+  'terminator machine=machine:2 block=block:2 kind=ReturnUnit edge=edge:2'
 
 echo "Cathedral legacy timer-root canary passed"
