@@ -1,0 +1,30 @@
+// source/core/legacy_timer_provider.omg
+//
+// Bounded preparation for Cathedral's first QEMU/PC timer provider. This
+// composes the checked PIC and PIT leaves while every interrupt input remains
+// masked. It neither installs an entry nor admits a live timer occurrence;
+// `Pic8259::unmask_timer` stays a separate, later operation ordered after the
+// complete exception floor and timer root have been installed.
+
+use core::pic_8259;
+use core::pit_8254;
+
+pub data LegacyPicPitTimerProvider {
+    pic: Pic8259;
+    pit: Pit8254;
+}
+
+// Establish the legacy controllers' safe pre-installation state in one
+// checked transaction: first remap the PIC while masking every input, then
+// program PIT channel 0 using divisor bytes already validated by the caller.
+// No timer frequency is selected here, and IRQ0 remains masked on return.
+pub machine LegacyPicPitTimerProvider::prepare_masked(
+    &mut self,
+    divisor_low: u8,
+    divisor_high: u8
+)
+reaches PortIo
+{
+    self.pic.remap_masked();
+    self.pit.program_channel0_rate_generator(divisor_low, divisor_high);
+}

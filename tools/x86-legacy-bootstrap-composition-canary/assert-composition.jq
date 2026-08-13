@@ -28,6 +28,22 @@ def port_operations($machine):
       }
   ];
 
+def source_calls($machine):
+  [
+    $machine.states[0].statements[]
+    | {
+        kind,
+        receiver,
+        target,
+        arguments: [
+          .arguments[]
+          | if .kind == "name" then { kind, path }
+            else { kind }
+            end
+        ]
+      }
+  ];
+
 def pure_contract:
   (.contract.service_reach.interface == "internal_inferred") and
   (.implementation.checked_service_reach == []) and
@@ -62,6 +78,7 @@ def portio_contract:
 | typed_machine($typed; "Pic8259::remap_masked") as $pic_remap
 | typed_machine($typed; "Pic8259::unmask_timer") as $pic_unmask
 | typed_machine($typed; "Pit8254::program_channel0_rate_generator") as $pit_program
+| typed_machine($typed; "LegacyPicPitTimerProvider::prepare_masked") as $prepare_masked
 | require(all([
       $double_fault,
       $nmi,
@@ -71,7 +88,8 @@ def portio_contract:
       $gate_layout,
       $pic_remap,
       $pic_unmask,
-      $pit_program
+      $pit_program,
+      $prepare_masked
     ][]; . != null);
     "bootstrap composition is missing a required typed machine")
 | [
@@ -110,6 +128,7 @@ def portio_contract:
 | port_operations($pic_remap) as $remap_operations
 | port_operations($pic_unmask) as $unmask_operations
 | port_operations($pit_program) as $pit_operations
+| source_calls($prepare_masked) as $prepare_operations
 | require($dedicated_assignments == [
       { vector: 8,  stack_class: 1, ist_index: 1 },
       { vector: 2,  stack_class: 2, ist_index: 2 },
@@ -193,6 +212,40 @@ def portio_contract:
       }
     ];
     "PIT programming is no longer a distinct command/low/high phase")
+| require(($prepare_masked.states | length) == 1 and
+          $prepare_masked.states[0].name == "prepare_masked" and
+          [$prepare_masked.states[0].parameters[] | {
+            name,
+            is_self,
+            is_mutable,
+            type: (
+              if .type_reference.kind == "named" then .type_reference.name
+              else .type_reference.referee.name
+              end
+            )
+          }] == [
+            { name: "self",         is_self: true,  is_mutable: true,  type: "Self" },
+            { name: "divisor_low",  is_self: false, is_mutable: false, type: "u8" },
+            { name: "divisor_high", is_self: false, is_mutable: false, type: "u8" }
+          ] and
+          $prepare_operations == [
+            {
+              kind: "call",
+              receiver: ["self", "pic"],
+              target: "remap_masked",
+              arguments: []
+            },
+            {
+              kind: "call",
+              receiver: ["self", "pit"],
+              target: "program_channel0_rate_generator",
+              arguments: [
+                { kind: "name", path: ["divisor_low"] },
+                { kind: "name", path: ["divisor_high"] }
+              ]
+            }
+          ];
+    "masked legacy-timer preparation no longer remaps before exact divisor programming")
 | require($unmask_operations == [
       {
         target: "asm#port_out",
@@ -222,7 +275,8 @@ def portio_contract:
 | [
     "Pic8259::remap_masked",
     "Pic8259::unmask_timer",
-    "Pit8254::program_channel0_rate_generator"
+    "Pit8254::program_channel0_rate_generator",
+    "LegacyPicPitTimerProvider::prepare_masked"
     | contract_machine($contracts; .)
   ] as $port_contracts
 | require(all($pure_contracts[]; pure_contract) and

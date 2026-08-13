@@ -1,6 +1,8 @@
-// Compile-only acceptance root for the existing bootstrap pieces. No wrapper
-// machine composes authority or implies that installation has occurred.
+// Compile-only acceptance root for the existing bootstrap pieces. The masked
+// preparation wrapper composes only pre-installation PIC/PIT work and does not
+// imply that an entry has been installed or an IRQ has been admitted.
 
+use core::legacy_timer_provider;
 use core::pic_8259;
 use core::pit_8254;
 use core::x86_interrupt_profile;
