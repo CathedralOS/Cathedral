@@ -1,0 +1,26 @@
+// source/core/timer_root_work.omg
+//
+// Preallocated per-CPU state for the fixed-work portion of Cathedral's timer
+// root. The installed root will receive this state through its admitted
+// internal claims; it must not add the state as a hardware-supplied semantic
+// entry parameter.
+
+// `observed_time` is written before `wake_pending` is published. An ordinary
+// timer-service task that observes the pending bit with Receive ordering may
+// then consume the recorded time. Repeated hard-root arrivals coalesce because
+// OR-ing the same one-bit marker never grows an unbounded queue.
+pub data TimerRootWakeState {
+    observed_time: AtomicU64;
+    wake_pending: AtomicU32;
+}
+
+// Record one already-captured monotonic observation, publish one coalesced wake
+// marker, and return. Clock capture remains a distinct provider leaf. This
+// machine allocates nothing, loops nowhere, and invokes no scheduler service.
+pub machine TimerRootWakeState::record_and_publish(
+    &self,
+    observed_time: u64
+) {
+    self.observed_time.store(observed_time, NoOrdering);
+    let prior_pending: u32 = self.wake_pending.fetch_or(1, Publish);
+}

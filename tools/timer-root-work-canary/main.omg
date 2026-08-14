@@ -1,0 +1,9 @@
+// Compile-only acceptance root for the fixed-work timer wake publication leaf.
+
+use core::timer_root_work;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}

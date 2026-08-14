@@ -1,0 +1,6 @@
+// Isolated checked frontier for Cathedral's preallocated timer-root work.
+
+machine build(b: &mut Build) {
+    b.depend("core", path("core"));
+    b.freestanding = true;
+}
