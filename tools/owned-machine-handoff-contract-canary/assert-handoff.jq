@@ -114,12 +114,14 @@ def has_granted_extent_parameter:
         kind: "field",
         identity: null,
         name: "alignment_anchor",
+        relevance: "relevant",
         type_reference: {kind: "named", name: "u64"}
       },
       {
         kind: "field",
         identity: null,
         name: "bytes",
+        relevance: "relevant",
         type_reference: {
           kind: "fixed_array",
           element_type: {kind: "named", name: "u8"},

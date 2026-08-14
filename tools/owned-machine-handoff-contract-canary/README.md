@@ -43,7 +43,9 @@ geometry.
 
 Map storage is a fixed 64-KiB zero-initialized field, not an allocation or
 memory capability. An explicit leading `u64` makes the byte view 8-byte
-aligned; successful map results additionally require an 8-byte-multiple
+aligned; the canary requires both storage members to remain runtime-relevant so
+neither part of that representation can erase. Successful map results
+additionally require an 8-byte-multiple
 descriptor stride, a whole number of descriptors, and the exact supported UEFI
 descriptor revision (version 1) before any typed recast. An unknown revision is
 a malformed success and parks unowned.
