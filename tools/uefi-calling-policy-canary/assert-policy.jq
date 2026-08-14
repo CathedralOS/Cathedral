@@ -76,13 +76,19 @@ def clobber_registers($statements):
       }
   ];
 
-[
-  .. | objects | select(.name? == "UefiX86_64::plan")
-] as $matches
+.[0] as $typed
+| .[1] as $contracts
+| [
+    $typed | .. | objects | select(.name? == "UefiX86_64::plan")
+  ] as $matches
+| [
+    $contracts.machines[] | select(.machine == "UefiX86_64::plan")
+  ] as $contract_matches
 | if ($matches | length) != 1 then
     error("expected exactly one typed UefiX86_64::plan machine")
   else
     $matches[0] as $machine
+    | $contract_matches[0] as $machine_contract
     | [$machine.states[] | select(.name == "build")] as $build_states
     | if ($build_states | length) != 1 then
         error("expected exactly one UefiX86_64::plan build state")
@@ -178,6 +184,37 @@ def clobber_registers($statements):
               name: "flags transitive use",
               ok: (one_nested_value($statements; "state"; "permitted_transitive_use"; "flags")
                 == [{"kind":"boolean","value":true}])
+            },
+            {
+              name: "exact pure terminating policy contract",
+              ok: (
+                ($contract_matches | length) == 1
+                and $machine_contract.contract.supply == "checked_body"
+                and $machine_contract.contract.service_reach.interface == "internal_inferred"
+                and $machine_contract.contract.synchronous_invocation == {
+                  interface: "internal_inferred",
+                  targets: []
+                }
+                and $machine_contract.implementation.checked_service_reach == []
+                and $machine_contract.implementation.checked_synchronous_invocations == []
+                and $machine_contract.implementation.checked_may_suspend == false
+                and $machine_contract.implementation.checked_may_block == false
+                and $machine_contract.implementation.checked_crash_sites == []
+                and $machine_contract.implementation.checked_crash_calls == []
+                and $machine_contract.implementation.checked_termination == {
+                  kind: "terminates",
+                  premises: []
+                }
+                and (
+                  $machine_contract.implementation.inferred_write_frames
+                  | map({state, completeness, paths})
+                ) == [
+                  {state: "plan", completeness: "complete", paths: []},
+                  {state: "accept", completeness: "complete", paths: []},
+                  {state: "build", completeness: "complete", paths: []},
+                  {state: "reject", completeness: "complete", paths: []}
+                ]
+              )
             }
           ]
         | map(select(.ok | not) | .name) as $failures

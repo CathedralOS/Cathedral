@@ -8,6 +8,9 @@ hide a calling-policy regression. The typed policy check also pins the actual
 Microsoft x64 entry plan: RCX/RDX indirect parameter copies, their disjoint
 stack homes, the volatile-register set, 16-byte alignment, 32-byte shadow
 space, call/return control, provider-selected stack, and machine-state policy.
+The same structured check selects the exact matching machine-contract row and
+requires a non-suspending, non-blocking, effect-free terminating computation
+with one complete empty write frame for each of its four states.
 
 Run:
 

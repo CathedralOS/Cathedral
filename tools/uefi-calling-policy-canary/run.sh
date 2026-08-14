@@ -56,16 +56,10 @@ assert_contains "$TYPED" '"name": "UefiX86_64::plan"'
 assert_contains "$TYPED" '"name": "UefiApplication"'
 assert_contains "$TYPED" 'Calling<UefiX86_64>'
 
-# The compile-time policy body remains accepted as an ordinary terminating,
-# non-suspending, non-blocking computation.
-assert_contains "$CONTRACTS" '"machine": "UefiX86_64::plan"'
-assert_contains "$CONTRACTS" '"checked_may_suspend": false'
-assert_contains "$CONTRACTS" '"checked_may_block": false'
-assert_contains "$CONTRACTS" '"checked_termination": {"kind": "terminates"'
-
-# Isolate the typed policy machine and validate Cathedral's actual firmware
-# entry plan. Merely finding these vocabulary names elsewhere in the artifact
-# would not prove that UefiX86_64::plan selected them.
-jq -e -f "$POLICY_ASSERTIONS" "$TYPED" >/dev/null
+# Isolate the exact typed policy machine and its matching checked contract, then
+# validate Cathedral's actual firmware entry plan and pure terminating body.
+# Merely finding these vocabulary names elsewhere in either artifact would not
+# prove that UefiX86_64::plan selected or established them.
+jq -s -e -f "$POLICY_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 
 echo "Cathedral UEFI calling-policy canary passed"
