@@ -19,6 +19,9 @@ The canary pins these cross-package facts:
 - PIT programming is a distinct command → low byte → high byte phase;
 - masked provider preparation calls PIC remapping first and PIT programming
   second, forwarding the caller's divisor bytes exactly;
+- its checked frame is complete and limited to those divisor inputs plus
+  `self.pic` and `self.pit`; each hardware leaf remains confined to its exact
+  receiver/input frame;
 - masked provider preparation retains only `PortIo`, performs no direct
   assembly, and cannot unmask the timer;
 - timer unmasking is a later distinct operation admitting only master IRQ0;

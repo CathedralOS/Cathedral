@@ -282,4 +282,49 @@ def portio_contract:
 | require(all($pure_contracts[]; pure_contract) and
           all($port_contracts[]; portio_contract);
     "bootstrap composition gained authority beyond pure policy/layout and exact PortIo leaves")
+| [
+    $port_contracts[]
+    | {
+        machine: .machine,
+        frames: [
+          .implementation.inferred_write_frames[]
+          | {state, completeness, paths}
+        ]
+      }
+  ] as $port_frames
+| require($port_frames == [
+      {
+        machine: "Pic8259::remap_masked",
+        frames: [{
+          state: "remap_masked",
+          completeness: "complete",
+          paths: ["self"]
+        }]
+      },
+      {
+        machine: "Pic8259::unmask_timer",
+        frames: [{
+          state: "unmask_timer",
+          completeness: "complete",
+          paths: ["self"]
+        }]
+      },
+      {
+        machine: "Pit8254::program_channel0_rate_generator",
+        frames: [{
+          state: "program_channel0_rate_generator",
+          completeness: "complete",
+          paths: ["$P0", "$P1", "self"]
+        }]
+      },
+      {
+        machine: "LegacyPicPitTimerProvider::prepare_masked",
+        frames: [{
+          state: "prepare_masked",
+          completeness: "complete",
+          paths: ["$P0", "$P1", "self.pic", "self.pit"]
+        }]
+      }
+    ];
+    "legacy timer preparation or a hardware leaf escaped its exact complete frame")
 | true
