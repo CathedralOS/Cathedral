@@ -87,6 +87,8 @@ def placement_rows($plan):
   ] as $expected_schema
 | require($actual_schema == $expected_schema;
     "x86 page-table entry schema or field constraints changed")
+| require(all($schema.members[]; .relevance == "relevant");
+    "x86 page-table entry gained an erased logical field")
 | placement_rows($plan) as $actual_placements
 | [
     { index: 0,  key_index: 0,  container: 0, container_width: 64, destination_lsb: 0,  source_lsb: 0, width: 1 },
@@ -120,8 +122,14 @@ def placement_rows($plan):
           ($machine_contract.implementation.checked_may_block == false) and
           ($machine_contract.implementation.checked_service_reach == []) and
           ($machine_contract.implementation.checked_synchronous_invocations == []) and
+          (($machine_contract.implementation.inferred_write_frames
+            | map({state, completeness, paths})) == [{
+              state: "plan",
+              completeness: "complete",
+              paths: ["self.entries"]
+            }]) and
           ($machine_contract.implementation.checked_crash_sites == []) and
           ($machine_contract.implementation.checked_crash_calls == []) and
           ($machine_contract.implementation.checked_termination.kind == "terminates");
-    "pure x86 layout construction gained effects, calls, crashes, or nontermination")
+    "x86 page-table layout gained effects, calls, crashes, nontermination, or writes outside its entry buffer")
 | true

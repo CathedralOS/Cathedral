@@ -3,7 +3,9 @@
 This compile-only harness checks Cathedral's pure x86-64 paging-entry schema
 and layout policy. It pins one fixed 8-byte, 8-aligned container whose fourteen
 logical fields tile all 64 bits exactly, including the 40-bit page-frame number
-at physical-address bits 12 through 51. The compile root also keeps the sibling
+at physical-address bits 12 through 51. Every logical field remains runtime-
+relevant, and the layout constructor's complete write frame is exactly its
+private `self.entries` planning buffer. The compile root also keeps the sibling
 x86 IDT-gate fact live against the same current core-layout dependency.
 
 Run:
