@@ -246,6 +246,67 @@ terminates by remaining;
     }
 }
 
+// One complete per-CPU stack-class requirement set. Named fields make every
+// role mandatory without assigning byte sizes or pretending that policy data
+// is a StackLease. WCSU and the selected target must still derive the actual
+// nonmoving storage provision for each coupled class/index.
+pub data X86BootstrapStackClassSet {
+    double_fault: X86IstStackClass;
+    nmi: X86IstStackClass;
+    machine_check: X86IstStackClass;
+    maskable_irq: X86IstStackClass;
+}
+
+pub data X86BootstrapStackClassSetPolicyCheck {
+    case Rejected;
+    case PolicyConsistent(candidate: X86BootstrapStackClassSet);
+}
+
+// Author the complete role-to-class policy once. Later stack provisioning and
+// TSS materialization consume the same record rather than independently
+// pairing analysis classes with hardware IST indices.
+pub machine x86_bootstrap_stack_class_set() -> X86BootstrapStackClassSet {
+    X86BootstrapStackClassSet {
+        double_fault: X86_DOUBLE_FAULT_STACK,
+        nmi: X86_NMI_STACK,
+        machine_check: X86_MACHINE_CHECK_STACK,
+        maskable_irq: X86_MASKABLE_IRQ_STACK,
+    }
+}
+
+// Pure pre-provisioning validation. Success returns ordinary policy-consistent
+// data only; it grants no storage, placement, TSS, gate, or installation fact.
+pub machine x86_validate_bootstrap_stack_class_set(
+    candidate: X86BootstrapStackClassSet
+) -> X86BootstrapStackClassSetPolicyCheck {
+    let expected: X86BootstrapStackClassSet = x86_bootstrap_stack_class_set();
+    let consistent: bool =
+        candidate.double_fault.stack_class == expected.double_fault.stack_class &&
+        candidate.double_fault.ist_index == expected.double_fault.ist_index &&
+        candidate.nmi.stack_class == expected.nmi.stack_class &&
+        candidate.nmi.ist_index == expected.nmi.ist_index &&
+        candidate.machine_check.stack_class == expected.machine_check.stack_class &&
+        candidate.machine_check.ist_index == expected.machine_check.ist_index &&
+        candidate.maskable_irq.stack_class == expected.maskable_irq.stack_class &&
+        candidate.maskable_irq.ist_index == expected.maskable_irq.ist_index;
+    transition consistent {
+        true -> accept_stack_class_set(candidate)
+        _ -> reject_stack_class_set()
+    }
+
+    state accept_stack_class_set(
+        candidate: X86BootstrapStackClassSet
+    ) -> X86BootstrapStackClassSetPolicyCheck {
+        X86BootstrapStackClassSetPolicyCheck::PolicyConsistent {
+            candidate: candidate,
+        }
+    }
+
+    state reject_stack_class_set() -> X86BootstrapStackClassSetPolicyCheck {
+        X86BootstrapStackClassSetPolicyCheck::Rejected
+    }
+}
+
 pub data X86EntryStackAssignment {
     vector: u8;
     stack: X86IstStackClass;

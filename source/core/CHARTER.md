@@ -44,7 +44,11 @@ access.
 four initial vector-to-stack assignments and one total fatal-diagnostic
 bootstrap exception-floor policy over slots 0–31. The latter couples each
 normalized stack choice to the exact hardware IST index without minting any of
-those missing authorities. Its pure gate-policy validator internally derives
+those missing authorities. A complete role-labeled stack-class set now groups
+double fault, NMI, machine check, and maskable IRQ policy into one candidate;
+its pure validator derives the expected set internally and rejects any
+class/index drift before later WCSU-derived storage provisioning. It assigns no
+bytes and mints no `StackLease`. The pure gate-policy validator internally derives
 that policy for the requested table slot, rejects vector, IST, disposition,
 gate-attribute, or reserved-field drift, and returns only an ordinary
 `PolicyConsistent` candidate. A table-level wrapper now scans one fixed

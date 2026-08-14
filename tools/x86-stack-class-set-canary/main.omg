@@ -1,0 +1,9 @@
+// Compile-only acceptance root for the complete x86 bootstrap stack-class set.
+
+use core::x86_interrupt_profile;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}

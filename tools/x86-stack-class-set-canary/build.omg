@@ -1,0 +1,7 @@
+// Isolated pure-policy frontier for Cathedral's complete bootstrap stack set.
+
+machine build(b: &mut Build) {
+    b.depend("core", path("core"));
+    b.depend("facts", path("facts"));
+    b.freestanding = true;
+}
