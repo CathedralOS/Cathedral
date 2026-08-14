@@ -80,14 +80,14 @@ def placement_rows($plan):
 | $machine_contracts[0] as $machine_contract
 | [
     $schema.members[]
-    | { name, type: (.type_reference | type_signature) }
+    | { name, relevance, type: (.type_reference | type_signature) }
   ] as $actual_schema
 | [
-    { name: "entry",           type: { kind: "named", name: "u64" } },
-    { name: "selector",        type: { kind: "named", name: "u16" } },
-    { name: "ist",             type: { kind: "constrained", base: "u8",  minimum: "0", maximum: "7" } },
-    { name: "type_attributes", type: { kind: "named", name: "u8" } },
-    { name: "reserved",        type: { kind: "constrained", base: "u32", minimum: "0", maximum: "0" } }
+    { name: "entry",           relevance: "relevant", type: { kind: "named", name: "u64" } },
+    { name: "selector",        relevance: "relevant", type: { kind: "named", name: "u16" } },
+    { name: "ist",             relevance: "relevant", type: { kind: "constrained", base: "u8",  minimum: "0", maximum: "7" } },
+    { name: "type_attributes", relevance: "relevant", type: { kind: "named", name: "u8" } },
+    { name: "reserved",        relevance: "relevant", type: { kind: "constrained", base: "u32", minimum: "0", maximum: "0" } }
   ] as $expected_schema
 | require($actual_schema == $expected_schema;
     "x86 IDT gate schema or field constraints changed")
@@ -129,8 +129,14 @@ def placement_rows($plan):
           ($machine_contract.implementation.checked_may_block == false) and
           ($machine_contract.implementation.checked_service_reach == []) and
           ($machine_contract.implementation.checked_synchronous_invocations == []) and
+          (($machine_contract.implementation.inferred_write_frames
+            | map({state, completeness, paths})) == [{
+              state: "plan",
+              completeness: "complete",
+              paths: ["self.entries"]
+            }]) and
           ($machine_contract.implementation.checked_crash_sites == []) and
           ($machine_contract.implementation.checked_crash_calls == []) and
           ($machine_contract.implementation.checked_termination.kind == "terminates");
-    "pure IDT layout construction gained effects, calls, crashes, or nontermination")
+    "IDT layout construction gained effects, calls, crashes, nontermination, or writes outside its entry buffer")
 | true

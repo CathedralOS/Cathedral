@@ -4,7 +4,9 @@ This compile-only harness checks Cathedral's pure x86-64 interrupt-gate schema
 and programmable layout policy. It pins one fixed 16-byte, 16-aligned gate and
 the exact three-fragment tiling of the logical 64-bit entry field across offset
 bits 0..15, 16..31, and 32..63. The selector, IST, attributes, and reserved
-word occupy the remaining architectural positions.
+word occupy the remaining architectural positions. All five logical inputs
+remain runtime-relevant, and the checked layout constructor's complete write
+frame is exactly its private `self.entries` planning buffer.
 
 Run:
 
