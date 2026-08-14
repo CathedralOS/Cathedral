@@ -30,6 +30,13 @@ The generational `{slot, generation}` authority graph
 that makes capabilities unforgeable + revocable is the
 `capability_lifecycle` arc, later.
 
+The first Cathedral-owned page-table source state now represents one 4-KiB
+candidate as 512 existing 8-byte x86 PTE values. A checked 512-step scan accepts
+only exact all-zero/non-present encoding and returns the whole ordinary
+candidate; it does not establish storage, hierarchy, mapping, or installation.
+Physical placement still requires qualified pre-reserved backing, and hierarchy
+shape waits for the selected address-space profile rather than being guessed.
+
 The interrupt-provider bootstrap also has checked 8259 PIC and 8254 PIT
 port-operation helpers plus checked x2APIC one-shot, stop, and acknowledgement
 MSR helpers. They retain `PortIo` or `MachineControl` reach from parsed

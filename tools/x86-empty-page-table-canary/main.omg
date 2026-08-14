@@ -1,0 +1,9 @@
+// Compile-only acceptance root for the fixed empty page-table page policy.
+
+use core::x86_page_table;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}

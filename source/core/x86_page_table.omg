@@ -1,0 +1,98 @@
+// source/core/x86_page_table.omg
+//
+// First source-owned state for Cathedral's fixed bootstrap page tables. This
+// models one architectural 4-KiB table page as 512 existing 8-byte PTE values
+// and validates the only universally safe starting state: exact zero encoding,
+// hence not present. It does not select a hierarchy depth, mapping, page size,
+// physical frame, or installation provider.
+
+use facts::x86_page_table_entry;
+
+pub const X86_PAGE_TABLE_ENTRY_COUNT: u64 = 512;
+
+// Ordinary candidate data. A future placed-page provider must bind this shape
+// to pre-reserved qualified storage; declaring the array grants no Extent,
+// capacity, placement, mapping, or installation authority.
+pub data X86PageTablePageCandidate {
+    entries: [X86PageTableEntry; 512];
+}
+
+pub data X86EmptyPageTablePagePolicyCheck {
+    case Rejected;
+    case ZeroConsistent(candidate: X86PageTablePageCandidate);
+}
+
+// Exact zero encoding for the existing PTE schema. `present == false` alone is
+// insufficient for this bootstrap baseline: accepting residual software or
+// address bits would make zero-initialized storage and a reused dirty page
+// indistinguishable at the policy boundary.
+machine x86_page_table_entry_is_zero(entry: X86PageTableEntry) -> bool {
+    !entry.present &&
+    !entry.writable &&
+    !entry.user &&
+    !entry.write_through &&
+    !entry.cache_disable &&
+    !entry.accessed &&
+    !entry.dirty &&
+    !entry.page_size_or_pat &&
+    !entry.global &&
+    entry.software_low == 0 &&
+    entry.frame_number == 0 &&
+    entry.software_high == 0 &&
+    entry.protection_key == 0 &&
+    !entry.no_execute
+}
+
+// Validate the whole page as one transaction. A failed slot rejects the page;
+// no partially checked candidate escapes.
+pub machine x86_validate_empty_page_table_page(
+    candidate: X86PageTablePageCandidate
+) -> X86EmptyPageTablePagePolicyCheck {
+    x86_scan_empty_page_table_page(candidate, X86_PAGE_TABLE_ENTRY_COUNT, true)
+}
+
+// The fixed scan always visits indices 0..511 under checked decreasing fuel.
+// Accumulating the verdict keeps one bounded control shape and still prevents
+// a dirty slot from being forgotten by an early success path.
+machine x86_scan_empty_page_table_page(
+    candidate: X86PageTablePageCandidate,
+    remaining: u64 [1..=512],
+    zero_so_far: bool
+)
+terminates by remaining;
+-> X86EmptyPageTablePagePolicyCheck
+{
+    let index: u64 [0..=511] = X86_PAGE_TABLE_ENTRY_COUNT - remaining;
+    let entry: X86PageTableEntry = candidate.entries[index];
+    let still_zero: bool = zero_so_far && x86_page_table_entry_is_zero(entry);
+    transition remaining > 1 {
+        true -> x86_scan_empty_page_table_page(
+            candidate,
+            remaining - 1,
+            still_zero
+        )
+        _ -> settle_empty_page_table_page(candidate, still_zero)
+    }
+
+    state settle_empty_page_table_page(
+        candidate: X86PageTablePageCandidate,
+        zero: bool
+    ) -> X86EmptyPageTablePagePolicyCheck {
+        transition zero {
+            true -> accept_empty_page_table_page(candidate)
+            _ -> reject_empty_page_table_page()
+        }
+    }
+
+    state accept_empty_page_table_page(
+        candidate: X86PageTablePageCandidate
+    ) -> X86EmptyPageTablePagePolicyCheck {
+        X86EmptyPageTablePagePolicyCheck::ZeroConsistent {
+            candidate: candidate,
+        }
+    }
+
+    state reject_empty_page_table_page() -> X86EmptyPageTablePagePolicyCheck {
+        X86EmptyPageTablePagePolicyCheck::Rejected
+    }
+}

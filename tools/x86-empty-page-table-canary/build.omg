@@ -1,0 +1,7 @@
+// Isolated checked frontier for Cathedral's zero page-table-page validator.
+
+machine build(b: &mut Build) {
+    b.depend("core", path("core"));
+    b.depend("facts", path("facts"));
+    b.freestanding = true;
+}
