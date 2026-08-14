@@ -456,6 +456,7 @@ def expression_path:
           {
             identity: null,
             name: "candidate",
+            relevance: "relevant",
             type_reference: {
               kind: "named",
               name: "X86BootstrapExceptionGateCandidate"
@@ -565,10 +566,7 @@ def expression_path:
           and .implementation.checked_crash_calls[0].surviving_buckets == []
           and .implementation.checked_termination.kind == "terminates"
           and (.implementation.inferred_write_frames | length) == 7
-          and .implementation.inferred_write_frames[0].state == "entry"
-          and .implementation.inferred_write_frames[0].completeness == "opaque"
-          and .implementation.inferred_write_frames[0].paths == []
-          and all(.implementation.inferred_write_frames[1:7][];
+          and all(.implementation.inferred_write_frames[];
             .completeness == "complete"
             and .paths == []
           )
@@ -583,6 +581,7 @@ def expression_path:
             kind: "field",
             identity: null,
             name: "entries",
+            relevance: "relevant",
             type_reference: {
               kind: "fixed_array",
               element_type: {
@@ -602,6 +601,7 @@ def expression_path:
           {
             identity: null,
             name: "candidate",
+            relevance: "relevant",
             type_reference: {
               kind: "named",
               name: "X86BootstrapExceptionTableCandidate"
@@ -736,8 +736,28 @@ def expression_path:
           and .implementation.checked_synchronous_invocations == []
           and .implementation.checked_crash_sites == []
           and .implementation.checked_termination.kind == "terminates"
-          and all(.implementation.inferred_write_frames[]; .paths == [])
         )
+        and (
+          $table_policy_contracts[]
+          | select(.machine == "x86_validate_bootstrap_exception_table_policy")
+          | .implementation.inferred_write_frames
+          | map({state, completeness, paths})
+        ) == [{
+          state: "entry",
+          completeness: "complete",
+          paths: ["$P0", "self"]
+        }]
+        and (
+          $table_policy_contracts[]
+          | select(.machine == "x86_scan_bootstrap_exception_table_policy")
+          | .implementation.inferred_write_frames
+          | map({state, completeness, paths})
+        ) == [
+          {state: "entry", completeness: "opaque", paths: []},
+          {state: "settle_table", completeness: "complete", paths: []},
+          {state: "accept_table", completeness: "complete", paths: []},
+          {state: "reject_table", completeness: "complete", paths: []}
+        ]
         and (
           $table_policy_contracts[]
           | select(.machine == "x86_scan_bootstrap_exception_table_policy")

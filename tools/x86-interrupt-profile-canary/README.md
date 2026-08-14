@@ -17,6 +17,12 @@ return a partially checked table. Neither result says anything about handler
 entry identity or selector: those require the admitted source resolver and
 boot-selected code-segment fact before materialization.
 
+All candidate fields and successful-result payloads remain runtime-relevant:
+the policy check must return the complete candidate that it inspected, not an
+erased proof-shaped shell. The artifact check also pins the wrapper's exact
+by-value candidate/result transfer frame and the recursive scanner's internal
+no-write frames separately.
+
 Run:
 
 ```sh
