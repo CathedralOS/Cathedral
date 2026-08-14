@@ -73,9 +73,12 @@ Legend: `[ ]` open · `[x]` closed.
   closure and derives its exact five-unit fixed-fuel certificate. Omega's
   canonical terminal installation record now seals emitter-derived
   per-function and per-call stack facts and reproduces the internal artifact
-  bound after decode. The next blocker is emitting that record from this source
-  path, accounting for the interrupt entry adapter, and composing the selected
-  provider into the installed-root WCSU report. After that, materialize every
+  bound after decode. A nonzero decoded demand can now bind exact installed
+  bytes and entry, compose with the selected provider, and survive in the
+  general installed-root report. The next blocker is emitting that record from
+  this source path and accounting for the interrupt entry adapter; zero-byte
+  internal closures remain inadmissible until that adapter demand exists. After
+  that, materialize every
   exception entry, provision the distinct
   fault and shared maskable-IRQ ISTs, connect checked `lidt`, validate final
   save-all-GPR/no-SIMD code, and bring up PIT/PIC then LAPIC. The hard root never

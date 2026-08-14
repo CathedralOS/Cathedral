@@ -32,6 +32,7 @@ interrupts, and does not boot QEMU. Those steps remain ordered after table and
 stack materialization. It does not claim WCSU: Omega's canonical terminal
 installation record now seals emitter-derived per-function and per-call stack
 facts and can reproduce the internal artifact bound after decode, but this
-source-root path does not yet emit that record, account for the interrupt entry
-adapter, or compose the bound with the selected provider in an installed-root
-report.
+source-root path does not yet emit that record or account for the interrupt
+entry adapter. The general root ledger can now bind a nonzero decoded demand to
+exact installed bytes and entry, compose it with the selected provider, and
+retain its terminal origin in the installed-root report.
