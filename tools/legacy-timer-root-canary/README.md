@@ -29,6 +29,9 @@ builds that sibling with Cargo, in that order.
 
 The canary installs no IDT, executes no `lidt`, unmasks no IRQ, enables no CPU
 interrupts, and does not boot QEMU. Those steps remain ordered after table and
-stack materialization. It does not claim WCSU: Omega's terminal native artifact
-must first retain and seal emitter-derived per-function and per-call stack facts
-before an installed-root report can derive an artifact-wide bound.
+stack materialization. It does not claim WCSU: Omega's canonical terminal
+installation record now seals emitter-derived per-function and per-call stack
+facts and can reproduce the internal artifact bound after decode, but this
+source-root path does not yet emit that record, account for the interrupt entry
+adapter, or compose the bound with the selected provider in an installed-root
+report.

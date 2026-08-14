@@ -57,6 +57,10 @@ maskable-IRQ stack and masked `InterruptReturn` plan. Its checked PIC path emits
 the master EOI, then consumes the exact pending acknowledgement through
 normalized completion.
 Omega independently verifies that terminal closure and derives its exact
-five-unit fixed-fuel certificate. Emitter-derived stack facts and artifact-wide
-WCSU integration are the next blocker. The package still publishes no IDT,
-provisions no stack, unmasks no IRQ, and performs no installation.
+five-unit fixed-fuel certificate. Omega's canonical terminal installation
+record now seals emitter-derived per-function and per-call stack facts and
+reproduces the internal artifact bound after decode. Emitting that record from
+this source-root path, accounting for the interrupt entry adapter, and composing
+the selected provider into an installed-root WCSU report are the next blocker.
+The package still publishes no IDT, provisions no stack, unmasks no IRQ, and
+performs no installation.
