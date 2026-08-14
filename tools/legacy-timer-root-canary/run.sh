@@ -154,9 +154,9 @@ assert_contains "$TERMINAL_SUMMARY" 'transfers=[claim:1->argument:0]'
 assert_contains "$TERMINAL_SUMMARY" 'kind=PortWrite service=service:1 service_identity=PortIo port=0x0020 value=0x20'
 assert_contains "$TERMINAL_SUMMARY" 'kind=BoundaryCallUnit boundary=boundary:1 boundary_identity=InterruptAcknowledgement::complete'
 # Claim identities are dense within each terminal machine. The callee therefore
-# settles its own `claim:1`; the separate closure-cardinality checks below still
+# completes its own `claim:1`; the separate closure-cardinality checks below still
 # require one caller claim and one callee claim overall.
-assert_contains "$TERMINAL_SUMMARY" 'settlements=[claim:1->argument:0]'
+assert_contains "$TERMINAL_SUMMARY" 'completion_receipts=[claim:1->argument:0]'
 
 # Presence and relative order are insufficient for an exactly-once interrupt
 # acknowledgement: those checks would still accept an extra provider machine,
@@ -177,7 +177,7 @@ assert_line_count "$TERMINAL_SUMMARY" 'kind=CallUnit ' 1
 assert_line_count "$TERMINAL_SUMMARY" 'kind=PortWrite ' 1
 assert_line_count "$TERMINAL_SUMMARY" 'kind=BoundaryCallUnit ' 1
 assert_line_count "$TERMINAL_SUMMARY" 'kind=ReturnUnit ' 2
-assert_contains "$TERMINAL_SUMMARY" 'fixed_fuel terminal_vocabulary=2 '
+assert_contains "$TERMINAL_SUMMARY" 'fixed_fuel terminal_vocabulary=13 '
 assert_contains "$TERMINAL_SUMMARY" ' schedule=1 entry=machine:1 ceiling_units=5 relevant_preconditions=0'
 assert_ordered_lines "$TERMINAL_SUMMARY" \
   'machine id=machine:1 attachment=named(name(LegacyPicTimerRoot)) result=unit' \
@@ -186,6 +186,6 @@ assert_ordered_lines "$TERMINAL_SUMMARY" \
   'kind=PortWrite service=service:1 service_identity=PortIo port=0x0020 value=0x20' \
   'kind=BoundaryCallUnit boundary=boundary:1 boundary_identity=InterruptAcknowledgement::complete' \
   'terminator machine=machine:2 block=block:2 kind=ReturnUnit edge=edge:2' \
-  'fixed_fuel terminal_vocabulary=2 '
+  'fixed_fuel terminal_vocabulary=13 '
 
 echo "Cathedral legacy timer-root canary passed"
