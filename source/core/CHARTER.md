@@ -51,7 +51,12 @@ gate-attribute, or reserved-field drift, and returns only an ordinary
 32-entry candidate with checked decreasing fuel and accepts only after every
 slot passes; no partial table escapes. It deliberately does not vouch for the
 handler entry identities or selectors; those still need the admitted resolver
-and boot-selected code-segment source facts. `legacy_timer_root.omg` now supplies
+and boot-selected code-segment source facts. The bootstrap fatal-diagnostic
+leaf now records one normalized 0–31 vector in preallocated atomic state,
+release-publishes its validity, and unconditionally aborts without calls or a
+normal-return path. It remains below the external-entry seam: generated stubs,
+exception calling/preemption plans, and admitted internal-state binding are not
+invented by that leaf. `legacy_timer_root.omg` now supplies
 the source-level normalized entry/provider canary under Cathedral's
 maskable-IRQ stack and masked `InterruptReturn` plan. Its checked PIC path emits
 the master EOI, then consumes the exact pending acknowledgement through

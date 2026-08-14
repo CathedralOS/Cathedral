@@ -1,0 +1,6 @@
+// Isolated checked frontier for Cathedral's bootstrap fatal-diagnostic leaf.
+
+machine build(b: &mut Build) {
+    b.depend("core", path("core"));
+    b.freestanding = true;
+}

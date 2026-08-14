@@ -1,0 +1,29 @@
+// source/core/fatal_exception_work.omg
+//
+// Fixed-work diagnostic sink for Cathedral's bootstrap exception floor. A
+// generated per-vector entry stub will eventually call this leaf with its own
+// normalized vector identity through admitted internal state. This is not an
+// external-root signature and does not claim that x86 supplies a semantic
+// vector parameter on entry.
+
+// The diagnostic fields are preallocated so the fatal path neither allocates
+// nor invokes an ordinary service. `published` is a one-bit validity marker:
+// a Receive observation of it may consume the preceding relaxed vector store.
+pub data BootstrapFatalExceptionDiagnosticState {
+    vector: AtomicU32;
+    published: AtomicU32;
+}
+
+// Record the exact architectural slot, publish that diagnostic, then end the
+// execution domain deliberately. There is no cleanup or returning path from a
+// bootstrap-fatal exception.
+pub machine BootstrapFatalExceptionDiagnosticState::record_and_abort(
+    &self,
+    vector: u32 [0..=31]
+)
+crashes Abort
+{
+    self.vector.store(vector, NoOrdering);
+    let prior_published: u32 = self.published.fetch_or(1, Publish);
+    crash Abort;
+}

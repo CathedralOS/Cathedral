@@ -1,0 +1,9 @@
+// Compile-only acceptance root for the fixed-work fatal exception diagnostic.
+
+use core::fatal_exception_work;
+
+data Main {
+}
+
+machine Main::main(&mut self) {
+}
