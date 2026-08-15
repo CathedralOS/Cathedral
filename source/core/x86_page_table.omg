@@ -1,14 +1,46 @@
 // source/core/x86_page_table.omg
 //
 // First source-owned state for Cathedral's fixed bootstrap page tables. This
-// models one architectural 4-KiB table page as 512 existing 8-byte PTE values
-// and validates the only universally safe starting state: exact zero encoding,
-// hence not present. It does not select a hierarchy depth, mapping, page size,
-// physical frame, or installation provider.
+// records the initial four-level x86-64 address-space profile, models one
+// architectural 4-KiB table page as 512 existing 8-byte PTE values, and
+// validates the only universally safe page starting state: exact zero encoding,
+// hence not present. It does not establish hierarchy storage, mappings,
+// physical frames, or an installation provider.
 
 use facts::x86_page_table_entry;
 
 pub const X86_PAGE_TABLE_ENTRY_COUNT: u64 = 512;
+
+// Cathedral's first QEMU/UEFI-x64 bootstrap profile deliberately uses the
+// baseline four-level translation regime. LA57 remains a future alternate
+// platform profile rather than an inferred property of ordinary x86-64 code.
+pub data X86BootstrapAddressSpaceProfile {
+    canonical_virtual_address_bits: u8;
+    translation_level_count: u8;
+    index_bits_per_level: u8;
+    entries_per_table: u64;
+    page_shift: u8;
+    page_bytes: u64;
+    level_shifts: [u8; 4];
+    la57_enabled: bool;
+}
+
+// Pure Cathedral policy data. It selects no virtual layout or page count and
+// grants no storage, mapping, placement, TLB, or machine-control authority.
+pub machine x86_bootstrap_address_space_profile()
+    -> X86BootstrapAddressSpaceProfile
+{
+    X86BootstrapAddressSpaceProfile {
+        canonical_virtual_address_bits: 48,
+        translation_level_count: 4,
+        index_bits_per_level: 9,
+        entries_per_table: X86_PAGE_TABLE_ENTRY_COUNT,
+        page_shift: X86_PAGE_SHIFT,
+        page_bytes: X86_PAGE_BYTES,
+        level_shifts: [39, 30, 21, 12],
+        la57_enabled: false,
+    }
+}
 
 // Ordinary candidate data. A future placed-page provider must bind this shape
 // to pre-reserved qualified storage; declaring the array grants no Extent,

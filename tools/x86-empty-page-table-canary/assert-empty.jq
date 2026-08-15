@@ -34,6 +34,8 @@ def pure_contract:
 
 .[0] as $typed
 | .[1] as $contracts
+| typed_named($typed; "X86BootstrapAddressSpaceProfile"; "members") as $profile_types
+| typed_named($typed; "x86_bootstrap_address_space_profile"; "states") as $profile_machines
 | typed_named($typed; "X86PageTablePageCandidate"; "members") as $page_types
 | typed_named($typed; "X86EmptyPageTablePagePolicyCheck"; "members") as $check_types
 | typed_named($typed; "x86_page_table_entry_is_zero"; "states") as $zero_helpers
@@ -43,22 +45,125 @@ def pure_contract:
     $contracts.machines[]
     | select(.machine as $name | [
         "x86_page_table_entry_is_zero",
+        "x86_bootstrap_address_space_profile",
         "x86_validate_empty_page_table_page",
         "x86_scan_empty_page_table_page"
       ] | index($name))
   ] as $machine_contracts
-| require(($page_types | length) == 1 and
+| require(($profile_types | length) == 1 and
+          ($profile_machines | length) == 1 and
+          ($page_types | length) == 1 and
           ($check_types | length) == 1 and
           ($zero_helpers | length) == 1 and
           ($validators | length) == 1 and
           ($scanners | length) == 1 and
-          ($machine_contracts | length) == 3;
-    "expected one empty-page candidate, check, helper, wrapper, scanner, and three contracts")
+          ($machine_contracts | length) == 4;
+    "expected one bootstrap profile plus one empty-page candidate/check/scan frontier")
+| $profile_types[0] as $profile_type
+| $profile_machines[0] as $profile_machine
 | $page_types[0] as $page_type
 | $check_types[0] as $check_type
 | $zero_helpers[0] as $zero_helper
 | $validators[0] as $validator
 | $scanners[0] as $scanner
+| require($profile_type.members == [
+      {
+        kind: "field",
+        identity: null,
+        name: "canonical_virtual_address_bits",
+        relevance: "relevant",
+        type_reference: {kind: "named", name: "u8"}
+      },
+      {
+        kind: "field",
+        identity: null,
+        name: "translation_level_count",
+        relevance: "relevant",
+        type_reference: {kind: "named", name: "u8"}
+      },
+      {
+        kind: "field",
+        identity: null,
+        name: "index_bits_per_level",
+        relevance: "relevant",
+        type_reference: {kind: "named", name: "u8"}
+      },
+      {
+        kind: "field",
+        identity: null,
+        name: "entries_per_table",
+        relevance: "relevant",
+        type_reference: {kind: "named", name: "u64"}
+      },
+      {
+        kind: "field",
+        identity: null,
+        name: "page_shift",
+        relevance: "relevant",
+        type_reference: {kind: "named", name: "u8"}
+      },
+      {
+        kind: "field",
+        identity: null,
+        name: "page_bytes",
+        relevance: "relevant",
+        type_reference: {kind: "named", name: "u64"}
+      },
+      {
+        kind: "field",
+        identity: null,
+        name: "level_shifts",
+        relevance: "relevant",
+        type_reference: {
+          kind: "fixed_array",
+          element_type: {kind: "named", name: "u8"},
+          length: "4"
+        }
+      },
+      {
+        kind: "field",
+        identity: null,
+        name: "la57_enabled",
+        relevance: "relevant",
+        type_reference: {kind: "named", name: "bool"}
+      }
+    ];
+    "bootstrap address-space profile changed shape")
+| require($profile_machine.states == [{
+      name: "entry",
+      parameters: [],
+      return_type: {kind: "named", name: "X86BootstrapAddressSpaceProfile"},
+      contracts: [],
+      statements: [{
+        kind: "expression",
+        value: {
+          kind: "struct_literal",
+          type_name: "X86BootstrapAddressSpaceProfile",
+          fields: [
+            {name: "canonical_virtual_address_bits", value: {kind: "integer", text: "48"}},
+            {name: "translation_level_count", value: {kind: "integer", text: "4"}},
+            {name: "index_bits_per_level", value: {kind: "integer", text: "9"}},
+            {name: "entries_per_table", value: {kind: "integer", text: "512"}},
+            {name: "page_shift", value: {kind: "integer", text: "12"}},
+            {name: "page_bytes", value: {kind: "integer", text: "4096"}},
+            {
+              name: "level_shifts",
+              value: {
+                kind: "array_literal",
+                values: [
+                  {kind: "integer", text: "39"},
+                  {kind: "integer", text: "30"},
+                  {kind: "integer", text: "21"},
+                  {kind: "integer", text: "12"}
+                ]
+              }
+            },
+            {name: "la57_enabled", value: {kind: "boolean", value: false}}
+          ]
+        }
+      }]
+    }];
+    "bootstrap address-space policy is no longer exact four-level 48-bit x86-64")
 | require($page_type.members == [{
       kind: "field",
       identity: null,
@@ -200,8 +305,17 @@ def pure_contract:
             ["X86EmptyPageTablePagePolicyCheck", "Rejected"];
     "empty-page scanner no longer returns only the whole candidate or rejection")
 | [$machine_contracts[] | select(.machine == "x86_page_table_entry_is_zero")][0] as $helper_contract
+| [$machine_contracts[] | select(.machine == "x86_bootstrap_address_space_profile")][0] as $profile_contract
 | [$machine_contracts[] | select(.machine == "x86_validate_empty_page_table_page")][0] as $validator_contract
 | [$machine_contracts[] | select(.machine == "x86_scan_empty_page_table_page")][0] as $scanner_contract
+| require(($profile_contract | pure_contract) and
+          $profile_contract.implementation.checked_crash_calls == [] and
+          [$profile_contract.implementation.inferred_write_frames[] | {
+            state,
+            completeness,
+            paths
+          }] == [{state: "entry", completeness: "complete", paths: []}];
+    "bootstrap address-space profile gained effects, calls, writes, crashes, or nontermination")
 | require(($helper_contract | pure_contract) and
           $helper_contract.implementation.checked_crash_calls == [] and
           [$helper_contract.implementation.inferred_write_frames[] | {
