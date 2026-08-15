@@ -10,6 +10,7 @@ use core::pic_8259;
 use core::pit_8254;
 use core::x86_interrupt_profile;
 use facts::pit_8254;
+use facts::x86_idt_gate;
 
 // First-provider policy only. The PC-compatible 1,193,182 Hz PIT input divided
 // by 11,932 yields approximately 99.9985 Hz, close to Cathedral's selected
@@ -56,6 +57,82 @@ pub machine legacy_bootstrap_timer_route_rate_policy()
     LegacyBootstrapTimerRouteRatePolicy {
         entry: x86_legacy_timer_entry_stack(),
         rate: legacy_pit_bootstrap_rate_policy(),
+    }
+}
+
+// Ordinary prepublication data for the complete timer fields Cathedral can
+// already decide. The admitted resolver and boot-selected segment source must
+// still vouch for `gate.entry` and `gate.selector` before materialization.
+pub data LegacyBootstrapTimerGatePolicyCandidate {
+    route_rate: LegacyBootstrapTimerRouteRatePolicy;
+    gate: X86IdtGate;
+}
+
+pub data LegacyBootstrapTimerGatePolicyCheck {
+    case Rejected;
+    case PolicyConsistent(candidate: LegacyBootstrapTimerGatePolicyCandidate);
+}
+
+pub machine legacy_validate_bootstrap_timer_gate_policy(
+    candidate: LegacyBootstrapTimerGatePolicyCandidate
+) -> LegacyBootstrapTimerGatePolicyCheck {
+    let policy: LegacyBootstrapTimerRouteRatePolicy =
+        legacy_bootstrap_timer_route_rate_policy();
+    transition
+        candidate.route_rate.entry.vector == policy.entry.vector &&
+        candidate.route_rate.entry.stack.stack_class ==
+            policy.entry.stack.stack_class &&
+        candidate.route_rate.entry.stack.ist_index ==
+            policy.entry.stack.ist_index &&
+        candidate.route_rate.rate.input_hz == policy.rate.input_hz &&
+        candidate.route_rate.rate.target_hz == policy.rate.target_hz &&
+        candidate.route_rate.rate.divisor == policy.rate.divisor &&
+        candidate.route_rate.rate.divisor_low == policy.rate.divisor_low &&
+        candidate.route_rate.rate.divisor_high == policy.rate.divisor_high
+    {
+        true -> check_timer_gate_ist(policy, candidate)
+        _ -> reject_timer_gate_policy()
+    }
+
+    state check_timer_gate_ist(
+        policy: LegacyBootstrapTimerRouteRatePolicy,
+        candidate: LegacyBootstrapTimerGatePolicyCandidate
+    ) -> LegacyBootstrapTimerGatePolicyCheck {
+        transition candidate.gate.ist == policy.entry.stack.ist_index {
+            true -> check_timer_gate_attributes(candidate)
+            _ -> reject_timer_gate_policy()
+        }
+    }
+
+    state check_timer_gate_attributes(
+        candidate: LegacyBootstrapTimerGatePolicyCandidate
+    ) -> LegacyBootstrapTimerGatePolicyCheck {
+        transition candidate.gate.type_attributes ==
+            PRESENT_RING0_INTERRUPT_GATE {
+            true -> check_timer_gate_reserved(candidate)
+            _ -> reject_timer_gate_policy()
+        }
+    }
+
+    state check_timer_gate_reserved(
+        candidate: LegacyBootstrapTimerGatePolicyCandidate
+    ) -> LegacyBootstrapTimerGatePolicyCheck {
+        transition candidate.gate.reserved == RESERVED_ZERO {
+            true -> accept_timer_gate_policy(candidate)
+            _ -> reject_timer_gate_policy()
+        }
+    }
+
+    state accept_timer_gate_policy(
+        candidate: LegacyBootstrapTimerGatePolicyCandidate
+    ) -> LegacyBootstrapTimerGatePolicyCheck {
+        LegacyBootstrapTimerGatePolicyCheck::PolicyConsistent {
+            candidate: candidate,
+        }
+    }
+
+    state reject_timer_gate_policy() -> LegacyBootstrapTimerGatePolicyCheck {
+        LegacyBootstrapTimerGatePolicyCheck::Rejected
     }
 }
 

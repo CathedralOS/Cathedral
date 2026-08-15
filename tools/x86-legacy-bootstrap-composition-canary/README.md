@@ -8,7 +8,8 @@ Cathedral-owned masked preparation transaction composes only the remap and PIT
 programming phases; timer unmasking remains deliberately separate.
 An ordinary route/rate record now composes the already-authored timer
 vector/stack assignment with the fixed PIT policy without claiming either
-operation.
+operation. A pure prepublication validator pairs that exact record with an IDT
+gate and checks only Cathedral's already-decided fields.
 
 The canary pins these cross-package facts:
 
@@ -24,6 +25,9 @@ The canary pins these cross-package facts:
   rounded divisor 11,932 (`0x2e9c`) from the PC-compatible 1,193,182 Hz input;
 - one runtime-relevant route/rate policy carries that exact entry assignment
   and rate choice together, with only their two pure fact calls;
+- one runtime-relevant timer-gate candidate retains that route/rate policy and
+  the complete ordinary gate, and its pure validator rejects route/rate, IST,
+  `0x8e` attribute, or reserved-zero drift;
 - masked provider preparation calls PIC remapping first and PIT programming
   second with exact low/high bytes `0x9c`, `0x2e` and no caller-selected rate;
 - its checked frame is complete and limited to `self.pic` and `self.pit`; each
@@ -50,4 +54,6 @@ enable CPU interrupts, or claim the still-blocked WCSU and checked
 IDT-installation milestones. The selected periodic rate belongs only to the
 first QEMU/PIC bring-up path; production LAPIC timing remains tickless and
 one-shot. The route/rate record is not a gate, root, stack provision, installed
-controller state, acknowledgement, or authority.
+controller state, acknowledgement, or authority. Timer-gate consistency remains
+ordinary candidate data and does not vouch for handler entry identity or code
+selector.

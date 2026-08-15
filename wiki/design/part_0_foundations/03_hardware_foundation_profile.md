@@ -474,6 +474,10 @@ root contract does not. Cathedral's ordinary first-provider route/rate record
 now retains the existing vector/stack assignment and fixed 100 Hz PIT policy as
 one candidate. It performs no preparation or unmasking and establishes no
 gate, root, stack provision, controller state, acknowledgement, or authority.
+A pure prepublication validator now pairs that exact candidate with an ordinary
+`X86IdtGate` and rejects route/rate, coupled IST, interrupt-gate attribute, or
+reserved-field drift. It intentionally does not inspect entry identity or
+selector and grants no materialization or publication authority.
 
 The timer-tick slice must reject direct-assembly effect laundering,
 user-authored `iretq`, incomplete split placement, forgotten or double EOI,

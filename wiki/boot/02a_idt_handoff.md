@@ -114,13 +114,17 @@ candidate normalized plan.
 
 The current pure Cathedral source check derives the total policy internally for
 each requested table slot and covers the policy-owned subset before placement:
-exact vector, IST, fatal disposition, present/ring-0 interrupt-gate attributes,
-and reserved-zero. A second pure validator scans one fixed 32-entry candidate
-and returns table-level consistency only after all slots pass, so sparse or
+exact vector, IST, delivery category, fatal disposition, present/ring-0
+interrupt-gate attributes, and reserved-zero. A second pure validator scans one
+fixed 32-entry candidate and returns table-level consistency only after all slots pass, so sparse or
 partially checked exception floors cannot escape this stage. Its
 `PolicyConsistent` result is ordinary candidate data, not a materialization
 receipt. Exact handler identity and code selector validation remain at the
 admitted resolver/source-carrier and boot-selected segment seam.
+The legacy timer has the same narrow prepublication boundary: its source
+validator checks the authored route/rate record, shared IST, interrupt-gate
+attributes, and reserved zero while leaving entry identity and selector to that
+same later seam.
 
 The writer receives no general address operation and cannot execute `lidt`.
 The installer receives no arbitrary writable table and cannot invent handler

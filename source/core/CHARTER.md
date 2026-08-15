@@ -65,6 +65,10 @@ timer-unmask operation remains ordered after exception-IDT publication. One
 ordinary route/rate policy now carries the remapped timer vector and coupled
 maskable-IRQ class/IST assignment beside that fixed PIT choice; it invokes no
 provider and grants no gate, stack, controller-state, or acknowledgement claim.
+A pure timer-gate validator derives that policy internally and rejects drift in
+the complete route/rate record, coupled IST, interrupt-gate attributes, or
+reserved-zero field. It deliberately leaves entry identity and selector to the
+admitted resolver and boot-selected segment source.
 Production LAPIC timing remains calibrated, tickless, and one-shot. These are
 provider operations, not ambient driver access.
 `x86_interrupt_profile.omg` composes the pure vector and stack facts into the

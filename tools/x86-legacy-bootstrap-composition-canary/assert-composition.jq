@@ -10,6 +10,15 @@ def contract_machine($contracts; $name):
 def field_value($literal; $name):
   first($literal.fields[] | select(.name == $name) | .value);
 
+def expression_path:
+  if .kind == "name" then
+    .path
+  elif .kind == "member" then
+    [(.receiver | expression_path)[], .member]
+  else
+    null
+  end;
+
 def assignment($machine):
   $machine.states[0].statements[0].value;
 
@@ -81,6 +90,9 @@ def portio_contract:
 | typed_machine($typed; "legacy_pit_bootstrap_rate_policy") as $rate_policy
 | typed_machine($typed; "LegacyBootstrapTimerRouteRatePolicy") as $route_rate_type
 | typed_machine($typed; "legacy_bootstrap_timer_route_rate_policy") as $route_rate_policy
+| typed_machine($typed; "LegacyBootstrapTimerGatePolicyCandidate") as $timer_gate_candidate_type
+| typed_machine($typed; "LegacyBootstrapTimerGatePolicyCheck") as $timer_gate_check_type
+| typed_machine($typed; "legacy_validate_bootstrap_timer_gate_policy") as $timer_gate_validator
 | typed_machine($typed; "LegacyPicPitTimerProvider::prepare_masked") as $prepare_masked
 | require(all([
       $double_fault,
@@ -95,6 +107,9 @@ def portio_contract:
       $rate_policy,
       $route_rate_type,
       $route_rate_policy,
+      $timer_gate_candidate_type,
+      $timer_gate_check_type,
+      $timer_gate_validator,
       $prepare_masked
     ][]; . != null);
     "bootstrap composition is missing a required typed machine")
@@ -264,6 +279,108 @@ def portio_contract:
       ["rate", "call", null, "legacy_pit_bootstrap_rate_policy", []]
     ];
     "legacy timer route/rate policy no longer composes the exact authored facts")
+| require(($timer_gate_candidate_type.members | map([
+      .name,
+      .relevance,
+      .type_reference.kind,
+      .type_reference.name
+    ])) == [
+      ["route_rate", "relevant", "named", "LegacyBootstrapTimerRouteRatePolicy"],
+      ["gate", "relevant", "named", "X86IdtGate"]
+    ] and
+    ($timer_gate_check_type.members | map(.name)) == [
+      "Rejected",
+      "PolicyConsistent"
+    ] and
+    $timer_gate_check_type.members[0].payload == [] and
+    ($timer_gate_check_type.members[1].payload | map([
+      .name,
+      .relevance,
+      .type_reference.kind,
+      .type_reference.name
+    ])) == [[
+      "candidate",
+      "relevant",
+      "named",
+      "LegacyBootstrapTimerGatePolicyCandidate"
+    ]];
+    "legacy timer gate candidate/check lost their runtime-relevant policy shape")
+| require(($timer_gate_validator.states | map(.name)) == [
+      "entry",
+      "check_timer_gate_ist",
+      "check_timer_gate_attributes",
+      "check_timer_gate_reserved",
+      "accept_timer_gate_policy",
+      "reject_timer_gate_policy"
+    ] and
+    all($timer_gate_validator.states[];
+      .return_type == {
+        kind: "named",
+        name: "LegacyBootstrapTimerGatePolicyCheck"
+      }) and
+    $timer_gate_validator.states[0].statements[0].initial_value.target ==
+      "legacy_bootstrap_timer_route_rate_policy" and
+    $timer_gate_validator.states[0].statements[0].initial_value.arguments == [];
+    "legacy timer gate validator changed its exact pure policy frontier")
+| $timer_gate_validator.states[0].statements[1].guard.value as $route_rate_guard
+| require([
+      $route_rate_guard
+      | ..
+      | objects
+      | select(
+          .operator? == "==" and
+          (.left | expression_path) != null and
+          (.right | expression_path) != null
+        )
+      | [(.left | expression_path), (.right | expression_path)]
+    ] == [
+      [["candidate", "route_rate", "entry", "vector"], ["policy", "entry", "vector"]],
+      [["candidate", "route_rate", "entry", "stack", "stack_class"], ["policy", "entry", "stack", "stack_class"]],
+      [["candidate", "route_rate", "entry", "stack", "ist_index"], ["policy", "entry", "stack", "ist_index"]],
+      [["candidate", "route_rate", "rate", "input_hz"], ["policy", "rate", "input_hz"]],
+      [["candidate", "route_rate", "rate", "target_hz"], ["policy", "rate", "target_hz"]],
+      [["candidate", "route_rate", "rate", "divisor"], ["policy", "rate", "divisor"]],
+      [["candidate", "route_rate", "rate", "divisor_low"], ["policy", "rate", "divisor_low"]],
+      [["candidate", "route_rate", "rate", "divisor_high"], ["policy", "rate", "divisor_high"]]
+    ] and
+    ([$route_rate_guard | .. | objects | select(.operator? == "&&")] | length) == 7;
+    "legacy timer gate validator no longer checks the complete route/rate policy")
+| [
+    $timer_gate_validator.states[1:4][]
+    | first(.statements[] | select(.kind == "transition"))
+    | .guard.value.left
+    | [(.left | expression_path), (
+        .right
+        | if .kind == "integer" then .text else expression_path end
+      )]
+  ] as $timer_gate_checks
+| require($timer_gate_checks == [
+      [["candidate", "gate", "ist"], ["policy", "entry", "stack", "ist_index"]],
+      [["candidate", "gate", "type_attributes"], "0x8e"],
+      [["candidate", "gate", "reserved"], "0"]
+    ] and
+    $timer_gate_validator.states[4].statements[0].value.fields == [{
+      name: "candidate",
+      value: {kind: "name", path: ["candidate"]}
+    }] and
+    $timer_gate_validator.states[5].statements[0].value.path == [
+      "LegacyBootstrapTimerGatePolicyCheck",
+      "Rejected"
+    ] and
+    ([
+      $timer_gate_validator
+      | ..
+      | objects
+      | select(.kind? == "member")
+      | expression_path
+      | select(.[0:2] == ["candidate", "gate"])
+    ] | unique) == [
+      ["candidate", "gate"],
+      ["candidate", "gate", "ist"],
+      ["candidate", "gate", "reserved"],
+      ["candidate", "gate", "type_attributes"]
+    ];
+    "legacy timer gate validator inspected unchecked entry/selector fields or lost decided checks")
 | require(($prepare_masked.states | length) == 1 and
           $prepare_masked.states[0].name == "prepare_masked" and
           [$prepare_masked.states[0].parameters[] | {
@@ -321,7 +438,8 @@ def portio_contract:
     "x86_bootstrap_exception_entry_policy",
     "X86IdtGateLayout::plan",
     "legacy_pit_bootstrap_rate_policy",
-    "legacy_bootstrap_timer_route_rate_policy"
+    "legacy_bootstrap_timer_route_rate_policy",
+    "legacy_validate_bootstrap_timer_gate_policy"
     | contract_machine($contracts; .)
   ] as $pure_contracts
 | [
@@ -336,7 +454,8 @@ def portio_contract:
             $pure_contracts[]
             | select(
                 .machine != "x86_bootstrap_exception_entry_policy" and
-                .machine != "legacy_bootstrap_timer_route_rate_policy"
+                .machine != "legacy_bootstrap_timer_route_rate_policy" and
+                .machine != "legacy_validate_bootstrap_timer_gate_policy"
               );
             .implementation.checked_crash_calls == []
           ) and
@@ -384,6 +503,43 @@ def portio_contract:
             completeness: "complete",
             paths: []
           }] and
+          (
+            $pure_contracts[]
+            | select(.machine == "legacy_validate_bootstrap_timer_gate_policy")
+            | .implementation.checked_crash_calls
+            | map([
+                .state,
+                .statement_ordinal,
+                .call_ordinal,
+                .target_machine,
+                .target_state,
+                .path_guard_conjuncts,
+                .path_guard_consequences,
+                .surviving_buckets
+              ])
+          ) == [[
+            "entry",
+            0,
+            0,
+            "legacy_bootstrap_timer_route_rate_policy",
+            "entry",
+            [],
+            [],
+            []
+          ]] and
+          (
+            $pure_contracts[]
+            | select(.machine == "legacy_validate_bootstrap_timer_gate_policy")
+            | .implementation.inferred_write_frames
+            | map({state, completeness, paths})
+          ) == [
+            {state: "entry", completeness: "complete", paths: []},
+            {state: "check_timer_gate_ist", completeness: "complete", paths: []},
+            {state: "check_timer_gate_attributes", completeness: "complete", paths: []},
+            {state: "check_timer_gate_reserved", completeness: "complete", paths: []},
+            {state: "accept_timer_gate_policy", completeness: "complete", paths: []},
+            {state: "reject_timer_gate_policy", completeness: "complete", paths: []}
+          ] and
           all($port_contracts[]; portio_contract);
     "bootstrap composition gained authority beyond pure policy/layout and exact PortIo leaves")
 | [
