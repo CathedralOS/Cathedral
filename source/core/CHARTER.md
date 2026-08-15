@@ -34,11 +34,14 @@ The first Cathedral-owned page-table policy now explicitly selects the
 four-level, 48-bit canonical-address QEMU/UEFI-x64 bootstrap profile with LA57
 disabled and the four 9-bit index shifts fixed at 39, 30, 21, and 12. This is a
 Cathedral target policy, not inferred universal x86-64 behavior. The source
-state represents one 4-KiB candidate as 512 existing 8-byte x86 PTE values. A
-checked 512-step scan accepts only exact all-zero/non-present encoding and
-returns the whole ordinary candidate; it does not establish storage, hierarchy
-page count, mapping, or installation. Physical placement still requires
-qualified pre-reserved backing; hierarchy storage and link construction remain.
+now rejects the noncanonical 48-bit address hole and derives the four bounded
+page-walk indexes plus byte offset while retaining the original numeric address.
+Those coordinates grant no mapping fact. The source state represents one 4-KiB
+candidate as 512 existing 8-byte x86 PTE values. A checked 512-step scan accepts
+only exact all-zero/non-present encoding and returns the whole ordinary
+candidate; it does not establish storage, hierarchy page count, mapping, or
+installation. Physical placement still requires qualified pre-reserved
+backing; hierarchy storage and link construction remain.
 
 The interrupt-provider bootstrap also has checked 8259 PIC and 8254 PIT
 port-operation helpers plus checked x2APIC one-shot, stop, and acknowledgement

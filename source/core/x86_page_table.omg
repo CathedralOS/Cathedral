@@ -2,14 +2,18 @@
 //
 // First source-owned state for Cathedral's fixed bootstrap page tables. This
 // records the initial four-level x86-64 address-space profile, models one
-// architectural 4-KiB table page as 512 existing 8-byte PTE values, and
-// validates the only universally safe page starting state: exact zero encoding,
-// hence not present. It does not establish hierarchy storage, mappings,
-// physical frames, or an installation provider.
+// architectural 4-KiB table page as 512 existing 8-byte PTE values, validates
+// the only universally safe page starting state, and decomposes canonical
+// virtual addresses into their four walk indexes. It does not establish
+// hierarchy storage, mappings, physical frames, or an installation provider.
 
 use facts::x86_page_table_entry;
 
 pub const X86_PAGE_TABLE_ENTRY_COUNT: u64 = 512;
+pub const X86_BOOTSTRAP_LOW_CANONICAL_MAX: u64 = 0x00007FFFFFFFFFFF;
+pub const X86_BOOTSTRAP_HIGH_CANONICAL_MIN: u64 = 0xFFFF800000000000;
+pub const X86_PAGE_TABLE_INDEX_MASK: u64 = 511;
+pub const X86_PAGE_OFFSET_MASK: u64 = 4095;
 
 // Cathedral's first QEMU/UEFI-x64 bootstrap profile deliberately uses the
 // baseline four-level translation regime. LA57 remains a future alternate
@@ -39,6 +43,65 @@ pub machine x86_bootstrap_address_space_profile()
         page_bytes: X86_PAGE_BYTES,
         level_shifts: [39, 30, 21, 12],
         la57_enabled: false,
+    }
+}
+
+// Ordinary numeric decomposition under the selected four-level profile. The
+// original address is retained so later mapping policy can bind these indexes
+// to the exact request rather than treating them as a free-standing path.
+pub data X86BootstrapVirtualAddressIndices {
+    address: u64;
+    pml4_index: u64 [0..=511];
+    pdpt_index: u64 [0..=511];
+    pd_index: u64 [0..=511];
+    pt_index: u64 [0..=511];
+    page_offset: u64 [0..=4095];
+}
+
+pub data X86BootstrapVirtualAddressCheck {
+    case Rejected;
+    case Canonical(indices: X86BootstrapVirtualAddressIndices);
+}
+
+// Reject the noncanonical hole, then derive the exact page-walk indexes and
+// byte offset. Success remains ordinary data: it grants no Extent, frame,
+// hierarchy, mapping, placement, TLB, or installation authority.
+pub machine x86_decompose_bootstrap_virtual_address(
+    address: u64
+) -> X86BootstrapVirtualAddressCheck {
+    // Bind the unsigned high bound to its u64 place before using it in the
+    // comparison; no signed intermediate participates in canonicality.
+    let low_canonical_max: u64 = X86_BOOTSTRAP_LOW_CANONICAL_MAX;
+    let high_canonical_min: u64 = X86_BOOTSTRAP_HIGH_CANONICAL_MIN;
+    transition address <= low_canonical_max || address >= high_canonical_min {
+        true -> decompose(address)
+        _ -> reject()
+    }
+
+    state decompose(address: u64) -> X86BootstrapVirtualAddressCheck {
+        let pml4_index: u64 [0..=511] =
+            (address >> 39) & X86_PAGE_TABLE_INDEX_MASK;
+        let pdpt_index: u64 [0..=511] =
+            (address >> 30) & X86_PAGE_TABLE_INDEX_MASK;
+        let pd_index: u64 [0..=511] =
+            (address >> 21) & X86_PAGE_TABLE_INDEX_MASK;
+        let pt_index: u64 [0..=511] =
+            (address >> 12) & X86_PAGE_TABLE_INDEX_MASK;
+        let page_offset: u64 [0..=4095] = address & X86_PAGE_OFFSET_MASK;
+        X86BootstrapVirtualAddressCheck::Canonical {
+            indices: X86BootstrapVirtualAddressIndices {
+                address: address,
+                pml4_index: pml4_index,
+                pdpt_index: pdpt_index,
+                pd_index: pd_index,
+                pt_index: pt_index,
+                page_offset: page_offset,
+            },
+        }
+    }
+
+    state reject() -> X86BootstrapVirtualAddressCheck {
+        X86BootstrapVirtualAddressCheck::Rejected
     }
 }
 

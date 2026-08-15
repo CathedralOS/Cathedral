@@ -32,10 +32,19 @@ def pure_contract:
   .implementation.checked_crash_sites == [] and
   .implementation.checked_termination.kind == "terminates";
 
+def constrained_u64_field:
+  .type_reference.kind == "constrained" and
+  .type_reference.base_type == {kind: "named", name: "u64"} and
+  .type_reference.constraints[0].kind == "range" and
+  .type_reference.constraints[0].minimum == {kind: "integer", text: "0"};
+
 .[0] as $typed
 | .[1] as $contracts
 | typed_named($typed; "X86BootstrapAddressSpaceProfile"; "members") as $profile_types
 | typed_named($typed; "x86_bootstrap_address_space_profile"; "states") as $profile_machines
+| typed_named($typed; "X86BootstrapVirtualAddressIndices"; "members") as $address_index_types
+| typed_named($typed; "X86BootstrapVirtualAddressCheck"; "members") as $address_check_types
+| typed_named($typed; "x86_decompose_bootstrap_virtual_address"; "states") as $address_machines
 | typed_named($typed; "X86PageTablePageCandidate"; "members") as $page_types
 | typed_named($typed; "X86EmptyPageTablePagePolicyCheck"; "members") as $check_types
 | typed_named($typed; "x86_page_table_entry_is_zero"; "states") as $zero_helpers
@@ -46,21 +55,28 @@ def pure_contract:
     | select(.machine as $name | [
         "x86_page_table_entry_is_zero",
         "x86_bootstrap_address_space_profile",
+        "x86_decompose_bootstrap_virtual_address",
         "x86_validate_empty_page_table_page",
         "x86_scan_empty_page_table_page"
       ] | index($name))
   ] as $machine_contracts
 | require(($profile_types | length) == 1 and
           ($profile_machines | length) == 1 and
+          ($address_index_types | length) == 1 and
+          ($address_check_types | length) == 1 and
+          ($address_machines | length) == 1 and
           ($page_types | length) == 1 and
           ($check_types | length) == 1 and
           ($zero_helpers | length) == 1 and
           ($validators | length) == 1 and
           ($scanners | length) == 1 and
-          ($machine_contracts | length) == 4;
-    "expected one bootstrap profile plus one empty-page candidate/check/scan frontier")
+          ($machine_contracts | length) == 5;
+    "expected one bootstrap profile/address decomposition plus one empty-page frontier")
 | $profile_types[0] as $profile_type
 | $profile_machines[0] as $profile_machine
+| $address_index_types[0] as $address_index_type
+| $address_check_types[0] as $address_check_type
+| $address_machines[0] as $address_machine
 | $page_types[0] as $page_type
 | $check_types[0] as $check_type
 | $zero_helpers[0] as $zero_helper
@@ -164,6 +180,135 @@ def pure_contract:
       }]
     }];
     "bootstrap address-space policy is no longer exact four-level 48-bit x86-64")
+| require($address_index_type.members[0] == {
+      kind: "field",
+      identity: null,
+      name: "address",
+      relevance: "relevant",
+      type_reference: {kind: "named", name: "u64"}
+    } and
+    all($address_index_type.members[1:][]; constrained_u64_field) and
+    [
+      $address_index_type.members[1:][]
+      | {
+          name,
+          relevance,
+          maximum: .type_reference.constraints[0].maximum.text
+        }
+    ] == [
+      {name: "pml4_index", relevance: "relevant", maximum: "511"},
+      {name: "pdpt_index", relevance: "relevant", maximum: "511"},
+      {name: "pd_index", relevance: "relevant", maximum: "511"},
+      {name: "pt_index", relevance: "relevant", maximum: "511"},
+      {name: "page_offset", relevance: "relevant", maximum: "4095"}
+    ];
+    "bootstrap virtual-address decomposition lost its exact bounded fields")
+| require($address_check_type.members == [
+      {
+        kind: "variant",
+        identity: null,
+        name: "Rejected",
+        payload: [],
+        retired_payload_identities: []
+      },
+      {
+        kind: "variant",
+        identity: null,
+        name: "Canonical",
+        payload: [{
+          identity: null,
+          name: "indices",
+          relevance: "relevant",
+          type_reference: {kind: "named", name: "X86BootstrapVirtualAddressIndices"}
+        }],
+        retired_payload_identities: []
+      }
+    ];
+    "bootstrap virtual-address check no longer returns rejection or exact indices")
+| require(($address_machine.states | map(.name)) == ["entry", "decompose", "reject"] and
+          [$address_machine.states[].return_type] == [
+            {kind: "named", name: "X86BootstrapVirtualAddressCheck"},
+            {kind: "named", name: "X86BootstrapVirtualAddressCheck"},
+            {kind: "named", name: "X86BootstrapVirtualAddressCheck"}
+          ] and
+          $address_machine.states[0].parameters[0].name == "address" and
+          $address_machine.states[0].parameters[0].type_reference == {
+            kind: "named",
+            name: "u64"
+          };
+    "bootstrap virtual-address check changed its exact three-state interface")
+| $address_machine.states[0].statements as $address_entry
+| require($address_entry[0] == {
+      kind: "local_data",
+      name: "low_canonical_max",
+      type_reference: {kind: "named", name: "u64"},
+      initial_value: {kind: "integer", text: "0x7fffffffffff"}
+    } and
+    $address_entry[1] == {
+      kind: "local_data",
+      name: "high_canonical_min",
+      type_reference: {kind: "named", name: "u64"},
+      initial_value: {kind: "integer", text: "0xffff800000000000"}
+    } and
+    $address_entry[2].target.path == ["decompose"] and
+    $address_entry[2].target.arguments == [{kind: "name", path: ["address"]}] and
+    $address_entry[2].guard.value.left.left == {
+      kind: "binary",
+      left: {kind: "name", path: ["address"]},
+      operator: "<=",
+      right: {kind: "name", path: ["low_canonical_max"]}
+    } and
+    $address_entry[2].guard.value.left.operator == "||" and
+    $address_entry[2].guard.value.left.right == {
+      kind: "binary",
+      left: {kind: "name", path: ["address"]},
+      operator: ">=",
+      right: {kind: "name", path: ["high_canonical_min"]}
+    } and
+    $address_entry[3].target.path == ["reject"] and
+    $address_entry[3].guard == {kind: "always"};
+    "bootstrap virtual-address check no longer rejects the noncanonical 48-bit hole")
+| $address_machine.states[1].statements as $decomposition
+| require([
+      $decomposition[0:4][]
+      | {
+          name,
+          maximum: .type_reference.constraints[0].maximum.text,
+          shift: .initial_value.left.right.text,
+          mask: .initial_value.right.text
+        }
+    ] == [
+      {name: "pml4_index", maximum: "511", shift: "39", mask: "511"},
+      {name: "pdpt_index", maximum: "511", shift: "30", mask: "511"},
+      {name: "pd_index", maximum: "511", shift: "21", mask: "511"},
+      {name: "pt_index", maximum: "511", shift: "12", mask: "511"}
+    ] and
+    $decomposition[4].name == "page_offset" and
+    $decomposition[4].type_reference.constraints[0].maximum.text == "4095" and
+    $decomposition[4].initial_value == {
+      kind: "binary",
+      left: {kind: "name", path: ["address"]},
+      operator: "&",
+      right: {kind: "integer", text: "4095"}
+    };
+    "bootstrap virtual-address indexes no longer use exact four-level shifts and masks")
+| $decomposition[5].value.fields[0].value as $canonical_indices
+| require($decomposition[5].kind == "expression" and
+          $decomposition[5].value.type_name == "X86BootstrapVirtualAddressCheck" and
+          $canonical_indices.type_name == "X86BootstrapVirtualAddressIndices" and
+          [$canonical_indices.fields[] | {name, path: .value.path}] == [
+            {name: "address", path: ["address"]},
+            {name: "pml4_index", path: ["pml4_index"]},
+            {name: "pdpt_index", path: ["pdpt_index"]},
+            {name: "pd_index", path: ["pd_index"]},
+            {name: "pt_index", path: ["pt_index"]},
+            {name: "page_offset", path: ["page_offset"]}
+          ] and
+          $address_machine.states[2].statements == [{
+            kind: "expression",
+            value: {kind: "name", path: ["X86BootstrapVirtualAddressCheck", "Rejected"]}
+          }];
+    "bootstrap virtual-address check no longer retains the exact address or rejects cleanly")
 | require($page_type.members == [{
       kind: "field",
       identity: null,
@@ -306,6 +451,7 @@ def pure_contract:
     "empty-page scanner no longer returns only the whole candidate or rejection")
 | [$machine_contracts[] | select(.machine == "x86_page_table_entry_is_zero")][0] as $helper_contract
 | [$machine_contracts[] | select(.machine == "x86_bootstrap_address_space_profile")][0] as $profile_contract
+| [$machine_contracts[] | select(.machine == "x86_decompose_bootstrap_virtual_address")][0] as $address_contract
 | [$machine_contracts[] | select(.machine == "x86_validate_empty_page_table_page")][0] as $validator_contract
 | [$machine_contracts[] | select(.machine == "x86_scan_empty_page_table_page")][0] as $scanner_contract
 | require(($profile_contract | pure_contract) and
@@ -316,6 +462,18 @@ def pure_contract:
             paths
           }] == [{state: "entry", completeness: "complete", paths: []}];
     "bootstrap address-space profile gained effects, calls, writes, crashes, or nontermination")
+| require(($address_contract | pure_contract) and
+          $address_contract.implementation.checked_crash_calls == [] and
+          [$address_contract.implementation.inferred_write_frames[] | {
+            state,
+            completeness,
+            paths
+          }] == [
+            {state: "entry", completeness: "complete", paths: []},
+            {state: "decompose", completeness: "complete", paths: []},
+            {state: "reject", completeness: "complete", paths: []}
+          ];
+    "bootstrap virtual-address decomposition gained effects, calls, writes, crashes, or nontermination")
 | require(($helper_contract | pure_contract) and
           $helper_contract.implementation.checked_crash_calls == [] and
           [$helper_contract.implementation.inferred_write_frames[] | {
