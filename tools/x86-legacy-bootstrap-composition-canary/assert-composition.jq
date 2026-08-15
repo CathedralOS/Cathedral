@@ -52,7 +52,6 @@ def pure_contract:
   (.implementation.checked_may_suspend == false) and
   (.implementation.checked_may_block == false) and
   (.implementation.checked_crash_sites == []) and
-  (.implementation.checked_crash_calls == []) and
   (.implementation.checked_termination.kind == "terminates");
 
 def portio_contract:
@@ -80,6 +79,8 @@ def portio_contract:
 | typed_machine($typed; "Pic8259::unmask_timer") as $pic_unmask
 | typed_machine($typed; "Pit8254::program_channel0_rate_generator") as $pit_program
 | typed_machine($typed; "legacy_pit_bootstrap_rate_policy") as $rate_policy
+| typed_machine($typed; "LegacyBootstrapTimerRouteRatePolicy") as $route_rate_type
+| typed_machine($typed; "legacy_bootstrap_timer_route_rate_policy") as $route_rate_policy
 | typed_machine($typed; "LegacyPicPitTimerProvider::prepare_masked") as $prepare_masked
 | require(all([
       $double_fault,
@@ -92,6 +93,8 @@ def portio_contract:
       $pic_unmask,
       $pit_program,
       $rate_policy,
+      $route_rate_type,
+      $route_rate_policy,
       $prepare_masked
     ][]; . != null);
     "bootstrap composition is missing a required typed machine")
@@ -132,6 +135,7 @@ def portio_contract:
 | port_operations($pic_unmask) as $unmask_operations
 | port_operations($pit_program) as $pit_operations
 | assignment($rate_policy) as $selected_rate_policy
+| assignment($route_rate_policy) as $selected_route_rate_policy
 | source_calls($prepare_masked) as $prepare_operations
 | require($dedicated_assignments == [
       { vector: 8,  stack_class: 1, ist_index: 1 },
@@ -230,6 +234,36 @@ def portio_contract:
     field_value($selected_rate_policy; "divisor_high").text == "0x2e" and
     ((1193182 + 50) / 100 | floor) == 11932;
     "legacy bootstrap PIT policy no longer selects the rounded 100 Hz divisor 0x2e9c")
+| require(($route_rate_type.members | map([
+      .name,
+      .relevance,
+      .type_reference.kind,
+      .type_reference.name
+    ])) == [
+      ["entry", "relevant", "named", "X86EntryStackAssignment"],
+      ["rate", "relevant", "named", "LegacyPitBootstrapRatePolicy"]
+    ] and
+    ($route_rate_policy.states | length) == 1 and
+    $route_rate_policy.states[0].name == "entry" and
+    $route_rate_policy.states[0].parameters == [] and
+    $route_rate_policy.states[0].return_type == {
+      kind: "named",
+      name: "LegacyBootstrapTimerRouteRatePolicy"
+    } and
+    ($route_rate_policy.states[0].statements | length) == 1 and
+    $selected_route_rate_policy.type_name ==
+      "LegacyBootstrapTimerRouteRatePolicy" and
+    ($selected_route_rate_policy.fields | map([
+      .name,
+      .value.kind,
+      .value.receiver,
+      .value.target,
+      .value.arguments
+    ])) == [
+      ["entry", "call", null, "x86_legacy_timer_entry_stack", []],
+      ["rate", "call", null, "legacy_pit_bootstrap_rate_policy", []]
+    ];
+    "legacy timer route/rate policy no longer composes the exact authored facts")
 | require(($prepare_masked.states | length) == 1 and
           $prepare_masked.states[0].name == "prepare_masked" and
           [$prepare_masked.states[0].parameters[] | {
@@ -286,7 +320,8 @@ def portio_contract:
     "x86_legacy_timer_entry_stack",
     "x86_bootstrap_exception_entry_policy",
     "X86IdtGateLayout::plan",
-    "legacy_pit_bootstrap_rate_policy"
+    "legacy_pit_bootstrap_rate_policy",
+    "legacy_bootstrap_timer_route_rate_policy"
     | contract_machine($contracts; .)
   ] as $pure_contracts
 | [
@@ -297,6 +332,58 @@ def portio_contract:
     | contract_machine($contracts; .)
   ] as $port_contracts
 | require(all($pure_contracts[]; pure_contract) and
+          all(
+            $pure_contracts[]
+            | select(
+                .machine != "x86_bootstrap_exception_entry_policy" and
+                .machine != "legacy_bootstrap_timer_route_rate_policy"
+              );
+            .implementation.checked_crash_calls == []
+          ) and
+          (
+            $pure_contracts[]
+            | select(.machine == "x86_bootstrap_exception_entry_policy")
+            | .implementation.checked_crash_calls
+            | map([
+                .state,
+                .statement_ordinal,
+                .call_ordinal,
+                .target_machine,
+                .target_state,
+                .surviving_buckets
+              ])
+          ) == [
+            ["dedicated", 0, 0, "x86_exception_delivery_shape", "entry", []],
+            ["current_stack", 0, 0, "x86_exception_delivery_shape", "entry", []]
+          ] and
+          (
+            $pure_contracts[]
+            | select(.machine == "legacy_bootstrap_timer_route_rate_policy")
+            | .implementation.checked_crash_calls
+            | map([
+                .state,
+                .statement_ordinal,
+                .call_ordinal,
+                .target_machine,
+                .target_state,
+                .path_guard_conjuncts,
+                .path_guard_consequences,
+                .surviving_buckets
+              ])
+          ) == [
+            ["entry", 0, 0, "x86_legacy_timer_entry_stack", "entry", [], [], []],
+            ["entry", 0, 1, "legacy_pit_bootstrap_rate_policy", "entry", [], [], []]
+          ] and
+          (
+            $pure_contracts[]
+            | select(.machine == "legacy_bootstrap_timer_route_rate_policy")
+            | .implementation.inferred_write_frames
+            | map({state, completeness, paths})
+          ) == [{
+            state: "entry",
+            completeness: "complete",
+            paths: []
+          }] and
           all($port_contracts[]; portio_contract);
     "bootstrap composition gained authority beyond pure policy/layout and exact PortIo leaves")
 | [

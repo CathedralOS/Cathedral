@@ -67,6 +67,9 @@ Legend: `[ ]` open · `[x]` closed.
   every slot passes, so no partial exception floor escapes. Entry identity and
   selector evidence still await the admitted resolver/source carrier
   integration and boot segment facts.
+  The legacy QEMU timer's authored vector/shared-IST route and fixed 100 Hz PIT
+  choice now also travel together as ordinary source policy, without claiming
+  controller state, installation, or acknowledgement.
   The first legacy timer root publishes its exact entry and selected provider;
   its checked PIC body now emits the master EOI before consuming normalized
   acknowledgement completion. Omega now independently verifies that terminal

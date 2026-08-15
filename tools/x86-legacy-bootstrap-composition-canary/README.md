@@ -6,6 +6,9 @@ bundle. It joins the pure exception/IST policy and IDT gate layout with the
 checked PIC-remap, PIT-programming, and timer-unmask provider leaves. The
 Cathedral-owned masked preparation transaction composes only the remap and PIT
 programming phases; timer unmasking remains deliberately separate.
+An ordinary route/rate record now composes the already-authored timer
+vector/stack assignment with the fixed PIT policy without claiming either
+operation.
 
 The canary pins these cross-package facts:
 
@@ -19,6 +22,8 @@ The canary pins these cross-package facts:
 - PIT programming is a distinct command → low byte → high byte phase;
 - the legacy provider owns a QEMU/bootstrap-only 100 Hz policy, selecting the
   rounded divisor 11,932 (`0x2e9c`) from the PC-compatible 1,193,182 Hz input;
+- one runtime-relevant route/rate policy carries that exact entry assignment
+  and rate choice together, with only their two pure fact calls;
 - masked provider preparation calls PIC remapping first and PIT programming
   second with exact low/high bytes `0x9c`, `0x2e` and no caller-selected rate;
 - its checked frame is complete and limited to `self.pic` and `self.pit`; each
@@ -44,4 +49,5 @@ publish an IDT, provision stacks, invoke any provider, unmask real hardware,
 enable CPU interrupts, or claim the still-blocked WCSU and checked
 IDT-installation milestones. The selected periodic rate belongs only to the
 first QEMU/PIC bring-up path; production LAPIC timing remains tickless and
-one-shot.
+one-shot. The route/rate record is not a gate, root, stack provision, installed
+controller state, acknowledgement, or authority.

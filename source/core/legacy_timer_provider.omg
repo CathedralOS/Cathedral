@@ -8,6 +8,7 @@
 
 use core::pic_8259;
 use core::pit_8254;
+use core::x86_interrupt_profile;
 use facts::pit_8254;
 
 // First-provider policy only. The PC-compatible 1,193,182 Hz PIT input divided
@@ -36,6 +37,25 @@ pub machine legacy_pit_bootstrap_rate_policy() -> LegacyPitBootstrapRatePolicy {
         divisor: LEGACY_BOOTSTRAP_PIT_DIVISOR,
         divisor_low: LEGACY_BOOTSTRAP_PIT_DIVISOR_LOW,
         divisor_high: LEGACY_BOOTSTRAP_PIT_DIVISOR_HIGH,
+    }
+}
+
+// The complete decided route/rate portion of the first timer policy. `entry`
+// retains the remapped vector and coupled stack-class/IST assignment while
+// `rate` retains the fixed QEMU/bootstrap PIT choice. This is ordinary data:
+// it does not claim a gate, root, stack, controller state, acknowledgement,
+// installation, or hardware authority.
+pub data LegacyBootstrapTimerRouteRatePolicy {
+    entry: X86EntryStackAssignment;
+    rate: LegacyPitBootstrapRatePolicy;
+}
+
+pub machine legacy_bootstrap_timer_route_rate_policy()
+    -> LegacyBootstrapTimerRouteRatePolicy
+{
+    LegacyBootstrapTimerRouteRatePolicy {
+        entry: x86_legacy_timer_entry_stack(),
+        rate: legacy_pit_bootstrap_rate_policy(),
     }
 }
 

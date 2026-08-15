@@ -57,7 +57,10 @@ unmasking a live root, or enabling CPU interrupts. A Cathedral-owned masked
 preparation transaction now selects the QEMU/bootstrap-only 100 Hz periodic PIT
 policy (divisor 11,932 / `0x2e9c`), remaps the PIC with every input masked, and
 then programs PIT channel 0 with its fixed low/high bytes. The separate
-timer-unmask operation remains ordered after exception-IDT publication.
+timer-unmask operation remains ordered after exception-IDT publication. One
+ordinary route/rate policy now carries the remapped timer vector and coupled
+maskable-IRQ class/IST assignment beside that fixed PIT choice; it invokes no
+provider and grants no gate, stack, controller-state, or acknowledgement claim.
 Production LAPIC timing remains calibrated, tickless, and one-shot. These are
 provider operations, not ambient driver access.
 `x86_interrupt_profile.omg` composes the pure vector and stack facts into the

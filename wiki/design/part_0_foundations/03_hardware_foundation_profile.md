@@ -460,7 +460,10 @@ is the next integration step.
 
 PIT plus remapped 8259 PIC is the first QEMU/PC provider. LAPIC one-shot timing
 is the production multicore/tickless provider; the provider changes while the
-root contract does not.
+root contract does not. Cathedral's ordinary first-provider route/rate record
+now retains the existing vector/stack assignment and fixed 100 Hz PIT policy as
+one candidate. It performs no preparation or unmasking and establishes no
+gate, root, stack provision, controller state, acknowledgement, or authority.
 
 The timer-tick slice must reject direct-assembly effect laundering,
 user-authored `iretq`, incomplete split placement, forgotten or double EOI,
