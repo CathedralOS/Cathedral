@@ -5,13 +5,22 @@
 // internal claims; it must not add the state as a hardware-supplied semantic
 // entry parameter.
 
-// `observed_time` is written before `wake_pending` is published. An ordinary
-// timer-service task that observes the pending bit with Receive ordering may
-// then consume the recorded time. Repeated hard-root arrivals coalesce because
+// `observed_time` is written before `wake_pending` is published. The ordinary
+// timer-service task claims and clears the pending bit with Receive ordering,
+// then consumes the recorded time. Repeated hard-root arrivals coalesce because
 // OR-ing the same one-bit marker never grows an unbounded queue.
 pub data TimerRootWakeState {
     observed_time: AtomicU64;
     wake_pending: AtomicU32;
+}
+
+// Result of one ordinary-task attempt to claim the coalesced wake marker.
+// `Idle` carries no time because no publication was acquired. `Claimed`
+// carries the latest observation visible after the matching Receive operation;
+// it is a wake notification, not a count of interrupt arrivals.
+pub data TimerRootWakeClaim {
+    case Idle;
+    case Claimed(observed_time: u64);
 }
 
 // Record one already-captured monotonic observation, publish one coalesced wake
@@ -23,4 +32,27 @@ pub machine TimerRootWakeState::record_and_publish(
 ) {
     self.observed_time.store(observed_time, NoOrdering);
     let prior_pending: u32 = self.wake_pending.fetch_or(1, Publish);
+}
+
+// Claim and clear at most one coalesced wake in the ordinary timer-service
+// task. The Receive read-modify-write pairs with the hard root's Publish; only
+// after a marker is acquired may the following relaxed load consume the
+// recorded time. A concurrent later publication may make the same latest
+// observation visible twice, but it cannot be lost by this clear-first shape.
+// This leaf allocates nothing, loops nowhere, and invokes no scheduler service.
+pub machine TimerRootWakeState::claim_pending(&self) -> TimerRootWakeClaim {
+    let prior_pending: u32 = self.wake_pending.fetch_and(0, Receive);
+    transition (prior_pending & 1) == 1 {
+        true -> claimed()
+        _ -> idle()
+    }
+
+    state claimed(&self) -> TimerRootWakeClaim {
+        let claimed_time: u64 = self.observed_time.load(NoOrdering);
+        TimerRootWakeClaim::Claimed { observed_time: claimed_time }
+    }
+
+    state idle(&self) -> TimerRootWakeClaim {
+        TimerRootWakeClaim::Idle
+    }
 }

@@ -72,12 +72,15 @@ the source-level normalized entry/provider canary under Cathedral's
 maskable-IRQ stack and masked `InterruptReturn` plan. Its checked PIC path emits
 the master EOI, then consumes the exact pending acknowledgement through
 normalized completion.
-The next fixed-work leaf now records one caller-supplied monotonic observation
-in preallocated atomic state and publishes one coalescing wake bit with release
-ordering. It is independently checked as a terminating, call-free two-write
-body. Wiring it into the timer root still waits for the installed-root path to
-supply that state as an internal claim; adding a hardware entry parameter would
-falsify the normalized `InterruptEntry::enter` contract.
+The fixed-work timer handoff now records one caller-supplied monotonic
+observation in preallocated atomic state and publishes one coalescing wake bit
+with release ordering. Its ordinary-task leaf claims and clears that marker
+with receive ordering before loading the latest published observation, yielding
+either one claimed wake or an idle result. Both halves are independently
+checked as terminating and call-free. Wiring the producer into the timer root
+still waits for the installed-root path to supply that state as an internal
+claim; adding a hardware entry parameter would falsify the normalized
+`InterruptEntry::enter` contract.
 Omega independently verifies that terminal closure and derives its exact
 five-unit fixed-fuel certificate. Omega's canonical terminal installation
 record now seals emitter-derived per-function and per-call stack facts and

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Compile and inspect Cathedral's fixed-work timer wake publication leaf without
+# Compile and inspect Cathedral's fixed-work timer wake handoff without
 # installing a root, invoking hardware, or binding a clock provider.
 set -euo pipefail
 
@@ -52,4 +52,4 @@ done
 
 jq -s -e -f "$ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 
-echo "Cathedral timer-root fixed-work canary passed"
+echo "Cathedral timer-root fixed-work handoff canary passed"
