@@ -4,8 +4,9 @@
 // records the initial four-level x86-64 address-space profile, models one
 // architectural 4-KiB table page as 512 existing 8-byte PTE values, validates
 // the only universally safe page starting state, and decomposes canonical
-// virtual addresses into their four walk indexes. It does not establish
-// hierarchy storage, mappings, physical frames, or an installation provider.
+// virtual addresses into their four walk indexes. It also validates ordinary
+// numeric physical-frame geometry without establishing hierarchy storage,
+// mappings, physical frames, or an installation provider.
 
 use facts::x86_page_table_entry;
 
@@ -14,6 +15,7 @@ pub const X86_BOOTSTRAP_LOW_CANONICAL_MAX: u64 = 0x00007FFFFFFFFFFF;
 pub const X86_BOOTSTRAP_HIGH_CANONICAL_MIN: u64 = 0xFFFF800000000000;
 pub const X86_PAGE_TABLE_INDEX_MASK: u64 = 511;
 pub const X86_PAGE_OFFSET_MASK: u64 = 4095;
+pub const X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS: u64 = 0x000FFFFFFFFFF000;
 
 // Cathedral's first QEMU/UEFI-x64 bootstrap profile deliberately uses the
 // baseline four-level translation regime. LA57 remains a future alternate
@@ -102,6 +104,52 @@ pub machine x86_decompose_bootstrap_virtual_address(
 
     state reject() -> X86BootstrapVirtualAddressCheck {
         X86BootstrapVirtualAddressCheck::Rejected
+    }
+}
+
+// Ordinary numeric geometry for one possible 4-KiB physical frame base. This
+// is intentionally not a frame, mapping claim, or provider receipt. The later
+// authority-bearing page-table operation must rebind the same address and PFN
+// while holding the exact physical source and mapping authority.
+pub data X86BootstrapPhysicalFrameGeometry {
+    address: u64;
+    frame_number: u64 [0..=1099511627775];
+}
+
+pub data X86BootstrapPhysicalFrameGeometryCheck {
+    case Rejected;
+    case GeometryConsistent(frame: X86BootstrapPhysicalFrameGeometry);
+}
+
+// Accept only a 4-KiB-aligned frame base inside the architectural 52-bit
+// physical-address envelope, then derive bits 12..51 as the bounded PFN.
+pub machine x86_validate_bootstrap_physical_frame_geometry(
+    address: u64
+) -> X86BootstrapPhysicalFrameGeometryCheck {
+    let page_offset: u64 [0..=4095] = address & X86_PAGE_OFFSET_MASK;
+    transition page_offset == 0 &&
+        address <= X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS {
+        true -> derive_frame_number(address)
+        _ -> reject_frame_geometry()
+    }
+
+    state derive_frame_number(
+        address: u64
+    ) -> X86BootstrapPhysicalFrameGeometryCheck {
+        // The mask makes the result domain explicit; the prior envelope check
+        // ensures this cannot silently truncate a higher physical-address bit.
+        let frame_number: u64 [0..=1099511627775] =
+            (address >> X86_PAGE_SHIFT) & X86_PAGE_FRAME_NUMBER_MAX;
+        X86BootstrapPhysicalFrameGeometryCheck::GeometryConsistent {
+            frame: X86BootstrapPhysicalFrameGeometry {
+                address: address,
+                frame_number: frame_number,
+            },
+        }
+    }
+
+    state reject_frame_geometry() -> X86BootstrapPhysicalFrameGeometryCheck {
+        X86BootstrapPhysicalFrameGeometryCheck::Rejected
     }
 }
 

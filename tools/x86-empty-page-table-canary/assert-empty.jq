@@ -45,6 +45,9 @@ def constrained_u64_field:
 | typed_named($typed; "X86BootstrapVirtualAddressIndices"; "members") as $address_index_types
 | typed_named($typed; "X86BootstrapVirtualAddressCheck"; "members") as $address_check_types
 | typed_named($typed; "x86_decompose_bootstrap_virtual_address"; "states") as $address_machines
+| typed_named($typed; "X86BootstrapPhysicalFrameGeometry"; "members") as $frame_geometry_types
+| typed_named($typed; "X86BootstrapPhysicalFrameGeometryCheck"; "members") as $frame_check_types
+| typed_named($typed; "x86_validate_bootstrap_physical_frame_geometry"; "states") as $frame_machines
 | typed_named($typed; "X86PageTablePageCandidate"; "members") as $page_types
 | typed_named($typed; "X86EmptyPageTablePagePolicyCheck"; "members") as $check_types
 | typed_named($typed; "x86_page_table_entry_is_zero"; "states") as $zero_helpers
@@ -56,6 +59,7 @@ def constrained_u64_field:
         "x86_page_table_entry_is_zero",
         "x86_bootstrap_address_space_profile",
         "x86_decompose_bootstrap_virtual_address",
+        "x86_validate_bootstrap_physical_frame_geometry",
         "x86_validate_empty_page_table_page",
         "x86_scan_empty_page_table_page"
       ] | index($name))
@@ -65,18 +69,24 @@ def constrained_u64_field:
           ($address_index_types | length) == 1 and
           ($address_check_types | length) == 1 and
           ($address_machines | length) == 1 and
+          ($frame_geometry_types | length) == 1 and
+          ($frame_check_types | length) == 1 and
+          ($frame_machines | length) == 1 and
           ($page_types | length) == 1 and
           ($check_types | length) == 1 and
           ($zero_helpers | length) == 1 and
           ($validators | length) == 1 and
           ($scanners | length) == 1 and
-          ($machine_contracts | length) == 5;
-    "expected one bootstrap profile/address decomposition plus one empty-page frontier")
+          ($machine_contracts | length) == 6;
+    "expected one bootstrap profile, address/frame geometry, and empty-page frontier")
 | $profile_types[0] as $profile_type
 | $profile_machines[0] as $profile_machine
 | $address_index_types[0] as $address_index_type
 | $address_check_types[0] as $address_check_type
 | $address_machines[0] as $address_machine
+| $frame_geometry_types[0] as $frame_geometry_type
+| $frame_check_types[0] as $frame_check_type
+| $frame_machines[0] as $frame_machine
 | $page_types[0] as $page_type
 | $check_types[0] as $check_type
 | $zero_helpers[0] as $zero_helper
@@ -309,6 +319,116 @@ def constrained_u64_field:
             value: {kind: "name", path: ["X86BootstrapVirtualAddressCheck", "Rejected"]}
           }];
     "bootstrap virtual-address check no longer retains the exact address or rejects cleanly")
+| require($frame_geometry_type.members[0] == {
+      kind: "field",
+      identity: null,
+      name: "address",
+      relevance: "relevant",
+      type_reference: {kind: "named", name: "u64"}
+    } and
+    ($frame_geometry_type.members[1] | constrained_u64_field) and
+    $frame_geometry_type.members[1].name == "frame_number" and
+    $frame_geometry_type.members[1].relevance == "relevant" and
+    $frame_geometry_type.members[1].type_reference.constraints[0].maximum == {
+      kind: "integer",
+      text: "1099511627775"
+    };
+    "bootstrap physical-frame geometry lost its retained address or bounded 40-bit PFN")
+| require($frame_check_type.members == [
+      {
+        kind: "variant",
+        identity: null,
+        name: "Rejected",
+        payload: [],
+        retired_payload_identities: []
+      },
+      {
+        kind: "variant",
+        identity: null,
+        name: "GeometryConsistent",
+        payload: [{
+          identity: null,
+          name: "frame",
+          relevance: "relevant",
+          type_reference: {kind: "named", name: "X86BootstrapPhysicalFrameGeometry"}
+        }],
+        retired_payload_identities: []
+      }
+    ];
+    "bootstrap physical-frame check no longer returns rejection or exact numeric geometry")
+| require(($frame_machine.states | map(.name)) == [
+      "entry",
+      "derive_frame_number",
+      "reject_frame_geometry"
+    ] and
+    all($frame_machine.states[];
+      .return_type == {kind: "named", name: "X86BootstrapPhysicalFrameGeometryCheck"});
+    "bootstrap physical-frame check changed its exact three-state interface")
+| $frame_machine.states[0].statements as $frame_entry
+| require(($frame_entry[0] | constrained_u64_field) and
+          $frame_entry[0].name == "page_offset" and
+          $frame_entry[0].type_reference.constraints[0].maximum.text == "4095" and
+          $frame_entry[0].initial_value == {
+            kind: "binary",
+            left: {kind: "name", path: ["address"]},
+            operator: "&",
+            right: {kind: "integer", text: "4095"}
+          } and
+          $frame_entry[1].target.path == ["derive_frame_number"] and
+          $frame_entry[1].target.arguments == [{kind: "name", path: ["address"]}] and
+          $frame_entry[1].guard.value.left == {
+            kind: "binary",
+            left: {
+              kind: "binary",
+              left: {kind: "name", path: ["page_offset"]},
+              operator: "==",
+              right: {kind: "integer", text: "0"}
+            },
+            operator: "&&",
+            right: {
+              kind: "binary",
+              left: {kind: "name", path: ["address"]},
+              operator: "<=",
+              right: {kind: "integer", text: "0xffffffffff000"}
+            }
+          } and
+          $frame_entry[2].target.path == ["reject_frame_geometry"] and
+          $frame_entry[2].guard == {kind: "always"};
+    "bootstrap physical-frame check no longer enforces 4-KiB alignment and the 52-bit envelope")
+| $frame_machine.states[1].statements as $frame_derivation
+| require(($frame_derivation[0] | constrained_u64_field) and
+          $frame_derivation[0].name == "frame_number" and
+          $frame_derivation[0].type_reference.constraints[0].maximum.text ==
+            "1099511627775" and
+          $frame_derivation[0].initial_value == {
+            kind: "binary",
+            left: {
+              kind: "binary",
+              left: {kind: "name", path: ["address"]},
+              operator: ">>",
+              right: {kind: "integer", text: "12"}
+            },
+            operator: "&",
+            right: {kind: "integer", text: "1099511627775"}
+          } and
+          $frame_derivation[1].value.type_name ==
+            "X86BootstrapPhysicalFrameGeometryCheck" and
+          $frame_derivation[1].value.fields[0].name == "frame" and
+          $frame_derivation[1].value.fields[0].value.type_name ==
+            "X86BootstrapPhysicalFrameGeometry" and
+          [$frame_derivation[1].value.fields[0].value.fields[] |
+            {name, path: .value.path}] == [
+              {name: "address", path: ["address"]},
+              {name: "frame_number", path: ["frame_number"]}
+            ] and
+          $frame_machine.states[2].statements == [{
+            kind: "expression",
+            value: {
+              kind: "name",
+              path: ["X86BootstrapPhysicalFrameGeometryCheck", "Rejected"]
+            }
+          }];
+    "bootstrap physical-frame check no longer derives and retains the exact bounded PFN")
 | require($page_type.members == [{
       kind: "field",
       identity: null,
@@ -452,6 +572,7 @@ def constrained_u64_field:
 | [$machine_contracts[] | select(.machine == "x86_page_table_entry_is_zero")][0] as $helper_contract
 | [$machine_contracts[] | select(.machine == "x86_bootstrap_address_space_profile")][0] as $profile_contract
 | [$machine_contracts[] | select(.machine == "x86_decompose_bootstrap_virtual_address")][0] as $address_contract
+| [$machine_contracts[] | select(.machine == "x86_validate_bootstrap_physical_frame_geometry")][0] as $frame_contract
 | [$machine_contracts[] | select(.machine == "x86_validate_empty_page_table_page")][0] as $validator_contract
 | [$machine_contracts[] | select(.machine == "x86_scan_empty_page_table_page")][0] as $scanner_contract
 | require(($profile_contract | pure_contract) and
@@ -474,6 +595,18 @@ def constrained_u64_field:
             {state: "reject", completeness: "complete", paths: []}
           ];
     "bootstrap virtual-address decomposition gained effects, calls, writes, crashes, or nontermination")
+| require(($frame_contract | pure_contract) and
+          $frame_contract.implementation.checked_crash_calls == [] and
+          [$frame_contract.implementation.inferred_write_frames[] | {
+            state,
+            completeness,
+            paths
+          }] == [
+            {state: "entry", completeness: "complete", paths: []},
+            {state: "derive_frame_number", completeness: "complete", paths: []},
+            {state: "reject_frame_geometry", completeness: "complete", paths: []}
+          ];
+    "bootstrap physical-frame geometry gained effects, calls, writes, crashes, or nontermination")
 | require(($helper_contract | pure_contract) and
           $helper_contract.implementation.checked_crash_calls == [] and
           [$helper_contract.implementation.inferred_write_frames[] | {
