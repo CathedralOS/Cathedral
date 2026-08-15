@@ -279,6 +279,48 @@ pub machine x86_compose_bootstrap_address_bound_page_table_entry(
     }
 }
 
+// Revalidate a retained detached candidate before later role-specific policy
+// consumes it. The address must still be aligned and inside the selected
+// physical envelope, and the entry's PFN must be exactly derived from it. All
+// non-address fields remain uninterpreted ordinary data.
+pub machine x86_validate_bootstrap_address_bound_page_table_entry(
+    candidate: X86BootstrapAddressBoundPageTableEntryCandidate
+) -> X86BootstrapAddressBoundPageTableEntryCheck {
+    let page_offset: u64 [0..=4095] =
+        candidate.physical_address & X86_PAGE_OFFSET_MASK;
+    transition page_offset == 0 &&
+        candidate.physical_address <= X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS {
+        true -> check_address_bound_frame_number(candidate)
+        _ -> reject_retained_address_bound_page_table_entry()
+    }
+
+    state check_address_bound_frame_number(
+        candidate: X86BootstrapAddressBoundPageTableEntryCandidate
+    ) -> X86BootstrapAddressBoundPageTableEntryCheck {
+        let frame_number: u64 [0..=1099511627775] =
+            (candidate.physical_address >> X86_PAGE_SHIFT) &
+            X86_PAGE_FRAME_NUMBER_MAX;
+        transition candidate.entry.frame_number == frame_number {
+            true -> accept_retained_address_bound_page_table_entry(candidate)
+            _ -> reject_retained_address_bound_page_table_entry()
+        }
+    }
+
+    state accept_retained_address_bound_page_table_entry(
+        candidate: X86BootstrapAddressBoundPageTableEntryCandidate
+    ) -> X86BootstrapAddressBoundPageTableEntryCheck {
+        X86BootstrapAddressBoundPageTableEntryCheck::Composed {
+            candidate: candidate,
+        }
+    }
+
+    state reject_retained_address_bound_page_table_entry()
+        -> X86BootstrapAddressBoundPageTableEntryCheck
+    {
+        X86BootstrapAddressBoundPageTableEntryCheck::Rejected
+    }
+}
+
 // Ordinary candidate data. A future placed-page provider must bind this shape
 // to pre-reserved qualified storage; declaring the array grants no Extent,
 // capacity, placement, mapping, or installation authority.

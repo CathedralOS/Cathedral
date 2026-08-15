@@ -44,8 +44,10 @@ address with its bounded 40-bit PFN. That numeric geometry grants no physical
 source, frame, backing, or mapping authority. A detached PTE composer derives
 only that PFN and copies every other schema field from explicit caller data;
 it does not interpret the role-dependent bit, select a leaf/link policy, or
-grant placement or installation authority. The source state represents one
-4-KiB candidate as 512 existing 8-byte x86 PTE values. A checked 512-step scan
+grant placement or installation authority. A companion validator independently
+rechecks a retained candidate's alignment, physical envelope, and PFN binding
+while leaving every non-address field uninterpreted. The source state
+represents one 4-KiB candidate as 512 existing 8-byte x86 PTE values. A checked 512-step scan
 accepts only exact all-zero/non-present encoding and returns the whole ordinary
 candidate; it does not establish storage, hierarchy page count, mapping, or
 installation. Physical placement still requires qualified pre-reserved backing;

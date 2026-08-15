@@ -67,6 +67,7 @@ def type_signature:
 | typed_named($typed; "X86BootstrapAddressBoundPageTableEntryCandidate"; "members") as $entry_candidate_types
 | typed_named($typed; "X86BootstrapAddressBoundPageTableEntryCheck"; "members") as $entry_check_types
 | typed_named($typed; "x86_compose_bootstrap_address_bound_page_table_entry"; "states") as $entry_composers
+| typed_named($typed; "x86_validate_bootstrap_address_bound_page_table_entry"; "states") as $entry_validators
 | typed_named($typed; "X86PageTablePageCandidate"; "members") as $page_types
 | typed_named($typed; "X86EmptyPageTablePagePolicyCheck"; "members") as $check_types
 | typed_named($typed; "x86_page_table_entry_is_zero"; "states") as $zero_helpers
@@ -81,6 +82,7 @@ def type_signature:
         "x86_validate_bootstrap_virtual_address_indices",
         "x86_validate_bootstrap_physical_frame_geometry",
         "x86_compose_bootstrap_address_bound_page_table_entry",
+        "x86_validate_bootstrap_address_bound_page_table_entry",
         "x86_validate_empty_page_table_page",
         "x86_scan_empty_page_table_page"
       ] | index($name))
@@ -98,12 +100,13 @@ def type_signature:
           ($entry_candidate_types | length) == 1 and
           ($entry_check_types | length) == 1 and
           ($entry_composers | length) == 1 and
+          ($entry_validators | length) == 1 and
           ($page_types | length) == 1 and
           ($check_types | length) == 1 and
           ($zero_helpers | length) == 1 and
           ($validators | length) == 1 and
           ($scanners | length) == 1 and
-          ($machine_contracts | length) == 8;
+          ($machine_contracts | length) == 9;
     "expected one bootstrap profile, address/frame/PTE geometry, and empty-page frontier")
 | $profile_types[0] as $profile_type
 | $profile_machines[0] as $profile_machine
@@ -118,6 +121,7 @@ def type_signature:
 | $entry_candidate_types[0] as $entry_candidate_type
 | $entry_check_types[0] as $entry_check_type
 | $entry_composers[0] as $entry_composer
+| $entry_validators[0] as $entry_validator
 | $page_types[0] as $page_type
 | $check_types[0] as $check_type
 | $zero_helpers[0] as $zero_helper
@@ -697,6 +701,106 @@ def type_signature:
             }
           }];
     "address-bound PTE composition no longer derives its PFN and copies every other bit")
+| require(($entry_validator.states | map(.name)) == [
+      "entry",
+      "check_address_bound_frame_number",
+      "accept_retained_address_bound_page_table_entry",
+      "reject_retained_address_bound_page_table_entry"
+    ] and
+    all($entry_validator.states[];
+      .return_type == {
+        kind: "named",
+        name: "X86BootstrapAddressBoundPageTableEntryCheck"
+      }) and
+    all($entry_validator.states[0:3][];
+      .parameters == [{
+        name: "candidate",
+        type_reference: {
+          kind: "named",
+          name: "X86BootstrapAddressBoundPageTableEntryCandidate"
+        },
+        is_const: false,
+        is_mutable: false,
+        is_self: false
+      }]);
+    "retained address-bound PTE validator changed its exact four-state interface")
+| $entry_validator.states[0].statements as $retained_entry_check
+| require(($retained_entry_check[0] | constrained_u64_field) and
+    $retained_entry_check[0].name == "page_offset" and
+    $retained_entry_check[0].type_reference.constraints[0].maximum.text == "4095" and
+    ($retained_entry_check[0].initial_value.left | expression_path) ==
+      ["candidate", "physical_address"] and
+    $retained_entry_check[0].initial_value.operator == "&" and
+    $retained_entry_check[0].initial_value.right.text == "4095" and
+    $retained_entry_check[1].guard.value.left == {
+      kind: "binary",
+      left: {
+        kind: "binary",
+        left: {kind: "name", path: ["page_offset"]},
+        operator: "==",
+        right: {kind: "integer", text: "0"}
+      },
+      operator: "&&",
+      right: {
+        kind: "binary",
+        left: {
+          kind: "member",
+          receiver: {kind: "name", path: ["candidate"]},
+          member: "physical_address"
+        },
+        operator: "<=",
+        right: {kind: "integer", text: "0xffffffffff000"}
+      }
+    } and
+    $retained_entry_check[1].target.path ==
+      ["check_address_bound_frame_number"] and
+    $retained_entry_check[1].target.arguments == [
+      {kind: "name", path: ["candidate"]}
+    ] and
+    $retained_entry_check[2].target.path ==
+      ["reject_retained_address_bound_page_table_entry"];
+    "retained address-bound PTE validator lost alignment or envelope checks")
+| $entry_validator.states[1].statements as $retained_frame_check
+| require(($retained_frame_check[0] | constrained_u64_field) and
+    $retained_frame_check[0].name == "frame_number" and
+    $retained_frame_check[0].type_reference.constraints[0].maximum.text ==
+      "1099511627775" and
+    ($retained_frame_check[0].initial_value.left.left | expression_path) ==
+      ["candidate", "physical_address"] and
+    $retained_frame_check[0].initial_value.left.operator == ">>" and
+    $retained_frame_check[0].initial_value.left.right.text == "12" and
+    $retained_frame_check[0].initial_value.operator == "&" and
+    $retained_frame_check[0].initial_value.right.text == "1099511627775" and
+    ($retained_frame_check[1].guard.value.left.left | expression_path) ==
+      ["candidate", "entry", "frame_number"] and
+    $retained_frame_check[1].guard.value.left.operator == "==" and
+    ($retained_frame_check[1].guard.value.left.right | expression_path) ==
+      ["frame_number"] and
+    $retained_frame_check[1].target.path ==
+      ["accept_retained_address_bound_page_table_entry"] and
+    $retained_frame_check[2].target.path ==
+      ["reject_retained_address_bound_page_table_entry"] and
+    $entry_validator.states[2].statements[0].value.fields == [{
+      name: "candidate",
+      value: {kind: "name", path: ["candidate"]}
+    }] and
+    $entry_validator.states[3].statements[0].value.path == [
+      "X86BootstrapAddressBoundPageTableEntryCheck",
+      "Rejected"
+    ] and
+    ([
+      $entry_validator
+      | ..
+      | objects
+      | select(.kind? == "member")
+      | expression_path
+      | select(.[0] == "candidate")
+    ] | unique) == [
+      ["candidate", "entry"],
+      ["candidate", "entry", "frame_number"],
+      ["candidate", "physical_address"]
+    ];
+    "retained address-bound PTE validator no longer checks only address/PFN consistency")
 | require($page_type.members == [{
       kind: "field",
       identity: null,
@@ -843,6 +947,7 @@ def type_signature:
 | [$machine_contracts[] | select(.machine == "x86_validate_bootstrap_virtual_address_indices")][0] as $address_validator_contract
 | [$machine_contracts[] | select(.machine == "x86_validate_bootstrap_physical_frame_geometry")][0] as $frame_contract
 | [$machine_contracts[] | select(.machine == "x86_compose_bootstrap_address_bound_page_table_entry")][0] as $entry_composer_contract
+| [$machine_contracts[] | select(.machine == "x86_validate_bootstrap_address_bound_page_table_entry")][0] as $entry_validator_contract
 | [$machine_contracts[] | select(.machine == "x86_validate_empty_page_table_page")][0] as $validator_contract
 | [$machine_contracts[] | select(.machine == "x86_scan_empty_page_table_page")][0] as $scanner_contract
 | require(($profile_contract | pure_contract) and
@@ -901,6 +1006,19 @@ def type_signature:
             {state: "reject_address_bound_page_table_entry", completeness: "complete", paths: []}
           ];
     "address-bound PTE composition gained effects, calls, writes, crashes, or nontermination")
+| require(($entry_validator_contract | pure_contract) and
+          $entry_validator_contract.implementation.checked_crash_calls == [] and
+          [$entry_validator_contract.implementation.inferred_write_frames[] | {
+            state,
+            completeness,
+            paths
+          }] == [
+            {state: "entry", completeness: "complete", paths: []},
+            {state: "check_address_bound_frame_number", completeness: "complete", paths: []},
+            {state: "accept_retained_address_bound_page_table_entry", completeness: "complete", paths: []},
+            {state: "reject_retained_address_bound_page_table_entry", completeness: "complete", paths: []}
+          ];
+    "retained address-bound PTE validation gained effects, calls, writes, crashes, or nontermination")
 | require(($helper_contract | pure_contract) and
           $helper_contract.implementation.checked_crash_calls == [] and
           [$helper_contract.implementation.inferred_write_frames[] | {

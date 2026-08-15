@@ -10,14 +10,17 @@ derives the four bounded indexes plus its 12-bit page offset. A separate pure
 validator accepts an ordinary retained decomposition only when the address is
 canonical and all four indexes and the offset exactly match those same shifts
 and masks. An ordinary physical-frame helper separately accepts only a
-4-KiB-aligned base inside the
-52-bit physical-address envelope, retains that address, and derives its bounded
-40-bit PFN. An ordinary PTE composer then binds those address bits while
+4-KiB-aligned base inside the 52-bit physical-address envelope, retains that
+address, and derives its bounded 40-bit PFN. An ordinary PTE composer then
+binds those address bits while
 requiring the caller to supply every other field in the complete 64-bit entry
 schema; it does not interpret the role-dependent `page_size_or_pat` bit or
-select leaf/link policy. One ordinary page candidate remains exactly 512
-existing 8-byte x86 PTE values. A checked decreasing-fuel scan visits all 512
-slots and accepts only when every one of the fourteen PTE fields has exact zero
+select leaf/link policy. A companion validator accepts a retained detached PTE
+candidate only when its address remains aligned and in-range and its PFN still
+matches; it deliberately ignores all thirteen non-address fields. One ordinary
+page candidate remains exactly 512 existing 8-byte x86 PTE values. A checked
+decreasing-fuel scan visits all 512 slots and accepts only when every one of the
+fourteen PTE fields has exact zero
 encoding. Success returns the complete runtime-relevant candidate; a dirty slot
 rejects the whole page, and no partial result escapes.
 
@@ -39,8 +42,9 @@ frame, or mapping. It binds no pre-reserved storage and grants no `Extent`,
 placement, page-table mutation, TLB, machine-control, installation, or teardown
 authority. Canonical address indexes are numeric walk coordinates only; they do
 not prove that a hierarchy, mapping, or address-space claim exists; successful
-revalidation adds only numeric consistency. Physical
-frame geometry is likewise only a numeric candidate: a later provider must
+revalidation adds only numeric consistency. Physical frame geometry is likewise
+only a numeric candidate: a later provider must
 rebind the same address and PFN while holding the exact physical source and
-mapping authority. The detached PTE candidate adds no claim that its supplied
-bits form a valid leaf or hierarchy link and grants no installation reach.
+mapping authority. Successful detached-PTE revalidation adds only numeric
+address/PFN consistency. It makes no claim that the remaining supplied bits
+form a valid leaf or hierarchy link and grants no installation reach.

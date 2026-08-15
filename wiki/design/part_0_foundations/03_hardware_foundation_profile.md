@@ -139,6 +139,11 @@ address candidates: one helper derives the canonical 39/30/21/12 walk indexes
 and 12-bit offset, while a second recomputes them and rejects retained-field
 drift. Success establishes only consistency with the selected 48-bit profile;
 it proves no hierarchy, mapping, backing, placement, or address-space claim.
+Likewise, Cathedral can independently revalidate that a retained detached PTE
+candidate still has an aligned, in-envelope physical address and the matching
+40-bit PFN. Every other entry field remains uninterpreted until later
+Cathedral-owned leaf/link policy; the numeric result grants no backing, mapping,
+placement, TLB, or installation authority.
 
 ## Layout, MMIO, and shared pages
 
