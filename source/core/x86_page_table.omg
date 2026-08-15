@@ -108,6 +108,49 @@ pub machine x86_decompose_bootstrap_virtual_address(
     }
 }
 
+// Revalidate an ordinary retained decomposition before a later hierarchy
+// consumer trusts its numeric coordinates. This proves only that the candidate
+// matches Cathedral's selected canonical-address profile; it grants no table,
+// mapping, backing, placement, TLB, or installation authority.
+pub machine x86_validate_bootstrap_virtual_address_indices(
+    candidate: X86BootstrapVirtualAddressIndices
+) -> X86BootstrapVirtualAddressCheck {
+    let low_canonical_max: u64 = X86_BOOTSTRAP_LOW_CANONICAL_MAX;
+    let high_canonical_min: u64 = X86_BOOTSTRAP_HIGH_CANONICAL_MIN;
+    let pml4_index: u64 [0..=511] =
+        (candidate.address >> 39) & X86_PAGE_TABLE_INDEX_MASK;
+    let pdpt_index: u64 [0..=511] =
+        (candidate.address >> 30) & X86_PAGE_TABLE_INDEX_MASK;
+    let pd_index: u64 [0..=511] =
+        (candidate.address >> 21) & X86_PAGE_TABLE_INDEX_MASK;
+    let pt_index: u64 [0..=511] =
+        (candidate.address >> 12) & X86_PAGE_TABLE_INDEX_MASK;
+    let page_offset: u64 [0..=4095] = candidate.address & X86_PAGE_OFFSET_MASK;
+    transition (
+        candidate.address <= low_canonical_max ||
+        candidate.address >= high_canonical_min
+    ) &&
+        candidate.pml4_index == pml4_index &&
+        candidate.pdpt_index == pdpt_index &&
+        candidate.pd_index == pd_index &&
+        candidate.pt_index == pt_index &&
+        candidate.page_offset == page_offset
+    {
+        true -> accept_virtual_address_indices(candidate)
+        _ -> reject_virtual_address_indices()
+    }
+
+    state accept_virtual_address_indices(
+        candidate: X86BootstrapVirtualAddressIndices
+    ) -> X86BootstrapVirtualAddressCheck {
+        X86BootstrapVirtualAddressCheck::Canonical { indices: candidate }
+    }
+
+    state reject_virtual_address_indices() -> X86BootstrapVirtualAddressCheck {
+        X86BootstrapVirtualAddressCheck::Rejected
+    }
+}
+
 // Ordinary numeric geometry for one possible 4-KiB physical frame base. This
 // is intentionally not a frame, mapping claim, or provider receipt. The later
 // authority-bearing page-table operation must rebind the same address and PFN

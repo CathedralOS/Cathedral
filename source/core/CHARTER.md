@@ -36,6 +36,8 @@ disabled and the four 9-bit index shifts fixed at 39, 30, 21, and 12. This is a
 Cathedral target policy, not inferred universal x86-64 behavior. The source
 now rejects the noncanonical 48-bit address hole and derives the four bounded
 page-walk indexes plus byte offset while retaining the original numeric address.
+An ordinary validator recomputes that canonical decomposition and rejects any
+retained address/index/offset drift before later hierarchy consumers use it.
 Those coordinates grant no mapping fact. A second ordinary helper checks 4-KiB
 alignment and the 52-bit physical-address envelope, then retains the candidate
 address with its bounded 40-bit PFN. That numeric geometry grants no physical

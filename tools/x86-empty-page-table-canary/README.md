@@ -6,8 +6,11 @@ baseline four-level, 48-bit canonical-address regime with LA57 disabled: four
 9-bit table indexes at shifts 39, 30, 21, and 12 over 4-KiB pages. One ordinary
 address helper accepts only `0x0000000000000000..=0x00007fffffffffff` or
 `0xffff800000000000..=0xffffffffffffffff`, retains the original address, and
-derives the four bounded indexes plus its 12-bit page offset. A separate
-ordinary physical-frame helper accepts only a 4-KiB-aligned base inside the
+derives the four bounded indexes plus its 12-bit page offset. A separate pure
+validator accepts an ordinary retained decomposition only when the address is
+canonical and all four indexes and the offset exactly match those same shifts
+and masks. An ordinary physical-frame helper separately accepts only a
+4-KiB-aligned base inside the
 52-bit physical-address envelope, retains that address, and derives its bounded
 40-bit PFN. An ordinary PTE composer then binds those address bits while
 requiring the caller to supply every other field in the complete 64-bit entry
@@ -35,7 +38,8 @@ chooses no virtual layout, large-page policy, hierarchy page count, physical
 frame, or mapping. It binds no pre-reserved storage and grants no `Extent`,
 placement, page-table mutation, TLB, machine-control, installation, or teardown
 authority. Canonical address indexes are numeric walk coordinates only; they do
-not prove that a hierarchy, mapping, or address-space claim exists. Physical
+not prove that a hierarchy, mapping, or address-space claim exists; successful
+revalidation adds only numeric consistency. Physical
 frame geometry is likewise only a numeric candidate: a later provider must
 rebind the same address and PFN while holding the exact physical source and
 mapping authority. The detached PTE candidate adds no claim that its supplied

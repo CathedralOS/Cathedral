@@ -134,6 +134,11 @@ the complete 64-bit paging word, including the 40-bit page-frame number for
 physical address bits 12 through 51. A checked provider derives that number
 from an aligned physical `addr` while holding the frame/mapping authority; the
 fact package itself grants no memory, mapping, installation, or TLB authority.
+Cathedral's baseline four-level bootstrap profile also has ordinary numeric
+address candidates: one helper derives the canonical 39/30/21/12 walk indexes
+and 12-bit offset, while a second recomputes them and rejects retained-field
+drift. Success establishes only consistency with the selected 48-bit profile;
+it proves no hierarchy, mapping, backing, placement, or address-space claim.
 
 ## Layout, MMIO, and shared pages
 

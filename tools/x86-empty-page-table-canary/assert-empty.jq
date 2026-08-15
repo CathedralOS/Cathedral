@@ -59,6 +59,7 @@ def type_signature:
 | typed_named($typed; "X86BootstrapVirtualAddressIndices"; "members") as $address_index_types
 | typed_named($typed; "X86BootstrapVirtualAddressCheck"; "members") as $address_check_types
 | typed_named($typed; "x86_decompose_bootstrap_virtual_address"; "states") as $address_machines
+| typed_named($typed; "x86_validate_bootstrap_virtual_address_indices"; "states") as $address_validators
 | typed_named($typed; "X86BootstrapPhysicalFrameGeometry"; "members") as $frame_geometry_types
 | typed_named($typed; "X86BootstrapPhysicalFrameGeometryCheck"; "members") as $frame_check_types
 | typed_named($typed; "x86_validate_bootstrap_physical_frame_geometry"; "states") as $frame_machines
@@ -77,6 +78,7 @@ def type_signature:
         "x86_page_table_entry_is_zero",
         "x86_bootstrap_address_space_profile",
         "x86_decompose_bootstrap_virtual_address",
+        "x86_validate_bootstrap_virtual_address_indices",
         "x86_validate_bootstrap_physical_frame_geometry",
         "x86_compose_bootstrap_address_bound_page_table_entry",
         "x86_validate_empty_page_table_page",
@@ -88,6 +90,7 @@ def type_signature:
           ($address_index_types | length) == 1 and
           ($address_check_types | length) == 1 and
           ($address_machines | length) == 1 and
+          ($address_validators | length) == 1 and
           ($frame_geometry_types | length) == 1 and
           ($frame_check_types | length) == 1 and
           ($frame_machines | length) == 1 and
@@ -100,13 +103,14 @@ def type_signature:
           ($zero_helpers | length) == 1 and
           ($validators | length) == 1 and
           ($scanners | length) == 1 and
-          ($machine_contracts | length) == 7;
+          ($machine_contracts | length) == 8;
     "expected one bootstrap profile, address/frame/PTE geometry, and empty-page frontier")
 | $profile_types[0] as $profile_type
 | $profile_machines[0] as $profile_machine
 | $address_index_types[0] as $address_index_type
 | $address_check_types[0] as $address_check_type
 | $address_machines[0] as $address_machine
+| $address_validators[0] as $address_validator
 | $frame_geometry_types[0] as $frame_geometry_type
 | $frame_check_types[0] as $frame_check_type
 | $frame_machines[0] as $frame_machine
@@ -346,6 +350,85 @@ def type_signature:
             value: {kind: "name", path: ["X86BootstrapVirtualAddressCheck", "Rejected"]}
           }];
     "bootstrap virtual-address check no longer retains the exact address or rejects cleanly")
+| require(($address_validator.states | map(.name)) == [
+      "entry",
+      "accept_virtual_address_indices",
+      "reject_virtual_address_indices"
+    ] and
+    all($address_validator.states[];
+      .return_type == {kind: "named", name: "X86BootstrapVirtualAddressCheck"}) and
+    $address_validator.states[0].parameters == [{
+      name: "candidate",
+      type_reference: {
+        kind: "named",
+        name: "X86BootstrapVirtualAddressIndices"
+      },
+      is_const: false,
+      is_mutable: false,
+      is_self: false
+    }];
+    "retained virtual-address validator changed its exact three-state interface")
+| $address_validator.states[0].statements as $address_validation
+| require([
+      $address_validation[2:6][]
+      | {
+          name,
+          maximum: .type_reference.constraints[0].maximum.text,
+          source: (.initial_value.left.left | expression_path),
+          shift: .initial_value.left.right.text,
+          mask: .initial_value.right.text
+        }
+    ] == [
+      {name: "pml4_index", maximum: "511", source: ["candidate", "address"], shift: "39", mask: "511"},
+      {name: "pdpt_index", maximum: "511", source: ["candidate", "address"], shift: "30", mask: "511"},
+      {name: "pd_index", maximum: "511", source: ["candidate", "address"], shift: "21", mask: "511"},
+      {name: "pt_index", maximum: "511", source: ["candidate", "address"], shift: "12", mask: "511"}
+    ] and
+    $address_validation[6].name == "page_offset" and
+    $address_validation[6].type_reference.constraints[0].maximum.text == "4095" and
+    ($address_validation[6].initial_value.left | expression_path) ==
+      ["candidate", "address"] and
+    $address_validation[6].initial_value.operator == "&" and
+    $address_validation[6].initial_value.right.text == "4095";
+    "retained virtual-address validator no longer recomputes exact coordinates")
+| $address_validation[7].guard.value as $address_validation_guard
+| require([
+      $address_validation_guard
+      | ..
+      | objects
+      | select(.operator? == "==" and (.left | expression_path) != null)
+      | [(.left | expression_path), (.right | expression_path)]
+    ] == [
+      [["candidate", "pml4_index"], ["pml4_index"]],
+      [["candidate", "pdpt_index"], ["pdpt_index"]],
+      [["candidate", "pd_index"], ["pd_index"]],
+      [["candidate", "pt_index"], ["pt_index"]],
+      [["candidate", "page_offset"], ["page_offset"]]
+    ] and
+    [
+      $address_validation_guard
+      | ..
+      | objects
+      | select(.operator? == "<=" or .operator? == ">=")
+      | [.operator, (.left | expression_path), (.right | expression_path)]
+    ] == [
+      ["<=", ["candidate", "address"], ["low_canonical_max"]],
+      [">=", ["candidate", "address"], ["high_canonical_min"]]
+    ] and
+    ([$address_validation_guard | .. | objects | select(.operator? == "&&")] | length) == 5 and
+    ([$address_validation_guard | .. | objects | select(.operator? == "||")] | length) == 1 and
+    $address_validation[7].target.path == ["accept_virtual_address_indices"] and
+    $address_validation[7].target.arguments == [{kind: "name", path: ["candidate"]}] and
+    $address_validation[8].target.path == ["reject_virtual_address_indices"] and
+    $address_validator.states[1].statements[0].value.fields == [{
+      name: "indices",
+      value: {kind: "name", path: ["candidate"]}
+    }] and
+    $address_validator.states[2].statements[0].value.path == [
+      "X86BootstrapVirtualAddressCheck",
+      "Rejected"
+    ];
+    "retained virtual-address validator no longer checks canonical exact-index consistency")
 | require($frame_geometry_type.members[0] == {
       kind: "field",
       identity: null,
@@ -757,6 +840,7 @@ def type_signature:
 | [$machine_contracts[] | select(.machine == "x86_page_table_entry_is_zero")][0] as $helper_contract
 | [$machine_contracts[] | select(.machine == "x86_bootstrap_address_space_profile")][0] as $profile_contract
 | [$machine_contracts[] | select(.machine == "x86_decompose_bootstrap_virtual_address")][0] as $address_contract
+| [$machine_contracts[] | select(.machine == "x86_validate_bootstrap_virtual_address_indices")][0] as $address_validator_contract
 | [$machine_contracts[] | select(.machine == "x86_validate_bootstrap_physical_frame_geometry")][0] as $frame_contract
 | [$machine_contracts[] | select(.machine == "x86_compose_bootstrap_address_bound_page_table_entry")][0] as $entry_composer_contract
 | [$machine_contracts[] | select(.machine == "x86_validate_empty_page_table_page")][0] as $validator_contract
@@ -781,6 +865,18 @@ def type_signature:
             {state: "reject", completeness: "complete", paths: []}
           ];
     "bootstrap virtual-address decomposition gained effects, calls, writes, crashes, or nontermination")
+| require(($address_validator_contract | pure_contract) and
+          $address_validator_contract.implementation.checked_crash_calls == [] and
+          [$address_validator_contract.implementation.inferred_write_frames[] | {
+            state,
+            completeness,
+            paths
+          }] == [
+            {state: "entry", completeness: "complete", paths: []},
+            {state: "accept_virtual_address_indices", completeness: "complete", paths: []},
+            {state: "reject_virtual_address_indices", completeness: "complete", paths: []}
+          ];
+    "retained virtual-address validation gained effects, calls, writes, crashes, or nontermination")
 | require(($frame_contract | pure_contract) and
           $frame_contract.implementation.checked_crash_calls == [] and
           [$frame_contract.implementation.inferred_write_frames[] | {
