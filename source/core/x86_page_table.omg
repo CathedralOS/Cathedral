@@ -5,8 +5,9 @@
 // architectural 4-KiB table page as 512 existing 8-byte PTE values, validates
 // the only universally safe page starting state, and decomposes canonical
 // virtual addresses into their four walk indexes. It also validates ordinary
-// numeric physical-frame geometry without establishing hierarchy storage,
-// mappings, physical frames, or an installation provider.
+// numeric physical-frame geometry and composes detached address-bound PTE data
+// without establishing hierarchy storage, mappings, physical frames, or an
+// installation provider.
 
 use facts::x86_page_table_entry;
 
@@ -150,6 +151,88 @@ pub machine x86_validate_bootstrap_physical_frame_geometry(
 
     state reject_frame_geometry() -> X86BootstrapPhysicalFrameGeometryCheck {
         X86BootstrapPhysicalFrameGeometryCheck::Rejected
+    }
+}
+
+// Every non-address bit of one detached paging entry. Cathedral does not assign
+// role semantics here: in particular, `page_size_or_pat` remains the hardware
+// fact's role-dependent field, and the caller supplies every policy value.
+pub data X86BootstrapPageTableEntryNonAddressFields {
+    present: bool;
+    writable: bool;
+    user: bool;
+    write_through: bool;
+    cache_disable: bool;
+    accessed: bool;
+    dirty: bool;
+    page_size_or_pat: bool;
+    global: bool;
+    software_low: u8 [0..=7];
+    software_high: u8 [0..=127];
+    protection_key: u8 [0..=15];
+    no_execute: bool;
+}
+
+// Ordinary detached encoding candidate. Retaining the numeric source address
+// prevents the derived PFN from becoming a free-standing address claim.
+pub data X86BootstrapAddressBoundPageTableEntryCandidate {
+    physical_address: u64;
+    entry: X86PageTableEntry;
+}
+
+pub data X86BootstrapAddressBoundPageTableEntryCheck {
+    case Rejected;
+    case Composed(candidate: X86BootstrapAddressBoundPageTableEntryCandidate);
+}
+
+// Bind bits 12..51 to one aligned address while copying every other PTE field
+// explicitly. This establishes numeric consistency only. It does not validate
+// a leaf/link role, select page size or hierarchy policy, prove a frame or
+// backing exists, establish a mapping, or authorize placement/installation.
+pub machine x86_compose_bootstrap_address_bound_page_table_entry(
+    physical_address: u64,
+    fields: X86BootstrapPageTableEntryNonAddressFields
+) -> X86BootstrapAddressBoundPageTableEntryCheck {
+    let page_offset: u64 [0..=4095] = physical_address & X86_PAGE_OFFSET_MASK;
+    transition page_offset == 0 &&
+        physical_address <= X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS {
+        true -> compose_address_bound_page_table_entry(physical_address, fields)
+        _ -> reject_address_bound_page_table_entry()
+    }
+
+    state compose_address_bound_page_table_entry(
+        physical_address: u64,
+        fields: X86BootstrapPageTableEntryNonAddressFields
+    ) -> X86BootstrapAddressBoundPageTableEntryCheck {
+        let frame_number: u64 [0..=1099511627775] =
+            (physical_address >> X86_PAGE_SHIFT) & X86_PAGE_FRAME_NUMBER_MAX;
+        X86BootstrapAddressBoundPageTableEntryCheck::Composed {
+            candidate: X86BootstrapAddressBoundPageTableEntryCandidate {
+                physical_address: physical_address,
+                entry: X86PageTableEntry {
+                    present: fields.present,
+                    writable: fields.writable,
+                    user: fields.user,
+                    write_through: fields.write_through,
+                    cache_disable: fields.cache_disable,
+                    accessed: fields.accessed,
+                    dirty: fields.dirty,
+                    page_size_or_pat: fields.page_size_or_pat,
+                    global: fields.global,
+                    software_low: fields.software_low,
+                    frame_number: frame_number,
+                    software_high: fields.software_high,
+                    protection_key: fields.protection_key,
+                    no_execute: fields.no_execute,
+                },
+            },
+        }
+    }
+
+    state reject_address_bound_page_table_entry()
+        -> X86BootstrapAddressBoundPageTableEntryCheck
+    {
+        X86BootstrapAddressBoundPageTableEntryCheck::Rejected
     }
 }
 

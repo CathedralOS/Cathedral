@@ -7,14 +7,16 @@ baseline four-level, 48-bit canonical-address regime with LA57 disabled: four
 address helper accepts only `0x0000000000000000..=0x00007fffffffffff` or
 `0xffff800000000000..=0xffffffffffffffff`, retains the original address, and
 derives the four bounded indexes plus its 12-bit page offset. A separate
-ordinary physical-frame helper accepts only a 4-KiB-aligned base inside the 52-bit
-physical-address envelope, retains that address, and derives its bounded 40-bit
-PFN. One ordinary page candidate remains exactly 512 existing 8-byte x86 PTE
-values. A checked
-decreasing-fuel scan visits all 512 slots and accepts only when every one of the
-fourteen PTE fields has exact zero encoding. Success returns the complete
-runtime-relevant candidate; a dirty slot rejects the whole page, and no partial
-result escapes.
+ordinary physical-frame helper accepts only a 4-KiB-aligned base inside the
+52-bit physical-address envelope, retains that address, and derives its bounded
+40-bit PFN. An ordinary PTE composer then binds those address bits while
+requiring the caller to supply every other field in the complete 64-bit entry
+schema; it does not interpret the role-dependent `page_size_or_pat` bit or
+select leaf/link policy. One ordinary page candidate remains exactly 512
+existing 8-byte x86 PTE values. A checked decreasing-fuel scan visits all 512
+slots and accepts only when every one of the fourteen PTE fields has exact zero
+encoding. Success returns the complete runtime-relevant candidate; a dirty slot
+rejects the whole page, and no partial result escapes.
 
 Run:
 
@@ -36,4 +38,5 @@ authority. Canonical address indexes are numeric walk coordinates only; they do
 not prove that a hierarchy, mapping, or address-space claim exists. Physical
 frame geometry is likewise only a numeric candidate: a later provider must
 rebind the same address and PFN while holding the exact physical source and
-mapping authority.
+mapping authority. The detached PTE candidate adds no claim that its supplied
+bits form a valid leaf or hierarchy link and grants no installation reach.

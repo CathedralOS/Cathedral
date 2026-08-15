@@ -39,7 +39,10 @@ page-walk indexes plus byte offset while retaining the original numeric address.
 Those coordinates grant no mapping fact. A second ordinary helper checks 4-KiB
 alignment and the 52-bit physical-address envelope, then retains the candidate
 address with its bounded 40-bit PFN. That numeric geometry grants no physical
-source, frame, backing, or mapping authority. The source state represents one
+source, frame, backing, or mapping authority. A detached PTE composer derives
+only that PFN and copies every other schema field from explicit caller data;
+it does not interpret the role-dependent bit, select a leaf/link policy, or
+grant placement or installation authority. The source state represents one
 4-KiB candidate as 512 existing 8-byte x86 PTE values. A checked 512-step scan
 accepts only exact all-zero/non-present encoding and returns the whole ordinary
 candidate; it does not establish storage, hierarchy page count, mapping, or

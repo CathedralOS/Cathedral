@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Compile and inspect Cathedral's exact-zero page-table-page validator without
-# claiming placed storage, a hierarchy, mappings, or installation authority.
+# Compile and inspect Cathedral's detached paging geometry and exact-zero
+# page-table validator without claiming storage, mappings, or installation.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

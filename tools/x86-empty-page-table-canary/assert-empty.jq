@@ -38,6 +38,20 @@ def constrained_u64_field:
   .type_reference.constraints[0].kind == "range" and
   .type_reference.constraints[0].minimum == {kind: "integer", text: "0"};
 
+def type_signature:
+  if .kind == "named" then
+    {kind, name}
+  elif .kind == "constrained" then
+    {
+      kind,
+      base: .base_type.name,
+      minimum: .constraints[0].minimum.text,
+      maximum: .constraints[0].maximum.text
+    }
+  else
+    {kind}
+  end;
+
 .[0] as $typed
 | .[1] as $contracts
 | typed_named($typed; "X86BootstrapAddressSpaceProfile"; "members") as $profile_types
@@ -48,6 +62,10 @@ def constrained_u64_field:
 | typed_named($typed; "X86BootstrapPhysicalFrameGeometry"; "members") as $frame_geometry_types
 | typed_named($typed; "X86BootstrapPhysicalFrameGeometryCheck"; "members") as $frame_check_types
 | typed_named($typed; "x86_validate_bootstrap_physical_frame_geometry"; "states") as $frame_machines
+| typed_named($typed; "X86BootstrapPageTableEntryNonAddressFields"; "members") as $entry_field_types
+| typed_named($typed; "X86BootstrapAddressBoundPageTableEntryCandidate"; "members") as $entry_candidate_types
+| typed_named($typed; "X86BootstrapAddressBoundPageTableEntryCheck"; "members") as $entry_check_types
+| typed_named($typed; "x86_compose_bootstrap_address_bound_page_table_entry"; "states") as $entry_composers
 | typed_named($typed; "X86PageTablePageCandidate"; "members") as $page_types
 | typed_named($typed; "X86EmptyPageTablePagePolicyCheck"; "members") as $check_types
 | typed_named($typed; "x86_page_table_entry_is_zero"; "states") as $zero_helpers
@@ -60,6 +78,7 @@ def constrained_u64_field:
         "x86_bootstrap_address_space_profile",
         "x86_decompose_bootstrap_virtual_address",
         "x86_validate_bootstrap_physical_frame_geometry",
+        "x86_compose_bootstrap_address_bound_page_table_entry",
         "x86_validate_empty_page_table_page",
         "x86_scan_empty_page_table_page"
       ] | index($name))
@@ -72,13 +91,17 @@ def constrained_u64_field:
           ($frame_geometry_types | length) == 1 and
           ($frame_check_types | length) == 1 and
           ($frame_machines | length) == 1 and
+          ($entry_field_types | length) == 1 and
+          ($entry_candidate_types | length) == 1 and
+          ($entry_check_types | length) == 1 and
+          ($entry_composers | length) == 1 and
           ($page_types | length) == 1 and
           ($check_types | length) == 1 and
           ($zero_helpers | length) == 1 and
           ($validators | length) == 1 and
           ($scanners | length) == 1 and
-          ($machine_contracts | length) == 6;
-    "expected one bootstrap profile, address/frame geometry, and empty-page frontier")
+          ($machine_contracts | length) == 7;
+    "expected one bootstrap profile, address/frame/PTE geometry, and empty-page frontier")
 | $profile_types[0] as $profile_type
 | $profile_machines[0] as $profile_machine
 | $address_index_types[0] as $address_index_type
@@ -87,6 +110,10 @@ def constrained_u64_field:
 | $frame_geometry_types[0] as $frame_geometry_type
 | $frame_check_types[0] as $frame_check_type
 | $frame_machines[0] as $frame_machine
+| $entry_field_types[0] as $entry_field_type
+| $entry_candidate_types[0] as $entry_candidate_type
+| $entry_check_types[0] as $entry_check_type
+| $entry_composers[0] as $entry_composer
 | $page_types[0] as $page_type
 | $check_types[0] as $check_type
 | $zero_helpers[0] as $zero_helper
@@ -429,6 +456,164 @@ def constrained_u64_field:
             }
           }];
     "bootstrap physical-frame check no longer derives and retains the exact bounded PFN")
+| require([
+      $entry_field_type.members[]
+      | {name, relevance, type: (.type_reference | type_signature)}
+    ] == [
+      {name: "present",          relevance: "relevant", type: {kind: "named", name: "bool"}},
+      {name: "writable",         relevance: "relevant", type: {kind: "named", name: "bool"}},
+      {name: "user",             relevance: "relevant", type: {kind: "named", name: "bool"}},
+      {name: "write_through",    relevance: "relevant", type: {kind: "named", name: "bool"}},
+      {name: "cache_disable",    relevance: "relevant", type: {kind: "named", name: "bool"}},
+      {name: "accessed",         relevance: "relevant", type: {kind: "named", name: "bool"}},
+      {name: "dirty",            relevance: "relevant", type: {kind: "named", name: "bool"}},
+      {name: "page_size_or_pat", relevance: "relevant", type: {kind: "named", name: "bool"}},
+      {name: "global",           relevance: "relevant", type: {kind: "named", name: "bool"}},
+      {name: "software_low",     relevance: "relevant", type: {kind: "constrained", base: "u8", minimum: "0", maximum: "7"}},
+      {name: "software_high",    relevance: "relevant", type: {kind: "constrained", base: "u8", minimum: "0", maximum: "127"}},
+      {name: "protection_key",   relevance: "relevant", type: {kind: "constrained", base: "u8", minimum: "0", maximum: "15"}},
+      {name: "no_execute",       relevance: "relevant", type: {kind: "named", name: "bool"}}
+    ];
+    "address-bound PTE composition no longer receives every non-address field")
+| require($entry_candidate_type.members == [
+      {
+        kind: "field",
+        identity: null,
+        name: "physical_address",
+        relevance: "relevant",
+        type_reference: {kind: "named", name: "u64"}
+      },
+      {
+        kind: "field",
+        identity: null,
+        name: "entry",
+        relevance: "relevant",
+        type_reference: {kind: "named", name: "X86PageTableEntry"}
+      }
+    ] and
+    $entry_check_type.members == [
+      {
+        kind: "variant",
+        identity: null,
+        name: "Rejected",
+        payload: [],
+        retired_payload_identities: []
+      },
+      {
+        kind: "variant",
+        identity: null,
+        name: "Composed",
+        payload: [{
+          identity: null,
+          name: "candidate",
+          relevance: "relevant",
+          type_reference: {
+            kind: "named",
+            name: "X86BootstrapAddressBoundPageTableEntryCandidate"
+          }
+        }],
+        retired_payload_identities: []
+      }
+    ];
+    "address-bound PTE composition no longer retains its address and complete entry")
+| require(($entry_composer.states | map(.name)) == [
+      "entry",
+      "compose_address_bound_page_table_entry",
+      "reject_address_bound_page_table_entry"
+    ] and
+    all($entry_composer.states[];
+      .return_type == {
+        kind: "named",
+        name: "X86BootstrapAddressBoundPageTableEntryCheck"
+      });
+    "address-bound PTE composer changed its exact three-state interface")
+| $entry_composer.states[0].statements as $entry_composer_entry
+| require(($entry_composer_entry[0] | constrained_u64_field) and
+          $entry_composer_entry[0].name == "page_offset" and
+          $entry_composer_entry[0].type_reference.constraints[0].maximum.text == "4095" and
+          $entry_composer_entry[0].initial_value == {
+            kind: "binary",
+            left: {kind: "name", path: ["physical_address"]},
+            operator: "&",
+            right: {kind: "integer", text: "4095"}
+          } and
+          $entry_composer_entry[1].target.path ==
+            ["compose_address_bound_page_table_entry"] and
+          $entry_composer_entry[1].target.arguments == [
+            {kind: "name", path: ["physical_address"]},
+            {kind: "name", path: ["fields"]}
+          ] and
+          $entry_composer_entry[1].guard.value.left == {
+            kind: "binary",
+            left: {
+              kind: "binary",
+              left: {kind: "name", path: ["page_offset"]},
+              operator: "==",
+              right: {kind: "integer", text: "0"}
+            },
+            operator: "&&",
+            right: {
+              kind: "binary",
+              left: {kind: "name", path: ["physical_address"]},
+              operator: "<=",
+              right: {kind: "integer", text: "0xffffffffff000"}
+            }
+          } and
+          $entry_composer_entry[2].target.path ==
+            ["reject_address_bound_page_table_entry"] and
+          $entry_composer_entry[2].guard == {kind: "always"};
+    "address-bound PTE composer no longer rejects misaligned or out-of-envelope addresses")
+| $entry_composer.states[1].statements as $entry_composition
+| $entry_composition[1].value.fields[0].value as $entry_candidate
+| $entry_candidate.fields[1].value as $composed_entry
+| require(($entry_composition[0] | constrained_u64_field) and
+          $entry_composition[0].name == "frame_number" and
+          $entry_composition[0].type_reference.constraints[0].maximum.text ==
+            "1099511627775" and
+          $entry_composition[0].initial_value == {
+            kind: "binary",
+            left: {
+              kind: "binary",
+              left: {kind: "name", path: ["physical_address"]},
+              operator: ">>",
+              right: {kind: "integer", text: "12"}
+            },
+            operator: "&",
+            right: {kind: "integer", text: "1099511627775"}
+          } and
+          $entry_composition[1].value.type_name ==
+            "X86BootstrapAddressBoundPageTableEntryCheck" and
+          $entry_candidate.type_name ==
+            "X86BootstrapAddressBoundPageTableEntryCandidate" and
+          $entry_candidate.fields[0] == {
+            name: "physical_address",
+            value: {kind: "name", path: ["physical_address"]}
+          } and
+          $composed_entry.type_name == "X86PageTableEntry" and
+          [$composed_entry.fields[] | {name, path: (.value | expression_path)}] == [
+            {name: "present", path: ["fields", "present"]},
+            {name: "writable", path: ["fields", "writable"]},
+            {name: "user", path: ["fields", "user"]},
+            {name: "write_through", path: ["fields", "write_through"]},
+            {name: "cache_disable", path: ["fields", "cache_disable"]},
+            {name: "accessed", path: ["fields", "accessed"]},
+            {name: "dirty", path: ["fields", "dirty"]},
+            {name: "page_size_or_pat", path: ["fields", "page_size_or_pat"]},
+            {name: "global", path: ["fields", "global"]},
+            {name: "software_low", path: ["fields", "software_low"]},
+            {name: "frame_number", path: ["frame_number"]},
+            {name: "software_high", path: ["fields", "software_high"]},
+            {name: "protection_key", path: ["fields", "protection_key"]},
+            {name: "no_execute", path: ["fields", "no_execute"]}
+          ] and
+          $entry_composer.states[2].statements == [{
+            kind: "expression",
+            value: {
+              kind: "name",
+              path: ["X86BootstrapAddressBoundPageTableEntryCheck", "Rejected"]
+            }
+          }];
+    "address-bound PTE composition no longer derives its PFN and copies every other bit")
 | require($page_type.members == [{
       kind: "field",
       identity: null,
@@ -573,6 +758,7 @@ def constrained_u64_field:
 | [$machine_contracts[] | select(.machine == "x86_bootstrap_address_space_profile")][0] as $profile_contract
 | [$machine_contracts[] | select(.machine == "x86_decompose_bootstrap_virtual_address")][0] as $address_contract
 | [$machine_contracts[] | select(.machine == "x86_validate_bootstrap_physical_frame_geometry")][0] as $frame_contract
+| [$machine_contracts[] | select(.machine == "x86_compose_bootstrap_address_bound_page_table_entry")][0] as $entry_composer_contract
 | [$machine_contracts[] | select(.machine == "x86_validate_empty_page_table_page")][0] as $validator_contract
 | [$machine_contracts[] | select(.machine == "x86_scan_empty_page_table_page")][0] as $scanner_contract
 | require(($profile_contract | pure_contract) and
@@ -607,6 +793,18 @@ def constrained_u64_field:
             {state: "reject_frame_geometry", completeness: "complete", paths: []}
           ];
     "bootstrap physical-frame geometry gained effects, calls, writes, crashes, or nontermination")
+| require(($entry_composer_contract | pure_contract) and
+          $entry_composer_contract.implementation.checked_crash_calls == [] and
+          [$entry_composer_contract.implementation.inferred_write_frames[] | {
+            state,
+            completeness,
+            paths
+          }] == [
+            {state: "entry", completeness: "complete", paths: []},
+            {state: "compose_address_bound_page_table_entry", completeness: "complete", paths: []},
+            {state: "reject_address_bound_page_table_entry", completeness: "complete", paths: []}
+          ];
+    "address-bound PTE composition gained effects, calls, writes, crashes, or nontermination")
 | require(($helper_contract | pure_contract) and
           $helper_contract.implementation.checked_crash_calls == [] and
           [$helper_contract.implementation.inferred_write_frames[] | {
