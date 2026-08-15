@@ -391,13 +391,18 @@ no-error-code, reserved, or CPU-profile-dependent delivery. The common
 error-code set is 8, 10–14, 17, and 21. Optional AMD meanings at 28–30 remain
 unresolved until Cathedral selects a CPU profile; the fact does not pretend
 that vendor assignments are universal. This is ordinary description data and
-does not itself create a stub or select a calling/state plan.
+does not itself create a stub or select a calling/state plan. Cathedral's total
+exception-floor policy carries this category into each ordinary gate candidate,
+and its single-entry and complete-table validators reject category drift. They
+preserve `CpuProfileRequired` unchanged rather than deciding slots 28–30 or
+claiming the still-unauthored stack transformation.
 
 Cathedral's first source-level gate-policy check is intentionally partial. It
 derives the total policy internally from the requested table slot, pairs an
-`X86IdtGate` candidate with its vector and fatal disposition, then rejects any
-mismatch in vector, coupled IST, disposition, fixed present/ring-0 interrupt-
-gate attributes, or reserved-zero field. Success yields only ordinary
+`X86IdtGate` candidate with its vector, delivery category, and fatal
+disposition, then rejects any mismatch in vector, coupled IST, delivery,
+disposition, fixed present/ring-0 interrupt-gate attributes, or reserved-zero
+field. Success yields only ordinary
 `PolicyConsistent` data. The table-level form accepts one fixed 32-entry
 candidate only after a checked decreasing-fuel scan accumulates that decision
 for every slot; it cannot return a partial floor. Neither result is sealed or

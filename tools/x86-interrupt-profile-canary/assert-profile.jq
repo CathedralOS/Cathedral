@@ -149,7 +149,7 @@ def expression_path:
       )
   ) as $gate_policy_validator
 | [
-    $gate_policy_validator.states[0:5][]
+    $gate_policy_validator.states[0:6][]
     | first(.statements[] | select(.kind == "transition")) as $success_statement
     | $success_statement.guard.value.left as $comparison
     | {
@@ -316,6 +316,7 @@ def expression_path:
           "vector",
           "stack",
           "ist_index",
+          "delivery",
           "disposition"
         ]
         and ($exception_policy_type.members[0].type_reference | constrained_u8("0"; "31"))
@@ -325,6 +326,10 @@ def expression_path:
         }
         and ($exception_policy_type.members[2].type_reference | constrained_u8("0"; "7"))
         and $exception_policy_type.members[3].type_reference == {
+          kind: "named",
+          name: "X86ExceptionDeliveryShape"
+        }
+        and $exception_policy_type.members[4].type_reference == {
           kind: "named",
           name: "X86BootstrapExceptionDisposition"
         }
@@ -393,6 +398,16 @@ def expression_path:
           receiver: {kind: "name", path: ["selected"]},
           member: "ist_index"
         }
+        and ($dedicated_policy | field("delivery")) == {
+          kind: "call",
+          receiver: null,
+          target: "x86_exception_delivery_shape",
+          machine_arguments: [],
+          arguments: [{kind: "name", path: ["vector"]}],
+          acknowledgement_synthesized: false,
+          acknowledges_suspend: false,
+          acknowledges_block: false
+        }
         and ($dedicated_policy | field("disposition") | .path) == [
           "X86BootstrapExceptionDisposition",
           "FatalDiagnostic"
@@ -404,6 +419,16 @@ def expression_path:
           "Interrupted"
         ]
         and ($current_stack_policy | field("ist_index") | .text) == "0"
+        and ($current_stack_policy | field("delivery")) == {
+          kind: "call",
+          receiver: null,
+          target: "x86_exception_delivery_shape",
+          machine_arguments: [],
+          arguments: [{kind: "name", path: ["vector"]}],
+          acknowledgement_synthesized: false,
+          acknowledges_suspend: false,
+          acknowledges_block: false
+        }
         and ($current_stack_policy | field("disposition") | .path) == [
           "X86BootstrapExceptionDisposition",
           "FatalDiagnostic"
@@ -420,7 +445,34 @@ def expression_path:
           and .implementation.checked_service_reach == []
           and .implementation.checked_synchronous_invocations == []
           and .implementation.checked_crash_sites == []
-          and .implementation.checked_crash_calls == []
+          and (
+            .implementation.checked_crash_calls
+            | map({
+                state,
+                statement_ordinal,
+                call_ordinal,
+                target_machine,
+                target_state,
+                surviving_buckets
+              })
+          ) == [
+            {
+              state: "dedicated",
+              statement_ordinal: 0,
+              call_ordinal: 0,
+              target_machine: "x86_exception_delivery_shape",
+              target_state: "entry",
+              surviving_buckets: []
+            },
+            {
+              state: "current_stack",
+              statement_ordinal: 0,
+              call_ordinal: 0,
+              target_machine: "x86_exception_delivery_shape",
+              target_state: "entry",
+              surviving_buckets: []
+            }
+          ]
           and .implementation.checked_termination.kind == "terminates"
           and (.implementation.inferred_write_frames | length) == 5
           and all(.implementation.inferred_write_frames[];
@@ -436,6 +488,7 @@ def expression_path:
         ($gate_candidate_type.members | map(.name)) == [
           "vector",
           "gate",
+          "delivery",
           "disposition"
         ]
         and ($gate_candidate_type.members[0].type_reference | constrained_u8("0"; "31"))
@@ -444,6 +497,10 @@ def expression_path:
           name: "X86IdtGate"
         }
         and $gate_candidate_type.members[2].type_reference == {
+          kind: "named",
+          name: "X86ExceptionDeliveryShape"
+        }
+        and $gate_candidate_type.members[3].type_reference == {
           kind: "named",
           name: "X86BootstrapExceptionDisposition"
         }
@@ -472,6 +529,7 @@ def expression_path:
           "entry",
           "check_ist",
           "check_disposition",
+          "check_delivery",
           "check_attributes",
           "check_reserved",
           "accept",
@@ -509,6 +567,13 @@ def expression_path:
             state: "check_disposition",
             left: ["candidate", "disposition"],
             right: ["policy", "disposition"],
+            success: "check_delivery",
+            failure: "reject"
+          },
+          {
+            state: "check_delivery",
+            left: ["candidate", "delivery"],
+            right: ["policy", "delivery"],
             success: "check_attributes",
             failure: "reject"
           },
@@ -565,7 +630,7 @@ def expression_path:
           and .implementation.checked_crash_calls[0].path_guard_consequences == []
           and .implementation.checked_crash_calls[0].surviving_buckets == []
           and .implementation.checked_termination.kind == "terminates"
-          and (.implementation.inferred_write_frames | length) == 7
+          and (.implementation.inferred_write_frames | length) == 8
           and all(.implementation.inferred_write_frames[];
             .completeness == "complete"
             and .paths == []
@@ -675,12 +740,13 @@ def expression_path:
         and $table_scan_entry.statements[3].initial_value.arguments == [
           {kind: "name", path: ["vector"]}
         ]
-        and ($table_scan_verdict.left.left.left.left.left | expression_path) ==
+        and ($table_scan_verdict.left.left.left.left.left.left | expression_path) ==
           ["valid_so_far"]
         and $table_scan_checks == [
           {left: ["entry", "vector"], right: ["policy", "vector"]},
           {left: ["entry", "gate", "ist"], right: ["policy", "ist_index"]},
           {left: ["entry", "disposition"], right: ["policy", "disposition"]},
+          {left: ["entry", "delivery"], right: ["policy", "delivery"]},
           {left: ["entry", "gate", "type_attributes"], right: "0x8e"},
           {left: ["entry", "gate", "reserved"], right: "0"}
         ]

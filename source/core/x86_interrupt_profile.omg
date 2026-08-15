@@ -25,21 +25,25 @@ pub data X86BootstrapExceptionDisposition {
 // One record is consumed by both sides of exception admission: `stack` is the
 // normalized WCSU/nesting policy and `ist_index` is the x86 gate/TSS choice.
 // Current-stack entries pair `Interrupted` with IST zero. Dedicated entries
-// derive both fields from one X86IstStackClass so they cannot drift.
+// derive both fields from one X86IstStackClass so they cannot drift. `delivery`
+// retains the source-authored frame category without resolving CPU-profile-
+// dependent vectors or selecting a normalization plan.
 pub data X86BootstrapExceptionEntryPolicy {
     vector: u8 [0..=31];
     stack: EntryStack;
     ist_index: u8 [0..=7];
+    delivery: X86ExceptionDeliveryShape;
     disposition: X86BootstrapExceptionDisposition;
 }
 
-// A proposed gate paired with the semantic fields that are not encoded in the
-// 16-byte descriptor itself. This remains ordinary data: `entry` and
-// `selector` inside `gate` have not yet been vouched for by the admitted-root
-// resolver or the boot-selected code-segment fact.
+// A proposed gate paired with policy fields, including the delivery category
+// that is not encoded in the 16-byte descriptor itself. This remains ordinary
+// data: `entry` and `selector` inside `gate` have not yet been vouched for by
+// the admitted-root resolver or the boot-selected code-segment fact.
 pub data X86BootstrapExceptionGateCandidate {
     vector: u8 [0..=31];
     gate: X86IdtGate;
+    delivery: X86ExceptionDeliveryShape;
     disposition: X86BootstrapExceptionDisposition;
 }
 
@@ -100,6 +104,7 @@ pub machine x86_bootstrap_exception_entry_policy(
             vector: vector,
             stack: EntryStack::Dedicated { class: selected.stack_class },
             ist_index: selected.ist_index,
+            delivery: x86_exception_delivery_shape(vector),
             disposition: X86BootstrapExceptionDisposition::FatalDiagnostic,
         }
     }
@@ -109,6 +114,7 @@ pub machine x86_bootstrap_exception_entry_policy(
             vector: vector,
             stack: EntryStack::Interrupted,
             ist_index: 0,
+            delivery: x86_exception_delivery_shape(vector),
             disposition: X86BootstrapExceptionDisposition::FatalDiagnostic,
         }
     }
@@ -147,6 +153,16 @@ pub machine x86_validate_bootstrap_exception_gate_policy(
         candidate: X86BootstrapExceptionGateCandidate
     ) -> X86BootstrapExceptionGatePolicyCheck {
         transition candidate.disposition == policy.disposition {
+            true -> check_delivery(policy, candidate)
+            _ -> reject()
+        }
+    }
+
+    state check_delivery(
+        policy: X86BootstrapExceptionEntryPolicy,
+        candidate: X86BootstrapExceptionGateCandidate
+    ) -> X86BootstrapExceptionGatePolicyCheck {
+        transition candidate.delivery == policy.delivery {
             true -> check_attributes(candidate)
             _ -> reject()
         }
@@ -214,6 +230,7 @@ terminates by remaining;
         entry.vector == policy.vector &&
         entry.gate.ist == policy.ist_index &&
         entry.disposition == policy.disposition &&
+        entry.delivery == policy.delivery &&
         entry.gate.type_attributes == PRESENT_RING0_INTERRUPT_GATE &&
         entry.gate.reserved == RESERVED_ZERO;
     transition remaining > 1 {

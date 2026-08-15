@@ -9,13 +9,15 @@ kernel stack with IST zero. The harness also pins the first remapped legacy
 timer to the shared maskable-IRQ class/index 4.
 
 The same harness pins Cathedral's pure gate-policy validators. The single-slot
-helper checks exact vector, IST, fatal disposition, fixed
-present/ring-0/interrupt-gate attributes, and zero reserved field. The
+helper checks exact vector, IST, source-authored delivery category, fatal
+disposition, fixed present/ring-0/interrupt-gate attributes, and zero reserved field. The
 table-level validator accepts only a fixed 32-entry candidate after a checked,
 terminating scan accumulates that decision for every slot; a failure cannot
 return a partially checked table. Neither result says anything about handler
 entry identity or selector: those require the admitted source resolver and
-boot-selected code-segment fact before materialization.
+boot-selected code-segment fact before materialization. Slots 28–30 remain
+`CpuProfileRequired`; the canary does not refine them or claim an entry-frame
+normalization plan.
 
 All candidate fields and successful-result payloads remain runtime-relevant:
 the policy check must return the complete candidate that it inspected, not an

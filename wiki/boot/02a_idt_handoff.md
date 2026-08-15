@@ -44,8 +44,11 @@ The prepared image conceptually contains:
 
 The exception-vector fact table already records whether each common exception
 arrives with a hardware error code and marks optional AMD slots 28–30 as
-CPU-profile-dependent. Stub generation must refine those optional slots from
-the selected target profile before choosing their stack-normalization sequence.
+CPU-profile-dependent. Cathedral's ordinary exception-floor policy retains that
+category and requires each gate candidate to match it, but does not refine the
+profile-dependent entries. Stub generation must refine those optional slots
+from the selected target profile before choosing their stack-normalization
+sequence.
 
 UEFI understands the PE/COFF envelope, not Omega semantics. Under Secure Boot
 it authenticates the signed image, loads and relocates its sections, and starts

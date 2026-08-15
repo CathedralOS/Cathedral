@@ -63,15 +63,18 @@ provider operations, not ambient driver access.
 `x86_interrupt_profile.omg` composes the pure vector and stack facts into the
 four initial vector-to-stack assignments and one total fatal-diagnostic
 bootstrap exception-floor policy over slots 0–31. The latter couples each
-normalized stack choice to the exact hardware IST index without minting any of
-those missing authorities. A complete role-labeled stack-class set now groups
-double fault, NMI, machine check, and maskable IRQ policy into one candidate;
+stack choice to the exact hardware IST index and the source-authored exception
+delivery category without minting any of those missing authorities. Delivery
+for slots 28–30 remains `CpuProfileRequired`; this policy does not select a CPU
+profile or an entry-frame normalization plan. A complete role-labeled
+stack-class set now groups double fault, NMI, machine check, and maskable IRQ
+policy into one candidate;
 its pure validator derives the expected set internally and rejects any
 class/index drift before later WCSU-derived storage provisioning. It assigns no
 bytes and mints no `StackLease`. The pure gate-policy validator internally derives
-that policy for the requested table slot, rejects vector, IST, disposition,
-gate-attribute, or reserved-field drift, and returns only an ordinary
-`PolicyConsistent` candidate. A table-level wrapper now scans one fixed
+that policy for the requested table slot, rejects vector, IST, delivery,
+disposition, gate-attribute, or reserved-field drift, and returns only an
+ordinary `PolicyConsistent` candidate. A table-level wrapper now scans one fixed
 32-entry candidate with checked decreasing fuel and accepts only after every
 slot passes; no partial table escapes. It deliberately does not vouch for the
 handler entry identities or selectors; those still need the admitted resolver
