@@ -38,6 +38,7 @@ def source_calls($machine):
         arguments: [
           .arguments[]
           | if .kind == "name" then { kind, path }
+            elif .kind == "integer" then { kind, text }
             else { kind }
             end
         ]
@@ -78,6 +79,7 @@ def portio_contract:
 | typed_machine($typed; "Pic8259::remap_masked") as $pic_remap
 | typed_machine($typed; "Pic8259::unmask_timer") as $pic_unmask
 | typed_machine($typed; "Pit8254::program_channel0_rate_generator") as $pit_program
+| typed_machine($typed; "legacy_pit_bootstrap_rate_policy") as $rate_policy
 | typed_machine($typed; "LegacyPicPitTimerProvider::prepare_masked") as $prepare_masked
 | require(all([
       $double_fault,
@@ -89,6 +91,7 @@ def portio_contract:
       $pic_remap,
       $pic_unmask,
       $pit_program,
+      $rate_policy,
       $prepare_masked
     ][]; . != null);
     "bootstrap composition is missing a required typed machine")
@@ -128,6 +131,7 @@ def portio_contract:
 | port_operations($pic_remap) as $remap_operations
 | port_operations($pic_unmask) as $unmask_operations
 | port_operations($pit_program) as $pit_operations
+| assignment($rate_policy) as $selected_rate_policy
 | source_calls($prepare_masked) as $prepare_operations
 | require($dedicated_assignments == [
       { vector: 8,  stack_class: 1, ist_index: 1 },
@@ -212,6 +216,20 @@ def portio_contract:
       }
     ];
     "PIT programming is no longer a distinct command/low/high phase")
+| require($rate_policy.states == [{
+      name: "entry",
+      parameters: [],
+      return_type: {kind: "named", name: "LegacyPitBootstrapRatePolicy"},
+      contracts: [],
+      statements: [{kind: "expression", value: $selected_rate_policy}]
+    }] and
+    field_value($selected_rate_policy; "input_hz").text == "1193182" and
+    field_value($selected_rate_policy; "target_hz").text == "100" and
+    field_value($selected_rate_policy; "divisor").text == "11932" and
+    field_value($selected_rate_policy; "divisor_low").text == "0x9c" and
+    field_value($selected_rate_policy; "divisor_high").text == "0x2e" and
+    ((1193182 + 50) / 100 | floor) == 11932;
+    "legacy bootstrap PIT policy no longer selects the rounded 100 Hz divisor 0x2e9c")
 | require(($prepare_masked.states | length) == 1 and
           $prepare_masked.states[0].name == "prepare_masked" and
           [$prepare_masked.states[0].parameters[] | {
@@ -224,9 +242,7 @@ def portio_contract:
               end
             )
           }] == [
-            { name: "self",         is_self: true,  is_mutable: true,  type: "Self" },
-            { name: "divisor_low",  is_self: false, is_mutable: false, type: "u8" },
-            { name: "divisor_high", is_self: false, is_mutable: false, type: "u8" }
+            { name: "self", is_self: true, is_mutable: true, type: "Self" }
           ] and
           $prepare_operations == [
             {
@@ -240,12 +256,12 @@ def portio_contract:
               receiver: ["self", "pit"],
               target: "program_channel0_rate_generator",
               arguments: [
-                { kind: "name", path: ["divisor_low"] },
-                { kind: "name", path: ["divisor_high"] }
+                { kind: "integer", text: "0x9c" },
+                { kind: "integer", text: "0x2e" }
               ]
             }
           ];
-    "masked legacy-timer preparation no longer remaps before exact divisor programming")
+    "masked legacy-timer preparation no longer owns the exact 100 Hz divisor policy")
 | require($unmask_operations == [
       {
         target: "asm#port_out",
@@ -269,7 +285,8 @@ def portio_contract:
     "x86_machine_check_entry_stack",
     "x86_legacy_timer_entry_stack",
     "x86_bootstrap_exception_entry_policy",
-    "X86IdtGateLayout::plan"
+    "X86IdtGateLayout::plan",
+    "legacy_pit_bootstrap_rate_policy"
     | contract_machine($contracts; .)
   ] as $pure_contracts
 | [
@@ -322,7 +339,7 @@ def portio_contract:
         frames: [{
           state: "prepare_masked",
           completeness: "complete",
-          paths: ["$P0", "$P1", "self.pic", "self.pit"]
+          paths: ["self.pic", "self.pit"]
         }]
       }
     ];

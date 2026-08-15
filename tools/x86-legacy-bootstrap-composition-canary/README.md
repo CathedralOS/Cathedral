@@ -17,11 +17,12 @@ The canary pins these cross-package facts:
 - the IDT gate remains a pure fixed 16-byte plan;
 - PIC remapping ends with both controllers masked;
 - PIT programming is a distinct command → low byte → high byte phase;
+- the legacy provider owns a QEMU/bootstrap-only 100 Hz policy, selecting the
+  rounded divisor 11,932 (`0x2e9c`) from the PC-compatible 1,193,182 Hz input;
 - masked provider preparation calls PIC remapping first and PIT programming
-  second, forwarding the caller's divisor bytes exactly;
-- its checked frame is complete and limited to those divisor inputs plus
-  `self.pic` and `self.pit`; each hardware leaf remains confined to its exact
-  receiver/input frame;
+  second with exact low/high bytes `0x9c`, `0x2e` and no caller-selected rate;
+- its checked frame is complete and limited to `self.pic` and `self.pit`; each
+  hardware leaf remains confined to its exact receiver/input frame;
 - masked provider preparation retains only `PortIo`, performs no direct
   assembly, and cannot unmask the timer;
 - timer unmasking is a later distinct operation admitting only master IRQ0;
@@ -40,5 +41,7 @@ builds that sibling with Cargo, in that order. Artifact validation uses `jq`.
 
 This is deliberately pre-installation acceptance. It does not materialize or
 publish an IDT, provision stacks, invoke any provider, unmask real hardware,
-enable CPU interrupts, choose a timer frequency, or claim the still-blocked
-WCSU and checked IDT-installation milestones.
+enable CPU interrupts, or claim the still-blocked WCSU and checked
+IDT-installation milestones. The selected periodic rate belongs only to the
+first QEMU/PIC bring-up path; production LAPIC timing remains tickless and
+one-shot.

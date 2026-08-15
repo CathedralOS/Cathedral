@@ -8,6 +8,36 @@
 
 use core::pic_8259;
 use core::pit_8254;
+use facts::pit_8254;
+
+// First-provider policy only. The PC-compatible 1,193,182 Hz PIT input divided
+// by 11,932 yields approximately 99.9985 Hz, close to Cathedral's selected
+// 100 Hz periodic QEMU/bootstrap rate. Production LAPIC timing remains
+// calibrated, tickless, and one-shot.
+pub const LEGACY_BOOTSTRAP_TIMER_HZ: u32 = 100;
+pub const LEGACY_BOOTSTRAP_PIT_DIVISOR: u16 = 11_932;
+pub const LEGACY_BOOTSTRAP_PIT_DIVISOR_LOW: u8 = 0x9C;
+pub const LEGACY_BOOTSTRAP_PIT_DIVISOR_HIGH: u8 = 0x2E;
+
+// Ordinary policy data for audit/reporting. It grants no PortIo authority and
+// cannot program or unmask the device.
+pub data LegacyPitBootstrapRatePolicy {
+    input_hz: u32;
+    target_hz: u32;
+    divisor: u16;
+    divisor_low: u8;
+    divisor_high: u8;
+}
+
+pub machine legacy_pit_bootstrap_rate_policy() -> LegacyPitBootstrapRatePolicy {
+    LegacyPitBootstrapRatePolicy {
+        input_hz: PIT_INPUT_HZ,
+        target_hz: LEGACY_BOOTSTRAP_TIMER_HZ,
+        divisor: LEGACY_BOOTSTRAP_PIT_DIVISOR,
+        divisor_low: LEGACY_BOOTSTRAP_PIT_DIVISOR_LOW,
+        divisor_high: LEGACY_BOOTSTRAP_PIT_DIVISOR_HIGH,
+    }
+}
 
 pub data LegacyPicPitTimerProvider {
     pic: Pic8259;
@@ -16,15 +46,16 @@ pub data LegacyPicPitTimerProvider {
 
 // Establish the legacy controllers' safe pre-installation state in one
 // checked transaction: first remap the PIC while masking every input, then
-// program PIT channel 0 using divisor bytes already validated by the caller.
-// No timer frequency is selected here, and IRQ0 remains masked on return.
+// program PIT channel 0 with Cathedral's fixed bootstrap divisor. IRQ0 remains
+// masked on return.
 pub machine LegacyPicPitTimerProvider::prepare_masked(
-    &mut self,
-    divisor_low: u8,
-    divisor_high: u8
+    &mut self
 )
 reaches PortIo
 {
     self.pic.remap_masked();
-    self.pit.program_channel0_rate_generator(divisor_low, divisor_high);
+    self.pit.program_channel0_rate_generator(
+        LEGACY_BOOTSTRAP_PIT_DIVISOR_LOW,
+        LEGACY_BOOTSTRAP_PIT_DIVISOR_HIGH
+    );
 }

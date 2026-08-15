@@ -41,12 +41,13 @@ The interrupt-provider bootstrap also has checked 8259 PIC and 8254 PIT
 port-operation helpers plus checked x2APIC one-shot, stop, and acknowledgement
 MSR helpers. They retain `PortIo` or `MachineControl` reach from parsed
 instruction contracts and deliberately stop short of installing an IDT,
-unmasking a live root, enabling CPU interrupts, or asserting a platform timer
-frequency. A Cathedral-owned masked preparation transaction now remaps the PIC
-with every input masked and then programs PIT channel 0 from caller-validated
-divisor bytes; the separate timer-unmask operation remains ordered after
-exception-IDT publication. These are provider operations, not ambient driver
-access.
+unmasking a live root, or enabling CPU interrupts. A Cathedral-owned masked
+preparation transaction now selects the QEMU/bootstrap-only 100 Hz periodic PIT
+policy (divisor 11,932 / `0x2e9c`), remaps the PIC with every input masked, and
+then programs PIT channel 0 with its fixed low/high bytes. The separate
+timer-unmask operation remains ordered after exception-IDT publication.
+Production LAPIC timing remains calibrated, tickless, and one-shot. These are
+provider operations, not ambient driver access.
 `x86_interrupt_profile.omg` composes the pure vector and stack facts into the
 four initial vector-to-stack assignments and one total fatal-diagnostic
 bootstrap exception-floor policy over slots 0–31. The latter couples each
