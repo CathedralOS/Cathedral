@@ -20,8 +20,9 @@ ambient accretion.
 
 **Status (2026-07-24).** In-progress hardware transcription:
 `facts/uart_16550` for serial; `facts/x86_exception_vectors` for the complete
-pre-timer exception floor; `facts/x86_idt_gate` for the compiler-validated
-16-byte gate layout and symbolic entry fragmentation;
+pre-timer exception floor and its error-code delivery categories, with optional
+AMD slots still requiring a selected CPU profile; `facts/x86_idt_gate` for the
+compiler-validated 16-byte gate layout and symbolic entry fragmentation;
 `facts/x86_page_table_entry` for the compiler-validated packed 64-bit paging
 entry under the architectural 52-bit physical-address envelope;
 `facts/x86_interrupt_stacks` for the single-source IST/analysis-class

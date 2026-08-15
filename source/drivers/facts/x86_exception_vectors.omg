@@ -43,3 +43,70 @@ pub const AMD_EXCEPTION_HYPERVISOR_INJECTION:         u8 = 28;
 pub const AMD_EXCEPTION_VMM_COMMUNICATION:            u8 = 29;
 pub const AMD_EXCEPTION_SECURITY:                     u8 = 30;
 pub const X86_EXCEPTION_RESERVED_31:                  u8 = 31;
+
+// Exception-entry stack normalization also depends on whether the processor
+// pushes an error code. These categories are transcribed from Intel SDM Vol. 3A
+// chapter 6 and AMD APM Vol. 2 chapter 8. AMD's optional 28..30 meanings remain
+// unresolved until Cathedral selects a CPU profile; this fact does not silently
+// assign those vendor exceptions to every x86-64 target.
+pub data X86ExceptionDeliveryShape {
+    case NoArchitecturalException;
+    case WithoutErrorCode;
+    case WithErrorCode;
+    case CpuProfileRequired;
+}
+
+// Total delivery-shape fact for the complete pre-timer 0..31 floor. Reserved
+// slots still receive fatal gates, but they are not architectural exceptions.
+// A later generated-stub provider must refine `CpuProfileRequired` before it
+// can choose the exact stack-normalization sequence for an optional slot.
+pub machine x86_exception_delivery_shape(
+    vector: u8 [0..=31]
+) -> X86ExceptionDeliveryShape {
+    transition vector == X86_EXCEPTION_DOUBLE_FAULT ||
+        vector == X86_EXCEPTION_INVALID_TSS ||
+        vector == X86_EXCEPTION_SEGMENT_NOT_PRESENT ||
+        vector == X86_EXCEPTION_STACK_SEGMENT_FAULT ||
+        vector == X86_EXCEPTION_GENERAL_PROTECTION ||
+        vector == X86_EXCEPTION_PAGE_FAULT ||
+        vector == X86_EXCEPTION_ALIGNMENT_CHECK ||
+        vector == X86_EXCEPTION_CONTROL_PROTECTION {
+        true -> with_error_code()
+        _ -> vendor_profile(vector)
+    }
+
+    state vendor_profile(vector: u8 [0..=31]) -> X86ExceptionDeliveryShape {
+        transition vector >= AMD_EXCEPTION_HYPERVISOR_INJECTION &&
+            vector <= AMD_EXCEPTION_SECURITY {
+            true -> cpu_profile_required()
+            _ -> reserved(vector)
+        }
+    }
+
+    state reserved(vector: u8 [0..=31]) -> X86ExceptionDeliveryShape {
+        transition vector == X86_EXCEPTION_RESERVED_09 ||
+            vector == X86_EXCEPTION_RESERVED_15 ||
+            (vector >= X86_EXCEPTION_RESERVED_22 &&
+                vector <= X86_EXCEPTION_RESERVED_27) ||
+            vector == X86_EXCEPTION_RESERVED_31 {
+            true -> no_architectural_exception()
+            _ -> without_error_code()
+        }
+    }
+
+    state no_architectural_exception() -> X86ExceptionDeliveryShape {
+        X86ExceptionDeliveryShape::NoArchitecturalException
+    }
+
+    state without_error_code() -> X86ExceptionDeliveryShape {
+        X86ExceptionDeliveryShape::WithoutErrorCode
+    }
+
+    state with_error_code() -> X86ExceptionDeliveryShape {
+        X86ExceptionDeliveryShape::WithErrorCode
+    }
+
+    state cpu_profile_required() -> X86ExceptionDeliveryShape {
+        X86ExceptionDeliveryShape::CpuProfileRequired
+    }
+}

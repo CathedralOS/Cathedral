@@ -385,6 +385,14 @@ That composition is authored once and remains pure; later root admission and
 gate materialization must consume it rather than independently pairing vectors
 with stack numbers.
 
+Generated per-vector stubs must also normalize the hardware exception frame.
+The source fact package now classifies the total 0–31 floor as error-code,
+no-error-code, reserved, or CPU-profile-dependent delivery. The common
+error-code set is 8, 10–14, 17, and 21. Optional AMD meanings at 28–30 remain
+unresolved until Cathedral selects a CPU profile; the fact does not pretend
+that vendor assignments are universal. This is ordinary description data and
+does not itself create a stub or select a calling/state plan.
+
 Cathedral's first source-level gate-policy check is intentionally partial. It
 derives the total policy internally from the requested table slot, pairs an
 `X86IdtGate` candidate with its vector and fatal disposition, then rejects any

@@ -42,6 +42,11 @@ The prepared image conceptually contains:
 - zero-initialized backing storage or provisioning demands for the IDT, TSS,
   and early stacks.
 
+The exception-vector fact table already records whether each common exception
+arrives with a hardware error code and marks optional AMD slots 28–30 as
+CPU-profile-dependent. Stub generation must refine those optional slots from
+the selected target profile before choosing their stack-normalization sequence.
+
 UEFI understands the PE/COFF envelope, not Omega semantics. Under Secure Boot
 it authenticates the signed image, loads and relocates its sections, and starts
 its entry point. It does not validate Omega PCC, select handler providers,
