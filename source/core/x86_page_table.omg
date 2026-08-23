@@ -321,6 +321,144 @@ pub machine x86_validate_bootstrap_address_bound_page_table_entry(
     }
 }
 
+// One ordinary numeric step in a retained four-level walk description. The
+// table address identifies the possible 4-KiB table page, `index` selects one
+// of its 512 entries, and `entry_address` retains the exact byte address at
+// which the detached entry was observed. The address-bound entry records the
+// numeric target encoded by bits 12..51. None of these values proves that the
+// table or target exists, is backed, belongs to Cathedral, or may be read.
+pub data X86BootstrapPageTableWalkStep {
+    table_address: u64;
+    index: u64 [0..=511];
+    entry_address: u64;
+    entry: X86BootstrapAddressBoundPageTableEntryCandidate;
+}
+
+// A complete retained numeric description of one baseline four-level walk.
+// Named fields make the level order explicit. The descriptor remains ordinary
+// pre-authority data: it is not a mapping, hierarchy, placement, frame, TLB, or
+// installation claim, and it assigns no leaf/link semantics to the entry bits.
+pub data X86BootstrapFourLevelWalkDescriptor {
+    indices: X86BootstrapVirtualAddressIndices;
+    pml4: X86BootstrapPageTableWalkStep;
+    pdpt: X86BootstrapPageTableWalkStep;
+    pd: X86BootstrapPageTableWalkStep;
+    pt: X86BootstrapPageTableWalkStep;
+}
+
+pub data X86BootstrapFourLevelWalkDescriptorCheck {
+    case Rejected;
+    case NumericallyConsistent(
+        descriptor: X86BootstrapFourLevelWalkDescriptor
+    );
+}
+
+// Revalidate one numeric step without assigning a paging role to its entry.
+// A 4-KiB-aligned table base and a bounded index determine the exact 8-byte
+// entry address. The detached entry's target address and PFN must also retain
+// the already-selected 52-bit physical geometry.
+machine x86_bootstrap_page_table_walk_step_is_consistent(
+    step: X86BootstrapPageTableWalkStep,
+    expected_index: u64 [0..=511]
+) -> bool {
+    let table_page_offset: u64 [0..=4095] =
+        step.table_address & X86_PAGE_OFFSET_MASK;
+    let target_page_offset: u64 [0..=4095] =
+        step.entry.physical_address & X86_PAGE_OFFSET_MASK;
+    let entry_offset: u64 [0..=4088] = step.index * 8;
+    // Alignment makes OR equivalent to addition here while keeping the
+    // bounded address composition visibly non-overflowing.
+    let expected_entry_address: u64 = step.table_address | entry_offset;
+    let expected_target_frame_number: u64 [0..=1099511627775] =
+        (step.entry.physical_address >> X86_PAGE_SHIFT) &
+        X86_PAGE_FRAME_NUMBER_MAX;
+    table_page_offset == 0 &&
+    step.table_address <= X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS &&
+    step.index == expected_index &&
+    step.entry_address == expected_entry_address &&
+    target_page_offset == 0 &&
+    step.entry.physical_address <=
+        X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS &&
+    step.entry.entry.frame_number == expected_target_frame_number
+}
+
+// Recompute every retained coordinate needed to replay the numeric walk. The
+// first three detached targets must name the next retained table page; the PT
+// entry's detached target is only checked as aligned address/PFN data. Success
+// does not establish that any entry is present, that large pages are disabled,
+// that the PT target is backed, or that a hardware translation exists.
+pub machine x86_validate_bootstrap_four_level_walk_descriptor(
+    candidate: X86BootstrapFourLevelWalkDescriptor
+) -> X86BootstrapFourLevelWalkDescriptorCheck {
+    let low_canonical_max: u64 = X86_BOOTSTRAP_LOW_CANONICAL_MAX;
+    let high_canonical_min: u64 = X86_BOOTSTRAP_HIGH_CANONICAL_MIN;
+    let pml4_index: u64 [0..=511] =
+        (candidate.indices.address >> 39) & X86_PAGE_TABLE_INDEX_MASK;
+    let pdpt_index: u64 [0..=511] =
+        (candidate.indices.address >> 30) & X86_PAGE_TABLE_INDEX_MASK;
+    let pd_index: u64 [0..=511] =
+        (candidate.indices.address >> 21) & X86_PAGE_TABLE_INDEX_MASK;
+    let pt_index: u64 [0..=511] =
+        (candidate.indices.address >> 12) & X86_PAGE_TABLE_INDEX_MASK;
+    let page_offset: u64 [0..=4095] =
+        candidate.indices.address & X86_PAGE_OFFSET_MASK;
+    let pml4_consistent: bool =
+        x86_bootstrap_page_table_walk_step_is_consistent(
+            candidate.pml4,
+            pml4_index
+        );
+    let pdpt_consistent: bool =
+        x86_bootstrap_page_table_walk_step_is_consistent(
+            candidate.pdpt,
+            pdpt_index
+        );
+    let pd_consistent: bool =
+        x86_bootstrap_page_table_walk_step_is_consistent(
+            candidate.pd,
+            pd_index
+        );
+    let pt_consistent: bool =
+        x86_bootstrap_page_table_walk_step_is_consistent(
+            candidate.pt,
+            pt_index
+        );
+    transition (
+        candidate.indices.address <= low_canonical_max ||
+        candidate.indices.address >= high_canonical_min
+    ) &&
+        candidate.indices.pml4_index == pml4_index &&
+        candidate.indices.pdpt_index == pdpt_index &&
+        candidate.indices.pd_index == pd_index &&
+        candidate.indices.pt_index == pt_index &&
+        candidate.indices.page_offset == page_offset &&
+        pml4_consistent &&
+        pdpt_consistent &&
+        pd_consistent &&
+        pt_consistent &&
+        candidate.pml4.entry.physical_address ==
+            candidate.pdpt.table_address &&
+        candidate.pdpt.entry.physical_address == candidate.pd.table_address &&
+        candidate.pd.entry.physical_address == candidate.pt.table_address
+    {
+        true -> accept_four_level_walk_descriptor(candidate)
+        _ -> reject_four_level_walk_descriptor()
+    }
+
+    state accept_four_level_walk_descriptor(
+        candidate: X86BootstrapFourLevelWalkDescriptor
+    ) -> X86BootstrapFourLevelWalkDescriptorCheck {
+        X86BootstrapFourLevelWalkDescriptorCheck::NumericallyConsistent {
+            descriptor: candidate,
+        }
+    }
+
+    state reject_four_level_walk_descriptor()
+        -> X86BootstrapFourLevelWalkDescriptorCheck
+    {
+        X86BootstrapFourLevelWalkDescriptorCheck::Rejected
+    }
+}
+
 // Ordinary candidate data. A future placed-page provider must bind this shape
 // to pre-reserved qualified storage; declaring the array grants no Extent,
 // capacity, placement, mapping, or installation authority.

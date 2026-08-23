@@ -43,8 +43,9 @@ run_omega --check --build-dir "$BUILD_DIR" "$CANARY_MAIN"
 TYPED="$BUILD_DIR/04_typed_trees.json"
 CONTRACTS="$BUILD_DIR/05_machine_contracts.json"
 ASSERTIONS="$CANARY_ROOT/assert-empty.jq"
+WALK_ASSERTIONS="$CANARY_ROOT/assert-walk.jq"
 
-for artifact in "$TYPED" "$CONTRACTS" "$ASSERTIONS"; do
+for artifact in "$TYPED" "$CONTRACTS" "$ASSERTIONS" "$WALK_ASSERTIONS"; do
   [[ -f "$artifact" ]] || {
     echo "error: expected compiler artifact is missing: $artifact" >&2
     exit 1
@@ -52,5 +53,6 @@ for artifact in "$TYPED" "$CONTRACTS" "$ASSERTIONS"; do
 done
 
 jq -s -e -f "$ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
+jq -s -e -f "$WALK_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 
 echo "Cathedral x86 empty-page-table canary passed"
