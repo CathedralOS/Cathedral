@@ -18,7 +18,7 @@ def expression_path:
     null
   end;
 
-def pure_operational_contract:
+def pure_contract:
   .contract.supply == "checked_body" and
   .contract.service_reach.interface == "internal_inferred" and
   .contract.synchronous_invocation == {
@@ -29,10 +29,7 @@ def pure_operational_contract:
   .implementation.checked_synchronous_invocations == [] and
   .implementation.checked_may_suspend == false and
   .implementation.checked_may_block == false and
-  .implementation.checked_crash_sites == [];
-
-def pure_contract:
-  pure_operational_contract and
+  .implementation.checked_crash_sites == [] and
   .implementation.checked_termination.kind == "terminates";
 
 def constrained_u64_field:
@@ -1030,8 +1027,7 @@ def type_signature:
             paths
           }] == [{state: "entry", completeness: "complete", paths: []}];
     "zero-entry helper gained effects, calls, writes, crashes, or nontermination")
-| require(($validator_contract | pure_operational_contract) and
-          $validator_contract.implementation.checked_termination.kind == "no_guarantee" and
+| require(($validator_contract | pure_contract) and
           ($validator_contract.implementation.checked_crash_calls | length) == 1 and
           $validator_contract.implementation.checked_crash_calls[0].target_machine ==
             "x86_scan_empty_page_table_page" and
@@ -1046,8 +1042,7 @@ def type_signature:
             paths: ["$P0", "self"]
           }];
     "empty-page wrapper gained effects or changed its exact by-value transfer frame")
-| require(($scanner_contract | pure_operational_contract) and
-          $scanner_contract.implementation.checked_termination.kind == "no_guarantee" and
+| require(($scanner_contract | pure_contract) and
           ($scanner_contract.implementation.checked_crash_calls | length) == 1 and
           $scanner_contract.implementation.checked_crash_calls[0].target_machine ==
             "x86_page_table_entry_is_zero" and
