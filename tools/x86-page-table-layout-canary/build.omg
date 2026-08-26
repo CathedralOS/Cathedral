@@ -1,5 +1,8 @@
 // Isolated pure-fact frontier for Cathedral's first x86 paging-word layout.
 
-machine build(b: &mut Build) {
-    b.depend("facts", path("facts"));
+machine build(builder: &mut Build) {
+    builder.package("cathedral-x86-page-table-layout-canary");
+    builder.depend_as("facts", Source::Path {
+        location: "facts"
+    });
 }

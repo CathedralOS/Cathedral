@@ -20,11 +20,12 @@ def expression_path:
 
 def pure_contract:
   .contract.supply == "checked_body" and
-  .contract.service_reach.interface == "internal_inferred" and
-  .contract.synchronous_invocation == {
-    interface: "internal_inferred",
-    targets: []
-  } and
+  (.contract.service_reach.interface == "internal_inferred" or
+   .contract.service_reach.interface == "published_ceiling") and
+  (.contract.service_reach.services // []) == [] and
+  (.contract.synchronous_invocation.interface == "internal_inferred" or
+   .contract.synchronous_invocation.interface == "published_ceiling") and
+  .contract.synchronous_invocation.targets == [] and
   .implementation.checked_service_reach == [] and
   .implementation.checked_synchronous_invocations == [] and
   .implementation.checked_may_suspend == false and

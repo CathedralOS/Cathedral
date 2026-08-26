@@ -459,6 +459,64 @@ pub machine x86_validate_bootstrap_four_level_walk_descriptor(
     }
 }
 
+// Ordinary role-policy validation for the selected four-level 4-KiB walk.
+// Numeric consistency is replayed first, so the descriptor accepted here is
+// still bound to its exact canonical indexes, entry addresses, PFNs, and three
+// inter-table links. The upper three entries must be present non-large-page
+// links, and the PT entry must be present as the final 4-KiB leaf. Bit 7 on the
+// PT entry remains caller-supplied PAT data, and every other permission/cache
+// field remains uninterpreted. Success grants no backing, mapping, placement,
+// TLB, installation, CR3, or machine-control authority.
+pub data X86BootstrapFourLevelWalkRoleCheck {
+    case Rejected;
+    case RoleConsistent(
+        descriptor: X86BootstrapFourLevelWalkDescriptor
+    );
+}
+
+pub machine x86_validate_bootstrap_four_level_walk_roles(
+    candidate: X86BootstrapFourLevelWalkDescriptor
+) -> X86BootstrapFourLevelWalkRoleCheck {
+    let numeric: X86BootstrapFourLevelWalkDescriptorCheck =
+        x86_validate_bootstrap_four_level_walk_descriptor(candidate);
+    transition numeric {
+        X86BootstrapFourLevelWalkDescriptorCheck::NumericallyConsistent {
+            descriptor
+        } -> validate_four_level_walk_roles(descriptor)
+        _ -> reject_four_level_walk_roles()
+    }
+
+    state validate_four_level_walk_roles(
+        descriptor: X86BootstrapFourLevelWalkDescriptor
+    ) -> X86BootstrapFourLevelWalkRoleCheck {
+        transition descriptor.pml4.entry.entry.present &&
+            !descriptor.pml4.entry.entry.page_size_or_pat &&
+            descriptor.pdpt.entry.entry.present &&
+            !descriptor.pdpt.entry.entry.page_size_or_pat &&
+            descriptor.pd.entry.entry.present &&
+            !descriptor.pd.entry.entry.page_size_or_pat &&
+            descriptor.pt.entry.entry.present
+        {
+            true -> accept_four_level_walk_roles(descriptor)
+            _ -> reject_four_level_walk_roles()
+        }
+    }
+
+    state accept_four_level_walk_roles(
+        descriptor: X86BootstrapFourLevelWalkDescriptor
+    ) -> X86BootstrapFourLevelWalkRoleCheck {
+        X86BootstrapFourLevelWalkRoleCheck::RoleConsistent {
+            descriptor: descriptor,
+        }
+    }
+
+    state reject_four_level_walk_roles()
+        -> X86BootstrapFourLevelWalkRoleCheck
+    {
+        X86BootstrapFourLevelWalkRoleCheck::Rejected
+    }
+}
+
 // Ordinary candidate data. A future placed-page provider must bind this shape
 // to pre-reserved qualified storage; declaring the array grants no Extent,
 // capacity, placement, mapping, or installation authority.

@@ -139,6 +139,14 @@ address candidates: one helper derives the canonical 39/30/21/12 walk indexes
 and 12-bit offset, while a second recomputes them and rejects retained-field
 drift. Success establishes only consistency with the selected 48-bit profile;
 it proves no hierarchy, mapping, backing, placement, or address-space claim.
+Cathedral can additionally retain one exact four-level walk descriptor and
+independently replay its indexes, entry addresses, PFNs, and three inter-table
+links. A separate role validator first requires that numeric success, then
+requires present non-large-page PML4/PDPT/PD links and a present PT leaf before
+returning the exact descriptor unchanged. Bit 7 on the PT entry remains
+caller-supplied PAT data, and all other permission/cache fields remain
+uninterpreted. Role consistency still grants no backing, mapping, placement,
+TLB, installation, CR3, or machine-control authority.
 Likewise, Cathedral can independently revalidate that a retained detached PTE
 candidate still has an aligned, in-envelope physical address and the matching
 40-bit PFN. Every other entry field remains uninterpreted until later

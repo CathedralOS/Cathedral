@@ -24,7 +24,12 @@ aligned table-page address, its bounded index, the exact 8-byte entry address,
 and one detached address-bound entry. Its validator recomputes all four indexes,
 all four entry locations and PFNs, and the three numeric links from each upper
 entry target to the next retained table page. It does not interpret `present`,
-`page_size_or_pat`, permissions, or any other role-specific entry field. One
+`page_size_or_pat`, permissions, or any other role-specific entry field. A
+separate role validator consumes only a numerically consistent descriptor,
+requires present non-large-page PML4/PDPT/PD links and a present PT leaf, and
+returns that exact descriptor unchanged. The PT entry's role-dependent bit
+remains caller-supplied PAT data, and every other permission/cache field stays
+uninterpreted. One
 ordinary page candidate remains exactly 512 existing 8-byte x86 PTE values. A
 checked decreasing-fuel scan visits all 512 slots and accepts only when every
 one of the fourteen PTE fields has exact zero
@@ -59,3 +64,6 @@ Likewise, a numerically consistent walk descriptor proves only that its retained
 coordinates can replay one four-level sequence. It does not prove that any
 table or target exists, that an entry is present, that the sequence is a valid
 hardware translation, or that Cathedral owns or may access any named address.
+Role consistency adds only the selected 4-KiB walk's present/link-versus-leaf
+bit policy; it still grants no backing, mapping, placement, TLB, installation,
+CR3, or machine-control authority.

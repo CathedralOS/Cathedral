@@ -38,7 +38,16 @@ now rejects the noncanonical 48-bit address hole and derives the four bounded
 page-walk indexes plus byte offset while retaining the original numeric address.
 An ordinary validator recomputes that canonical decomposition and rejects any
 retained address/index/offset drift before later hierarchy consumers use it.
-Those coordinates grant no mapping fact. A second ordinary helper checks 4-KiB
+Those coordinates grant no mapping fact. Cathedral also assembles one exact
+four-level numeric walk descriptor and independently replays all four indexes,
+entry addresses, PFNs, and three inter-table links. A following ordinary role
+validator accepts only that numerically consistent descriptor, requires the
+PML4/PDPT/PD entries to be present non-large-page links and the PT entry to be
+present, and returns the exact descriptor unchanged. The PT entry's
+role-dependent bit 7 remains caller-supplied PAT data; every other
+permission/cache field remains uninterpreted. Neither validator grants backing,
+mapping, placement, TLB, installation, CR3, or machine-control authority. A
+second ordinary helper checks 4-KiB
 alignment and the 52-bit physical-address envelope, then retains the candidate
 address with its bounded 40-bit PFN. That numeric geometry grants no physical
 source, frame, backing, or mapping authority. A detached PTE composer derives
