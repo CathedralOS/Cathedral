@@ -47,6 +47,14 @@ present, and returns the exact descriptor unchanged. The PT entry's
 role-dependent bit 7 remains caller-supplied PAT data; every other
 permission/cache field remains uninterpreted. Neither validator grants backing,
 mapping, placement, TLB, installation, CR3, or machine-control authority. A
+following endpoint validator retains one requested virtual page base and
+physical frame base beside that descriptor. It accepts only role consistency,
+then requires the virtual endpoint to equal the retained canonical address with
+zero page offset and the physical endpoint to equal the PT entry's retained
+target. Success returns both exact endpoints with the validated descriptor but
+chooses no identity/higher-half layout or permission policy and grants no
+backing, hierarchy-page, mapping, placement, TLB, installation, CR3, or
+machine-control authority. A
 second ordinary helper checks 4-KiB
 alignment and the 52-bit physical-address envelope, then retains the candidate
 address with its bounded 40-bit PFN. That numeric geometry grants no physical

@@ -45,8 +45,9 @@ CONTRACTS="$BUILD_DIR/05_machine_contracts.json"
 ASSERTIONS="$CANARY_ROOT/assert-empty.jq"
 WALK_ASSERTIONS="$CANARY_ROOT/assert-walk.jq"
 ROLE_ASSERTIONS="$CANARY_ROOT/assert-roles.jq"
+ENDPOINT_ASSERTIONS="$CANARY_ROOT/assert-endpoints.jq"
 
-for artifact in "$TYPED" "$CONTRACTS" "$ASSERTIONS" "$WALK_ASSERTIONS" "$ROLE_ASSERTIONS"; do
+for artifact in "$TYPED" "$CONTRACTS" "$ASSERTIONS" "$WALK_ASSERTIONS" "$ROLE_ASSERTIONS" "$ENDPOINT_ASSERTIONS"; do
   [[ -f "$artifact" ]] || {
     echo "error: expected compiler artifact is missing: $artifact" >&2
     exit 1
@@ -56,5 +57,6 @@ done
 jq -s -e -f "$ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 jq -s -e -f "$WALK_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 jq -s -e -f "$ROLE_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
+jq -s -e -f "$ENDPOINT_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 
 echo "Cathedral x86 empty-page-table canary passed"

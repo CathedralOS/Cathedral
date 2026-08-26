@@ -517,6 +517,83 @@ pub machine x86_validate_bootstrap_four_level_walk_roles(
     }
 }
 
+// Ordinary numeric endpoints bound to one role-consistent four-level 4-KiB
+// walk. The virtual endpoint must be the exact page base retained by the walk,
+// and the physical endpoint must be the exact frame base retained by its PT
+// entry. This intent data chooses no virtual layout or permission/cache policy
+// and grants no Extent, backing, hierarchy-page, mapping, placement, TLB,
+// installation, CR3, or machine-control authority.
+pub data X86BootstrapFourKilobyteWalkEndpoints {
+    virtual_page_address: u64;
+    physical_frame_address: u64;
+    descriptor: X86BootstrapFourLevelWalkDescriptor;
+}
+
+pub data X86BootstrapFourKilobyteWalkEndpointCheck {
+    case Rejected;
+    case EndpointConsistent(
+        candidate: X86BootstrapFourKilobyteWalkEndpoints
+    );
+}
+
+pub machine x86_validate_bootstrap_four_kilobyte_walk_endpoints(
+    candidate: X86BootstrapFourKilobyteWalkEndpoints
+) -> X86BootstrapFourKilobyteWalkEndpointCheck {
+    let virtual_page_address: u64 = candidate.virtual_page_address;
+    let physical_frame_address: u64 = candidate.physical_frame_address;
+    let roles: X86BootstrapFourLevelWalkRoleCheck =
+        x86_validate_bootstrap_four_level_walk_roles(candidate.descriptor);
+    transition roles {
+        X86BootstrapFourLevelWalkRoleCheck::RoleConsistent {
+            descriptor
+        } -> validate_four_kilobyte_walk_endpoints(
+            virtual_page_address,
+            physical_frame_address,
+            descriptor
+        )
+        _ -> reject_four_kilobyte_walk_endpoints()
+    }
+
+    state validate_four_kilobyte_walk_endpoints(
+        virtual_page_address: u64,
+        physical_frame_address: u64,
+        descriptor: X86BootstrapFourLevelWalkDescriptor
+    ) -> X86BootstrapFourKilobyteWalkEndpointCheck {
+        transition virtual_page_address == descriptor.indices.address &&
+            descriptor.indices.page_offset == 0 &&
+            physical_frame_address ==
+                descriptor.pt.entry.physical_address
+        {
+            true -> accept_four_kilobyte_walk_endpoints(
+                virtual_page_address,
+                physical_frame_address,
+                descriptor
+            )
+            _ -> reject_four_kilobyte_walk_endpoints()
+        }
+    }
+
+    state accept_four_kilobyte_walk_endpoints(
+        virtual_page_address: u64,
+        physical_frame_address: u64,
+        descriptor: X86BootstrapFourLevelWalkDescriptor
+    ) -> X86BootstrapFourKilobyteWalkEndpointCheck {
+        X86BootstrapFourKilobyteWalkEndpointCheck::EndpointConsistent {
+            candidate: X86BootstrapFourKilobyteWalkEndpoints {
+                virtual_page_address: virtual_page_address,
+                physical_frame_address: physical_frame_address,
+                descriptor: descriptor,
+            },
+        }
+    }
+
+    state reject_four_kilobyte_walk_endpoints()
+        -> X86BootstrapFourKilobyteWalkEndpointCheck
+    {
+        X86BootstrapFourKilobyteWalkEndpointCheck::Rejected
+    }
+}
+
 // Ordinary candidate data. A future placed-page provider must bind this shape
 // to pre-reserved qualified storage; declaring the array grants no Extent,
 // capacity, placement, mapping, or installation authority.

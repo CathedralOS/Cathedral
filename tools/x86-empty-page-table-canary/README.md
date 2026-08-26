@@ -29,7 +29,12 @@ separate role validator consumes only a numerically consistent descriptor,
 requires present non-large-page PML4/PDPT/PD links and a present PT leaf, and
 returns that exact descriptor unchanged. The PT entry's role-dependent bit
 remains caller-supplied PAT data, and every other permission/cache field stays
-uninterpreted. One
+uninterpreted. A following endpoint validator retains one requested virtual
+page base and physical frame base beside the descriptor. It accepts only the
+role-consistent descriptor, requires the requested virtual address to equal its
+retained canonical address with exact zero page offset, and requires the
+requested physical address to equal the PT entry's retained target. Success
+returns both endpoint values with the role-validated descriptor. One
 ordinary page candidate remains exactly 512 existing 8-byte x86 PTE values. A
 checked decreasing-fuel scan visits all 512 slots and accepts only when every
 one of the fourteen PTE fields has exact zero
@@ -67,3 +72,6 @@ hardware translation, or that Cathedral owns or may access any named address.
 Role consistency adds only the selected 4-KiB walk's present/link-versus-leaf
 bit policy; it still grants no backing, mapping, placement, TLB, installation,
 CR3, or machine-control authority.
+Endpoint consistency likewise records only numeric intent. It chooses no
+identity or higher-half layout and grants no Extent, hierarchy-page, mapping,
+backing, placement, TLB, installation, CR3, or machine-control authority.

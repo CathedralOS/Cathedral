@@ -147,6 +147,14 @@ returning the exact descriptor unchanged. Bit 7 on the PT entry remains
 caller-supplied PAT data, and all other permission/cache fields remain
 uninterpreted. Role consistency still grants no backing, mapping, placement,
 TLB, installation, CR3, or machine-control authority.
+An ordinary endpoint carrier can then retain one requested virtual page base
+and physical frame base beside that role-consistent descriptor. Its validator
+requires the virtual address to equal the descriptor's retained canonical
+address with exact zero page offset and the physical address to equal the PT
+entry's retained target. The exact values and validated descriptor return
+together. This records numeric intent only: it chooses no identity or
+higher-half layout and grants no Extent, backing, hierarchy-page, mapping,
+placement, TLB, installation, CR3, or machine-control authority.
 Likewise, Cathedral can independently revalidate that a retained detached PTE
 candidate still has an aligned, in-envelope physical address and the matching
 40-bit PFN. Every other entry field remains uninterpreted until later
