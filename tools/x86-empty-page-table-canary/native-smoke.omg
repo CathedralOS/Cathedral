@@ -1,0 +1,13 @@
+// Native hard-root smoke: importing Cathedral's complete x86 page-table core
+// must lower even though this host-only entry point exercises no paging authority.
+
+use omega::language::std::console;
+use core::x86_page_table;
+
+data Main {
+    console: Console;
+}
+
+machine Main::main(&mut self) {
+    self.console.exit_process(70);
+}

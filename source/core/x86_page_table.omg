@@ -774,11 +774,11 @@ pub machine x86_validate_bootstrap_single_entry_page_image(
             candidate.step.index
         );
     transition step_consistent && candidate.step.entry.entry.present {
-        true -> x86_scan_bootstrap_single_entry_page_image(
+        true -> (x86_scan_bootstrap_single_entry_page_image(
             candidate,
             X86_PAGE_TABLE_ENTRY_COUNT,
             true
-        )
+        ))
         _ -> reject_bootstrap_single_entry_page_image()
     }
 

@@ -42,10 +42,14 @@ encoding. Success returns the complete runtime-relevant candidate; a dirty slot
 rejects the whole page, and no partial result escapes. A separate final-image
 validator pairs one page with one retained numeric walk step, replays that
 step's table/entry-address/PFN geometry, and requires its selected entry to be
-present. Its checked 512-slot scan requires exact equality across all fourteen
+present. It enters the scanner through explicit parenthesized value-call syntax
+rather than a named state-transition spelling. Its checked 512-slot scan
+requires exact equality across all fourteen
 PTE fields at the retained index and the existing exact-zero policy everywhere
 else. Any drift rejects the whole image; success returns the exact step and
-complete page unchanged.
+complete page unchanged. The harness also compiles the complete imported x86
+page-table core through a minimal macOS ARM64 hard root and executes that smoke
+image, pinning native lowering independently of the structural reports.
 
 Run:
 

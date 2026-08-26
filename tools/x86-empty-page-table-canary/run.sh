@@ -9,14 +9,21 @@ OMEGA_REPO="${OMEGA_REPO:-$REPO_ROOT/../Omega}"
 SCRATCH_DIR="$(mktemp -d "${TMPDIR:-/tmp}/cathedral-x86-empty-page-table.XXXXXX")"
 PROJECT_DIR="$SCRATCH_DIR/project"
 BUILD_DIR="$SCRATCH_DIR/artifacts"
+NATIVE_PROJECT_DIR="$SCRATCH_DIR/native-project"
+NATIVE_BUILD_DIR="$SCRATCH_DIR/native-artifacts"
 trap 'rm -rf "$SCRATCH_DIR"' EXIT
 
-mkdir -p "$PROJECT_DIR"
+mkdir -p "$PROJECT_DIR" "$NATIVE_PROJECT_DIR"
 install -m 0644 "$CANARY_ROOT/main.omg" "$PROJECT_DIR/main.omg"
 install -m 0644 "$CANARY_ROOT/build.omg" "$PROJECT_DIR/build.omg"
 ln -s "$REPO_ROOT/source/core" "$PROJECT_DIR/core"
 ln -s "$REPO_ROOT/source/drivers/facts" "$PROJECT_DIR/facts"
 CANARY_MAIN="$PROJECT_DIR/main.omg"
+install -m 0644 "$CANARY_ROOT/native-smoke.omg" "$NATIVE_PROJECT_DIR/main.omg"
+install -m 0644 "$CANARY_ROOT/build-native-smoke.omg" "$NATIVE_PROJECT_DIR/build.omg"
+ln -s "$REPO_ROOT/source/core" "$NATIVE_PROJECT_DIR/core"
+ln -s "$REPO_ROOT/source/drivers/facts" "$NATIVE_PROJECT_DIR/facts"
+NATIVE_MAIN="$NATIVE_PROJECT_DIR/main.omg"
 
 run_omega() {
   if [[ -n "${OMEGA_BIN:-}" && -x "${OMEGA_BIN:-}" ]]; then
@@ -62,5 +69,20 @@ jq -s -e -f "$ROLE_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 jq -s -e -f "$ENDPOINT_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 jq -s -e -f "$SINGLE_ENTRY_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 jq -s -e -f "$FOUR_PAGE_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
+
+run_omega --build-dir "$NATIVE_BUILD_DIR" --target macos_arm64 "$NATIVE_MAIN"
+NATIVE_EXECUTABLE="$NATIVE_BUILD_DIR/omega-program"
+[[ -x "$NATIVE_EXECUTABLE" ]] || {
+  echo "error: expected native smoke executable is missing: $NATIVE_EXECUTABLE" >&2
+  exit 1
+}
+set +e
+"$NATIVE_EXECUTABLE"
+NATIVE_STATUS=$?
+set -e
+[[ "$NATIVE_STATUS" -eq 70 ]] || {
+  echo "error: native x86-core import smoke exited $NATIVE_STATUS, expected 70" >&2
+  exit 1
+}
 
 echo "Cathedral x86 empty-page-table canary passed"

@@ -187,16 +187,12 @@ def pure_contract:
     ];
     "page-image validator changed its exact prerequisite interface")
 | $validator.states[0].statements as $validator_entry
-| [
-    $validator_entry[]
-    | ..
-    | objects
-    | select(.kind? == "call")
-  ] as $geometry_calls
-| require(($geometry_calls | length) == 1 and
-          $geometry_calls[0].target ==
+| $validator_entry[0].initial_value as $geometry_call
+| $validator_entry[1].target as $scanner_target
+| require($geometry_call.kind == "call" and
+          $geometry_call.target ==
             "x86_bootstrap_page_table_walk_step_is_consistent" and
-          $geometry_calls[0].arguments == [
+          $geometry_call.arguments == [
             {
               kind: "member",
               receiver: {kind: "name", path: ["candidate"]},
@@ -212,9 +208,11 @@ def pure_contract:
               member: "index"
             }
           ] and
-          $validator_entry[1].target.path ==
-            ["x86_scan_bootstrap_single_entry_page_image"] and
-          $validator_entry[1].target.arguments == [
+          $scanner_target.kind == "value" and
+          $scanner_target.value.kind == "call" and
+          $scanner_target.value.target ==
+            "x86_scan_bootstrap_single_entry_page_image" and
+          $scanner_target.value.arguments == [
             {kind: "name", path: ["candidate"]},
             {kind: "integer", text: "512"},
             {kind: "boolean", value: true}
@@ -244,7 +242,7 @@ def pure_contract:
           $validator_entry[2].target.path ==
             ["reject_bootstrap_single_entry_page_image"] and
           $validator_entry[2].guard.kind == "always";
-    "page-image validation must require exact step geometry and a present entry")
+    "page-image validation must require exact step geometry and enter the scanner through an explicit value call")
 | require(($scanner.states | map(.name)) == [
       "entry",
       "settle_bootstrap_single_entry_page_image",
@@ -380,15 +378,35 @@ def pure_contract:
 | require(($validator_contract | pure_contract) and
           [$validator_contract.implementation.checked_crash_calls[] | {
             state, target_machine, surviving_buckets
-          }] == [{
-            state: "entry",
-            target_machine:
-              "x86_bootstrap_page_table_walk_step_is_consistent",
-            surviving_buckets: []
-          }] and
-          all($validator_contract.implementation.inferred_write_frames[];
-            .paths == []);
-    "page-image prerequisite gained effects, writes, crash survivors, or nontermination")
+          }] == [
+            {
+              state: "entry",
+              target_machine:
+                "x86_bootstrap_page_table_walk_step_is_consistent",
+              surviving_buckets: []
+            },
+            {
+              state: "entry",
+              target_machine:
+                "x86_scan_bootstrap_single_entry_page_image",
+              surviving_buckets: []
+            }
+          ] and
+          [$validator_contract.implementation.inferred_write_frames[] | {
+            state, completeness, paths
+          }] == [
+            {
+              state: "entry",
+              completeness: "complete",
+              paths: ["$P0", "self"]
+            },
+            {
+              state: "reject_bootstrap_single_entry_page_image",
+              completeness: "complete",
+              paths: []
+            }
+          ];
+    "page-image validation gained effects, external writes, crash survivors, or nontermination")
 | require(($scanner_contract | pure_contract) and
           [$scanner_contract.implementation.checked_crash_calls[] | {
             state, target_machine, surviving_buckets

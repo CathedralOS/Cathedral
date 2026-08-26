@@ -1,0 +1,15 @@
+// Hosted hard-root smoke for lowering Cathedral's imported x86 core.
+
+target macos_arm64 {
+}
+
+machine build(builder: &mut Build) {
+    builder.application("cathedral-x86-page-table-native-smoke");
+    builder.depend_as("core", Source::Path {
+        location: "core"
+    });
+    builder.depend_as("facts", Source::Path {
+        location: "facts"
+    });
+    builder.roots.bind(macos_arm64::ProgramEntry, Main::main);
+}
