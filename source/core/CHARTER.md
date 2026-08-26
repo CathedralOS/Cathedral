@@ -54,6 +54,13 @@ zero page offset and the physical endpoint to equal the PT entry's retained
 target. Success returns both exact endpoints with the validated descriptor but
 chooses no identity/higher-half layout or permission policy and grants no
 backing, hierarchy-page, mapping, placement, TLB, installation, CR3, or
+machine-control authority. Cathedral can also validate one ordinary final
+512-entry page image against one retained walk step: step geometry replays,
+the expected entry is present and field-for-field identical at its exact index,
+and a checked decreasing-fuel scan requires all 511 other entries to preserve
+the complete zero baseline. Success returns the exact step and page unchanged;
+all permission/cache/PAT fields remain caller data, and the result grants no
+backing, placement, hierarchy, mapping, TLB, installation, CR3, or
 machine-control authority. A
 second ordinary helper checks 4-KiB
 alignment and the 52-bit physical-address envelope, then retains the candidate

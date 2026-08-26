@@ -680,3 +680,153 @@ terminates by remaining;
         X86EmptyPageTablePagePolicyCheck::Rejected
     }
 }
+
+// One ordinary final page image paired with the numeric walk step that names
+// its sole populated slot. The retained table and target addresses remain
+// numeric data; this carrier establishes no backing, placement, hierarchy,
+// mapping, TLB, installation, CR3, or machine-control authority.
+pub data X86BootstrapSingleEntryPageImageCandidate {
+    step: X86BootstrapPageTableWalkStep;
+    page: X86PageTablePageCandidate;
+}
+
+pub data X86BootstrapSingleEntryPageImageCheck {
+    case Rejected;
+    case ImageConsistent(
+        candidate: X86BootstrapSingleEntryPageImageCandidate
+    );
+}
+
+// Exact schema equality for the PTE value stored in one selected slot. Every
+// permission, cache, software, address, and role-dependent field is copied as
+// uninterpreted data rather than inferred or normalized here.
+machine x86_page_table_entries_are_equal(
+    left: X86PageTableEntry,
+    right: X86PageTableEntry
+) -> bool {
+    left.present == right.present &&
+    left.writable == right.writable &&
+    left.user == right.user &&
+    left.write_through == right.write_through &&
+    left.cache_disable == right.cache_disable &&
+    left.accessed == right.accessed &&
+    left.dirty == right.dirty &&
+    left.page_size_or_pat == right.page_size_or_pat &&
+    left.global == right.global &&
+    left.software_low == right.software_low &&
+    left.frame_number == right.frame_number &&
+    left.software_high == right.software_high &&
+    left.protection_key == right.protection_key &&
+    left.no_execute == right.no_execute
+}
+
+// Keep the selected-versus-zero policy explicit while leaving the recursive
+// scanner with one visibly decreasing edge. The selected slot preserves every
+// retained entry field; an unselected slot preserves the exact-zero baseline.
+machine x86_bootstrap_single_entry_page_slot_is_consistent(
+    entry: X86PageTableEntry,
+    expected: X86PageTableEntry,
+    selected: bool
+) -> bool {
+    transition selected {
+        true -> compare_selected_bootstrap_page_entry(entry, expected)
+        _ -> compare_zero_bootstrap_page_entry(entry)
+    }
+
+    state compare_selected_bootstrap_page_entry(
+        entry: X86PageTableEntry,
+        expected: X86PageTableEntry
+    ) -> bool {
+        x86_page_table_entries_are_equal(entry, expected)
+    }
+
+    state compare_zero_bootstrap_page_entry(
+        entry: X86PageTableEntry
+    ) -> bool {
+        x86_page_table_entry_is_zero(entry)
+    }
+}
+
+// Validate the complete final image as one transaction. Step geometry and a
+// present selected entry are prerequisites; no partial image escapes failure.
+pub machine x86_validate_bootstrap_single_entry_page_image(
+    candidate: X86BootstrapSingleEntryPageImageCandidate
+) -> X86BootstrapSingleEntryPageImageCheck {
+    let step_consistent: bool =
+        x86_bootstrap_page_table_walk_step_is_consistent(
+            candidate.step,
+            candidate.step.index
+        );
+    transition step_consistent && candidate.step.entry.entry.present {
+        true -> x86_scan_bootstrap_single_entry_page_image(
+            candidate,
+            X86_PAGE_TABLE_ENTRY_COUNT,
+            true
+        )
+        _ -> reject_bootstrap_single_entry_page_image()
+    }
+
+    state reject_bootstrap_single_entry_page_image()
+        -> X86BootstrapSingleEntryPageImageCheck
+    {
+        X86BootstrapSingleEntryPageImageCheck::Rejected
+    }
+}
+
+// Visit indices 0..511 under checked decreasing fuel. Exactly the retained
+// step index uses field-for-field equality; every other slot must preserve the
+// existing exact-zero starting policy.
+machine x86_scan_bootstrap_single_entry_page_image(
+    candidate: X86BootstrapSingleEntryPageImageCandidate,
+    remaining: u64 [1..=512],
+    consistent_so_far: bool
+)
+terminates by remaining;
+-> X86BootstrapSingleEntryPageImageCheck
+{
+    let index: u64 [0..=511] = X86_PAGE_TABLE_ENTRY_COUNT - remaining;
+    let entry: X86PageTableEntry = candidate.page.entries[index];
+    let selected: bool = index == candidate.step.index;
+    let slot_consistent: bool =
+        x86_bootstrap_single_entry_page_slot_is_consistent(
+            entry,
+            candidate.step.entry.entry,
+            selected
+        );
+    let still_consistent: bool = consistent_so_far && slot_consistent;
+    transition remaining > 1 {
+        true -> x86_scan_bootstrap_single_entry_page_image(
+            candidate,
+            remaining - 1,
+            still_consistent
+        )
+        _ -> settle_bootstrap_single_entry_page_image(
+            candidate,
+            still_consistent
+        )
+    }
+
+    state settle_bootstrap_single_entry_page_image(
+        candidate: X86BootstrapSingleEntryPageImageCandidate,
+        consistent: bool
+    ) -> X86BootstrapSingleEntryPageImageCheck {
+        transition consistent {
+            true -> accept_bootstrap_single_entry_page_image(candidate)
+            _ -> reject_bootstrap_single_entry_page_image()
+        }
+    }
+
+    state accept_bootstrap_single_entry_page_image(
+        candidate: X86BootstrapSingleEntryPageImageCandidate
+    ) -> X86BootstrapSingleEntryPageImageCheck {
+        X86BootstrapSingleEntryPageImageCheck::ImageConsistent {
+            candidate: candidate,
+        }
+    }
+
+    state reject_bootstrap_single_entry_page_image()
+        -> X86BootstrapSingleEntryPageImageCheck
+    {
+        X86BootstrapSingleEntryPageImageCheck::Rejected
+    }
+}

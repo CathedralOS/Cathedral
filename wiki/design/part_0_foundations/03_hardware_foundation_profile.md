@@ -155,6 +155,14 @@ entry's retained target. The exact values and validated descriptor return
 together. This records numeric intent only: it chooses no identity or
 higher-half layout and grants no Extent, backing, hierarchy-page, mapping,
 placement, TLB, installation, CR3, or machine-control authority.
+One ordinary page-image validator then pairs a retained walk step with a
+complete 512-entry page candidate. It independently replays the step geometry,
+requires the selected entry to be present and field-for-field equal at the
+step's exact index, and uses checked decreasing fuel to require all 511 other
+entries to retain the complete zero encoding. The exact step and page return
+together on success. Permission, cache, software, and PAT fields remain
+uninterpreted, and image consistency grants no Extent, backing, placement,
+hierarchy, mapping, TLB, installation, CR3, or machine-control authority.
 Likewise, Cathedral can independently revalidate that a retained detached PTE
 candidate still has an aligned, in-envelope physical address and the matching
 40-bit PFN. Every other entry field remains uninterpreted until later

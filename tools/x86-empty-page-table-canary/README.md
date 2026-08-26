@@ -39,7 +39,13 @@ ordinary page candidate remains exactly 512 existing 8-byte x86 PTE values. A
 checked decreasing-fuel scan visits all 512 slots and accepts only when every
 one of the fourteen PTE fields has exact zero
 encoding. Success returns the complete runtime-relevant candidate; a dirty slot
-rejects the whole page, and no partial result escapes.
+rejects the whole page, and no partial result escapes. A separate final-image
+validator pairs one page with one retained numeric walk step, replays that
+step's table/entry-address/PFN geometry, and requires its selected entry to be
+present. Its checked 512-slot scan requires exact equality across all fourteen
+PTE fields at the retained index and the existing exact-zero policy everywhere
+else. Any drift rejects the whole image; success returns the exact step and
+complete page unchanged.
 
 Run:
 
@@ -75,3 +81,7 @@ CR3, or machine-control authority.
 Endpoint consistency likewise records only numeric intent. It chooses no
 identity or higher-half layout and grants no Extent, hierarchy-page, mapping,
 backing, placement, TLB, installation, CR3, or machine-control authority.
+Single-entry image consistency likewise validates ordinary data only. It does
+not prove that the page exists at the retained table address, that it was
+derived by mutating a qualified zero page, or that Cathedral may place, map, or
+install it.
