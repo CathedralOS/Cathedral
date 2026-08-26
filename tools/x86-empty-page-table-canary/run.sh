@@ -47,8 +47,9 @@ WALK_ASSERTIONS="$CANARY_ROOT/assert-walk.jq"
 ROLE_ASSERTIONS="$CANARY_ROOT/assert-roles.jq"
 ENDPOINT_ASSERTIONS="$CANARY_ROOT/assert-endpoints.jq"
 SINGLE_ENTRY_ASSERTIONS="$CANARY_ROOT/assert-single-entry-page.jq"
+FOUR_PAGE_ASSERTIONS="$CANARY_ROOT/assert-four-page-walk.jq"
 
-for artifact in "$TYPED" "$CONTRACTS" "$ASSERTIONS" "$WALK_ASSERTIONS" "$ROLE_ASSERTIONS" "$ENDPOINT_ASSERTIONS" "$SINGLE_ENTRY_ASSERTIONS"; do
+for artifact in "$TYPED" "$CONTRACTS" "$ASSERTIONS" "$WALK_ASSERTIONS" "$ROLE_ASSERTIONS" "$ENDPOINT_ASSERTIONS" "$SINGLE_ENTRY_ASSERTIONS" "$FOUR_PAGE_ASSERTIONS"; do
   [[ -f "$artifact" ]] || {
     echo "error: expected compiler artifact is missing: $artifact" >&2
     exit 1
@@ -60,5 +61,6 @@ jq -s -e -f "$WALK_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 jq -s -e -f "$ROLE_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 jq -s -e -f "$ENDPOINT_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 jq -s -e -f "$SINGLE_ENTRY_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
+jq -s -e -f "$FOUR_PAGE_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
 
 echo "Cathedral x86 empty-page-table canary passed"

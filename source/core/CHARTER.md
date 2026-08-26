@@ -61,8 +61,16 @@ and a checked decreasing-fuel scan requires all 511 other entries to preserve
 the complete zero baseline. Success returns the exact step and page unchanged;
 all permission/cache/PAT fields remain caller data, and the result grants no
 backing, placement, hierarchy, mapping, TLB, installation, CR3, or
-machine-control authority. A
-second ordinary helper checks 4-KiB
+machine-control authority. An ordinary four-page aggregator now first replays
+the endpoint/role/descriptor policy and independently validates one such exact
+single-entry image for each PML4, PDPT, PD, and PT level. It then requires each
+validated image step to match its named descriptor step exactly across table
+address, index, entry address, target address/PFN, and every uninterpreted PTE
+field. Success returns the exact endpoints, retained descriptor, and all four
+page images unchanged. This remains pre-authority validation: it proves no
+backing or placement, constructs no mapping, chooses no layout or permission
+policy, observes no TLB state, and grants no installation, CR3, or
+machine-control authority. A second ordinary helper checks 4-KiB
 alignment and the 52-bit physical-address envelope, then retains the candidate
 address with its bounded 40-bit PFN. That numeric geometry grants no physical
 source, frame, backing, or mapping authority. A detached PTE composer derives
