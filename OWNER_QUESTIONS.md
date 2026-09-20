@@ -30,25 +30,7 @@ standard.
 
 ## Open questions
 
-### UEFI semantic-entry resource carriers
-
-The physical-to-semantic UEFI adapter cannot be completed until Cathedral fixes
-the exact resource carriers and qualifications accepted by its semantic boot
-entry. The [entry-handoff specification](wiki/spec/boot/uefi_entry_handoff.md)
-now rules out naked-geometry grants but deliberately leaves the complete schema
-open.
-
-The owner choice is whether loaded-image storage, bootstrap storage, and the
-post-exit machine inventory are represented as transparent `Extent` carriers
-with precise qualifications, opaque linear resource types, or authority
-retained behind provider services. This choice determines which exact boundary
-occurrence establishes each root and which split, transfer, return, and
-firmware-exit obligations survive the adapter.
-
-**Recommendation:** use a scoped, nonconstructible firmware-session carrier
-while Boot Services are live; use qualified `Extent` values for ranges that are
-actually delegated to Cathedral; and use a linear post-exit inventory to
-account for ranges not yet delegated. The loaded image must receive only its
-real attenuated executable/storage rights, not an unrestricted physical-memory
-grant. Establish direct-entry parameters when there is only one consumer, while
-retaining the adapter and external-receipt provenance across inlining.
+None. The exact UEFI semantic-entry carrier schema is an
+implementation-decided specification gap, not currently an owner-level choice;
+the fixed invariants and the rule for closing that gap live in the
+[entry-handoff specification](wiki/spec/boot/uefi_entry_handoff.md).

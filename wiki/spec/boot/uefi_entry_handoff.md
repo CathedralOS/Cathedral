@@ -141,6 +141,35 @@ construction instead of qualifying a transparent `Extent`. That representation
 choice does not change the required external premise, correspondence proof, or
 conservation rules.
 
+## Implementation-selected semantic schema
+
+The exact source-visible carriers for the first complete adapter are deferred
+until that implementation makes their required dataflow and lifetime concrete.
+This is a specification-coverage gap, not an open license to weaken the rules
+above and not presently an owner-level question.
+
+The implementation may select qualified `Extent` values, opaque linear
+resource values, direct semantic-entry parameters, or an appropriate mixture.
+It must choose the narrowest representation that preserves the actual
+lifetime, rights, custody, conservation, and return obligations:
+
+- firmware calls that remain available across multiple operations require one
+  scoped boot-phase carrier or an equivalently checked borrow;
+- a range delegated for independent splitting, mapping, or transfer requires a
+  first-class authority-bearing range value;
+- memory not yet delegated must remain accounted for by a linear inventory or
+  equivalent custody ledger; and
+- a single-consumer adapter may establish exact semantic-entry parameters
+  directly, while retaining its provenance if the call is fused or inlined.
+
+The change that first implements the adapter must specify its exact semantic
+entry signature, establishment subjects, qualifications or opaque-resource
+invariants, failure returns, and terminal dispositions in this page and the
+machine-readable contracts. Implementation coverage cannot advance past
+`Partial` without that same-change specification. If implementation exposes
+two viable shapes with different user-visible authority or compatibility
+semantics, only then is the choice promoted to `OWNER_QUESTIONS.md`.
+
 ## Current implementation boundary
 
 Cathedral currently exports a raw `Main::run(handle, table)` UEFI callable and
@@ -168,4 +197,3 @@ replayable evidence chain.
   [UEFI entry and firmware handoff](../../../../Omega/wiki/spec/build/uefi_entry.md),
   [authority establishment](../../../../Omega/wiki/spec/resources/authority.md),
   and [extent](../../../../Omega/wiki/spec/resources/extents.md) rules.
-
