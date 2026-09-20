@@ -1,0 +1,29 @@
+use x86::mapping_plans;
+use x86::mapping_plans::LeafPlan;
+use x86::mapping_plans::ChildPlan;
+use x86::mapping_plans::FrameSupply;
+machine test_result()->i32 {
+    let unaligned:ChildPlan=mapping_plans::prepare_child(0,3,FrameSupply::Supplied { address:4097 });
+    let too_high:ChildPlan=mapping_plans::prepare_child(0,3,FrameSupply::Supplied { address:4503599627370496 });
+    let bad_size:LeafPlan=mapping_plans::map_leaf(0,0,0,3);
+    let bad_frame:LeafPlan=mapping_plans::map_leaf(0,4096,2097152,3);
+    let bad_high:LeafPlan=mapping_plans::map_leaf(0,4503599627370496,4096,3);
+    let unmap_size:LeafPlan=mapping_plans::unmap_leaf(1,8192);
+    let update_size:LeafPlan=mapping_plans::update_leaf_flags(1,0,3);
+    let translate_size:LeafPlan=mapping_plans::translate_leaf(1,8192);
+    let flags:u64=mapping_plans::default_parent_flags(18446744073709551615);
+    transition unaligned in ChildPlan::InvalidSuppliedFrame && !unaligned.write && unaligned.word == 0 &&
+        too_high in ChildPlan::InvalidSuppliedFrame && !too_high.write &&
+        bad_size in LeafPlan::InvalidGeometry && !bad_size.write &&
+        bad_frame in LeafPlan::InvalidGeometry && !bad_frame.write &&
+        bad_high in LeafPlan::InvalidGeometry && !bad_high.write &&
+        unmap_size in LeafPlan::InvalidGeometry && unmap_size.word == 1 &&
+        update_size in LeafPlan::InvalidGeometry && update_size.word == 1 &&
+        translate_size in LeafPlan::InvalidGeometry && translate_size.word == 1 && flags == 7 {
+        true -> (0) _ -> (1)
+    }
+}
+const RESULT:i32=test_result();
+machine require_success(value:i32) requires value == 0; {}
+data Main{}
+machine Main::main(&mut self){require_success(RESULT);}

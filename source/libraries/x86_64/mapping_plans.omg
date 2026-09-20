@@ -1,0 +1,135 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pure branches from pinned x86_64 mapped_page_table.rs and mapper/mod.rs.
+// Requests retain numeric effects and partial writes; they grant no allocator,
+// hierarchy mutation, frame uniqueness, mapping publication or TLB authority.
+module mapping_plans;
+use addresses;
+use page_entries;
+
+pub data FrameSupply [copy] { case Unavailable; case Supplied(address: u64); }
+pub data ChildPlan [copy] {
+    word: u64;
+    write: bool;
+    case AllocationFailed;
+    case InvalidSuppliedFrame;
+    case InvalidHugeInput;
+    case MissingPresent;
+    case HugeParent;
+    case Ready(address: u64, zero_child: bool);
+}
+pub data LeafPlan [copy] {
+    word: u64;
+    write: bool;
+    case InvalidGeometry;
+    case InvalidHugeInput;
+    case PageNotMapped;
+    case ParentHugePage;
+    case InvalidFrameAddress(address: u64);
+    case AlreadyMapped(requested_frame: u64);
+    case Ready(frame: u64);
+}
+pub machine default_parent_flags(flags: u64) -> u64 { flags & 7 }
+pub machine supported_size(size: u64) -> bool { size == 4096 || size == 2097152 || size == 1073741824 }
+
+// Pure create_next_table branch: a failure may retain a preceding flag write.
+pub machine prepare_child(word: u64, insert_flags: u64, supply: FrameSupply) -> ChildPlan {
+    transition word == 0 { true -> allocate(insert_flags, supply) _ -> existing(word, insert_flags) }
+    state allocate(flags: u64, supply: FrameSupply) -> ChildPlan {
+        transition supply {
+            FrameSupply::Unavailable -> (ChildPlan::AllocationFailed { word: 0, write: false })
+            FrameSupply::Supplied { address } -> frame(address, flags)
+        }
+    }
+    state frame(address: u64, flags: u64) -> ChildPlan {
+        transition address <= page_entries::ADDRESS_MASK && (address & 4095) == 0 {
+            true -> input_flags(address, flags)
+            _ -> (ChildPlan::InvalidSuppliedFrame { word: 0, write: false })
+        }
+    }
+    state input_flags(address: u64, flags: u64) -> ChildPlan {
+        let huge: bool = (flags & 128) != 0;
+        transition huge {
+            true -> (ChildPlan::InvalidHugeInput { word: 0, write: false })
+            _ -> classify(address | flags, true, true)
+        }
+    }
+    state existing(word: u64, flags: u64) -> ChildPlan {
+        let old_flags: u64 = page_entries::flags(word);
+        let write: bool = flags != 0 && (old_flags & flags) != flags;
+        transition write { true -> classify(word | flags, true, false) _ -> classify(word, false, false) }
+    }
+    state classify(word: u64, write: bool, created: bool) -> ChildPlan {
+        let present: bool = (word & 1) != 0;
+        let huge: bool = (word & 128) != 0;
+        let address: u64 = page_entries::address(word);
+        transition {
+            !present -> (ChildPlan::MissingPresent { word: word, write: write })
+            huge -> (ChildPlan::HugeParent { word: word, write: write })
+            _ -> (ChildPlan::Ready { word: word, write: write, address: address, zero_child: created })
+        }
+    }
+}
+
+// Leaf operations assume parent traversal has already supplied the selected
+// word. Their results are detached edits; Ready does not settle invalidation.
+pub machine map_leaf(word: u64, frame: u64, size: u64, flags: u64) -> LeafPlan {
+    transition size > 0 && supported_size(size) && frame <= page_entries::ADDRESS_MASK {
+        true -> geometry(word, frame, size, flags) _ -> (LeafPlan::InvalidGeometry { word: word, write: false })
+    }
+    state geometry(word: u64, frame: u64, size: u64, flags: u64) -> LeafPlan {
+        transition size > 0 && frame % size == 0 {
+            true -> unused(word, frame, size, flags) _ -> (LeafPlan::InvalidGeometry { word: word, write: false })
+        }
+    }
+    state unused(word: u64, frame: u64, size: u64, flags: u64) -> LeafPlan {
+        transition word != 0 {
+            true -> (LeafPlan::AlreadyMapped { word: word, write: false, requested_frame: frame })
+            _ -> compose(frame, size, flags)
+        }
+    }
+    state compose(frame: u64, size: u64, flags: u64) -> LeafPlan {
+        let huge: bool = (flags & 128) != 0;
+        transition { size == 4096 && huge -> (LeafPlan::InvalidHugeInput { word: 0, write: false })
+            size == 4096 -> (LeafPlan::Ready { word: frame | flags, write: true, frame: frame })
+            _ -> (LeafPlan::Ready { word: frame | flags | 128, write: true, frame: frame }) }
+    }
+}
+pub machine unmap_leaf(word: u64, size: u64) -> LeafPlan {
+    transition size > 0 && supported_size(size) {
+        true -> present(word, size) _ -> (LeafPlan::InvalidGeometry { word: word, write: false })
+    }
+    state present(word: u64, size: u64) -> LeafPlan {
+        let present: bool = (word & 1) != 0;
+        let huge: bool = (word & 128) != 0;
+        let wrong_role: bool = (size == 4096 && huge) || (size != 4096 && !huge);
+        transition { !present -> (LeafPlan::PageNotMapped { word: word, write: false })
+            wrong_role -> (LeafPlan::ParentHugePage { word: word, write: false })
+            _ -> aligned(word, size) }
+    }
+    state aligned(word: u64, size: u64) -> LeafPlan {
+        let frame: u64 = page_entries::address(word);
+        transition size > 0 && frame % size == 0 {
+            true -> (LeafPlan::Ready { word: 0, write: true, frame: frame })
+            _ -> (LeafPlan::InvalidFrameAddress { word: word, write: false, address: frame }) }
+    }
+}
+pub machine update_leaf_flags(word: u64, size: u64, flags: u64) -> LeafPlan {
+    let frame: u64 = page_entries::address(word);
+    let valid: bool = supported_size(size);
+    transition { !valid -> (LeafPlan::InvalidGeometry { word: word, write: false })
+        word == 0 -> (LeafPlan::PageNotMapped { word: word, write: false })
+        size == 4096 -> (LeafPlan::Ready { word: frame | flags, write: true, frame: frame })
+        _ -> (LeafPlan::Ready { word: frame | flags | 128, write: true, frame: frame }) }
+}
+pub machine translate_leaf(word: u64, size: u64) -> LeafPlan {
+    let frame: u64 = page_entries::address(word);
+    let valid: bool = supported_size(size);
+    transition { !valid -> (LeafPlan::InvalidGeometry { word: word, write: false })
+        word == 0 -> (LeafPlan::PageNotMapped { word: word, write: false })
+        _ -> alignment(word, size, frame) }
+    state alignment(word: u64, size: u64, frame: u64) -> LeafPlan {
+        transition size > 0 && frame % size == 0 {
+            true -> (LeafPlan::Ready { word: word, write: false, frame: frame })
+            _ -> (LeafPlan::InvalidFrameAddress { word: word, write: false, address: frame }) }
+    }
+}

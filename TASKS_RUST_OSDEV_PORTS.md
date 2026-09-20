@@ -224,6 +224,10 @@ Map/unmap/update/cleanup and live ownership/invalidation integration remain open
 The [page/frame slice](source/libraries/x86_64/pages.PORT.md) passes 267 numeric
 scenarios, 253 actual Rust witnesses, 15 upstream Rust tests, range/overflow
 extras and three body mutations. Checked canonical-gap range deviations are explicit.
+The [mapping-decision slice](source/libraries/x86_64/mapping-plans.PORT.md) passes
+112 actual Rust child/leaf operations and matching Omega decisions, nine extra
+assertions and four body mutations. Partial writes on failure are retained;
+complete mapper orchestration and invalidation settlement remain open.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

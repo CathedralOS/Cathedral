@@ -1,0 +1,563 @@
+{
+  "files": {
+    "src/structures/paging/mapper/mapped_page_table.rs": {
+      "disposition": "pending",
+      "reason": "Pure child-creation and leaf decision components tested; complete mapper surface is not claimed.",
+      "sha256": "e250c729f0588d1ce129c1c68ab43337f2f44328d2b38fe896cbeeacc1bc4ff2",
+      "symbols": {
+        "108:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Leaf decision component translated and tested in update_leaf_flags; complete parent traversal/orchestration and ordered partial-write plan composition remain pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine update_leaf_flags("
+            }
+          ]
+        },
+        "126:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "143:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "151:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "159:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {",
+          "disposition": "pending",
+          "reason": "Leaf decision component translated and tested in translate_leaf; complete parent traversal/orchestration and ordered partial-write plan composition remain pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine translate_leaf("
+            }
+          ]
+        },
+        "15:MappedPageTable": {
+          "anchor": "pub struct MappedPageTable<'a, P: PageTableFrameMapping> {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "176:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Leaf decision component translated and tested in map_leaf; complete parent traversal/orchestration and ordered partial-write plan composition remain pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine map_leaf("
+            }
+          ]
+        },
+        "207:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "pending",
+          "reason": "Leaf decision component translated and tested in unmap_leaf; complete parent traversal/orchestration and ordered partial-write plan composition remain pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine unmap_leaf("
+            }
+          ]
+        },
+        "236:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Leaf decision component translated and tested in update_leaf_flags; complete parent traversal/orchestration and ordered partial-write plan composition remain pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine update_leaf_flags("
+            }
+          ]
+        },
+        "258:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "275:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "295:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "303:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {",
+          "disposition": "pending",
+          "reason": "Leaf decision component translated and tested in translate_leaf; complete parent traversal/orchestration and ordered partial-write plan composition remain pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine translate_leaf("
+            }
+          ]
+        },
+        "31:new": {
+          "anchor": "pub unsafe fn new(level_4_table: &'a mut PageTable, page_table_frame_mapping: P) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "321:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Leaf decision component translated and tested in map_leaf; complete parent traversal/orchestration and ordered partial-write plan composition remain pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine map_leaf("
+            }
+          ]
+        },
+        "357:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "pending",
+          "reason": "Leaf decision component translated and tested in unmap_leaf; complete parent traversal/orchestration and ordered partial-write plan composition remain pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine unmap_leaf("
+            }
+          ]
+        },
+        "383:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Leaf decision component translated and tested in update_leaf_flags; complete parent traversal/orchestration and ordered partial-write plan composition remain pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine update_leaf_flags("
+            }
+          ]
+        },
+        "39:level_4_table": {
+          "anchor": "pub fn level_4_table(&self) -> &PageTable {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "408:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "425:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "445:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "44:level_4_table_mut": {
+          "anchor": "pub fn level_4_table_mut(&mut self) -> &mut PageTable {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "468:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {",
+          "disposition": "pending",
+          "reason": "Leaf decision component translated and tested in translate_leaf; complete parent traversal/orchestration and ordered partial-write plan composition remain pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine translate_leaf("
+            }
+          ]
+        },
+        "487:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "49:page_table_frame_mapping": {
+          "anchor": "pub fn page_table_frame_mapping(&self) -> &P {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "551:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "566:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "56:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Leaf decision component translated and tested in map_leaf; complete parent traversal/orchestration and ordered partial-write plan composition remain pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine map_leaf("
+            }
+          ]
+        },
+        "573:clean_up": {
+          "anchor": "unsafe fn clean_up<P: PageTableFrameMapping>(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "644:PageTableWalker": {
+          "anchor": "struct PageTableWalker<P: PageTableFrameMapping> {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "650:new": {
+          "anchor": "pub unsafe fn new(page_table_frame_mapping: P) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "662:next_table": {
+          "anchor": "fn next_table<'b>(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "680:next_table_mut": {
+          "anchor": "fn next_table_mut<'b>(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "701:create_next_table": {
+          "anchor": "fn create_next_table<'b, A>(",
+          "disposition": "translated",
+          "reason": "Pure branch decisions and preceding word write retained in prepare_child, with explicit frame supply and zero-child request. No allocator call or physical table reference is fabricated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine prepare_child("
+            }
+          ]
+        },
+        "742:PageTableWalkError": {
+          "anchor": "enum PageTableWalkError {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "748:PageTableCreateError": {
+          "anchor": "enum PageTableCreateError {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "755:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "765:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "775:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "785:from": {
+          "anchor": "fn from(err: FrameError) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "795:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "805:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "815:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "82:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "pending",
+          "reason": "Leaf decision component translated and tested in unmap_leaf; complete parent traversal/orchestration and ordered partial-write plan composition remain pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine unmap_leaf("
+            }
+          ]
+        },
+        "832:PageTableFrameMapping": {
+          "anchor": "pub unsafe trait PageTableFrameMapping {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "834:frame_to_pointer": {
+          "anchor": "fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable;",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "839:frame_to_pointer": {
+          "anchor": "fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/mapping_plans.omg",
+          "anchor": "module mapping_plans;"
+        }
+      ]
+    },
+    "src/structures/paging/mapper/mod.rs": {
+      "disposition": "pending",
+      "reason": "Pure child-creation and leaf decision components tested; complete mapper surface is not claimed.",
+      "sha256": "9b33e4f767f0eb77560cc7daf0826feadd176d0ced292ada00329a0695f67b6e",
+      "symbols": {
+        "100:size": {
+          "anchor": "pub const fn size(&self) -> u64 {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "110:Mapper": {
+          "anchor": "pub trait Mapper<S: PageSize> {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "179:map_to": {
+          "anchor": "unsafe fn map_to<A>(",
+          "disposition": "pending",
+          "reason": "Default parent flag selection extracted and tested; complete map call/allocator ownership remains pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine default_parent_flags("
+            }
+          ]
+        },
+        "17:mapped_page_table": {
+          "anchor": "mod mapped_page_table;",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "18:offset_page_table": {
+          "anchor": "mod offset_page_table;",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "20:recursive_page_table": {
+          "anchor": "mod recursive_page_table;",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "23:MapperAllSizes": {
+          "anchor": "pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB> {}",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "270:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "285:unmap": {
+          "anchor": "fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "28:Translate": {
+          "anchor": "pub trait Translate {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "298:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "313:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "328:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "343:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "353:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "362:identity_map": {
+          "anchor": "unsafe fn identity_map<A>(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "36:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult;",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "390:MapperFlush": {
+          "anchor": "pub struct MapperFlush<S: PageSize>(Page<S>);",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "398:new": {
+          "anchor": "pub fn new(page: Page<S>) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "3:self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};": {
+          "anchor": "pub use self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "405:flush": {
+          "anchor": "pub fn flush(self) {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "411:ignore": {
+          "anchor": "pub fn ignore(self) {}",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "415:page": {
+          "anchor": "pub fn page(&self) -> Page<S> {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "427:MapperFlushAll": {
+          "anchor": "pub struct MapperFlushAll(());",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "435:new": {
+          "anchor": "pub fn new() -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "442:flush_all": {
+          "anchor": "pub fn flush_all(self) {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "448:ignore": {
+          "anchor": "pub fn ignore(self) {}",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "453:MapToError": {
+          "anchor": "pub enum MapToError<S: PageSize> {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "45:translate_addr": {
+          "anchor": "fn translate_addr(&self, addr: VirtAddr) -> Option<PhysAddr> {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "466:UnmapError": {
+          "anchor": "pub enum UnmapError {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "478:FlagUpdateError": {
+          "anchor": "pub enum FlagUpdateError {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "488:TranslateError": {
+          "anchor": "pub enum TranslateError {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "498:_ASSERT_OBJECT_SAFE": {
+          "anchor": "static _ASSERT_OBJECT_SAFE: Option<&(dyn Translate + Sync)> = None;",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "501:CleanUp": {
+          "anchor": "pub trait CleanUp {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "509:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "534:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "58:TranslateResult": {
+          "anchor": "pub enum TranslateResult {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "5:self::offset_page_table::OffsetPageTable;": {
+          "anchor": "pub use self::offset_page_table::OffsetPageTable;",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "7:self::recursive_page_table::{InvalidPageTable, RecursivePageTable};": {
+          "anchor": "pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "80:MappedFrame": {
+          "anchor": "pub enum MappedFrame {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "91:start_address": {
+          "anchor": "pub const fn start_address(&self) -> PhysAddr {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/mapping_plans.omg",
+          "anchor": "module mapping_plans;"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/paging/mapper/mapped_page_table.rs",
+      "src/structures/paging/mapper/mod.rs"
+    ],
+    "url": "https://github.com/rust-osdev/x86_64"
+  }
+}
