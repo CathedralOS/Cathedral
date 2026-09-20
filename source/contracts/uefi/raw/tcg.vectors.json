@@ -1,0 +1,519 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "measurements": {
+    "ALGORITHM_AES": {
+      "kind": "value",
+      "value": 6
+    },
+    "ALGORITHM_ERROR": {
+      "kind": "value",
+      "value": 0
+    },
+    "ALGORITHM_HMAC": {
+      "kind": "value",
+      "value": 5
+    },
+    "ALGORITHM_KEYED_HASH": {
+      "kind": "value",
+      "value": 8
+    },
+    "ALGORITHM_MGF1": {
+      "kind": "value",
+      "value": 7
+    },
+    "ALGORITHM_NULL": {
+      "kind": "value",
+      "value": 16
+    },
+    "ALGORITHM_RSA": {
+      "kind": "value",
+      "value": 1
+    },
+    "ALGORITHM_SHA1": {
+      "kind": "value",
+      "value": 4
+    },
+    "ALGORITHM_SHA256": {
+      "kind": "value",
+      "value": 11
+    },
+    "ALGORITHM_SHA384": {
+      "kind": "value",
+      "value": 12
+    },
+    "ALGORITHM_SHA512": {
+      "kind": "value",
+      "value": 13
+    },
+    "ALGORITHM_SM3_256": {
+      "kind": "value",
+      "value": 18
+    },
+    "ALGORITHM_SM4": {
+      "kind": "value",
+      "value": 19
+    },
+    "ALGORITHM_TDES": {
+      "kind": "value",
+      "value": 3
+    },
+    "ALGORITHM_XOR": {
+      "kind": "value",
+      "value": 10
+    },
+    "AlgorithmId.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "AlgorithmId.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "EVENT_ACTION": {
+      "kind": "value",
+      "value": 5
+    },
+    "EVENT_COMPACT_HASH": {
+      "kind": "value",
+      "value": 12
+    },
+    "EVENT_CPU_MICROCODE": {
+      "kind": "value",
+      "value": 9
+    },
+    "EVENT_CRTM_CONTENTS": {
+      "kind": "value",
+      "value": 7
+    },
+    "EVENT_CRTM_VERSION": {
+      "kind": "value",
+      "value": 8
+    },
+    "EVENT_EFI_ACTION": {
+      "kind": "value",
+      "value": 2147483655
+    },
+    "EVENT_EFI_BOOT_SERVICES_APPLICATION": {
+      "kind": "value",
+      "value": 2147483651
+    },
+    "EVENT_EFI_BOOT_SERVICES_DRIVER": {
+      "kind": "value",
+      "value": 2147483652
+    },
+    "EVENT_EFI_EVENT_BASE": {
+      "kind": "value",
+      "value": 2147483648
+    },
+    "EVENT_EFI_GPT_EVENT": {
+      "kind": "value",
+      "value": 2147483654
+    },
+    "EVENT_EFI_HANDOFF_TABLES": {
+      "kind": "value",
+      "value": 2147483657
+    },
+    "EVENT_EFI_HANDOFF_TABLES2": {
+      "kind": "value",
+      "value": 2147483659
+    },
+    "EVENT_EFI_HCRTM_EVENT": {
+      "kind": "value",
+      "value": 2147483664
+    },
+    "EVENT_EFI_PLATFORM_FIRMWARE_BLOB": {
+      "kind": "value",
+      "value": 2147483656
+    },
+    "EVENT_EFI_PLATFORM_FIRMWARE_BLOB2": {
+      "kind": "value",
+      "value": 2147483658
+    },
+    "EVENT_EFI_RUNTIME_SERVICES_DRIVER": {
+      "kind": "value",
+      "value": 2147483653
+    },
+    "EVENT_EFI_SPDM_FIRMWARE_BLOB": {
+      "kind": "value",
+      "value": 2147483873
+    },
+    "EVENT_EFI_SPDM_FIRMWARE_CONFIG": {
+      "kind": "value",
+      "value": 2147483874
+    },
+    "EVENT_EFI_VARIABLE_AUTHORITY": {
+      "kind": "value",
+      "value": 2147483872
+    },
+    "EVENT_EFI_VARIABLE_BOOT": {
+      "kind": "value",
+      "value": 2147483650
+    },
+    "EVENT_EFI_VARIABLE_BOOT2": {
+      "kind": "value",
+      "value": 2147483660
+    },
+    "EVENT_EFI_VARIABLE_DRIVER_CONFIG": {
+      "kind": "value",
+      "value": 2147483649
+    },
+    "EVENT_EVENT_TAG": {
+      "kind": "value",
+      "value": 6
+    },
+    "EVENT_IPL": {
+      "kind": "value",
+      "value": 13
+    },
+    "EVENT_IPL_PARTITION_DATA": {
+      "kind": "value",
+      "value": 14
+    },
+    "EVENT_LOG_TCG_1_2": {
+      "kind": "value",
+      "value": 1
+    },
+    "EVENT_LOG_TCG_2": {
+      "kind": "value",
+      "value": 2
+    },
+    "EVENT_NONHOST_CODE": {
+      "kind": "value",
+      "value": 15
+    },
+    "EVENT_NONHOST_CONFIG": {
+      "kind": "value",
+      "value": 16
+    },
+    "EVENT_NONHOST_INFO": {
+      "kind": "value",
+      "value": 17
+    },
+    "EVENT_NO_ACTION": {
+      "kind": "value",
+      "value": 3
+    },
+    "EVENT_OMIT_BOOT_DEVICE_EVENTS": {
+      "kind": "value",
+      "value": 18
+    },
+    "EVENT_PLATFORM_CONFIG_FLAGS": {
+      "kind": "value",
+      "value": 10
+    },
+    "EVENT_POST_CODE": {
+      "kind": "value",
+      "value": 1
+    },
+    "EVENT_PREBOOT_CERT": {
+      "kind": "value",
+      "value": 0
+    },
+    "EVENT_SEPARATOR": {
+      "kind": "value",
+      "value": 4
+    },
+    "EVENT_TABLE_OF_DEVICES": {
+      "kind": "value",
+      "value": 11
+    },
+    "EVENT_UNUSED": {
+      "kind": "value",
+      "value": 2
+    },
+    "EventType.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "EventType.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "HASH_LOG_EXTEND_ONLY": {
+      "kind": "value",
+      "value": 1
+    },
+    "HASH_LOG_PE_COFF_IMAGE": {
+      "kind": "value",
+      "value": 16
+    },
+    "HASH_SHA1": {
+      "kind": "value",
+      "value": 1
+    },
+    "HASH_SHA256": {
+      "kind": "value",
+      "value": 2
+    },
+    "HASH_SHA384": {
+      "kind": "value",
+      "value": 4
+    },
+    "HASH_SHA512": {
+      "kind": "value",
+      "value": 8
+    },
+    "HASH_SM3_256": {
+      "kind": "value",
+      "value": 16
+    },
+    "TCG2_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "6c767f605574be42930be4d76db2720f"
+    },
+    "TCG_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "6d7941f52ea65449a7759584f61b9cdd"
+    },
+    "Tcg2BootServiceCapability.active_pcr_banks.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "Tcg2BootServiceCapability.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Tcg2BootServiceCapability.hash_algorithm_bitmap.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Tcg2BootServiceCapability.manufacturer_id.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "Tcg2BootServiceCapability.max_command_size.offset": {
+      "kind": "offset",
+      "value": 18
+    },
+    "Tcg2BootServiceCapability.max_response_size.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "Tcg2BootServiceCapability.number_of_pcr_banks.offset": {
+      "kind": "offset",
+      "value": 28
+    },
+    "Tcg2BootServiceCapability.protocol_version.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "Tcg2BootServiceCapability.size": {
+      "kind": "size",
+      "value": 36
+    },
+    "Tcg2BootServiceCapability.size.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcg2BootServiceCapability.structure_version.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "Tcg2BootServiceCapability.supported_event_logs.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "Tcg2BootServiceCapability.tpm_present_flag.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Tcg2EventHeader.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Tcg2EventHeader.event_type.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "Tcg2EventHeader.header_size.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcg2EventHeader.header_version.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Tcg2EventHeader.pcr_index.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "Tcg2EventHeader.size": {
+      "kind": "size",
+      "value": 14
+    },
+    "Tcg2EventLogBitmap.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Tcg2EventLogBitmap.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "Tcg2HashAlgorithmBitmap.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Tcg2HashAlgorithmBitmap.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "Tcg2HashLogExtendEventFlags.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcg2HashLogExtendEventFlags.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "Tcg2Protocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcg2Protocol.get_active_pcr_banks.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "Tcg2Protocol.get_capability.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcg2Protocol.get_event_log.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Tcg2Protocol.get_result_of_set_active_pcr_banks.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "Tcg2Protocol.hash_log_extend_event.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Tcg2Protocol.set_active_pcr_banks.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "Tcg2Protocol.size": {
+      "kind": "size",
+      "value": 56
+    },
+    "Tcg2Protocol.submit_command.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "Tcg2Version.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Tcg2Version.major.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcg2Version.minor.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "Tcg2Version.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "TcgBootServiceCapability.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "TcgBootServiceCapability.hash_algorithm_bitmap.offset": {
+      "kind": "offset",
+      "value": 9
+    },
+    "TcgBootServiceCapability.protocol_spec_version.offset": {
+      "kind": "offset",
+      "value": 5
+    },
+    "TcgBootServiceCapability.size": {
+      "kind": "size",
+      "value": 12
+    },
+    "TcgBootServiceCapability.size.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "TcgBootServiceCapability.structure_version.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "TcgBootServiceCapability.tpm_deactivated_flag.offset": {
+      "kind": "offset",
+      "value": 11
+    },
+    "TcgBootServiceCapability.tpm_present_flag.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "TcgProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "TcgProtocol.hash_all.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "TcgProtocol.hash_log_extend_event.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "TcgProtocol.log_event.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "TcgProtocol.pass_through_to_tpm.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "TcgProtocol.size": {
+      "kind": "size",
+      "value": 40
+    },
+    "TcgProtocol.status_check.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "TcgVersion.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "TcgVersion.major.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "TcgVersion.minor.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "TcgVersion.rev_major.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "TcgVersion.rev_minor.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "TcgVersion.size": {
+      "kind": "size",
+      "value": 4
+    }
+  },
+  "provenance": {
+    "description": "Expected C x64 and packed event-header geometry, numeric constants and GUID bytes from pinned uefi-raw; source typechecking is separate from ABI conformance.",
+    "kind": "upstream",
+    "sources": [
+      "https://github.com/rust-osdev/uefi-rs/tree/c0facddf9ba42b74906a37fca2869e6cdbc8da6a/uefi-raw/src/protocol/tcg",
+      "https://trustedcomputinggroup.org/wp-content/uploads/EFI-Protocol-Specification-rev13-160330final.pdf",
+      "https://trustedcomputinggroup.org/wp-content/uploads/TCG_EFI_Protocol_1_22_Final-v05.pdf"
+    ]
+  },
+  "target": {
+    "abi": "uefi-x64",
+    "endian": "little",
+    "pointer_bits": 64
+  }
+}

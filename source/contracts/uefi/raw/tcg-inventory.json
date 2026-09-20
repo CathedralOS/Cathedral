@@ -1,0 +1,1333 @@
+{
+  "files": {
+    "uefi-raw/src/protocol/tcg.rs": {
+      "disposition": "translated",
+      "reason": "Raw representation translation, no callable authority; see tcg.PORT.md.",
+      "sha256": "1bce7821019b8ad2b2f727b42984b29ec53563146fc54b993890c12501f3155c",
+      "symbols": {
+        "16:v1": {
+          "anchor": "pub mod v1;",
+          "disposition": "omitted",
+          "reason": "Rust module/reexport topology flattened to Omega tcg; all definitions mapped in child files."
+        },
+        "17:v2": {
+          "anchor": "pub mod v2;",
+          "disposition": "omitted",
+          "reason": "Rust module/reexport topology flattened to Omega tcg; all definitions mapped in child files."
+        },
+        "19:enums": {
+          "anchor": "mod enums;",
+          "disposition": "omitted",
+          "reason": "Rust module/reexport topology flattened to Omega tcg; all definitions mapped in child files."
+        },
+        "20:enums::*;": {
+          "anchor": "pub use enums::*;",
+          "disposition": "omitted",
+          "reason": "Rust module/reexport topology flattened to Omega tcg; all definitions mapped in child files."
+        }
+      },
+      "targets": [
+        {
+          "anchor": "module tcg;",
+          "path": "source/contracts/uefi/raw/tcg.omg"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/tcg/enums.rs": {
+      "disposition": "translated",
+      "reason": "Raw representation translation, no callable authority; see tcg.PORT.md.",
+      "sha256": "ea9270b5d9e387452169a54aec8e71f2077717956ad5bdc573364c0221fb68bf",
+      "symbols": {
+        "11:AlgorithmId": {
+          "anchor": "pub enum AlgorithmId: u16 => {",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub data AlgorithmId ",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "12:ERROR": {
+          "anchor": "ERROR = 0x0000,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_ERROR:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "13:RSA": {
+          "anchor": "RSA = 0x0001,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_RSA:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "14:TDES": {
+          "anchor": "TDES = 0x0003,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_TDES:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "15:SHA1": {
+          "anchor": "SHA1 = 0x0004,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_SHA1:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "16:HMAC": {
+          "anchor": "HMAC = 0x0005,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_HMAC:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "17:AES": {
+          "anchor": "AES = 0x0006,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_AES:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "18:MGF1": {
+          "anchor": "MGF1 = 0x0007,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_MGF1:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "19:KEYED_HASH": {
+          "anchor": "KEYED_HASH = 0x0008,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_KEYED_HASH:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "20:XOR": {
+          "anchor": "XOR = 0x000a,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_XOR:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "21:SHA256": {
+          "anchor": "SHA256 = 0x000b,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_SHA256:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "22:SHA384": {
+          "anchor": "SHA384 = 0x000c,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_SHA384:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "23:SHA512": {
+          "anchor": "SHA512 = 0x000d,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_SHA512:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "24:NULL": {
+          "anchor": "NULL = 0x0010,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_NULL:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "25:SM3_256": {
+          "anchor": "SM3_256 = 0x0012,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_SM3_256:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "26:SM4": {
+          "anchor": "SM4 = 0x0013,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const ALGORITHM_SM4:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "41:EventType": {
+          "anchor": "pub enum EventType: u32 => {",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub data EventType ",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "42:PREBOOT_CERT": {
+          "anchor": "PREBOOT_CERT = 0x0000_0000,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_PREBOOT_CERT:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "43:POST_CODE": {
+          "anchor": "POST_CODE = 0x0000_0001,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_POST_CODE:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "44:UNUSED": {
+          "anchor": "UNUSED = 0x0000_0002,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_UNUSED:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "45:NO_ACTION": {
+          "anchor": "NO_ACTION = 0x0000_0003,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_NO_ACTION:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "46:SEPARATOR": {
+          "anchor": "SEPARATOR = 0x0000_0004,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_SEPARATOR:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "47:ACTION": {
+          "anchor": "ACTION = 0x0000_0005,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_ACTION:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "48:EVENT_TAG": {
+          "anchor": "EVENT_TAG = 0x0000_0006,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EVENT_TAG:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "49:CRTM_CONTENTS": {
+          "anchor": "CRTM_CONTENTS = 0x0000_0007,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_CRTM_CONTENTS:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "50:CRTM_VERSION": {
+          "anchor": "CRTM_VERSION = 0x0000_0008,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_CRTM_VERSION:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "51:CPU_MICROCODE": {
+          "anchor": "CPU_MICROCODE = 0x0000_0009,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_CPU_MICROCODE:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "52:PLATFORM_CONFIG_FLAGS": {
+          "anchor": "PLATFORM_CONFIG_FLAGS = 0x0000_000a,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_PLATFORM_CONFIG_FLAGS:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "53:TABLE_OF_DEVICES": {
+          "anchor": "TABLE_OF_DEVICES = 0x0000_000b,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_TABLE_OF_DEVICES:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "54:COMPACT_HASH": {
+          "anchor": "COMPACT_HASH = 0x0000_000c,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_COMPACT_HASH:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "55:IPL": {
+          "anchor": "IPL = 0x0000_000d,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_IPL:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "56:IPL_PARTITION_DATA": {
+          "anchor": "IPL_PARTITION_DATA = 0x0000_000e,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_IPL_PARTITION_DATA:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "57:NONHOST_CODE": {
+          "anchor": "NONHOST_CODE = 0x0000_000f,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_NONHOST_CODE:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "58:NONHOST_CONFIG": {
+          "anchor": "NONHOST_CONFIG = 0x0000_0010,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_NONHOST_CONFIG:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "59:NONHOST_INFO": {
+          "anchor": "NONHOST_INFO = 0x0000_0011,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_NONHOST_INFO:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "60:OMIT_BOOT_DEVICE_EVENTS": {
+          "anchor": "OMIT_BOOT_DEVICE_EVENTS = 0x0000_0012,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_OMIT_BOOT_DEVICE_EVENTS:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "61:EFI_EVENT_BASE": {
+          "anchor": "EFI_EVENT_BASE = 0x8000_0000,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_EVENT_BASE:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "62:EFI_VARIABLE_DRIVER_CONFIG": {
+          "anchor": "EFI_VARIABLE_DRIVER_CONFIG = 0x8000_0001,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_VARIABLE_DRIVER_CONFIG:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "63:EFI_VARIABLE_BOOT": {
+          "anchor": "EFI_VARIABLE_BOOT = 0x8000_0002,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_VARIABLE_BOOT:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "64:EFI_BOOT_SERVICES_APPLICATION": {
+          "anchor": "EFI_BOOT_SERVICES_APPLICATION = 0x8000_0003,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_BOOT_SERVICES_APPLICATION:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "65:EFI_BOOT_SERVICES_DRIVER": {
+          "anchor": "EFI_BOOT_SERVICES_DRIVER = 0x8000_0004,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_BOOT_SERVICES_DRIVER:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "66:EFI_RUNTIME_SERVICES_DRIVER": {
+          "anchor": "EFI_RUNTIME_SERVICES_DRIVER = 0x8000_0005,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_RUNTIME_SERVICES_DRIVER:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "67:EFI_GPT_EVENT": {
+          "anchor": "EFI_GPT_EVENT = 0x8000_0006,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_GPT_EVENT:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "68:EFI_ACTION": {
+          "anchor": "EFI_ACTION = 0x8000_0007,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_ACTION:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "69:EFI_PLATFORM_FIRMWARE_BLOB": {
+          "anchor": "EFI_PLATFORM_FIRMWARE_BLOB = 0x8000_0008,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_PLATFORM_FIRMWARE_BLOB:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "70:EFI_HANDOFF_TABLES": {
+          "anchor": "EFI_HANDOFF_TABLES = 0x8000_0009,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_HANDOFF_TABLES:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "71:EFI_PLATFORM_FIRMWARE_BLOB2": {
+          "anchor": "EFI_PLATFORM_FIRMWARE_BLOB2 = 0x8000_000a,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_PLATFORM_FIRMWARE_BLOB2:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "72:EFI_HANDOFF_TABLES2": {
+          "anchor": "EFI_HANDOFF_TABLES2 = 0x8000_000b,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_HANDOFF_TABLES2:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "73:EFI_VARIABLE_BOOT2": {
+          "anchor": "EFI_VARIABLE_BOOT2 = 0x8000_000c,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_VARIABLE_BOOT2:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "74:EFI_HCRTM_EVENT": {
+          "anchor": "EFI_HCRTM_EVENT = 0x8000_0010,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_HCRTM_EVENT:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "75:EFI_VARIABLE_AUTHORITY": {
+          "anchor": "EFI_VARIABLE_AUTHORITY = 0x8000_00e0,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_VARIABLE_AUTHORITY:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "76:EFI_SPDM_FIRMWARE_BLOB": {
+          "anchor": "EFI_SPDM_FIRMWARE_BLOB = 0x8000_00e1,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_SPDM_FIRMWARE_BLOB:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "77:EFI_SPDM_FIRMWARE_CONFIG": {
+          "anchor": "EFI_SPDM_FIRMWARE_CONFIG = 0x8000_00e2,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_EFI_SPDM_FIRMWARE_CONFIG:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "module tcg;",
+          "path": "source/contracts/uefi/raw/tcg.omg"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/tcg/v1.rs": {
+      "disposition": "translated",
+      "reason": "Raw representation translation, no callable authority; see tcg.PORT.md.",
+      "sha256": "ea12a4f4c83540506a7b7a7ffeadd1ef9b436cec74762c8aa4fbbcde6ec65a3c",
+      "symbols": {
+        "19:TcgBootServiceCapability": {
+          "anchor": "pub struct TcgBootServiceCapability {",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub data TcgBootServiceCapability ",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "20:size": {
+          "anchor": "pub size: u8,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    size:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "21:structure_version": {
+          "anchor": "pub structure_version: TcgVersion,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    structure_version:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "22:protocol_spec_version": {
+          "anchor": "pub protocol_spec_version: TcgVersion,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    protocol_spec_version:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "23:hash_algorithm_bitmap": {
+          "anchor": "pub hash_algorithm_bitmap: u8,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    hash_algorithm_bitmap:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "24:tpm_present_flag": {
+          "anchor": "pub tpm_present_flag: u8,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    tpm_present_flag:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "25:tpm_deactivated_flag": {
+          "anchor": "pub tpm_deactivated_flag: u8,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    tpm_deactivated_flag:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "31:TcgVersion": {
+          "anchor": "pub struct TcgVersion {",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub data TcgVersion ",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "33:major": {
+          "anchor": "pub major: u8,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    major:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "35:minor": {
+          "anchor": "pub minor: u8,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    minor:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "37:rev_major": {
+          "anchor": "pub rev_major: u8,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    rev_major:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "38:rev_minor": {
+          "anchor": "pub rev_minor: u8,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    rev_minor:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "44:TcgProtocol": {
+          "anchor": "pub struct TcgProtocol {",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub data TcgProtocol ",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "45:status_check": {
+          "anchor": "pub status_check: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    status_check:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "53:hash_all": {
+          "anchor": "pub hash_all: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    hash_all:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "62:log_event": {
+          "anchor": "pub log_event: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    log_event:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "69:pass_through_to_tpm": {
+          "anchor": "pub pass_through_to_tpm: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    pass_through_to_tpm:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "77:hash_log_extend_event": {
+          "anchor": "pub hash_log_extend_event: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    hash_log_extend_event:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "89:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"f541796d-a62e-4954-a775-9584f61b9cdd\");",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const TCG_PROTOCOL_GUID:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "module tcg;",
+          "path": "source/contracts/uefi/raw/tcg.omg"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/tcg/v2.rs": {
+      "disposition": "translated",
+      "reason": "Raw representation translation, no callable authority; see tcg.PORT.md.",
+      "sha256": "2bf4d08ff35d972a0b06a14f683ac409bdad97cc41937499a4a8441ed419c9e3",
+      "symbols": {
+        "101:manufacturer_id": {
+          "anchor": "pub manufacturer_id: u32,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    manufacturer_id:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "104:number_of_pcr_banks": {
+          "anchor": "pub number_of_pcr_banks: u32,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    number_of_pcr_banks:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "110:active_pcr_banks": {
+          "anchor": "pub active_pcr_banks: Tcg2HashAlgorithmBitmap,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    active_pcr_banks:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "117:Tcg2HashLogExtendEventFlags": {
+          "anchor": "pub struct Tcg2HashLogExtendEventFlags: u64 {",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub data Tcg2HashLogExtendEventFlags ",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "119:EFI_TCG2_EXTEND_ONLY": {
+          "anchor": "const EFI_TCG2_EXTEND_ONLY = 0x0000_0000_0000_0001;",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const HASH_LOG_EXTEND_ONLY:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "122:PE_COFF_IMAGE": {
+          "anchor": "const PE_COFF_IMAGE = 0x0000_0000_0000_0010;",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const HASH_LOG_PE_COFF_IMAGE:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "128:Tcg2EventHeader": {
+          "anchor": "pub struct Tcg2EventHeader {",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub data Tcg2EventHeader ",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "129:header_size": {
+          "anchor": "pub header_size: u32,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    header_size:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "130:header_version": {
+          "anchor": "pub header_version: u16,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    header_version:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "131:pcr_index": {
+          "anchor": "pub pcr_index: u32,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    pcr_index:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "132:event_type": {
+          "anchor": "pub event_type: EventType,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    event_type:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "143:Tcg2Protocol": {
+          "anchor": "pub struct Tcg2Protocol {",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub data Tcg2Protocol ",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "144:get_capability": {
+          "anchor": "pub get_capability: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    get_capability:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "149:get_event_log": {
+          "anchor": "pub get_event_log: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    get_event_log:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "157:hash_log_extend_event": {
+          "anchor": "pub hash_log_extend_event: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    hash_log_extend_event:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "165:submit_command": {
+          "anchor": "pub submit_command: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    submit_command:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "173:get_active_pcr_banks": {
+          "anchor": "pub get_active_pcr_banks: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    get_active_pcr_banks:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "178:set_active_pcr_banks": {
+          "anchor": "pub set_active_pcr_banks: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    set_active_pcr_banks:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "183:get_result_of_set_active_pcr_banks": {
+          "anchor": "pub get_result_of_set_active_pcr_banks: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    get_result_of_set_active_pcr_banks:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "191:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"607f766c-7455-42be-930b-e4d76db2720f\");",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const TCG2_PROTOCOL_GUID:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "23:Tcg2Version": {
+          "anchor": "pub struct Tcg2Version {",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub data Tcg2Version ",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "25:major": {
+          "anchor": "pub major: u8,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    major:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "27:minor": {
+          "anchor": "pub minor: u8,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    minor:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "34:Tcg2EventLogBitmap": {
+          "anchor": "pub struct Tcg2EventLogBitmap: u32 {",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub data Tcg2EventLogBitmap ",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "36:TCG_1_2": {
+          "anchor": "const TCG_1_2 = 0x0000_0001;",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_LOG_TCG_1_2:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "39:TCG_2": {
+          "anchor": "const TCG_2 = 0x0000_0002;",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const EVENT_LOG_TCG_2:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "44:Tcg2EventLogFormat": {
+          "anchor": "pub type Tcg2EventLogFormat = Tcg2EventLogBitmap;",
+          "disposition": "omitted",
+          "reason": "Upstream alias has no distinct representation; consumers use Tcg2EventLogBitmap directly."
+        },
+        "50:Tcg2HashAlgorithmBitmap": {
+          "anchor": "pub struct Tcg2HashAlgorithmBitmap: u32 {",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub data Tcg2HashAlgorithmBitmap ",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "52:SHA1": {
+          "anchor": "const SHA1 = 0x0000_0001;",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const HASH_SHA1:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "55:SHA256": {
+          "anchor": "const SHA256 = 0x0000_0002;",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const HASH_SHA256:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "58:SHA384": {
+          "anchor": "const SHA384 = 0x0000_0004;",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const HASH_SHA384:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "61:SHA512": {
+          "anchor": "const SHA512 = 0x0000_0008;",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const HASH_SHA512:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "64:SM3_256": {
+          "anchor": "const SM3_256 = 0x0000_0010;",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub const HASH_SM3_256:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "71:Tcg2BootServiceCapability": {
+          "anchor": "pub struct Tcg2BootServiceCapability {",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "pub data Tcg2BootServiceCapability ",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "73:size": {
+          "anchor": "pub size: u8,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    size:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "76:structure_version": {
+          "anchor": "pub structure_version: Tcg2Version,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    structure_version:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "79:protocol_version": {
+          "anchor": "pub protocol_version: Tcg2Version,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    protocol_version:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "82:hash_algorithm_bitmap": {
+          "anchor": "pub hash_algorithm_bitmap: Tcg2HashAlgorithmBitmap,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    hash_algorithm_bitmap:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "85:supported_event_logs": {
+          "anchor": "pub supported_event_logs: Tcg2EventLogBitmap,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    supported_event_logs:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "88:tpm_present_flag": {
+          "anchor": "pub tpm_present_flag: u8,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    tpm_present_flag:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "91:max_command_size": {
+          "anchor": "pub max_command_size: u16,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    max_command_size:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        },
+        "94:max_response_size": {
+          "anchor": "pub max_response_size: u16,",
+          "disposition": "translated",
+          "reason": "Stored data/constant; raw function slot is inert, not invocation support.",
+          "targets": [
+            {
+              "anchor": "    max_response_size:",
+              "path": "source/contracts/uefi/raw/tcg.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "module tcg;",
+          "path": "source/contracts/uefi/raw/tcg.omg"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a",
+    "roots": [
+      "uefi-raw/src/protocol/tcg.rs",
+      "uefi-raw/src/protocol/tcg"
+    ],
+    "url": "https://github.com/rust-osdev/uefi-rs"
+  }
+}

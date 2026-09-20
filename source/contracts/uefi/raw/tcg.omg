@@ -1,0 +1,168 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) The uefi-rs contributors
+// Derived from rust-osdev/uefi-rs c0facddf9ba42b74906a37fca2869e6cdbc8da6a,
+// uefi-raw/src/protocol/tcg/{v1,v2,enums}.rs.
+// Modified for Cathedral: Rust repr/bitflags become explicit inert data and
+// constants; function pointers become address fields, with no invocation right.
+// See tcg.PORT.md and ../../../../THIRD_PARTY_NOTICES.md.
+module tcg;
+use scalars::Guid;
+
+pub data AlgorithmId [copy] { value: u16; }
+pub data EventType [copy] { value: u32; }
+pub data Tcg2EventLogBitmap [copy] { bits: u32; }
+// Upstream Tcg2EventLogFormat is the same carrier as Tcg2EventLogBitmap.
+// Use Tcg2EventLogBitmap directly rather than creating a distinct nominal type.
+pub data Tcg2HashAlgorithmBitmap [copy] { bits: u32; }
+pub data Tcg2HashLogExtendEventFlags [copy] { bits: u64; }
+
+pub data TcgVersion [copy] {
+    major: u8;
+    minor: u8;
+    rev_major: u8;
+    rev_minor: u8;
+}
+pub data TcgBootServiceCapability [copy] {
+    size: u8;
+    structure_version: TcgVersion;
+    protocol_spec_version: TcgVersion;
+    hash_algorithm_bitmap: u8;
+    tpm_present_flag: u8;
+    tpm_deactivated_flag: u8;
+}
+pub data TcgProtocol [copy] {
+    // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, protocol_capability: *mut TcgBootServiceCapability, feature_flags: *mut u32, event_log_location: *mut PhysicalAddress, event_log_last_entry: *mut PhysicalAddress, ) -> Status
+    status_check: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, hash_data: *const u8, hash_data_len: u64, algorithm_id: u32, hashed_data_len: *mut u64, hashed_data_result: *mut *mut u8, ) -> Status
+    hash_all: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, event: *const c_void, event_number: *mut u32, flags: u32, ) -> Status
+    log_event: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, tpm_input_parameter_block_size: u32, tpm_input_parameter_block: *const u8, tpm_output_parameter_block_size: u32, tpm_output_parameter_block: *mut u8, ) -> Status
+    pass_through_to_tpm: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, hash_data: PhysicalAddress, hash_data_len: u64, algorithm_id: u32, event: *mut c_void, event_number: *mut u32, event_log_last_entry: *mut PhysicalAddress, ) -> Status
+    hash_log_extend_event: addr;
+}
+
+pub data Tcg2Version [copy] {
+    major: u8;
+    minor: u8;
+}
+pub data Tcg2BootServiceCapability [copy] {
+    size: u8;
+    structure_version: Tcg2Version;
+    protocol_version: Tcg2Version;
+    hash_algorithm_bitmap: Tcg2HashAlgorithmBitmap;
+    supported_event_logs: Tcg2EventLogBitmap;
+    tpm_present_flag: u8;
+    max_command_size: u16;
+    max_response_size: u16;
+    manufacturer_id: u32;
+    number_of_pcr_banks: u32;
+    active_pcr_banks: Tcg2HashAlgorithmBitmap;
+}
+// This semantic record requires PACKED physical offsets 0,4,6,10 (size14,
+// align1), not its ordinary compiler-selected record layout. See vectors.
+// tcg_layouts::Tcg2EventHeaderX64Layout supplies this fixed geometry.
+// Selection/materialization remains separate from source typechecking.
+pub data Tcg2EventHeader [copy] {
+    header_size: u32;
+    header_version: u16;
+    pcr_index: u32;
+    event_type: EventType;
+}
+pub data Tcg2Protocol [copy] {
+    // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, protocol_capability: *mut Tcg2BootServiceCapability, ) -> Status
+    get_capability: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, event_log_format: Tcg2EventLogFormat, event_log_location: *mut PhysicalAddress, event_log_last_entry: *mut PhysicalAddress, event_log_truncated: *mut Boolean, ) -> Status
+    get_event_log: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, flags: Tcg2HashLogExtendEventFlags, data_to_hash: PhysicalAddress, data_to_hash_len: u64, event: *const c_void, ) -> Status
+    hash_log_extend_event: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, input_parameter_block_size: u32, input_parameter_block: *const u8, output_parameter_block_size: u32, output_parameter_block: *mut u8, ) -> Status
+    submit_command: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, active_pcr_banks: *mut Tcg2HashAlgorithmBitmap, ) -> Status
+    get_active_pcr_banks: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, active_pcr_banks: Tcg2HashAlgorithmBitmap, ) -> Status
+    set_active_pcr_banks: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, operation_present: *mut u32, response: *mut u32, ) -> Status
+    get_result_of_set_active_pcr_banks: addr;
+}
+
+// Stored addresses above are opaque numbers. Establishing callable firmware
+// backing, provider admission, output bounds and log lifetime is separate.
+// PORT-BLOCKED[omega:named-calling-policy]: native TCG invocation needs the
+// exact named Calling<C, Policy> conformance and checked pointer custody;
+// raw table data never confers TPM access or attestation authority.
+
+pub const TCG_PROTOCOL_GUID: Guid = Guid {
+    data1: 0xf541796d, data2: 0xa62e, data3: 0x4954,
+    data4: [0xa7, 0x75, 0x95, 0x84, 0xf6, 0x1b, 0x9c, 0xdd],
+};
+pub const TCG2_PROTOCOL_GUID: Guid = Guid {
+    data1: 0x607f766c, data2: 0x7455, data3: 0x42be,
+    data4: [0x93, 0x0b, 0xe4, 0xd7, 0x6d, 0xb2, 0x72, 0x0f],
+};
+
+pub const EVENT_LOG_TCG_1_2: u32 = 0x00000001;
+pub const EVENT_LOG_TCG_2: u32 = 0x00000002;
+pub const HASH_SHA1: u32 = 0x00000001;
+pub const HASH_SHA256: u32 = 0x00000002;
+pub const HASH_SHA384: u32 = 0x00000004;
+pub const HASH_SHA512: u32 = 0x00000008;
+pub const HASH_SM3_256: u32 = 0x00000010;
+pub const HASH_LOG_EXTEND_ONLY: u64 = 0x0000000000000001;
+pub const HASH_LOG_PE_COFF_IMAGE: u64 = 0x0000000000000010;
+
+// Pinned AlgorithmId numeric values; unknown values remain representable.
+pub const ALGORITHM_ERROR: u16 = 0x0000;
+pub const ALGORITHM_RSA: u16 = 0x0001;
+pub const ALGORITHM_TDES: u16 = 0x0003;
+pub const ALGORITHM_SHA1: u16 = 0x0004;
+pub const ALGORITHM_HMAC: u16 = 0x0005;
+pub const ALGORITHM_AES: u16 = 0x0006;
+pub const ALGORITHM_MGF1: u16 = 0x0007;
+pub const ALGORITHM_KEYED_HASH: u16 = 0x0008;
+pub const ALGORITHM_XOR: u16 = 0x000a;
+pub const ALGORITHM_SHA256: u16 = 0x000b;
+pub const ALGORITHM_SHA384: u16 = 0x000c;
+pub const ALGORITHM_SHA512: u16 = 0x000d;
+pub const ALGORITHM_NULL: u16 = 0x0010;
+pub const ALGORITHM_SM3_256: u16 = 0x0012;
+pub const ALGORITHM_SM4: u16 = 0x0013;
+
+// Pinned EventType numeric values; unknown values remain representable.
+pub const EVENT_PREBOOT_CERT: u32 = 0x0000_0000;
+pub const EVENT_POST_CODE: u32 = 0x0000_0001;
+pub const EVENT_UNUSED: u32 = 0x0000_0002;
+pub const EVENT_NO_ACTION: u32 = 0x0000_0003;
+pub const EVENT_SEPARATOR: u32 = 0x0000_0004;
+pub const EVENT_ACTION: u32 = 0x0000_0005;
+pub const EVENT_EVENT_TAG: u32 = 0x0000_0006;
+pub const EVENT_CRTM_CONTENTS: u32 = 0x0000_0007;
+pub const EVENT_CRTM_VERSION: u32 = 0x0000_0008;
+pub const EVENT_CPU_MICROCODE: u32 = 0x0000_0009;
+pub const EVENT_PLATFORM_CONFIG_FLAGS: u32 = 0x0000_000a;
+pub const EVENT_TABLE_OF_DEVICES: u32 = 0x0000_000b;
+pub const EVENT_COMPACT_HASH: u32 = 0x0000_000c;
+pub const EVENT_IPL: u32 = 0x0000_000d;
+pub const EVENT_IPL_PARTITION_DATA: u32 = 0x0000_000e;
+pub const EVENT_NONHOST_CODE: u32 = 0x0000_000f;
+pub const EVENT_NONHOST_CONFIG: u32 = 0x0000_0010;
+pub const EVENT_NONHOST_INFO: u32 = 0x0000_0011;
+pub const EVENT_OMIT_BOOT_DEVICE_EVENTS: u32 = 0x0000_0012;
+pub const EVENT_EFI_EVENT_BASE: u32 = 0x8000_0000;
+pub const EVENT_EFI_VARIABLE_DRIVER_CONFIG: u32 = 0x8000_0001;
+pub const EVENT_EFI_VARIABLE_BOOT: u32 = 0x8000_0002;
+pub const EVENT_EFI_BOOT_SERVICES_APPLICATION: u32 = 0x8000_0003;
+pub const EVENT_EFI_BOOT_SERVICES_DRIVER: u32 = 0x8000_0004;
+pub const EVENT_EFI_RUNTIME_SERVICES_DRIVER: u32 = 0x8000_0005;
+pub const EVENT_EFI_GPT_EVENT: u32 = 0x8000_0006;
+pub const EVENT_EFI_ACTION: u32 = 0x8000_0007;
+pub const EVENT_EFI_PLATFORM_FIRMWARE_BLOB: u32 = 0x8000_0008;
+pub const EVENT_EFI_HANDOFF_TABLES: u32 = 0x8000_0009;
+pub const EVENT_EFI_PLATFORM_FIRMWARE_BLOB2: u32 = 0x8000_000a;
+pub const EVENT_EFI_HANDOFF_TABLES2: u32 = 0x8000_000b;
+pub const EVENT_EFI_VARIABLE_BOOT2: u32 = 0x8000_000c;
+pub const EVENT_EFI_HCRTM_EVENT: u32 = 0x8000_0010;
+pub const EVENT_EFI_VARIABLE_AUTHORITY: u32 = 0x8000_00e0;
+pub const EVENT_EFI_SPDM_FIRMWARE_BLOB: u32 = 0x8000_00e1;
+pub const EVENT_EFI_SPDM_FIRMWARE_CONFIG: u32 = 0x8000_00e2;

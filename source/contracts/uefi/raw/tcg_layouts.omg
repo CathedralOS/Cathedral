@@ -1,0 +1,170 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Derived layout geometry for the pinned TCG representations; see tcg.PORT.md.
+// These plans supply requested byte geometry, not storage or call authority.
+module tcg_layouts;
+use omega::language::core::layout;
+
+pub data AlgorithmIdX64Layout { }
+pub AlgorithmIdX64Policy: AlgorithmIdX64Layout satisfies Layout;
+
+pub machine AlgorithmIdX64Layout::plan(schema: Schema) -> Plan
+    satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 2, size_is_dynamic: false, align: 2 }
+}
+
+pub data EventTypeX64Layout { }
+pub EventTypeX64Policy: EventTypeX64Layout satisfies Layout;
+
+pub machine EventTypeX64Layout::plan(schema: Schema) -> Plan
+    satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+pub data Tcg2EventLogBitmapX64Layout { }
+pub Tcg2EventLogBitmapX64Policy: Tcg2EventLogBitmapX64Layout satisfies Layout;
+
+pub machine Tcg2EventLogBitmapX64Layout::plan(schema: Schema) -> Plan
+    satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+pub data Tcg2HashAlgorithmBitmapX64Layout { }
+pub Tcg2HashAlgorithmBitmapX64Policy: Tcg2HashAlgorithmBitmapX64Layout satisfies Layout;
+
+pub machine Tcg2HashAlgorithmBitmapX64Layout::plan(schema: Schema) -> Plan
+    satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+pub data Tcg2HashLogExtendEventFlagsX64Layout { }
+pub Tcg2HashLogExtendEventFlagsX64Policy: Tcg2HashLogExtendEventFlagsX64Layout satisfies Layout;
+
+pub machine Tcg2HashLogExtendEventFlagsX64Layout::plan(schema: Schema) -> Plan
+    satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 8, size_is_dynamic: false, align: 8 }
+}
+
+pub data TcgVersionX64Layout { }
+pub TcgVersionX64Policy: TcgVersionX64Layout satisfies Layout;
+
+pub machine TcgVersionX64Layout::plan(schema: Schema) -> Plan
+    satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 1 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 2 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 3 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 4, size_is_dynamic: false, align: 1 }
+}
+
+pub data TcgBootServiceCapabilityX64Layout { }
+pub TcgBootServiceCapabilityX64Policy: TcgBootServiceCapabilityX64Layout satisfies Layout;
+
+pub machine TcgBootServiceCapabilityX64Layout::plan(schema: Schema) -> Plan
+    satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 1 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 5 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 9 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 10 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 11 } };
+    Plan { entries: entries, entry_count: 6, size_fixed: 12, size_is_dynamic: false, align: 1 }
+}
+
+pub data TcgProtocolX64Layout { }
+pub TcgProtocolX64Policy: TcgProtocolX64Layout satisfies Layout;
+
+pub machine TcgProtocolX64Layout::plan(schema: Schema) -> Plan
+    satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 32 } };
+    Plan { entries: entries, entry_count: 5, size_fixed: 40, size_is_dynamic: false, align: 8 }
+}
+
+pub data Tcg2VersionX64Layout { }
+pub Tcg2VersionX64Policy: Tcg2VersionX64Layout satisfies Layout;
+
+pub machine Tcg2VersionX64Layout::plan(schema: Schema) -> Plan
+    satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 1 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 2, size_is_dynamic: false, align: 1 }
+}
+
+pub data Tcg2BootServiceCapabilityX64Layout { }
+pub Tcg2BootServiceCapabilityX64Policy: Tcg2BootServiceCapabilityX64Layout satisfies Layout;
+
+pub machine Tcg2BootServiceCapabilityX64Layout::plan(schema: Schema) -> Plan
+    satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 1 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 3 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 8 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 12 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 16 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 18 } };
+    entries[7] = FieldEntry { key: schema.fields[7].key, placement: FieldPlan::At { offset: 20 } };
+    entries[8] = FieldEntry { key: schema.fields[8].key, placement: FieldPlan::At { offset: 24 } };
+    entries[9] = FieldEntry { key: schema.fields[9].key, placement: FieldPlan::At { offset: 28 } };
+    entries[10] = FieldEntry { key: schema.fields[10].key, placement: FieldPlan::At { offset: 32 } };
+    Plan { entries: entries, entry_count: 11, size_fixed: 36, size_is_dynamic: false, align: 4 }
+}
+
+pub data Tcg2EventHeaderX64Layout { }
+pub Tcg2EventHeaderX64Policy: Tcg2EventHeaderX64Layout satisfies Layout;
+
+pub machine Tcg2EventHeaderX64Layout::plan(schema: Schema) -> Plan
+    satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 6 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 10 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 14, size_is_dynamic: false, align: 1 }
+}
+
+pub data Tcg2ProtocolX64Layout { }
+pub Tcg2ProtocolX64Policy: Tcg2ProtocolX64Layout satisfies Layout;
+
+pub machine Tcg2ProtocolX64Layout::plan(schema: Schema) -> Plan
+    satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 32 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 40 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 48 } };
+    Plan { entries: entries, entry_count: 7, size_fixed: 56, size_is_dynamic: false, align: 8 }
+}
+
