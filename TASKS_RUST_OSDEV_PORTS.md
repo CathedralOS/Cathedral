@@ -233,6 +233,11 @@ observations/target assertions, four Rust tests, Omega option/frame/gate checks,
 complete 4096-byte table encode/decode/rejection fixtures and six body mutations.
 Canonical gate fields and placements are preserved; imported generated-field
 privacy remains an explicitly reproduced layout-consumer limitation.
+The [TLB operand slice](source/libraries/x86_64/tlb-operands.PORT.md) passes
+43 exact-source Rust observations, six actual upstream target assertions, four
+Rust tests and Omega semantic checks with four body mutations. Pinned and
+AMD-defined range-count recipes are separate; no TLB instruction or invalidation
+settlement is claimed.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

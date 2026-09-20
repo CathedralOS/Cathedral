@@ -14,8 +14,9 @@ Completed slices: [tested numeric address algorithms](addresses.PORT.md),
 [descriptor cases and TSS codecs](../../drivers/facts/x86_descriptors.PORT.md),
 [PTE word/index/level operations](page-entries.PORT.md),
 [detached tables and captured translation](tables.PORT.md),
-[child/leaf mapping decisions](mapping-plans.PORT.md), and
-[interrupt values and table codecs](../../drivers/facts/x86_interrupts.PORT.md).
+[child/leaf mapping decisions](mapping-plans.PORT.md),
+[interrupt values and table codecs](../../drivers/facts/x86_interrupts.PORT.md), and
+[TLB operand recipes](tlb-operands.PORT.md).
 Baseline reviewed 2026-09-20 against
 Cathedral `77544518fc947973a5607f28b278aca2e2ffa462` and
 Omega `eaa7993a23623cd8fabf45350340479c5c9c7879`. X86-001/002 are implementation work,

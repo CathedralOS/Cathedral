@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Requested repr(C) operand geometry, independently measured in the pinned Rust mirror.
+module x86_tlb_layouts;
+use omega::language::core::layout;
+pub data InvpcidDescriptorLayout {}
+pub InvpcidDescriptorPolicy: InvpcidDescriptorLayout satisfies Layout;
+pub machine InvpcidDescriptorLayout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 16, size_is_dynamic: false, align: 8 }
+}

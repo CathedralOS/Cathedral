@@ -1,0 +1,74 @@
+use facts::x86_tlb_operands::Pcid;
+use facts::x86_tlb_operands::InvpcidDescriptor;
+use facts::x86_tlb_operands::InvlpgbLimits;
+use facts::x86_tlb_operands::BroadcastRegisters;
+use x86_values::tlb_operands;
+use x86_values::tlb_operands::PcidResult;
+use x86_values::tlb_operands::InvPcidCommand;
+use x86_values::tlb_operands::InvpcidOperand;
+use x86_values::tlb_operands::LimitsResult;
+use x86_values::tlb_operands::PageSelection;
+use x86_values::tlb_operands::PcidSelection;
+use x86_values::tlb_operands::AsidSelection;
+use x86_values::tlb_operands::BroadcastRequest;
+use x86_values::tlb_operands::BroadcastResult;
+use x86_values::tlb_operands::RangeStep;
+use cases;
+machine operand_is(value: InvpcidOperand, expected_kind: u8, pcid: u64, address: u64) -> bool {
+    transition value { InvpcidOperand::Ready { kind, descriptor } -> check(kind, descriptor, expected_kind, pcid, address) _ -> (false) }
+    state check(actual: u8, descriptor: InvpcidDescriptor, expected_kind: u8, pcid: u64, address: u64) { actual == expected_kind && descriptor.pcid == pcid && descriptor.address == address }
+}
+machine invpcid_cases() -> bool {
+    let a: InvpcidOperand = tlb_operands::invpcid_prepare(InvPcidCommand::Address { address: 0x1234, pcid: Pcid { value: 9 } });
+    let b: InvpcidOperand = tlb_operands::invpcid_prepare(InvPcidCommand::Single { pcid: Pcid { value: 4095 } });
+    let c: InvpcidOperand = tlb_operands::invpcid_prepare(InvPcidCommand::All);
+    let d: InvpcidOperand = tlb_operands::invpcid_prepare(InvPcidCommand::AllExceptGlobal);
+    let invalid: InvpcidOperand = tlb_operands::invpcid_prepare(InvPcidCommand::Address { address: 0x800000000000, pcid: Pcid { value: 0 } });
+    let high: u64 = 0xffff800000001234;
+    let raw: InvpcidDescriptor = InvpcidDescriptor { pcid: 4095, address: high };
+    let bytes: [u8; 16] = tlb_operands::encode_invpcid(&raw);
+    let decoded: InvpcidDescriptor = tlb_operands::decode_invpcid(&bytes);
+    operand_is(a, 0, 9, 0x1234) && operand_is(b, 1, 4095, 0) && operand_is(c, 2, 0, 0) && operand_is(d, 3, 0, 0) &&
+    invalid in InvpcidOperand::InvalidAddress && bytes[0] == 255 && bytes[1] == 15 && bytes[2] == 0 && bytes[3] == 0 && bytes[4] == 0 && bytes[5] == 0 && bytes[6] == 0 && bytes[7] == 0 &&
+    bytes[8] == 52 && bytes[9] == 18 && bytes[10] == 0 && bytes[11] == 0 && bytes[12] == 0 && bytes[13] == 128 && bytes[14] == 255 && bytes[15] == 255 &&
+    decoded.pcid == 4095 && decoded.address == high
+}
+machine limits_are(value: LimitsResult) -> bool {
+    transition value { LimitsResult::Observed { limits } -> (limits.count_max == 65535 && limits.nested && limits.nasid == 123456) _ -> (false) }
+}
+machine asid_error_is(value: BroadcastResult) -> bool {
+    transition value { BroadcastResult::AsidOutOfRange { value, nasid } -> (value == 2 && nasid == 2) _ -> (false) }
+}
+machine count_error_is(value: BroadcastResult) -> bool {
+    transition value { BroadcastResult::CountTooLarge { value, maximum } -> (value == 2 && maximum == 1) _ -> (false) }
+}
+machine privilege_error_is(value: LimitsResult) -> bool {
+    transition value { LimitsResult::PrivilegeNotZero { cpl } -> (cpl == 3) _ -> (false) }
+}
+machine invalid_cases() -> bool {
+    let observed: LimitsResult = tlb_operands::limits_from_observations(0, 2097160, 4294967295, 123456);
+    let denied: LimitsResult = tlb_operands::limits_from_observations(3, 8, 1, 1);
+    let absent: LimitsResult = tlb_operands::limits_from_observations(0, 0, 1, 1);
+    let limits: InvlpgbLimits = InvlpgbLimits { count_max: 1, nested: false, nasid: 2 };
+    let base: BroadcastRequest = tlb_operands::broadcast_default();
+    let nested: BroadcastRequest = tlb_operands::with_nested(base);
+    let asid: BroadcastRequest = tlb_operands::with_asid(base, 2);
+    let count: BroadcastRequest = tlb_operands::with_pages(base, PageSelection::Pages { address: 4096, extra_count: 2, stride: 4096 });
+    let giant: BroadcastRequest = tlb_operands::with_pages(base, PageSelection::Pages { address: 0, extra_count: 0, stride: 1073741824 });
+    let misaligned: BroadcastRequest = tlb_operands::with_pages(base, PageSelection::Pages { address: 4097, extra_count: 0, stride: 4096 });
+    let n: BroadcastResult = tlb_operands::broadcast_prepare(nested, limits);
+    let a: BroadcastResult = tlb_operands::broadcast_prepare(asid, limits);
+    let c: BroadcastResult = tlb_operands::broadcast_prepare(count, limits);
+    let g: BroadcastResult = tlb_operands::broadcast_prepare(giant, limits);
+    let m: BroadcastResult = tlb_operands::broadcast_prepare(misaligned, limits);
+    limits_are(observed) && privilege_error_is(denied) && absent in LimitsResult::Unsupported &&
+    n in BroadcastResult::NestedUnsupported && asid_error_is(a) && count_error_is(c) &&
+    g in BroadcastResult::InvalidPageGeometry && m in BroadcastResult::InvalidPageGeometry
+}
+machine test_result() -> i32 {
+    transition cases::pcid_cases() && cases::broadcast_cases() && cases::range_cases() && invpcid_cases() && invalid_cases() { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

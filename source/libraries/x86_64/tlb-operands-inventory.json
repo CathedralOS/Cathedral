@@ -1,0 +1,775 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/x86_64",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/instructions/interrupts.rs",
+      "src/instructions/mod.rs",
+      "src/instructions/port.rs",
+      "src/instructions/random.rs",
+      "src/instructions/segmentation.rs",
+      "src/instructions/smap.rs",
+      "src/instructions/tables.rs",
+      "src/instructions/tlb.rs"
+    ]
+  },
+  "files": {
+    "src/instructions/interrupts.rs": {
+      "sha256": "2021860d3a7bfdf57789821cf917f44f84dd551ec417552c96f28c00e5630419",
+      "disposition": "omitted",
+      "reason": "RFLAGS predicate facts already exist; IF mutation, software interrupt entry, callback restoration and enable+halt are instruction/provider lifecycle work. No callback execution plan is supplied by numeric data.",
+      "symbols": {
+        "7:are_enabled": {
+          "anchor": "pub fn are_enabled() -> bool {",
+          "disposition": "omitted",
+          "reason": "RFLAGS predicate facts already exist; IF mutation, software interrupt entry, callback restoration and enable+halt are instruction/provider lifecycle work. No callback execution plan is supplied by numeric data."
+        },
+        "21:enable": {
+          "anchor": "pub fn enable() {",
+          "disposition": "omitted",
+          "reason": "RFLAGS predicate facts already exist; IF mutation, software interrupt entry, callback restoration and enable+halt are instruction/provider lifecycle work. No callback execution plan is supplied by numeric data."
+        },
+        "33:disable": {
+          "anchor": "pub fn disable() {",
+          "disposition": "omitted",
+          "reason": "RFLAGS predicate facts already exist; IF mutation, software interrupt entry, callback restoration and enable+halt are instruction/provider lifecycle work. No callback execution plan is supplied by numeric data."
+        },
+        "62:without_interrupts": {
+          "anchor": "pub fn without_interrupts<F, R>(f: F) -> R",
+          "disposition": "omitted",
+          "reason": "RFLAGS predicate facts already exist; IF mutation, software interrupt entry, callback restoration and enable+halt are instruction/provider lifecycle work. No callback execution plan is supplied by numeric data."
+        },
+        "130:enable_and_hlt": {
+          "anchor": "pub fn enable_and_hlt() {",
+          "disposition": "omitted",
+          "reason": "RFLAGS predicate facts already exist; IF mutation, software interrupt entry, callback restoration and enable+halt are instruction/provider lifecycle work. No callback execution plan is supplied by numeric data."
+        },
+        "138:int3": {
+          "anchor": "pub fn int3() {",
+          "disposition": "omitted",
+          "reason": "RFLAGS predicate facts already exist; IF mutation, software interrupt entry, callback restoration and enable+halt are instruction/provider lifecycle work. No callback execution plan is supplied by numeric data."
+        },
+        "153:software_interrupt": {
+          "anchor": "pub unsafe fn software_interrupt<const NUM: u8>() {",
+          "disposition": "omitted",
+          "reason": "RFLAGS predicate facts already exist; IF mutation, software interrupt entry, callback restoration and enable+halt are instruction/provider lifecycle work. No callback execution plan is supplied by numeric data."
+        }
+      }
+    },
+    "src/instructions/mod.rs": {
+      "sha256": "d4fd3d08cef922e12dd94c6e08430319385d5b5c0115729b0e1edcec7f5da471",
+      "disposition": "omitted",
+      "reason": "Module scaffolding or individual instruction leaves (halt/no-op/debug/current RIP); no independent numeric operand algorithm remains here.",
+      "symbols": {
+        "5:interrupts": {
+          "anchor": "pub mod interrupts;",
+          "disposition": "omitted",
+          "reason": "Module scaffolding or individual instruction leaves (halt/no-op/debug/current RIP); no independent numeric operand algorithm remains here."
+        },
+        "6:port": {
+          "anchor": "pub mod port;",
+          "disposition": "omitted",
+          "reason": "Module scaffolding or individual instruction leaves (halt/no-op/debug/current RIP); no independent numeric operand algorithm remains here."
+        },
+        "7:random": {
+          "anchor": "pub mod random;",
+          "disposition": "omitted",
+          "reason": "Module scaffolding or individual instruction leaves (halt/no-op/debug/current RIP); no independent numeric operand algorithm remains here."
+        },
+        "8:segmentation": {
+          "anchor": "pub mod segmentation;",
+          "disposition": "omitted",
+          "reason": "Module scaffolding or individual instruction leaves (halt/no-op/debug/current RIP); no independent numeric operand algorithm remains here."
+        },
+        "9:smap": {
+          "anchor": "pub mod smap;",
+          "disposition": "omitted",
+          "reason": "Module scaffolding or individual instruction leaves (halt/no-op/debug/current RIP); no independent numeric operand algorithm remains here."
+        },
+        "10:tables": {
+          "anchor": "pub mod tables;",
+          "disposition": "omitted",
+          "reason": "Module scaffolding or individual instruction leaves (halt/no-op/debug/current RIP); no independent numeric operand algorithm remains here."
+        },
+        "11:tlb": {
+          "anchor": "pub mod tlb;",
+          "disposition": "omitted",
+          "reason": "Module scaffolding or individual instruction leaves (halt/no-op/debug/current RIP); no independent numeric operand algorithm remains here."
+        },
+        "17:hlt": {
+          "anchor": "pub fn hlt() {",
+          "disposition": "omitted",
+          "reason": "Module scaffolding or individual instruction leaves (halt/no-op/debug/current RIP); no independent numeric operand algorithm remains here."
+        },
+        "30:nop": {
+          "anchor": "pub fn nop() {",
+          "disposition": "omitted",
+          "reason": "Module scaffolding or individual instruction leaves (halt/no-op/debug/current RIP); no independent numeric operand algorithm remains here."
+        },
+        "42:bochs_breakpoint": {
+          "anchor": "pub fn bochs_breakpoint() {",
+          "disposition": "omitted",
+          "reason": "Module scaffolding or individual instruction leaves (halt/no-op/debug/current RIP); no independent numeric operand algorithm remains here."
+        },
+        "51:read_rip": {
+          "anchor": "pub fn read_rip() -> crate::VirtAddr {",
+          "disposition": "omitted",
+          "reason": "Module scaffolding or individual instruction leaves (halt/no-op/debug/current RIP); no independent numeric operand algorithm remains here."
+        }
+      }
+    },
+    "src/instructions/port.rs": {
+      "sha256": "e548b3ddc13b738876fe932a15682aace0dfd8fbcccd5761782dc6742d505b53",
+      "disposition": "omitted",
+      "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering.",
+      "symbols": {
+        "8:crate::structures::port::{PortRead, PortWrite};": {
+          "anchor": "pub use crate::structures::port::{PortRead, PortWrite};",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "12:read_from_port": {
+          "anchor": "unsafe fn read_from_port(port: u16) -> u8 {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "23:read_from_port": {
+          "anchor": "unsafe fn read_from_port(port: u16) -> u16 {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "34:read_from_port": {
+          "anchor": "unsafe fn read_from_port(port: u16) -> u32 {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "45:write_to_port": {
+          "anchor": "unsafe fn write_to_port(port: u16, value: u8) {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "54:write_to_port": {
+          "anchor": "unsafe fn write_to_port(port: u16, value: u16) {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "63:write_to_port": {
+          "anchor": "unsafe fn write_to_port(port: u16, value: u32) {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "71:PortAccess": {
+          "anchor": "pub trait PortAccess: Sealed {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "73:DEBUG_STR": {
+          "anchor": "const DEBUG_STR: &'static str;",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "77:PortReadAccess": {
+          "anchor": "pub trait PortReadAccess: PortAccess {}",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "80:PortWriteAccess": {
+          "anchor": "pub trait PortWriteAccess: PortAccess {}",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "84:ReadOnlyAccess": {
+          "anchor": "pub struct ReadOnlyAccess(());",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "88:DEBUG_STR": {
+          "anchor": "const DEBUG_STR: &'static str = \"ReadOnly\";",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "94:WriteOnlyAccess": {
+          "anchor": "pub struct WriteOnlyAccess(());",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "98:DEBUG_STR": {
+          "anchor": "const DEBUG_STR: &'static str = \"WriteOnly\";",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "104:ReadWriteAccess": {
+          "anchor": "pub struct ReadWriteAccess(());",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "108:DEBUG_STR": {
+          "anchor": "const DEBUG_STR: &'static str = \"ReadWrite\";",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "121:PortGeneric": {
+          "anchor": "pub struct PortGeneric<T, A> {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "127:Port": {
+          "anchor": "pub type Port<T> = PortGeneric<T, ReadWriteAccess>;",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "130:PortReadOnly": {
+          "anchor": "pub type PortReadOnly<T> = PortGeneric<T, ReadOnlyAccess>;",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "133:PortWriteOnly": {
+          "anchor": "pub type PortWriteOnly<T> = PortGeneric<T, WriteOnlyAccess>;",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "138:new": {
+          "anchor": "pub const fn new(port: u16) -> PortGeneric<T, A> {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "158:read": {
+          "anchor": "pub unsafe fn read(&mut self) -> T {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "175:write": {
+          "anchor": "pub unsafe fn write(&mut self, value: T) {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "181:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "191:clone": {
+          "anchor": "fn clone(&self) -> Self {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        },
+        "200:eq": {
+          "anchor": "fn eq(&self, other: &Self) -> bool {",
+          "disposition": "omitted",
+          "reason": "Port numbers remain u16 and existing PIC PortIo operations remain canonical. Rust read/write marker wrappers, Copy/Clone and construction are deliberately not port-access authority. Generic width-specific leaves require admitted PortIo integration; formatting/equality are ordinary omitted API engineering."
+        }
+      }
+    },
+    "src/instructions/random.rs": {
+      "sha256": "a454ca21b303bcf6ece284ddfecb33e5cd1d4898a9adaddfb20520599f4688d1",
+      "disposition": "omitted",
+      "reason": "CPUID bit30 predicate is an ordinary extractable observation check; obtaining random bytes and carrying provider success require RDRAND boundary work. No standalone CPUID/RNG provider introduced in this TLB slice.",
+      "symbols": {
+        "5:RdRand": {
+          "anchor": "pub struct RdRand(());",
+          "disposition": "omitted",
+          "reason": "CPUID bit30 predicate is an ordinary extractable observation check; obtaining random bytes and carrying provider success require RDRAND boundary work. No standalone CPUID/RNG provider introduced in this TLB slice."
+        },
+        "10:new": {
+          "anchor": "pub fn new() -> Option<Self> {",
+          "disposition": "omitted",
+          "reason": "CPUID bit30 predicate is an ordinary extractable observation check; obtaining random bytes and carrying provider success require RDRAND boundary work. No standalone CPUID/RNG provider introduced in this TLB slice."
+        },
+        "25:get_u64": {
+          "anchor": "pub fn get_u64(self) -> Option<u64> {",
+          "disposition": "omitted",
+          "reason": "CPUID bit30 predicate is an ordinary extractable observation check; obtaining random bytes and carrying provider success require RDRAND boundary work. No standalone CPUID/RNG provider introduced in this TLB slice."
+        },
+        "40:get_u32": {
+          "anchor": "pub fn get_u32(self) -> Option<u32> {",
+          "disposition": "omitted",
+          "reason": "CPUID bit30 predicate is an ordinary extractable observation check; obtaining random bytes and carrying provider success require RDRAND boundary work. No standalone CPUID/RNG provider introduced in this TLB slice."
+        },
+        "55:get_u16": {
+          "anchor": "pub fn get_u16(self) -> Option<u16> {",
+          "disposition": "omitted",
+          "reason": "CPUID bit30 predicate is an ordinary extractable observation check; obtaining random bytes and carrying provider success require RDRAND boundary work. No standalone CPUID/RNG provider introduced in this TLB slice."
+        },
+        "70:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "CPUID bit30 predicate is an ordinary extractable observation check; obtaining random bytes and carrying provider success require RDRAND boundary work. No standalone CPUID/RNG provider introduced in this TLB slice."
+        },
+        "74:test_rdrand": {
+          "anchor": "pub fn test_rdrand() {",
+          "disposition": "omitted",
+          "reason": "CPUID bit30 predicate is an ordinary extractable observation check; obtaining random bytes and carrying provider success require RDRAND boundary work. No standalone CPUID/RNG provider introduced in this TLB slice."
+        }
+      }
+    },
+    "src/instructions/segmentation.rs": {
+      "sha256": "37e3d831a3d46d16a45397cd2b185d084ba70c4f48373a46653dac7fecc6b18d",
+      "disposition": "omitted",
+      "reason": "Existing SegmentSelector, FS_BASE_MSR and GS_BASE_MSR facts are canonical. Segment register mutation, base reads/writes, CS far return and swapgs are instruction/entry authority boundaries.",
+      "symbols": {
+        "3:crate::registers::segmentation::{Segment, Segment64, CS, DS, ES, FS, GS, SS};": {
+          "anchor": "pub use crate::registers::segmentation::{Segment, Segment64, CS, DS, ES, FS, GS, SS};",
+          "disposition": "omitted",
+          "reason": "Existing SegmentSelector, FS_BASE_MSR and GS_BASE_MSR facts are canonical. Segment register mutation, base reads/writes, CS far return and swapgs are instruction/entry authority boundaries."
+        },
+        "14:get_reg": {
+          "anchor": "fn get_reg() -> SegmentSelector {",
+          "disposition": "omitted",
+          "reason": "Existing SegmentSelector, FS_BASE_MSR and GS_BASE_MSR facts are canonical. Segment register mutation, base reads/writes, CS far return and swapgs are instruction/entry authority boundaries."
+        },
+        "30:set_reg": {
+          "anchor": "unsafe fn set_reg(sel: SegmentSelector) {",
+          "disposition": "omitted",
+          "reason": "Existing SegmentSelector, FS_BASE_MSR and GS_BASE_MSR facts are canonical. Segment register mutation, base reads/writes, CS far return and swapgs are instruction/entry authority boundaries."
+        },
+        "42:BASE": {
+          "anchor": "const BASE: Msr = <$base>::MSR;",
+          "disposition": "omitted",
+          "reason": "Existing SegmentSelector, FS_BASE_MSR and GS_BASE_MSR facts are canonical. Segment register mutation, base reads/writes, CS far return and swapgs are instruction/entry authority boundaries."
+        },
+        "44:read_base": {
+          "anchor": "fn read_base() -> VirtAddr {",
+          "disposition": "omitted",
+          "reason": "Existing SegmentSelector, FS_BASE_MSR and GS_BASE_MSR facts are canonical. Segment register mutation, base reads/writes, CS far return and swapgs are instruction/entry authority boundaries."
+        },
+        "53:write_base": {
+          "anchor": "unsafe fn write_base(base: VirtAddr) {",
+          "disposition": "omitted",
+          "reason": "Existing SegmentSelector, FS_BASE_MSR and GS_BASE_MSR facts are canonical. Segment register mutation, base reads/writes, CS far return and swapgs are instruction/entry authority boundaries."
+        },
+        "74:set_reg": {
+          "anchor": "unsafe fn set_reg(sel: SegmentSelector) {",
+          "disposition": "omitted",
+          "reason": "Existing SegmentSelector, FS_BASE_MSR and GS_BASE_MSR facts are canonical. Segment register mutation, base reads/writes, CS far return and swapgs are instruction/entry authority boundaries."
+        },
+        "106:swap": {
+          "anchor": "pub unsafe fn swap() {",
+          "disposition": "omitted",
+          "reason": "Existing SegmentSelector, FS_BASE_MSR and GS_BASE_MSR facts are canonical. Segment register mutation, base reads/writes, CS far return and swapgs are instruction/entry authority boundaries."
+        }
+      }
+    },
+    "src/instructions/smap.rs": {
+      "sha256": "b5a6a5ae9bfb9051ca8fd2325f4fa50d73c2d7386726ea74155e101f8cfd2e20",
+      "disposition": "omitted",
+      "reason": "Existing RFLAGS AC bit and CR4 SMAP flag are canonical. CPUID bit20 interpretation is ordinary extractable observation engineering; STAC/CLAC and callback restoration require a checked provider/guard lifecycle.",
+      "symbols": {
+        "26:Smap": {
+          "anchor": "pub struct Smap(());",
+          "disposition": "omitted",
+          "reason": "Existing RFLAGS AC bit and CR4 SMAP flag are canonical. CPUID bit20 interpretation is ordinary extractable observation engineering; STAC/CLAC and callback restoration require a checked provider/guard lifecycle."
+        },
+        "36:new": {
+          "anchor": "pub fn new() -> Option<Self> {",
+          "disposition": "omitted",
+          "reason": "Existing RFLAGS AC bit and CR4 SMAP flag are canonical. CPUID bit20 interpretation is ordinary extractable observation engineering; STAC/CLAC and callback restoration require a checked provider/guard lifecycle."
+        },
+        "53:new_unchecked": {
+          "anchor": "pub const unsafe fn new_unchecked() -> Self {",
+          "disposition": "omitted",
+          "reason": "Existing RFLAGS AC bit and CR4 SMAP flag are canonical. CPUID bit20 interpretation is ordinary extractable observation engineering; STAC/CLAC and callback restoration require a checked provider/guard lifecycle."
+        },
+        "64:is_enabled": {
+          "anchor": "pub fn is_enabled(self) -> bool {",
+          "disposition": "omitted",
+          "reason": "Existing RFLAGS AC bit and CR4 SMAP flag are canonical. CPUID bit20 interpretation is ordinary extractable observation engineering; STAC/CLAC and callback restoration require a checked provider/guard lifecycle."
+        },
+        "74:disable": {
+          "anchor": "pub fn disable(self) {",
+          "disposition": "omitted",
+          "reason": "Existing RFLAGS AC bit and CR4 SMAP flag are canonical. CPUID bit20 interpretation is ordinary extractable observation engineering; STAC/CLAC and callback restoration require a checked provider/guard lifecycle."
+        },
+        "88:enable": {
+          "anchor": "pub fn enable(self) {",
+          "disposition": "omitted",
+          "reason": "Existing RFLAGS AC bit and CR4 SMAP flag are canonical. CPUID bit20 interpretation is ordinary extractable observation engineering; STAC/CLAC and callback restoration require a checked provider/guard lifecycle."
+        },
+        "100:without_smap": {
+          "anchor": "pub fn without_smap<F, R>(self, f: F) -> R",
+          "disposition": "omitted",
+          "reason": "Existing RFLAGS AC bit and CR4 SMAP flag are canonical. CPUID bit20 interpretation is ordinary extractable observation engineering; STAC/CLAC and callback restoration require a checked provider/guard lifecycle."
+        }
+      }
+    },
+    "src/instructions/tables.rs": {
+      "sha256": "34ed3b42c79d72cb74cef8a2581dffa798b66ea77b793887910e38377d975bed",
+      "disposition": "omitted",
+      "reason": "Existing DescriptorTablePointer and selector values/codecs are canonical. LGDT/LIDT/SGDT/SIDT/LTR need instruction and admitted table/backing lifetimes.",
+      "symbols": {
+        "7:crate::structures::DescriptorTablePointer;": {
+          "anchor": "pub use crate::structures::DescriptorTablePointer;",
+          "disposition": "omitted",
+          "reason": "Existing DescriptorTablePointer and selector values/codecs are canonical. LGDT/LIDT/SGDT/SIDT/LTR need instruction and admitted table/backing lifetimes."
+        },
+        "21:lgdt": {
+          "anchor": "pub unsafe fn lgdt(gdt: &DescriptorTablePointer) {",
+          "disposition": "omitted",
+          "reason": "Existing DescriptorTablePointer and selector values/codecs are canonical. LGDT/LIDT/SGDT/SIDT/LTR need instruction and admitted table/backing lifetimes."
+        },
+        "39:lidt": {
+          "anchor": "pub unsafe fn lidt(idt: &DescriptorTablePointer) {",
+          "disposition": "omitted",
+          "reason": "Existing DescriptorTablePointer and selector values/codecs are canonical. LGDT/LIDT/SGDT/SIDT/LTR need instruction and admitted table/backing lifetimes."
+        },
+        "47:sgdt": {
+          "anchor": "pub fn sgdt() -> DescriptorTablePointer {",
+          "disposition": "omitted",
+          "reason": "Existing DescriptorTablePointer and selector values/codecs are canonical. LGDT/LIDT/SGDT/SIDT/LTR need instruction and admitted table/backing lifetimes."
+        },
+        "60:sidt": {
+          "anchor": "pub fn sidt() -> DescriptorTablePointer {",
+          "disposition": "omitted",
+          "reason": "Existing DescriptorTablePointer and selector values/codecs are canonical. LGDT/LIDT/SGDT/SIDT/LTR need instruction and admitted table/backing lifetimes."
+        },
+        "88:load_tss": {
+          "anchor": "pub unsafe fn load_tss(sel: SegmentSelector) {",
+          "disposition": "omitted",
+          "reason": "Existing DescriptorTablePointer and selector values/codecs are canonical. LGDT/LIDT/SGDT/SIDT/LTR need instruction and admitted table/backing lifetimes."
+        }
+      }
+    },
+    "src/instructions/tlb.rs": {
+      "sha256": "c4c47e0718be84a5e3812b20a4129e48d0ebc203e395476b117b540bc50dae88",
+      "disposition": "translated",
+      "reason": "Pure operand extraction; hardware tails explicitly excluded.",
+      "symbols": {
+        "17:flush": {
+          "anchor": "pub fn flush(addr: VirtAddr) {",
+          "disposition": "omitted",
+          "reason": "TLB instruction execution, deprecated misspelled alias or Rust formatting deliberately omitted."
+        },
+        "25:flush_all": {
+          "anchor": "pub fn flush_all() {",
+          "disposition": "omitted",
+          "reason": "TLB instruction execution, deprecated misspelled alias or Rust formatting deliberately omitted."
+        },
+        "33:InvPcidCommand": {
+          "anchor": "pub enum InvPcidCommand {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub data InvPcidCommand"
+            }
+          ]
+        },
+        "50:InvPicdCommand": {
+          "anchor": "pub type InvPicdCommand = InvPcidCommand;",
+          "disposition": "omitted",
+          "reason": "TLB instruction execution, deprecated misspelled alias or Rust formatting deliberately omitted."
+        },
+        "56:InvpcidDescriptor": {
+          "anchor": "struct InvpcidDescriptor {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_tlb_operands.omg",
+              "anchor": "pub data InvpcidDescriptor"
+            }
+          ]
+        },
+        "64:Pcid": {
+          "anchor": "pub struct Pcid(u16);",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_tlb_operands.omg",
+              "anchor": "pub data Pcid "
+            }
+          ]
+        },
+        "69:new": {
+          "anchor": "pub const fn new(pcid: u16) -> Result<Pcid, PcidTooBig> {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub machine pcid_new"
+            }
+          ]
+        },
+        "78:value": {
+          "anchor": "pub const fn value(&self) -> u16 {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub machine pcid_value"
+            }
+          ]
+        },
+        "87:PcidTooBig": {
+          "anchor": "pub struct PcidTooBig(u16);",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub data PcidResult"
+            }
+          ]
+        },
+        "90:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "TLB instruction execution, deprecated misspelled alias or Rust formatting deliberately omitted."
+        },
+        "101:flush_pcid": {
+          "anchor": "pub unsafe fn flush_pcid(command: InvPcidCommand) {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub machine invpcid_prepare"
+            }
+          ]
+        },
+        "146:Invlpgb": {
+          "anchor": "pub struct Invlpgb {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_tlb_operands.omg",
+              "anchor": "pub data InvlpgbLimits"
+            }
+          ]
+        },
+        "158:new": {
+          "anchor": "pub fn new() -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub machine limits_from_observations"
+            }
+          ]
+        },
+        "186:invlpgb_count_max": {
+          "anchor": "pub fn invlpgb_count_max(&self) -> u16 {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_tlb_operands.omg",
+              "anchor": "count_max: u16"
+            }
+          ]
+        },
+        "192:tlb_flush_nested": {
+          "anchor": "pub fn tlb_flush_nested(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_tlb_operands.omg",
+              "anchor": "nested: bool"
+            }
+          ]
+        },
+        "198:nasid": {
+          "anchor": "pub fn nasid(&self) -> u32 {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_tlb_operands.omg",
+              "anchor": "nasid: u32"
+            }
+          ]
+        },
+        "203:build": {
+          "anchor": "pub fn build(&self) -> InvlpgbFlushBuilder<'_> {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub machine broadcast_default"
+            }
+          ]
+        },
+        "218:tlbsync": {
+          "anchor": "pub fn tlbsync(&self) {",
+          "disposition": "omitted",
+          "reason": "TLB instruction execution, deprecated misspelled alias or Rust formatting deliberately omitted."
+        },
+        "228:InvlpgbFlushBuilder": {
+          "anchor": "pub struct InvlpgbFlushBuilder<'a, S = Size4KiB>",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub data BroadcastRequest"
+            }
+          ]
+        },
+        "249:pages": {
+          "anchor": "pub fn pages<T>(self, page_range: PageRange<T>) -> InvlpgbFlushBuilder<'a, T>",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub machine with_pages"
+            }
+          ]
+        },
+        "269:pcid": {
+          "anchor": "pub unsafe fn pcid(&mut self, pcid: Pcid) -> &mut Self {",
+          "disposition": "translated",
+          "reason": "Detached selection mutation is independent of execution authority; prepare validates ASID/nested limits. CR4.PCIDE/EFER.SVME/provider provenance remain separate obligations.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub machine with_pcid"
+            }
+          ]
+        },
+        "280:asid": {
+          "anchor": "pub unsafe fn asid(&mut self, asid: u16) -> Result<&mut Self, AsidOutOfRangeError> {",
+          "disposition": "translated",
+          "reason": "Detached selection mutation is independent of execution authority; prepare validates ASID/nested limits. CR4.PCIDE/EFER.SVME/provider provenance remain separate obligations.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "state asid_valid"
+            }
+          ]
+        },
+        "293:include_global": {
+          "anchor": "pub fn include_global(&mut self) -> &mut Self {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub machine with_global"
+            }
+          ]
+        },
+        "299:final_translation_only": {
+          "anchor": "pub fn final_translation_only(&mut self) -> &mut Self {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub machine with_final_only"
+            }
+          ]
+        },
+        "305:include_nested_translations": {
+          "anchor": "pub fn include_nested_translations(mut self) -> Self {",
+          "disposition": "translated",
+          "reason": "Detached selection mutation is independent of execution authority; prepare validates ASID/nested limits. CR4.PCIDE/EFER.SVME/provider provenance remain separate obligations.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub machine with_nested"
+            }
+          ]
+        },
+        "316:flush": {
+          "anchor": "pub fn flush(&self) {",
+          "disposition": "translated",
+          "reason": "Exact one-iteration pinned recipe. Architectural count interpretation is separately implemented and tested; no flush loop or CPU completion authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub machine pinned_range_step"
+            }
+          ]
+        },
+        "373:AsidOutOfRangeError": {
+          "anchor": "pub struct AsidOutOfRangeError {",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "case AsidOutOfRange"
+            }
+          ]
+        },
+        "375:asid": {
+          "anchor": "pub asid: u16,",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "case AsidOutOfRange"
+            }
+          ]
+        },
+        "377:nasid": {
+          "anchor": "pub nasid: u32,",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "case AsidOutOfRange"
+            }
+          ]
+        },
+        "381:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "TLB instruction execution, deprecated misspelled alias or Rust formatting deliberately omitted."
+        },
+        "392:flush_broadcast": {
+          "anchor": "unsafe fn flush_broadcast<S>(",
+          "disposition": "translated",
+          "reason": "Pure values/validation/composition only; no probe, instruction execution or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/tlb_operands.omg",
+              "anchor": "pub machine broadcast_prepare"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/tlb_operands.omg",
+          "anchor": "module tlb_operands;"
+        }
+      ]
+    }
+  },
+  "private_and_implicit_mappings": [
+    {
+      "source": "InvPcidCommand::{Address,Single,All,AllExceptGlobal}",
+      "target": "source/libraries/x86_64/tlb_operands.omg::InvPcidCommand",
+      "meaning": "Semantic cases retained, canonical address checked before producing operand."
+    },
+    {
+      "source": "InvpcidDescriptor::{pcid,address}",
+      "target": "source/drivers/facts/x86_tlb_operands.omg::InvpcidDescriptor",
+      "meaning": "Exact raw128-bit fixed record, separate16-byte codec and requested Layout policy."
+    },
+    {
+      "source": "Invlpgb private limits and InvlpgbFlushBuilder optional selections/booleans",
+      "target": "source/drivers/facts/x86_tlb_operands.omg::InvlpgbLimits and source/libraries/x86_64/tlb_operands.omg::BroadcastRequest",
+      "meaning": "Explicit observed numeric inputs, semantic option cases; no borrowed live CPU object."
+    }
+  ],
+  "architectural_discrepancy": {
+    "source": "AMD24594 r3.36 p388",
+    "rule": "ECX low16 is additional-page count; addressed total=encoded+1",
+    "pinned": "count capped by encoded maximum; advance=max(count,1)",
+    "separate_recipe": "architectural_range_step caps addressed total by maximum+1, encodes total-1 and advances total",
+    "meaning": "No silent change to pinned translation and no hardware execution claim."
+  }
+}

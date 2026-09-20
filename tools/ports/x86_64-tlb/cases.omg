@@ -1,0 +1,475 @@
+module cases;
+use x86_values::tlb_operands;
+use x86_values::tlb_operands::PcidResult;
+use x86_values::tlb_operands::BroadcastResult;
+use x86_values::tlb_operands::BroadcastRequest;
+use x86_values::tlb_operands::PageSelection;
+use x86_values::tlb_operands::PcidSelection;
+use x86_values::tlb_operands::AsidSelection;
+use x86_values::tlb_operands::RangeStep;
+use facts::x86_tlb_operands::Pcid;
+use facts::x86_tlb_operands::InvlpgbLimits;
+machine pcid_is(result: PcidResult, expected: u16, valid: bool) -> bool { transition result { PcidResult::Valid { pcid } -> (valid && tlb_operands::pcid_value(pcid) == expected) PcidResult::TooBig { value } -> (!valid && value == expected) } }
+pub machine pcid_cases() -> bool { pcid_is(tlb_operands::pcid_new(0), 0, true) && pcid_is(tlb_operands::pcid_new(1), 1, true) && pcid_is(tlb_operands::pcid_new(2), 2, true) && pcid_is(tlb_operands::pcid_new(63), 63, true) && pcid_is(tlb_operands::pcid_new(64), 64, true) && pcid_is(tlb_operands::pcid_new(255), 255, true) && pcid_is(tlb_operands::pcid_new(256), 256, true) && pcid_is(tlb_operands::pcid_new(4094), 4094, true) && pcid_is(tlb_operands::pcid_new(4095), 4095, true) && pcid_is(tlb_operands::pcid_new(4096), 4096, false) && pcid_is(tlb_operands::pcid_new(4097), 4097, false) && pcid_is(tlb_operands::pcid_new(8191), 8191, false) && pcid_is(tlb_operands::pcid_new(32767), 32767, false) && pcid_is(tlb_operands::pcid_new(65535), 65535, false) }
+machine regs_are(value: BroadcastResult, rax: u64, ecx: u32, edx: u32) -> bool { transition value { BroadcastResult::Ready { registers } -> (registers.rax == rax && registers.ecx == ecx && registers.edx == edx) _ -> (false) } }
+machine broadcast_0() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: false, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 0, 0, 0)
+}
+machine broadcast_1() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: false, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418241, 2, 0)
+}
+machine broadcast_2() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: false, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 2, 0, 8060928)
+}
+machine broadcast_3() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: false, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418243, 2, 8060928)
+}
+machine broadcast_4() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 4, 0, 42)
+}
+machine broadcast_5() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418245, 2, 42)
+}
+machine broadcast_6() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 6, 0, 8060970)
+}
+machine broadcast_7() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418247, 2, 8060970)
+}
+machine broadcast_8() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: true, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 8, 0, 0)
+}
+machine broadcast_9() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: true, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418249, 2, 0)
+}
+machine broadcast_10() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: true, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 10, 0, 8060928)
+}
+machine broadcast_11() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: true, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418251, 2, 8060928)
+}
+machine broadcast_12() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 12, 0, 42)
+}
+machine broadcast_13() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418253, 2, 42)
+}
+machine broadcast_14() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 14, 0, 8060970)
+}
+machine broadcast_15() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: false, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418255, 2, 8060970)
+}
+machine broadcast_16() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: false, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 16, 0, 0)
+}
+machine broadcast_17() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: false, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418257, 2, 0)
+}
+machine broadcast_18() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: false, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 18, 0, 8060928)
+}
+machine broadcast_19() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: false, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418259, 2, 8060928)
+}
+machine broadcast_20() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 20, 0, 42)
+}
+machine broadcast_21() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418261, 2, 42)
+}
+machine broadcast_22() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 22, 0, 8060970)
+}
+machine broadcast_23() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418263, 2, 8060970)
+}
+machine broadcast_24() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: true, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 24, 0, 0)
+}
+machine broadcast_25() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: true, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418265, 2, 0)
+}
+machine broadcast_26() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: true, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 26, 0, 8060928)
+}
+machine broadcast_27() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: true, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418267, 2, 8060928)
+}
+machine broadcast_28() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 28, 0, 42)
+}
+machine broadcast_29() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418269, 2, 42)
+}
+machine broadcast_30() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 30, 0, 8060970)
+}
+machine broadcast_31() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: true, include_nested: false };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418271, 2, 8060970)
+}
+machine broadcast_32() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: false, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 32, 0, 0)
+}
+machine broadcast_33() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: false, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418273, 2, 0)
+}
+machine broadcast_34() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: false, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 34, 0, 8060928)
+}
+machine broadcast_35() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: false, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418275, 2, 8060928)
+}
+machine broadcast_36() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 36, 0, 42)
+}
+machine broadcast_37() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418277, 2, 42)
+}
+machine broadcast_38() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 38, 0, 8060970)
+}
+machine broadcast_39() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418279, 2, 8060970)
+}
+machine broadcast_40() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: true, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 40, 0, 0)
+}
+machine broadcast_41() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: true, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418281, 2, 0)
+}
+machine broadcast_42() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: true, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 42, 0, 8060928)
+}
+machine broadcast_43() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: true, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418283, 2, 8060928)
+}
+machine broadcast_44() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 44, 0, 42)
+}
+machine broadcast_45() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418285, 2, 42)
+}
+machine broadcast_46() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 46, 0, 8060970)
+}
+machine broadcast_47() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: false, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418287, 2, 8060970)
+}
+machine broadcast_48() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: false, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 48, 0, 0)
+}
+machine broadcast_49() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: false, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418289, 2, 0)
+}
+machine broadcast_50() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: false, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 50, 0, 8060928)
+}
+machine broadcast_51() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: false, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418291, 2, 8060928)
+}
+machine broadcast_52() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 52, 0, 42)
+}
+machine broadcast_53() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418293, 2, 42)
+}
+machine broadcast_54() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 54, 0, 8060970)
+}
+machine broadcast_55() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: false, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418295, 2, 8060970)
+}
+machine broadcast_56() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: true, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 56, 0, 0)
+}
+machine broadcast_57() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::Any, include_global: true, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418297, 2, 0)
+}
+machine broadcast_58() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: true, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 58, 0, 8060928)
+}
+machine broadcast_59() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::Any, include_global: true, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418299, 2, 8060928)
+}
+machine broadcast_60() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 60, 0, 42)
+}
+machine broadcast_61() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::Any, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418301, 2, 42)
+}
+machine broadcast_62() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::All, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 62, 0, 8060970)
+}
+machine broadcast_63() -> bool {
+let request: BroadcastRequest = BroadcastRequest { pages: PageSelection::Pages { address: 305418240, extra_count: 2, stride: 4096 }, pcid: PcidSelection::One { pcid: Pcid { value: 123 } }, asid: AsidSelection::One { value: 42 }, include_global: true, final_only: true, include_nested: true };
+let result: BroadcastResult = tlb_operands::broadcast_prepare(request, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, 305418303, 2, 8060970)
+}
+machine large_broadcast() -> bool {
+let address: u64 = 0xffff800000000000;
+let expected: u64 = 0xffff80000000003f;
+let r0: BroadcastRequest = tlb_operands::broadcast_default();
+let r1: BroadcastRequest = tlb_operands::with_pages(r0, PageSelection::Pages { address: address, extra_count: 65535, stride: 2097152 });
+let r2: BroadcastRequest = tlb_operands::with_pcid(r1, Pcid { value: 4095 });
+let r3: BroadcastRequest = tlb_operands::with_asid(r2, 65535);
+let r4: BroadcastRequest = tlb_operands::with_global(r3);
+let r5: BroadcastRequest = tlb_operands::with_final_only(r4);
+let r6: BroadcastRequest = tlb_operands::with_nested(r5);
+let result: BroadcastResult = tlb_operands::broadcast_prepare(r6, InvlpgbLimits { count_max: 65535, nested: true, nasid: 65536 });
+regs_are(result, expected, 2147549183, 268435455)
+}
+pub machine broadcast_cases() -> bool { broadcast_0() && broadcast_1() && broadcast_2() && broadcast_3() && broadcast_4() && broadcast_5() && broadcast_6() && broadcast_7() && broadcast_8() && broadcast_9() && broadcast_10() && broadcast_11() && broadcast_12() && broadcast_13() && broadcast_14() && broadcast_15() && broadcast_16() && broadcast_17() && broadcast_18() && broadcast_19() && broadcast_20() && broadcast_21() && broadcast_22() && broadcast_23() && broadcast_24() && broadcast_25() && broadcast_26() && broadcast_27() && broadcast_28() && broadcast_29() && broadcast_30() && broadcast_31() && broadcast_32() && broadcast_33() && broadcast_34() && broadcast_35() && broadcast_36() && broadcast_37() && broadcast_38() && broadcast_39() && broadcast_40() && broadcast_41() && broadcast_42() && broadcast_43() && broadcast_44() && broadcast_45() && broadcast_46() && broadcast_47() && broadcast_48() && broadcast_49() && broadcast_50() && broadcast_51() && broadcast_52() && broadcast_53() && broadcast_54() && broadcast_55() && broadcast_56() && broadcast_57() && broadcast_58() && broadcast_59() && broadcast_60() && broadcast_61() && broadcast_62() && broadcast_63() && large_broadcast() }
+machine chunk_is(result: RangeStep, want_address: u64, want_extra: u16, want_advance: u32, want_next: u64) -> bool { transition result { RangeStep::Chunk { address, extra_count, advance, next } -> (address == want_address && extra_count == want_extra && advance == want_advance && next == want_next) _ -> (false) } }
+machine range_0() -> bool {
+let start: u64 = 4096;
+let end: u64 = 16384;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 4096, 0);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 4096, 0);
+let old_next: u64 = 8192;
+let new_next: u64 = 8192;
+chunk_is(old, start, 0, 1, old_next) && chunk_is(new, start, 0, 1, new_next)
+}
+machine range_1() -> bool {
+let start: u64 = 4096;
+let end: u64 = 16384;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 4096, 1);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 4096, 1);
+let old_next: u64 = 8192;
+let new_next: u64 = 12288;
+chunk_is(old, start, 1, 1, old_next) && chunk_is(new, start, 1, 2, new_next)
+}
+machine range_2() -> bool {
+let start: u64 = 4096;
+let end: u64 = 16384;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 4096, 2);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 4096, 2);
+let old_next: u64 = 12288;
+let new_next: u64 = 16384;
+chunk_is(old, start, 2, 2, old_next) && chunk_is(new, start, 2, 3, new_next)
+}
+machine range_3() -> bool {
+let start: u64 = 4096;
+let end: u64 = 16384;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 4096, 65535);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 4096, 65535);
+let old_next: u64 = 16384;
+let new_next: u64 = 16384;
+chunk_is(old, start, 3, 3, old_next) && chunk_is(new, start, 2, 3, new_next)
+}
+machine range_4() -> bool {
+let start: u64 = 4096;
+let end: u64 = 8192;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 4096, 15);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 4096, 15);
+let old_next: u64 = 8192;
+let new_next: u64 = 8192;
+chunk_is(old, start, 1, 1, old_next) && chunk_is(new, start, 0, 1, new_next)
+}
+machine range_5() -> bool {
+let start: u64 = 140737488351232;
+let end: u64 = 18446603336221200384;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 4096, 15);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 4096, 15);
+let old_next: u64 = 18446603336221196288;
+let new_next: u64 = 18446603336221196288;
+chunk_is(old, start, 1, 1, old_next) && chunk_is(new, start, 0, 1, new_next)
+}
+machine range_6() -> bool {
+let start: u64 = 18446603336221196288;
+let end: u64 = 18446603336221212672;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 4096, 1);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 4096, 1);
+let old_next: u64 = 18446603336221200384;
+let new_next: u64 = 18446603336221204480;
+chunk_is(old, start, 1, 1, old_next) && chunk_is(new, start, 1, 2, new_next)
+}
+machine range_7() -> bool {
+let start: u64 = 0;
+let end: u64 = 268435456;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 4096, 65535);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 4096, 65535);
+let old_next: u64 = 268431360;
+let new_next: u64 = 268435456;
+chunk_is(old, start, 65535, 65535, old_next) && chunk_is(new, start, 65535, 65536, new_next)
+}
+machine range_8() -> bool {
+let start: u64 = 0;
+let end: u64 = 6291456;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 2097152, 2);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 2097152, 2);
+let old_next: u64 = 4194304;
+let new_next: u64 = 6291456;
+chunk_is(old, start, 2, 2, old_next) && chunk_is(new, start, 2, 3, new_next)
+}
+machine range_9() -> bool {
+let start: u64 = 140737486258176;
+let end: u64 = 18446603336223293440;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 2097152, 15);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 2097152, 15);
+let old_next: u64 = 18446603336221196288;
+let new_next: u64 = 18446603336221196288;
+chunk_is(old, start, 1, 1, old_next) && chunk_is(new, start, 0, 1, new_next)
+}
+machine range_10() -> bool {
+let start: u64 = 4096;
+let end: u64 = 4096;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 4096, 1);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 4096, 1);
+old in RangeStep::Done && new in RangeStep::Done
+}
+machine range_11() -> bool {
+let start: u64 = 8192;
+let end: u64 = 4096;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 4096, 1);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 4096, 1);
+old in RangeStep::Done && new in RangeStep::Done
+}
+machine range_12() -> bool {
+let start: u64 = 1;
+let end: u64 = 8192;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 4096, 1);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 4096, 1);
+old in RangeStep::InvalidRange && new in RangeStep::InvalidRange
+}
+machine range_13() -> bool {
+let start: u64 = 0;
+let end: u64 = 1073741824;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 1073741824, 1);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 1073741824, 1);
+old in RangeStep::InvalidRange && new in RangeStep::InvalidRange
+}
+machine range_14() -> bool {
+let start: u64 = 140737488355328;
+let end: u64 = 18446603336221196288;
+let old: RangeStep = tlb_operands::pinned_range_step(start, end, 4096, 1);
+let new: RangeStep = tlb_operands::architectural_range_step(start, end, 4096, 1);
+old in RangeStep::InvalidRange && new in RangeStep::InvalidRange
+}
+pub machine range_cases() -> bool { range_0() && range_1() && range_2() && range_3() && range_4() && range_5() && range_6() && range_7() && range_8() && range_9() && range_10() && range_11() && range_12() && range_13() && range_14() && tlb_operands::architectural_page_count(65535) == 65536 && tlb_operands::pinned_advance(65535) == 65535 }

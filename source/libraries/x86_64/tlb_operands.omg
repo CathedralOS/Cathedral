@@ -1,0 +1,220 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Detached pure operand translation of pinned instructions/tlb.rs.
+// See tlb-operands.PORT.md. No feature probe, CPU state read, instruction or settlement.
+module tlb_operands;
+use facts::x86_tlb_operands::Pcid;
+use facts::x86_tlb_operands::InvpcidDescriptor;
+use facts::x86_tlb_operands::InvlpgbLimits;
+use facts::x86_tlb_operands::BroadcastRegisters;
+use addresses;
+use addresses::NumberResult;
+use pages;
+
+pub data PcidResult [copy] { case TooBig(value: u16); case Valid(pcid: Pcid); }
+pub data InvPcidCommand [copy] {
+    case Address(address: u64, pcid: Pcid);
+    case Single(pcid: Pcid);
+    case All;
+    case AllExceptGlobal;
+}
+pub data InvpcidOperand [copy] {
+    case InvalidAddress(value: u64);
+    case Ready(kind: u8 [0..=3], descriptor: InvpcidDescriptor);
+}
+pub data LimitsResult [copy] {
+    case PrivilegeNotZero(cpl: u8);
+    case Unsupported;
+    case Observed(limits: InvlpgbLimits);
+}
+pub data PageSelection [copy] { case All; case Pages(address: u64, extra_count: u16, stride: u64); }
+pub data PcidSelection [copy] { case Any; case One(pcid: Pcid); }
+pub data AsidSelection [copy] { case Any; case One(value: u16); }
+pub data BroadcastRequest [copy] {
+    pages: PageSelection; pcid: PcidSelection; asid: AsidSelection;
+    include_global: bool; final_only: bool; include_nested: bool;
+}
+pub data BroadcastResult [copy] {
+    case InvalidPageGeometry;
+    case CountTooLarge(value: u16, maximum: u16);
+    case AsidOutOfRange(value: u16, nasid: u32);
+    case NestedUnsupported;
+    case Ready(registers: BroadcastRegisters);
+}
+pub data RangeStep [copy] {
+    case InvalidRange;
+    case Done;
+    case Chunk(address: u64, extra_count: u16, advance: u32, next: u64);
+}
+pub machine pcid_new(value: u16) -> PcidResult {
+    transition value <= 4095 { true -> valid(value) _ -> (PcidResult::TooBig { value: value }) }
+    state valid(value: u16 [0..=4095]) { PcidResult::Valid { pcid: Pcid { value: value } } }
+}
+pub machine pcid_value(value: Pcid) -> u16 { value.value }
+pub machine invpcid_prepare(command: InvPcidCommand) -> InvpcidOperand {
+    transition command {
+        InvPcidCommand::Address { address, pcid } -> address_case(address, pcid)
+        InvPcidCommand::Single { pcid } -> (InvpcidOperand::Ready { kind: 1, descriptor: InvpcidDescriptor { pcid: pcid.value as u64, address: 0 } })
+        InvPcidCommand::All -> (InvpcidOperand::Ready { kind: 2, descriptor: InvpcidDescriptor { pcid: 0, address: 0 } })
+        InvPcidCommand::AllExceptGlobal -> (InvpcidOperand::Ready { kind: 3, descriptor: InvpcidDescriptor { pcid: 0, address: 0 } })
+    }
+    state address_case(address: u64, pcid: Pcid) {
+        let valid: bool = addresses::virtual_valid(address);
+        transition valid {
+            true -> (InvpcidOperand::Ready { kind: 0, descriptor: InvpcidDescriptor { pcid: pcid.value as u64, address: address } })
+            _ -> (InvpcidOperand::InvalidAddress { value: address })
+        }
+    }
+}
+// Explicit observations: this neither executes CPUID nor proves they describe a CPU.
+pub machine limits_from_observations(cpl: u8, leaf08_ebx: u32, leaf08_edx: u32, leaf0a_ebx: u32) -> LimitsResult {
+    transition cpl == 0 { true -> feature(leaf08_ebx, leaf08_edx, leaf0a_ebx) _ -> (LimitsResult::PrivilegeNotZero { cpl: cpl }) }
+    state feature(ebx: u32, edx: u32, nasid: u32) {
+        transition (ebx & 8) != 0 {
+            true -> (LimitsResult::Observed { limits: InvlpgbLimits { count_max: (edx & 65535) as u16, nested: (ebx & 2097152) != 0, nasid: nasid } })
+            _ -> (LimitsResult::Unsupported)
+        }
+    }
+}
+pub machine broadcast_default() -> BroadcastRequest { BroadcastRequest {} }
+pub machine with_pages(value: BroadcastRequest, selection: PageSelection) -> BroadcastRequest { let mut next: BroadcastRequest = value; next.pages = selection; next }
+pub machine with_pcid(value: BroadcastRequest, pcid: Pcid) -> BroadcastRequest { let mut next: BroadcastRequest = value; next.pcid = PcidSelection::One { pcid: pcid }; next }
+pub machine with_asid(value: BroadcastRequest, asid: u16) -> BroadcastRequest { let mut next: BroadcastRequest = value; next.asid = AsidSelection::One { value: asid }; next }
+pub machine with_global(value: BroadcastRequest) -> BroadcastRequest { let mut next: BroadcastRequest = value; next.include_global = true; next }
+pub machine with_final_only(value: BroadcastRequest) -> BroadcastRequest { let mut next: BroadcastRequest = value; next.final_only = true; next }
+pub machine with_nested(value: BroadcastRequest) -> BroadcastRequest { let mut next: BroadcastRequest = value; next.include_nested = true; next }
+pub machine broadcast_prepare(value: BroadcastRequest, limits: InvlpgbLimits) -> BroadcastResult {
+    transition value.include_nested && !limits.nested { true -> (BroadcastResult::NestedUnsupported) _ -> check_asid(value, limits) }
+    state check_asid(request: BroadcastRequest, limits: InvlpgbLimits) {
+        transition request.asid {
+            AsidSelection::Any -> page(request, limits)
+            AsidSelection::One { value } -> asid_valid(request, limits, value)
+        }
+    }
+    state asid_valid(value: BroadcastRequest, limits: InvlpgbLimits, asid: u16) {
+        transition (asid as u32) < limits.nasid { true -> page(value, limits) _ -> (BroadcastResult::AsidOutOfRange { value: asid, nasid: limits.nasid }) }
+    }
+    state page(value: BroadcastRequest, limits: InvlpgbLimits) {
+        transition value.pages {
+            PageSelection::All -> flags(value, BroadcastRegisters {})
+            PageSelection::Pages { address, extra_count, stride } -> geometry(value, limits, address, extra_count, stride)
+        }
+    }
+    state geometry(value: BroadcastRequest, limits: InvlpgbLimits, address: u64, extra_count: u16, stride: u64) {
+        let valid: bool = pages::start_valid(address, stride, false);
+        transition valid && (stride == 4096 || stride == 2097152) {
+            true -> count(value, limits, address, extra_count, stride)
+            _ -> (BroadcastResult::InvalidPageGeometry)
+        }
+    }
+    state count(value: BroadcastRequest, limits: InvlpgbLimits, address: u64, extra_count: u16, stride: u64) {
+        transition extra_count <= limits.count_max {
+            true -> stride_bit(value, address, extra_count, stride)
+            _ -> (BroadcastResult::CountTooLarge { value: extra_count, maximum: limits.count_max })
+        }
+    }
+    state stride_bit(value: BroadcastRequest, address: u64, extra_count: u16, stride: u64) {
+        transition stride == 2097152 {
+            true -> flags(value, BroadcastRegisters { rax: (address & 18446744073709547520) | 1, ecx: (extra_count as u32) | 2147483648, edx: 0 })
+            _ -> flags(value, BroadcastRegisters { rax: (address & 18446744073709547520) | 1, ecx: extra_count as u32, edx: 0 })
+        }
+    }
+    state flags(value: BroadcastRequest, registers: BroadcastRegisters) {
+        let global: u64 = (value.include_global as u64) << 3;
+        let final_only: u64 = (value.final_only as u64) << 4;
+        let nested: u64 = (value.include_nested as u64) << 5;
+        let updated: BroadcastRegisters = BroadcastRegisters { rax: registers.rax | global | final_only | nested, ecx: registers.ecx, edx: registers.edx };
+        transition value.pcid {
+            PcidSelection::Any -> asid_bits(value.asid, updated)
+            PcidSelection::One { pcid } -> asid_bits(value.asid, BroadcastRegisters { rax: updated.rax | 2, ecx: updated.ecx, edx: updated.edx | ((pcid.value as u32) << 16) })
+        }
+    }
+    state asid_bits(selection: AsidSelection, registers: BroadcastRegisters) {
+        transition selection {
+            AsidSelection::Any -> (BroadcastResult::Ready { registers: registers })
+            AsidSelection::One { value } -> (BroadcastResult::Ready { registers: BroadcastRegisters { rax: registers.rax | 4, ecx: registers.ecx, edx: registers.edx | (value as u32) } })
+        }
+    }
+}
+// AMD ECX low16 encodes additional pages: one addressed page is always included.
+pub machine architectural_page_count(extra_count: u16) -> u32 { (extra_count as u32) + 1 }
+pub machine pinned_advance(extra_count: u16) -> u32 { transition extra_count == 0 { true -> (1) _ -> (extra_count as u32) } }
+
+pub machine pinned_range_step(start: u64, end: u64, stride: u64, count_max: u16) -> RangeStep {
+    let result: RangeStep = range_step(start, end, stride, count_max, true);
+    result
+}
+pub machine architectural_range_step(start: u64, end: u64, stride: u64, count_max: u16) -> RangeStep {
+    let result: RangeStep = range_step(start, end, stride, count_max, false);
+    result
+}
+machine smaller(left: u64, right: u64) -> u64 { transition left < right { true -> (left) _ -> (right) } }
+machine range_step(start: u64, end: u64, stride: u64, count_max: u16, pinned: bool) -> RangeStep {
+    let first_valid: bool = pages::start_valid(start, stride, false);
+    let end_valid: bool = pages::start_valid(end, stride, false);
+    transition first_valid && end_valid && (stride == 4096 || stride == 2097152) {
+        true -> order(start, end, stride, count_max, pinned)
+        _ -> (RangeStep::InvalidRange)
+    }
+    state order(start: u64, end: u64, stride: u64, count_max: u16, pinned: bool) {
+        transition start >= end { true -> (RangeStep::Done) _ -> remaining(start, end, stride, count_max, pinned) }
+    }
+    state remaining(start: u64, end: u64, stride: u64, count_max: u16, pinned: bool) {
+        let count: NumberResult = pages::steps_between(start, end, stride);
+        transition count { NumberResult::Value { value } -> half(start, stride, count_max, pinned, value) _ -> (RangeStep::InvalidRange) }
+    }
+    state half(start: u64, stride: u64, count_max: u16, pinned: bool, remaining: u64) {
+        transition start < addresses::VIRTUAL_HIGH_MIN {
+            true -> boundary(start, stride, count_max, pinned, remaining)
+            _ -> capacity(start, stride, count_max, pinned, remaining)
+        }
+    }
+    state boundary(start: u64, stride: u64, count_max: u16, pinned: bool, remaining: u64) {
+        let gap: NumberResult = pages::steps_between(start, addresses::VIRTUAL_HIGH_MIN, stride);
+        transition gap { NumberResult::Value { value } -> bound_count(start, stride, count_max, pinned, remaining, value) _ -> (RangeStep::InvalidRange) }
+    }
+    state bound_count(start: u64, stride: u64, count_max: u16, pinned: bool, remaining: u64, boundary: u64) {
+        let limited: u64 = smaller(remaining, boundary);
+        transition pinned { true -> capacity(start, stride, count_max, true, limited) _ -> capacity(start, stride, count_max, false, limited) }
+    }
+    state capacity(start: u64, stride: u64, count_max: u16, pinned: bool, remaining: u64) {
+        transition pinned {
+            true -> cap(start, stride, remaining, count_max as u64, true)
+            _ -> cap(start, stride, remaining, (count_max as u64) + 1, false)
+        }
+    }
+    state cap(start: u64, stride: u64, remaining: u64, limit: u64, pinned: bool) {
+        let count: u64 = smaller(remaining, limit);
+        transition pinned { true -> old_count(start, stride, count) _ -> new_count(start, stride, count) }
+    }
+    state old_count(start: u64, stride: u64, count: u64) {
+        transition count <= 65535 { true -> old_bounded(start, stride, count) _ -> (RangeStep::InvalidRange) }
+    }
+    state old_bounded(start: u64, stride: u64, count: u64 [0..=65535]) {
+        let extra: u16 = count as u16;
+        let advance: u32 = pinned_advance(extra);
+        transition count == 0 { true -> advance(start, stride, extra, advance) _ -> advance(start, stride, extra, advance) }
+    }
+    state new_count(start: u64, stride: u64, count: u64) {
+        transition count >= 1 && count <= 65536 { true -> new_bounded(start, stride, count) _ -> (RangeStep::InvalidRange) }
+    }
+    state new_bounded(start: u64, stride: u64, count: u64 [1..=65536]) {
+        let extra: u16 = (count - 1) as u16;
+        let advance: u32 = count as u32;
+        transition count > 0 { true -> advance(start, stride, extra, advance) _ -> (RangeStep::InvalidRange) }
+    }
+    state advance(start: u64, stride: u64, extra: u16, advance: u32) {
+        let next: NumberResult = pages::step(start, stride, advance as u64, false);
+        transition next {
+            NumberResult::Value { value } -> (RangeStep::Chunk { address: start, extra_count: extra, advance: advance, next: value })
+            _ -> (RangeStep::InvalidRange)
+        }
+    }
+}
+
+// Raw16-byte descriptor codec preserves all bits; preparation establishes PCID validity.
+pub machine encode_invpcid(value: &InvpcidDescriptor) -> [u8; 16] {
+    [ ((value.pcid >> 0) & 255) as u8, ((value.pcid >> 8) & 255) as u8, ((value.pcid >> 16) & 255) as u8, ((value.pcid >> 24) & 255) as u8, ((value.pcid >> 32) & 255) as u8, ((value.pcid >> 40) & 255) as u8, ((value.pcid >> 48) & 255) as u8, ((value.pcid >> 56) & 255) as u8, ((value.address >> 0) & 255) as u8, ((value.address >> 8) & 255) as u8, ((value.address >> 16) & 255) as u8, ((value.address >> 24) & 255) as u8, ((value.address >> 32) & 255) as u8, ((value.address >> 40) & 255) as u8, ((value.address >> 48) & 255) as u8, ((value.address >> 56) & 255) as u8 ]
+}
+pub machine decode_invpcid(input: &[u8; 16]) -> InvpcidDescriptor {
+    InvpcidDescriptor { pcid: ((input[0] as u64) << 0) | ((input[1] as u64) << 8) | ((input[2] as u64) << 16) | ((input[3] as u64) << 24) | ((input[4] as u64) << 32) | ((input[5] as u64) << 40) | ((input[6] as u64) << 48) | ((input[7] as u64) << 56), address: ((input[8] as u64) << 0) | ((input[9] as u64) << 8) | ((input[10] as u64) << 16) | ((input[11] as u64) << 24) | ((input[12] as u64) << 32) | ((input[13] as u64) << 40) | ((input[14] as u64) << 48) | ((input[15] as u64) << 56) }
+}

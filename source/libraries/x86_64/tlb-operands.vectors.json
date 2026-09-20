@@ -1,0 +1,190 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "pointer_bits": 64,
+    "endian": "little",
+    "abi": "raw INVPCID repr(C) mirror; actual Pcid UEFI-x64 assertions"
+  },
+  "provenance": {
+    "kind": "upstream",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "sources": [
+      "src/instructions/tlb.rs"
+    ],
+    "description": "Exact extracted private pure bodies on host with real upstream address/Page/Step types. Hardware tails omitted. Actual upstream Pcid type and constructor boundaries compile-asserted for UEFI x64. Descriptor measurements use its exact private repr(C) source mirror; no Omega native ABI claim."
+  },
+  "measurements": {
+    "descriptor_pcid_offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "descriptor_address_offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "pcid_size": {
+      "kind": "size",
+      "value": 2
+    },
+    "pcid_align": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "descriptor_size": {
+      "kind": "size",
+      "value": 16
+    },
+    "descriptor_align": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "pcid_0": {
+      "kind": "value",
+      "value": 0
+    },
+    "pcid_1": {
+      "kind": "value",
+      "value": 1
+    },
+    "pcid_4095": {
+      "kind": "value",
+      "value": 4095
+    },
+    "pcid_4096": {
+      "kind": "value",
+      "value": 65536
+    },
+    "pcid_65535": {
+      "kind": "value",
+      "value": 65536
+    },
+    "chunk_0.0": {
+      "kind": "value",
+      "value": 0
+    },
+    "chunk_0.1": {
+      "kind": "value",
+      "value": 1
+    },
+    "chunk_0.2": {
+      "kind": "value",
+      "value": 8192
+    },
+    "chunk_1.0": {
+      "kind": "value",
+      "value": 1
+    },
+    "chunk_1.1": {
+      "kind": "value",
+      "value": 1
+    },
+    "chunk_1.2": {
+      "kind": "value",
+      "value": 8192
+    },
+    "chunk_2.0": {
+      "kind": "value",
+      "value": 2
+    },
+    "chunk_2.1": {
+      "kind": "value",
+      "value": 2
+    },
+    "chunk_2.2": {
+      "kind": "value",
+      "value": 12288
+    },
+    "chunk_65535.0": {
+      "kind": "value",
+      "value": 3
+    },
+    "chunk_65535.1": {
+      "kind": "value",
+      "value": 3
+    },
+    "chunk_65535.2": {
+      "kind": "value",
+      "value": 16384
+    },
+    "broadcast_all.0": {
+      "kind": "value",
+      "value": 18446603336221196351
+    },
+    "broadcast_all.1": {
+      "kind": "value",
+      "value": 2147549183
+    },
+    "broadcast_all.2": {
+      "kind": "value",
+      "value": 268435455
+    },
+    "invpcid_kind": {
+      "kind": "value",
+      "value": 0
+    },
+    "invpcid_byte_0": {
+      "kind": "value",
+      "value": 255
+    },
+    "invpcid_byte_1": {
+      "kind": "value",
+      "value": 15
+    },
+    "invpcid_byte_2": {
+      "kind": "value",
+      "value": 0
+    },
+    "invpcid_byte_3": {
+      "kind": "value",
+      "value": 0
+    },
+    "invpcid_byte_4": {
+      "kind": "value",
+      "value": 0
+    },
+    "invpcid_byte_5": {
+      "kind": "value",
+      "value": 0
+    },
+    "invpcid_byte_6": {
+      "kind": "value",
+      "value": 0
+    },
+    "invpcid_byte_7": {
+      "kind": "value",
+      "value": 0
+    },
+    "invpcid_byte_8": {
+      "kind": "value",
+      "value": 52
+    },
+    "invpcid_byte_9": {
+      "kind": "value",
+      "value": 18
+    },
+    "invpcid_byte_10": {
+      "kind": "value",
+      "value": 0
+    },
+    "invpcid_byte_11": {
+      "kind": "value",
+      "value": 0
+    },
+    "invpcid_byte_12": {
+      "kind": "value",
+      "value": 0
+    },
+    "invpcid_byte_13": {
+      "kind": "value",
+      "value": 128
+    },
+    "invpcid_byte_14": {
+      "kind": "value",
+      "value": 255
+    },
+    "invpcid_byte_15": {
+      "kind": "value",
+      "value": 255
+    }
+  }
+}

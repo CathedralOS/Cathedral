@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified numeric operands from x86_64 cc35c876d3badb57df54a66e22f7768a52be95f2.
+// See source/libraries/x86_64/tlb-operands.PORT.md. No CPU or invalidation authority.
+module x86_tlb_operands;
+pub data Pcid [copy] { value: u16 [0..=4095]; }
+pub data InvpcidDescriptor [copy] { pcid: u64; address: u64; }
+pub data InvlpgbLimits [copy] { count_max: u16; nested: bool; nasid: u32; }
+pub data BroadcastRegisters [copy] { rax: u64; ecx: u32; edx: u32; }
+pub const PCID_MAX: u16 = 4095;
+pub const INVPCID_ADDRESS: u8 = 0;
+pub const INVPCID_SINGLE: u8 = 1;
+pub const INVPCID_ALL: u8 = 2;
+pub const INVPCID_ALL_EXCEPT_GLOBAL: u8 = 3;
+pub const INVLPGB_ADDRESS_VALID: u64 = 1;
+pub const INVLPGB_PCID_VALID: u64 = 2;
+pub const INVLPGB_ASID_VALID: u64 = 4;
+pub const INVLPGB_INCLUDE_GLOBAL: u64 = 8;
+pub const INVLPGB_FINAL_ONLY: u64 = 16;
+pub const INVLPGB_INCLUDE_NESTED: u64 = 32;
+pub const INVLPGB_STRIDE_2M: u32 = 2147483648;

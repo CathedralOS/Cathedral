@@ -1,0 +1,8 @@
+use facts::x86_tlb_layouts::InvpcidDescriptorLayout;
+data LocalDescriptor { pcid: u64; address: u64; }
+data Main { operand: InvpcidDescriptorLayout<LocalDescriptor>; }
+machine Main::main(&mut self) -> i32 {
+    self.operand.pcid = 4095;
+    self.operand.address = 0x12345678;
+    transition self.operand.pcid == 4095 && self.operand.address == 0x12345678 { true -> (0) _ -> (1) }
+}

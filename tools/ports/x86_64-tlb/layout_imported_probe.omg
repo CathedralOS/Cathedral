@@ -1,0 +1,4 @@
+use facts::x86_tlb_layouts::InvpcidDescriptorLayout;
+use facts::x86_tlb_operands::InvpcidDescriptor;
+data Main { operand: InvpcidDescriptorLayout<InvpcidDescriptor>; }
+machine Main::main(&mut self) { self.operand.pcid = 4095; self.operand.address = 0x12345678; }
