@@ -122,7 +122,7 @@ The immediate target is the `uefi-raw` crate within `uefi-rs`.  Raw UEFI ABI
 belongs under `source/contracts/uefi/`.  Higher-level safe wrappers and
 Cathedral's authority-bearing boot policy do not belong in this phase.
 
-- [ ] **UEFI-000 — Reconcile the existing subset.** Map current
+- [x] **UEFI-000 — Reconcile the existing subset.** Map current
   `uefi.omg` and `boot_services.omg` declarations to the pinned `uefi-raw`
   source and the UEFI specification.  Record collisions, missing fields, local
   policy, and ABI deviations before adding declarations.
