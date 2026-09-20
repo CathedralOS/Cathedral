@@ -1,0 +1,216 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of pci_types eff856b6bab81adbe1bda0ab750009f3786cb8d3; see PORT.md.
+module bars;
+use snapshot::ConfigPlan;
+use snapshot::ConfigOperation;
+use snapshot::write_plan;
+pub const MAX_BARS: u8 = 6;
+// kind: 1 IO, 2 memory32, 3 memory64. Low/upper words remain raw evidence.
+pub data Bar [copy] { ok: bool; kind: u8; slots: u8; prefetchable: bool; address: u64; low: u32; upper: u32; }
+pub data BarSize [copy] { ok: bool; bytes: u64; }
+pub data BarValue [copy] { ok: bool; value: u64; }
+pub const BAR_WRITE_NO_SUCH_BAR: u8 = 1;
+pub const BAR_WRITE_INVALID_VALUE: u8 = 2;
+pub machine bar_decode(low: u32, upper: u32, slot: u8, count: u8) -> Bar {
+    transition slot < count && count <= 6 {
+      true -> kind(low, upper, slot, count)
+      _ -> (Bar {})
+    }
+    state kind(low: u32, upper: u32, slot: u8, count: u8) -> Bar {
+      transition (low & 1) != 0 {
+        true -> (Bar { ok: true, kind: 1, slots: 1, address: (low & 0xfffffffc) as u64, low: low, upper: upper })
+        _ -> memory(low, upper, slot, count)
+      }
+    }
+    state memory(low: u32, upper: u32, slot: u8, count: u8) -> Bar {
+      transition (low >> 1) & 3 {
+        0 -> (Bar { ok: true, kind: 2, slots: 1, prefetchable: (low & 8) != 0,
+          address: (low & 0xfffffff0) as u64, low: low, upper: upper })
+        2 -> (Bar { ok: (slot as u16) + 1 < (count as u16), kind: 3, slots: 2,
+          prefetchable: (low & 8) != 0, address: ((upper as u64) << 32) | ((low & 0xfffffff0) as u64), low: low, upper: upper })
+        _ -> (Bar { low: low, upper: upper })
+      }
+    }
+}
+pub machine bar_unwrap_io(value: Bar) -> BarValue { BarValue { ok: value.ok && value.kind == 1, value: value.address } }
+pub data BarMemoryValue [copy] { ok: bool; address: u64; bytes: u64; prefetchable: bool; }
+pub machine bar_unwrap_mem(value: Bar, size: BarSize) -> BarMemoryValue {
+    BarMemoryValue { ok: value.ok && size.ok && (value.kind == 2 || value.kind == 3),
+      address: value.address, bytes: size.bytes, prefetchable: value.prefetchable }
+}
+// A zero masked probe is ambiguous (unimplemented or full-width aperture).
+// Reject it instead of shifting by 32/64 or inventing an implemented BAR.
+pub machine bar_size(value: Bar, mask_low: u32, mask_upper: u32) -> BarSize {
+    transition value.ok {
+      true -> kind(value.kind, mask_low, mask_upper)
+      _ -> (BarSize {})
+    }
+    state kind(kind: u8, low: u32, upper: u32) -> BarSize {
+      transition kind {
+        1 -> call_size32_2(low & 0xfffffffc)
+        2 -> call_size32(low & 0xfffffff0)
+        3 -> call_size64(((upper as u64) << 32) | ((low & 0xfffffff0) as u64))
+        _ -> (BarSize {})
+      }
+    }
+
+    state call_size64(mask: u64) -> BarSize {
+      let result: BarSize = size64(mask);
+      result
+    }
+
+    state call_size32(mask: u32) -> BarSize {
+      let result: BarSize = size32(mask);
+      result
+    }
+
+    state call_size32_2(mask: u32) -> BarSize {
+      let result: BarSize = size32(mask);
+      result
+    }
+}
+machine size32(mask: u32) -> BarSize {
+    let size: u64 = 0x100000000 - (mask as u64);
+    BarSize { ok: mask != 0 && (size & (size - 1)) == 0, bytes: size }
+}
+machine size64(mask: u64) -> BarSize {
+    transition mask > 0 { true -> call_size64_nonzero(mask) _ -> (BarSize {}) }
+
+    state call_size64_nonzero(mask: u64) -> BarSize {
+      let result: BarSize = size64_nonzero(mask);
+      result
+    }
+}
+machine size64_nonzero(mask: u64) -> BarSize requires mask > 0; {
+    let size: u64 = 0xffffffffffffffff - (mask - 1);
+    BarSize { ok: (size & (size - 1)) == 0, bytes: size }
+}
+// Snapshot originals must be captured before any probe. This is an inert plan.
+// Executor must quiesce decoding, serialize access, and restore BOTH exact words
+// on every failure path before resuming decoding; reads here have result order.
+pub machine bar_probe_plan(slot: u8, count: u8, low: u32, upper: u32) -> ConfigPlan {
+    let value: Bar = bar_decode(low, upper, slot, count);
+    transition value.ok { true -> plan(slot, value) _ -> (ConfigPlan {}) }
+    state plan(slot: u8, value: Bar) -> ConfigPlan {
+      let offset: u16 = 16 + ((slot as u16) * 4);
+      let mut result: ConfigPlan;
+      result.ok = true; result.requires_quiesced_decoding = true; result.requires_restore_on_failure = true;
+      result.operations[0] = ConfigOperation { kind: 2, width: 4, offset: offset, value: 0xffffffff };
+      transition value.kind == 3 {
+        true -> wide(result, value, offset)
+        _ -> narrow(result, value, offset)
+      }
+    }
+    state narrow(result: ConfigPlan, value: Bar, offset: u16) -> ConfigPlan {
+      let mut out: ConfigPlan = result;
+      out.count = 3;
+      out.operations[1] = ConfigOperation { kind: 1, width: 4, offset: offset };
+      out.operations[2] = ConfigOperation { kind: 2, width: 4, offset: offset, value: value.low };
+      out
+    }
+    state wide(result: ConfigPlan, value: Bar, offset: u16) -> ConfigPlan {
+      let mut out: ConfigPlan = result;
+      out.count = 6;
+      out.operations[1] = ConfigOperation { kind: 2, width: 4, offset: offset + 4, value: 0xffffffff };
+      out.operations[2] = ConfigOperation { kind: 1, width: 4, offset: offset };
+      out.operations[3] = ConfigOperation { kind: 1, width: 4, offset: offset + 4 };
+      out.operations[4] = ConfigOperation { kind: 2, width: 4, offset: offset + 4, value: value.upper };
+      out.operations[5] = ConfigOperation { kind: 2, width: 4, offset: offset, value: value.low };
+      out
+    }
+}
+pub machine bar_write_plan(slot: u8, count: u8, low: u32, upper: u32, address: u64) -> ConfigPlan {
+    let value: Bar = bar_decode(low, upper, slot, count);
+    transition value.ok && (address & 3) == 0 &&
+      (value.kind == 1 || (address & 15) == 0) && (value.kind == 3 || address <= 0xffffffff) {
+      true -> plan(slot, value, address)
+      _ -> (ConfigPlan {})
+    }
+    state plan(slot: u8, value: Bar, address: u64) -> ConfigPlan {
+      let offset: u16 = 16 + ((slot as u16) * 4);
+      transition value.kind {
+        1 -> call_bar_write_one_2(offset, ((address & 0xfffffffc) as u32) | (value.low & 3))
+        2 -> call_bar_write_one(offset, ((address & 0xfffffff0) as u32) | (value.low & 15))
+        _ -> wide(offset, value, address)
+      }
+    }
+    state wide(offset: u16, value: Bar, address: u64) -> ConfigPlan {
+      let mut result: ConfigPlan = write_plan(offset, 4, ((address & 0xfffffff0) as u32) | (value.low & 15));
+      result.count = 2;
+      result.requires_quiesced_decoding = true;
+      result.operations[1] = ConfigOperation { kind: 2, width: 4, offset: offset + 4, value: ((address >> 32) & 0xffffffff) as u32 };
+      result
+    }
+
+    state call_bar_write_one(offset: u16, value: u32) -> ConfigPlan {
+      let result: ConfigPlan = bar_write_one(offset, value);
+      result
+    }
+
+    state call_bar_write_one_2(offset: u16, value: u32) -> ConfigPlan {
+      let result: ConfigPlan = bar_write_one(offset, value);
+      result
+    }
+}
+
+// Type-0 lookup rejects an upper half of a preceding 64-bit BAR. The low-word
+// decoder alone cannot establish that a caller-supplied slot starts a BAR.
+use headers::EndpointHeader;
+pub machine endpoint_bar(header: EndpointHeader, slot: u8) -> Bar {
+    let wide0: bool = (header.bars[0] & 7) == 4;
+    let wide1: bool = !wide0 && (header.bars[1] & 7) == 4;
+    let wide2: bool = !wide1 && (header.bars[2] & 7) == 4;
+    let wide3: bool = !wide2 && (header.bars[3] & 7) == 4;
+    let wide4: bool = !wide3 && (header.bars[4] & 7) == 4;
+    transition header.ok {
+      true -> choose(header, slot, wide0, wide1, wide2, wide3, wide4)
+      _ -> (Bar {})
+    }
+    state choose(header: EndpointHeader, slot: u8, wide0: bool, wide1: bool, wide2: bool, wide3: bool, wide4: bool) -> Bar {
+      transition {
+        slot == 0 -> call_bar_decode_6(header.bars[0], header.bars[1], 0, 6)
+        slot == 1 && !wide0 -> call_bar_decode_5(header.bars[1], header.bars[2], 1, 6)
+        slot == 2 && !wide1 -> call_bar_decode_4(header.bars[2], header.bars[3], 2, 6)
+        slot == 3 && !wide2 -> call_bar_decode_3(header.bars[3], header.bars[4], 3, 6)
+        slot == 4 && !wide3 -> call_bar_decode_2(header.bars[4], header.bars[5], 4, 6)
+        slot == 5 && !wide4 -> call_bar_decode(header.bars[5], 0, 5, 6)
+        _ -> (Bar {})
+      }
+    }
+
+    state call_bar_decode(low: u32, upper: u32, slot: u8, count: u8) -> Bar {
+      let result: Bar = bar_decode(low, upper, slot, count);
+      result
+    }
+
+    state call_bar_decode_2(low: u32, upper: u32, slot: u8, count: u8) -> Bar {
+      let result: Bar = bar_decode(low, upper, slot, count);
+      result
+    }
+
+    state call_bar_decode_3(low: u32, upper: u32, slot: u8, count: u8) -> Bar {
+      let result: Bar = bar_decode(low, upper, slot, count);
+      result
+    }
+
+    state call_bar_decode_4(low: u32, upper: u32, slot: u8, count: u8) -> Bar {
+      let result: Bar = bar_decode(low, upper, slot, count);
+      result
+    }
+
+    state call_bar_decode_5(low: u32, upper: u32, slot: u8, count: u8) -> Bar {
+      let result: Bar = bar_decode(low, upper, slot, count);
+      result
+    }
+
+    state call_bar_decode_6(low: u32, upper: u32, slot: u8, count: u8) -> Bar {
+      let result: Bar = bar_decode(low, upper, slot, count);
+      result
+    }
+}
+
+machine bar_write_one(offset: u16, value: u32) -> ConfigPlan {
+    let mut result: ConfigPlan = write_plan(offset, 4, value);
+    result.requires_quiesced_decoding = true;
+    result
+}

@@ -1,0 +1,5 @@
+machine build(builder: &mut Build) {
+    builder.application("cathedral-pci-tests");
+    builder.freestanding = true;
+    builder.depend_as("cathedral_pci", Source::Path { location: "../../../source/libraries/pci" });
+}

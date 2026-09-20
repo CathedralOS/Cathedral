@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of pci_types eff856b6bab81adbe1bda0ab750009f3786cb8d3; see PORT.md.
+module msix;
+use snapshot::ConfigPlan;
+use snapshot::write_plan;
+pub data MsixCapability [copy] { control: u16; table: u32; pending_bit_array: u32; table_size: u16; }
+pub data MsixRegion [copy] { ok: bool; bar: u8; offset: u32; bytes: u32; }
+pub machine msix_capability(control: u16, table: u32, pending: u32) -> MsixCapability {
+    MsixCapability { control: control, table: table, pending_bit_array: pending, table_size: (control & 2047) + 1 }
+}
+pub machine msix_enabled(control: u16) -> bool { (control & 32768) != 0 }
+pub machine msix_masked(control: u16) -> bool { (control & 16384) != 0 }
+pub machine msix_set_enabled(control: u16, enabled: bool) -> u16 {
+    transition enabled { true -> (control | 32768) _ -> (control & 32767) }
+}
+pub machine msix_set_masked(control: u16, masked: bool) -> u16 {
+    transition masked { true -> (control | 16384) _ -> (control & 49151) }
+}
+pub machine msix_control_plan(offset: u16, control: u16) -> ConfigPlan {
+    transition offset >= 64 && offset <= 244 && (offset & 3) == 0 {
+      true -> call_write_plan(offset + 2, 2, control as u32)
+      _ -> (ConfigPlan {})
+    }
+
+    state call_write_plan(offset: u16, width: u8, value: u32) -> ConfigPlan {
+      let result: ConfigPlan = write_plan(offset, width, value);
+      result
+    }
+}
+pub machine msix_table(value: MsixCapability) -> MsixRegion {
+    MsixRegion { ok: (value.table & 7) < 6 && value.table_size >= 1 && value.table_size <= 2048,
+      bar: (value.table & 7) as u8, offset: value.table & 0xfffffff8, bytes: (value.table_size as u32) * 16 }
+}
+pub machine msix_pending_bit_array(value: MsixCapability) -> MsixRegion {
+    MsixRegion { ok: (value.pending_bit_array & 7) < 6 && value.table_size >= 1 && value.table_size <= 2048,
+      bar: (value.pending_bit_array & 7) as u8, offset: value.pending_bit_array & 0xfffffff8,
+      bytes: (((value.table_size as u32) + 63) / 64) * 8 }
+}
+// The BAR must separately be a memory BAR, mapped only by a resource owner.
+pub machine msix_region_fits(value: MsixRegion, bar_bytes: u64, memory_bar: bool) -> bool {
+    value.ok && memory_bar && (value.offset as u64) + (value.bytes as u64) <= bar_bytes
+}
+pub data MsixEntry [copy] { message_address: u64; message_data: u32; vector_control: u32; }
+pub machine msix_entry_masked(value: MsixEntry) -> bool { (value.vector_control & 1) != 0 }

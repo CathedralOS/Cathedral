@@ -1,0 +1,257 @@
+use cathedral_pci::msi::ControlResult;
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Cathedral semantic fixtures; no live configuration access.
+use cathedral_pci::address::address_new;
+use cathedral_pci::address::address_segment;
+use cathedral_pci::address::address_bus;
+use cathedral_pci::address::address_device;
+use cathedral_pci::address::address_function;
+use cathedral_pci::address::AddressResult;
+use cathedral_pci::snapshot::ConfigSnapshot;
+use cathedral_pci::snapshot::ReadResult;
+use cathedral_pci::snapshot::ConfigPlan;
+use cathedral_pci::snapshot::snapshot_read;
+use cathedral_pci::snapshot::write_plan;
+use cathedral_pci::headers::HeaderFacts;
+use cathedral_pci::headers::EndpointHeader;
+use cathedral_pci::headers::PciPciBridgeHeader;
+use cathedral_pci::headers::BusNumber;
+use cathedral_pci::headers::header_facts;
+use cathedral_pci::headers::header_kind;
+use cathedral_pci::headers::header_multifunction;
+use cathedral_pci::headers::header_device_present;
+use cathedral_pci::headers::endpoint_header;
+use cathedral_pci::headers::endpoint_capability_pointer;
+use cathedral_pci::headers::bridge_header;
+use cathedral_pci::headers::update_command;
+use cathedral_pci::headers::update_interrupt;
+use cathedral_pci::headers::update_bus_numbers;
+use cathedral_pci::registers::StatusRegister;
+use cathedral_pci::registers::status_devsel_timing;
+use cathedral_pci::registers::status_parity_error_detected;
+use cathedral_pci::registers::status_has_capability_list;
+use cathedral_pci::registers::status_interrupt_status;
+use cathedral_pci::registers::devsel_timing;
+use cathedral_pci::registers::CommandRegister;
+use cathedral_pci::registers::command_update;
+use cathedral_pci::registers::command_contains;
+use cathedral_pci::device_type::device_type;
+use cathedral_pci::device_type::usb_type;
+use cathedral_pci::bars::Bar;
+use cathedral_pci::bars::BarSize;
+use cathedral_pci::bars::bar_decode;
+use cathedral_pci::bars::bar_size;
+use cathedral_pci::bars::bar_probe_plan;
+use cathedral_pci::bars::bar_write_plan;
+use cathedral_pci::bars::bar_unwrap_io;
+use cathedral_pci::bars::bar_unwrap_mem;
+use cathedral_pci::bars::endpoint_bar;
+use cathedral_pci::capabilities::CapabilityIterator;
+use cathedral_pci::capabilities::CapabilityStep;
+use cathedral_pci::capabilities::capability_iterator;
+use cathedral_pci::capabilities::extended_capability_iterator;
+use cathedral_pci::capabilities::capability_next;
+use cathedral_pci::capabilities::capability_known;
+use cathedral_pci::msi::MsiOffsets;
+use cathedral_pci::msi::msi_capability;
+use cathedral_pci::msi::msi_set_enabled;
+use cathedral_pci::msi::msi_enabled;
+use cathedral_pci::msi::msi_set_multiple_message_enable;
+use cathedral_pci::msi::msi_offsets;
+use cathedral_pci::msi::multiple_message_support;
+use cathedral_pci::msi::msi_control_plan;
+use cathedral_pci::msi::msi_message_plan;
+use cathedral_pci::msi::lapic_message_data;
+use cathedral_pci::msi::msi_mask_plan;
+use cathedral_pci::msi::msi_mask_read_plan;
+use cathedral_pci::msi::msi_pending_read_plan;
+use cathedral_pci::msi::msi_is_pending;
+use cathedral_pci::msix::MsixCapability;
+use cathedral_pci::msix::MsixRegion;
+use cathedral_pci::msix::msix_capability;
+use cathedral_pci::msix::msix_enabled;
+use cathedral_pci::msix::msix_masked;
+use cathedral_pci::msix::msix_set_enabled;
+use cathedral_pci::msix::msix_set_masked;
+use cathedral_pci::msix::msix_control_plan;
+use cathedral_pci::msix::msix_table;
+use cathedral_pci::msix::msix_pending_bit_array;
+use cathedral_pci::msix::msix_region_fits;
+
+machine address_cases() -> bool {
+    let full: AddressResult = address_new(65535, 255, 31, 7);
+    full.ok && full.value.raw == 0xffffffff && address_segment(full.value) == 65535 &&
+    address_bus(full.value) == 255 && address_device(full.value) == 31 && address_function(full.value) == 7 &&
+    !address_new(0, 0, 32, 0).ok && !address_new(0, 0, 0, 8).ok && address_new(0, 0, 0, 0).ok
+}
+machine snapshot_cases() -> bool {
+    let mut value: ConfigSnapshot;
+    value.length = 4096;
+    value.bytes[4092] = 0x12; value.bytes[4093] = 0x34; value.bytes[4094] = 0x56; value.bytes[4095] = 0x78;
+    let last: ReadResult = snapshot_read(&value, 4092, 4);
+    let mut invalid: ConfigSnapshot;
+    invalid.length = 4097;
+    !snapshot_read(&invalid, 0, 1).ok && last.ok && last.value == 0x78563412 && snapshot_read(&value, 4095, 1).value == 0x78 &&
+    !snapshot_read(&value, 4093, 4).ok && !snapshot_read(&value, 65535, 4).ok &&
+    !snapshot_read(&value, 0, 3).ok && !write_plan(3, 2, 0).ok && !write_plan(2, 4, 0).ok &&
+    !write_plan(0, 1, 256).ok && !write_plan(4095, 2, 0).ok && write_plan(4092, 4, 0xffffffff).ok
+}
+machine header_cases() -> bool {
+    let mut value: ConfigSnapshot;
+    value.length = 64;
+    value.bytes[0] = 0x86; value.bytes[1] = 0x80; value.bytes[2] = 0x34; value.bytes[3] = 0x12;
+    value.bytes[4] = 7; value.bytes[6] = 16; value.bytes[7] = 128;
+    value.bytes[8] = 9; value.bytes[9] = 48; value.bytes[10] = 3; value.bytes[11] = 12;
+    value.bytes[14] = 128; value.bytes[44] = 0x11; value.bytes[46] = 0x22;
+    value.bytes[52] = 0x40; value.bytes[60] = 11; value.bytes[61] = 1;
+    let header: HeaderFacts = header_facts(&value);
+    let endpoint: EndpointHeader = endpoint_header(&value);
+    let command: ConfigPlan = update_command(5);
+    let interrupt: ConfigPlan = update_interrupt(1, 1, 13);
+    header.ok && header.vendor_id == 0x8086 && header.device_id == 0x1234 && header.command == 7 &&
+    header.status == 0x8010 && header.revision == 9 && header.interface == 48 && header.base_class == 12 &&
+    header_kind(header) == 0 && header_multifunction(header) && header_device_present(header) &&
+    endpoint.ok && endpoint.subsystem_vendor_id == 17 && endpoint.subsystem_id == 34 &&
+    endpoint.interrupt_pin == 1 && endpoint.interrupt_line == 11 && endpoint_capability_pointer(endpoint) == 64 &&
+    command.ok && command.count == 1 && command.operations[0].width == 2 && command.operations[0].offset == 4 &&
+    command.operations[0].value == 5 && interrupt.ok && interrupt.operations[0].width == 1 &&
+    interrupt.operations[0].offset == 60 && !update_interrupt(1, 2, 13).ok && !bridge_header(&value).ok
+}
+machine bridge_cases() -> bool {
+    let mut value: ConfigSnapshot;
+    value.length = 64; value.bytes[14] = 1;
+    value.bytes[24] = 2; value.bytes[25] = 3; value.bytes[26] = 20; value.bytes[27] = 0xab;
+    value.bytes[28] = 0x11; value.bytes[29] = 0x22; value.bytes[30] = 0x33; value.bytes[31] = 0x44;
+    let bridge: PciPciBridgeHeader = bridge_header(&value);
+    let plan: ConfigPlan = update_bus_numbers(0xab140302, BusNumber { primary: 4, secondary: 5, subordinate: 6 });
+    bridge.ok && bridge.buses.primary == 2 && bridge.buses.secondary == 3 && bridge.buses.subordinate == 20 &&
+    bridge.secondary_latency_timer == 0xab && bridge.io_base == 0x11 && bridge.io_limit == 0x22 &&
+    bridge.secondary_status == 0x4433 && plan.operations[0].value == 0xab060504 && !endpoint_header(&value).ok
+}
+machine register_class_cases() -> bool {
+    let status: StatusRegister = StatusRegister { raw: 0x8618 };
+    let command: CommandRegister = command_update(CommandRegister { raw: 0x8003 }, 2, 4);
+    status_parity_error_detected(status) && status_has_capability_list(status) && status_interrupt_status(status) &&
+    !status_devsel_timing(status).ok && devsel_timing(2).ok && !devsel_timing(255).ok &&
+    command.raw == 0x8005 && command_contains(command, 5) && !command_contains(command, 2) &&
+    device_type(2, 0).code == 512 && device_type(2, 5).code == 517 &&
+    device_type(4, 128).code == 1152 && device_type(5, 128).code == 1408 &&
+    device_type(15, 0).code == 65536 && device_type(15, 1).code == 3841 && device_type(15, 4).code == 3844 &&
+    device_type(4, 3).code == 65536 && device_type(5, 2).code == 65536 && device_type(255, 255).code == 65536 &&
+    usb_type(0).ok && usb_type(16).ok && usb_type(32).ok && usb_type(48).ok && usb_type(128).ok &&
+    usb_type(254).ok && !usb_type(255).ok && usb_type(255).raw == 255
+}
+machine bar_cases() -> bool {
+    let mem: Bar = bar_decode(0x80000008, 0, 0, 6);
+    let wide: Bar = bar_decode(0x3450000c, 0x12, 2, 6);
+    let io: Bar = bar_decode(0xc001, 0, 0, 6);
+    let size: BarSize = bar_size(mem, 0xfffff000, 0);
+    let huge: BarSize = bar_size(wide, 0, 0x80000000);
+    let high_bit: u64 = 0x8000000000000000;
+    let probe: ConfigPlan = bar_probe_plan(2, 6, 0x3450000c, 0x12);
+    let write: ConfigPlan = bar_write_plan(2, 6, 0x3450000c, 0x12, 0x1234500000);
+    let mut endpoint: EndpointHeader;
+    endpoint.ok = true; endpoint.bars[0] = 4; endpoint.bars[1] = 4; endpoint.bars[2] = 0x80000000;
+    mem.ok && mem.kind == 2 && mem.prefetchable && mem.address == 0x80000000 && size.ok && size.bytes == 4096 &&
+    huge.ok && huge.bytes == high_bit && wide.ok && wide.slots == 2 && wide.address == 0x1234500000 && io.ok && io.address == 0xc000 &&
+    bar_unwrap_io(io).ok && !bar_unwrap_io(mem).ok && bar_unwrap_mem(wide, size).ok &&
+    !bar_decode(4, 0, 5, 6).ok && !bar_decode(6, 0, 0, 6).ok && !bar_decode(0, 0, 6, 6).ok &&
+    bar_decode(0, 0, 0, 6).ok && !bar_size(mem, 0, 0).ok && !bar_size(mem, 0xfffff010, 0).ok &&
+    bar_size(wide, 0xffff0000, 0xffffffff).bytes == 65536 && !bar_size(wide, 0, 0).ok &&
+    probe.ok && probe.count == 6 && probe.requires_restore_on_failure && probe.requires_quiesced_decoding &&
+    probe.operations[4].value == 0x12 && probe.operations[5].value == 0x3450000c &&
+    write.ok && write.count == 2 && write.operations[0].value == 0x3450000c && write.operations[1].value == 0x12 &&
+    !bar_write_plan(0, 6, 0, 0, 0x100000000).ok && !bar_write_plan(0, 6, 0, 0, 1).ok &&
+    !endpoint_bar(endpoint, 1).ok && endpoint_bar(endpoint, 2).ok
+}
+machine capability_cases() -> bool {
+    let mut value: ConfigSnapshot;
+    value.length = 256;
+    value.bytes[64] = 5; value.bytes[65] = 68; value.bytes[66] = 128;
+    value.bytes[68] = 0; value.bytes[69] = 72;
+    value.bytes[72] = 254; value.bytes[73] = 64;
+    let mut cursor: CapabilityIterator = capability_iterator(64);
+    let first: CapabilityStep = capability_next(&value, &mut cursor);
+    let skipped: CapabilityStep = capability_next(&value, &mut cursor);
+    let unknown: CapabilityStep = capability_next(&value, &mut cursor);
+    let cycle: CapabilityStep = capability_next(&value, &mut cursor);
+    let end: CapabilityStep = capability_next(&value, &mut cursor);
+    let mut exhausted: CapabilityIterator = capability_iterator(64);
+    exhausted.steps = 48;
+    let budget: CapabilityStep = capability_next(&value, &mut exhausted);
+    let mut bad: CapabilityIterator = capability_iterator(65);
+    let unaligned: CapabilityStep = capability_next(&value, &mut bad);
+    let mut low: CapabilityIterator = capability_iterator(60);
+    let below: CapabilityStep = capability_next(&value, &mut low);
+    let mut high: CapabilityIterator = capability_iterator(256);
+    let above: CapabilityStep = capability_next(&value, &mut high);
+    first.status == 1 && first.id == 5 && first.control == 128 && skipped.status == 2 &&
+    unknown.status == 1 && unknown.id == 254 && !capability_known(254) && capability_known(17) &&
+    budget.status == 4 && cycle.status == 4 && end.status == 3 && cursor.steps == 3 && unaligned.status == 4 && below.status == 4 && above.status == 4
+}
+machine extended_cases() -> bool {
+    let mut value: ConfigSnapshot;
+    value.length = 4096;
+    value.bytes[256] = 1; value.bytes[258] = 0xc2; value.bytes[259] = 0xff;
+    value.bytes[4092] = 0x23; value.bytes[4093] = 1; value.bytes[4094] = 3;
+    let mut cursor: CapabilityIterator = extended_capability_iterator();
+    let first: CapabilityStep = capability_next(&value, &mut cursor);
+    let last: CapabilityStep = capability_next(&value, &mut cursor);
+    let end: CapabilityStep = capability_next(&value, &mut cursor);
+    let mut short: ConfigSnapshot;
+    short.length = 256;
+    let mut missing: CapabilityIterator = extended_capability_iterator();
+    let truncated: CapabilityStep = capability_next(&short, &mut missing);
+    first.status == 1 && first.id == 1 && first.version == 2 && first.next_offset == 4092 &&
+    last.status == 1 && last.id == 0x123 && last.version == 3 && last.next_offset == 0 && end.status == 3 && truncated.status == 4
+}
+machine msi_cases() -> bool {
+    let fields32: MsiOffsets = msi_offsets(64, 0x106);
+    let fields64: MsiOffsets = msi_offsets(64, 0x186);
+    let plan: ConfigPlan = msi_message_plan(64, 0x186, 0xfee00000, 0x4040);
+    let transformed: ControlResult = msi_set_multiple_message_enable(0x186, 2);
+    let control: ConfigPlan = msi_control_plan(64, transformed.raw);
+    let enabled: u16 = msi_set_enabled(0x186, true);
+    let disabled: u16 = msi_set_enabled(0x187, false);
+    msi_capability(0x186).ok && !msi_capability(0x18e).ok && !msi_capability(0x130).ok &&
+    msi_set_multiple_message_enable(0x186, 2).ok && msi_set_multiple_message_enable(0x186, 2).raw == 0x1a6 &&
+    !msi_set_multiple_message_enable(0x186, 4).ok && control.operations[0].width == 2 &&
+    control.operations[0].offset == 66 && control.operations[0].value == 0x1a6 &&
+    msi_enabled(enabled) && !msi_enabled(disabled) &&
+    multiple_message_support(5).count == 32 && !multiple_message_support(6).ok &&
+    fields32.ok && fields32.mask == 76 && fields32.pending == 80 && fields32.data == 72 &&
+    fields64.ok && fields64.mask == 80 && fields64.pending == 84 && fields64.data == 76 &&
+    !msi_offsets(252, 0).ok && !msi_offsets(65, 0).ok &&
+    plan.ok && plan.count == 3 && plan.requires_interrupts_disabled && plan.operations[2].width == 2 &&
+    plan.operations[2].offset == 76 && plan.operations[2].value == 0x4040 &&
+    !msi_message_plan(64, 0, 0x100000000, 0).ok && !msi_message_plan(64, 0, 1, 0).ok &&
+    lapic_message_data(64, 3).raw == 0xc040 && !lapic_message_data(64, 1).ok &&
+    msi_mask_plan(64, 0x106, 0x80000000).ok && msi_mask_read_plan(64, 0x106).operations[0].offset == 76 &&
+    msi_pending_read_plan(64, 0x106).operations[0].offset == 80 && !msi_pending_read_plan(64, 0x80).ok &&
+    msi_is_pending(0x80000000, 31) && !msi_is_pending(0x80000000, 32)
+}
+machine msix_cases() -> bool {
+    let value: MsixCapability = msix_capability(0xc7ff, 0x1002, 0x8004);
+    let table: MsixRegion = msix_table(value);
+    let pba: MsixRegion = msix_pending_bit_array(value);
+    let enabled: u16 = msix_set_enabled(0x7ff, true);
+    let masked: u16 = msix_set_masked(enabled, true);
+    let plan: ConfigPlan = msix_control_plan(64, masked);
+    let invalid: MsixCapability = msix_capability(0, 7, 0);
+    let partial: MsixCapability = msix_capability(64, 0, 0);
+    value.table_size == 2048 && msix_enabled(value.control) && msix_masked(value.control) &&
+    table.ok && table.bar == 2 && table.offset == 4096 && table.bytes == 32768 &&
+    pba.ok && pba.bar == 4 && pba.offset == 32768 && pba.bytes == 256 &&
+    msix_region_fits(table, 36864, true) && !msix_region_fits(table, 36863, true) &&
+    !msix_region_fits(table, 36864, false) && !msix_table(invalid).ok &&
+    msix_pending_bit_array(partial).bytes == 16 &&
+    plan.ok && plan.operations[0].width == 2 && plan.operations[0].value == 0xc7ff && !msix_control_plan(248, 0).ok
+}
+machine test_result() -> i32 {
+    transition address_cases() && snapshot_cases() && header_cases() && bridge_cases() && register_class_cases() &&
+      bar_cases() && capability_cases() && extended_cases() && msi_cases() && msix_cases() { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

@@ -169,7 +169,7 @@ projection, union/tail and native-boundary limitations remain recorded there.
 
 ## Phase 2 — small, high-yield hardware packages
 
-- [ ] **PCI-000 — Port `pci_types`.** Land PCI configuration headers, BDFs,
+- [x] **PCI-000 — Port `pci_types`.** Land PCI configuration headers, BDFs,
   command/status flags, BAR encodings, bridge headers, capability walking, and
   extended-capability facts.  Keep byte parsing pure; config-space access is an
   unresolved authority seam.  Add malformed-list, alignment, and overflow
@@ -191,6 +191,11 @@ projection, union/tail and native-boundary limitations remain recorded there.
 - [ ] **X86-002 — Translate pure x86 algorithms and tests.** Canonical-address
   checks, index extraction, frame/page arithmetic, descriptor construction, and
   table walking.  Actual register access and instructions remain boundaries.
+
+PCI-000 evidence: [PCI port record](source/libraries/pci/PORT.md), complete
+six-file inventory, pinned in-memory Rust witnesses, and ten Omega semantic
+behavior groups with ten body-mutating negative controls. Configuration access
+remains an explicit authority seam.
 
 ## Phase 3 — VirtIO protocol corpus
 

@@ -1,0 +1,104 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of pci_types eff856b6bab81adbe1bda0ab750009f3786cb8d3; see PORT.md.
+module capabilities;
+use snapshot::ConfigSnapshot;
+use snapshot::ReadResult;
+use snapshot::snapshot_read;
+use address::PciAddress;
+pub data PciCapabilityAddress [copy] { address: PciAddress; offset: u16; }
+// Bounded one-step iterator: every step ends, advances, or permanently rejects.
+// status 1 entry, 2 null skipped, 3 end, 4 malformed. Raw unknown IDs survive.
+pub data CapabilityStep [copy] { status: u8; offset: u16; id: u16; version: u8; control: u16; next_offset: u16; }
+pub data CapabilityIterator [copy] { next_offset: u16; steps: u16; extended: bool; done: bool; visited: [u8; 1024]; }
+pub machine capability_iterator(first: u16) -> CapabilityIterator { CapabilityIterator { next_offset: first } }
+pub machine extended_capability_iterator() -> CapabilityIterator { CapabilityIterator { next_offset: 256, extended: true } }
+pub machine capability_next(snapshot: &ConfigSnapshot, cursor: &mut CapabilityIterator) -> CapabilityStep {
+    transition cursor.done || cursor.next_offset == 0 {
+      true -> end(cursor)
+      _ -> validate(snapshot, cursor)
+    }
+    state end(cursor: &mut CapabilityIterator) -> CapabilityStep {
+      cursor.done = true;
+      CapabilityStep { status: 3 }
+    }
+    state validate(snapshot: &ConfigSnapshot, cursor: &mut CapabilityIterator) -> CapabilityStep {
+      transition (cursor.next_offset & 3) == 0 &&
+        ((!cursor.extended && cursor.next_offset >= 64 && cursor.next_offset <= 252 && cursor.steps < 48) ||
+        (cursor.extended && cursor.next_offset >= 256 && cursor.next_offset <= 4092 && cursor.steps < 960)) {
+        true -> read(snapshot, cursor)
+        _ -> malformed(cursor)
+      }
+    }
+    state read(snapshot: &ConfigSnapshot, cursor: &mut CapabilityIterator) -> CapabilityStep {
+      let word: ReadResult = snapshot_read(snapshot, cursor.next_offset, 4);
+      let index: u16 = cursor.next_offset >> 2;
+      transition word.ok && index < 1024 {
+        true -> visited(cursor, word.value, index)
+        _ -> malformed(cursor)
+      }
+    }
+    state visited(cursor: &mut CapabilityIterator, raw: u32, index: u16) -> CapabilityStep {
+      transition visited_slot(cursor, index) {
+        true -> malformed(cursor)
+        _ -> decode(cursor, raw, index)
+      }
+    }
+    state decode(cursor: &mut CapabilityIterator, raw: u32, index: u16) -> CapabilityStep {
+      mark_slot(cursor, index);
+      let offset: u16 = cursor.next_offset;
+      cursor.steps = step_increment(cursor.steps);
+      transition cursor.extended {
+        true -> extended(cursor, raw, offset)
+        _ -> conventional(cursor, raw, offset)
+      }
+    }
+    state conventional(cursor: &mut CapabilityIterator, raw: u32, offset: u16) -> CapabilityStep {
+      cursor.next_offset = ((raw >> 8) & 255) as u16;
+      transition (raw & 255) == 0 {
+        true -> (CapabilityStep { status: 2, offset: offset, next_offset: cursor.next_offset, control: (raw >> 16) as u16 })
+        _ -> (CapabilityStep { status: 1, offset: offset, id: (raw & 255) as u16, next_offset: cursor.next_offset, control: (raw >> 16) as u16 })
+      }
+    }
+    state extended(cursor: &mut CapabilityIterator, raw: u32, offset: u16) -> CapabilityStep {
+      transition raw == 0 || raw == 0xffffffff {
+        true -> end(cursor)
+        _ -> extended_entry(cursor, raw, offset)
+      }
+    }
+    state extended_entry(cursor: &mut CapabilityIterator, raw: u32, offset: u16) -> CapabilityStep {
+      cursor.next_offset = (raw >> 20) as u16;
+      CapabilityStep { status: 1, offset: offset, id: (raw & 65535) as u16,
+        version: ((raw >> 16) & 15) as u8, next_offset: cursor.next_offset }
+    }
+    state malformed(cursor: &mut CapabilityIterator) -> CapabilityStep {
+      cursor.done = true;
+      CapabilityStep { status: 4, offset: cursor.next_offset }
+    }
+}
+machine visited_slot(cursor: &CapabilityIterator, index: u16) -> bool {
+    transition index < 1024 { true -> (cursor.visited[index] != 0) _ -> (true) }
+}
+machine mark_slot(cursor: &mut CapabilityIterator, index: u16) {
+    transition index < 1024 { true -> mark(cursor, index) _ -> done() }
+    state done() {}
+    state mark(cursor: &mut CapabilityIterator, index: u16) { cursor.visited[index] = 1; }
+}
+pub machine capability_known(id: u16) -> bool { (id >= 1 && id <= 14) || id == 16 || id == 17 }
+pub const CAPABILITY_POWER_MANAGEMENT: u16 = 1;
+pub const CAPABILITY_AGP: u16 = 2;
+pub const CAPABILITY_VITAL_PRODUCT_DATA: u16 = 3;
+pub const CAPABILITY_SLOT_IDENTIFICATION: u16 = 4;
+pub const CAPABILITY_MSI: u16 = 5;
+pub const CAPABILITY_COMPACT_PCI_HOT_SWAP: u16 = 6;
+pub const CAPABILITY_PCI_X: u16 = 7;
+pub const CAPABILITY_HYPER_TRANSPORT: u16 = 8;
+pub const CAPABILITY_VENDOR_SPECIFIC: u16 = 9;
+pub const CAPABILITY_DEBUG_PORT: u16 = 10;
+pub const CAPABILITY_COMPACT_PCI_CENTRAL_RESOURCE_CONTROL: u16 = 11;
+pub const CAPABILITY_PCI_HOT_PLUG: u16 = 12;
+pub const CAPABILITY_BRIDGE_SUBSYSTEM_VENDOR_ID: u16 = 13;
+pub const CAPABILITY_AGP_3: u16 = 14;
+pub const CAPABILITY_PCI_EXPRESS: u16 = 16;
+pub const CAPABILITY_MSI_X: u16 = 17;
+
+machine step_increment(value: u16) -> u16 { transition value < 960 { true -> (value + 1) _ -> (960) } }

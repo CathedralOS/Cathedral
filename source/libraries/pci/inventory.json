@@ -1,0 +1,2007 @@
+{
+  "files": {
+    "src/capability/mod.rs": {
+      "disposition": "translated",
+      "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+      "sha256": "69721c9b49383910bdf6e65faac31c18a0f411160066bb6ed1eac4e0cb9d93a1",
+      "symbols": {
+        "114:CapabilityIterator": {
+          "anchor": "pub struct CapabilityIterator<T: ConfigRegionAccess> {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub data CapabilityIterator"
+            }
+          ]
+        },
+        "121:new": {
+          "anchor": "pub(crate) fn new(address: PciAddress, offset: u16, access: T) -> CapabilityIterator<T> {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub machine capability_iterator"
+            }
+          ]
+        },
+        "127:Item": {
+          "anchor": "type Item = PciCapability;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub data CapabilityStep"
+            }
+          ]
+        },
+        "129:next": {
+          "anchor": "fn next(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub machine capability_next"
+            }
+          ]
+        },
+        "12:PciCapabilityAddress": {
+          "anchor": "pub struct PciCapabilityAddress {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub data PciCapabilityAddress"
+            }
+          ]
+        },
+        "13:address": {
+          "anchor": "pub address: PciAddress,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub data PciCapabilityAddress"
+            }
+          ]
+        },
+        "14:offset": {
+          "anchor": "pub offset: u16,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "offset: u16;"
+            }
+          ]
+        },
+        "18:fmt": {
+          "anchor": "fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust Display/Debug formatting and formatter trait machinery are intentionally omitted from this pure hardware-facts library; all numeric facts remain available."
+        },
+        "25:PciCapability": {
+          "anchor": "pub enum PciCapability {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub data CapabilityStep"
+            },
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub machine capability_known"
+            },
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_capability"
+            },
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_capability"
+            }
+          ]
+        },
+        "5:msi": {
+          "anchor": "mod msi;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "module msi;"
+            }
+          ]
+        },
+        "63:parse": {
+          "anchor": "fn parse(",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub machine capability_next"
+            },
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub machine capability_known"
+            },
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_capability"
+            },
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_capability"
+            }
+          ]
+        },
+        "6:msix": {
+          "anchor": "mod msix;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "module msix;"
+            }
+          ]
+        },
+        "8:msi::{MsiCapability, MultipleMessageSupport, TriggerMode};": {
+          "anchor": "pub use msi::{MsiCapability, MultipleMessageSupport, TriggerMode};",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "module msi;"
+            }
+          ]
+        },
+        "91:address": {
+          "anchor": "pub fn address(&self) -> PciCapabilityAddress {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub data PciCapabilityAddress"
+            }
+          ]
+        },
+        "9:msix::MsixCapability;": {
+          "anchor": "pub use msix::MsixCapability;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "module msix;"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/pci/capabilities.omg",
+          "anchor": "module capabilities;"
+        }
+      ]
+    },
+    "src/capability/msi.rs": {
+      "disposition": "translated",
+      "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+      "sha256": "af57a8d8191948520bb474d2fdae33bdc22038683601827c607c25c5e3780097",
+      "symbols": {
+        "104:set_multiple_message_enable": {
+          "anchor": "pub fn set_multiple_message_enable(&self, data: MultipleMessageSupport, access: impl ConfigRegionAccess) {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_set_multiple_message_enable"
+            },
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_control_plan"
+            }
+          ]
+        },
+        "111:multiple_message_enable": {
+          "anchor": "pub fn multiple_message_enable(&self, access: impl ConfigRegionAccess) -> MultipleMessageSupport {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "multiple_message_enable: u8"
+            }
+          ]
+        },
+        "118:set_message_info": {
+          "anchor": "pub fn set_message_info(&self, address: u64, data: u32, access: impl ConfigRegionAccess) {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_message_plan"
+            }
+          ]
+        },
+        "11:Int1": {
+          "anchor": "Int1 = 0b000,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "count: 1"
+            }
+          ]
+        },
+        "139:set_message_info_lapic": {
+          "anchor": "pub fn set_message_info_lapic(",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine lapic_message_data"
+            },
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_message_plan"
+            }
+          ]
+        },
+        "13:Int2": {
+          "anchor": "Int2 = 0b001,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "count: 2"
+            }
+          ]
+        },
+        "157:message_mask": {
+          "anchor": "pub fn message_mask(&self, access: impl ConfigRegionAccess) -> u32 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_mask_read_plan"
+            }
+          ]
+        },
+        "15:Int4": {
+          "anchor": "Int4 = 0b010,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "count: 4"
+            }
+          ]
+        },
+        "170:set_message_mask": {
+          "anchor": "pub fn set_message_mask(&self, mask: u32, access: impl ConfigRegionAccess) {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_mask_plan"
+            }
+          ]
+        },
+        "17:Int8": {
+          "anchor": "Int8 = 0b011,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "count: 8"
+            }
+          ]
+        },
+        "180:is_pending": {
+          "anchor": "pub fn is_pending(&self, access: impl ConfigRegionAccess) -> u32 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_pending_read_plan"
+            }
+          ]
+        },
+        "19:Int16": {
+          "anchor": "Int16 = 0b100,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "count: 16"
+            }
+          ]
+        },
+        "21:Int32": {
+          "anchor": "Int32 = 0b101,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "count: 32"
+            }
+          ]
+        },
+        "25:Error": {
+          "anchor": "type Error = ();",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub data MultipleMessageSupport"
+            }
+          ]
+        },
+        "27:try_from": {
+          "anchor": "fn try_from(value: u8) -> Result<Self, Self::Error> {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine multiple_message_support"
+            }
+          ]
+        },
+        "42:TriggerMode": {
+          "anchor": "pub enum TriggerMode {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine lapic_message_data"
+            }
+          ]
+        },
+        "43:Edge": {
+          "anchor": "Edge = 0b00,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub const TRIGGER_EDGE"
+            }
+          ]
+        },
+        "44:LevelAssert": {
+          "anchor": "LevelAssert = 0b11,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub const TRIGGER_LEVEL_ASSERT"
+            }
+          ]
+        },
+        "45:LevelDeassert": {
+          "anchor": "LevelDeassert = 0b10,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub const TRIGGER_LEVEL_DEASSERT"
+            }
+          ]
+        },
+        "49:MsiCapability": {
+          "anchor": "pub struct MsiCapability {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub data MsiCapability"
+            }
+          ]
+        },
+        "50:address": {
+          "anchor": "pub(super) address: PciCapabilityAddress,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub data PciCapabilityAddress"
+            }
+          ]
+        },
+        "57:new": {
+          "anchor": "pub(crate) fn new(address: PciCapabilityAddress, control: u16) -> MsiCapability {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_capability"
+            }
+          ]
+        },
+        "69:has_per_vector_masking": {
+          "anchor": "pub fn has_per_vector_masking(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "per_vector_masking: bool"
+            }
+          ]
+        },
+        "75:is_64bit": {
+          "anchor": "pub fn is_64bit(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "is_64_bit: bool"
+            }
+          ]
+        },
+        "81:multiple_message_capable": {
+          "anchor": "pub fn multiple_message_capable(&self) -> MultipleMessageSupport {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "multiple_message_capable: u8"
+            }
+          ]
+        },
+        "85:ctrl": {
+          "anchor": "pub fn ctrl(&self, access: impl ConfigRegionAccess) -> u32 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "control: u16"
+            }
+          ]
+        },
+        "90:is_enabled": {
+          "anchor": "pub fn is_enabled(&self, access: impl ConfigRegionAccess) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_enabled"
+            }
+          ]
+        },
+        "96:set_enabled": {
+          "anchor": "pub fn set_enabled(&self, enabled: bool, access: impl ConfigRegionAccess) {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_set_enabled"
+            },
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub machine msi_control_plan"
+            }
+          ]
+        },
+        "9:MultipleMessageSupport": {
+          "anchor": "pub enum MultipleMessageSupport {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msi.omg",
+              "anchor": "pub data MultipleMessageSupport"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/pci/msi.omg",
+          "anchor": "module msi;"
+        }
+      ]
+    },
+    "src/capability/msix.rs": {
+      "disposition": "translated",
+      "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+      "sha256": "ef3260f98e9f7d8453bfc483a7c4317cb47292d242b22a73de4ec9a269f7e17d",
+      "symbols": {
+        "16:new": {
+          "anchor": "pub(crate) fn new(",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_capability"
+            }
+          ]
+        },
+        "34:set_enabled": {
+          "anchor": "pub fn set_enabled(&mut self, enabled: bool, access: impl ConfigRegionAccess) {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_set_enabled"
+            },
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_control_plan"
+            }
+          ]
+        },
+        "42:enabled": {
+          "anchor": "pub fn enabled(&self, access: impl ConfigRegionAccess) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_enabled"
+            }
+          ]
+        },
+        "51:set_function_mask": {
+          "anchor": "pub fn set_function_mask(&mut self, mask: bool, access: impl ConfigRegionAccess) {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_set_masked"
+            },
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_control_plan"
+            }
+          ]
+        },
+        "59:function_mask": {
+          "anchor": "pub fn function_mask(&self, access: impl ConfigRegionAccess) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_masked"
+            }
+          ]
+        },
+        "65:table_bar": {
+          "anchor": "pub fn table_bar(&self) -> u8 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_table"
+            }
+          ]
+        },
+        "6:MsixCapability": {
+          "anchor": "pub struct MsixCapability {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub data MsixCapability"
+            }
+          ]
+        },
+        "70:table_offset": {
+          "anchor": "pub fn table_offset(&self) -> u32 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_table"
+            }
+          ]
+        },
+        "78:table_size": {
+          "anchor": "pub fn table_size(&self) -> u16 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "table_size: u16"
+            }
+          ]
+        },
+        "7:address": {
+          "anchor": "pub(super) address: PciCapabilityAddress,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub data PciCapabilityAddress"
+            }
+          ]
+        },
+        "82:pba_bar": {
+          "anchor": "pub fn pba_bar(&self) -> u8 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_pending_bit_array"
+            }
+          ]
+        },
+        "86:pba_offset": {
+          "anchor": "pub fn pba_offset(&self) -> u32 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/msix.omg",
+              "anchor": "pub machine msix_pending_bit_array"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/pci/msix.omg",
+          "anchor": "module msix;"
+        }
+      ]
+    },
+    "src/device_type.rs": {
+      "disposition": "translated",
+      "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+      "sha256": "414a2ed3ae2c6fa75583f0785cb87f7dac0d782698d760a1190f9365f2e3fa20",
+      "symbols": {
+        "188:from": {
+          "anchor": "fn from(class: (BaseClass, SubClass)) -> Self {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/device_type.omg",
+              "anchor": "pub machine device_type"
+            }
+          ]
+        },
+        "319:UsbType": {
+          "anchor": "pub enum UsbType {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/device_type.omg",
+              "anchor": "pub data UsbTypeResult"
+            }
+          ]
+        },
+        "329:Error": {
+          "anchor": "type Error = ();",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/device_type.omg",
+              "anchor": "pub data UsbTypeResult"
+            }
+          ]
+        },
+        "331:try_from": {
+          "anchor": "fn try_from(interface: Interface) -> Result<Self, Self::Error> {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/device_type.omg",
+              "anchor": "pub machine usb_type"
+            }
+          ]
+        },
+        "7:DeviceType": {
+          "anchor": "pub enum DeviceType {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/device_type.omg",
+              "anchor": "pub data DeviceType"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/pci/device_type.omg",
+          "anchor": "module device_type;"
+        }
+      ]
+    },
+    "src/lib.rs": {
+      "disposition": "translated",
+      "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+      "sha256": "a98e7332581f990f0dd57bb71926f39adb1d0e3bcad6d51e79e7c64a9b7164fa",
+      "symbols": {
+        "100:write": {
+          "anchor": "unsafe fn write(&self, address: PciAddress, offset: u16, value: u32) {",
+          "disposition": "translated",
+          "reason": "Explicit replacement by bounded caller-supplied snapshot reads and inert finite config-operation plans. No live accessor implementation/reference forwarding, config authority, or hardware effect. See PORT.md Representation and authority.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigSnapshot"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub machine snapshot_read"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigOperation"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigPlan"
+            }
+          ]
+        },
+        "107:HeaderType": {
+          "anchor": "pub enum HeaderType {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine header_kind"
+            }
+          ]
+        },
+        "135:PciHeader": {
+          "anchor": "pub struct PciHeader(PciAddress);",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub data PciHeader"
+            }
+          ]
+        },
+        "138:new": {
+          "anchor": "pub fn new(address: PciAddress) -> PciHeader {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine pci_header"
+            }
+          ]
+        },
+        "142:address": {
+          "anchor": "pub fn address(&self) -> PciAddress {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "address: PciAddress;"
+            }
+          ]
+        },
+        "146:id": {
+          "anchor": "pub fn id(&self, access: impl ConfigRegionAccess) -> (VendorId, DeviceId) {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "vendor_id: u16; device_id: u16;"
+            }
+          ]
+        },
+        "151:header_type": {
+          "anchor": "pub fn header_type(&self, access: impl ConfigRegionAccess) -> HeaderType {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine header_kind"
+            }
+          ]
+        },
+        "164:has_multiple_functions": {
+          "anchor": "pub fn has_multiple_functions(&self, access: impl ConfigRegionAccess) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine header_multifunction"
+            }
+          ]
+        },
+        "171:revision_and_class": {
+          "anchor": "pub fn revision_and_class(",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine header_facts"
+            }
+          ]
+        },
+        "184:status": {
+          "anchor": "pub fn status(&self, access: impl ConfigRegionAccess) -> StatusRegister {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "status: u16;"
+            }
+          ]
+        },
+        "189:command": {
+          "anchor": "pub fn command(&self, access: impl ConfigRegionAccess) -> CommandRegister {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "command: u16;"
+            }
+          ]
+        },
+        "194:update_command": {
+          "anchor": "pub fn update_command<F>(&mut self, access: impl ConfigRegionAccess, f: F)",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine update_command"
+            }
+          ]
+        },
+        "24:PciAddress": {
+          "anchor": "pub struct PciAddress(u32);",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/address.omg",
+              "anchor": "pub data PciAddress"
+            }
+          ]
+        },
+        "253:EndpointHeader": {
+          "anchor": "pub struct EndpointHeader(PciAddress);",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub data EndpointHeader"
+            }
+          ]
+        },
+        "256:from_header": {
+          "anchor": "pub fn from_header(header: PciHeader, access: impl ConfigRegionAccess) -> Option<EndpointHeader> {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine endpoint_header"
+            }
+          ]
+        },
+        "263:header": {
+          "anchor": "pub fn header(&self) -> PciHeader {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "common: HeaderFacts;"
+            }
+          ]
+        },
+        "267:status": {
+          "anchor": "pub fn status(&self, access: impl ConfigRegionAccess) -> StatusRegister {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "status: u16;"
+            }
+          ]
+        },
+        "271:command": {
+          "anchor": "pub fn command(&self, access: impl ConfigRegionAccess) -> CommandRegister {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "command: u16;"
+            }
+          ]
+        },
+        "275:update_command": {
+          "anchor": "pub fn update_command<F>(&mut self, access: impl ConfigRegionAccess, f: F)",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine update_command"
+            }
+          ]
+        },
+        "27:new": {
+          "anchor": "pub fn new(segment: u16, bus: u8, device: u8, function: u8) -> PciAddress {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/address.omg",
+              "anchor": "pub machine address_new"
+            }
+          ]
+        },
+        "282:capability_pointer": {
+          "anchor": "pub fn capability_pointer(&self, access: impl ConfigRegionAccess) -> u16 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine endpoint_capability_pointer"
+            }
+          ]
+        },
+        "291:capabilities": {
+          "anchor": "pub fn capabilities<T: ConfigRegionAccess>(&self, access: T) -> CapabilityIterator<T> {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub machine capability_iterator"
+            },
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "pub machine capability_next"
+            }
+          ]
+        },
+        "296:subsystem": {
+          "anchor": "pub fn subsystem(&self, access: impl ConfigRegionAccess) -> (SubsystemId, SubsystemVendorId) {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "subsystem_vendor_id: u16; subsystem_id: u16;"
+            }
+          ]
+        },
+        "306:bar": {
+          "anchor": "pub fn bar(&self, slot: u8, access: impl ConfigRegionAccess) -> Option<Bar> {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/bars.omg",
+              "anchor": "pub machine endpoint_bar"
+            },
+            {
+              "path": "source/libraries/pci/bars.omg",
+              "anchor": "pub machine bar_probe_plan"
+            },
+            {
+              "path": "source/libraries/pci/bars.omg",
+              "anchor": "pub machine bar_size"
+            }
+          ]
+        },
+        "36:segment": {
+          "anchor": "pub fn segment(&self) -> u16 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/address.omg",
+              "anchor": "pub machine address_segment"
+            }
+          ]
+        },
+        "380:is": {
+          "anchor": "_ => panic!(\"BAR Memory type is reserved!\"),",
+          "disposition": "omitted",
+          "reason": "Lexical scanner anchor occurs inside panic!(\"BAR Memory type is reserved!\"); it is not a Rust declaration. Reserved-encoding behavior is translated by bars::bar_decode as ok=false."
+        },
+        "394:write_bar": {
+          "anchor": "pub unsafe fn write_bar(",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/bars.omg",
+              "anchor": "pub machine bar_write_plan"
+            }
+          ]
+        },
+        "3:capability": {
+          "anchor": "pub mod capability;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/capabilities.omg",
+              "anchor": "module capabilities;"
+            }
+          ]
+        },
+        "40:bus": {
+          "anchor": "pub fn bus(&self) -> u8 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/address.omg",
+              "anchor": "pub machine address_bus"
+            }
+          ]
+        },
+        "424:interrupt": {
+          "anchor": "pub fn interrupt(&self, access: impl ConfigRegionAccess) -> (InterruptPin, InterruptLine) {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "interrupt_line: u8; interrupt_pin: u8;"
+            }
+          ]
+        },
+        "431:update_interrupt": {
+          "anchor": "pub fn update_interrupt<F>(&mut self, access: impl ConfigRegionAccess, f: F)",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine update_interrupt"
+            }
+          ]
+        },
+        "44:device": {
+          "anchor": "pub fn device(&self) -> u8 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/address.omg",
+              "anchor": "pub machine address_device"
+            }
+          ]
+        },
+        "48:function": {
+          "anchor": "pub fn function(&self) -> u8 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/address.omg",
+              "anchor": "pub machine address_function"
+            }
+          ]
+        },
+        "491:PciPciBridgeHeader": {
+          "anchor": "pub struct PciPciBridgeHeader(PciAddress);",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub data PciPciBridgeHeader"
+            }
+          ]
+        },
+        "494:from_header": {
+          "anchor": "pub fn from_header(header: PciHeader, access: impl ConfigRegionAccess) -> Option<PciPciBridgeHeader> {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine bridge_header"
+            }
+          ]
+        },
+        "4:device_type": {
+          "anchor": "pub mod device_type;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/device_type.omg",
+              "anchor": "module device_type;"
+            }
+          ]
+        },
+        "501:header": {
+          "anchor": "pub fn header(&self) -> PciHeader {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "common: HeaderFacts;"
+            }
+          ]
+        },
+        "505:status": {
+          "anchor": "pub fn status(&self, access: impl ConfigRegionAccess) -> StatusRegister {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "status: u16;"
+            }
+          ]
+        },
+        "509:command": {
+          "anchor": "pub fn command(&self, access: impl ConfigRegionAccess) -> CommandRegister {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "command: u16;"
+            }
+          ]
+        },
+        "513:update_command": {
+          "anchor": "pub fn update_command<F>(&mut self, access: impl ConfigRegionAccess, f: F)",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine update_command"
+            }
+          ]
+        },
+        "520:primary_bus_number": {
+          "anchor": "pub fn primary_bus_number(&self, access: impl ConfigRegionAccess) -> u8 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "primary: u8;"
+            }
+          ]
+        },
+        "525:secondary_bus_number": {
+          "anchor": "pub fn secondary_bus_number(&self, access: impl ConfigRegionAccess) -> u8 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "secondary: u8;"
+            }
+          ]
+        },
+        "530:subordinate_bus_number": {
+          "anchor": "pub fn subordinate_bus_number(&self, access: impl ConfigRegionAccess) -> u8 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "subordinate: u8;"
+            }
+          ]
+        },
+        "535:update_bus_number": {
+          "anchor": "pub fn update_bus_number<F>(&self, access: impl ConfigRegionAccess, f: F)",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub machine update_bus_numbers"
+            }
+          ]
+        },
+        "54:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust Display/Debug formatting and formatter trait machinery are intentionally omitted from this pure hardware-facts library; all numeric facts remain available."
+        },
+        "554:BusNumber": {
+          "anchor": "pub struct BusNumber {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "pub data BusNumber"
+            }
+          ]
+        },
+        "555:primary": {
+          "anchor": "pub primary: u8,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "primary: u8;"
+            }
+          ]
+        },
+        "556:secondary": {
+          "anchor": "pub secondary: u8,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "secondary: u8;"
+            }
+          ]
+        },
+        "557:subordinate": {
+          "anchor": "pub subordinate: u8,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "subordinate: u8;"
+            }
+          ]
+        },
+        "560:MAX_BARS": {
+          "anchor": "pub const MAX_BARS: usize = 6;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/bars.omg",
+              "anchor": "pub const MAX_BARS"
+            }
+          ]
+        },
+        "563:Bar": {
+          "anchor": "pub enum Bar {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/bars.omg",
+              "anchor": "pub data Bar "
+            }
+          ]
+        },
+        "571:unwrap_io": {
+          "anchor": "pub fn unwrap_io(self) -> u32 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/bars.omg",
+              "anchor": "pub machine bar_unwrap_io"
+            }
+          ]
+        },
+        "579:unwrap_mem": {
+          "anchor": "pub fn unwrap_mem(self) -> (usize, usize) {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/bars.omg",
+              "anchor": "pub machine bar_unwrap_mem"
+            }
+          ]
+        },
+        "592:BarWriteError": {
+          "anchor": "pub enum BarWriteError {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/bars.omg",
+              "anchor": "pub const BAR_WRITE_INVALID_VALUE"
+            }
+          ]
+        },
+        "5:register": {
+          "anchor": "mod register;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "module registers;"
+            }
+          ]
+        },
+        "60:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust Display/Debug formatting and formatter trait machinery are intentionally omitted from this pure hardware-facts library; all numeric facts remain available."
+        },
+        "65:VendorId": {
+          "anchor": "pub type VendorId = u16;",
+          "disposition": "translated",
+          "reason": "Rust scalar alias maps to named raw header field of identical width; no general Omega type-alias syntax or separate representation required.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "vendor_id: u16;"
+            }
+          ]
+        },
+        "66:DeviceId": {
+          "anchor": "pub type DeviceId = u16;",
+          "disposition": "translated",
+          "reason": "Rust scalar alias maps to named raw header field of identical width; no general Omega type-alias syntax or separate representation required.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "device_id: u16;"
+            }
+          ]
+        },
+        "67:DeviceRevision": {
+          "anchor": "pub type DeviceRevision = u8;",
+          "disposition": "translated",
+          "reason": "Rust scalar alias maps to named raw header field of identical width; no general Omega type-alias syntax or separate representation required.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "revision: u8;"
+            }
+          ]
+        },
+        "68:BaseClass": {
+          "anchor": "pub type BaseClass = u8;",
+          "disposition": "translated",
+          "reason": "Rust scalar alias maps to named raw header field of identical width; no general Omega type-alias syntax or separate representation required.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "base_class: u8;"
+            }
+          ]
+        },
+        "69:SubClass": {
+          "anchor": "pub type SubClass = u8;",
+          "disposition": "translated",
+          "reason": "Rust scalar alias maps to named raw header field of identical width; no general Omega type-alias syntax or separate representation required.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "sub_class: u8;"
+            }
+          ]
+        },
+        "70:Interface": {
+          "anchor": "pub type Interface = u8;",
+          "disposition": "translated",
+          "reason": "Rust scalar alias maps to named raw header field of identical width; no general Omega type-alias syntax or separate representation required.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "interface: u8;"
+            }
+          ]
+        },
+        "71:SubsystemId": {
+          "anchor": "pub type SubsystemId = u16;",
+          "disposition": "translated",
+          "reason": "Rust scalar alias maps to named raw header field of identical width; no general Omega type-alias syntax or separate representation required.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "subsystem_id: u16;"
+            }
+          ]
+        },
+        "72:SubsystemVendorId": {
+          "anchor": "pub type SubsystemVendorId = u16;",
+          "disposition": "translated",
+          "reason": "Rust scalar alias maps to named raw header field of identical width; no general Omega type-alias syntax or separate representation required.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "subsystem_vendor_id: u16;"
+            }
+          ]
+        },
+        "73:InterruptLine": {
+          "anchor": "pub type InterruptLine = u8;",
+          "disposition": "translated",
+          "reason": "Rust scalar alias maps to named raw header field of identical width; no general Omega type-alias syntax or separate representation required.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "interrupt_line: u8;"
+            }
+          ]
+        },
+        "74:InterruptPin": {
+          "anchor": "pub type InterruptPin = u8;",
+          "disposition": "translated",
+          "reason": "Rust scalar alias maps to named raw header field of identical width; no general Omega type-alias syntax or separate representation required.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/headers.omg",
+              "anchor": "interrupt_pin: u8;"
+            }
+          ]
+        },
+        "77:ConfigRegionAccess": {
+          "anchor": "pub trait ConfigRegionAccess {",
+          "disposition": "translated",
+          "reason": "Explicit replacement by bounded caller-supplied snapshot reads and inert finite config-operation plans. No live accessor implementation/reference forwarding, config authority, or hardware effect. See PORT.md Representation and authority.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigSnapshot"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub machine snapshot_read"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigOperation"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigPlan"
+            }
+          ]
+        },
+        "7:register::{CommandRegister, DevselTiming, StatusRegister};": {
+          "anchor": "pub use register::{CommandRegister, DevselTiming, StatusRegister};",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub data CommandRegister"
+            }
+          ]
+        },
+        "83:read": {
+          "anchor": "unsafe fn read(&self, address: PciAddress, offset: u16) -> u32;",
+          "disposition": "translated",
+          "reason": "Explicit replacement by bounded caller-supplied snapshot reads and inert finite config-operation plans. No live accessor implementation/reference forwarding, config authority, or hardware effect. See PORT.md Representation and authority.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigSnapshot"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub machine snapshot_read"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigOperation"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigPlan"
+            }
+          ]
+        },
+        "90:write": {
+          "anchor": "unsafe fn write(&self, address: PciAddress, offset: u16, value: u32);",
+          "disposition": "translated",
+          "reason": "Explicit replacement by bounded caller-supplied snapshot reads and inert finite config-operation plans. No live accessor implementation/reference forwarding, config authority, or hardware effect. See PORT.md Representation and authority.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigSnapshot"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub machine snapshot_read"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigOperation"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigPlan"
+            }
+          ]
+        },
+        "95:read": {
+          "anchor": "unsafe fn read(&self, address: PciAddress, offset: u16) -> u32 {",
+          "disposition": "translated",
+          "reason": "Explicit replacement by bounded caller-supplied snapshot reads and inert finite config-operation plans. No live accessor implementation/reference forwarding, config authority, or hardware effect. See PORT.md Representation and authority.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigSnapshot"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub machine snapshot_read"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigOperation"
+            },
+            {
+              "path": "source/libraries/pci/snapshot.omg",
+              "anchor": "pub data ConfigPlan"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/pci/headers.omg",
+          "anchor": "module headers;"
+        }
+      ]
+    },
+    "src/register.rs": {
+      "disposition": "translated",
+      "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+      "sha256": "8abad7104ac71873811d0b30f54f15b530fb5c413809d4efadc717e2b5ae9a89",
+      "symbols": {
+        "102:capable_66mhz": {
+          "anchor": "pub fn capable_66mhz(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine status_capable_66mhz"
+            }
+          ]
+        },
+        "10:DevselTiming": {
+          "anchor": "pub enum DevselTiming {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine devsel_timing"
+            }
+          ]
+        },
+        "110:has_capability_list": {
+          "anchor": "pub fn has_capability_list(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine status_has_capability_list"
+            }
+          ]
+        },
+        "117:interrupt_status": {
+          "anchor": "pub fn interrupt_status(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine status_interrupt_status"
+            }
+          ]
+        },
+        "11:Fast": {
+          "anchor": "Fast = 0x0,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine devsel_timing"
+            }
+          ]
+        },
+        "123:fmt": {
+          "anchor": "fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust Display/Debug formatting and formatter trait machinery are intentionally omitted from this pure hardware-facts library; all numeric facts remain available."
+        },
+        "12:Medium": {
+          "anchor": "Medium = 0x1,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine devsel_timing"
+            }
+          ]
+        },
+        "13:Slow": {
+          "anchor": "Slow = 0x2,",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine devsel_timing"
+            }
+          ]
+        },
+        "143:CommandRegister": {
+          "anchor": "pub struct CommandRegister: u16 {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub data CommandRegister"
+            }
+          ]
+        },
+        "144:IO_ENABLE": {
+          "anchor": "const IO_ENABLE = 1 << 0;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub const COMMAND_IO_ENABLE"
+            }
+          ]
+        },
+        "145:MEMORY_ENABLE": {
+          "anchor": "const MEMORY_ENABLE = 1 << 1;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub const COMMAND_MEMORY_ENABLE"
+            }
+          ]
+        },
+        "146:BUS_MASTER_ENABLE": {
+          "anchor": "const BUS_MASTER_ENABLE = 1 << 2;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub const COMMAND_BUS_MASTER_ENABLE"
+            }
+          ]
+        },
+        "147:SPECIAL_CYCLE_ENABLE": {
+          "anchor": "const SPECIAL_CYCLE_ENABLE = 1 << 3;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub const COMMAND_SPECIAL_CYCLE_ENABLE"
+            }
+          ]
+        },
+        "148:MEMORY_WRITE_AND_INVALIDATE": {
+          "anchor": "const MEMORY_WRITE_AND_INVALIDATE = 1 << 4;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub const COMMAND_MEMORY_WRITE_AND_INVALIDATE"
+            }
+          ]
+        },
+        "149:VGA_PALETTE_SNOOP": {
+          "anchor": "const VGA_PALETTE_SNOOP = 1 << 5;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub const COMMAND_VGA_PALETTE_SNOOP"
+            }
+          ]
+        },
+        "150:PARITY_ERROR_RESPONSE": {
+          "anchor": "const PARITY_ERROR_RESPONSE = 1 << 6;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub const COMMAND_PARITY_ERROR_RESPONSE"
+            }
+          ]
+        },
+        "151:IDSEL_STEP_WAIT_CYCLE_CONTROL": {
+          "anchor": "const IDSEL_STEP_WAIT_CYCLE_CONTROL = 1 << 7;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub const COMMAND_IDSEL_STEP_WAIT_CYCLE_CONTROL"
+            }
+          ]
+        },
+        "152:SERR_ENABLE": {
+          "anchor": "const SERR_ENABLE = 1 << 8;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub const COMMAND_SERR_ENABLE"
+            }
+          ]
+        },
+        "153:FAST_BACK_TO_BACK_ENABLE": {
+          "anchor": "const FAST_BACK_TO_BACK_ENABLE = 1 << 9;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub const COMMAND_FAST_BACK_TO_BACK_ENABLE"
+            }
+          ]
+        },
+        "154:INTERRUPT_DISABLE": {
+          "anchor": "const INTERRUPT_DISABLE = 1 << 10;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub const COMMAND_INTERRUPT_DISABLE"
+            }
+          ]
+        },
+        "155:_": {
+          "anchor": "const _ = !0;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub data CommandRegister"
+            }
+          ]
+        },
+        "17:TryFromDevselTimingError": {
+          "anchor": "pub struct TryFromDevselTimingError {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine devsel_timing"
+            }
+          ]
+        },
+        "22:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust Display/Debug formatting and formatter trait machinery are intentionally omitted from this pure hardware-facts library; all numeric facts remain available."
+        },
+        "28:Error": {
+          "anchor": "type Error = TryFromDevselTimingError;",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine devsel_timing"
+            }
+          ]
+        },
+        "30:try_from": {
+          "anchor": "fn try_from(value: u8) -> Result<Self, Self::Error> {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine devsel_timing"
+            }
+          ]
+        },
+        "41:StatusRegister": {
+          "anchor": "pub struct StatusRegister(u16);",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub data StatusRegister"
+            }
+          ]
+        },
+        "44:new": {
+          "anchor": "pub fn new(value: u16) -> Self {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine status_new"
+            }
+          ]
+        },
+        "49:parity_error_detected": {
+          "anchor": "pub fn parity_error_detected(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine status_parity_error_detected"
+            }
+          ]
+        },
+        "54:signalled_system_error": {
+          "anchor": "pub fn signalled_system_error(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine status_signalled_system_error"
+            }
+          ]
+        },
+        "60:received_master_abort": {
+          "anchor": "pub fn received_master_abort(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine status_received_master_abort"
+            }
+          ]
+        },
+        "65:received_target_abort": {
+          "anchor": "pub fn received_target_abort(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine status_received_target_abort"
+            }
+          ]
+        },
+        "70:signalled_target_abort": {
+          "anchor": "pub fn signalled_target_abort(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine status_signalled_target_abort"
+            }
+          ]
+        },
+        "78:devsel_timing": {
+          "anchor": "pub fn devsel_timing(&self) -> Result<DevselTiming, TryFromDevselTimingError> {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine status_devsel_timing"
+            }
+          ]
+        },
+        "87:master_data_parity_error": {
+          "anchor": "pub fn master_data_parity_error(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine status_master_data_parity_error"
+            }
+          ]
+        },
+        "95:fast_back_to_back_capable": {
+          "anchor": "pub fn fast_back_to_back_capable(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Modified translation; consult PORT.md for raw/validated behavior and configuration authority seam.",
+          "targets": [
+            {
+              "path": "source/libraries/pci/registers.omg",
+              "anchor": "pub machine status_fast_back_to_back_capable"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/pci/registers.omg",
+          "anchor": "module registers;"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "eff856b6bab81adbe1bda0ab750009f3786cb8d3",
+    "roots": [
+      "src"
+    ],
+    "url": "https://github.com/rust-osdev/pci_types"
+  }
+}

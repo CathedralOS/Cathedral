@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of pci_types eff856b6bab81adbe1bda0ab750009f3786cb8d3.
+// See PORT.md for source mapping, upstream corrections, and authority boundary.
+module snapshot;
+use address::PciAddress;
+
+// Caller-supplied bytes are facts. This object cannot read config space.
+pub data ConfigSnapshot [copy] { address: PciAddress; length: u16; bytes: [u8; 4096]; }
+pub data ReadResult [copy] { ok: bool; value: u32; }
+machine snapshot_byte(value: &ConfigSnapshot, index: u32) -> u8 {
+    transition index < 4096 { true -> (value.bytes[index]) _ -> (0) }
+}
+pub machine snapshot_read(value: &ConfigSnapshot, offset: u16, width: u8) -> ReadResult {
+    transition value.length <= 4096 && (width == 1 || width == 2 || width == 4) &&
+      ((offset as u32) + (width as u32) <= (value.length as u32)) {
+        true -> valid(value, offset, width)
+        _ -> (ReadResult {})
+    }
+    state valid(value: &ConfigSnapshot, offset: u16, width: u8) -> ReadResult {
+      transition width {
+        1 -> (ReadResult { ok: true, value: snapshot_byte(value, (offset as u32)) as u32 })
+        2 -> (ReadResult { ok: true, value: (snapshot_byte(value, (offset as u32)) as u32) |
+          ((snapshot_byte(value, (offset as u32) + 1) as u32) << 8) })
+        _ -> (ReadResult { ok: true, value: (snapshot_byte(value, (offset as u32)) as u32) |
+          ((snapshot_byte(value, (offset as u32) + 1) as u32) << 8) | ((snapshot_byte(value, (offset as u32) + 2) as u32) << 16) |
+          ((snapshot_byte(value, (offset as u32) + 3) as u32) << 24) })
+      }
+    }
+}
+// Finite requests, not an accessor implementation, callbacks, or permission.
+pub data ConfigOperation [copy] { kind: u8; width: u8; offset: u16; value: u32; }
+pub const OP_READ: u8 = 1;
+pub const OP_WRITE: u8 = 2;
+pub data ConfigPlan [copy] {
+    ok: bool; count: u8; operations: [ConfigOperation; 8];
+    requires_quiesced_decoding: bool; requires_restore_on_failure: bool; requires_interrupts_disabled: bool;
+}
+pub machine write_plan(offset: u16, width: u8, value: u32) -> ConfigPlan {
+    transition (width == 1 || width == 2 || width == 4) &&
+      (offset as u32) + (width as u32) <= 4096 &&
+      (width != 1 || value <= 255) && (width != 2 || value <= 65535) &&
+      (width != 2 || (offset & 1) == 0) && (width != 4 || (offset & 3) == 0) {
+      true -> valid(offset, width, value)
+      _ -> (ConfigPlan {})
+    }
+    state valid(offset: u16, width: u8, value: u32) -> ConfigPlan {
+      let mut result: ConfigPlan;
+      result.ok = true; result.count = 1;
+      result.operations[0] = ConfigOperation { kind: 2, width: width, offset: offset, value: value };
+      result
+    }
+}

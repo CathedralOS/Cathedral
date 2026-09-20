@@ -1,0 +1,146 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of pci_types eff856b6bab81adbe1bda0ab750009f3786cb8d3; see PORT.md.
+module msi;
+use snapshot::ConfigPlan;
+use snapshot::ConfigOperation;
+use snapshot::write_plan;
+pub data MultipleMessageSupport [copy] { ok: bool; raw: u8; count: u8; }
+pub machine multiple_message_support(raw: u8) -> MultipleMessageSupport {
+    transition raw {
+      0 -> (MultipleMessageSupport { ok: true, raw: raw, count: 1 })
+      1 -> (MultipleMessageSupport { ok: true, raw: raw, count: 2 })
+      2 -> (MultipleMessageSupport { ok: true, raw: raw, count: 4 })
+      3 -> (MultipleMessageSupport { ok: true, raw: raw, count: 8 })
+      4 -> (MultipleMessageSupport { ok: true, raw: raw, count: 16 })
+      5 -> (MultipleMessageSupport { ok: true, raw: raw, count: 32 })
+      _ -> (MultipleMessageSupport { raw: raw })
+    }
+}
+pub const TRIGGER_EDGE: u8 = 0;
+pub const TRIGGER_LEVEL_ASSERT: u8 = 3;
+pub const TRIGGER_LEVEL_DEASSERT: u8 = 2;
+pub data ControlResult [copy] { ok: bool; raw: u16; }
+pub data MsiCapability [copy] { ok: bool; control: u16; per_vector_masking: bool; is_64_bit: bool; multiple_message_capable: u8; multiple_message_enable: u8; }
+pub machine msi_capability(control: u16) -> MsiCapability {
+    let capable: u8 = ((control >> 1) & 7) as u8;
+    let enabled: u8 = ((control >> 4) & 7) as u8;
+    MsiCapability { ok: capable <= 5 && enabled <= capable, control: control,
+      per_vector_masking: (control & 256) != 0, is_64_bit: (control & 128) != 0,
+      multiple_message_capable: capable, multiple_message_enable: enabled }
+}
+pub machine msi_enabled(control: u16) -> bool { (control & 1) != 0 }
+pub machine msi_set_enabled(control: u16, enabled: bool) -> u16 {
+    transition enabled { true -> (control | 1) _ -> (control & 65534) }
+}
+// MME is control bits 6:4 (capability DWORD bits 22:20), not ID bits 6:4.
+pub machine msi_set_multiple_message_enable(control: u16, requested: u8) -> ControlResult {
+    let capable: u8 = ((control >> 1) & 7) as u8;
+    ControlResult { ok: capable <= 5 && requested <= capable,
+      raw: (control & 65423) | (((requested & 7) as u16) << 4) }
+}
+pub data MsiOffsets [copy] { ok: bool; address_low: u16; address_high: u16; data: u16; mask: u16; pending: u16; has_high: bool; has_mask: bool; extent: u16; }
+pub machine msi_offsets(offset: u16, control: u16) -> MsiOffsets {
+    transition offset >= 64 && offset <= 252 && (offset & 3) == 0 {
+      true -> fields(offset, control)
+      _ -> (MsiOffsets {})
+    }
+    state fields(offset: u16, control: u16) -> MsiOffsets {
+      let mut result: MsiOffsets;
+      result.address_low = offset + 4;
+      result.has_high = (control & 128) != 0;
+      result.has_mask = (control & 256) != 0;
+      transition result.has_high { true -> wide(result, offset) _ -> narrow(result, offset) }
+    }
+    state wide(result: MsiOffsets, offset: u16) -> MsiOffsets {
+      let mut out: MsiOffsets = result;
+      out.address_high = offset + 8; out.data = offset + 12;
+      out.mask = offset + 16; out.pending = offset + 20;
+      transition out.has_mask { true -> finish(out, offset, 24) _ -> finish(out, offset, 14) }
+    }
+    state narrow(result: MsiOffsets, offset: u16) -> MsiOffsets {
+      let mut out: MsiOffsets = result;
+      out.data = offset + 8; out.mask = offset + 12; out.pending = offset + 16;
+      transition out.has_mask { true -> finish(out, offset, 20) _ -> finish(out, offset, 10) }
+    }
+    state finish(result: MsiOffsets, offset: u16, extent: u16) -> MsiOffsets {
+      let mut out: MsiOffsets = result;
+      out.extent = extent; out.ok = (offset as u32) + (extent as u32) <= 256;
+      out
+    }
+}
+pub machine msi_control_plan(offset: u16, control: u16) -> ConfigPlan {
+    transition offset >= 64 && offset <= 252 && (offset & 3) == 0 {
+      true -> call_write_plan(offset + 2, 2, control as u32)
+      _ -> (ConfigPlan {})
+    }
+
+    state call_write_plan(offset: u16, width: u8, value: u32) -> ConfigPlan {
+      let result: ConfigPlan = write_plan(offset, width, value);
+      result
+    }
+}
+pub machine msi_message_plan(offset: u16, control: u16, address: u64, data: u16) -> ConfigPlan {
+    let fields: MsiOffsets = msi_offsets(offset, control);
+    let facts: MsiCapability = msi_capability(control);
+    transition fields.ok && facts.ok && (address & 3) == 0 && (fields.has_high || address <= 0xffffffff) {
+      true -> plan(fields, address, data)
+      _ -> (ConfigPlan {})
+    }
+    state plan(fields: MsiOffsets, address: u64, data: u16) -> ConfigPlan {
+      let mut result: ConfigPlan = write_plan(fields.address_low, 4, (address & 0xffffffff) as u32);
+      result.requires_interrupts_disabled = true;
+      transition fields.has_high { true -> wide(result, fields, address, data) _ -> narrow(result, fields, data) }
+    }
+    state narrow(result: ConfigPlan, fields: MsiOffsets, data: u16) -> ConfigPlan {
+      let mut out: ConfigPlan = result; out.count = 2;
+      out.operations[1] = ConfigOperation { kind: 2, width: 2, offset: fields.data, value: data as u32 };
+      out
+    }
+    state wide(result: ConfigPlan, fields: MsiOffsets, address: u64, data: u16) -> ConfigPlan {
+      let mut out: ConfigPlan = result; out.count = 3;
+      out.operations[1] = ConfigOperation { kind: 2, width: 4, offset: fields.address_high, value: ((address >> 32) & 0xffffffff) as u32 };
+      out.operations[2] = ConfigOperation { kind: 2, width: 2, offset: fields.data, value: data as u32 };
+      out
+    }
+}
+pub machine lapic_message_data(vector: u8, trigger: u8) -> ControlResult {
+    ControlResult { ok: trigger == 0 || trigger == 2 || trigger == 3,
+      raw: (vector as u16) | (((trigger & 3) as u16) << 14) }
+}
+pub machine msi_mask_plan(offset: u16, control: u16, mask: u32) -> ConfigPlan {
+    let fields: MsiOffsets = msi_offsets(offset, control);
+    transition fields.ok && fields.has_mask { true -> call_write_plan_2(fields.mask, 4, mask) _ -> (ConfigPlan {}) }
+
+    state call_write_plan_2(offset: u16, width: u8, value: u32) -> ConfigPlan {
+      let result: ConfigPlan = write_plan(offset, width, value);
+      result
+    }
+}
+// Explicit read descriptors replace firmware reads; caller correlates response.
+pub machine msi_mask_read_plan(offset: u16, control: u16) -> ConfigPlan {
+    let fields: MsiOffsets = msi_offsets(offset, control);
+    transition fields.ok && fields.has_mask { true -> call_read_plan(fields.mask) _ -> (ConfigPlan {}) }
+
+    state call_read_plan(offset: u16) -> ConfigPlan {
+      let result: ConfigPlan = read_plan(offset);
+      result
+    }
+}
+pub machine msi_pending_read_plan(offset: u16, control: u16) -> ConfigPlan {
+    let fields: MsiOffsets = msi_offsets(offset, control);
+    transition fields.ok && fields.has_mask { true -> call_read_plan(fields.pending) _ -> (ConfigPlan {}) }
+
+    state call_read_plan(offset: u16) -> ConfigPlan {
+      let result: ConfigPlan = read_plan(offset);
+      result
+    }
+}
+machine read_plan(offset: u16) -> ConfigPlan {
+    let mut result: ConfigPlan;
+    result.ok = true; result.count = 1;
+    result.operations[0] = ConfigOperation { kind: 1, width: 4, offset: offset };
+    result
+}
+pub machine msi_is_pending(word: u32, vector_index: u8) -> bool {
+    transition vector_index < 32 { true -> ((word & ((1 as u32) << (vector_index as u32))) != 0) _ -> (false) }
+}

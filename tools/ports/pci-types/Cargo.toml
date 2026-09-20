@@ -1,0 +1,10 @@
+[package]
+name = "cathedral-pci-types-witness"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+pci_types = { path = "../../../reference_code/rust-osdev/pci_types" }
+
+[workspace]

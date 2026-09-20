@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of pci_types eff856b6bab81adbe1bda0ab750009f3786cb8d3.
+// See PORT.md for source mapping, upstream corrections, and authority boundary.
+module registers;
+pub data StatusRegister [copy] { raw: u16; }
+pub data CommandRegister [copy] { raw: u16; }
+pub data DevselTimingResult [copy] { ok: bool; raw: u8; }
+pub machine status_new(raw: u16) -> StatusRegister { StatusRegister { raw: raw } }
+pub machine devsel_timing(raw: u8) -> DevselTimingResult { DevselTimingResult { ok: raw < 3, raw: raw } }
+pub machine status_devsel_timing(value: StatusRegister) -> DevselTimingResult { devsel_timing(((value.raw >> 9) & 3) as u8) }
+pub machine command_contains(value: CommandRegister, flags: u16) -> bool { (value.raw & flags) == flags }
+pub machine command_update(value: CommandRegister, clear: u16, set: u16) -> CommandRegister { CommandRegister { raw: (value.raw & (clear ^ 65535)) | set } }
+pub machine status_parity_error_detected(value: StatusRegister) -> bool { (value.raw & 32768) != 0 }
+pub machine status_signalled_system_error(value: StatusRegister) -> bool { (value.raw & 16384) != 0 }
+pub machine status_received_master_abort(value: StatusRegister) -> bool { (value.raw & 8192) != 0 }
+pub machine status_received_target_abort(value: StatusRegister) -> bool { (value.raw & 4096) != 0 }
+pub machine status_signalled_target_abort(value: StatusRegister) -> bool { (value.raw & 2048) != 0 }
+pub machine status_master_data_parity_error(value: StatusRegister) -> bool { (value.raw & 256) != 0 }
+pub machine status_fast_back_to_back_capable(value: StatusRegister) -> bool { (value.raw & 128) != 0 }
+pub machine status_capable_66mhz(value: StatusRegister) -> bool { (value.raw & 32) != 0 }
+pub machine status_has_capability_list(value: StatusRegister) -> bool { (value.raw & 16) != 0 }
+pub machine status_interrupt_status(value: StatusRegister) -> bool { (value.raw & 8) != 0 }
+pub const COMMAND_IO_ENABLE: u16 = 1;
+pub const COMMAND_MEMORY_ENABLE: u16 = 2;
+pub const COMMAND_BUS_MASTER_ENABLE: u16 = 4;
+pub const COMMAND_SPECIAL_CYCLE_ENABLE: u16 = 8;
+pub const COMMAND_MEMORY_WRITE_AND_INVALIDATE: u16 = 16;
+pub const COMMAND_VGA_PALETTE_SNOOP: u16 = 32;
+pub const COMMAND_PARITY_ERROR_RESPONSE: u16 = 64;
+pub const COMMAND_IDSEL_STEP_WAIT_CYCLE_CONTROL: u16 = 128;
+pub const COMMAND_SERR_ENABLE: u16 = 256;
+pub const COMMAND_FAST_BACK_TO_BACK_ENABLE: u16 = 512;
+pub const COMMAND_INTERRUPT_DISABLE: u16 = 1024;

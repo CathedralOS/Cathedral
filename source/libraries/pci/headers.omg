@@ -1,0 +1,119 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of pci_types eff856b6bab81adbe1bda0ab750009f3786cb8d3; see PORT.md.
+module headers;
+use snapshot::ConfigSnapshot;
+use snapshot::ConfigPlan;
+use snapshot::ReadResult;
+use snapshot::snapshot_read;
+use snapshot::write_plan;
+use address::PciAddress;
+
+// IDs/classes retain all raw values, including unknown and absent-device IDs.
+pub data PciHeader [copy] { address: PciAddress; }
+pub data HeaderFacts [copy] {
+    address: PciAddress; ok: bool; vendor_id: u16; device_id: u16; command: u16; status: u16;
+    revision: u8; interface: u8; sub_class: u8; base_class: u8;
+    cache_line_size: u8; latency_timer: u8; header_type: u8; bist: u8;
+}
+pub machine pci_header(address: PciAddress) -> PciHeader { PciHeader { address: address } }
+pub machine header_facts(value: &ConfigSnapshot) -> HeaderFacts {
+    let id: ReadResult = snapshot_read(value, 0, 4);
+    let control: ReadResult = snapshot_read(value, 4, 4);
+    let class: ReadResult = snapshot_read(value, 8, 4);
+    let kind: ReadResult = snapshot_read(value, 12, 4);
+    HeaderFacts {
+      address: value.address,
+      ok: id.ok && control.ok && class.ok && kind.ok,
+      vendor_id: (id.value & 65535) as u16, device_id: (id.value >> 16) as u16,
+      command: (control.value & 65535) as u16, status: (control.value >> 16) as u16,
+      revision: (class.value & 255) as u8, interface: ((class.value >> 8) & 255) as u8,
+      sub_class: ((class.value >> 16) & 255) as u8, base_class: (class.value >> 24) as u8,
+      cache_line_size: (kind.value & 255) as u8, latency_timer: ((kind.value >> 8) & 255) as u8,
+      header_type: ((kind.value >> 16) & 255) as u8, bist: (kind.value >> 24) as u8,
+    }
+}
+pub machine header_kind(value: HeaderFacts) -> u8 { value.header_type & 127 }
+pub machine header_multifunction(value: HeaderFacts) -> bool { (value.header_type & 128) != 0 }
+pub machine header_device_present(value: HeaderFacts) -> bool { value.ok && value.vendor_id != 65535 }
+// Command is a 16-bit write. Never echo read status into RW1C bits.
+pub machine update_command(command: u16) -> ConfigPlan { write_plan(4, 2, command as u32) }
+pub data EndpointHeader [copy] {
+    ok: bool; common: HeaderFacts; bars: [u32; 6]; cardbus_cis: u32;
+    subsystem_vendor_id: u16; subsystem_id: u16; expansion_rom: u32;
+    capability_pointer: u8; interrupt_line: u8; interrupt_pin: u8; min_grant: u8; max_latency: u8;
+}
+pub machine endpoint_header(value: &ConfigSnapshot) -> EndpointHeader {
+    let common: HeaderFacts = header_facts(value);
+    let subsystem: ReadResult = snapshot_read(value, 44, 4);
+    let interrupt: ReadResult = snapshot_read(value, 60, 4);
+    let mut result: EndpointHeader;
+    result.ok = common.ok && header_kind(common) == 0 && interrupt.ok;
+    result.common = common;
+    result.bars[0] = snapshot_read(value, 16, 4).value;
+    result.bars[1] = snapshot_read(value, 20, 4).value;
+    result.bars[2] = snapshot_read(value, 24, 4).value;
+    result.bars[3] = snapshot_read(value, 28, 4).value;
+    result.bars[4] = snapshot_read(value, 32, 4).value;
+    result.bars[5] = snapshot_read(value, 36, 4).value;
+    result.cardbus_cis = snapshot_read(value, 40, 4).value;
+    result.subsystem_vendor_id = (subsystem.value & 65535) as u16;
+    result.subsystem_id = (subsystem.value >> 16) as u16;
+    result.expansion_rom = snapshot_read(value, 48, 4).value;
+    result.capability_pointer = (snapshot_read(value, 52, 1).value & 255) as u8;
+    result.interrupt_line = (interrupt.value & 255) as u8;
+    result.interrupt_pin = ((interrupt.value >> 8) & 255) as u8;
+    result.min_grant = ((interrupt.value >> 16) & 255) as u8;
+    result.max_latency = (interrupt.value >> 24) as u8;
+    result
+}
+pub machine endpoint_capability_pointer(value: EndpointHeader) -> u16 {
+    transition value.ok && (value.common.status & 16) != 0 {
+      true -> (value.capability_pointer as u16)
+      _ -> (0)
+    }
+}
+// Interrupt pin is read-only. A requested change fails; line alone is writable.
+pub machine update_interrupt(old_pin: u8, requested_pin: u8, line: u8) -> ConfigPlan {
+    transition old_pin == requested_pin { true -> call_write_plan(60, 1, line as u32) _ -> (ConfigPlan {}) }
+
+    state call_write_plan(offset: u16, width: u8, value: u32) -> ConfigPlan {
+      let result: ConfigPlan = write_plan(offset, width, value);
+      result
+    }
+}
+pub data BusNumber [copy] { primary: u8; secondary: u8; subordinate: u8; }
+pub data PciPciBridgeHeader [copy] {
+    ok: bool; common: HeaderFacts; bar0: u32; bar1: u32; buses: BusNumber;
+    secondary_latency_timer: u8; io_base: u8; io_limit: u8; secondary_status: u16;
+    memory_base_limit: u32; prefetch_base_limit: u32; prefetch_base_upper: u32;
+    prefetch_limit_upper: u32; io_base_limit_upper: u32; capability_pointer: u8;
+    expansion_rom: u32; interrupt_line: u8; interrupt_pin: u8; bridge_control: u16;
+}
+pub machine bridge_header(value: &ConfigSnapshot) -> PciPciBridgeHeader {
+    let common: HeaderFacts = header_facts(value);
+    let buses: ReadResult = snapshot_read(value, 24, 4);
+    let io: ReadResult = snapshot_read(value, 28, 4);
+    let last: ReadResult = snapshot_read(value, 60, 4);
+    PciPciBridgeHeader {
+      ok: common.ok && header_kind(common) == 1 && last.ok, common: common,
+      bar0: snapshot_read(value, 16, 4).value, bar1: snapshot_read(value, 20, 4).value,
+      buses: BusNumber { primary: (buses.value & 255) as u8,
+        secondary: ((buses.value >> 8) & 255) as u8, subordinate: ((buses.value >> 16) & 255) as u8 },
+      secondary_latency_timer: (buses.value >> 24) as u8,
+      io_base: (io.value & 255) as u8, io_limit: ((io.value >> 8) & 255) as u8,
+      secondary_status: (io.value >> 16) as u16,
+      memory_base_limit: snapshot_read(value, 32, 4).value,
+      prefetch_base_limit: snapshot_read(value, 36, 4).value,
+      prefetch_base_upper: snapshot_read(value, 40, 4).value,
+      prefetch_limit_upper: snapshot_read(value, 44, 4).value,
+      io_base_limit_upper: snapshot_read(value, 48, 4).value,
+      capability_pointer: (snapshot_read(value, 52, 1).value & 255) as u8,
+      expansion_rom: snapshot_read(value, 56, 4).value,
+      interrupt_line: (last.value & 255) as u8, interrupt_pin: ((last.value >> 8) & 255) as u8,
+      bridge_control: (last.value >> 16) as u16,
+    }
+}
+pub machine update_bus_numbers(old_word: u32, buses: BusNumber) -> ConfigPlan {
+    write_plan(24, 4, (old_word & 0xff000000) | (buses.primary as u32) |
+      ((buses.secondary as u32) << 8) | ((buses.subordinate as u32) << 16))
+}

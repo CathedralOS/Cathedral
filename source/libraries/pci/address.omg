@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of pci_types eff856b6bab81adbe1bda0ab750009f3786cb8d3.
+// See PORT.md for source mapping, upstream corrections, and authority boundary.
+module address;
+
+pub data PciAddress [copy] { raw: u32; }
+pub data AddressResult [copy] { ok: bool; value: PciAddress; }
+pub machine address_new(segment: u16, bus: u8, device: u8, function: u8) -> AddressResult {
+    AddressResult { ok: device < 32 && function < 8,
+      value: PciAddress { raw: ((segment as u32) << 16) | ((bus as u32) << 8) |
+        (((device & 31) as u32) << 3) | ((function & 7) as u32) } }
+}
+pub machine address_segment(value: PciAddress) -> u16 { (value.raw >> 16) as u16 }
+pub machine address_bus(value: PciAddress) -> u8 { ((value.raw >> 8) & 255) as u8 }
+pub machine address_device(value: PciAddress) -> u8 { ((value.raw >> 3) & 31) as u8 }
+pub machine address_function(value: PciAddress) -> u8 { (value.raw & 7) as u8 }
