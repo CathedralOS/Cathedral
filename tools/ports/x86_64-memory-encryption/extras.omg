@@ -1,0 +1,47 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+use x86::addresses::NumberResult;
+use x86::page_entries::FrameResult;
+machine number(result: NumberResult, expected: u64) -> bool {
+ transition result { NumberResult::Value { value } -> (value == expected) _ -> (false) }
+}
+machine frame(result: FrameResult, kind: u8, expected: u64) -> bool {
+ transition result {
+  FrameResult::NotPresent -> (kind == 0)
+  FrameResult::HugeFrame -> (kind == 1)
+  FrameResult::Value { address } -> (kind == 2 && address == expected)
+ }
+}
+machine scenario() -> i32 {
+ let mut profile: State = memory_encryption::initial();
+ let disabled: NumberResult = memory_encryption::encryption_flag(&profile);
+ let configured: bool = memory_encryption::configure(&mut profile, Configuration::EncryptedBit { position: 47 });
+ let flag: NumberResult = memory_encryption::encryption_flag(&profile);
+ let valid_flag: bool = number(flag, 140737488355328);
+ let invalid64: bool = memory_encryption::configure(&mut profile, Configuration::SharedBit { position: 64 });
+ let invalid255: bool = memory_encryption::configure(&mut profile, Configuration::EncryptedBit { position: 255 });
+ let huge: NumberResult = memory_encryption::set_frame(&profile, 4096, 129);
+ let preserved: bool = profile.bit_mask == 140737488355328 && profile.address_mask == 4362862139011072 && !profile.reversed;
+ let second: bool = memory_encryption::configure(&mut profile, Configuration::SharedBit { position: 48 });
+ let third: bool = memory_encryption::configure(&mut profile, Configuration::EncryptedBit { position: 47 });
+ let old_bit: NumberResult = memory_encryption::physical_check(&profile, 281474976710656);
+ let old_accepted: bool = number(old_bit, 281474976710656);
+ let truncated: NumberResult = memory_encryption::physical_truncate(&profile, 18446744073709551615);
+ let truncated_ok: bool = number(truncated, 4362862139015167);
+ let pte_address: u64 = memory_encryption::entry_address(&profile, 281474976710657);
+ let pte_flags: u64 = memory_encryption::entry_flags(&profile, 281474976710657);
+ let pte_frame: FrameResult = memory_encryption::entry_frame(&profile, 281474976710657);
+ let frame_ok: bool = frame(pte_frame, 2, 0);
+ let replaced: u64 = memory_encryption::set_flags(&profile, 281474976710657, 3);
+ let typical: NumberResult = memory_encryption::set_address(&profile, 305418240, 3);
+ let typical_ok: bool = number(typical, 305418243);
+ transition disabled in NumberResult::Rejected && configured && valid_flag && !invalid64 && !invalid255 && preserved && huge in NumberResult::Rejected && second && third && old_accepted && truncated_ok && pte_address == 0 && pte_flags == 281474976710657 && frame_ok && replaced == 3 && typical_ok {
+  true -> (0) _ -> (1)
+ }
+}
+const RESULT: i32 = scenario();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(RESULT); }

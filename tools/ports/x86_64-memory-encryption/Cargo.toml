@@ -1,0 +1,7 @@
+[package]
+name = "cathedral-memory-encryption-reference"
+version = "0.0.0"
+edition = "2021"
+publish = false
+[dependencies]
+x86_64 = { path = "../../../reference_code/rust-osdev/x86_64", default-features = false, features = ["memory_encryption"] }

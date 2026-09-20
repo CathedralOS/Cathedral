@@ -1,0 +1,182 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+use x86::addresses::NumberResult;
+use x86::page_entries::FrameResult;
+machine number(result: NumberResult, expected: u64) -> bool {
+ transition result { NumberResult::Value { value } -> (value == expected) _ -> (false) }
+}
+machine frame(result: FrameResult, kind: u8, expected: u64) -> bool {
+ transition result {
+  FrameResult::NotPresent -> (kind == 0)
+  FrameResult::HugeFrame -> (kind == 1)
+  FrameResult::Value { address } -> (kind == 2 && address == expected)
+ }
+}
+
+machine scenario() -> i32 {
+ let mut profile: State = memory_encryption::initial();
+ let configured0: bool = memory_encryption::configure(&mut profile, Configuration::SharedBit { position: 29 });
+ let encrypted0: bool = memory_encryption::is_encrypted(&profile, 0);
+ let clear0: NumberResult = memory_encryption::set_encrypted(&profile, 0, false);
+ let ok_clear0: bool = number(clear0, 536870912);
+ let set0: NumberResult = memory_encryption::set_encrypted(&profile, 0, true);
+ let ok_set0: bool = number(set0, 0);
+ let address0: u64 = memory_encryption::entry_address(&profile, 0);
+ let flags0: u64 = memory_encryption::entry_flags(&profile, 0);
+ let replaced0: u64 = memory_encryption::set_flags(&profile, 0, 17293822569102704647);
+ let physical0: NumberResult = memory_encryption::physical_check(&profile, 0);
+ let ok_physical0: bool = number(physical0, 0);
+ let truncated0: NumberResult = memory_encryption::physical_truncate(&profile, 0);
+ let ok_truncated0: bool = number(truncated0, 0);
+ let set_addr0: NumberResult = memory_encryption::set_address(&profile, 0, 9223372036854775811);
+ let ok_set_addr0: bool = number(set_addr0, 9223372036854775811);
+ let set_frame0: NumberResult = memory_encryption::set_frame(&profile, 0, 9223372036854775811);
+ let ok_set_frame0: bool = number(set_frame0, 9223372036854775811);
+ let frame0: FrameResult = memory_encryption::entry_frame(&profile, 0);
+ let ok_frame0: bool = frame(frame0, 0, 0);
+ let encrypted1: bool = memory_encryption::is_encrypted(&profile, 1);
+ let clear1: NumberResult = memory_encryption::set_encrypted(&profile, 1, false);
+ let ok_clear1: bool = number(clear1, 536870913);
+ let set1: NumberResult = memory_encryption::set_encrypted(&profile, 1, true);
+ let ok_set1: bool = number(set1, 1);
+ let address1: u64 = memory_encryption::entry_address(&profile, 1);
+ let flags1: u64 = memory_encryption::entry_flags(&profile, 1);
+ let replaced1: u64 = memory_encryption::set_flags(&profile, 1, 17293822569102704647);
+ let physical1: NumberResult = memory_encryption::physical_check(&profile, 1);
+ let ok_physical1: bool = number(physical1, 1);
+ let truncated1: NumberResult = memory_encryption::physical_truncate(&profile, 1);
+ let ok_truncated1: bool = number(truncated1, 1);
+ let set_addr1: NumberResult = memory_encryption::set_address(&profile, 1, 9223372036854775811);
+ let set_frame1: NumberResult = memory_encryption::set_frame(&profile, 1, 9223372036854775811);
+ let frame1: FrameResult = memory_encryption::entry_frame(&profile, 1);
+ let ok_frame1: bool = frame(frame1, 2, 0);
+ let encrypted2: bool = memory_encryption::is_encrypted(&profile, 128);
+ let clear2: NumberResult = memory_encryption::set_encrypted(&profile, 128, false);
+ let ok_clear2: bool = number(clear2, 536871040);
+ let set2: NumberResult = memory_encryption::set_encrypted(&profile, 128, true);
+ let ok_set2: bool = number(set2, 128);
+ let address2: u64 = memory_encryption::entry_address(&profile, 128);
+ let flags2: u64 = memory_encryption::entry_flags(&profile, 128);
+ let replaced2: u64 = memory_encryption::set_flags(&profile, 128, 17293822569102704647);
+ let physical2: NumberResult = memory_encryption::physical_check(&profile, 128);
+ let ok_physical2: bool = number(physical2, 128);
+ let truncated2: NumberResult = memory_encryption::physical_truncate(&profile, 128);
+ let ok_truncated2: bool = number(truncated2, 128);
+ let set_addr2: NumberResult = memory_encryption::set_address(&profile, 128, 9223372036854775811);
+ let set_frame2: NumberResult = memory_encryption::set_frame(&profile, 128, 9223372036854775811);
+ let frame2: FrameResult = memory_encryption::entry_frame(&profile, 128);
+ let ok_frame2: bool = frame(frame2, 0, 0);
+ let encrypted3: bool = memory_encryption::is_encrypted(&profile, 129);
+ let clear3: NumberResult = memory_encryption::set_encrypted(&profile, 129, false);
+ let ok_clear3: bool = number(clear3, 536871041);
+ let set3: NumberResult = memory_encryption::set_encrypted(&profile, 129, true);
+ let ok_set3: bool = number(set3, 129);
+ let address3: u64 = memory_encryption::entry_address(&profile, 129);
+ let flags3: u64 = memory_encryption::entry_flags(&profile, 129);
+ let replaced3: u64 = memory_encryption::set_flags(&profile, 129, 17293822569102704647);
+ let physical3: NumberResult = memory_encryption::physical_check(&profile, 129);
+ let ok_physical3: bool = number(physical3, 129);
+ let truncated3: NumberResult = memory_encryption::physical_truncate(&profile, 129);
+ let ok_truncated3: bool = number(truncated3, 129);
+ let set_addr3: NumberResult = memory_encryption::set_address(&profile, 129, 9223372036854775811);
+ let set_frame3: NumberResult = memory_encryption::set_frame(&profile, 129, 9223372036854775811);
+ let frame3: FrameResult = memory_encryption::entry_frame(&profile, 129);
+ let ok_frame3: bool = frame(frame3, 1, 0);
+ let encrypted4: bool = memory_encryption::is_encrypted(&profile, 536870912);
+ let clear4: NumberResult = memory_encryption::set_encrypted(&profile, 536870912, false);
+ let ok_clear4: bool = number(clear4, 536870912);
+ let set4: NumberResult = memory_encryption::set_encrypted(&profile, 536870912, true);
+ let ok_set4: bool = number(set4, 0);
+ let address4: u64 = memory_encryption::entry_address(&profile, 536870912);
+ let flags4: u64 = memory_encryption::entry_flags(&profile, 536870912);
+ let replaced4: u64 = memory_encryption::set_flags(&profile, 536870912, 17293822569102704647);
+ let physical4: NumberResult = memory_encryption::physical_check(&profile, 536870912);
+ let truncated4: NumberResult = memory_encryption::physical_truncate(&profile, 536870912);
+ let ok_truncated4: bool = number(truncated4, 0);
+ let set_addr4: NumberResult = memory_encryption::set_address(&profile, 536870912, 9223372036854775811);
+ let set_frame4: NumberResult = memory_encryption::set_frame(&profile, 536870912, 9223372036854775811);
+ let frame4: FrameResult = memory_encryption::entry_frame(&profile, 536870912);
+ let ok_frame4: bool = frame(frame4, 0, 0);
+ let encrypted5: bool = memory_encryption::is_encrypted(&profile, 536870913);
+ let clear5: NumberResult = memory_encryption::set_encrypted(&profile, 536870913, false);
+ let ok_clear5: bool = number(clear5, 536870913);
+ let set5: NumberResult = memory_encryption::set_encrypted(&profile, 536870913, true);
+ let ok_set5: bool = number(set5, 1);
+ let address5: u64 = memory_encryption::entry_address(&profile, 536870913);
+ let flags5: u64 = memory_encryption::entry_flags(&profile, 536870913);
+ let replaced5: u64 = memory_encryption::set_flags(&profile, 536870913, 17293822569102704647);
+ let physical5: NumberResult = memory_encryption::physical_check(&profile, 536870913);
+ let truncated5: NumberResult = memory_encryption::physical_truncate(&profile, 536870913);
+ let ok_truncated5: bool = number(truncated5, 1);
+ let set_addr5: NumberResult = memory_encryption::set_address(&profile, 536870913, 9223372036854775811);
+ let set_frame5: NumberResult = memory_encryption::set_frame(&profile, 536870913, 9223372036854775811);
+ let frame5: FrameResult = memory_encryption::entry_frame(&profile, 536870913);
+ let ok_frame5: bool = frame(frame5, 2, 0);
+ let encrypted6: bool = memory_encryption::is_encrypted(&profile, 536871040);
+ let clear6: NumberResult = memory_encryption::set_encrypted(&profile, 536871040, false);
+ let ok_clear6: bool = number(clear6, 536871040);
+ let set6: NumberResult = memory_encryption::set_encrypted(&profile, 536871040, true);
+ let ok_set6: bool = number(set6, 128);
+ let address6: u64 = memory_encryption::entry_address(&profile, 536871040);
+ let flags6: u64 = memory_encryption::entry_flags(&profile, 536871040);
+ let replaced6: u64 = memory_encryption::set_flags(&profile, 536871040, 17293822569102704647);
+ let physical6: NumberResult = memory_encryption::physical_check(&profile, 536871040);
+ let truncated6: NumberResult = memory_encryption::physical_truncate(&profile, 536871040);
+ let ok_truncated6: bool = number(truncated6, 128);
+ let set_addr6: NumberResult = memory_encryption::set_address(&profile, 536871040, 9223372036854775811);
+ let set_frame6: NumberResult = memory_encryption::set_frame(&profile, 536871040, 9223372036854775811);
+ let frame6: FrameResult = memory_encryption::entry_frame(&profile, 536871040);
+ let ok_frame6: bool = frame(frame6, 0, 0);
+ let encrypted7: bool = memory_encryption::is_encrypted(&profile, 4503599627366400);
+ let clear7: NumberResult = memory_encryption::set_encrypted(&profile, 4503599627366400, false);
+ let ok_clear7: bool = number(clear7, 4503599627366400);
+ let set7: NumberResult = memory_encryption::set_encrypted(&profile, 4503599627366400, true);
+ let ok_set7: bool = number(set7, 4503599090495488);
+ let address7: u64 = memory_encryption::entry_address(&profile, 4503599627366400);
+ let flags7: u64 = memory_encryption::entry_flags(&profile, 4503599627366400);
+ let replaced7: u64 = memory_encryption::set_flags(&profile, 4503599627366400, 17293822569102704647);
+ let physical7: NumberResult = memory_encryption::physical_check(&profile, 4503599627366400);
+ let truncated7: NumberResult = memory_encryption::physical_truncate(&profile, 4503599627366400);
+ let ok_truncated7: bool = number(truncated7, 4503599090495488);
+ let set_addr7: NumberResult = memory_encryption::set_address(&profile, 4503599627366400, 9223372036854775811);
+ let set_frame7: NumberResult = memory_encryption::set_frame(&profile, 4503599627366400, 9223372036854775811);
+ let frame7: FrameResult = memory_encryption::entry_frame(&profile, 4503599627366400);
+ let ok_frame7: bool = frame(frame7, 0, 0);
+ let encrypted8: bool = memory_encryption::is_encrypted(&profile, 48358647703819896);
+ let clear8: NumberResult = memory_encryption::set_encrypted(&profile, 48358647703819896, false);
+ let ok_clear8: bool = number(clear8, 48358648240690808);
+ let set8: NumberResult = memory_encryption::set_encrypted(&profile, 48358647703819896, true);
+ let ok_set8: bool = number(set8, 48358647703819896);
+ let address8: u64 = memory_encryption::entry_address(&profile, 48358647703819896);
+ let flags8: u64 = memory_encryption::entry_flags(&profile, 48358647703819896);
+ let replaced8: u64 = memory_encryption::set_flags(&profile, 48358647703819896, 17293822569102704647);
+ let physical8: NumberResult = memory_encryption::physical_check(&profile, 48358647703819896);
+ let truncated8: NumberResult = memory_encryption::physical_truncate(&profile, 48358647703819896);
+ let ok_truncated8: bool = number(truncated8, 3322651430114936);
+ let set_addr8: NumberResult = memory_encryption::set_address(&profile, 48358647703819896, 9223372036854775811);
+ let set_frame8: NumberResult = memory_encryption::set_frame(&profile, 48358647703819896, 9223372036854775811);
+ let frame8: FrameResult = memory_encryption::entry_frame(&profile, 48358647703819896);
+ let ok_frame8: bool = frame(frame8, 0, 0);
+ let encrypted9: bool = memory_encryption::is_encrypted(&profile, 18446744073709551615);
+ let clear9: NumberResult = memory_encryption::set_encrypted(&profile, 18446744073709551615, false);
+ let ok_clear9: bool = number(clear9, 18446744073709551615);
+ let set9: NumberResult = memory_encryption::set_encrypted(&profile, 18446744073709551615, true);
+ let ok_set9: bool = number(set9, 18446744073172680703);
+ let address9: u64 = memory_encryption::entry_address(&profile, 18446744073709551615);
+ let flags9: u64 = memory_encryption::entry_flags(&profile, 18446744073709551615);
+ let replaced9: u64 = memory_encryption::set_flags(&profile, 18446744073709551615, 17293822569102704647);
+ let physical9: NumberResult = memory_encryption::physical_check(&profile, 18446744073709551615);
+ let truncated9: NumberResult = memory_encryption::physical_truncate(&profile, 18446744073709551615);
+ let ok_truncated9: bool = number(truncated9, 4503599090499583);
+ let set_addr9: NumberResult = memory_encryption::set_address(&profile, 18446744073709551615, 9223372036854775811);
+ let set_frame9: NumberResult = memory_encryption::set_frame(&profile, 18446744073709551615, 9223372036854775811);
+ let frame9: FrameResult = memory_encryption::entry_frame(&profile, 18446744073709551615);
+ let ok_frame9: bool = frame(frame9, 1, 0);
+ transition configured0 && encrypted0 == true && ok_clear0 && ok_set0 && address0 == 0 && flags0 == 0 && replaced0 == 17293822569102704647 && ok_physical0 && ok_truncated0 && ok_set_addr0 && ok_set_frame0 && ok_frame0 && encrypted1 == true && ok_clear1 && ok_set1 && address1 == 0 && flags1 == 1 && replaced1 == 17293822569102704647 && ok_physical1 && ok_truncated1 && set_addr1 in NumberResult::Rejected && set_frame1 in NumberResult::Rejected && ok_frame1 && encrypted2 == true && ok_clear2 && ok_set2 && address2 == 0 && flags2 == 128 && replaced2 == 17293822569102704647 && ok_physical2 && ok_truncated2 && set_addr2 in NumberResult::Rejected && set_frame2 in NumberResult::Rejected && ok_frame2 && encrypted3 == true && ok_clear3 && ok_set3 && address3 == 0 && flags3 == 129 && replaced3 == 17293822569102704647 && ok_physical3 && ok_truncated3 && set_addr3 in NumberResult::Rejected && set_frame3 in NumberResult::Rejected && ok_frame3 && encrypted4 == false && ok_clear4 && ok_set4 && address4 == 0 && flags4 == 536870912 && replaced4 == 17293822569102704647 && physical4 in NumberResult::Rejected && ok_truncated4 && set_addr4 in NumberResult::Rejected && set_frame4 in NumberResult::Rejected && ok_frame4 && encrypted5 == false && ok_clear5 && ok_set5 && address5 == 0 && flags5 == 536870913 && replaced5 == 17293822569102704647 && physical5 in NumberResult::Rejected && ok_truncated5 && set_addr5 in NumberResult::Rejected && set_frame5 in NumberResult::Rejected && ok_frame5 && encrypted6 == false && ok_clear6 && ok_set6 && address6 == 0 && flags6 == 536871040 && replaced6 == 17293822569102704647 && physical6 in NumberResult::Rejected && ok_truncated6 && set_addr6 in NumberResult::Rejected && set_frame6 in NumberResult::Rejected && ok_frame6 && encrypted7 == false && ok_clear7 && ok_set7 && address7 == 4503599090495488 && flags7 == 536870912 && replaced7 == 17298326168193200135 && physical7 in NumberResult::Rejected && ok_truncated7 && set_addr7 in NumberResult::Rejected && set_frame7 in NumberResult::Rejected && ok_frame7 && encrypted8 == true && ok_clear8 && ok_set8 && address8 == 3322651430113280 && flags8 == 45035996273706616 && replaced8 == 17297145220532817927 && physical8 in NumberResult::Rejected && ok_truncated8 && set_addr8 in NumberResult::Rejected && set_frame8 in NumberResult::Rejected && ok_frame8 && encrypted9 == false && ok_clear9 && ok_set9 && address9 == 4503599090495488 && flags9 == 18442240474619056127 && replaced9 == 17298326168193200135 && physical9 in NumberResult::Rejected && ok_truncated9 && set_addr9 in NumberResult::Rejected && set_frame9 in NumberResult::Rejected && ok_frame9 { true -> (0) _ -> (1) }
+}
+const RESULT: i32 = scenario();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(RESULT); }

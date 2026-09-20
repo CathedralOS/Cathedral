@@ -1,0 +1,1161 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/x86_64",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/mem_encrypt.rs",
+      "src/structures/paging/page_table.rs",
+      "src/addr.rs"
+    ]
+  },
+  "files": {
+    "src/addr.rs": {
+      "sha256": "8370e442e48677438615f9f0ac4a7e2fbf1a9aadec875348cc68a9e916031721",
+      "disposition": "pending",
+      "reason": "Explicit-state encryption component overlay; unrelated declarations remain in separate slices.",
+      "symbols": {
+        "19:ADDRESS_SPACE_SIZE": {
+          "anchor": "const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "33:VirtAddr": {
+          "anchor": "pub struct VirtAddr(u64);",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "46:PhysAddr": {
+          "anchor": "pub struct PhysAddr(u64);",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "56:VirtAddrNotValid": {
+          "anchor": "pub struct VirtAddrNotValid(pub u64);",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "59:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "77:new": {
+          "anchor": "pub const fn new(addr: u64) -> VirtAddr {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "92:try_new": {
+          "anchor": "pub const fn try_new(addr: u64) -> Result<VirtAddr, VirtAddrNotValid> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "107:new_truncate": {
+          "anchor": "pub const fn new_truncate(addr: u64) -> VirtAddr {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "119:new_unsafe": {
+          "anchor": "pub const unsafe fn new_unsafe(addr: u64) -> VirtAddr {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "125:zero": {
+          "anchor": "pub const fn zero() -> VirtAddr {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "131:as_u64": {
+          "anchor": "pub const fn as_u64(self) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "138:from_ptr": {
+          "anchor": "pub fn from_ptr<T: ?Sized>(ptr: *const T) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "145:as_ptr": {
+          "anchor": "pub const fn as_ptr<T>(self) -> *const T {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "152:as_mut_ptr": {
+          "anchor": "pub const fn as_mut_ptr<T>(self) -> *mut T {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "158:is_null": {
+          "anchor": "pub const fn is_null(self) -> bool {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "171:align_up": {
+          "anchor": "pub fn align_up<U>(self, align: U) -> Self",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "182:align_down": {
+          "anchor": "pub fn align_down<U>(self, align: U) -> Self",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "193:align_down_u64": {
+          "anchor": "pub(crate) const fn align_down_u64(self, align: u64) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "199:is_aligned": {
+          "anchor": "pub fn is_aligned<U>(self, align: U) -> bool",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "208:is_aligned_u64": {
+          "anchor": "pub(crate) const fn is_aligned_u64(self, align: u64) -> bool {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "214:page_offset": {
+          "anchor": "pub const fn page_offset(self) -> PageOffset {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "220:p1_index": {
+          "anchor": "pub const fn p1_index(self) -> PageTableIndex {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "226:p2_index": {
+          "anchor": "pub const fn p2_index(self) -> PageTableIndex {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "232:p3_index": {
+          "anchor": "pub const fn p3_index(self) -> PageTableIndex {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "238:p4_index": {
+          "anchor": "pub const fn p4_index(self) -> PageTableIndex {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "244:page_table_index": {
+          "anchor": "pub const fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "250:steps_between_impl": {
+          "anchor": "pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> (usize, Option<usize>) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "262:steps_between_u64": {
+          "anchor": "pub(crate) fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "273:forward_checked_impl": {
+          "anchor": "pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "279:forward_checked_u64": {
+          "anchor": "pub(crate) fn forward_checked_u64(start: Self, count: u64) -> Option<Self> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "304:backward_checked_u64": {
+          "anchor": "pub(crate) fn backward_checked_u64(start: Self, count: u64) -> Option<Self> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "328:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "337:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "344:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "351:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "358:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "365:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "371:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "385:add": {
+          "anchor": "fn add(self, rhs: u64) -> Self::Output {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "408:add_assign": {
+          "anchor": "fn add_assign(&mut self, rhs: u64) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "414:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "428:sub": {
+          "anchor": "fn sub(self, rhs: u64) -> Self::Output {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "451:sub_assign": {
+          "anchor": "fn sub_assign(&mut self, rhs: u64) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "457:Output": {
+          "anchor": "type Output = u64;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "465:sub": {
+          "anchor": "fn sub(self, rhs: VirtAddr) -> Self::Output {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "475:steps_between": {
+          "anchor": "fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "480:forward_checked": {
+          "anchor": "fn forward_checked(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "485:backward_checked": {
+          "anchor": "fn backward_checked(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "490:forward_overflowing": {
+          "anchor": "fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "498:backward_overflowing": {
+          "anchor": "fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "508:any": {
+          "anchor": "fn any() -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "518:PhysAddrNotValid": {
+          "anchor": "pub struct PhysAddrNotValid(pub u64);",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "521:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "539:new": {
+          "anchor": "pub const fn new(addr: u64) -> Self {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine physical_check"
+            }
+          ]
+        },
+        "550:new_truncate": {
+          "anchor": "pub const fn new_truncate(addr: u64) -> PhysAddr {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "557:new_truncate": {
+          "anchor": "pub fn new_truncate(addr: u64) -> PhysAddr {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine physical_truncate"
+            }
+          ]
+        },
+        "567:new_unsafe": {
+          "anchor": "pub const unsafe fn new_unsafe(addr: u64) -> PhysAddr {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "578:try_new": {
+          "anchor": "pub const fn try_new(addr: u64) -> Result<Self, PhysAddrNotValid> {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine physical_check"
+            }
+          ]
+        },
+        "589:zero": {
+          "anchor": "pub const fn zero() -> PhysAddr {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "595:as_u64": {
+          "anchor": "pub const fn as_u64(self) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "601:is_null": {
+          "anchor": "pub const fn is_null(self) -> bool {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "614:align_up": {
+          "anchor": "pub fn align_up<U>(self, align: U) -> Self",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "625:align_down": {
+          "anchor": "pub fn align_down<U>(self, align: U) -> Self",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "636:align_down_u64": {
+          "anchor": "pub(crate) const fn align_down_u64(self, align: u64) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "642:is_aligned": {
+          "anchor": "pub fn is_aligned<U>(self, align: U) -> bool",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "651:is_aligned_u64": {
+          "anchor": "pub(crate) const fn is_aligned_u64(self, align: u64) -> bool {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "657:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "666:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "673:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "680:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "687:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "694:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "700:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "702:add": {
+          "anchor": "fn add(self, rhs: u64) -> Self::Output {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "709:add_assign": {
+          "anchor": "fn add_assign(&mut self, rhs: u64) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "715:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "717:sub": {
+          "anchor": "fn sub(self, rhs: u64) -> Self::Output {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "724:sub_assign": {
+          "anchor": "fn sub_assign(&mut self, rhs: u64) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "730:Output": {
+          "anchor": "type Output = u64;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "732:sub": {
+          "anchor": "fn sub(self, rhs: PhysAddr) -> Self::Output {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "739:any": {
+          "anchor": "fn any() -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "750:align_down": {
+          "anchor": "pub const fn align_down(addr: u64, align: u64) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "761:align_up": {
+          "anchor": "pub const fn align_up(addr: u64, align: u64) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "777:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "782:add_overflow_virtaddr": {
+          "anchor": "pub fn add_overflow_virtaddr() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "788:add_overflow_physaddr": {
+          "anchor": "pub fn add_overflow_physaddr() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "794:sub_underflow_virtaddr": {
+          "anchor": "pub fn sub_underflow_virtaddr() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "800:sub_overflow_physaddr": {
+          "anchor": "pub fn sub_overflow_physaddr() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "805:virtaddr_new_truncate": {
+          "anchor": "pub fn virtaddr_new_truncate() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "814:virtaddr_step_forward": {
+          "anchor": "fn virtaddr_step_forward() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "858:virtaddr_step_backward": {
+          "anchor": "fn virtaddr_step_backward() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "894:virtaddr_steps_between": {
+          "anchor": "fn virtaddr_steps_between() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "958:virtaddr_step_overflowing": {
+          "anchor": "fn virtaddr_step_overflowing() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "977:test_align_up": {
+          "anchor": "pub fn test_align_up() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "994:test_virt_addr_align_up": {
+          "anchor": "fn test_virt_addr_align_up() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "1003:test_virt_addr_align_down": {
+          "anchor": "fn test_virt_addr_align_down() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "1013:test_virt_addr_align_up_overflow": {
+          "anchor": "fn test_virt_addr_align_up_overflow() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "1019:test_phys_addr_align_up_overflow": {
+          "anchor": "fn test_phys_addr_align_up_overflow() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "1025:test_from_ptr_array": {
+          "anchor": "fn test_from_ptr_array() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "1036:proofs": {
+          "anchor": "mod proofs {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "1045:forward_base_case": {
+          "anchor": "fn forward_base_case() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "1080:forward_induction_step": {
+          "anchor": "fn forward_induction_step() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "1107:forward_implies_backward": {
+          "anchor": "fn forward_implies_backward() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "1124:backward_implies_forward": {
+          "anchor": "fn backward_implies_forward() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "1146:forward_implies_steps_between": {
+          "anchor": "fn forward_implies_steps_between() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "1162:steps_between_implies_forward": {
+          "anchor": "fn steps_between_implies_forward() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/memory_encryption.omg",
+          "anchor": "module memory_encryption;"
+        }
+      ]
+    },
+    "src/structures/mem_encrypt.rs": {
+      "sha256": "fb97af17b5d33745593bc21b5e7235ae57262895122bd8ff86cea781c3a6e4cb",
+      "disposition": "translated",
+      "reason": "Explicit-state encryption component overlay; unrelated declarations remain in separate slices.",
+      "symbols": {
+        "14:ENC_BIT_MASK": {
+          "anchor": "pub(crate) static ENC_BIT_MASK: AtomicU64 = AtomicU64::new(0);",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "bit_mask: u64"
+            }
+          ]
+        },
+        "18:ENC_BIT_REVERSED": {
+          "anchor": "static ENC_BIT_REVERSED: AtomicBool = AtomicBool::new(false);",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "reversed: bool"
+            }
+          ]
+        },
+        "22:MemoryEncryptionConfiguration": {
+          "anchor": "pub enum MemoryEncryptionConfiguration {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub data Configuration"
+            }
+          ]
+        },
+        "44:enable_memory_encryption": {
+          "anchor": "pub unsafe fn enable_memory_encryption(configuration: MemoryEncryptionConfiguration) {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine configure"
+            }
+          ]
+        },
+        "59:enc_bit_flag": {
+          "anchor": "fn enc_bit_flag() -> Option<PageTableFlags> {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine encryption_flag"
+            }
+          ]
+        },
+        "74:set_encrypted": {
+          "anchor": "pub fn set_encrypted(&mut self, encrypted: bool) {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine set_encrypted"
+            }
+          ]
+        },
+        "80:is_encrypted": {
+          "anchor": "pub fn is_encrypted(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine is_encrypted"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/memory_encryption.omg",
+          "anchor": "module memory_encryption;"
+        }
+      ]
+    },
+    "src/structures/paging/page_table.rs": {
+      "sha256": "c22af38b260fc7d51d7a1c156f3d8788b0e539563bbbd72ea7d417e513c89f42",
+      "disposition": "pending",
+      "reason": "Explicit-state encryption component overlay; unrelated declarations remain in separate slices.",
+      "symbols": {
+        "18:FrameError": {
+          "anchor": "pub enum FrameError {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "28:PHYSICAL_ADDRESS_MASK": {
+          "anchor": "pub(crate) static PHYSICAL_ADDRESS_MASK: AtomicU64 = AtomicU64::new(0x000f_ffff_ffff_f000u64);",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "address_mask: u64"
+            }
+          ]
+        },
+        "33:PageTableEntry": {
+          "anchor": "pub struct PageTableEntry {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "40:new": {
+          "anchor": "pub const fn new() -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "46:is_unused": {
+          "anchor": "pub const fn is_unused(&self) -> bool {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "52:set_unused": {
+          "anchor": "pub fn set_unused(&mut self) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "59:flags": {
+          "anchor": "pub const fn flags(&self) -> PageTableFlags {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine entry_flags"
+            }
+          ]
+        },
+        "65:addr": {
+          "anchor": "pub fn addr(&self) -> PhysAddr {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine entry_address"
+            }
+          ]
+        },
+        "77:frame": {
+          "anchor": "pub fn frame(&self) -> Result<PhysFrame, FrameError> {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine entry_frame"
+            }
+          ]
+        },
+        "89:set_addr": {
+          "anchor": "pub fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine set_address"
+            }
+          ]
+        },
+        "96:set_frame": {
+          "anchor": "pub fn set_frame(&mut self, frame: PhysFrame, flags: PageTableFlags) {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine set_frame"
+            }
+          ]
+        },
+        "103:set_flags": {
+          "anchor": "pub fn set_flags(&mut self, flags: PageTableFlags) {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine set_flags"
+            }
+          ]
+        },
+        "109:physical_address_mask": {
+          "anchor": "const fn physical_address_mask() -> u64 {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "115:physical_address_mask": {
+          "anchor": "fn physical_address_mask() -> u64 {",
+          "disposition": "translated",
+          "reason": "Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/memory_encryption.omg",
+              "anchor": "pub machine entry_address"
+            }
+          ]
+        },
+        "122:default": {
+          "anchor": "fn default() -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "128:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "139:PageTableFlags": {
+          "anchor": "pub struct PageTableFlags: u64 {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "141:PRESENT": {
+          "anchor": "const PRESENT =         1;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "147:WRITABLE": {
+          "anchor": "const WRITABLE =        1 << 1;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "149:USER_ACCESSIBLE": {
+          "anchor": "const USER_ACCESSIBLE = 1 << 2;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "152:WRITE_THROUGH": {
+          "anchor": "const WRITE_THROUGH =   1 << 3;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "154:NO_CACHE": {
+          "anchor": "const NO_CACHE =        1 << 4;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "156:ACCESSED": {
+          "anchor": "const ACCESSED =        1 << 5;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "158:DIRTY": {
+          "anchor": "const DIRTY =           1 << 6;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "161:HUGE_PAGE": {
+          "anchor": "const HUGE_PAGE =       1 << 7;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "164:GLOBAL": {
+          "anchor": "const GLOBAL =          1 << 8;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "166:BIT_9": {
+          "anchor": "const BIT_9 =           1 << 9;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "168:BIT_10": {
+          "anchor": "const BIT_10 =          1 << 10;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "170:BIT_11": {
+          "anchor": "const BIT_11 =          1 << 11;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "172:BIT_52": {
+          "anchor": "const BIT_52 =          1 << 52;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "174:BIT_53": {
+          "anchor": "const BIT_53 =          1 << 53;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "176:BIT_54": {
+          "anchor": "const BIT_54 =          1 << 54;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "178:BIT_55": {
+          "anchor": "const BIT_55 =          1 << 55;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "180:BIT_56": {
+          "anchor": "const BIT_56 =          1 << 56;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "182:BIT_57": {
+          "anchor": "const BIT_57 =          1 << 57;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "184:BIT_58": {
+          "anchor": "const BIT_58 =          1 << 58;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "186:BIT_59": {
+          "anchor": "const BIT_59 =          1 << 59;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "188:BIT_60": {
+          "anchor": "const BIT_60 =          1 << 60;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "190:BIT_61": {
+          "anchor": "const BIT_61 =          1 << 61;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "192:BIT_62": {
+          "anchor": "const BIT_62 =          1 << 62;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "197:NO_EXECUTE": {
+          "anchor": "const NO_EXECUTE =      1 << 63;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "202:ENTRY_COUNT": {
+          "anchor": "const ENTRY_COUNT: usize = 512;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "216:PageTable": {
+          "anchor": "pub struct PageTable {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "223:new": {
+          "anchor": "pub const fn new() -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "224:EMPTY": {
+          "anchor": "const EMPTY: PageTableEntry = PageTableEntry::new();",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "232:zero": {
+          "anchor": "pub fn zero(&mut self) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "240:iter": {
+          "anchor": "pub fn iter(&self) -> impl Iterator<Item = &PageTableEntry> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "246:iter_mut": {
+          "anchor": "pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut PageTableEntry> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "267:is_empty": {
+          "anchor": "pub fn is_empty(&self) -> bool {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "273:Output": {
+          "anchor": "type Output = PageTableEntry;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "276:index": {
+          "anchor": "fn index(&self, index: usize) -> &Self::Output {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "283:index_mut": {
+          "anchor": "fn index_mut(&mut self, index: usize) -> &mut Self::Output {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "289:Output": {
+          "anchor": "type Output = PageTableEntry;",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "292:index": {
+          "anchor": "fn index(&self, index: PageTableIndex) -> &Self::Output {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "299:index_mut": {
+          "anchor": "fn index_mut(&mut self, index: PageTableIndex) -> &mut Self::Output {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "305:default": {
+          "anchor": "fn default() -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "312:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "323:PageTableIndex": {
+          "anchor": "pub struct PageTableIndex(u16);",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "328:new": {
+          "anchor": "pub const fn new(index: u16) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "335:new_truncate": {
+          "anchor": "pub const fn new_truncate(index: u16) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "340:into_u64": {
+          "anchor": "pub(crate) const fn into_u64(self) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "347:from": {
+          "anchor": "fn from(index: PageTableIndex) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "354:from": {
+          "anchor": "fn from(index: PageTableIndex) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "361:from": {
+          "anchor": "fn from(index: PageTableIndex) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "368:from": {
+          "anchor": "fn from(index: PageTableIndex) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "376:steps_between": {
+          "anchor": "fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "381:forward_checked": {
+          "anchor": "fn forward_checked(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "387:backward_checked": {
+          "anchor": "fn backward_checked(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "393:forward_overflowing": {
+          "anchor": "fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "401:backward_overflowing": {
+          "anchor": "fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "415:PageOffset": {
+          "anchor": "pub struct PageOffset(u16);",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "420:new": {
+          "anchor": "pub fn new(offset: u16) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "427:new_truncate": {
+          "anchor": "pub const fn new_truncate(offset: u16) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "434:from": {
+          "anchor": "fn from(offset: PageOffset) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "441:from": {
+          "anchor": "fn from(offset: PageOffset) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "448:from": {
+          "anchor": "fn from(offset: PageOffset) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "455:from": {
+          "anchor": "fn from(offset: PageOffset) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "462:PageTableLevel": {
+          "anchor": "pub enum PageTableLevel {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "464:One": {
+          "anchor": "One = 1,",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "475:next_lower_level": {
+          "anchor": "pub const fn next_lower_level(self) -> Option<Self> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "485:next_higher_level": {
+          "anchor": "pub const fn next_higher_level(self) -> Option<Self> {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "495:table_address_space_alignment": {
+          "anchor": "pub const fn table_address_space_alignment(self) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "500:entry_address_space_alignment": {
+          "anchor": "pub const fn entry_address_space_alignment(self) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "506:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        },
+        "511:page_table_index_step_overflowing": {
+          "anchor": "fn page_table_index_step_overflowing() {",
+          "disposition": "omitted",
+          "reason": "Outside this narrow encryption overlay: other address/PTE/table algorithms have their own slice mappings; Rust scaffolding and live atomic access are not recreated."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/memory_encryption.omg",
+          "anchor": "module memory_encryption;"
+        }
+      ]
+    }
+  },
+  "configuration_cases": [
+    {
+      "upstream": "MemoryEncryptionConfiguration::EncryptedBit(u8)",
+      "target": "Configuration::EncryptedBit(position: u8)"
+    },
+    {
+      "upstream": "MemoryEncryptionConfiguration::SharedBit(u8)",
+      "target": "Configuration::SharedBit(position: u8)"
+    }
+  ]
+}

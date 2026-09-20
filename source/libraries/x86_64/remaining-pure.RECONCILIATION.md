@@ -23,6 +23,9 @@ the remaining raw MSR word-splitting component is completed by
 [MSR word transport](msr-words.PORT.md).
 [Numeric topology](mapper-topology.PORT.md) completes `offset-address`,
 `recursive-coordinates` and `recursive-constructor` at their numeric boundary.
+[Explicit encryption state](memory-encryption.PORT.md) completes the detached
+`memory-encryption` family. Default-profile captured walkers are not silently
+changed into encryption-profile walkers.
 
 ## Work that already has a reusable implementation
 
