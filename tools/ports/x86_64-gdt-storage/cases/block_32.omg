@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::gdt_storage;
+use x86::gdt_storage::Table;
+use x86::gdt_storage::AppendResult;
+use x86::addresses::NumberResult;
+use facts::x86_descriptors::Descriptor;
+machine added(value: AppendResult, expected: u16) -> bool {
+ transition value { AppendResult::Added { selector } -> (selector.raw == expected) _ -> (false) }
+}
+machine number(value: NumberResult, expected: u64) -> bool {
+ transition value { NumberResult::Value { value } -> (value == expected) _ -> (false) }
+}
+
+machine scenario() -> i32 {
+ let mut table: Table;
+ table.words[8191] = 16045690984833335023;
+ let mut input: [u64; 8192];
+ input[1] = 283686952306183;
+ input[2] = 567373904612366;
+ input[3] = 851060856918549;
+ input[4] = 1134747809224732;
+ input[5] = 1418434761530915;
+ input[6] = 1702121713837098;
+ input[7] = 1985808666143281;
+ input[8] = 2269495618449464;
+ input[9] = 2553182570755647;
+ input[10] = 2836869523061830;
+ input[11] = 3120556475368013;
+ input[12] = 3404243427674196;
+ input[13] = 3687930379980379;
+ input[14] = 3971617332286562;
+ input[15] = 4255304284592745;
+ input[16] = 4538991236898928;
+ input[17] = 4822678189205111;
+ input[18] = 5106365141511294;
+ input[19] = 5390052093817477;
+ input[20] = 5673739046123660;
+ input[21] = 5957425998429843;
+ input[22] = 6241112950736026;
+ input[23] = 6524799903042209;
+ input[24] = 6808486855348392;
+ input[25] = 7092173807654575;
+ input[26] = 7375860759960758;
+ input[27] = 7659547712266941;
+ input[28] = 7943234664573124;
+ input[29] = 8226921616879307;
+ input[30] = 8510608569185490;
+ input[31] = 8794295521491673;
+ let initialized: bool = gdt_storage::import_words(&mut table, &input, 32, 64);
+ let result0: AppendResult = gdt_storage::append(&mut table, Descriptor::SystemSegment { low: 170, high: 187 });
+ let pass0: bool = added(result0, 256);
+ let content0: bool = table.length == 34 && table.words[0] == 0 && table.words[1] == 283686952306183 && table.words[2] == 567373904612366 && table.words[3] == 851060856918549 && table.words[4] == 1134747809224732 && table.words[5] == 1418434761530915 && table.words[6] == 1702121713837098 && table.words[7] == 1985808666143281 && table.words[8] == 2269495618449464 && table.words[9] == 2553182570755647 && table.words[10] == 2836869523061830 && table.words[11] == 3120556475368013 && table.words[12] == 3404243427674196 && table.words[13] == 3687930379980379 && table.words[14] == 3971617332286562 && table.words[15] == 4255304284592745 && table.words[16] == 4538991236898928 && table.words[17] == 4822678189205111 && table.words[18] == 5106365141511294 && table.words[19] == 5390052093817477 && table.words[20] == 5673739046123660 && table.words[21] == 5957425998429843 && table.words[22] == 6241112950736026 && table.words[23] == 6524799903042209 && table.words[24] == 6808486855348392 && table.words[25] == 7092173807654575 && table.words[26] == 7375860759960758 && table.words[27] == 7659547712266941 && table.words[28] == 7943234664573124 && table.words[29] == 8226921616879307 && table.words[30] == 8510608569185490 && table.words[31] == 8794295521491673 && table.words[32] == 170 && table.words[33] == 187 && table.words[34] == 0 && table.words[8191] == 0;
+ let limit0: NumberResult = gdt_storage::limit(&table);
+ let bound0: bool = number(limit0, 271);
+ let last: NumberResult = gdt_storage::entry(&table, 33);
+ let projection: bool = number(last, 187);
+ let outside: NumberResult = gdt_storage::entry(&table, 34);
+ transition initialized && table.capacity == 64 && pass0 && content0 && bound0 && projection && outside in NumberResult::Rejected { true -> (0) _ -> (1) }
+}
+const RESULT: i32 = scenario();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(RESULT); }

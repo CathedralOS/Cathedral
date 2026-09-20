@@ -12054,5 +12054,13 @@
       "Hardware execution"
     ],
     "review_document": "source/libraries/x86_64/remaining-pure.RECONCILIATION.md"
-  }
+  },
+  "subsequent_completions": [
+    {
+      "family": "gdt-storage",
+      "stage": "tested",
+      "evidence": "source/libraries/x86_64/gdt-storage.PORT.md",
+      "inventory": "source/libraries/x86_64/gdt-storage-inventory.json"
+    }
+  ]
 }

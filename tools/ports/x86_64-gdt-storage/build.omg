@@ -1,0 +1,1 @@
+machine build(builder: &mut Build) { builder.application("gdt-storage-tests"); builder.freestanding = true; builder.depend_as("facts", Source::Path { location: "../../../source/drivers/facts" }); builder.depend_as("x86", Source::Path { location: "../../../source/libraries/x86_64" }); }

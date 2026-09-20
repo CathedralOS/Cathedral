@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::gdt_storage;
+use x86::gdt_storage::Table;
+use x86::gdt_storage::AppendResult;
+use x86::addresses::NumberResult;
+use facts::x86_descriptors::Descriptor;
+machine added(value: AppendResult, expected: u16) -> bool {
+ transition value { AppendResult::Added { selector } -> (selector.raw == expected) _ -> (false) }
+}
+machine number(value: NumberResult, expected: u64) -> bool {
+ transition value { NumberResult::Value { value } -> (value == expected) _ -> (false) }
+}
+
+machine scenario() -> i32 {
+ let mut table: Table;
+ table.words[8191] = 16045690984833335023;
+ let initialized: bool = gdt_storage::initialize(&mut table, 1);
+ let result0: AppendResult = gdt_storage::append(&mut table, Descriptor::UserSegment { low: 7 });
+ let pass0: bool = result0 in AppendResult::Full;
+ let content0: bool = table.length == 1 && table.words[0] == 0 && table.words[1] == 0 && table.words[8191] == 0;
+ let limit0: NumberResult = gdt_storage::limit(&table);
+ let bound0: bool = number(limit0, 7);
+ let result1: AppendResult = gdt_storage::append(&mut table, Descriptor::SystemSegment { low: 8, high: 9 });
+ let pass1: bool = result1 in AppendResult::Full;
+ let content1: bool = table.length == 1 && table.words[0] == 0 && table.words[1] == 0 && table.words[8191] == 0;
+ let limit1: NumberResult = gdt_storage::limit(&table);
+ let bound1: bool = number(limit1, 7);
+ let last: NumberResult = gdt_storage::entry(&table, 0);
+ let projection: bool = number(last, 0);
+ let outside: NumberResult = gdt_storage::entry(&table, 1);
+ transition initialized && table.capacity == 1 && pass0 && content0 && bound0 && pass1 && content1 && bound1 && projection && outside in NumberResult::Rejected { true -> (0) _ -> (1) }
+}
+const RESULT: i32 = scenario();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(RESULT); }

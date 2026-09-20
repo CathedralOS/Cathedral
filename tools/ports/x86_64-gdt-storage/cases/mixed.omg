@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::gdt_storage;
+use x86::gdt_storage::Table;
+use x86::gdt_storage::AppendResult;
+use x86::addresses::NumberResult;
+use facts::x86_descriptors::Descriptor;
+machine added(value: AppendResult, expected: u16) -> bool {
+ transition value { AppendResult::Added { selector } -> (selector.raw == expected) _ -> (false) }
+}
+machine number(value: NumberResult, expected: u64) -> bool {
+ transition value { NumberResult::Value { value } -> (value == expected) _ -> (false) }
+}
+
+machine scenario() -> i32 {
+ let mut table: Table;
+ table.words[8191] = 16045690984833335023;
+ let initialized: bool = gdt_storage::initialize(&mut table, 8);
+ let result0: AppendResult = gdt_storage::append(&mut table, Descriptor::UserSegment { low: 49428545226735615 });
+ let pass0: bool = added(result0, 8);
+ let content0: bool = table.length == 2 && table.words[0] == 0 && table.words[1] == 49428545226735615 && table.words[2] == 0 && table.words[8191] == 0;
+ let limit0: NumberResult = gdt_storage::limit(&table);
+ let bound0: bool = number(limit0, 15);
+ let result1: AppendResult = gdt_storage::append(&mut table, Descriptor::UserSegment { low: 58532501504720895 });
+ let pass1: bool = added(result1, 19);
+ let content1: bool = table.length == 3 && table.words[0] == 0 && table.words[1] == 49428545226735615 && table.words[2] == 58532501504720895 && table.words[3] == 0 && table.words[8191] == 0;
+ let limit1: NumberResult = gdt_storage::limit(&table);
+ let bound1: bool = number(limit1, 23);
+ let result2: AppendResult = gdt_storage::append(&mut table, Descriptor::SystemSegment { low: 35184372093492, high: 3735928559 });
+ let pass2: bool = added(result2, 25);
+ let content2: bool = table.length == 5 && table.words[0] == 0 && table.words[1] == 49428545226735615 && table.words[2] == 58532501504720895 && table.words[3] == 35184372093492 && table.words[4] == 3735928559 && table.words[5] == 0 && table.words[8191] == 0;
+ let limit2: NumberResult = gdt_storage::limit(&table);
+ let bound2: bool = number(limit2, 39);
+ let result3: AppendResult = gdt_storage::append(&mut table, Descriptor::UserSegment { low: 18446744073709551615 });
+ let pass3: bool = added(result3, 43);
+ let content3: bool = table.length == 6 && table.words[0] == 0 && table.words[1] == 49428545226735615 && table.words[2] == 58532501504720895 && table.words[3] == 35184372093492 && table.words[4] == 3735928559 && table.words[5] == 18446744073709551615 && table.words[6] == 0 && table.words[8191] == 0;
+ let limit3: NumberResult = gdt_storage::limit(&table);
+ let bound3: bool = number(limit3, 47);
+ let result4: AppendResult = gdt_storage::append(&mut table, Descriptor::SystemSegment { low: 0, high: 65261 });
+ let pass4: bool = added(result4, 48);
+ let content4: bool = table.length == 8 && table.words[0] == 0 && table.words[1] == 49428545226735615 && table.words[2] == 58532501504720895 && table.words[3] == 35184372093492 && table.words[4] == 3735928559 && table.words[5] == 18446744073709551615 && table.words[6] == 0 && table.words[7] == 65261 && table.words[8] == 0 && table.words[8191] == 0;
+ let limit4: NumberResult = gdt_storage::limit(&table);
+ let bound4: bool = number(limit4, 63);
+ let result5: AppendResult = gdt_storage::append(&mut table, Descriptor::UserSegment { low: 0 });
+ let pass5: bool = result5 in AppendResult::Full;
+ let content5: bool = table.length == 8 && table.words[0] == 0 && table.words[1] == 49428545226735615 && table.words[2] == 58532501504720895 && table.words[3] == 35184372093492 && table.words[4] == 3735928559 && table.words[5] == 18446744073709551615 && table.words[6] == 0 && table.words[7] == 65261 && table.words[8] == 0 && table.words[8191] == 0;
+ let limit5: NumberResult = gdt_storage::limit(&table);
+ let bound5: bool = number(limit5, 63);
+ let last: NumberResult = gdt_storage::entry(&table, 7);
+ let projection: bool = number(last, 65261);
+ let outside: NumberResult = gdt_storage::entry(&table, 8);
+ transition initialized && table.capacity == 8 && pass0 && content0 && bound0 && pass1 && content1 && bound1 && pass2 && content2 && bound2 && pass3 && content3 && bound3 && pass4 && content4 && bound4 && pass5 && content5 && bound5 && projection && outside in NumberResult::Rejected { true -> (0) _ -> (1) }
+}
+const RESULT: i32 = scenario();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(RESULT); }

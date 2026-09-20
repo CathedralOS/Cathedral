@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::gdt_storage;
+use x86::gdt_storage::Table;
+use x86::gdt_storage::AppendResult;
+use x86::addresses::NumberResult;
+use facts::x86_descriptors::Descriptor;
+machine added(value: AppendResult, expected: u16) -> bool {
+ transition value { AppendResult::Added { selector } -> (selector.raw == expected) _ -> (false) }
+}
+machine number(value: NumberResult, expected: u64) -> bool {
+ transition value { NumberResult::Value { value } -> (value == expected) _ -> (false) }
+}
+machine scenario() -> i32 {
+ let mut table: Table;
+ let initialized: bool = gdt_storage::initialize_default(&mut table);
+ table.words[1] = 85;
+ table.words[8191] = 102;
+ table.length = 2;
+ let cap0: bool = gdt_storage::initialize(&mut table, 0);
+ let cap_large: bool = gdt_storage::initialize(&mut table, 8193);
+ let preserved0: bool = table.length == 2 && table.capacity == 8 && table.words[1] == 85 && table.words[8191] == 102;
+ let mut input: [u64; 8192];
+ let empty: bool = gdt_storage::import_words(&mut table, &input, 0, 8);
+ let too_long: bool = gdt_storage::import_words(&mut table, &input, 9, 8);
+ let invalid_capacity: bool = gdt_storage::import_words(&mut table, &input, 1, 8193);
+ input[0] = 1;
+ let nonnull: bool = gdt_storage::import_words(&mut table, &input, 1, 8);
+ let preserved1: bool = table.length == 2 && table.capacity == 8 && table.words[0] == 0 && table.words[1] == 85 && table.words[8191] == 102;
+ table.words[0] = 1;
+ let invalid_append: AppendResult = gdt_storage::append(&mut table, Descriptor::UserSegment { low: 999 });
+ let invalid_read: NumberResult = gdt_storage::entry(&table, 1);
+ let invalid_limit: NumberResult = gdt_storage::limit(&table);
+ let preserved2: bool = table.length == 2 && table.words[0] == 1 && table.words[1] == 85;
+ let reset: bool = gdt_storage::initialize_default(&mut table);
+ let cleared: bool = table.length == 1 && table.capacity == 8 && table.words[0] == 0 && table.words[1] == 0 && table.words[8191] == 0;
+ table.length = 9;
+ let invalid_geometry: AppendResult = gdt_storage::append(&mut table, Descriptor::SystemSegment { low: 7, high: 8 });
+ transition initialized && !cap0 && !cap_large && preserved0 && !empty && !too_long && !invalid_capacity && !nonnull && preserved1 && invalid_append in AppendResult::InvalidTable && invalid_read in NumberResult::Rejected && invalid_limit in NumberResult::Rejected && preserved2 && reset && cleared && invalid_geometry in AppendResult::InvalidTable {
+  true -> (0) _ -> (1)
+ }
+}
+const RESULT: i32 = scenario();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(RESULT); }

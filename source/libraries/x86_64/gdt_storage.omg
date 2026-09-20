@@ -1,0 +1,203 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified owned GDT algorithms from x86_64 cc35c876d3badb57df54a66e22f7768a52be95f2,
+// src/structures/gdt.rs. See gdt-storage.PORT.md and retained upstream notices.
+// Initialized numeric storage only: no native GDT placement or loading authority.
+module gdt_storage;
+use facts::x86_descriptors::Descriptor;
+use facts::x86_registers::SegmentSelector;
+use descriptors;
+use descriptors::GdtAppendPlan;
+use addresses::NumberResult;
+
+// Fixed maximum backing replaces Rust's const-generic capacity. Only the prefix
+// of capacity words belongs to the selected table; length includes the null entry.
+pub data Table { words: [u64; 8192]; length: u16; capacity: u16; }
+pub data AppendResult [copy] {
+    case InvalidTable;
+    case Full;
+    case Added(selector: SegmentSelector);
+}
+
+pub machine valid(table: &Table) -> bool {
+    descriptors::gdt_raw_metadata_valid(table.length, table.capacity, table.words[0])
+}
+// Invalid input leaves the entire prior value unchanged.
+pub machine initialize(table: &mut Table, capacity: u16) -> bool {
+    transition capacity >= 1 && capacity <= 8192 {
+        true -> clear(table, capacity)
+        _ -> (false)
+    }
+    state clear(table: &mut Table, capacity: u16) {
+        let words: [u64; 8192];
+        table.words = move words;
+        table.length = 1;
+        table.capacity = capacity;
+        true
+    }
+}
+pub machine initialize_default(table: &mut Table) -> bool {
+    initialize(table, 8)
+}
+pub machine import_words(table: &mut Table, input: &[u64; 8192], length: u16, capacity: u16) -> bool {
+    let acceptable: bool = descriptors::gdt_raw_metadata_valid(length, capacity, input[0]);
+    transition acceptable {
+        true -> install(table, input, length, capacity)
+        _ -> (false)
+    }
+    state install(table: &mut Table, input: &[u64; 8192], length: u16, capacity: u16) {
+        let cleared: bool = initialize(table, capacity);
+        let count: u64 [0..=4095] = (length as u64) / 16;
+        let tail_start: u64 = count * 16;
+        copy_prefix(table, input, 0, count);
+        copy_tail(table, input, tail_start, length as u64);
+        table.length = length;
+        true
+    }
+}
+// Sixteen-word blocks keep maximum-size semantic witnesses within evaluator
+// fuel; a separate bounded tail copies exactly the remaining prefix words.
+machine copy_prefix(table: &mut Table, input: &[u64; 8192], index: u64, end: u64)
+terminates by (index, end) -> Nat::BoundedDistance;
+{
+    let copied: bool = copy_full_block(table, input, index, end);
+    transition index < end {
+        true -> copy_prefix(table, input, index + 1, end)
+        _ -> done()
+    }
+    state done() {}
+}
+machine copy_full_block(table: &mut Table, input: &[u64; 8192], index: u64, end: u64) -> bool {
+    transition index < end && index < 512 {
+        true -> scaled(table, input, index)
+        _ -> (false)
+    }
+    state scaled(table: &mut Table, input: &[u64; 8192], index: u64) {
+        let start: u64 [0..=8176] = index * 16;
+        transition { _ -> block(table, input, start) }
+    }
+    state block(table: &mut Table, input: &[u64; 8192], index: u64) {
+        let i0: u64 [0..=8191] = index + 0;
+        table.words[i0] = input[i0];
+        let i1: u64 [0..=8191] = index + 1;
+        table.words[i1] = input[i1];
+        let i2: u64 [0..=8191] = index + 2;
+        table.words[i2] = input[i2];
+        let i3: u64 [0..=8191] = index + 3;
+        table.words[i3] = input[i3];
+        let i4: u64 [0..=8191] = index + 4;
+        table.words[i4] = input[i4];
+        let i5: u64 [0..=8191] = index + 5;
+        table.words[i5] = input[i5];
+        let i6: u64 [0..=8191] = index + 6;
+        table.words[i6] = input[i6];
+        let i7: u64 [0..=8191] = index + 7;
+        table.words[i7] = input[i7];
+        let i8: u64 [0..=8191] = index + 8;
+        table.words[i8] = input[i8];
+        let i9: u64 [0..=8191] = index + 9;
+        table.words[i9] = input[i9];
+        let i10: u64 [0..=8191] = index + 10;
+        table.words[i10] = input[i10];
+        let i11: u64 [0..=8191] = index + 11;
+        table.words[i11] = input[i11];
+        let i12: u64 [0..=8191] = index + 12;
+        table.words[i12] = input[i12];
+        let i13: u64 [0..=8191] = index + 13;
+        table.words[i13] = input[i13];
+        let i14: u64 [0..=8191] = index + 14;
+        table.words[i14] = input[i14];
+        let i15: u64 [0..=8191] = index + 15;
+        table.words[i15] = input[i15];
+        true
+    }
+}
+machine copy_tail(table: &mut Table, input: &[u64; 8192], index: u64, end: u64)
+terminates by (index, end) -> Nat::BoundedDistance;
+{
+    let copied: bool = copy_slot(table, input, index, end);
+    transition index < end {
+        true -> copy_tail(table, input, index + 1, end)
+        _ -> done()
+    }
+    state done() {}
+}
+machine copy_slot(table: &mut Table, input: &[u64; 8192], index: u64, end: u64) -> bool {
+    transition index < end && index < 8192 {
+        true -> copied(table, input, index)
+        _ -> (false)
+    }
+    state copied(table: &mut Table, input: &[u64; 8192], index: u64) {
+        table.words[index] = input[index];
+        true
+    }
+}
+// Checked projection substitutes for a dynamically sized entries slice.
+pub machine entry(table: &Table, index: u64) -> NumberResult {
+    let acceptable: bool = valid(table);
+    let length: u64 = table.length as u64;
+    transition acceptable && index < length && index < 8192 {
+        true -> read(table, index)
+        _ -> (NumberResult::Rejected)
+    }
+    state read(table: &Table, index: u64) {
+        NumberResult::Value { value: table.words[index] }
+    }
+}
+pub machine limit(table: &Table) -> NumberResult {
+    let acceptable: bool = valid(table);
+    transition acceptable && table.length >= 1 && table.length <= 8192 {
+        true -> computed(table)
+        _ -> (NumberResult::Rejected)
+    }
+    state computed(table: &Table) {
+        let result: u16 = descriptors::gdt_limit(table.length);
+        NumberResult::Value { value: result as u64 }
+    }
+}
+pub machine append(table: &mut Table, value: Descriptor) -> AppendResult {
+    let acceptable: bool = valid(table);
+    transition acceptable {
+        true -> planned(table, value)
+        _ -> (AppendResult::InvalidTable)
+    }
+    state planned(table: &mut Table, value: Descriptor) {
+        let plan: GdtAppendPlan = descriptors::gdt_append_plan(table.length, table.capacity, value);
+        transition {
+            plan.error == 2 -> (AppendResult::Full)
+            plan.error != 0 -> (AppendResult::InvalidTable)
+            _ -> selected(table, value, plan)
+        }
+    }
+    state selected(table: &mut Table, value: Descriptor, plan: GdtAppendPlan) {
+        transition value {
+            Descriptor::UserSegment { low } -> user(table, plan, low)
+            Descriptor::SystemSegment { low, high } -> system(table, plan, low, high)
+        }
+    }
+    state user(table: &mut Table, plan: GdtAppendPlan, low: u64) {
+        let index: u16 = plan.index;
+        transition index < 8192 {
+            true -> write_user(table, plan, low, index)
+            _ -> (AppendResult::InvalidTable)
+        }
+    }
+    state write_user(table: &mut Table, plan: GdtAppendPlan, low: u64, index: u16) {
+        table.words[index] = low;
+        table.length = plan.next_length;
+        AppendResult::Added { selector: plan.selector }
+    }
+    state system(table: &mut Table, plan: GdtAppendPlan, low: u64, high: u64) {
+        let index: u16 = plan.index;
+        transition index < 8191 {
+            true -> write_system(table, plan, low, high, index)
+            _ -> (AppendResult::InvalidTable)
+        }
+    }
+    state write_system(table: &mut Table, plan: GdtAppendPlan, low: u64, high: u64, index: u16) {
+        let next: u16 [1..=8191] = index + 1;
+        table.words[index] = low;
+        table.words[next] = high;
+        table.length = plan.next_length;
+        AppendResult::Added { selector: plan.selector }
+    }
+}

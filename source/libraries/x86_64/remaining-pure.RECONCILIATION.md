@@ -14,6 +14,10 @@ There are ordinary pure algorithms left, particularly inside methods previously
 classified as instruction or policy boundaries. Layout/native limitations in
 existing PORT files remain separate from this implementation queue.
 
+Subsequent completion: `gdt-storage` is now implemented and tested in
+[owned GDT storage](gdt-storage.PORT.md). The missing-family table below records
+the original audit findings; subsequent completions supersede those rows.
+
 ## Work that already has a reusable implementation
 
 | Family | Canonical implementation and evidence |

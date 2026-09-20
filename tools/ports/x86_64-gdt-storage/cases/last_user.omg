@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::gdt_storage;
+use x86::gdt_storage::Table;
+use x86::gdt_storage::AppendResult;
+use x86::addresses::NumberResult;
+use facts::x86_descriptors::Descriptor;
+machine added(value: AppendResult, expected: u16) -> bool {
+ transition value { AppendResult::Added { selector } -> (selector.raw == expected) _ -> (false) }
+}
+machine number(value: NumberResult, expected: u64) -> bool {
+ transition value { NumberResult::Value { value } -> (value == expected) _ -> (false) }
+}
+
+machine scenario() -> i32 {
+ let mut table: Table;
+ table.words[8191] = 16045690984833335023;
+ let mut input: [u64; 8192];
+ input[8189] = 61453;
+ input[8190] = 43981;
+ let initialized: bool = gdt_storage::import_words(&mut table, &input, 8191, 8192);
+ let result0: AppendResult = gdt_storage::append(&mut table, Descriptor::SystemSegment { low: 9, high: 10 });
+ let pass0: bool = result0 in AppendResult::Full;
+ let content0: bool = table.length == 8191 && table.words[0] == 0 && table.words[1] == 0 && table.words[2] == 0 && table.words[3] == 0 && table.words[4] == 0 && table.words[5] == 0 && table.words[6] == 0 && table.words[7] == 0 && table.words[8] == 0 && table.words[8189] == 61453 && table.words[8190] == 43981 && table.words[8191] == 0;
+ let limit0: NumberResult = gdt_storage::limit(&table);
+ let bound0: bool = number(limit0, 65527);
+ let result1: AppendResult = gdt_storage::append(&mut table, Descriptor::UserSegment { low: 105553116266497 });
+ let pass1: bool = added(result1, 65531);
+ let content1: bool = table.length == 8192 && table.words[0] == 0 && table.words[1] == 0 && table.words[2] == 0 && table.words[3] == 0 && table.words[4] == 0 && table.words[5] == 0 && table.words[6] == 0 && table.words[7] == 0 && table.words[8] == 0 && table.words[8189] == 61453 && table.words[8190] == 43981 && table.words[8191] == 105553116266497;
+ let limit1: NumberResult = gdt_storage::limit(&table);
+ let bound1: bool = number(limit1, 65535);
+ let last: NumberResult = gdt_storage::entry(&table, 8191);
+ let projection: bool = number(last, 105553116266497);
+ let outside: NumberResult = gdt_storage::entry(&table, 8192);
+ transition initialized && table.capacity == 8192 && pass0 && content0 && bound0 && pass1 && content1 && bound1 && projection && outside in NumberResult::Rejected { true -> (0) _ -> (1) }
+}
+const RESULT: i32 = scenario();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(RESULT); }

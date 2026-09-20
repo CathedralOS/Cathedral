@@ -1,0 +1,441 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/x86_64",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/gdt.rs"
+    ]
+  },
+  "files": {
+    "src/structures/gdt.rs": {
+      "sha256": "a4232a94ccc9ce30c90d172360e1de316cbf46b10c4543307d2e3e34548aa865",
+      "disposition": "translated",
+      "reason": "Detached owned storage component only; other declarations explicitly outside this narrow overlay.",
+      "symbols": {
+        "3:crate::registers::segmentation::SegmentSelector;": {
+          "anchor": "pub use crate::registers::segmentation::SegmentSelector;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "26:Entry": {
+          "anchor": "pub struct Entry(EntryValue);",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "30:new": {
+          "anchor": "const fn new(raw: u64) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "38:raw": {
+          "anchor": "pub fn raw(&self) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "49:clone": {
+          "anchor": "fn clone(&self) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "55:eq": {
+          "anchor": "fn eq(&self, other: &Self) -> bool {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "63:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "108:GlobalDescriptorTable": {
+          "anchor": "pub struct GlobalDescriptorTable<const MAX: usize = 8> {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/gdt_storage.omg",
+              "anchor": "pub data Table"
+            }
+          ]
+        },
+        "115:new": {
+          "anchor": "pub const fn new() -> Self {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/gdt_storage.omg",
+              "anchor": "pub machine initialize_default"
+            }
+          ]
+        },
+        "122:default": {
+          "anchor": "fn default() -> Self {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/gdt_storage.omg",
+              "anchor": "pub machine initialize_default"
+            }
+          ]
+        },
+        "127:MAX": {
+          "anchor": "impl<const MAX: usize> GlobalDescriptorTable<MAX> {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "130:empty": {
+          "anchor": "pub const fn empty() -> Self {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/gdt_storage.omg",
+              "anchor": "pub machine initialize("
+            }
+          ]
+        },
+        "137:NULL": {
+          "anchor": "const NULL: Entry = Entry::new(0);",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/gdt_storage.omg",
+              "anchor": "let words: [u64; 8192]"
+            }
+          ]
+        },
+        "161:from_raw_entries": {
+          "anchor": "pub const fn from_raw_entries(slice: &[u64]) -> Self {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/gdt_storage.omg",
+              "anchor": "pub machine import_words"
+            }
+          ]
+        },
+        "185:entries": {
+          "anchor": "pub fn entries(&self) -> &[Entry] {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/gdt_storage.omg",
+              "anchor": "pub machine entry("
+            }
+          ]
+        },
+        "197:append": {
+          "anchor": "pub fn append(&mut self, entry: Descriptor) -> SegmentSelector {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/gdt_storage.omg",
+              "anchor": "pub machine append("
+            }
+          ]
+        },
+        "223:load": {
+          "anchor": "pub fn load(&'static self) {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "241:load_unsafe": {
+          "anchor": "pub unsafe fn load_unsafe(&self) {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "250:push": {
+          "anchor": "fn push(&mut self, value: u64) -> usize {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/gdt_storage.omg",
+              "anchor": "state write_user("
+            }
+          ]
+        },
+        "258:limit": {
+          "anchor": "pub const fn limit(&self) -> u16 {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/gdt_storage.omg",
+              "anchor": "pub machine limit("
+            }
+          ]
+        },
+        "268:pointer": {
+          "anchor": "fn pointer(&self) -> super::DescriptorTablePointer {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "281:Descriptor": {
+          "anchor": "pub enum Descriptor {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "294:DescriptorFlags": {
+          "anchor": "pub struct DescriptorFlags: u64 {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "297:ACCESSED": {
+          "anchor": "const ACCESSED          = 1 << 40;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "300:WRITABLE": {
+          "anchor": "const WRITABLE          = 1 << 41;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "304:CONFORMING": {
+          "anchor": "const CONFORMING        = 1 << 42;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "306:EXECUTABLE": {
+          "anchor": "const EXECUTABLE        = 1 << 43;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "308:USER_SEGMENT": {
+          "anchor": "const USER_SEGMENT      = 1 << 44;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "311:DPL_RING_3": {
+          "anchor": "const DPL_RING_3        = 3 << 45;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "313:PRESENT": {
+          "anchor": "const PRESENT           = 1 << 47;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "315:AVAILABLE": {
+          "anchor": "const AVAILABLE         = 1 << 52;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "317:LONG_MODE": {
+          "anchor": "const LONG_MODE         = 1 << 53;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "320:DEFAULT_SIZE": {
+          "anchor": "const DEFAULT_SIZE      = 1 << 54;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "322:GRANULARITY": {
+          "anchor": "const GRANULARITY       = 1 << 55;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "325:LIMIT_0_15": {
+          "anchor": "const LIMIT_0_15        = 0xFFFF;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "327:LIMIT_16_19": {
+          "anchor": "const LIMIT_16_19       = 0xF << 48;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "329:BASE_0_23": {
+          "anchor": "const BASE_0_23         = 0xFF_FFFF << 16;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "331:BASE_24_31": {
+          "anchor": "const BASE_24_31        = 0xFF << 56;",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "346:COMMON": {
+          "anchor": "const COMMON: Self = Self::from_bits_truncate(",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "356:KERNEL_DATA": {
+          "anchor": "pub const KERNEL_DATA: Self =",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "359:KERNEL_CODE32": {
+          "anchor": "pub const KERNEL_CODE32: Self = Self::from_bits_truncate(",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "363:KERNEL_CODE64": {
+          "anchor": "pub const KERNEL_CODE64: Self = Self::from_bits_truncate(",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "367:USER_DATA": {
+          "anchor": "pub const USER_DATA: Self =",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "370:USER_CODE32": {
+          "anchor": "pub const USER_CODE32: Self =",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "373:USER_CODE64": {
+          "anchor": "pub const USER_CODE64: Self =",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "383:dpl": {
+          "anchor": "pub const fn dpl(self) -> PrivilegeLevel {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "395:kernel_code_segment": {
+          "anchor": "pub const fn kernel_code_segment() -> Descriptor {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "402:kernel_data_segment": {
+          "anchor": "pub const fn kernel_data_segment() -> Descriptor {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "409:user_data_segment": {
+          "anchor": "pub const fn user_data_segment() -> Descriptor {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "416:user_code_segment": {
+          "anchor": "pub const fn user_code_segment() -> Descriptor {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "429:tss_segment": {
+          "anchor": "pub fn tss_segment(tss: &'static TaskStateSegment) -> Descriptor {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "441:tss_segment_unchecked": {
+          "anchor": "pub unsafe fn tss_segment_unchecked(tss: *const TaskStateSegment) -> Descriptor {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "468:tss_segment_with_iomap": {
+          "anchor": "pub fn tss_segment_with_iomap(",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "511:tss_segment_raw": {
+          "anchor": "unsafe fn tss_segment_raw(tss: *const TaskStateSegment, iomap_size: u16) -> Descriptor {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "537:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "543:linux_kernel_defaults": {
+          "anchor": "pub fn linux_kernel_defaults() {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "555:make_six_entry_gdt": {
+          "anchor": "fn make_six_entry_gdt() -> GlobalDescriptorTable {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-gdt-storage/src/main.rs",
+              "anchor": "\"mixed\""
+            }
+          ]
+        },
+        "566:TSS": {
+          "anchor": "static TSS: TaskStateSegment = TaskStateSegment::new();",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        },
+        "568:make_full_gdt": {
+          "anchor": "fn make_full_gdt() -> GlobalDescriptorTable {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-gdt-storage/src/main.rs",
+              "anchor": "\"system_fits\""
+            }
+          ]
+        },
+        "576:push_max_segments": {
+          "anchor": "pub fn push_max_segments() {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-gdt-storage/src/main.rs",
+              "anchor": "\"mixed\""
+            }
+          ]
+        },
+        "589:panic_user_segment": {
+          "anchor": "pub fn panic_user_segment() {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-gdt-storage/src/main.rs",
+              "anchor": "\"full_import\""
+            }
+          ]
+        },
+        "596:panic_system_segment": {
+          "anchor": "pub fn panic_system_segment() {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-gdt-storage/src/main.rs",
+              "anchor": "\"single_slot\""
+            }
+          ]
+        },
+        "604:from_entries": {
+          "anchor": "pub fn from_entries() {",
+          "disposition": "translated",
+          "reason": "Ordinary owned numeric storage or retained storage test scenario. Fixed 8192-word backing plus checked logical capacity replaces const generics; no native ABI, atomics or live table loading.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-gdt-storage/src/main.rs",
+              "anchor": "\"import\""
+            }
+          ]
+        },
+        "612:descriptor_dpl": {
+          "anchor": "pub fn descriptor_dpl() {",
+          "disposition": "omitted",
+          "reason": "Outside this storage overlay: canonical descriptor facts/codecs already translated separately, Rust scaffolding/formatting/traits, or live loading/pointer/atomic access."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/gdt_storage.omg",
+          "anchor": "module gdt_storage;"
+        }
+      ]
+    }
+  }
+}

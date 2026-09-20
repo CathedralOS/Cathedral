@@ -259,8 +259,11 @@ mutations, including partial edits, allocation failures and capture mismatches.
 [Mapper conveniences](source/libraries/x86_64/mapper-conveniences.PORT.md) add
 actual trait-default witnesses, three Omega fixtures and four body mutations.
 The [remaining pure-work audit](source/libraries/x86_64/remaining-pure.RECONCILIATION.md)
-identifies unfinished recursive mapper algorithms, explicit encryption, owned
-GDT storage and register recipes; these are implementation work.
+identifies unfinished recursive mapper algorithms, explicit encryption and
+register recipes; these are implementation work.
+[Owned GDT storage](source/libraries/x86_64/gdt-storage.PORT.md) now passes 16
+actual Rust/Omega scenarios, malformed-input/reset checks and four body mutations,
+including full 8192-word import and failed system appends without partial writes.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors
