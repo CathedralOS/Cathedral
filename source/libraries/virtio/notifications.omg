@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
+module notifications;
+pub data NotificationData [copy] { raw: u32; }
+pub data NotificationResult [copy] { ok: bool; value: NotificationData; }
+pub machine notification_split(queue: u16, next_index: u16) -> NotificationData { NotificationData { raw: (queue as u32) | ((next_index as u32) << 16) } }
+pub machine notification_packed(queue: u16, offset: u16, wrap: u8) -> NotificationResult {
+    NotificationResult { ok: offset < 32768 && wrap < 2,
+      value: NotificationData { raw: (queue as u32) | (((offset & 32767) as u32) << 16) | (((wrap & 1) as u32) << 31) } }
+}
+pub machine notification_queue(value: NotificationData) -> u16 { (value.raw & 65535) as u16 }
+pub machine notification_next_idx(value: NotificationData) -> u16 { (value.raw >> 16) as u16 }
+pub machine notification_next_off(value: NotificationData) -> u16 { ((value.raw >> 16) & 32767) as u16 }
+pub machine notification_next_wrap(value: NotificationData) -> u8 { (value.raw >> 31) as u8 }
+pub machine notification_with_next_idx(value: NotificationData, index: u16) -> NotificationData {
+    NotificationData { raw: (value.raw & 65535) | ((index as u32) << 16) }
+}
+pub machine notification_set_next_idx(value: &mut NotificationData, index: u16) { value.raw = (value.raw & 65535) | ((index as u32) << 16); }

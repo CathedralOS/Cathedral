@@ -1,0 +1,227 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of pinned feature/layout tests plus Cathedral boundary fixtures.
+use cathedral_virtio::common::Id;
+use cathedral_virtio::common::Id_known;
+use cathedral_virtio::common::DeviceStatus;
+use cathedral_virtio::common::STATUS_ACKNOWLEDGE;
+use cathedral_virtio::common::STATUS_DRIVER;
+use cathedral_virtio::common::STATUS_DRIVER_OK;
+use cathedral_virtio::common::STATUS_FEATURES_OK;
+use cathedral_virtio::common::STATUS_FAILED;
+use cathedral_virtio::common::RingEventFlags;
+use cathedral_virtio::common::RingEventFlags_known;
+use cathedral_virtio::features::Features;
+use cathedral_virtio::features::FeatureWord;
+use cathedral_virtio::features::NegotiatedFeatures;
+use cathedral_virtio::features::feature_has;
+use cathedral_virtio::features::feature_word;
+use cathedral_virtio::features::feature_from_words;
+use cathedral_virtio::features::features_empty;
+use cathedral_virtio::features::features_all;
+use cathedral_virtio::features::features_contains;
+use cathedral_virtio::features::features_intersects;
+use cathedral_virtio::features::features_intersection;
+use cathedral_virtio::features::features_union;
+use cathedral_virtio::features::features_difference;
+use cathedral_virtio::features::features_complement;
+use cathedral_virtio::features::features_toggle;
+use cathedral_virtio::features::features_set;
+use cathedral_virtio::features::features_equal;
+use cathedral_virtio::features::net_requirements_satisfied;
+use cathedral_virtio::features::net_recommendations_satisfied;
+use cathedral_virtio::features::negotiate_features;
+use cathedral_virtio::features::COMMON_VERSION_1;
+use cathedral_virtio::features::NET_RSS_CONTEXT;
+use cathedral_virtio::features::NET_IPSEC;
+use cathedral_virtio::notifications::NotificationData;
+use cathedral_virtio::notifications::NotificationResult;
+use cathedral_virtio::notifications::notification_split;
+use cathedral_virtio::notifications::notification_packed;
+use cathedral_virtio::notifications::notification_queue;
+use cathedral_virtio::notifications::notification_next_idx;
+use cathedral_virtio::notifications::notification_next_off;
+use cathedral_virtio::notifications::notification_next_wrap;
+use cathedral_virtio::notifications::notification_with_next_idx;
+use cathedral_virtio::notifications::notification_set_next_idx;
+use cathedral_virtio::configuration::CommonCfg;
+use cathedral_virtio::configuration::IsrStatus;
+use cathedral_virtio::configuration::isr_queue;
+use cathedral_virtio::configuration::isr_configuration;
+use cathedral_virtio::configuration::config_observation_consistent;
+use cathedral_virtio::configuration::combine_address;
+use cathedral_virtio::configuration::address_low;
+use cathedral_virtio::configuration::address_high;
+use cathedral_virtio::configuration::block_queue_count;
+use cathedral_virtio::split::Desc;
+use cathedral_virtio::split::UsedElem;
+use cathedral_virtio::split::SplitLayout;
+use cathedral_virtio::split::RingSlot;
+use cathedral_virtio::split::RingView;
+use cathedral_virtio::split::AllocationPlan;
+use cathedral_virtio::split::split_layout;
+use cathedral_virtio::split::split_queue_size_valid;
+use cathedral_virtio::split::avail_slot;
+use cathedral_virtio::split::used_slot;
+use cathedral_virtio::split::index_add;
+use cathedral_virtio::split::index_distance;
+use cathedral_virtio::split::event_needed;
+use cathedral_virtio::split::split_notify;
+use cathedral_virtio::split::avail_ring_view;
+use cathedral_virtio::split::used_ring_view;
+use cathedral_virtio::split::used_event_view;
+use cathedral_virtio::split::avail_event_view;
+use cathedral_virtio::split::avail_allocation_plan;
+use cathedral_virtio::split::used_allocation_plan;
+use cathedral_virtio::split::descriptor_valid;
+use cathedral_virtio::split::used_element_valid;
+use cathedral_virtio::split::descriptor_decode;
+use cathedral_virtio::split::descriptor_encode;
+use cathedral_virtio::raw_blk::PreEolInfo;
+use cathedral_virtio::raw_blk::PreEolInfo_known;
+use cathedral_virtio::raw_net::HashReport;
+use cathedral_virtio::raw_net::HashReport_known;
+use cathedral_virtio::raw_console::Device;
+use cathedral_virtio::raw_console::Device_known;
+use cathedral_virtio::raw_balloon;
+use cathedral_virtio::raw_blk;
+use cathedral_virtio::raw_console;
+use cathedral_virtio::raw_fs;
+use cathedral_virtio::raw_net;
+use cathedral_virtio::raw_vsock;
+
+machine facts_cases() -> bool {
+    let unknown: Id = Id { raw: 255 };
+    let status: DeviceStatus = DeviceStatus { raw: 255 };
+    let isr: IsrStatus = IsrStatus { raw: 255 };
+    Id_known(Id { raw: 49 }) && !Id_known(unknown) && unknown.raw == 255 && !Id_known(Id { raw: 15 }) &&
+    status.raw == 255 && STATUS_ACKNOWLEDGE.raw == 1 && STATUS_DRIVER.raw == 2 &&
+    STATUS_DRIVER_OK.raw == 4 && STATUS_FEATURES_OK.raw == 8 && STATUS_FAILED.raw == 128 &&
+    RingEventFlags_known(RingEventFlags { raw: 3 }) && !RingEventFlags_known(RingEventFlags { raw: 4 }) &&
+    isr_queue(isr) && isr_configuration(isr) && Device_known(Device { raw: 7 }) &&
+    !Device_known(Device { raw: 256 }) && HashReport_known(HashReport { raw: 9 }) &&
+    !HashReport_known(HashReport { raw: 256 }) && PreEolInfo_known(PreEolInfo { raw: 3 }) &&
+    !PreEolInfo_known(PreEolInfo { raw: 256 })
+}
+// All assertions from upstream features::tests::requirements_satisfied.
+machine feature_requirement_cases() -> bool {
+    net_requirements_satisfied(Features { low: 0x10000000 }) &&
+    net_requirements_satisfied(Features { low: 1 }) &&
+    !net_requirements_satisfied(Features { low: 0x400000 }) &&
+    net_requirements_satisfied(Features { low: 0x420000 }) &&
+    !net_requirements_satisfied(Features { low: 0x800 }) &&
+    net_requirements_satisfied(Features { low: 0x801 }) &&
+    net_requirements_satisfied(Features { low: 0x1801 }) &&
+    !net_requirements_satisfied(Features { low: 0x2000 }) &&
+    !net_requirements_satisfied(Features { low: 0x2001 }) &&
+    !net_requirements_satisfied(Features { low: 0x2800 }) &&
+    net_requirements_satisfied(Features { low: 0x2801 }) &&
+    net_requirements_satisfied(Features { low: 0x3801 }) &&
+    !net_requirements_satisfied(NET_RSS_CONTEXT) &&
+    net_requirements_satisfied(Features { low: 0x1000000000020000, high: 1 }) &&
+    !net_requirements_satisfied(Features { high: 2 }) &&
+    !net_recommendations_satisfied(Features { low: 0x200000000000000 }) &&
+    net_recommendations_satisfied(Features { low: 0x200000000020000 })
+}
+machine feature_word_cases() -> bool {
+    let value: Features = feature_from_words(0x89abcdef, 0x12345678, 0xfedcba98, 0x80000000);
+    let complement: Features = features_complement(value);
+    let all: Features = features_union(value, complement);
+    let empty: Features = features_intersection(value, complement);
+    let cleared: Features = features_difference(all, value);
+    let toggled: Features = features_toggle(value, value);
+    let set: Features = features_set(empty, NET_IPSEC, true);
+    let removed: Features = features_set(set, NET_IPSEC, false);
+    let supported: Features = Features { low: 0x100000001, high: 64 };
+    let selected: NegotiatedFeatures = negotiate_features(all, supported, COMMON_VERSION_1, true, true);
+    let rejected: NegotiatedFeatures = negotiate_features(Features { low: 1 }, supported, COMMON_VERSION_1, false, true);
+    feature_word(value, 0).value == 0x89abcdef && feature_word(value, 1).value == 0x12345678 &&
+    feature_word(value, 2).value == 0xfedcba98 && feature_word(value, 3).value == 0x80000000 &&
+    !feature_word(value, 4).ok && feature_has(value, 127) && !feature_has(value, 128) &&
+    features_all(all) && features_empty(empty) && features_equal(cleared, complement) && features_empty(toggled) &&
+    features_contains(set, NET_IPSEC) && features_intersects(set, NET_IPSEC) && features_empty(removed) &&
+    selected.ok && selected.value.low == 0x100000001 && selected.value.high == 64 && !rejected.ok
+}
+machine notification_cases() -> bool {
+    let value: NotificationData = notification_split(0xabcd, 0xffff);
+    let packed: NotificationResult = notification_packed(0xabcd, 32767, 1);
+    let changed: NotificationData = notification_with_next_idx(value, 0x1234);
+    let mut assigned: NotificationData = value;
+    notification_set_next_idx(&mut assigned, 7);
+    value.raw == 0xffffabcd && notification_queue(value) == 0xabcd && notification_next_idx(value) == 65535 &&
+    notification_next_off(value) == 32767 && notification_next_wrap(value) == 1 && packed.ok && packed.value.raw == value.raw &&
+    !notification_packed(0, 32768, 0).ok && !notification_packed(0, 0, 2).ok &&
+    changed.raw == 0x1234abcd && assigned.raw == 0x0007abcd &&
+    config_observation_consistent(255, 255) && !config_observation_consistent(255, 0) &&
+    combine_address(0x89abcdef, 0x12345678) == 0x1234567889abcdef &&
+    address_low(0x1234567889abcdef) == 0x89abcdef && address_high(0x1234567889abcdef) == 0x12345678 &&
+    block_queue_count(0, 2) == 512
+}
+machine layout_case(size: u16, event_idx: bool, avail_bytes: u32, used_bytes: u32, wire_bytes: u32) -> bool {
+    let layout: SplitLayout = split_layout(size, event_idx);
+    let avail: AllocationPlan = avail_allocation_plan(size, event_idx);
+    let used: AllocationPlan = used_allocation_plan(size, event_idx);
+    layout.avail_bytes == avail_bytes && layout.used_allocation_bytes == used_bytes && layout.used_wire_bytes == wire_bytes &&
+    avail.bytes == avail_bytes && avail.alignment == 2 && avail.zero_initialize &&
+    used.bytes == used_bytes && used.alignment == 4 && used.zero_initialize
+}
+// The six q/event combinations in each upstream allocation test, including
+// non-power-of-two counts: raw layout construction is not queue admission.
+machine layout_cases() -> bool {
+    layout_case(255, false, 514, 2044, 2044) && layout_case(255, true, 516, 2048, 2046) &&
+    layout_case(256, false, 516, 2052, 2052) && layout_case(256, true, 518, 2056, 2054) &&
+    layout_case(257, false, 518, 2060, 2060) && layout_case(257, true, 520, 2064, 2062) &&
+    layout_case(0, false, 4, 4, 4) && layout_case(0, true, 6, 8, 6) &&
+    layout_case(65535, true, 131076, 524288, 524286)
+}
+machine ring_arithmetic_cases() -> bool {
+    let avail: RingSlot = avail_slot(256, 65535);
+    let used: RingSlot = used_slot(256, 65535);
+    split_queue_size_valid(1) && split_queue_size_valid(32768) && !split_queue_size_valid(0) &&
+    !split_queue_size_valid(3) && !split_queue_size_valid(32769) && !split_queue_size_valid(65535) &&
+    avail.ok && avail.index == 255 && avail.byte_offset == 514 && used.byte_offset == 2044 &&
+    !avail_slot(0, 0).ok && index_add(65535, 1) == 0 && index_add(65535, 65535) == 65534 &&
+    index_distance(0, 65535) == 1 && index_distance(65535, 0) == 65535 &&
+    event_needed(65535, 0, 65535) && !event_needed(0, 0, 65535) &&
+    event_needed(9, 11, 9) && event_needed(10, 11, 9) && !event_needed(11, 11, 9) &&
+    !event_needed(10, 10, 10) && split_notify(false, 0, 0, 0, 0) && !split_notify(false, 0, 1, 0, 0) &&
+    split_notify(true, 65535, 1, 0, 65535)
+}
+machine ring_view_cases() -> bool {
+    let used: RingView = used_ring_view(256, true, 2056, 0x1000);
+    let event: RingView = avail_event_view(256, true, 2056, 0x1000);
+    let avail: RingView = avail_ring_view(256, true, 518, 0x1000);
+    let used_event: RingView = used_event_view(256, true, 518, 0x1000);
+    used.ok && used.offset == 4 && used.length == 2048 && used.count == 256 && used.element_bytes == 8 &&
+    event.ok && event.offset == 2052 && event.length == 2 && avail.ok && used_event.ok && used_event.offset == 516 &&
+    !avail_ring_view(0, false, 0, 0).ok && !avail_ring_view(0, false, 2, 0).ok &&
+    !used_ring_view(0, true, 0, 0).ok && !used_ring_view(256, true, 2056, 2).ok &&
+    !avail_ring_view(256, true, 518, 1).ok && !used_ring_view(256, true, 2054, 0).ok &&
+    !avail_event_view(256, false, 2052, 0).ok && !used_event_view(256, false, 516, 0).ok
+}
+machine descriptor_cases() -> bool {
+    let value: Desc = Desc { addr: 0x0123456789abcdef, len: 0x10203040, flags: 3, next: 7 };
+    let bytes: [u8; 16] = descriptor_encode(value);
+    let decoded: Desc = descriptor_decode(bytes);
+    let direct: Desc = Desc { addr: 0x1000, len: 4096, flags: 3, next: 7 };
+    let indirect: Desc = Desc { addr: 0x1000, len: 32, flags: 4 };
+    bytes[0] == 0xef && bytes[7] == 1 && bytes[8] == 0x40 && bytes[11] == 0x10 && bytes[12] == 3 && bytes[14] == 7 &&
+    decoded.addr == value.addr && decoded.len == value.len && decoded.flags == value.flags && decoded.next == value.next &&
+    descriptor_valid(direct, 8, false) && !descriptor_valid(direct, 4, false) &&
+    descriptor_valid(indirect, 8, true) && !descriptor_valid(indirect, 8, false) &&
+    !descriptor_valid(Desc { addr: 0x1000, len: 16, flags: 5 }, 8, true) &&
+    !descriptor_valid(Desc { addr: 0x1008, len: 16, flags: 4 }, 8, true) &&
+    !descriptor_valid(Desc { addr: 0x1000, len: 15, flags: 4 }, 8, true) &&
+    !descriptor_valid(Desc { addr: 0x1000, len: 0, flags: 4 }, 8, true) &&
+    !descriptor_valid(Desc { addr: 0xfffffffffffffff0, len: 16 }, 8, false) &&
+    !descriptor_valid(Desc { flags: 128 }, 8, false) &&
+    used_element_valid(UsedElem { id: 7, len: 4096 }, 8, 4096) &&
+    !used_element_valid(UsedElem { id: 8 }, 8, 4096) && !used_element_valid(UsedElem { id: 0, len: 4097 }, 8, 4096)
+}
+machine test_result() -> i32 {
+    transition facts_cases() && feature_requirement_cases() && feature_word_cases() && notification_cases() &&
+      layout_cases() && ring_arithmetic_cases() && ring_view_cases() && descriptor_cases() { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

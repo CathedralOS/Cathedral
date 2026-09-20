@@ -1,0 +1,170 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
+module features;
+pub data Features [copy] { low: u64; high: u64; }
+pub const COMMON_INDIRECT_DESC: Features = Features { low: 268435456, high: 0 };
+pub const COMMON_EVENT_IDX: Features = Features { low: 536870912, high: 0 };
+pub const COMMON_VERSION_1: Features = Features { low: 4294967296, high: 0 };
+pub const COMMON_ACCESS_PLATFORM: Features = Features { low: 8589934592, high: 0 };
+pub const COMMON_RING_PACKED: Features = Features { low: 17179869184, high: 0 };
+pub const COMMON_IN_ORDER: Features = Features { low: 34359738368, high: 0 };
+pub const COMMON_ORDER_PLATFORM: Features = Features { low: 68719476736, high: 0 };
+pub const COMMON_SR_IOV: Features = Features { low: 137438953472, high: 0 };
+pub const COMMON_NOTIFICATION_DATA: Features = Features { low: 274877906944, high: 0 };
+pub const COMMON_NOTIF_CONFIG_DATA: Features = Features { low: 549755813888, high: 0 };
+pub const COMMON_RING_RESET: Features = Features { low: 1099511627776, high: 0 };
+pub const COMMON_ADMIN_VQ: Features = Features { low: 2199023255552, high: 0 };
+pub const COMMON_SUSPEND: Features = Features { low: 8796093022208, high: 0 };
+pub const CONSOLE_SIZE: Features = Features { low: 1, high: 0 };
+pub const CONSOLE_MULTIPORT: Features = Features { low: 2, high: 0 };
+pub const CONSOLE_EMERG_WRITE: Features = Features { low: 4, high: 0 };
+pub const BLK_SIZE_MAX: Features = Features { low: 2, high: 0 };
+pub const BLK_SEG_MAX: Features = Features { low: 4, high: 0 };
+pub const BLK_GEOMETRY: Features = Features { low: 16, high: 0 };
+pub const BLK_RO: Features = Features { low: 32, high: 0 };
+pub const BLK_BLK_SIZE: Features = Features { low: 64, high: 0 };
+pub const BLK_FLUSH: Features = Features { low: 512, high: 0 };
+pub const BLK_TOPOLOGY: Features = Features { low: 1024, high: 0 };
+pub const BLK_CONFIG_WCE: Features = Features { low: 2048, high: 0 };
+pub const BLK_MQ: Features = Features { low: 4096, high: 0 };
+pub const BLK_DISCARD: Features = Features { low: 8192, high: 0 };
+pub const BLK_WRITE_ZEROES: Features = Features { low: 16384, high: 0 };
+pub const BLK_LIFETIME: Features = Features { low: 32768, high: 0 };
+pub const BLK_SECURE_ERASE: Features = Features { low: 65536, high: 0 };
+pub const BLK_ZONED: Features = Features { low: 131072, high: 0 };
+pub const NET_CSUM: Features = Features { low: 1, high: 0 };
+pub const NET_GUEST_CSUM: Features = Features { low: 2, high: 0 };
+pub const NET_CTRL_GUEST_OFFLOADS: Features = Features { low: 4, high: 0 };
+pub const NET_MTU: Features = Features { low: 8, high: 0 };
+pub const NET_MAC: Features = Features { low: 32, high: 0 };
+pub const NET_GUEST_TSO4: Features = Features { low: 128, high: 0 };
+pub const NET_GUEST_TSO6: Features = Features { low: 256, high: 0 };
+pub const NET_GUEST_ECN: Features = Features { low: 512, high: 0 };
+pub const NET_GUEST_UFO: Features = Features { low: 1024, high: 0 };
+pub const NET_HOST_TSO4: Features = Features { low: 2048, high: 0 };
+pub const NET_HOST_TSO6: Features = Features { low: 4096, high: 0 };
+pub const NET_HOST_ECN: Features = Features { low: 8192, high: 0 };
+pub const NET_HOST_UFO: Features = Features { low: 16384, high: 0 };
+pub const NET_MRG_RXBUF: Features = Features { low: 32768, high: 0 };
+pub const NET_STATUS: Features = Features { low: 65536, high: 0 };
+pub const NET_CTRL_VQ: Features = Features { low: 131072, high: 0 };
+pub const NET_CTRL_RX: Features = Features { low: 262144, high: 0 };
+pub const NET_CTRL_VLAN: Features = Features { low: 524288, high: 0 };
+pub const NET_CTRL_RX_EXTRA: Features = Features { low: 1048576, high: 0 };
+pub const NET_GUEST_ANNOUNCE: Features = Features { low: 2097152, high: 0 };
+pub const NET_MQ: Features = Features { low: 4194304, high: 0 };
+pub const NET_CTRL_MAC_ADDR: Features = Features { low: 8388608, high: 0 };
+pub const NET_DEVICE_STATS: Features = Features { low: 1125899906842624, high: 0 };
+pub const NET_HASH_TUNNEL: Features = Features { low: 2251799813685248, high: 0 };
+pub const NET_VQ_NOTF_COAL: Features = Features { low: 4503599627370496, high: 0 };
+pub const NET_NOTF_COAL: Features = Features { low: 9007199254740992, high: 0 };
+pub const NET_GUEST_USO4: Features = Features { low: 18014398509481984, high: 0 };
+pub const NET_GUEST_USO6: Features = Features { low: 36028797018963968, high: 0 };
+pub const NET_HOST_USO: Features = Features { low: 72057594037927936, high: 0 };
+pub const NET_HASH_REPORT: Features = Features { low: 144115188075855872, high: 0 };
+pub const NET_GUEST_HDRLEN: Features = Features { low: 576460752303423488, high: 0 };
+pub const NET_RSS: Features = Features { low: 1152921504606846976, high: 0 };
+pub const NET_RSC_EXT: Features = Features { low: 2305843009213693952, high: 0 };
+pub const NET_STANDBY: Features = Features { low: 4611686018427387904, high: 0 };
+pub const NET_SPEED_DUPLEX: Features = Features { low: 9223372036854775808, high: 0 };
+pub const NET_RSS_CONTEXT: Features = Features { low: 0, high: 1 };
+pub const NET_GUEST_UDP_TUNNEL_GSO: Features = Features { low: 0, high: 2 };
+pub const NET_GUEST_UDP_TUNNEL_GSO_CSUM: Features = Features { low: 0, high: 4 };
+pub const NET_HOST_UDP_TUNNEL_GSO: Features = Features { low: 0, high: 8 };
+pub const NET_HOST_UDP_TUNNEL_GSO_CSUM: Features = Features { low: 0, high: 16 };
+pub const NET_OUT_NET_HEADER: Features = Features { low: 0, high: 32 };
+pub const NET_IPSEC: Features = Features { low: 0, high: 64 };
+pub const FS_NOTIFICATION: Features = Features { low: 1, high: 0 };
+pub const VSOCK_STREAM: Features = Features { low: 1, high: 0 };
+pub const VSOCK_SEQPACKET: Features = Features { low: 2, high: 0 };
+pub const VSOCK_NO_IMPLIED_STREAM: Features = Features { low: 4, high: 0 };
+pub const BALLOON_MUST_TELL_HOST: Features = Features { low: 1, high: 0 };
+pub const BALLOON_STATS_VQ: Features = Features { low: 2, high: 0 };
+pub const BALLOON_DEFLATE_ON_OOM: Features = Features { low: 4, high: 0 };
+pub const BALLOON_FREE_PAGE_HINT: Features = Features { low: 8, high: 0 };
+pub const BALLOON_PAGE_POISON: Features = Features { low: 16, high: 0 };
+pub const BALLOON_PAGE_REPORTING: Features = Features { low: 32, high: 0 };
+
+pub machine features_equal(a: Features, b: Features) -> bool { a.low == b.low && a.high == b.high }
+pub machine features_empty(value: Features) -> bool { value.low == 0 && value.high == 0 }
+pub machine features_all(value: Features) -> bool {
+    let all: u64 = 0xffffffffffffffff;
+    value.low == all && value.high == all
+}
+pub machine features_contains(value: Features, mask: Features) -> bool { (value.low & mask.low) == mask.low && (value.high & mask.high) == mask.high }
+pub machine features_intersects(value: Features, mask: Features) -> bool { (value.low & mask.low) != 0 || (value.high & mask.high) != 0 }
+pub machine features_intersection(a: Features, b: Features) -> Features { Features { low: a.low & b.low, high: a.high & b.high } }
+pub machine features_union(a: Features, b: Features) -> Features { Features { low: a.low | b.low, high: a.high | b.high } }
+pub machine features_difference(a: Features, b: Features) -> Features {
+    Features { low: a.low & (b.low ^ 0xffffffffffffffff), high: a.high & (b.high ^ 0xffffffffffffffff) }
+}
+pub machine features_toggle(a: Features, b: Features) -> Features { Features { low: a.low ^ b.low, high: a.high ^ b.high } }
+pub machine features_complement(value: Features) -> Features { Features { low: value.low ^ 0xffffffffffffffff, high: value.high ^ 0xffffffffffffffff } }
+pub machine features_set(value: Features, mask: Features, enabled: bool) -> Features {
+    transition enabled { true -> insert(value, mask) _ -> remove(value, mask) }
+    state insert(value: Features, mask: Features) -> Features { let out: Features = features_union(value, mask); out }
+    state remove(value: Features, mask: Features) -> Features { let out: Features = features_difference(value, mask); out }
+}
+pub machine feature_has(value: Features, index: u8) -> bool {
+    transition index < 64 {
+      true -> ((value.low & ((1 as u64) << (index as u64))) != 0)
+      _ -> high(value, index)
+    }
+    state high(value: Features, index: u8) -> bool {
+      transition index < 128 { true -> ((value.high & ((1 as u64) << ((index as u64) - 64))) != 0) _ -> (false) }
+    }
+}
+pub data FeatureWord [copy] { ok: bool; value: u32; }
+pub machine feature_word(value: Features, selector: u32) -> FeatureWord {
+    transition selector {
+      0 -> (FeatureWord { ok: true, value: (value.low & 0xffffffff) as u32 })
+      1 -> (FeatureWord { ok: true, value: ((value.low >> 32) & 0xffffffff) as u32 })
+      2 -> (FeatureWord { ok: true, value: (value.high & 0xffffffff) as u32 })
+      3 -> (FeatureWord { ok: true, value: ((value.high >> 32) & 0xffffffff) as u32 })
+      _ -> (FeatureWord {})
+    }
+}
+pub machine feature_from_words(a: u32, b: u32, c: u32, d: u32) -> Features {
+    Features { low: (a as u64) | ((b as u64) << 32), high: (c as u64) | ((d as u64) << 32) }
+}
+
+// Exact pinned dependency matrix, including its all-of tunnel prerequisites.
+pub machine net_requirements_satisfied(value: Features) -> bool {
+    (!((value.low & 128) != 0) || (((value.low & 2) != 0))) &&
+    (!((value.low & 256) != 0) || (((value.low & 2) != 0))) &&
+    (!((value.low & 512) != 0) || (((value.low & 128) != 0) || ((value.low & 256) != 0))) &&
+    (!((value.low & 1024) != 0) || (((value.low & 2) != 0))) &&
+    (!((value.low & 18014398509481984) != 0) || (((value.low & 2) != 0))) &&
+    (!((value.low & 36028797018963968) != 0) || (((value.low & 2) != 0))) &&
+    (!((value.high & 2) != 0) || (((value.low & 128) != 0) && ((value.low & 256) != 0) && ((value.low & 18014398509481984) != 0) && ((value.low & 36028797018963968) != 0))) &&
+    (!((value.high & 4) != 0) || (((value.high & 2) != 0))) &&
+    (!((value.low & 2048) != 0) || (((value.low & 1) != 0))) &&
+    (!((value.low & 4096) != 0) || (((value.low & 1) != 0))) &&
+    (!((value.low & 8192) != 0) || (((value.low & 2048) != 0) || ((value.low & 4096) != 0))) &&
+    (!((value.low & 16384) != 0) || (((value.low & 1) != 0))) &&
+    (!((value.low & 72057594037927936) != 0) || (((value.low & 1) != 0))) &&
+    (!((value.high & 8) != 0) || (((value.low & 2048) != 0) && ((value.low & 4096) != 0) && ((value.low & 72057594037927936) != 0))) &&
+    (!((value.high & 16) != 0) || (((value.high & 8) != 0))) &&
+    (!((value.low & 262144) != 0) || (((value.low & 131072) != 0))) &&
+    (!((value.low & 524288) != 0) || (((value.low & 131072) != 0))) &&
+    (!((value.low & 2097152) != 0) || (((value.low & 131072) != 0))) &&
+    (!((value.low & 4194304) != 0) || (((value.low & 131072) != 0))) &&
+    (!((value.low & 8388608) != 0) || (((value.low & 131072) != 0))) &&
+    (!((value.low & 9007199254740992) != 0) || (((value.low & 131072) != 0))) &&
+    (!((value.low & 2305843009213693952) != 0) || (((value.low & 2048) != 0) || ((value.low & 4096) != 0))) &&
+    (!((value.low & 1152921504606846976) != 0) || (((value.low & 131072) != 0))) &&
+    (!((value.low & 4503599627370496) != 0) || (((value.low & 131072) != 0))) &&
+    (!((value.high & 1) != 0) || (((value.low & 131072) != 0) && ((value.low & 1152921504606846976) != 0))) &&
+    (!((value.low & 2251799813685248) != 0) || (((value.low & 131072) != 0) && (((value.low & 1152921504606846976) != 0) || ((value.low & 144115188075855872) != 0))))
+}
+pub machine net_recommendations_satisfied(value: Features) -> bool {
+    (!((value.low & 144115188075855872) != 0) || ((value.low & 131072) != 0)) &&
+    (!((value.low & 1048576) != 0) || ((value.low & 131072) != 0))
+}
+
+pub data NegotiatedFeatures [copy] { ok: bool; value: Features; }
+pub machine negotiate_features(offered: Features, supported: Features, required: Features, network: bool, modern: bool) -> NegotiatedFeatures {
+    let accepted: Features = features_intersection(offered, supported);
+    NegotiatedFeatures { ok: features_contains(accepted, required) &&
+      (!network || net_requirements_satisfied(accepted)) && (!modern || feature_has(accepted, 32)), value: accepted }
+}

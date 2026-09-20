@@ -1,0 +1,4 @@
+cannot check prepared project: checked compilation failed for package `cathedral-virtio-tests` with 3 diagnostic(s)
+  error: machine `PlacedField::read` does not satisfy trait `Readable` machine `read`: expected 0 callable generic parameter(s), got 1
+  error: machine `PlacedField::take` does not satisfy trait `DestructiveRead` machine `take`: expected 0 callable generic parameter(s), got 1
+  error: machine `PlacedField::write` does not satisfy trait `Writable` machine `write`: expected 0 callable generic parameter(s), got 1

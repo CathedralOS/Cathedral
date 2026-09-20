@@ -1,0 +1,117 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
+module raw_net;
+pub data S [copy] { raw: u16; }
+pub const S_LINK_UP: S = S { raw: 1 };
+pub const S_ANNOUNCE: S = S { raw: 2 };
+pub data Config [copy] {
+    mac: [u8; 6];
+    status: S;
+    max_virtqueue_pairs: u16;
+    mtu: u16;
+    speed: u32;
+    duplex: u8;
+    rss_max_key_size: u8;
+    rss_max_indirection_table_length: u16;
+    supported_hash_types: u32;
+    supported_tunnel_types: u32;
+}
+pub data HdrF [copy] { raw: u8; }
+pub const HdrF_NEEDS_CSUM: HdrF = HdrF { raw: 1 };
+pub const HdrF_DATA_VALID: HdrF = HdrF { raw: 2 };
+pub const HdrF_RSC_INFO: HdrF = HdrF { raw: 4 };
+pub const HdrF_UDP_TUNNEL_CSUM: HdrF = HdrF { raw: 8 };
+pub const HdrF_SECURITY: HdrF = HdrF { raw: 16 };
+pub const HdrF_SECURITY_ERR: HdrF = HdrF { raw: 32 };
+pub const HdrF_SECURITY_SA_SOFT_EXPIRY_WARN: HdrF = HdrF { raw: 64 };
+pub data Hdr [copy] {
+    flags: HdrF;
+    gso_type: u8;
+    hdr_len: u16;
+    gso_size: u16;
+    csum_start: u16;
+    csum_offset: u16;
+    num_buffers: u16;
+}
+pub data HdrHash [copy] {
+    hdr: Hdr;
+    hash_value: u32;
+    hash_report: u16;
+    padding_reserved: u16;
+}
+pub data HdrHashTunnel [copy] {
+    hash_hdr: HdrHash;
+    outer_th_offset: u16;
+    inner_nh_offset: u16;
+}
+pub data HdrHashTunnelOutNetHdr [copy] {
+    outer_nh_offset: u16;
+    padding_reserved_2: [u8; 6];
+}
+pub data HashType [copy] { raw: u32; }
+pub const HashType_IPV4: HashType = HashType { raw: 1 };
+pub const HashType_TCPV4: HashType = HashType { raw: 2 };
+pub const HashType_UDPV4: HashType = HashType { raw: 4 };
+pub const HashType_IPV6: HashType = HashType { raw: 8 };
+pub const HashType_TCPV6: HashType = HashType { raw: 16 };
+pub const HashType_UDPV6: HashType = HashType { raw: 32 };
+pub const HashType_IP_EX: HashType = HashType { raw: 64 };
+pub const HashType_TCP_EX: HashType = HashType { raw: 128 };
+pub const HashType_UDP_EX: HashType = HashType { raw: 256 };
+pub data HdrGso [copy] { raw: u8; }
+pub const HdrGso_None: HdrGso = HdrGso { raw: 0 };
+pub const HdrGso_Tcpv4: HdrGso = HdrGso { raw: 1 };
+pub const HdrGso_Udp: HdrGso = HdrGso { raw: 3 };
+pub const HdrGso_Tcpv6: HdrGso = HdrGso { raw: 4 };
+pub const HdrGso_UdpL4: HdrGso = HdrGso { raw: 5 };
+pub const HdrGso_UdpTunnelIpv4: HdrGso = HdrGso { raw: 32 };
+pub const HdrGso_UdpTunnelIpv6: HdrGso = HdrGso { raw: 64 };
+pub const HdrGso_Ecn: HdrGso = HdrGso { raw: 128 };
+pub machine HdrGso_known(value: HdrGso) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 3 || value.raw == 4 || value.raw == 5 || value.raw == 32 || value.raw == 64 || value.raw == 128 }
+pub data HashReport [copy] { raw: u16; }
+pub const HashReport_None: HashReport = HashReport { raw: 0 };
+pub const HashReport_Ipv4: HashReport = HashReport { raw: 1 };
+pub const HashReport_Tcpv4: HashReport = HashReport { raw: 2 };
+pub const HashReport_Udpv4: HashReport = HashReport { raw: 3 };
+pub const HashReport_IPv6: HashReport = HashReport { raw: 4 };
+pub const HashReport_Tcpv6: HashReport = HashReport { raw: 5 };
+pub const HashReport_Udpv6: HashReport = HashReport { raw: 6 };
+pub const HashReport_Ipv6Ex: HashReport = HashReport { raw: 7 };
+pub const HashReport_Tcpv6Ex: HashReport = HashReport { raw: 8 };
+pub const HashReport_Udpv6Ex: HashReport = HashReport { raw: 9 };
+pub machine HashReport_known(value: HashReport) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 2 || value.raw == 3 || value.raw == 4 || value.raw == 5 || value.raw == 6 || value.raw == 7 || value.raw == 8 || value.raw == 9 }
+pub data Ctrl [copy] { raw: u8; }
+pub const Ctrl_Rx: Ctrl = Ctrl { raw: 0 };
+pub const Ctrl_Mac: Ctrl = Ctrl { raw: 1 };
+pub const Ctrl_Vlan: Ctrl = Ctrl { raw: 2 };
+pub const Ctrl_Announce: Ctrl = Ctrl { raw: 3 };
+pub const Ctrl_Mq: Ctrl = Ctrl { raw: 4 };
+pub const Ctrl_GuestOffloads: Ctrl = Ctrl { raw: 5 };
+pub machine Ctrl_known(value: Ctrl) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 2 || value.raw == 3 || value.raw == 4 || value.raw == 5 }
+pub data CtrlRx [copy] { raw: u8; }
+pub const CtrlRx_Promisc: CtrlRx = CtrlRx { raw: 0 };
+pub const CtrlRx_Allmulti: CtrlRx = CtrlRx { raw: 1 };
+pub const CtrlRx_Alluni: CtrlRx = CtrlRx { raw: 2 };
+pub const CtrlRx_Nomulti: CtrlRx = CtrlRx { raw: 3 };
+pub const CtrlRx_Nouni: CtrlRx = CtrlRx { raw: 4 };
+pub const CtrlRx_Nobcast: CtrlRx = CtrlRx { raw: 5 };
+pub machine CtrlRx_known(value: CtrlRx) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 2 || value.raw == 3 || value.raw == 4 || value.raw == 5 }
+pub data CtrlMac [copy] { raw: u8; }
+pub const CtrlMac_TableSet: CtrlMac = CtrlMac { raw: 0 };
+pub const CtrlMac_AddrSet: CtrlMac = CtrlMac { raw: 1 };
+pub machine CtrlMac_known(value: CtrlMac) -> bool { value.raw == 0 || value.raw == 1 }
+pub data CtrlVlan [copy] { raw: u8; }
+pub const CtrlVlan_Add: CtrlVlan = CtrlVlan { raw: 0 };
+pub const CtrlVlan_Del: CtrlVlan = CtrlVlan { raw: 1 };
+pub machine CtrlVlan_known(value: CtrlVlan) -> bool { value.raw == 0 || value.raw == 1 }
+pub data CtrlAnnounce [copy] { raw: u8; }
+pub const CtrlAnnounce_Ack: CtrlAnnounce = CtrlAnnounce { raw: 0 };
+pub machine CtrlAnnounce_known(value: CtrlAnnounce) -> bool { value.raw == 0 }
+pub data CtrlMq [copy] { raw: u8; }
+pub const CtrlMq_VqPairsSet: CtrlMq = CtrlMq { raw: 0 };
+pub const CtrlMq_RssConfig: CtrlMq = CtrlMq { raw: 1 };
+pub const CtrlMq_HashConfig: CtrlMq = CtrlMq { raw: 2 };
+pub machine CtrlMq_known(value: CtrlMq) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 2 }
+pub data CtrlGuestOffloads [copy] { raw: u8; }
+pub const CtrlGuestOffloads_Set: CtrlGuestOffloads = CtrlGuestOffloads { raw: 0 };
+pub machine CtrlGuestOffloads_known(value: CtrlGuestOffloads) -> bool { value.raw == 0 }

@@ -1,0 +1,9 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
+module raw_balloon;
+pub data Config [copy] {
+    num_pages: u32;
+    actual: u32;
+    free_page_hint_cmd_id: u32;
+    poison_val: u32;
+}

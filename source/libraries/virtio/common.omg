@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
+module common;
+pub data DeviceStatus [copy] { raw: u8; }
+pub const STATUS_ACKNOWLEDGE: DeviceStatus = DeviceStatus { raw: 1 };
+pub const STATUS_DRIVER: DeviceStatus = DeviceStatus { raw: 2 };
+pub const STATUS_DRIVER_OK: DeviceStatus = DeviceStatus { raw: 4 };
+pub const STATUS_FEATURES_OK: DeviceStatus = DeviceStatus { raw: 8 };
+pub const STATUS_SUSPEND: DeviceStatus = DeviceStatus { raw: 16 };
+pub const STATUS_DEVICE_NEEDS_RESET: DeviceStatus = DeviceStatus { raw: 64 };
+pub const STATUS_FAILED: DeviceStatus = DeviceStatus { raw: 128 };
+pub data Id [copy] { raw: u8; }
+pub const Id_Reserved: Id = Id { raw: 0 };
+pub const Id_Net: Id = Id { raw: 1 };
+pub const Id_Block: Id = Id { raw: 2 };
+pub const Id_Console: Id = Id { raw: 3 };
+pub const Id_Rng: Id = Id { raw: 4 };
+pub const Id_Balloon: Id = Id { raw: 5 };
+pub const Id_Iomem: Id = Id { raw: 6 };
+pub const Id_Rpmsg: Id = Id { raw: 7 };
+pub const Id_Scsi: Id = Id { raw: 8 };
+pub const Id_NineP: Id = Id { raw: 9 };
+pub const Id_Mac80211Wlan: Id = Id { raw: 10 };
+pub const Id_RprocSerial: Id = Id { raw: 11 };
+pub const Id_Caif: Id = Id { raw: 12 };
+pub const Id_MemoryBalloon: Id = Id { raw: 13 };
+pub const Id_Gpu: Id = Id { raw: 16 };
+pub const Id_Clock: Id = Id { raw: 17 };
+pub const Id_Input: Id = Id { raw: 18 };
+pub const Id_Vsock: Id = Id { raw: 19 };
+pub const Id_Crypto: Id = Id { raw: 20 };
+pub const Id_SignalDist: Id = Id { raw: 21 };
+pub const Id_Pstore: Id = Id { raw: 22 };
+pub const Id_Iommu: Id = Id { raw: 23 };
+pub const Id_Mem: Id = Id { raw: 24 };
+pub const Id_Sound: Id = Id { raw: 25 };
+pub const Id_Fs: Id = Id { raw: 26 };
+pub const Id_Pmem: Id = Id { raw: 27 };
+pub const Id_Rpmb: Id = Id { raw: 28 };
+pub const Id_Mac80211Hwsim: Id = Id { raw: 29 };
+pub const Id_VideoEncoder: Id = Id { raw: 30 };
+pub const Id_VideoDecoder: Id = Id { raw: 31 };
+pub const Id_Scmi: Id = Id { raw: 32 };
+pub const Id_NitroSecMod: Id = Id { raw: 33 };
+pub const Id_I2cAdapter: Id = Id { raw: 34 };
+pub const Id_Watchdog: Id = Id { raw: 35 };
+pub const Id_Can: Id = Id { raw: 36 };
+pub const Id_ParamServ: Id = Id { raw: 38 };
+pub const Id_AudioPolicy: Id = Id { raw: 39 };
+pub const Id_Bt: Id = Id { raw: 40 };
+pub const Id_Gpio: Id = Id { raw: 41 };
+pub const Id_Rdma: Id = Id { raw: 42 };
+pub const Id_Camera: Id = Id { raw: 43 };
+pub const Id_Ism: Id = Id { raw: 44 };
+pub const Id_Spi: Id = Id { raw: 45 };
+pub const Id_Tee: Id = Id { raw: 46 };
+pub const Id_CpuBalloon: Id = Id { raw: 47 };
+pub const Id_Media: Id = Id { raw: 48 };
+pub const Id_Usb: Id = Id { raw: 49 };
+pub machine Id_known(value: Id) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 2 || value.raw == 3 || value.raw == 4 || value.raw == 5 || value.raw == 6 || value.raw == 7 || value.raw == 8 || value.raw == 9 || value.raw == 10 || value.raw == 11 || value.raw == 12 || value.raw == 13 || value.raw == 16 || value.raw == 17 || value.raw == 18 || value.raw == 19 || value.raw == 20 || value.raw == 21 || value.raw == 22 || value.raw == 23 || value.raw == 24 || value.raw == 25 || value.raw == 26 || value.raw == 27 || value.raw == 28 || value.raw == 29 || value.raw == 30 || value.raw == 31 || value.raw == 32 || value.raw == 33 || value.raw == 34 || value.raw == 35 || value.raw == 36 || value.raw == 38 || value.raw == 39 || value.raw == 40 || value.raw == 41 || value.raw == 42 || value.raw == 43 || value.raw == 44 || value.raw == 45 || value.raw == 46 || value.raw == 47 || value.raw == 48 || value.raw == 49 }
+pub data RingEventFlags [copy] { raw: u8; }
+pub const RingEventFlags_Enable: RingEventFlags = RingEventFlags { raw: 0 };
+pub const RingEventFlags_Disable: RingEventFlags = RingEventFlags { raw: 1 };
+pub const RingEventFlags_Desc: RingEventFlags = RingEventFlags { raw: 2 };
+pub const RingEventFlags_Reserved: RingEventFlags = RingEventFlags { raw: 3 };
+pub machine RingEventFlags_known(value: RingEventFlags) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 2 || value.raw == 3 }

@@ -1,0 +1,116 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
+module raw_blk;
+pub data Config [copy] {
+    capacity: u64;
+    size_max: u32;
+    seg_max: u32;
+    geometry: Geometry;
+    blk_size: u32;
+    topology: Topology;
+    writeback: u8;
+    unused0: u8;
+    num_queues: u8;
+    max_discard_sectors: u32;
+    max_discard_seg: u32;
+    discard_sector_alignment: u32;
+    max_write_zeroes_sectors: u32;
+    max_write_zeroes_seg: u32;
+    write_zeroes_may_unmap: u8;
+    unused1: [u8; 3];
+    max_secure_erase_sectors: u32;
+    max_secure_erase_seg: u32;
+    secure_erase_sector_alignment: u32;
+    zoned: ZonedCharacteristics;
+}
+pub data Geometry [copy] {
+    cylinders: u16;
+    heads: u8;
+    sectors: u8;
+}
+pub data Topology [copy] {
+    physical_block_exp: u8;
+    alignment_offset: u8;
+    min_io_size: u16;
+    opt_io_size: u32;
+}
+pub data ZonedCharacteristics [copy] {
+    zone_sectors: u32;
+    max_open_zones: u32;
+    max_active_zones: u32;
+    max_append_sectors: u32;
+    write_granularity: u32;
+    model: u8;
+    unused2: [u8; 3];
+}
+pub data DiscardWriteZeroes [copy] {
+    sector: u64;
+    num_sectors: u32;
+    flags: u32;
+}
+pub data DiscardWriteZeroesFlags [copy] { raw: u32; }
+pub data Lifetime [copy] {
+    pre_eol_info: u16;
+    device_lifetime_est_typ_a: u16;
+    device_lifetime_est_typ_b: u16;
+}
+pub data ZoneDescriptor [copy] {
+    z_cap: u64;
+    z_start: u64;
+    z_wp: u64;
+    z_type: u8;
+    z_state: u8;
+    reserved: [u8; 38];
+}
+pub data Z [copy] { raw: u8; }
+pub const Z_None: Z = Z { raw: 0 };
+pub const Z_Hm: Z = Z { raw: 1 };
+pub const Z_Ha: Z = Z { raw: 2 };
+pub machine Z_known(value: Z) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 2 }
+pub data T [copy] { raw: u32; }
+pub const T_In: T = T { raw: 0 };
+pub const T_Out: T = T { raw: 1 };
+pub const T_Flush: T = T { raw: 4 };
+pub const T_GetId: T = T { raw: 8 };
+pub const T_GetLifetime: T = T { raw: 10 };
+pub const T_Discard: T = T { raw: 11 };
+pub const T_WriteZeroes: T = T { raw: 13 };
+pub const T_SecureErase: T = T { raw: 14 };
+pub const T_ZoneAppend: T = T { raw: 15 };
+pub const T_ZoneReport: T = T { raw: 16 };
+pub const T_ZoneOpen: T = T { raw: 18 };
+pub const T_ZoneClose: T = T { raw: 20 };
+pub const T_ZoneFinish: T = T { raw: 22 };
+pub const T_ZoneReset: T = T { raw: 24 };
+pub const T_ZoneResetAll: T = T { raw: 26 };
+pub machine T_known(value: T) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 4 || value.raw == 8 || value.raw == 10 || value.raw == 11 || value.raw == 13 || value.raw == 14 || value.raw == 15 || value.raw == 16 || value.raw == 18 || value.raw == 20 || value.raw == 22 || value.raw == 24 || value.raw == 26 }
+pub data PreEolInfo [copy] { raw: u16; }
+pub const PreEolInfo_Undefined: PreEolInfo = PreEolInfo { raw: 0 };
+pub const PreEolInfo_Normal: PreEolInfo = PreEolInfo { raw: 1 };
+pub const PreEolInfo_Warning: PreEolInfo = PreEolInfo { raw: 2 };
+pub const PreEolInfo_Urgent: PreEolInfo = PreEolInfo { raw: 3 };
+pub machine PreEolInfo_known(value: PreEolInfo) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 2 || value.raw == 3 }
+pub data S [copy] { raw: u8; }
+pub const S_Ok: S = S { raw: 0 };
+pub const S_Ioerr: S = S { raw: 1 };
+pub const S_Unsupp: S = S { raw: 2 };
+pub const S_ZoneInvalidCmd: S = S { raw: 3 };
+pub const S_ZoneUnalignedWp: S = S { raw: 4 };
+pub const S_ZoneOpenResource: S = S { raw: 5 };
+pub const S_ZoneActiveResource: S = S { raw: 6 };
+pub machine S_known(value: S) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 2 || value.raw == 3 || value.raw == 4 || value.raw == 5 || value.raw == 6 }
+pub data Zt [copy] { raw: u8; }
+pub const Zt_Conv: Zt = Zt { raw: 1 };
+pub const Zt_Swr: Zt = Zt { raw: 2 };
+pub const Zt_Swp: Zt = Zt { raw: 3 };
+pub machine Zt_known(value: Zt) -> bool { value.raw == 1 || value.raw == 2 || value.raw == 3 }
+pub data Zs [copy] { raw: u8; }
+pub const Zs_NotWp: Zs = Zs { raw: 0 };
+pub const Zs_Empty: Zs = Zs { raw: 1 };
+pub const Zs_Iopen: Zs = Zs { raw: 2 };
+pub const Zs_Eopen: Zs = Zs { raw: 3 };
+pub const Zs_Closed: Zs = Zs { raw: 4 };
+pub const Zs_Rdonly: Zs = Zs { raw: 13 };
+pub const Zs_Full: Zs = Zs { raw: 14 };
+pub const Zs_Offline: Zs = Zs { raw: 15 };
+pub machine Zs_known(value: Zs) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 2 || value.raw == 3 || value.raw == 4 || value.raw == 13 || value.raw == 14 || value.raw == 15 }

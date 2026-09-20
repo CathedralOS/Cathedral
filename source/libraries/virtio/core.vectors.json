@@ -1,0 +1,1389 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "abi": "x86_64-unknown-uefi:repr(C)-facts",
+    "pointer_bits": 64,
+    "endian": "little"
+  },
+  "provenance": {
+    "kind": "upstream",
+    "description": "Expected pinned Rust repr(C)/packed geometry and values, checked against actual cross-target measurements for every size/alignment/feature mask and accessible public-field offset. Private-field offsets are source-derived expected geometry only. No Omega ABI observation.",
+    "sources": [
+      "https://github.com/rust-osdev/virtio-spec-rs/tree/ad565bd701e93fa47bc288d45701e1ae53ac3c12"
+    ]
+  },
+  "measurements": {
+    "balloon.Config.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "balloon.Config.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "balloon.Config.num_pages.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "balloon.Config.actual.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "balloon.Config.free_page_hint_cmd_id.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "balloon.Config.poison_val.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "blk.Geometry.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "blk.Geometry.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "blk.Geometry.cylinders.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "blk.Geometry.heads.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "blk.Geometry.sectors.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "blk.Topology.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "blk.Topology.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "blk.Topology.physical_block_exp.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "blk.Topology.alignment_offset.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "blk.Topology.min_io_size.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "blk.Topology.opt_io_size.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "blk.ZonedCharacteristics.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "blk.ZonedCharacteristics.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "blk.ZonedCharacteristics.zone_sectors.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "blk.ZonedCharacteristics.max_open_zones.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "blk.ZonedCharacteristics.max_active_zones.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "blk.ZonedCharacteristics.max_append_sectors.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "blk.ZonedCharacteristics.write_granularity.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "blk.ZonedCharacteristics.model.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "blk.ZonedCharacteristics.unused2.offset": {
+      "kind": "offset",
+      "value": 21
+    },
+    "blk.Config.size": {
+      "kind": "size",
+      "value": 96
+    },
+    "blk.Config.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "blk.Config.capacity.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "blk.Config.size_max.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "blk.Config.seg_max.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "blk.Config.geometry.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "blk.Config.blk_size.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "blk.Config.topology.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "blk.Config.writeback.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "blk.Config.unused0.offset": {
+      "kind": "offset",
+      "value": 33
+    },
+    "blk.Config.num_queues.offset": {
+      "kind": "offset",
+      "value": 34
+    },
+    "blk.Config.max_discard_sectors.offset": {
+      "kind": "offset",
+      "value": 36
+    },
+    "blk.Config.max_discard_seg.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "blk.Config.discard_sector_alignment.offset": {
+      "kind": "offset",
+      "value": 44
+    },
+    "blk.Config.max_write_zeroes_sectors.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "blk.Config.max_write_zeroes_seg.offset": {
+      "kind": "offset",
+      "value": 52
+    },
+    "blk.Config.write_zeroes_may_unmap.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "blk.Config.unused1.offset": {
+      "kind": "offset",
+      "value": 57
+    },
+    "blk.Config.max_secure_erase_sectors.offset": {
+      "kind": "offset",
+      "value": 60
+    },
+    "blk.Config.max_secure_erase_seg.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "blk.Config.secure_erase_sector_alignment.offset": {
+      "kind": "offset",
+      "value": 68
+    },
+    "blk.Config.zoned.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "blk.DiscardWriteZeroes.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "blk.DiscardWriteZeroes.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "blk.DiscardWriteZeroes.sector.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "blk.DiscardWriteZeroes.num_sectors.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "blk.DiscardWriteZeroes.flags.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "blk.Lifetime.size": {
+      "kind": "size",
+      "value": 6
+    },
+    "blk.Lifetime.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "blk.Lifetime.pre_eol_info.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "blk.Lifetime.device_lifetime_est_typ_a.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "blk.Lifetime.device_lifetime_est_typ_b.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "blk.ZoneDescriptor.size": {
+      "kind": "size",
+      "value": 64
+    },
+    "blk.ZoneDescriptor.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "blk.ZoneDescriptor.z_cap.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "blk.ZoneDescriptor.z_start.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "blk.ZoneDescriptor.z_wp.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "blk.ZoneDescriptor.z_type.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "blk.ZoneDescriptor.z_state.offset": {
+      "kind": "offset",
+      "value": 25
+    },
+    "blk.ZoneDescriptor.reserved.offset": {
+      "kind": "offset",
+      "value": 26
+    },
+    "console.Config.size": {
+      "kind": "size",
+      "value": 12
+    },
+    "console.Config.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "console.Config.cols.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "console.Config.rows.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "console.Config.max_nr_ports.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "console.Config.emerg_wr.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "console.Control.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "console.Control.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "console.Control.id.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "console.Control.event.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "console.Control.value.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "console.Resize.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "console.Resize.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "console.Resize.cols.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "console.Resize.rows.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "fs.Config.size": {
+      "kind": "size",
+      "value": 44
+    },
+    "fs.Config.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "fs.Config.tag.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "fs.Config.num_request_queues.offset": {
+      "kind": "offset",
+      "value": 36
+    },
+    "fs.Config.notify_buf_size.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "net.Config.size": {
+      "kind": "size",
+      "value": 28
+    },
+    "net.Config.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "net.Config.mac.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "net.Config.status.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "net.Config.max_virtqueue_pairs.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "net.Config.mtu.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "net.Config.speed.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "net.Config.duplex.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "net.Config.rss_max_key_size.offset": {
+      "kind": "offset",
+      "value": 17
+    },
+    "net.Config.rss_max_indirection_table_length.offset": {
+      "kind": "offset",
+      "value": 18
+    },
+    "net.Config.supported_hash_types.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "net.Config.supported_tunnel_types.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "net.Hdr.size": {
+      "kind": "size",
+      "value": 12
+    },
+    "net.Hdr.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "net.Hdr.flags.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "net.Hdr.gso_type.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "net.Hdr.hdr_len.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "net.Hdr.gso_size.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "net.Hdr.csum_start.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "net.Hdr.csum_offset.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "net.Hdr.num_buffers.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "net.HdrHash.size": {
+      "kind": "size",
+      "value": 20
+    },
+    "net.HdrHash.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "net.HdrHash.hdr.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "net.HdrHash.hash_value.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "net.HdrHash.hash_report.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "net.HdrHash.padding_reserved.offset": {
+      "kind": "offset",
+      "value": 18
+    },
+    "net.HdrHashTunnel.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "net.HdrHashTunnel.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "net.HdrHashTunnel.hash_hdr.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "net.HdrHashTunnel.outer_th_offset.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "net.HdrHashTunnel.inner_nh_offset.offset": {
+      "kind": "offset",
+      "value": 22
+    },
+    "net.HdrHashTunnelOutNetHdr.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "net.HdrHashTunnelOutNetHdr.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "net.HdrHashTunnelOutNetHdr.outer_nh_offset.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "net.HdrHashTunnelOutNetHdr.padding_reserved_2.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "vsock.Config.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "vsock.Config.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "vsock.Config.guest_cid.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "vsock.Hdr.size": {
+      "kind": "size",
+      "value": 44
+    },
+    "vsock.Hdr.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "vsock.Hdr.src_cid.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "vsock.Hdr.dst_cid.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "vsock.Hdr.src_port.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "vsock.Hdr.dst_port.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "vsock.Hdr.len.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "vsock.Hdr.type_.offset": {
+      "kind": "offset",
+      "value": 28
+    },
+    "vsock.Hdr.op.offset": {
+      "kind": "offset",
+      "value": 30
+    },
+    "vsock.Hdr.flags.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "vsock.Hdr.buf_alloc.offset": {
+      "kind": "offset",
+      "value": 36
+    },
+    "vsock.Hdr.fwd_cnt.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "vsock.Event.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "vsock.Event.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "vsock.Event.id.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "configuration.CommonCfg.size": {
+      "kind": "size",
+      "value": 64
+    },
+    "configuration.CommonCfg.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "configuration.CommonCfg.device_feature_select.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "configuration.CommonCfg.device_feature.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "configuration.CommonCfg.driver_feature_select.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "configuration.CommonCfg.driver_feature.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "configuration.CommonCfg.config_msix_vector.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "configuration.CommonCfg.num_queues.offset": {
+      "kind": "offset",
+      "value": 18
+    },
+    "configuration.CommonCfg.device_status.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "configuration.CommonCfg.config_generation.offset": {
+      "kind": "offset",
+      "value": 21
+    },
+    "configuration.CommonCfg.queue_select.offset": {
+      "kind": "offset",
+      "value": 22
+    },
+    "configuration.CommonCfg.queue_size.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "configuration.CommonCfg.queue_msix_vector.offset": {
+      "kind": "offset",
+      "value": 26
+    },
+    "configuration.CommonCfg.queue_enable.offset": {
+      "kind": "offset",
+      "value": 28
+    },
+    "configuration.CommonCfg.queue_notify_off.offset": {
+      "kind": "offset",
+      "value": 30
+    },
+    "configuration.CommonCfg.queue_desc_low.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "configuration.CommonCfg.queue_desc_high.offset": {
+      "kind": "offset",
+      "value": 36
+    },
+    "configuration.CommonCfg.queue_driver_low.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "configuration.CommonCfg.queue_driver_high.offset": {
+      "kind": "offset",
+      "value": 44
+    },
+    "configuration.CommonCfg.queue_device_low.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "configuration.CommonCfg.queue_device_high.offset": {
+      "kind": "offset",
+      "value": 52
+    },
+    "configuration.CommonCfg.queue_notif_config_data.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "configuration.CommonCfg.queue_reset.offset": {
+      "kind": "offset",
+      "value": 58
+    },
+    "configuration.CommonCfg.admin_queue_index.offset": {
+      "kind": "offset",
+      "value": 60
+    },
+    "configuration.CommonCfg.admin_queue_num.offset": {
+      "kind": "offset",
+      "value": 62
+    },
+    "split.Desc.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "split.Desc.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "split.Desc.addr.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "split.Desc.len.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "split.Desc.flags.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "split.Desc.next.offset": {
+      "kind": "offset",
+      "value": 14
+    },
+    "split.UsedElem.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "split.UsedElem.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "split.UsedElem.id.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "split.UsedElem.len.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "features.Features.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "features.Features.alignment": {
+      "kind": "alignment",
+      "value": 16
+    },
+    "features.Features.low.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "features.Features.high.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "features.COMMON_INDIRECT_DESC.low": {
+      "kind": "value",
+      "value": 268435456
+    },
+    "features.COMMON_INDIRECT_DESC.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.COMMON_EVENT_IDX.low": {
+      "kind": "value",
+      "value": 536870912
+    },
+    "features.COMMON_EVENT_IDX.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.COMMON_VERSION_1.low": {
+      "kind": "value",
+      "value": 4294967296
+    },
+    "features.COMMON_VERSION_1.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.COMMON_ACCESS_PLATFORM.low": {
+      "kind": "value",
+      "value": 8589934592
+    },
+    "features.COMMON_ACCESS_PLATFORM.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.COMMON_RING_PACKED.low": {
+      "kind": "value",
+      "value": 17179869184
+    },
+    "features.COMMON_RING_PACKED.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.COMMON_IN_ORDER.low": {
+      "kind": "value",
+      "value": 34359738368
+    },
+    "features.COMMON_IN_ORDER.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.COMMON_ORDER_PLATFORM.low": {
+      "kind": "value",
+      "value": 68719476736
+    },
+    "features.COMMON_ORDER_PLATFORM.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.COMMON_SR_IOV.low": {
+      "kind": "value",
+      "value": 137438953472
+    },
+    "features.COMMON_SR_IOV.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.COMMON_NOTIFICATION_DATA.low": {
+      "kind": "value",
+      "value": 274877906944
+    },
+    "features.COMMON_NOTIFICATION_DATA.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.COMMON_NOTIF_CONFIG_DATA.low": {
+      "kind": "value",
+      "value": 549755813888
+    },
+    "features.COMMON_NOTIF_CONFIG_DATA.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.COMMON_RING_RESET.low": {
+      "kind": "value",
+      "value": 1099511627776
+    },
+    "features.COMMON_RING_RESET.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.COMMON_ADMIN_VQ.low": {
+      "kind": "value",
+      "value": 2199023255552
+    },
+    "features.COMMON_ADMIN_VQ.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.COMMON_SUSPEND.low": {
+      "kind": "value",
+      "value": 8796093022208
+    },
+    "features.COMMON_SUSPEND.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.CONSOLE_SIZE.low": {
+      "kind": "value",
+      "value": 1
+    },
+    "features.CONSOLE_SIZE.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.CONSOLE_MULTIPORT.low": {
+      "kind": "value",
+      "value": 2
+    },
+    "features.CONSOLE_MULTIPORT.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.CONSOLE_EMERG_WRITE.low": {
+      "kind": "value",
+      "value": 4
+    },
+    "features.CONSOLE_EMERG_WRITE.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_SIZE_MAX.low": {
+      "kind": "value",
+      "value": 2
+    },
+    "features.BLK_SIZE_MAX.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_SEG_MAX.low": {
+      "kind": "value",
+      "value": 4
+    },
+    "features.BLK_SEG_MAX.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_GEOMETRY.low": {
+      "kind": "value",
+      "value": 16
+    },
+    "features.BLK_GEOMETRY.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_RO.low": {
+      "kind": "value",
+      "value": 32
+    },
+    "features.BLK_RO.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_BLK_SIZE.low": {
+      "kind": "value",
+      "value": 64
+    },
+    "features.BLK_BLK_SIZE.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_FLUSH.low": {
+      "kind": "value",
+      "value": 512
+    },
+    "features.BLK_FLUSH.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_TOPOLOGY.low": {
+      "kind": "value",
+      "value": 1024
+    },
+    "features.BLK_TOPOLOGY.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_CONFIG_WCE.low": {
+      "kind": "value",
+      "value": 2048
+    },
+    "features.BLK_CONFIG_WCE.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_MQ.low": {
+      "kind": "value",
+      "value": 4096
+    },
+    "features.BLK_MQ.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_DISCARD.low": {
+      "kind": "value",
+      "value": 8192
+    },
+    "features.BLK_DISCARD.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_WRITE_ZEROES.low": {
+      "kind": "value",
+      "value": 16384
+    },
+    "features.BLK_WRITE_ZEROES.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_LIFETIME.low": {
+      "kind": "value",
+      "value": 32768
+    },
+    "features.BLK_LIFETIME.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_SECURE_ERASE.low": {
+      "kind": "value",
+      "value": 65536
+    },
+    "features.BLK_SECURE_ERASE.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BLK_ZONED.low": {
+      "kind": "value",
+      "value": 131072
+    },
+    "features.BLK_ZONED.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_CSUM.low": {
+      "kind": "value",
+      "value": 1
+    },
+    "features.NET_CSUM.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_GUEST_CSUM.low": {
+      "kind": "value",
+      "value": 2
+    },
+    "features.NET_GUEST_CSUM.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_CTRL_GUEST_OFFLOADS.low": {
+      "kind": "value",
+      "value": 4
+    },
+    "features.NET_CTRL_GUEST_OFFLOADS.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_MTU.low": {
+      "kind": "value",
+      "value": 8
+    },
+    "features.NET_MTU.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_MAC.low": {
+      "kind": "value",
+      "value": 32
+    },
+    "features.NET_MAC.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_GUEST_TSO4.low": {
+      "kind": "value",
+      "value": 128
+    },
+    "features.NET_GUEST_TSO4.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_GUEST_TSO6.low": {
+      "kind": "value",
+      "value": 256
+    },
+    "features.NET_GUEST_TSO6.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_GUEST_ECN.low": {
+      "kind": "value",
+      "value": 512
+    },
+    "features.NET_GUEST_ECN.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_GUEST_UFO.low": {
+      "kind": "value",
+      "value": 1024
+    },
+    "features.NET_GUEST_UFO.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_HOST_TSO4.low": {
+      "kind": "value",
+      "value": 2048
+    },
+    "features.NET_HOST_TSO4.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_HOST_TSO6.low": {
+      "kind": "value",
+      "value": 4096
+    },
+    "features.NET_HOST_TSO6.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_HOST_ECN.low": {
+      "kind": "value",
+      "value": 8192
+    },
+    "features.NET_HOST_ECN.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_HOST_UFO.low": {
+      "kind": "value",
+      "value": 16384
+    },
+    "features.NET_HOST_UFO.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_MRG_RXBUF.low": {
+      "kind": "value",
+      "value": 32768
+    },
+    "features.NET_MRG_RXBUF.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_STATUS.low": {
+      "kind": "value",
+      "value": 65536
+    },
+    "features.NET_STATUS.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_CTRL_VQ.low": {
+      "kind": "value",
+      "value": 131072
+    },
+    "features.NET_CTRL_VQ.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_CTRL_RX.low": {
+      "kind": "value",
+      "value": 262144
+    },
+    "features.NET_CTRL_RX.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_CTRL_VLAN.low": {
+      "kind": "value",
+      "value": 524288
+    },
+    "features.NET_CTRL_VLAN.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_CTRL_RX_EXTRA.low": {
+      "kind": "value",
+      "value": 1048576
+    },
+    "features.NET_CTRL_RX_EXTRA.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_GUEST_ANNOUNCE.low": {
+      "kind": "value",
+      "value": 2097152
+    },
+    "features.NET_GUEST_ANNOUNCE.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_MQ.low": {
+      "kind": "value",
+      "value": 4194304
+    },
+    "features.NET_MQ.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_CTRL_MAC_ADDR.low": {
+      "kind": "value",
+      "value": 8388608
+    },
+    "features.NET_CTRL_MAC_ADDR.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_DEVICE_STATS.low": {
+      "kind": "value",
+      "value": 1125899906842624
+    },
+    "features.NET_DEVICE_STATS.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_HASH_TUNNEL.low": {
+      "kind": "value",
+      "value": 2251799813685248
+    },
+    "features.NET_HASH_TUNNEL.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_VQ_NOTF_COAL.low": {
+      "kind": "value",
+      "value": 4503599627370496
+    },
+    "features.NET_VQ_NOTF_COAL.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_NOTF_COAL.low": {
+      "kind": "value",
+      "value": 9007199254740992
+    },
+    "features.NET_NOTF_COAL.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_GUEST_USO4.low": {
+      "kind": "value",
+      "value": 18014398509481984
+    },
+    "features.NET_GUEST_USO4.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_GUEST_USO6.low": {
+      "kind": "value",
+      "value": 36028797018963968
+    },
+    "features.NET_GUEST_USO6.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_HOST_USO.low": {
+      "kind": "value",
+      "value": 72057594037927936
+    },
+    "features.NET_HOST_USO.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_HASH_REPORT.low": {
+      "kind": "value",
+      "value": 144115188075855872
+    },
+    "features.NET_HASH_REPORT.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_GUEST_HDRLEN.low": {
+      "kind": "value",
+      "value": 576460752303423488
+    },
+    "features.NET_GUEST_HDRLEN.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_RSS.low": {
+      "kind": "value",
+      "value": 1152921504606846976
+    },
+    "features.NET_RSS.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_RSC_EXT.low": {
+      "kind": "value",
+      "value": 2305843009213693952
+    },
+    "features.NET_RSC_EXT.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_STANDBY.low": {
+      "kind": "value",
+      "value": 4611686018427387904
+    },
+    "features.NET_STANDBY.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_SPEED_DUPLEX.low": {
+      "kind": "value",
+      "value": 9223372036854775808
+    },
+    "features.NET_SPEED_DUPLEX.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_RSS_CONTEXT.low": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_RSS_CONTEXT.high": {
+      "kind": "value",
+      "value": 1
+    },
+    "features.NET_GUEST_UDP_TUNNEL_GSO.low": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_GUEST_UDP_TUNNEL_GSO.high": {
+      "kind": "value",
+      "value": 2
+    },
+    "features.NET_GUEST_UDP_TUNNEL_GSO_CSUM.low": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_GUEST_UDP_TUNNEL_GSO_CSUM.high": {
+      "kind": "value",
+      "value": 4
+    },
+    "features.NET_HOST_UDP_TUNNEL_GSO.low": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_HOST_UDP_TUNNEL_GSO.high": {
+      "kind": "value",
+      "value": 8
+    },
+    "features.NET_HOST_UDP_TUNNEL_GSO_CSUM.low": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_HOST_UDP_TUNNEL_GSO_CSUM.high": {
+      "kind": "value",
+      "value": 16
+    },
+    "features.NET_OUT_NET_HEADER.low": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_OUT_NET_HEADER.high": {
+      "kind": "value",
+      "value": 32
+    },
+    "features.NET_IPSEC.low": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.NET_IPSEC.high": {
+      "kind": "value",
+      "value": 64
+    },
+    "features.FS_NOTIFICATION.low": {
+      "kind": "value",
+      "value": 1
+    },
+    "features.FS_NOTIFICATION.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.VSOCK_STREAM.low": {
+      "kind": "value",
+      "value": 1
+    },
+    "features.VSOCK_STREAM.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.VSOCK_SEQPACKET.low": {
+      "kind": "value",
+      "value": 2
+    },
+    "features.VSOCK_SEQPACKET.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.VSOCK_NO_IMPLIED_STREAM.low": {
+      "kind": "value",
+      "value": 4
+    },
+    "features.VSOCK_NO_IMPLIED_STREAM.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BALLOON_MUST_TELL_HOST.low": {
+      "kind": "value",
+      "value": 1
+    },
+    "features.BALLOON_MUST_TELL_HOST.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BALLOON_STATS_VQ.low": {
+      "kind": "value",
+      "value": 2
+    },
+    "features.BALLOON_STATS_VQ.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BALLOON_DEFLATE_ON_OOM.low": {
+      "kind": "value",
+      "value": 4
+    },
+    "features.BALLOON_DEFLATE_ON_OOM.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BALLOON_FREE_PAGE_HINT.low": {
+      "kind": "value",
+      "value": 8
+    },
+    "features.BALLOON_FREE_PAGE_HINT.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BALLOON_PAGE_POISON.low": {
+      "kind": "value",
+      "value": 16
+    },
+    "features.BALLOON_PAGE_POISON.high": {
+      "kind": "value",
+      "value": 0
+    },
+    "features.BALLOON_PAGE_REPORTING.low": {
+      "kind": "value",
+      "value": 32
+    },
+    "features.BALLOON_PAGE_REPORTING.high": {
+      "kind": "value",
+      "value": 0
+    }
+  }
+}

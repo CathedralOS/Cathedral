@@ -1,0 +1,8 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
+module raw_fs;
+pub data Config [copy] {
+    tag: [u8; 36];
+    num_request_queues: u32;
+    notify_buf_size: u32;
+}

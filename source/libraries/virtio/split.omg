@@ -1,0 +1,149 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
+module split;
+pub data Desc [copy] { addr: u64; len: u32; flags: u16; next: u16; }
+pub data AvailHeader [copy] { flags: u16; idx: u16; }
+pub data UsedHeader [copy] { flags: u16; idx: u16; }
+pub data UsedElem [copy] { id: u32; len: u32; }
+pub const DESC_NEXT: u16 = 1;
+pub const DESC_WRITE: u16 = 2;
+pub const DESC_INDIRECT: u16 = 4;
+// Shared upstream flag carrier includes packed bits; split validation rejects them.
+pub const DESC_AVAIL: u16 = 128;
+pub const DESC_USED: u16 = 32768;
+pub const AVAIL_NO_INTERRUPT: u16 = 1;
+pub const USED_NO_NOTIFY: u16 = 1;
+pub const DESC_BYTES: u32 = 16;
+pub const DESC_ALIGNMENT: u32 = 16;
+pub const AVAIL_ALIGNMENT: u32 = 2;
+pub const USED_ALIGNMENT: u32 = 4;
+pub const USED_ELEMENT_BYTES: u32 = 8;
+pub data SplitLayout [copy] {
+    queue_size: u16; event_idx: bool; desc_bytes: u32;
+    avail_bytes: u32; used_wire_bytes: u32; used_allocation_bytes: u32;
+    used_event_offset: u32; avail_event_offset: u32;
+}
+// Raw layout works for every u16 count, matching upstream allocation tests255/257.
+// It is separate from the power-of-two queue admission predicate.
+pub machine split_layout(queue_size: u16, event_idx: bool) -> SplitLayout {
+    let mut result: SplitLayout;
+    result.queue_size = queue_size; result.event_idx = event_idx;
+    result.desc_bytes = (queue_size as u32) * 16;
+    result.used_event_offset = 4 + ((queue_size as u32) * 2);
+    result.avail_event_offset = 4 + ((queue_size as u32) * 8);
+    transition event_idx { true -> event(result) _ -> plain(result) }
+    state event(value: SplitLayout) -> SplitLayout {
+      let mut result: SplitLayout = value;
+      result.avail_bytes = 6 + ((value.queue_size as u32) * 2);
+      result.used_wire_bytes = 6 + ((value.queue_size as u32) * 8);
+      result.used_allocation_bytes = 8 + ((value.queue_size as u32) * 8);
+      result
+    }
+    state plain(value: SplitLayout) -> SplitLayout {
+      let mut result: SplitLayout = value;
+      result.avail_bytes = value.used_event_offset;
+      result.used_wire_bytes = value.avail_event_offset;
+      result.used_allocation_bytes = value.avail_event_offset;
+      result
+    }
+}
+pub machine split_queue_size_valid(size: u16) -> bool {
+    transition size > 0 && size <= 32768 { true -> ((size & (size - 1)) == 0) _ -> (false) }
+}
+pub data RingSlot [copy] { ok: bool; index: u16; byte_offset: u32; }
+pub machine avail_slot(size: u16, sequence: u16) -> RingSlot {
+    transition size > 0 && split_queue_size_valid(size) { true -> slot(size, sequence) _ -> (RingSlot {}) }
+    state slot(size: u16, sequence: u16) -> RingSlot {
+      let index: u16 = sequence & (size - 1);
+      RingSlot { ok: true, index: index, byte_offset: 4 + ((index as u32) * 2) }
+    }
+}
+pub machine used_slot(size: u16, sequence: u16) -> RingSlot {
+    let value: RingSlot = avail_slot(size, sequence);
+    RingSlot { ok: value.ok, index: value.index, byte_offset: 4 + ((value.index as u32) * 8) }
+}
+pub machine index_add(index: u16, count: u16) -> u16 { (((index as u32) + (count as u32)) & 65535) as u16 }
+pub machine index_distance(new_index: u16, old_index: u16) -> u16 { (((new_index as u32) + 65536 - (old_index as u32)) & 65535) as u16 }
+// Exactly unsigned16 modular event-index comparison, with widened intermediates.
+pub machine event_needed(event_index: u16, new_index: u16, old_index: u16) -> bool {
+    let after_event: u32 = ((new_index as u32) + 65535 - (event_index as u32)) & 65535;
+    let advanced: u32 = ((new_index as u32) + 65536 - (old_index as u32)) & 65535;
+    after_event < advanced
+}
+pub machine split_notify(event_idx: bool, event_index: u16, flags: u16, new_index: u16, old_index: u16) -> bool {
+    transition event_idx { true -> event(event_index, new_index, old_index) _ -> ((flags & 1) == 0) }
+    state event(event_index: u16, new_index: u16, old_index: u16) -> bool {
+      let needed: bool = event_needed(event_index, new_index, old_index); needed
+    }
+}
+// Inert offsets into a supplied region; no pointers/references are manufactured.
+pub data RingView [copy] { ok: bool; offset: u32; length: u32; count: u16; element_bytes: u8; }
+pub machine avail_ring_view(size: u16, event_idx: bool, supplied_bytes: u32, supplied_address: u64) -> RingView {
+    let layout: SplitLayout = split_layout(size, event_idx);
+    RingView { ok: (supplied_address & 1) == 0 && supplied_bytes == layout.avail_bytes,
+      offset: 4, length: (size as u32) * 2, count: size, element_bytes: 2 }
+}
+pub machine used_ring_view(size: u16, event_idx: bool, supplied_bytes: u32, supplied_address: u64) -> RingView {
+    let layout: SplitLayout = split_layout(size, event_idx);
+    RingView { ok: (supplied_address & 3) == 0 && supplied_bytes == layout.used_allocation_bytes,
+      offset: 4, length: (size as u32) * 8, count: size, element_bytes: 8 }
+}
+pub machine used_event_view(size: u16, event_idx: bool, supplied_bytes: u32, supplied_address: u64) -> RingView {
+    let layout: SplitLayout = split_layout(size, event_idx);
+    let ring: RingView = avail_ring_view(size, event_idx, supplied_bytes, supplied_address);
+    RingView { ok: event_idx && ring.ok, offset: layout.used_event_offset, length: 2, count: 1, element_bytes: 2 }
+}
+pub machine avail_event_view(size: u16, event_idx: bool, supplied_bytes: u32, supplied_address: u64) -> RingView {
+    let layout: SplitLayout = split_layout(size, event_idx);
+    let ring: RingView = used_ring_view(size, event_idx, supplied_bytes, supplied_address);
+    RingView { ok: event_idx && ring.ok, offset: layout.avail_event_offset, length: 2, count: 1, element_bytes: 2 }
+}
+pub data AllocationPlan [copy] { bytes: u32; alignment: u32; zero_initialize: bool; }
+pub machine avail_allocation_plan(size: u16, event_idx: bool) -> AllocationPlan {
+    let layout: SplitLayout = split_layout(size, event_idx);
+    AllocationPlan { bytes: layout.avail_bytes, alignment: 2, zero_initialize: true }
+}
+pub machine used_allocation_plan(size: u16, event_idx: bool) -> AllocationPlan {
+    let layout: SplitLayout = split_layout(size, event_idx);
+    AllocationPlan { bytes: layout.used_allocation_bytes, alignment: 4, zero_initialize: true }
+}
+pub machine descriptor_valid(value: Desc, size: u16, indirect_negotiated: bool) -> bool {
+    split_queue_size_valid(size) && (value.flags & 65528) == 0 &&
+    ((value.flags & 1) == 0 || value.next < size) &&
+    (value.len as u64) <= 0xffffffffffffffff - value.addr &&
+    ((value.flags & 4) == 0 || (indirect_negotiated && (value.flags & 1) == 0 &&
+      value.len > 0 && (value.len & 15) == 0 && (value.addr & 15) == 0))
+}
+pub machine used_element_valid(value: UsedElem, size: u16, writable_bytes: u32) -> bool {
+    split_queue_size_valid(size) && value.id < (size as u32) && value.len <= writable_bytes
+}
+
+// Fixed-width little-endian codecs; these are not native-memory casts.
+pub machine descriptor_decode(bytes: [u8; 16]) -> Desc {
+    Desc {
+      addr: ((bytes[0] as u64) << 0) | ((bytes[1] as u64) << 8) | ((bytes[2] as u64) << 16) | ((bytes[3] as u64) << 24) | ((bytes[4] as u64) << 32) | ((bytes[5] as u64) << 40) | ((bytes[6] as u64) << 48) | ((bytes[7] as u64) << 56),
+      len: ((bytes[8] as u32) << 0) | ((bytes[9] as u32) << 8) | ((bytes[10] as u32) << 16) | ((bytes[11] as u32) << 24),
+      flags: ((bytes[12] as u16) << 0) | ((bytes[13] as u16) << 8),
+      next: ((bytes[14] as u16) << 0) | ((bytes[15] as u16) << 8),
+    }
+}
+pub machine descriptor_encode(value: Desc) -> [u8; 16] {
+    let mut bytes: [u8; 16];
+    bytes[0] = ((value.addr >> 0) & 255) as u8;
+    bytes[1] = ((value.addr >> 8) & 255) as u8;
+    bytes[2] = ((value.addr >> 16) & 255) as u8;
+    bytes[3] = ((value.addr >> 24) & 255) as u8;
+    bytes[4] = ((value.addr >> 32) & 255) as u8;
+    bytes[5] = ((value.addr >> 40) & 255) as u8;
+    bytes[6] = ((value.addr >> 48) & 255) as u8;
+    bytes[7] = ((value.addr >> 56) & 255) as u8;
+    bytes[8] = ((value.len >> 0) & 255) as u8;
+    bytes[9] = ((value.len >> 8) & 255) as u8;
+    bytes[10] = ((value.len >> 16) & 255) as u8;
+    bytes[11] = ((value.len >> 24) & 255) as u8;
+    bytes[12] = ((value.flags >> 0) & 255) as u8;
+    bytes[13] = ((value.flags >> 8) & 255) as u8;
+    bytes[14] = ((value.next >> 0) & 255) as u8;
+    bytes[15] = ((value.next >> 8) & 255) as u8;
+    bytes
+}

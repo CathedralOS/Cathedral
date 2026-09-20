@@ -1,0 +1,1061 @@
+{
+  "pin": "ad565bd701e93fa47bc288d45701e1ae53ac3c12",
+  "records": {
+    "balloon.Config": {
+      "size": 16,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "num_pages",
+          "offset": 0,
+          "bytes": 4
+        },
+        {
+          "name": "actual",
+          "offset": 4,
+          "bytes": 4
+        },
+        {
+          "name": "free_page_hint_cmd_id",
+          "offset": 8,
+          "bytes": 4
+        },
+        {
+          "name": "poison_val",
+          "offset": 12,
+          "bytes": 4
+        }
+      ]
+    },
+    "blk.Geometry": {
+      "size": 4,
+      "alignment": 2,
+      "fields": [
+        {
+          "name": "cylinders",
+          "offset": 0,
+          "bytes": 2
+        },
+        {
+          "name": "heads",
+          "offset": 2,
+          "bytes": 1
+        },
+        {
+          "name": "sectors",
+          "offset": 3,
+          "bytes": 1
+        }
+      ]
+    },
+    "blk.Topology": {
+      "size": 8,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "physical_block_exp",
+          "offset": 0,
+          "bytes": 1
+        },
+        {
+          "name": "alignment_offset",
+          "offset": 1,
+          "bytes": 1
+        },
+        {
+          "name": "min_io_size",
+          "offset": 2,
+          "bytes": 2
+        },
+        {
+          "name": "opt_io_size",
+          "offset": 4,
+          "bytes": 4
+        }
+      ]
+    },
+    "blk.ZonedCharacteristics": {
+      "size": 24,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "zone_sectors",
+          "offset": 0,
+          "bytes": 4
+        },
+        {
+          "name": "max_open_zones",
+          "offset": 4,
+          "bytes": 4
+        },
+        {
+          "name": "max_active_zones",
+          "offset": 8,
+          "bytes": 4
+        },
+        {
+          "name": "max_append_sectors",
+          "offset": 12,
+          "bytes": 4
+        },
+        {
+          "name": "write_granularity",
+          "offset": 16,
+          "bytes": 4
+        },
+        {
+          "name": "model",
+          "offset": 20,
+          "bytes": 1
+        },
+        {
+          "name": "unused2",
+          "offset": 21,
+          "bytes": 3
+        }
+      ]
+    },
+    "blk.Config": {
+      "size": 96,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "capacity",
+          "offset": 0,
+          "bytes": 8
+        },
+        {
+          "name": "size_max",
+          "offset": 8,
+          "bytes": 4
+        },
+        {
+          "name": "seg_max",
+          "offset": 12,
+          "bytes": 4
+        },
+        {
+          "name": "geometry",
+          "offset": 16,
+          "bytes": 4
+        },
+        {
+          "name": "blk_size",
+          "offset": 20,
+          "bytes": 4
+        },
+        {
+          "name": "topology",
+          "offset": 24,
+          "bytes": 8
+        },
+        {
+          "name": "writeback",
+          "offset": 32,
+          "bytes": 1
+        },
+        {
+          "name": "unused0",
+          "offset": 33,
+          "bytes": 1
+        },
+        {
+          "name": "num_queues",
+          "offset": 34,
+          "bytes": 1
+        },
+        {
+          "name": "max_discard_sectors",
+          "offset": 36,
+          "bytes": 4
+        },
+        {
+          "name": "max_discard_seg",
+          "offset": 40,
+          "bytes": 4
+        },
+        {
+          "name": "discard_sector_alignment",
+          "offset": 44,
+          "bytes": 4
+        },
+        {
+          "name": "max_write_zeroes_sectors",
+          "offset": 48,
+          "bytes": 4
+        },
+        {
+          "name": "max_write_zeroes_seg",
+          "offset": 52,
+          "bytes": 4
+        },
+        {
+          "name": "write_zeroes_may_unmap",
+          "offset": 56,
+          "bytes": 1
+        },
+        {
+          "name": "unused1",
+          "offset": 57,
+          "bytes": 3
+        },
+        {
+          "name": "max_secure_erase_sectors",
+          "offset": 60,
+          "bytes": 4
+        },
+        {
+          "name": "max_secure_erase_seg",
+          "offset": 64,
+          "bytes": 4
+        },
+        {
+          "name": "secure_erase_sector_alignment",
+          "offset": 68,
+          "bytes": 4
+        },
+        {
+          "name": "zoned",
+          "offset": 72,
+          "bytes": 24
+        }
+      ]
+    },
+    "blk.DiscardWriteZeroes": {
+      "size": 16,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "sector",
+          "offset": 0,
+          "bytes": 8
+        },
+        {
+          "name": "num_sectors",
+          "offset": 8,
+          "bytes": 4
+        },
+        {
+          "name": "flags",
+          "offset": 12,
+          "bytes": 4
+        }
+      ]
+    },
+    "blk.Lifetime": {
+      "size": 6,
+      "alignment": 2,
+      "fields": [
+        {
+          "name": "pre_eol_info",
+          "offset": 0,
+          "bytes": 2
+        },
+        {
+          "name": "device_lifetime_est_typ_a",
+          "offset": 2,
+          "bytes": 2
+        },
+        {
+          "name": "device_lifetime_est_typ_b",
+          "offset": 4,
+          "bytes": 2
+        }
+      ]
+    },
+    "blk.ZoneDescriptor": {
+      "size": 64,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "z_cap",
+          "offset": 0,
+          "bytes": 8
+        },
+        {
+          "name": "z_start",
+          "offset": 8,
+          "bytes": 8
+        },
+        {
+          "name": "z_wp",
+          "offset": 16,
+          "bytes": 8
+        },
+        {
+          "name": "z_type",
+          "offset": 24,
+          "bytes": 1
+        },
+        {
+          "name": "z_state",
+          "offset": 25,
+          "bytes": 1
+        },
+        {
+          "name": "reserved",
+          "offset": 26,
+          "bytes": 38
+        }
+      ]
+    },
+    "console.Config": {
+      "size": 12,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "cols",
+          "offset": 0,
+          "bytes": 2
+        },
+        {
+          "name": "rows",
+          "offset": 2,
+          "bytes": 2
+        },
+        {
+          "name": "max_nr_ports",
+          "offset": 4,
+          "bytes": 4
+        },
+        {
+          "name": "emerg_wr",
+          "offset": 8,
+          "bytes": 4
+        }
+      ]
+    },
+    "console.Control": {
+      "size": 8,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "id",
+          "offset": 0,
+          "bytes": 4
+        },
+        {
+          "name": "event",
+          "offset": 4,
+          "bytes": 2
+        },
+        {
+          "name": "value",
+          "offset": 6,
+          "bytes": 2
+        }
+      ]
+    },
+    "console.Resize": {
+      "size": 4,
+      "alignment": 2,
+      "fields": [
+        {
+          "name": "cols",
+          "offset": 0,
+          "bytes": 2
+        },
+        {
+          "name": "rows",
+          "offset": 2,
+          "bytes": 2
+        }
+      ]
+    },
+    "fs.Config": {
+      "size": 44,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "tag",
+          "offset": 0,
+          "bytes": 36
+        },
+        {
+          "name": "num_request_queues",
+          "offset": 36,
+          "bytes": 4
+        },
+        {
+          "name": "notify_buf_size",
+          "offset": 40,
+          "bytes": 4
+        }
+      ]
+    },
+    "net.Config": {
+      "size": 28,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "mac",
+          "offset": 0,
+          "bytes": 6
+        },
+        {
+          "name": "status",
+          "offset": 6,
+          "bytes": 2
+        },
+        {
+          "name": "max_virtqueue_pairs",
+          "offset": 8,
+          "bytes": 2
+        },
+        {
+          "name": "mtu",
+          "offset": 10,
+          "bytes": 2
+        },
+        {
+          "name": "speed",
+          "offset": 12,
+          "bytes": 4
+        },
+        {
+          "name": "duplex",
+          "offset": 16,
+          "bytes": 1
+        },
+        {
+          "name": "rss_max_key_size",
+          "offset": 17,
+          "bytes": 1
+        },
+        {
+          "name": "rss_max_indirection_table_length",
+          "offset": 18,
+          "bytes": 2
+        },
+        {
+          "name": "supported_hash_types",
+          "offset": 20,
+          "bytes": 4
+        },
+        {
+          "name": "supported_tunnel_types",
+          "offset": 24,
+          "bytes": 4
+        }
+      ]
+    },
+    "net.Hdr": {
+      "size": 12,
+      "alignment": 2,
+      "fields": [
+        {
+          "name": "flags",
+          "offset": 0,
+          "bytes": 1
+        },
+        {
+          "name": "gso_type",
+          "offset": 1,
+          "bytes": 1
+        },
+        {
+          "name": "hdr_len",
+          "offset": 2,
+          "bytes": 2
+        },
+        {
+          "name": "gso_size",
+          "offset": 4,
+          "bytes": 2
+        },
+        {
+          "name": "csum_start",
+          "offset": 6,
+          "bytes": 2
+        },
+        {
+          "name": "csum_offset",
+          "offset": 8,
+          "bytes": 2
+        },
+        {
+          "name": "num_buffers",
+          "offset": 10,
+          "bytes": 2
+        }
+      ]
+    },
+    "net.HdrHash": {
+      "size": 20,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "hdr",
+          "offset": 0,
+          "bytes": 12
+        },
+        {
+          "name": "hash_value",
+          "offset": 12,
+          "bytes": 4
+        },
+        {
+          "name": "hash_report",
+          "offset": 16,
+          "bytes": 2
+        },
+        {
+          "name": "padding_reserved",
+          "offset": 18,
+          "bytes": 2
+        }
+      ]
+    },
+    "net.HdrHashTunnel": {
+      "size": 24,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "hash_hdr",
+          "offset": 0,
+          "bytes": 20
+        },
+        {
+          "name": "outer_th_offset",
+          "offset": 20,
+          "bytes": 2
+        },
+        {
+          "name": "inner_nh_offset",
+          "offset": 22,
+          "bytes": 2
+        }
+      ]
+    },
+    "net.HdrHashTunnelOutNetHdr": {
+      "size": 8,
+      "alignment": 2,
+      "fields": [
+        {
+          "name": "outer_nh_offset",
+          "offset": 0,
+          "bytes": 2
+        },
+        {
+          "name": "padding_reserved_2",
+          "offset": 2,
+          "bytes": 6
+        }
+      ]
+    },
+    "vsock.Config": {
+      "size": 8,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "guest_cid",
+          "offset": 0,
+          "bytes": 8
+        }
+      ]
+    },
+    "vsock.Hdr": {
+      "size": 44,
+      "alignment": 1,
+      "fields": [
+        {
+          "name": "src_cid",
+          "offset": 0,
+          "bytes": 8
+        },
+        {
+          "name": "dst_cid",
+          "offset": 8,
+          "bytes": 8
+        },
+        {
+          "name": "src_port",
+          "offset": 16,
+          "bytes": 4
+        },
+        {
+          "name": "dst_port",
+          "offset": 20,
+          "bytes": 4
+        },
+        {
+          "name": "len",
+          "offset": 24,
+          "bytes": 4
+        },
+        {
+          "name": "type_",
+          "offset": 28,
+          "bytes": 2
+        },
+        {
+          "name": "op",
+          "offset": 30,
+          "bytes": 2
+        },
+        {
+          "name": "flags",
+          "offset": 32,
+          "bytes": 4
+        },
+        {
+          "name": "buf_alloc",
+          "offset": 36,
+          "bytes": 4
+        },
+        {
+          "name": "fwd_cnt",
+          "offset": 40,
+          "bytes": 4
+        }
+      ]
+    },
+    "vsock.Event": {
+      "size": 4,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "id",
+          "offset": 0,
+          "bytes": 4
+        }
+      ]
+    },
+    "configuration.CommonCfg": {
+      "size": 64,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "device_feature_select",
+          "offset": 0,
+          "bytes": 4
+        },
+        {
+          "name": "device_feature",
+          "offset": 4,
+          "bytes": 4
+        },
+        {
+          "name": "driver_feature_select",
+          "offset": 8,
+          "bytes": 4
+        },
+        {
+          "name": "driver_feature",
+          "offset": 12,
+          "bytes": 4
+        },
+        {
+          "name": "config_msix_vector",
+          "offset": 16,
+          "bytes": 2
+        },
+        {
+          "name": "num_queues",
+          "offset": 18,
+          "bytes": 2
+        },
+        {
+          "name": "device_status",
+          "offset": 20,
+          "bytes": 1
+        },
+        {
+          "name": "config_generation",
+          "offset": 21,
+          "bytes": 1
+        },
+        {
+          "name": "queue_select",
+          "offset": 22,
+          "bytes": 2
+        },
+        {
+          "name": "queue_size",
+          "offset": 24,
+          "bytes": 2
+        },
+        {
+          "name": "queue_msix_vector",
+          "offset": 26,
+          "bytes": 2
+        },
+        {
+          "name": "queue_enable",
+          "offset": 28,
+          "bytes": 2
+        },
+        {
+          "name": "queue_notify_off",
+          "offset": 30,
+          "bytes": 2
+        },
+        {
+          "name": "queue_desc_low",
+          "offset": 32,
+          "bytes": 4
+        },
+        {
+          "name": "queue_desc_high",
+          "offset": 36,
+          "bytes": 4
+        },
+        {
+          "name": "queue_driver_low",
+          "offset": 40,
+          "bytes": 4
+        },
+        {
+          "name": "queue_driver_high",
+          "offset": 44,
+          "bytes": 4
+        },
+        {
+          "name": "queue_device_low",
+          "offset": 48,
+          "bytes": 4
+        },
+        {
+          "name": "queue_device_high",
+          "offset": 52,
+          "bytes": 4
+        },
+        {
+          "name": "queue_notif_config_data",
+          "offset": 56,
+          "bytes": 2
+        },
+        {
+          "name": "queue_reset",
+          "offset": 58,
+          "bytes": 2
+        },
+        {
+          "name": "admin_queue_index",
+          "offset": 60,
+          "bytes": 2
+        },
+        {
+          "name": "admin_queue_num",
+          "offset": 62,
+          "bytes": 2
+        }
+      ]
+    },
+    "split.Desc": {
+      "size": 16,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "addr",
+          "offset": 0,
+          "bytes": 8
+        },
+        {
+          "name": "len",
+          "offset": 8,
+          "bytes": 4
+        },
+        {
+          "name": "flags",
+          "offset": 12,
+          "bytes": 2
+        },
+        {
+          "name": "next",
+          "offset": 14,
+          "bytes": 2
+        }
+      ]
+    },
+    "split.UsedElem": {
+      "size": 8,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "id",
+          "offset": 0,
+          "bytes": 4
+        },
+        {
+          "name": "len",
+          "offset": 4,
+          "bytes": 4
+        }
+      ]
+    },
+    "features.Features": {
+      "size": 16,
+      "alignment": 16,
+      "fields": [
+        {
+          "name": "low",
+          "offset": 0,
+          "bytes": 8
+        },
+        {
+          "name": "high",
+          "offset": 8,
+          "bytes": 8
+        }
+      ]
+    }
+  },
+  "rust_measured_keys": [
+    "balloon.Config.size",
+    "balloon.Config.alignment",
+    "blk.Geometry.size",
+    "blk.Geometry.alignment",
+    "blk.Topology.size",
+    "blk.Topology.alignment",
+    "blk.ZonedCharacteristics.size",
+    "blk.ZonedCharacteristics.alignment",
+    "blk.Config.size",
+    "blk.Config.alignment",
+    "blk.DiscardWriteZeroes.size",
+    "blk.DiscardWriteZeroes.alignment",
+    "blk.DiscardWriteZeroes.sector.offset",
+    "blk.DiscardWriteZeroes.num_sectors.offset",
+    "blk.DiscardWriteZeroes.flags.offset",
+    "blk.Lifetime.size",
+    "blk.Lifetime.alignment",
+    "blk.Lifetime.pre_eol_info.offset",
+    "blk.Lifetime.device_lifetime_est_typ_a.offset",
+    "blk.Lifetime.device_lifetime_est_typ_b.offset",
+    "blk.ZoneDescriptor.size",
+    "blk.ZoneDescriptor.alignment",
+    "console.Config.size",
+    "console.Config.alignment",
+    "console.Control.size",
+    "console.Control.alignment",
+    "console.Control.id.offset",
+    "console.Control.event.offset",
+    "console.Control.value.offset",
+    "console.Resize.size",
+    "console.Resize.alignment",
+    "console.Resize.cols.offset",
+    "console.Resize.rows.offset",
+    "fs.Config.size",
+    "fs.Config.alignment",
+    "net.Config.size",
+    "net.Config.alignment",
+    "net.Hdr.size",
+    "net.Hdr.alignment",
+    "net.Hdr.flags.offset",
+    "net.Hdr.gso_type.offset",
+    "net.Hdr.hdr_len.offset",
+    "net.Hdr.gso_size.offset",
+    "net.Hdr.csum_start.offset",
+    "net.Hdr.csum_offset.offset",
+    "net.Hdr.num_buffers.offset",
+    "net.HdrHash.size",
+    "net.HdrHash.alignment",
+    "net.HdrHash.hdr.offset",
+    "net.HdrHash.hash_value.offset",
+    "net.HdrHash.hash_report.offset",
+    "net.HdrHash.padding_reserved.offset",
+    "net.HdrHashTunnel.size",
+    "net.HdrHashTunnel.alignment",
+    "net.HdrHashTunnel.hash_hdr.offset",
+    "net.HdrHashTunnel.outer_th_offset.offset",
+    "net.HdrHashTunnel.inner_nh_offset.offset",
+    "net.HdrHashTunnelOutNetHdr.size",
+    "net.HdrHashTunnelOutNetHdr.alignment",
+    "net.HdrHashTunnelOutNetHdr.outer_nh_offset.offset",
+    "net.HdrHashTunnelOutNetHdr.padding_reserved_2.offset",
+    "vsock.Config.size",
+    "vsock.Config.alignment",
+    "vsock.Hdr.size",
+    "vsock.Hdr.alignment",
+    "vsock.Hdr.src_cid.offset",
+    "vsock.Hdr.dst_cid.offset",
+    "vsock.Hdr.src_port.offset",
+    "vsock.Hdr.dst_port.offset",
+    "vsock.Hdr.len.offset",
+    "vsock.Hdr.type_.offset",
+    "vsock.Hdr.op.offset",
+    "vsock.Hdr.flags.offset",
+    "vsock.Hdr.buf_alloc.offset",
+    "vsock.Hdr.fwd_cnt.offset",
+    "vsock.Event.size",
+    "vsock.Event.alignment",
+    "configuration.CommonCfg.size",
+    "configuration.CommonCfg.alignment",
+    "split.Desc.size",
+    "split.Desc.alignment",
+    "split.Desc.addr.offset",
+    "split.Desc.len.offset",
+    "split.Desc.flags.offset",
+    "split.Desc.next.offset",
+    "split.UsedElem.size",
+    "split.UsedElem.alignment",
+    "split.UsedElem.id.offset",
+    "split.UsedElem.len.offset",
+    "features.Features.size",
+    "features.Features.alignment",
+    "features.COMMON_INDIRECT_DESC.low",
+    "features.COMMON_INDIRECT_DESC.high",
+    "features.COMMON_EVENT_IDX.low",
+    "features.COMMON_EVENT_IDX.high",
+    "features.COMMON_VERSION_1.low",
+    "features.COMMON_VERSION_1.high",
+    "features.COMMON_ACCESS_PLATFORM.low",
+    "features.COMMON_ACCESS_PLATFORM.high",
+    "features.COMMON_RING_PACKED.low",
+    "features.COMMON_RING_PACKED.high",
+    "features.COMMON_IN_ORDER.low",
+    "features.COMMON_IN_ORDER.high",
+    "features.COMMON_ORDER_PLATFORM.low",
+    "features.COMMON_ORDER_PLATFORM.high",
+    "features.COMMON_SR_IOV.low",
+    "features.COMMON_SR_IOV.high",
+    "features.COMMON_NOTIFICATION_DATA.low",
+    "features.COMMON_NOTIFICATION_DATA.high",
+    "features.COMMON_NOTIF_CONFIG_DATA.low",
+    "features.COMMON_NOTIF_CONFIG_DATA.high",
+    "features.COMMON_RING_RESET.low",
+    "features.COMMON_RING_RESET.high",
+    "features.COMMON_ADMIN_VQ.low",
+    "features.COMMON_ADMIN_VQ.high",
+    "features.COMMON_SUSPEND.low",
+    "features.COMMON_SUSPEND.high",
+    "features.CONSOLE_SIZE.low",
+    "features.CONSOLE_SIZE.high",
+    "features.CONSOLE_MULTIPORT.low",
+    "features.CONSOLE_MULTIPORT.high",
+    "features.CONSOLE_EMERG_WRITE.low",
+    "features.CONSOLE_EMERG_WRITE.high",
+    "features.BLK_SIZE_MAX.low",
+    "features.BLK_SIZE_MAX.high",
+    "features.BLK_SEG_MAX.low",
+    "features.BLK_SEG_MAX.high",
+    "features.BLK_GEOMETRY.low",
+    "features.BLK_GEOMETRY.high",
+    "features.BLK_RO.low",
+    "features.BLK_RO.high",
+    "features.BLK_BLK_SIZE.low",
+    "features.BLK_BLK_SIZE.high",
+    "features.BLK_FLUSH.low",
+    "features.BLK_FLUSH.high",
+    "features.BLK_TOPOLOGY.low",
+    "features.BLK_TOPOLOGY.high",
+    "features.BLK_CONFIG_WCE.low",
+    "features.BLK_CONFIG_WCE.high",
+    "features.BLK_MQ.low",
+    "features.BLK_MQ.high",
+    "features.BLK_DISCARD.low",
+    "features.BLK_DISCARD.high",
+    "features.BLK_WRITE_ZEROES.low",
+    "features.BLK_WRITE_ZEROES.high",
+    "features.BLK_LIFETIME.low",
+    "features.BLK_LIFETIME.high",
+    "features.BLK_SECURE_ERASE.low",
+    "features.BLK_SECURE_ERASE.high",
+    "features.BLK_ZONED.low",
+    "features.BLK_ZONED.high",
+    "features.NET_CSUM.low",
+    "features.NET_CSUM.high",
+    "features.NET_GUEST_CSUM.low",
+    "features.NET_GUEST_CSUM.high",
+    "features.NET_CTRL_GUEST_OFFLOADS.low",
+    "features.NET_CTRL_GUEST_OFFLOADS.high",
+    "features.NET_MTU.low",
+    "features.NET_MTU.high",
+    "features.NET_MAC.low",
+    "features.NET_MAC.high",
+    "features.NET_GUEST_TSO4.low",
+    "features.NET_GUEST_TSO4.high",
+    "features.NET_GUEST_TSO6.low",
+    "features.NET_GUEST_TSO6.high",
+    "features.NET_GUEST_ECN.low",
+    "features.NET_GUEST_ECN.high",
+    "features.NET_GUEST_UFO.low",
+    "features.NET_GUEST_UFO.high",
+    "features.NET_HOST_TSO4.low",
+    "features.NET_HOST_TSO4.high",
+    "features.NET_HOST_TSO6.low",
+    "features.NET_HOST_TSO6.high",
+    "features.NET_HOST_ECN.low",
+    "features.NET_HOST_ECN.high",
+    "features.NET_HOST_UFO.low",
+    "features.NET_HOST_UFO.high",
+    "features.NET_MRG_RXBUF.low",
+    "features.NET_MRG_RXBUF.high",
+    "features.NET_STATUS.low",
+    "features.NET_STATUS.high",
+    "features.NET_CTRL_VQ.low",
+    "features.NET_CTRL_VQ.high",
+    "features.NET_CTRL_RX.low",
+    "features.NET_CTRL_RX.high",
+    "features.NET_CTRL_VLAN.low",
+    "features.NET_CTRL_VLAN.high",
+    "features.NET_CTRL_RX_EXTRA.low",
+    "features.NET_CTRL_RX_EXTRA.high",
+    "features.NET_GUEST_ANNOUNCE.low",
+    "features.NET_GUEST_ANNOUNCE.high",
+    "features.NET_MQ.low",
+    "features.NET_MQ.high",
+    "features.NET_CTRL_MAC_ADDR.low",
+    "features.NET_CTRL_MAC_ADDR.high",
+    "features.NET_DEVICE_STATS.low",
+    "features.NET_DEVICE_STATS.high",
+    "features.NET_HASH_TUNNEL.low",
+    "features.NET_HASH_TUNNEL.high",
+    "features.NET_VQ_NOTF_COAL.low",
+    "features.NET_VQ_NOTF_COAL.high",
+    "features.NET_NOTF_COAL.low",
+    "features.NET_NOTF_COAL.high",
+    "features.NET_GUEST_USO4.low",
+    "features.NET_GUEST_USO4.high",
+    "features.NET_GUEST_USO6.low",
+    "features.NET_GUEST_USO6.high",
+    "features.NET_HOST_USO.low",
+    "features.NET_HOST_USO.high",
+    "features.NET_HASH_REPORT.low",
+    "features.NET_HASH_REPORT.high",
+    "features.NET_GUEST_HDRLEN.low",
+    "features.NET_GUEST_HDRLEN.high",
+    "features.NET_RSS.low",
+    "features.NET_RSS.high",
+    "features.NET_RSC_EXT.low",
+    "features.NET_RSC_EXT.high",
+    "features.NET_STANDBY.low",
+    "features.NET_STANDBY.high",
+    "features.NET_SPEED_DUPLEX.low",
+    "features.NET_SPEED_DUPLEX.high",
+    "features.NET_RSS_CONTEXT.low",
+    "features.NET_RSS_CONTEXT.high",
+    "features.NET_GUEST_UDP_TUNNEL_GSO.low",
+    "features.NET_GUEST_UDP_TUNNEL_GSO.high",
+    "features.NET_GUEST_UDP_TUNNEL_GSO_CSUM.low",
+    "features.NET_GUEST_UDP_TUNNEL_GSO_CSUM.high",
+    "features.NET_HOST_UDP_TUNNEL_GSO.low",
+    "features.NET_HOST_UDP_TUNNEL_GSO.high",
+    "features.NET_HOST_UDP_TUNNEL_GSO_CSUM.low",
+    "features.NET_HOST_UDP_TUNNEL_GSO_CSUM.high",
+    "features.NET_OUT_NET_HEADER.low",
+    "features.NET_OUT_NET_HEADER.high",
+    "features.NET_IPSEC.low",
+    "features.NET_IPSEC.high",
+    "features.FS_NOTIFICATION.low",
+    "features.FS_NOTIFICATION.high",
+    "features.VSOCK_STREAM.low",
+    "features.VSOCK_STREAM.high",
+    "features.VSOCK_SEQPACKET.low",
+    "features.VSOCK_SEQPACKET.high",
+    "features.VSOCK_NO_IMPLIED_STREAM.low",
+    "features.VSOCK_NO_IMPLIED_STREAM.high",
+    "features.BALLOON_MUST_TELL_HOST.low",
+    "features.BALLOON_MUST_TELL_HOST.high",
+    "features.BALLOON_STATS_VQ.low",
+    "features.BALLOON_STATS_VQ.high",
+    "features.BALLOON_DEFLATE_ON_OOM.low",
+    "features.BALLOON_DEFLATE_ON_OOM.high",
+    "features.BALLOON_FREE_PAGE_HINT.low",
+    "features.BALLOON_FREE_PAGE_HINT.high",
+    "features.BALLOON_PAGE_POISON.low",
+    "features.BALLOON_PAGE_POISON.high",
+    "features.BALLOON_PAGE_REPORTING.low",
+    "features.BALLOON_PAGE_REPORTING.high"
+  ]
+}

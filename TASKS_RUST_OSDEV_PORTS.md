@@ -217,10 +217,10 @@ confirmed instruction-catalog gaps are limited to their exact live operations.
 
 ## Phase 3 — VirtIO protocol corpus
 
-- [ ] **VIRTIO-000 — Port transport-neutral specification types.** Device IDs,
+- [x] **VIRTIO-000 — Port transport-neutral specification types.** Device IDs,
   status bits, feature negotiation, common configuration, notification, ISR,
   and device-specific configuration structures.
-- [ ] **VIRTIO-001 — Port split virtqueue representations.** Descriptor,
+- [x] **VIRTIO-001 — Port split virtqueue representations.** Descriptor,
   available, and used rings; event-index arithmetic; validation; wraparound;
   and upstream tests.  DMA ownership is deliberately absent.
 - [ ] **VIRTIO-002 — Port packed virtqueue representations.** Descriptor/event
@@ -231,6 +231,12 @@ confirmed instruction-catalog gaps are limited to their exact live operations.
 - [ ] **VIRTIO-004 — Add a pure queue simulator.** Exercise negotiation and ring
   transitions without hardware or DMA.  This is the unit-test target for later
   driver integration.
+
+VIRTIO-000/001 evidence: [protocol and split-queue port](source/libraries/virtio/PORT.md)
+retains 343 expected vectors, 255 actual Rust UEFI-target measurements, 20 upstream
+allocation cases, and eight Omega behavior groups with eight body-mutating
+controls. All 24 policy declarations check separately; combined fixture/layout
+import exposes a recorded compiler diagnostic. No DMA or native ABI claim.
 
 ## Phase 4 — ACPI tables, then AML
 

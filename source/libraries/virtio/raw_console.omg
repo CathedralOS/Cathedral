@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
+module raw_console;
+pub data Config [copy] {
+    cols: u16;
+    rows: u16;
+    max_nr_ports: u32;
+    emerg_wr: u32;
+}
+pub data Control [copy] {
+    id: u32;
+    event: u16;
+    value: u16;
+}
+pub data Resize [copy] {
+    cols: u16;
+    rows: u16;
+}
+pub data Device [copy] { raw: u16; }
+pub const Device_DeviceReady: Device = Device { raw: 0 };
+pub const Device_DeviceAdd: Device = Device { raw: 1 };
+pub const Device_DeviceRemove: Device = Device { raw: 2 };
+pub const Device_PortReady: Device = Device { raw: 3 };
+pub const Device_ConsolePort: Device = Device { raw: 4 };
+pub const Device_Resize: Device = Device { raw: 5 };
+pub const Device_PortOpen: Device = Device { raw: 6 };
+pub const Device_PortName: Device = Device { raw: 7 };
+pub machine Device_known(value: Device) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 2 || value.raw == 3 || value.raw == 4 || value.raw == 5 || value.raw == 6 || value.raw == 7 }

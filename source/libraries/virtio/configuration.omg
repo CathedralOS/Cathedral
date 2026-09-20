@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
+module configuration;
+use common::DeviceStatus;
+pub data CommonCfg [copy] {
+    device_feature_select: u32;
+    device_feature: u32;
+    driver_feature_select: u32;
+    driver_feature: u32;
+    config_msix_vector: u16;
+    num_queues: u16;
+    device_status: DeviceStatus;
+    config_generation: u8;
+    queue_select: u16;
+    queue_size: u16;
+    queue_msix_vector: u16;
+    queue_enable: u16;
+    queue_notify_off: u16;
+    queue_desc_low: u32;
+    queue_desc_high: u32;
+    queue_driver_low: u32;
+    queue_driver_high: u32;
+    queue_device_low: u32;
+    queue_device_high: u32;
+    queue_notif_config_data: u16;
+    queue_reset: u16;
+    admin_queue_index: u16;
+    admin_queue_num: u16;
+}
+pub data IsrStatus [copy] { raw: u8; }
+pub const ISR_QUEUE_INTERRUPT: u8 = 1;
+pub const ISR_DEVICE_CONFIGURATION_INTERRUPT: u8 = 2;
+
+// A finite observed-generation predicate replaces an unbounded volatile retry loop.
+// It does not read memory or promise that a stale/wrapped generation is fresh.
+pub machine config_observation_consistent(before: u32, after: u32) -> bool { before == after }
+pub machine combine_address(low: u32, high: u32) -> u64 { (low as u64) | ((high as u64) << 32) }
+pub machine address_low(value: u64) -> u32 { (value & 0xffffffff) as u32 }
+pub machine address_high(value: u64) -> u32 { ((value >> 32) & 0xffffffff) as u32 }
+pub machine isr_queue(value: IsrStatus) -> bool { (value.raw & 1) != 0 }
+pub machine isr_configuration(value: IsrStatus) -> bool { (value.raw & 2) != 0 }
+// Virtio block wire num_queues is little-endian16. The pinned raw_blk::Config
+// declares u8 at this field; keep that source fact separate from wire decoding.
+pub machine block_queue_count(low: u8, high: u8) -> u16 { (low as u16) | ((high as u16) << 8) }

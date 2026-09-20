@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
+module raw_vsock;
+pub data Config [copy] {
+    guest_cid: u64;
+}
+pub data Hdr [copy] {
+    src_cid: u64;
+    dst_cid: u64;
+    src_port: u32;
+    dst_port: u32;
+    len: u32;
+    type_: u16;
+    op: u16;
+    flags: u32;
+    buf_alloc: u32;
+    fwd_cnt: u32;
+}
+pub data ShutdownF [copy] { raw: u32; }
+pub const ShutdownF_RECEIVE: ShutdownF = ShutdownF { raw: 1 };
+pub const ShutdownF_SEND: ShutdownF = ShutdownF { raw: 2 };
+pub data Seq [copy] { raw: u32; }
+pub const Seq_EOM: Seq = Seq { raw: 1 };
+pub const Seq_EOR: Seq = Seq { raw: 2 };
+pub data Event [copy] {
+    id: u32;
+}
+pub data Op [copy] { raw: u16; }
+pub const Op_Invalid: Op = Op { raw: 0 };
+pub const Op_Request: Op = Op { raw: 1 };
+pub const Op_Response: Op = Op { raw: 2 };
+pub const Op_Rst: Op = Op { raw: 3 };
+pub const Op_Shutdown: Op = Op { raw: 4 };
+pub const Op_Rw: Op = Op { raw: 5 };
+pub const Op_CreditUpdate: Op = Op { raw: 6 };
+pub const Op_CreditRequest: Op = Op { raw: 7 };
+pub machine Op_known(value: Op) -> bool { value.raw == 0 || value.raw == 1 || value.raw == 2 || value.raw == 3 || value.raw == 4 || value.raw == 5 || value.raw == 6 || value.raw == 7 }
+pub data Type [copy] { raw: u16; }
+pub const Type_Stream: Type = Type { raw: 1 };
+pub const Type_Seqpacket: Type = Type { raw: 2 };
+pub machine Type_known(value: Type) -> bool { value.raw == 1 || value.raw == 2 }
+pub data EventId [copy] { raw: u32; }
+pub const EventId_TransportReset: EventId = EventId { raw: 0 };
+pub machine EventId_known(value: EventId) -> bool { value.raw == 0 }
