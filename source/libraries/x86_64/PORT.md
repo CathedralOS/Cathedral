@@ -23,7 +23,8 @@ Completed slices: [tested numeric address algorithms](addresses.PORT.md),
 [mapper conveniences](mapper-conveniences.PORT.md),
 [owned GDT storage](gdt-storage.PORT.md),
 [remaining register operand recipes](register-operands.PORT.md),
-[MSR word transport](msr-words.PORT.md), and
+[MSR word transport](msr-words.PORT.md),
+[numeric mapper topology](mapper-topology.PORT.md), and
 [CPUID observation predicates](instruction-observations.PORT.md).
 The [remaining pure-work audit](remaining-pure.RECONCILIATION.md) reconciles all
 41 files and identifies the concrete unfinished algorithm families.

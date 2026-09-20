@@ -1,0 +1,156 @@
+{
+  "checked-inputs": {
+    "mutation": [
+      "observed_is(nonrecursive,1,0,0)",
+      "observed_is(nonrecursive,6,0,0)"
+    ],
+    "numeric_checks": 8
+  },
+  "constructor-0": {
+    "mutation": [
+      "observed_is(r0,0,",
+      "observed_is(r0,1,"
+    ],
+    "numeric_checks": 12
+  },
+  "constructor-1": {
+    "mutation": [
+      "observed_is(r0,0,",
+      "observed_is(r0,1,"
+    ],
+    "numeric_checks": 12
+  },
+  "constructor-2": {
+    "mutation": [
+      "observed_is(r0,0,",
+      "observed_is(r0,1,"
+    ],
+    "numeric_checks": 12
+  },
+  "constructor-3": {
+    "mutation": [
+      "observed_is(r0,0,",
+      "observed_is(r0,1,"
+    ],
+    "numeric_checks": 12
+  },
+  "coordinates-00": {
+    "mutation": [
+      "first4:0",
+      "first4:4096"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-01": {
+    "mutation": [
+      "first4:17592186044416",
+      "first4:17592186048512"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-02": {
+    "mutation": [
+      "first4:35184372088832",
+      "first4:35184372092928"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-03": {
+    "mutation": [
+      "first4:52776558133248",
+      "first4:52776558137344"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-04": {
+    "mutation": [
+      "first4:70368744177664",
+      "first4:70368744181760"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-05": {
+    "mutation": [
+      "first4:87960930222080",
+      "first4:87960930226176"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-06": {
+    "mutation": [
+      "first4:105553116266496",
+      "first4:105553116270592"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-07": {
+    "mutation": [
+      "first4:123145302310912",
+      "first4:123145302315008"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-08": {
+    "mutation": [
+      "first4:18446603336221196288",
+      "first4:18446603336221200384"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-09": {
+    "mutation": [
+      "first4:18446620928407240704",
+      "first4:18446620928407244800"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-10": {
+    "mutation": [
+      "first4:18446638520593285120",
+      "first4:18446638520593289216"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-11": {
+    "mutation": [
+      "first4:18446656112779329536",
+      "first4:18446656112779333632"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-12": {
+    "mutation": [
+      "first4:18446673704965373952",
+      "first4:18446673704965378048"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-13": {
+    "mutation": [
+      "first4:18446691297151418368",
+      "first4:18446691297151422464"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-14": {
+    "mutation": [
+      "first4:18446708889337462784",
+      "first4:18446708889337466880"
+    ],
+    "numeric_checks": 192
+  },
+  "coordinates-15": {
+    "mutation": [
+      "first4:18446726481523507200",
+      "first4:18446726481523511296"
+    ],
+    "numeric_checks": 192
+  },
+  "offsets": {
+    "mutation": [
+      "number_is(r0,true,0)",
+      "number_is(r0,true,1)"
+    ],
+    "numeric_checks": 11
+  }
+}

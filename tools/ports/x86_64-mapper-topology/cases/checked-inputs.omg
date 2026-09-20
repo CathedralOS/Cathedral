@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Expected numeric results observed from pinned Rust public APIs/private mirrors.
+use values::addresses::NumberResult;
+use values::mapper_topology::offset_frame_address;
+use values::mapper_topology::recursive_p3;
+use values::mapper_topology::recursive_p2;
+use values::mapper_topology::recursive_p1;
+use values::mapper_topology::observe_recursive;
+use values::mapper_topology::RecursiveObservation;
+use values::mapper_topology::InactiveReason;
+machine number_is(result:NumberResult,valid:bool,expected:u64)->bool {
+ transition result {NumberResult::Value {value} -> compare(value,valid,expected) _ -> (!valid)}
+ state compare(value:u64,valid:bool,expected:u64)->bool {valid && value==expected}
+}
+machine observed_is(result:RecursiveObservation,code:u64,index:u16,frame:u64)->bool {
+ transition result {
+  RecursiveObservation::InvalidAddress -> (code==5)
+  RecursiveObservation::InvalidObservedFrame -> (code==6)
+  RecursiveObservation::NotRecursive -> (code==1)
+  RecursiveObservation::NotActive {reason} -> inactive(reason,code)
+  RecursiveObservation::Observed {recursive_index,physical_frame} -> active(recursive_index,physical_frame,code,index,frame)
+ }
+ state inactive(reason:InactiveReason,code:u64)->bool {transition reason {InactiveReason::EntryNotPresent -> (code==2) InactiveReason::EntryHugeFrame -> (code==3) InactiveReason::DifferentFrame -> (code==4)}}
+ state active(actual_index:u16,actual_frame:u64,code:u64,index:u16,frame:u64)->bool {code==0 && actual_index==index && actual_frame==frame}
+}
+
+machine test()->u64{
+let p3:NumberResult=recursive_p3(0,4096,512);let bad_size:NumberResult=recursive_p3(0,8192,1);let giant_p2:NumberResult=recursive_p2(0,1073741824,1);let unaligned:NumberResult=recursive_p1(1,1);let hole:NumberResult=recursive_p1(0x800000000000,1);
+let a:bool=number_is(p3,false,0);let b:bool=number_is(bad_size,false,0);let c:bool=number_is(giant_p2,false,0);let d:bool=number_is(unaligned,false,0);let e:bool=number_is(hole,false,0);
+let bad_address:RecursiveObservation=observe_recursive(0x800000000000,0,0);let bad_observed:RecursiveObservation=observe_recursive(0,1,0);let nonrecursive:RecursiveObservation=observe_recursive(4096,1,0);
+let f:bool=observed_is(bad_address,5,0,0);let g:bool=observed_is(bad_observed,6,0,0);let h:bool=observed_is(nonrecursive,1,0,0);
+transition a && b && c && d && e && f && g && h {true -> (0) _ -> (1)}
+}
+
+const RESULT:u64=test();
+machine require_ok(value:u64) requires value==0; {}
+data Main{}
+machine Main::main(&mut self){require_ok(RESULT);}

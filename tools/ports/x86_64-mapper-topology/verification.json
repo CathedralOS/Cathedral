@@ -1,0 +1,187 @@
+{
+  "compiler_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "families": [
+    "offset-address",
+    "recursive-coordinates",
+    "recursive-constructor"
+  ],
+  "inventory": {
+    "anchors": 71,
+    "blocked": 0,
+    "files": 2,
+    "omitted": 0,
+    "pending": 65,
+    "translated": 6
+  },
+  "kind": "observed numeric Rust/Omega semantic checks; no native ABI or pointer/custody claim",
+  "omega": {
+    "body_mutation_rejections": 22,
+    "cases": {
+      "checked-inputs": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "43aff0afea3c95ba2afa3a25a9e2ec6c5df90d008507484c43cd8212b40dcde3",
+        "numeric_checks": 8,
+        "positive": "passed"
+      },
+      "constructor-0": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "a9bcc963f43f86bad608e0704316c1586635aa60db3167169fee8af3388977d2",
+        "numeric_checks": 12,
+        "positive": "passed"
+      },
+      "constructor-1": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "ea4e4f69e45210be15fd6f9d4f35f5e72242e559770a98d0f208f78fcc54e3be",
+        "numeric_checks": 12,
+        "positive": "passed"
+      },
+      "constructor-2": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "00636c83d7da772289e372ade5ad5f0110b426979a22e358815b26fbc0098092",
+        "numeric_checks": 12,
+        "positive": "passed"
+      },
+      "constructor-3": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "af36466385da509be2ffb2bdec224a05f319cb41edd113ab935e4e97577b4d48",
+        "numeric_checks": 12,
+        "positive": "passed"
+      },
+      "coordinates-00": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "4fde62828ab8101b2dce1a798d6dbde808f2ac3791a9b65f523db1b289dd9cef",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-01": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "8207091ab958d0a2f39dc4cdb805ab8a024dfe11a2a62947dc17a71dffe37eb1",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-02": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "e7b805dc99833f82a9398f0671b676120787d5c7659cdd49ea5e06f5b6a14768",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-03": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "528d92409eb043486519be2e0b505eadc6e6a58049666d6585a35ceb75c9ebc9",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-04": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "90d35393c233f18e9040b8c57024d533a5684217b670a711fa62ebe951528f00",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-05": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "3fe04ef8ee59393c1830569298110aac9cd4a4b48bd0615b789e0db4c649d22e",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-06": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "b86510d0f09e9957ba7de598486a0e0e8244732a5a86b975d4cbfc0e68c8266a",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-07": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "5c8f1423f490afae48f53074a8878389350e37cc28ec93bc1ad7aeda4035f049",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-08": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "c99c16489c6dd31d9c49aedb0b95fcfcf04d53fd1f61dab5924f11fe401bf754",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-09": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "88f82d428e757833f67678eaaa50cdda107ef6f740147a9922d321140e55cb98",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-10": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "b950750dbc3c96fafafd793ffb5d3642b4e0de073e6b3f274416502b0d04b104",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-11": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "d183202fe4ef886ad919a4349b91908ec82bb057dd0036b10603dcb493f9d423",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-12": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "e7bf8dfd6924f43d5b2a046307aee5e2b1a875e2e39319bc244d79f591fe5e47",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-13": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "ef407a7c7a8b1b2aa6fe04a67b7c13db5a63cb3507abc0b96903f7e4cd7ba987",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-14": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "ba415872b129c6ff68ca17b1d3dd98ed4a67f6bb35f4468c78df2bca2674b417",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "coordinates-15": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "6484a9c86439dd5ee5b0ae43cc091c4edbf944fffb15d57cd546f5e810db46a2",
+        "numeric_checks": 192,
+        "positive": "passed"
+      },
+      "offsets": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "67868ba73cb9b3b10fb62858ebf970784b1b353c62c70f05f50279569d9aba0b",
+        "numeric_checks": 11,
+        "positive": "passed"
+      }
+    },
+    "command": "python3 tools/ports/x86_64-mapper-topology/check.py --jobs 4",
+    "numeric_assertions": 3139,
+    "positive_cases": 22
+  },
+  "pin": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+  "rust": {
+    "cargo_lock_sha256": "475dde0bdcc762cb4e4710bb8ca2c4417ff5ac4b593ac6835dc81af241049fc5",
+    "constructor_observations": 48,
+    "coordinates": 3072,
+    "numeric_witnesses": 3131,
+    "offsets": 11,
+    "policy": "Actual public numeric APIs plus exact private coordinate mirrors and explicitly substituted constructor observations. No live constructor, CR3 instruction or raw pointer creation.",
+    "private_reference_sha256": "a620b3ac0d09f6f1507b02bd758e150dc1dfc47d600bfb65edb7db62dde6dbe9",
+    "reference_sha256": "cbd020a3287e40abfadcb12b924ac4d63d27ddccf1be3bb85ca65a53393e7ca2",
+    "rustc": "rustc 1.94.0-nightly (f6a07efc8 2026-01-16)",
+    "post_review": "Removed one generated trailing blank line and reran host reference/freshness checks; Omega source and fixtures unchanged."
+  },
+  "selected_source_files": [
+    "source/libraries/x86_64/build.omg",
+    "source/libraries/x86_64/mapper_topology.omg",
+    "source/libraries/x86_64/addresses.omg",
+    "source/libraries/x86_64/pages.omg",
+    "source/libraries/x86_64/page_entries.omg",
+    "source/drivers/facts/build.omg",
+    "source/drivers/facts/x86_page_table_entry.omg"
+  ],
+  "selected_source_sha256": "d93cbf2d49bd540ed7725f5028f7bdd752d7d154df1379816c956a3387b475a0",
+  "source_check": {
+    "command": "/tmp/cathedral-omega-eaa7993/release/omega --check source/libraries/x86_64/mapper_topology.omg",
+    "source_files": 14,
+    "wrote_output": false
+  },
+  "source_hash_algorithm": "SHA-256 over sorted repository-relative path + NUL + file bytes"
+}

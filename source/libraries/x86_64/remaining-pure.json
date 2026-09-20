@@ -12086,6 +12086,24 @@
       "completed": "STAR/CET/APIC observations and composition plus raw MSR word splitting",
       "evidence": "source/libraries/x86_64/register-operands.PORT.md",
       "additional_evidence": "source/libraries/x86_64/msr-words.PORT.md"
+    },
+    {
+      "family": "offset-address",
+      "stage": "tested",
+      "evidence": "source/libraries/x86_64/mapper-topology.PORT.md",
+      "inventory": "source/libraries/x86_64/mapper-topology-inventory.json"
+    },
+    {
+      "family": "recursive-coordinates",
+      "stage": "tested",
+      "evidence": "source/libraries/x86_64/mapper-topology.PORT.md",
+      "inventory": "source/libraries/x86_64/mapper-topology-inventory.json"
+    },
+    {
+      "family": "recursive-constructor",
+      "stage": "tested",
+      "evidence": "source/libraries/x86_64/mapper-topology.PORT.md",
+      "inventory": "source/libraries/x86_64/mapper-topology-inventory.json"
     }
   ]
 }

@@ -21,6 +21,8 @@ the original audit findings; subsequent completions supersede those rows.
 `cr3-cr8-operands`, `xcr0-validation` and STAR/CET/APIC parts of `msr-composition`;
 the remaining raw MSR word-splitting component is completed by
 [MSR word transport](msr-words.PORT.md).
+[Numeric topology](mapper-topology.PORT.md) completes `offset-address`,
+`recursive-coordinates` and `recursive-constructor` at their numeric boundary.
 
 ## Work that already has a reusable implementation
 

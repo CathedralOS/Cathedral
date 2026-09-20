@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Expected numeric results observed from pinned Rust public APIs/private mirrors.
+use values::addresses::NumberResult;
+use values::mapper_topology::offset_frame_address;
+use values::mapper_topology::recursive_p3;
+use values::mapper_topology::recursive_p2;
+use values::mapper_topology::recursive_p1;
+use values::mapper_topology::observe_recursive;
+use values::mapper_topology::RecursiveObservation;
+use values::mapper_topology::InactiveReason;
+machine number_is(result:NumberResult,valid:bool,expected:u64)->bool {
+ transition result {NumberResult::Value {value} -> compare(value,valid,expected) _ -> (!valid)}
+ state compare(value:u64,valid:bool,expected:u64)->bool {valid && value==expected}
+}
+machine observed_is(result:RecursiveObservation,code:u64,index:u16,frame:u64)->bool {
+ transition result {
+  RecursiveObservation::InvalidAddress -> (code==5)
+  RecursiveObservation::InvalidObservedFrame -> (code==6)
+  RecursiveObservation::NotRecursive -> (code==1)
+  RecursiveObservation::NotActive {reason} -> inactive(reason,code)
+  RecursiveObservation::Observed {recursive_index,physical_frame} -> active(recursive_index,physical_frame,code,index,frame)
+ }
+ state inactive(reason:InactiveReason,code:u64)->bool {transition reason {InactiveReason::EntryNotPresent -> (code==2) InactiveReason::EntryHugeFrame -> (code==3) InactiveReason::DifferentFrame -> (code==4)}}
+ state active(actual_index:u16,actual_frame:u64,code:u64,index:u16,frame:u64)->bool {code==0 && actual_index==index && actual_frame==frame}
+}
+
+machine test()->u64{
+let r0:NumberResult=offset_frame_address(0,0);let c0:bool=number_is(r0,true,0);
+let r1:NumberResult=offset_frame_address(4096,8192);let c1:bool=number_is(r1,true,12288);
+let r2:NumberResult=offset_frame_address(18446603336221196288,4096);let c2:bool=number_is(r2,true,18446603336221200384);
+let r3:NumberResult=offset_frame_address(140737488351232,0);let c3:bool=number_is(r3,true,140737488351232);
+let r4:NumberResult=offset_frame_address(140737488351232,4096);let c4:bool=number_is(r4,false,0);
+let r5:NumberResult=offset_frame_address(18446744073709547520,4096);let c5:bool=number_is(r5,false,0);
+let r6:NumberResult=offset_frame_address(18446744073709547519,4096);let c6:bool=number_is(r6,true,18446744073709551615);
+let r7:NumberResult=offset_frame_address(140737488355328,0);let c7:bool=number_is(r7,false,0);
+let r8:NumberResult=offset_frame_address(0,1);let c8:bool=number_is(r8,false,0);
+let r9:NumberResult=offset_frame_address(0,4503599627370496);let c9:bool=number_is(r9,false,0);
+let r10:NumberResult=offset_frame_address(0,4503599627366400);let c10:bool=number_is(r10,false,0);
+transition c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8 && c9 && c10 {true -> (0) _ -> (1)}
+}
+
+const RESULT:u64=test();
+machine require_ok(value:u64) requires value==0; {}
+data Main{}
+machine Main::main(&mut self){require_ok(RESULT);}

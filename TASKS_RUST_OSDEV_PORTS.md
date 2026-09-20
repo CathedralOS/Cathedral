@@ -271,6 +271,10 @@ and seven body mutations, covering reserved bits, XCR0 validation, CR3/CR8 and
 STAR/CET/APIC composition. [MSR word transport](source/libraries/x86_64/msr-words.PORT.md)
 adds 136 Rust-derived observations, 130 Omega round trips and two body mutations.
 No live register methods or instructions execute.
+[Numeric mapper topology](source/libraries/x86_64/mapper-topology.PORT.md) adds
+3,131 Rust numeric witnesses, 3,139 Omega assertions in 22 fixtures and 22 body
+controls for offset addition, recursive coordinates and constructor observations.
+All 512 recursive indices are covered; pointer/custody operations stay external.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

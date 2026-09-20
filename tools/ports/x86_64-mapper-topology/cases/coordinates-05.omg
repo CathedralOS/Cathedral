@@ -1,0 +1,87 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Expected numeric results observed from pinned Rust public APIs/private mirrors.
+use values::addresses::NumberResult;
+use values::mapper_topology::offset_frame_address;
+use values::mapper_topology::recursive_p3;
+use values::mapper_topology::recursive_p2;
+use values::mapper_topology::recursive_p1;
+use values::mapper_topology::observe_recursive;
+use values::mapper_topology::RecursiveObservation;
+use values::mapper_topology::InactiveReason;
+machine number_is(result:NumberResult,valid:bool,expected:u64)->bool {
+ transition result {NumberResult::Value {value} -> compare(value,valid,expected) _ -> (!valid)}
+ state compare(value:u64,valid:bool,expected:u64)->bool {valid && value==expected}
+}
+machine observed_is(result:RecursiveObservation,code:u64,index:u16,frame:u64)->bool {
+ transition result {
+  RecursiveObservation::InvalidAddress -> (code==5)
+  RecursiveObservation::InvalidObservedFrame -> (code==6)
+  RecursiveObservation::NotRecursive -> (code==1)
+  RecursiveObservation::NotActive {reason} -> inactive(reason,code)
+  RecursiveObservation::Observed {recursive_index,physical_frame} -> active(recursive_index,physical_frame,code,index,frame)
+ }
+ state inactive(reason:InactiveReason,code:u64)->bool {transition reason {InactiveReason::EntryNotPresent -> (code==2) InactiveReason::EntryHugeFrame -> (code==3) InactiveReason::DifferentFrame -> (code==4)}}
+ state active(actual_index:u16,actual_frame:u64,code:u64,index:u16,frame:u64)->bool {code==0 && actual_index==index && actual_frame==frame}
+}
+
+data Vector [copy]{recursive_index:u16;page4:u64;page2:u64;page1:u64;third4:u64;third2:u64;third1:u64;second4:u64;second2:u64;first4:u64;}
+machine check_vector(row:Vector)->bool {
+ let r:u16=row.recursive_index;let p4:u64=row.page4;let p2:u64=row.page2;let p1:u64=row.page1;
+ let a:NumberResult=recursive_p3(p4,4096,r);let b:NumberResult=recursive_p3(p2,2097152,r);let c:NumberResult=recursive_p3(p1,1073741824,r);
+ let d:NumberResult=recursive_p2(p4,4096,r);let e:NumberResult=recursive_p2(p2,2097152,r);let f:NumberResult=recursive_p1(p4,r);
+ let aa:bool=number_is(a,true,row.third4);let bb:bool=number_is(b,true,row.third2);let cc:bool=number_is(c,true,row.third1);
+ let dd:bool=number_is(d,true,row.second4);let ee:bool=number_is(e,true,row.second2);let ff:bool=number_is(f,true,row.first4);
+ aa && bb && cc && dd && ee && ff
+}
+machine topology_scan(rows:&[Vector;32],index:u64,limit:u64,ok:bool)
+terminates by (index,limit) -> Nat::BoundedDistance;
+-> bool {
+ let next:bool=topology_step(rows,index,ok);
+ transition index<limit {true -> topology_scan(rows,index+1,limit,next) _ -> (ok)}
+}
+machine topology_step(rows:&[Vector;32],index:u64,ok:bool)->bool {
+ transition index<32 {true -> compare(rows,index,ok) _ -> (ok)}
+ state compare(rows:&[Vector;32],index:u64,ok:bool)->bool {let passed:bool=check_vector(rows[index]);ok && passed}
+}
+
+machine test()->u64{
+let mut rows:[Vector;32];
+rows[0]=Vector {recursive_index:160,page4:0,page2:0,page1:0,third4:88133064458240,third2:88133064458240,third1:88133064458240,second4:88132728913920,second2:88132728913920,first4:87960930222080};
+rows[1]=Vector {recursive_index:161,page4:140737488351232,page2:140737486258176,page1:140736414613504,third4:88683897155584,third2:88683897155584,third1:88683897155584,second4:88684095336448,second2:88684095336448,first4:88785563938816};
+rows[2]=Vector {recursive_index:162,page4:18446603338366586880,page2:18446603338366582784,page1:18446603337294938112,third4:89234728812544,third2:89234728812544,third1:89234728812544,second4:89234924900352,second2:89234924900352,first4:89335323947008};
+rows[3]=Vector {recursive_index:163,page4:18446744072637902848,page2:18446744072635809792,page1:18446744072635809792,third4:89785561509888,third2:89785561509888,third1:89785561509888,second4:89786291318784,second2:89786291318784,first4:90159951380480};
+rows[4]=Vector {recursive_index:164,page4:0,page2:0,page1:0,third4:90336391069696,third2:90336391069696,third1:90336391069696,second4:90336047136768,second2:90336047136768,first4:90159953477632};
+rows[5]=Vector {recursive_index:165,page4:140737488351232,page2:140737486258176,page1:140736414613504,third4:90887223767040,third2:90887223767040,third1:90887223767040,second4:90887413559296,second2:90887413559296,first4:90984587194368};
+rows[6]=Vector {recursive_index:166,page4:18446603338366586880,page2:18446603338366582784,page1:18446603337294938112,third4:91438055424000,third2:91438055424000,third1:91438055424000,second4:91438243123200,second2:91438243123200,first4:91534347202560};
+rows[7]=Vector {recursive_index:167,page4:18446744072637902848,page2:18446744072635809792,page1:18446744072635809792,third4:91988888121344,third2:91988888121344,third1:91988888121344,second4:91989609541632,second2:91989609541632,first4:92358974636032};
+rows[8]=Vector {recursive_index:168,page4:0,page2:0,page1:0,third4:92539717681152,third2:92539717681152,third1:92539717681152,second4:92539365359616,second2:92539365359616,first4:92358976733184};
+rows[9]=Vector {recursive_index:169,page4:140737488351232,page2:140737486258176,page1:140736414613504,third4:93090550378496,third2:93090550378496,third1:93090550378496,second4:93090731782144,second2:93090731782144,first4:93183610449920};
+rows[10]=Vector {recursive_index:170,page4:18446603338366586880,page2:18446603338366582784,page1:18446603337294938112,third4:93641382035456,third2:93641382035456,third1:93641382035456,second4:93641561346048,second2:93641561346048,first4:93733370458112};
+rows[11]=Vector {recursive_index:171,page4:18446744072637902848,page2:18446744072635809792,page1:18446744072635809792,third4:94192214732800,third2:94192214732800,third1:94192214732800,second4:94192927764480,second2:94192927764480,first4:94557997891584};
+rows[12]=Vector {recursive_index:172,page4:0,page2:0,page1:0,third4:94743044292608,third2:94743044292608,third1:94743044292608,second4:94742683582464,second2:94742683582464,first4:94557999988736};
+rows[13]=Vector {recursive_index:173,page4:140737488351232,page2:140737486258176,page1:140736414613504,third4:95293876989952,third2:95293876989952,third1:95293876989952,second4:95294050004992,second2:95294050004992,first4:95382633705472};
+rows[14]=Vector {recursive_index:174,page4:18446603338366586880,page2:18446603338366582784,page1:18446603337294938112,third4:95844708646912,third2:95844708646912,third1:95844708646912,second4:95844879568896,second2:95844879568896,first4:95932393713664};
+rows[15]=Vector {recursive_index:175,page4:18446744072637902848,page2:18446744072635809792,page1:18446744072635809792,third4:96395541344256,third2:96395541344256,third1:96395541344256,second4:96396245987328,second2:96396245987328,first4:96757021147136};
+rows[16]=Vector {recursive_index:176,page4:0,page2:0,page1:0,third4:96946370904064,third2:96946370904064,third1:96946370904064,second4:96946001805312,second2:96946001805312,first4:96757023244288};
+rows[17]=Vector {recursive_index:177,page4:140737488351232,page2:140737486258176,page1:140736414613504,third4:97497203601408,third2:97497203601408,third1:97497203601408,second4:97497368227840,second2:97497368227840,first4:97581656961024};
+rows[18]=Vector {recursive_index:178,page4:18446603338366586880,page2:18446603338366582784,page1:18446603337294938112,third4:98048035258368,third2:98048035258368,third1:98048035258368,second4:98048197791744,second2:98048197791744,first4:98131416969216};
+rows[19]=Vector {recursive_index:179,page4:18446744072637902848,page2:18446744072635809792,page1:18446744072635809792,third4:98598867955712,third2:98598867955712,third1:98598867955712,second4:98599564210176,second2:98599564210176,first4:98956044402688};
+rows[20]=Vector {recursive_index:180,page4:0,page2:0,page1:0,third4:99149697515520,third2:99149697515520,third1:99149697515520,second4:99149320028160,second2:99149320028160,first4:98956046499840};
+rows[21]=Vector {recursive_index:181,page4:140737488351232,page2:140737486258176,page1:140736414613504,third4:99700530212864,third2:99700530212864,third1:99700530212864,second4:99700686450688,second2:99700686450688,first4:99780680216576};
+rows[22]=Vector {recursive_index:182,page4:18446603338366586880,page2:18446603338366582784,page1:18446603337294938112,third4:100251361869824,third2:100251361869824,third1:100251361869824,second4:100251516014592,second2:100251516014592,first4:100330440224768};
+rows[23]=Vector {recursive_index:183,page4:18446744072637902848,page2:18446744072635809792,page1:18446744072635809792,third4:100802194567168,third2:100802194567168,third1:100802194567168,second4:100802882433024,second2:100802882433024,first4:101155067658240};
+rows[24]=Vector {recursive_index:184,page4:0,page2:0,page1:0,third4:101353024126976,third2:101353024126976,third1:101353024126976,second4:101352638251008,second2:101352638251008,first4:101155069755392};
+rows[25]=Vector {recursive_index:185,page4:140737488351232,page2:140737486258176,page1:140736414613504,third4:101903856824320,third2:101903856824320,third1:101903856824320,second4:101904004673536,second2:101904004673536,first4:101979703472128};
+rows[26]=Vector {recursive_index:186,page4:18446603338366586880,page2:18446603338366582784,page1:18446603337294938112,third4:102454688481280,third2:102454688481280,third1:102454688481280,second4:102454834237440,second2:102454834237440,first4:102529463480320};
+rows[27]=Vector {recursive_index:187,page4:18446744072637902848,page2:18446744072635809792,page1:18446744072635809792,third4:103005521178624,third2:103005521178624,third1:103005521178624,second4:103006200655872,second2:103006200655872,first4:103354090913792};
+rows[28]=Vector {recursive_index:188,page4:0,page2:0,page1:0,third4:103556350738432,third2:103556350738432,third1:103556350738432,second4:103555956473856,second2:103555956473856,first4:103354093010944};
+rows[29]=Vector {recursive_index:189,page4:140737488351232,page2:140737486258176,page1:140736414613504,third4:104107183435776,third2:104107183435776,third1:104107183435776,second4:104107322896384,second2:104107322896384,first4:104178726727680};
+rows[30]=Vector {recursive_index:190,page4:18446603338366586880,page2:18446603338366582784,page1:18446603337294938112,third4:104658015092736,third2:104658015092736,third1:104658015092736,second4:104658152460288,second2:104658152460288,first4:104728486735872};
+rows[31]=Vector {recursive_index:191,page4:18446744072637902848,page2:18446744072635809792,page1:18446744072635809792,third4:105208847790080,third2:105208847790080,third1:105208847790080,second4:105209518878720,second2:105209518878720,first4:105553114169344};
+let good:bool=topology_scan(&rows,0,32,true);transition good {true -> (0) _ -> (1)}
+}
+
+const RESULT:u64=test();
+machine require_ok(value:u64) requires value==0; {}
+data Main{}
+machine Main::main(&mut self){require_ok(RESULT);}

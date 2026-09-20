@@ -1,0 +1,115 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Numeric adaptations from x86_64 cc35c876d3badb57df54a66e22f7768a52be95f2.
+// See mapper-topology.PORT.md. Results grant no pointer or page-table custody.
+module mapper_topology;
+use addresses::NumberResult;
+use addresses::virtual_add;
+use addresses::page_index;
+use pages::SIZE_4K;
+use pages::SIZE_2M;
+use pages::SIZE_1G;
+use pages::start_valid;
+use pages::containing;
+use pages::from_indices;
+use page_entries::FrameResult;
+use page_entries::frame;
+
+pub machine offset_frame_address(offset:u64,frame_start:u64)->NumberResult {
+ let valid:bool=start_valid(frame_start,SIZE_4K,true);
+ transition valid {true -> add(offset,frame_start) _ -> (NumberResult::Rejected)}
+ state add(offset:u64,frame_start:u64)->NumberResult {let result:NumberResult=virtual_add(offset,frame_start);result}
+}
+
+pub machine recursive_p3(address:u64,size:u64,recursive_index:u16)->NumberResult {
+ let result:NumberResult=recursive_coordinate(address,size,recursive_index,3);result
+}
+pub machine recursive_p2(address:u64,size:u64,recursive_index:u16)->NumberResult {
+ let result:NumberResult=recursive_coordinate(address,size,recursive_index,2);result
+}
+pub machine recursive_p1(address:u64,recursive_index:u16)->NumberResult {
+ let result:NumberResult=recursive_coordinate(address,SIZE_4K,recursive_index,1);result
+}
+machine recursive_coordinate(address:u64,size:u64,recursive_index:u16,level:u8)->NumberResult {
+ let valid_page:bool=start_valid(address,size,false);
+ let size_allowed:bool=level==3 || (level==2 && (size==SIZE_4K || size==SIZE_2M)) || (level==1 && size==SIZE_4K);
+ transition valid_page && recursive_index<512 && size_allowed {
+  true -> p4(address,recursive_index,level) _ -> (NumberResult::Rejected)
+ }
+ state p4(address:u64,r:u16,level:u8)->NumberResult {
+  let index:NumberResult=page_index(address,4);
+  transition index {NumberResult::Value {value} -> p4_bounded(address,r,level,value) _ -> (NumberResult::Rejected)}
+ }
+ state p4_bounded(address:u64,r:u16,level:u8,value:u64)->NumberResult {
+  transition value<512 {true -> p4_known(address,r,level,value as u16) _ -> (NumberResult::Rejected)}
+ }
+ state p4_known(address:u64,r:u16,level:u8,p4:u16)->NumberResult {
+  transition level==3 {true -> third(r,p4) _ -> p3(address,r,level,p4)}
+ }
+ state third(r:u16,p4:u16)->NumberResult {let result:NumberResult=from_indices(r,r,r,p4,SIZE_4K);result}
+ state p3(address:u64,r:u16,level:u8,p4:u16)->NumberResult {
+  let index:NumberResult=page_index(address,3);
+  transition index {NumberResult::Value {value} -> p3_bounded(address,r,level,p4,value) _ -> (NumberResult::Rejected)}
+ }
+ state p3_bounded(address:u64,r:u16,level:u8,p4:u16,value:u64)->NumberResult {
+  transition value<512 {true -> p3_known(address,r,level,p4,value as u16) _ -> (NumberResult::Rejected)}
+ }
+ state p3_known(address:u64,r:u16,level:u8,p4:u16,p3:u16)->NumberResult {
+  transition level==2 {true -> second(r,p4,p3) _ -> p2(address,r,p4,p3)}
+ }
+ state second(r:u16,p4:u16,p3:u16)->NumberResult {let result:NumberResult=from_indices(r,r,p4,p3,SIZE_4K);result}
+ state p2(address:u64,r:u16,p4:u16,p3:u16)->NumberResult {
+  let index:NumberResult=page_index(address,2);
+  transition index {NumberResult::Value {value} -> p2_bounded(r,p4,p3,value) _ -> (NumberResult::Rejected)}
+ }
+ state p2_bounded(r:u16,p4:u16,p3:u16,value:u64)->NumberResult {
+  transition value<512 {true -> first(r,p4,p3,value as u16) _ -> (NumberResult::Rejected)}
+ }
+ state first(r:u16,p4:u16,p3:u16,p2:u16)->NumberResult {let result:NumberResult=from_indices(r,p4,p3,p2,SIZE_4K);result}
+}
+
+pub data InactiveReason [copy] {case EntryNotPresent;case EntryHugeFrame;case DifferentFrame;}
+pub data RecursiveObservation [copy] {
+ case InvalidAddress;
+ case InvalidObservedFrame;
+ case NotRecursive;
+ case NotActive(reason:InactiveReason);
+ case Observed(recursive_index:u16,physical_frame:u64);
+}
+// Mirrors only the constructor's observations. CR3 and the recursive entry are
+// supplied numbers; success never constructs a RecursivePageTable or reference.
+pub machine observe_recursive(table_address:u64,observed_cr3_frame:u64,recursive_entry_word:u64)->RecursiveObservation {
+ let page:NumberResult=containing(table_address,SIZE_4K,false);
+ transition page {NumberResult::Value {value} -> index(value,observed_cr3_frame,recursive_entry_word) _ -> (RecursiveObservation::InvalidAddress)}
+ state index(page:u64,observed:u64,word:u64)->RecursiveObservation {
+  let result:NumberResult=page_index(page,4);
+  transition result {NumberResult::Value {value} -> index_bounded(page,observed,word,value) _ -> (RecursiveObservation::InvalidAddress)}
+ }
+ state index_bounded(page:u64,observed:u64,word:u64,index:u64)->RecursiveObservation {
+  transition index<512 {true -> repeated(page,observed,word,index as u16) _ -> (RecursiveObservation::InvalidAddress)}
+ }
+ state repeated(page:u64,observed:u64,word:u64,index:u16)->RecursiveObservation {
+  let expected:NumberResult=from_indices(index,index,index,index,SIZE_4K);
+  transition expected {NumberResult::Value {value} -> compare(page,observed,word,index,value) _ -> (RecursiveObservation::InvalidAddress)}
+ }
+ state compare(page:u64,observed:u64,word:u64,index:u16,expected:u64)->RecursiveObservation {
+  transition page==expected {true -> active_input(observed,word,index) _ -> (RecursiveObservation::NotRecursive)}
+ }
+ state active_input(observed:u64,word:u64,index:u16)->RecursiveObservation {
+  let valid:bool=start_valid(observed,SIZE_4K,true);
+  transition valid {true -> classify(observed,word,index) _ -> (RecursiveObservation::InvalidObservedFrame)}
+ }
+ state classify(observed:u64,word:u64,index:u16)->RecursiveObservation {
+  let result:FrameResult=frame(word);
+  transition result {
+   FrameResult::NotPresent -> (RecursiveObservation::NotActive {reason:InactiveReason::EntryNotPresent})
+   FrameResult::HugeFrame -> (RecursiveObservation::NotActive {reason:InactiveReason::EntryHugeFrame})
+   FrameResult::Value {address} -> match_frame(observed,address,index)
+  }
+ }
+ state match_frame(observed:u64,actual:u64,index:u16)->RecursiveObservation {
+  transition observed==actual {
+   true -> (RecursiveObservation::Observed {recursive_index:index,physical_frame:actual})
+   _ -> (RecursiveObservation::NotActive {reason:InactiveReason::DifferentFrame})
+  }
+ }
+}

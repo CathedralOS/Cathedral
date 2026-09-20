@@ -1,0 +1,33 @@
+{
+  "excluded": [
+    "No CR3 read",
+    "No RecursivePageTable::new invocation",
+    "No frame-to-pointer call",
+    "No raw dereference/table reference"
+  ],
+  "license": "MIT OR Apache-2.0",
+  "license_and_manifest_sha256": {
+    "Cargo.toml": "6bcb2827c4ebe83dff41b22819c1550cb5102e6aabf7a4580e0d867029034856",
+    "LICENSE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "LICENSE-MIT": "fc51e923890d2a82fd792cfd5d21bc63f7548aa7e20753fb8e7b18c4742f5f5a"
+  },
+  "private_reference": {
+    "constructor_substitutions": {
+      "Ok(Cr3::read().0)": "Ok(supplied observed_cr3)",
+      "Ok(RecursivePageTable {p4,recursive_index})": "Ok(recursive_index)",
+      "VirtAddr::new(table as *const _ as u64)": "supplied checked table_address",
+      "table[recursive_index].frame()": "supplied recursive_entry.frame()"
+    },
+    "coordinates": "Exact p3_page/p2_page/p1_page functions extracted from pinned source, called locally; not exported upstream APIs.",
+    "offset": "Exact numeric addition expression; as_mut_ptr excluded."
+  },
+  "public_upstream_apis": [
+    "VirtAddr checked construction/addition",
+    "Page index-based constructors/getters/start addresses",
+    "PhysFrame checked construction",
+    "PageTableEntry set_addr/frame",
+    "PageTableFlags from_bits_retain"
+  ],
+  "reference_numeric_cases": 3131,
+  "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2"
+}
