@@ -1,0 +1,163 @@
+[
+  {
+    "name": "device_feature_select",
+    "source_type": "le32",
+    "access": "ReadWrite",
+    "offset": 0,
+    "bytes": 4
+  },
+  {
+    "name": "device_feature",
+    "source_type": "le32",
+    "access": "ReadOnly",
+    "offset": 4,
+    "bytes": 4
+  },
+  {
+    "name": "driver_feature_select",
+    "source_type": "le32",
+    "access": "ReadWrite",
+    "offset": 8,
+    "bytes": 4
+  },
+  {
+    "name": "driver_feature",
+    "source_type": "le32",
+    "access": "ReadWrite",
+    "offset": 12,
+    "bytes": 4
+  },
+  {
+    "name": "config_msix_vector",
+    "source_type": "le16",
+    "access": "ReadWrite",
+    "offset": 16,
+    "bytes": 2
+  },
+  {
+    "name": "num_queues",
+    "source_type": "le16",
+    "access": "ReadOnly",
+    "offset": 18,
+    "bytes": 2
+  },
+  {
+    "name": "device_status",
+    "source_type": "DeviceStatus",
+    "access": "ReadWrite",
+    "offset": 20,
+    "bytes": 1
+  },
+  {
+    "name": "config_generation",
+    "source_type": "u8",
+    "access": "ReadOnly",
+    "offset": 21,
+    "bytes": 1
+  },
+  {
+    "name": "queue_select",
+    "source_type": "le16",
+    "access": "ReadWrite",
+    "offset": 22,
+    "bytes": 2
+  },
+  {
+    "name": "queue_size",
+    "source_type": "le16",
+    "access": "ReadWrite",
+    "offset": 24,
+    "bytes": 2
+  },
+  {
+    "name": "queue_msix_vector",
+    "source_type": "le16",
+    "access": "ReadWrite",
+    "offset": 26,
+    "bytes": 2
+  },
+  {
+    "name": "queue_enable",
+    "source_type": "le16",
+    "access": "ReadWrite",
+    "offset": 28,
+    "bytes": 2
+  },
+  {
+    "name": "queue_notify_off",
+    "source_type": "le16",
+    "access": "ReadOnly",
+    "offset": 30,
+    "bytes": 2
+  },
+  {
+    "name": "queue_desc_low",
+    "source_type": "le32",
+    "access": "ReadWrite",
+    "offset": 32,
+    "bytes": 4
+  },
+  {
+    "name": "queue_desc_high",
+    "source_type": "le32",
+    "access": "ReadWrite",
+    "offset": 36,
+    "bytes": 4
+  },
+  {
+    "name": "queue_driver_low",
+    "source_type": "le32",
+    "access": "ReadWrite",
+    "offset": 40,
+    "bytes": 4
+  },
+  {
+    "name": "queue_driver_high",
+    "source_type": "le32",
+    "access": "ReadWrite",
+    "offset": 44,
+    "bytes": 4
+  },
+  {
+    "name": "queue_device_low",
+    "source_type": "le32",
+    "access": "ReadWrite",
+    "offset": 48,
+    "bytes": 4
+  },
+  {
+    "name": "queue_device_high",
+    "source_type": "le32",
+    "access": "ReadWrite",
+    "offset": 52,
+    "bytes": 4
+  },
+  {
+    "name": "queue_notif_config_data",
+    "source_type": "le16",
+    "access": "ReadOnly",
+    "offset": 56,
+    "bytes": 2
+  },
+  {
+    "name": "queue_reset",
+    "source_type": "le16",
+    "access": "ReadWrite",
+    "offset": 58,
+    "bytes": 2
+  },
+  {
+    "name": "admin_queue_index",
+    "source_type": "le16",
+    "access": "ReadOnly",
+    "offset": 60,
+    "bytes": 2
+  },
+  {
+    "name": "admin_queue_num",
+    "source_type": "le16",
+    "access": "ReadOnly",
+    "offset": 62,
+    "bytes": 2
+  }
+]

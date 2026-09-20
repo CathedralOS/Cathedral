@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[3]
 HERE = Path(__file__).resolve().parent
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--omega', type=Path, default=ROOT.parent/'Omega/target/release/omega')
-parser.add_argument('--module', choices=['layouts', 'packed_layouts'], default='layouts')
+parser.add_argument('--module', choices=['layouts', 'packed_layouts', 'transport_layouts'], default='layouts')
 parser.add_argument('--combined', action='store_true', help='reproduce current full-fixture/core-layout trait-resolution failure')
 args = parser.parse_args()
 with tempfile.TemporaryDirectory(prefix='cathedral-virtio-layout-') as directory:

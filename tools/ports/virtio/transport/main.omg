@@ -1,0 +1,149 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use cathedral_virtio::transport_access::RegisterField;
+use cathedral_virtio::transport_access::WideField;
+use cathedral_virtio::transport_access::AccessPlan;
+use cathedral_virtio::transport_access::ByteResult;
+use cathedral_virtio::transport_access::HalfResult;
+use cathedral_virtio::transport_access::WordResult;
+use cathedral_virtio::transport_access::narrow_byte;
+use cathedral_virtio::transport_access::narrow_half;
+use cathedral_virtio::transport_access::decode_bool_pinned;
+use cathedral_virtio::transport_access::decode_bool_checked;
+use cathedral_virtio::transport_access::encode_bool;
+use cathedral_virtio::transport_access::wide_decode_pinned;
+use cathedral_virtio::transport_access::read_plan;
+use cathedral_virtio::transport_access::write_plan;
+use cathedral_virtio::transport_access::wide_read_plan;
+use cathedral_virtio::transport_access::wide_write_plan;
+use cathedral_virtio::mmio::DeviceRegisters;
+use cathedral_virtio::mmio::MAGIC_VALUE;
+use cathedral_virtio::mmio::snapshot_word;
+use cathedral_virtio::mmio::modern_device_present;
+use cathedral_virtio::mmio::QUEUE_SIZE_MAX;
+use cathedral_virtio::mmio::QUEUE_READY;
+use cathedral_virtio::mmio::QUEUE_NOTIFY;
+use cathedral_virtio::mmio::QUEUE_DESC;
+use cathedral_virtio::mmio::SHM_LEN;
+use cathedral_virtio::mmio::CONFIG;
+use cathedral_virtio::configuration_fields::CONFIG_GENERATION;
+use cathedral_virtio::configuration_fields::DEVICE_STATUS;
+use cathedral_virtio::transport_pci::Cap;
+use cathedral_virtio::transport_pci::CapResult;
+use cathedral_virtio::transport_pci::CapData;
+use cathedral_virtio::transport_pci::CapDataResult;
+use cathedral_virtio::transport_pci::CapCfgType;
+use cathedral_virtio::transport_pci::CapabilityReadPlan;
+use cathedral_virtio::transport_pci::RegionPlan;
+use cathedral_virtio::transport_pci::NotifyAddress;
+use cathedral_virtio::transport_pci::capability_header_plan;
+use cathedral_virtio::transport_pci::capability_read_plan;
+use cathedral_virtio::transport_pci::decode_cap;
+use cathedral_virtio::transport_pci::decode_cap_data;
+use cathedral_virtio::transport_pci::cfg_type_known;
+use cathedral_virtio::transport_pci::region_plan;
+use cathedral_virtio::transport_pci::notify_address;
+
+use cathedral_virtio::transport_seams::QueueActivationRequest;
+use cathedral_virtio::transport_seams::activation_geometry_valid;
+
+machine bytes_for(kind: u8, length: u8) -> [u8; 24] {
+    let mut bytes: [u8; 24]; bytes[0] = 9; bytes[1] = 0x80; bytes[2] = length; bytes[3] = kind;
+    bytes[4] = 5; bytes[5] = 7; bytes[8] = 0x10; bytes[12] = 64; bytes[16] = 4; bytes[20] = 2; bytes
+}
+machine pci_raw_cases() -> bool {
+    let shared_bytes: [u8; 24] = bytes_for(8, 24);
+    let raw: CapResult = decode_cap(shared_bytes, 24, 64);
+    let shared: CapDataResult = decode_cap_data(shared_bytes, 24, 64);
+    let notify_bytes: [u8; 24] = bytes_for(2, 20);
+    let notification: CapDataResult = decode_cap_data(notify_bytes, 20, 64);
+    let unknown_bytes: [u8; 24] = bytes_for(255, 16);
+    let unknown: CapDataResult = decode_cap_data(unknown_bytes, 16, 64);
+    raw.ok && raw.value.cap_next == 128 && raw.value.bar == 5 && raw.value.id == 7 && raw.value.offset == 16 &&
+    shared.ok && shared.value.offset == 0x400000010 && shared.value.length == 0x200000040 &&
+    !shared.value.has_notify_multiplier && notification.ok && notification.value.has_notify_multiplier && notification.value.notify_off_multiplier == 4 &&
+    unknown.ok && unknown.value.cfg_type.raw == 255 && !cfg_type_known(unknown.value.cfg_type.raw) &&
+    cfg_type_known(8) && cfg_type_known(9) && !cfg_type_known(6) && !cfg_type_known(7)
+}
+machine pci_bounds_cases() -> bool {
+    let short_shared: [u8; 24] = bytes_for(8, 23);
+    let short_notify: [u8; 24] = bytes_for(2, 19);
+    let shared: [u8; 24] = bytes_for(8, 24);
+    let base: [u8; 24] = bytes_for(1, 16);
+    let extended: [u8; 24] = bytes_for(1, 32);
+    let mut wrong_vendor: [u8; 24] = base; wrong_vendor[0] = 8;
+    !decode_cap_data(short_shared, 24, 64).ok && !decode_cap_data(short_notify, 24, 64).ok &&
+    !decode_cap_data(shared, 23, 64).ok && !decode_cap(base, 15, 64).ok && !decode_cap(base, 25, 64).ok &&
+    !decode_cap(base, 16, 63).ok && !decode_cap(base, 16, 65).ok && !decode_cap(base, 16, 244).ok &&
+    !decode_cap(wrong_vendor, 16, 64).ok && decode_cap(base, 16, 240).ok && decode_cap(extended, 16, 64).ok
+}
+machine pci_plan_cases() -> bool {
+    let header: CapabilityReadPlan = capability_header_plan(252);
+    let shared: CapabilityReadPlan = capability_read_plan(64, 0x08180009);
+    let notification: CapabilityReadPlan = capability_read_plan(64, 0x02140009);
+    let last: CapabilityReadPlan = capability_read_plan(240, 0x01100009);
+    header.ok && header.count == 1 && header.offsets[0] == 252 && shared.ok && shared.count == 6 && shared.offsets[5] == 84 &&
+    notification.count == 5 && last.ok && last.count == 4 && last.offsets[3] == 252 &&
+    !capability_header_plan(256).ok && !capability_read_plan(64, 0x08170009).ok &&
+    !capability_read_plan(244, 0x01100009).ok && !capability_read_plan(64, 0x01100008).ok
+}
+machine region_cases() -> bool {
+    let value: CapData = CapData { cfg_type: CapCfgType { raw: 2 }, bar: 5, offset: 0x1000, length: 32, has_notify_multiplier: true, notify_off_multiplier: 4 };
+    let region: RegionPlan = region_plan(value, 16, 4);
+    let addr: NotifyAddress = notify_address(value, 7, true);
+    let short: NotifyAddress = notify_address(value, 8, true);
+    let mut zero: CapData = value; zero.notify_off_multiplier = 0;
+    let mut odd: CapData = value; odd.offset = 1;
+    let mut overflow: CapData = value; overflow.offset = 0xfffffffffffffff0;
+    region.ok && region.offset == 4096 && region.length == 32 && region.bar == 5 &&
+    addr.ok && addr.offset == 4124 && addr.bytes == 4 && !short.ok && notify_address(zero, 65535, true).ok &&
+    !notify_address(odd, 0, true).ok && !notify_address(overflow, 7, true).ok && !region_plan(overflow, 16, 4).ok &&
+    !region_plan(value, 33, 4).ok && !region_plan(value, 0, 3).ok && !region_plan(value, 0, 0).ok &&
+    !region_plan(CapData { cfg_type: CapCfgType { raw: 255 } }, 0, 1).ok &&
+    !region_plan(CapData { cfg_type: CapCfgType { raw: 1 }, bar: 6 }, 0, 1).ok
+}
+machine narrowing_cases() -> bool {
+    narrow_byte(255).ok && narrow_byte(255).value == 255 && !narrow_byte(256).ok &&
+    narrow_half(65535).ok && narrow_half(65535).value == 65535 && !narrow_half(65536).ok &&
+    decode_bool_pinned(1) && !decode_bool_pinned(2) && !decode_bool_pinned(0xffffffff) &&
+    decode_bool_checked(1).ok && !decode_bool_checked(2).ok && encode_bool(true) == 1 && encode_bool(false) == 0 &&
+    wide_decode_pinned(0x89abcdef, 0x12345678, false) == 0x1234567889abcdef &&
+    wide_decode_pinned(0x89abcdef, 0x12345678, true) == 0x89abcdef12345678
+}
+machine mmio_cases() -> bool {
+    let mut snapshot: DeviceRegisters; snapshot.words[0] = MAGIC_VALUE; snapshot.words[1] = 2; snapshot.words[2] = 49; snapshot.words[13] = 32768;
+    let max: WordResult = snapshot_word(snapshot, QUEUE_SIZE_MAX);
+    let mut empty: DeviceRegisters = snapshot; empty.words[2] = 0;
+    let mut legacy: DeviceRegisters = snapshot; legacy.words[1] = 1;
+    let mut wide_id: DeviceRegisters = snapshot; wide_id.words[2] = 256;
+    modern_device_present(snapshot) && max.ok && max.value == 32768 && !modern_device_present(empty) &&
+    !modern_device_present(legacy) && !modern_device_present(wide_id) && !snapshot_word(snapshot, CONFIG).ok &&
+    !snapshot_word(snapshot, RegisterField { offset: 2, bytes: 4 }).ok &&
+    QUEUE_READY.offset == 68 && QUEUE_READY.bytes == 4 && CONFIG.offset == 256 && CONFIG.bytes == 0
+}
+machine access_cases() -> bool {
+    let read: AccessPlan = read_plan(QUEUE_SIZE_MAX);
+    let write: AccessPlan = write_plan(QUEUE_NOTIFY, 0x12345678);
+    let wide: AccessPlan = wide_write_plan(QUEUE_DESC, 0x1234567889abcdef, false);
+    let big: AccessPlan = wide_write_plan(QUEUE_DESC, 0x1234567889abcdef, true);
+    let read64: AccessPlan = wide_read_plan(SHM_LEN);
+    let byte: AccessPlan = write_plan(DEVICE_STATUS, 15);
+    read.ok && read.operations[0].kind == 1 && read.operations[0].offset == 52 && read.operations[0].bytes == 4 &&
+    write.ok && write.operations[0].kind == 2 && write.operations[0].offset == 80 && write.operations[0].value == 0x12345678 &&
+    wide.ok && wide.count == 2 && wide.operations[0].offset == 128 && wide.operations[0].value == 0x89abcdef && wide.operations[1].offset == 132 && wide.operations[1].value == 0x12345678 &&
+    big.operations[0].value == 0x12345678 && big.operations[1].value == 0x89abcdef &&
+    read64.ok && read64.operations[0].offset == 176 && read64.operations[1].offset == 180 &&
+    byte.ok && byte.operations[0].bytes == 1 && byte.operations[0].offset == 20 &&
+    !write_plan(QUEUE_SIZE_MAX, 1).ok && !read_plan(QUEUE_NOTIFY).ok && !write_plan(CONFIG_GENERATION, 0).ok &&
+    !read_plan(CONFIG).ok && !wide_read_plan(QUEUE_DESC).ok && !wide_write_plan(SHM_LEN, 0, false).ok &&
+    activation_geometry_valid(QueueActivationRequest { size: 3, packed: true }) &&
+    !activation_geometry_valid(QueueActivationRequest { size: 3 }) &&
+    !activation_geometry_valid(QueueActivationRequest { size: 4, descriptor_address: 8 }) &&
+    !activation_geometry_valid(QueueActivationRequest { size: 4, packed: true, driver_address: 2 })
+}
+machine test_result() -> i32 {
+    transition pci_raw_cases() && pci_bounds_cases() && pci_plan_cases() && region_cases() && narrowing_cases() && mmio_cases() && access_cases() { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

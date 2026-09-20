@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Requested fixed transport representation plans; no observed Omega ABI.
+module transport_layouts;
+use omega::language::core::layout;
+pub data CapLayout {}
+pub CapPolicy: CapLayout satisfies Layout;
+pub machine CapLayout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 1 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 2 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 3 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 4 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 5 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 6 } };
+    entries[7] = FieldEntry { key: schema.fields[7].key, placement: FieldPlan::At { offset: 8 } };
+    entries[8] = FieldEntry { key: schema.fields[8].key, placement: FieldPlan::At { offset: 12 } };
+    Plan { entries: entries, entry_count: 9, size_fixed: 16, size_is_dynamic: false, align: 4 }
+}
+pub data Cap64Layout {}
+pub Cap64Policy: Cap64Layout satisfies Layout;
+pub machine Cap64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 16 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 20 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 24, size_is_dynamic: false, align: 4 }
+}
+pub data NotifyCapLayout {}
+pub NotifyCapPolicy: NotifyCapLayout satisfies Layout;
+pub machine NotifyCapLayout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 16 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 20, size_is_dynamic: false, align: 4 }
+}
+pub data CfgCapLayout {}
+pub CfgCapPolicy: CfgCapLayout satisfies Layout;
+pub machine CfgCapLayout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 16 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 20, size_is_dynamic: false, align: 4 }
+}
+pub data DeviceRegistersLayout {}
+pub DeviceRegistersPolicy: DeviceRegistersLayout satisfies Layout;
+pub machine DeviceRegistersLayout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 256, size_is_dynamic: false, align: 4 }
+}

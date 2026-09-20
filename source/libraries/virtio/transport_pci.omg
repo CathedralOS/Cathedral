@@ -1,0 +1,120 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pinned PCI capability decoding with bounded copied bytes and inert plans.
+module transport_pci;
+pub data Cap [copy] { cap_vndr: u8; cap_next: u8; cap_len: u8; cfg_type: u8; bar: u8; id: u8; padding: [u8; 2]; offset: u32; length: u32; }
+pub data Cap64 [copy] { cap: Cap; offset_hi: u32; length_hi: u32; }
+pub data NotifyCap [copy] { cap: Cap; notify_off_multiplier: u32; }
+pub data CfgCap [copy] { cap: Cap; pci_cfg_data: [u8; 4]; }
+pub data CapCfgType [copy] { raw: u8; }
+pub const CFG_COMMON: u8 = 1;
+pub const CFG_NOTIFY: u8 = 2;
+pub const CFG_ISR: u8 = 3;
+pub const CFG_DEVICE: u8 = 4;
+pub const CFG_PCI: u8 = 5;
+pub const CFG_SHARED_MEMORY: u8 = 8;
+pub const CFG_VENDOR: u8 = 9;
+pub data CapData [copy] { cfg_type: CapCfgType; bar: u8; id: u8; offset: u64; length: u64; has_notify_multiplier: bool; notify_off_multiplier: u32; }
+pub data CapResult [copy] { ok: bool; value: Cap; }
+pub data CapDataResult [copy] { ok: bool; value: CapData; }
+pub data CapabilityReadPlan [copy] { ok: bool; count: u8; offsets: [u32; 6]; }
+pub data RegionPlan [copy] { ok: bool; bar: u8; offset: u64; length: u64; alignment: u8; }
+pub data NotifyAddress [copy] { ok: bool; offset: u64; bytes: u8; }
+pub machine cfg_type_known(value: u8) -> bool { value == 1 || value == 2 || value == 3 || value == 4 || value == 5 || value == 8 || value == 9 }
+pub machine capability_location_valid(offset: u16) -> bool { offset >= 64 && offset <= 252 && (offset & 3) == 0 }
+pub machine capability_read_plan(offset: u16, header: u32) -> CapabilityReadPlan {
+    let vendor: u8 = (header & 255) as u8;
+    let length: u8 = ((header >> 16) & 255) as u8;
+    let kind: u8 = (header >> 24) as u8;
+    transition capability_location_valid(offset) && vendor == 9 && length >= 16 && ((offset as u32) + (length as u32)) <= 256 {
+      true -> kind_plan(offset, length, kind) _ -> (CapabilityReadPlan {})
+    }
+    state kind_plan(offset: u16, length: u8, kind: u8) -> CapabilityReadPlan {
+      transition kind { 8 -> extended(offset, length, 6) 2 -> extended(offset, length, 5) _ -> extended(offset, length, 4) }
+    }
+    state extended(offset: u16, length: u8, words: u8) -> CapabilityReadPlan {
+      transition (length as u16) >= ((words as u16) * 4) { true -> plan(offset, words) _ -> (CapabilityReadPlan {}) }
+    }
+    state plan(offset: u16, words: u8) -> CapabilityReadPlan {
+      let mut result: CapabilityReadPlan; result.ok = true; result.count = words;
+      result.offsets[0] = (offset as u32); result.offsets[1] = (offset as u32) + 4;
+      result.offsets[2] = (offset as u32) + 8; result.offsets[3] = (offset as u32) + 12;
+      result.offsets[4] = (offset as u32) + 16; result.offsets[5] = (offset as u32) + 20; result
+    }
+}
+// Explicit source read header plan; no live ConfigRegionAccess object.
+pub machine capability_header_plan(offset: u16) -> CapabilityReadPlan {
+    transition capability_location_valid(offset) { true -> plan(offset) _ -> (CapabilityReadPlan {}) }
+    state plan(offset: u16) -> CapabilityReadPlan {
+      let mut result: CapabilityReadPlan; result.ok = true; result.count = 1; result.offsets[0] = (offset as u32); result
+    }
+}
+pub machine decode_cap(bytes: [u8; 24], captured: u8, location: u16) -> CapResult {
+    transition captured >= 16 && captured <= 24 && capability_location_valid(location) && bytes[0] == 9 && bytes[2] >= 16 && ((location as u32) + (bytes[2] as u32)) <= 256 {
+      true -> decode(bytes) _ -> (CapResult {})
+    }
+    state decode(bytes: [u8; 24]) -> CapResult {
+      let mut value: Cap;
+      value.cap_vndr = bytes[0]; value.cap_next = bytes[1]; value.cap_len = bytes[2]; value.cfg_type = bytes[3];
+      value.bar = bytes[4]; value.id = bytes[5]; value.padding[0] = bytes[6]; value.padding[1] = bytes[7];
+      value.offset = (bytes[8] as u32) | ((bytes[9] as u32) << 8) | ((bytes[10] as u32) << 16) | ((bytes[11] as u32) << 24);
+      value.length = (bytes[12] as u32) | ((bytes[13] as u32) << 8) | ((bytes[14] as u32) << 16) | ((bytes[15] as u32) << 24);
+      CapResult { ok: true, value: value }
+    }
+}
+pub machine decode_cap_data(bytes: [u8; 24], captured: u8, location: u16) -> CapDataResult {
+    let raw: CapResult = decode_cap(bytes, captured, location);
+    transition raw.ok { true -> kind(raw.value, bytes, captured) _ -> (CapDataResult {}) }
+    state kind(raw: Cap, bytes: [u8; 24], captured: u8) -> CapDataResult {
+      let value: CapData = CapData { cfg_type: CapCfgType { raw: raw.cfg_type }, bar: raw.bar, id: raw.id, offset: raw.offset as u64, length: raw.length as u64 };
+      transition raw.cfg_type {
+        8 -> shared(value, raw.cap_len, bytes, captured)
+        2 -> notification(value, raw.cap_len, bytes, captured)
+        _ -> (CapDataResult { ok: true, value: value })
+      }
+    }
+    state shared(value: CapData, length: u8, bytes: [u8; 24], captured: u8) -> CapDataResult {
+      transition length >= 24 && captured >= 24 { true -> extend(value, bytes) _ -> (CapDataResult {}) }
+    }
+    state extend(value: CapData, bytes: [u8; 24]) -> CapDataResult {
+      let offset_high: u32 = (bytes[16] as u32) | ((bytes[17] as u32) << 8) | ((bytes[18] as u32) << 16) | ((bytes[19] as u32) << 24);
+      let length_high: u32 = (bytes[20] as u32) | ((bytes[21] as u32) << 8) | ((bytes[22] as u32) << 16) | ((bytes[23] as u32) << 24);
+      let mut result: CapData = value; result.offset = value.offset | ((offset_high as u64) << 32); result.length = value.length | ((length_high as u64) << 32);
+      CapDataResult { ok: true, value: result }
+    }
+    state notification(value: CapData, length: u8, bytes: [u8; 24], captured: u8) -> CapDataResult {
+      transition length >= 20 && captured >= 20 { true -> multiplier(value, bytes) _ -> (CapDataResult {}) }
+    }
+    state multiplier(value: CapData, bytes: [u8; 24]) -> CapDataResult {
+      let mut result: CapData = value; result.has_notify_multiplier = true;
+      result.notify_off_multiplier = (bytes[16] as u32) | ((bytes[17] as u32) << 8) | ((bytes[18] as u32) << 16) | ((bytes[19] as u32) << 24);
+      CapDataResult { ok: true, value: result }
+    }
+}
+// This only proposes a BAR-relative region; the owner must validate its actual BAR extent/type.
+// Explicit left-hand carrier keeps the u64 maximum expression in unsigned meaning
+// under current semantic evaluation; reproduce-unsigned-max.py records the issue.
+pub machine region_plan(value: CapData, minimum: u64, alignment: u8) -> RegionPlan {
+    transition cfg_type_known(value.cfg_type.raw) && value.bar <= 5 && alignment > 0 && (alignment & (alignment - 1)) == 0 && value.length >= minimum && (value.length as u64) <= (0xffffffffffffffff - value.offset) {
+      true -> aligned(value, alignment) _ -> (RegionPlan {})
+    }
+    state aligned(value: CapData, alignment: u8) -> RegionPlan {
+      RegionPlan { ok: (value.offset % (alignment as u64)) == 0, bar: value.bar, offset: value.offset, length: value.length, alignment: alignment }
+    }
+}
+pub machine notify_address(value: CapData, queue_notify_off: u16, notification_data: bool) -> NotifyAddress {
+    transition value.cfg_type.raw == 2 && value.bar <= 5 && value.has_notify_multiplier {
+      true -> width(value, queue_notify_off, notification_data) _ -> (NotifyAddress {})
+    }
+    state width(value: CapData, queue_notify_off: u16, notification_data: bool) -> NotifyAddress {
+      transition notification_data { true -> address(value, queue_notify_off, 4) _ -> address(value, queue_notify_off, 2) }
+    }
+    state address(value: CapData, queue_notify_off: u16, width: u8) -> NotifyAddress {
+      let delta: u64 = (queue_notify_off as u64) * (value.notify_off_multiplier as u64);
+      transition delta <= value.length && (width as u64) <= (value.length - delta) && delta <= (0xffffffffffffffff - value.offset) {
+        true -> finish(value.offset + delta, width) _ -> (NotifyAddress {})
+      }
+    }
+    state finish(offset: u64, width: u8) -> NotifyAddress {
+      NotifyAddress { ok: (offset % (width as u64)) == 0 && (width as u64) <= (0xffffffffffffffff - offset), offset: offset, bytes: width }
+    }
+}

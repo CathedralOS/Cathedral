@@ -1,0 +1,4 @@
+machine build(builder: &mut Build) {
+    builder.application("cathedral-virtio-transport-tests"); builder.freestanding = true;
+    builder.depend_as("cathedral_virtio", Source::Path { location: "../../../../source/libraries/virtio" });
+}

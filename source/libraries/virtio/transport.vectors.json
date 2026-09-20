@@ -1,0 +1,129 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "abi": "x86_64-unknown-uefi:repr(C)-facts",
+    "pointer_bits": 64,
+    "endian": "little"
+  },
+  "provenance": {
+    "kind": "upstream",
+    "description": "Actual pinned transport size/alignment/public offsets. CapCfgType is a Rust data-carrying enum, not its one-byte wire discriminator. No Omega ABI observation.",
+    "sources": [
+      "https://github.com/rust-osdev/virtio-spec-rs/tree/ad565bd701e93fa47bc288d45701e1ae53ac3c12/src"
+    ]
+  },
+  "measurements": {
+    "Cap.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "Cap.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Cap.cap_vndr.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Cap.cap_next.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "Cap.cap_len.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "Cap.cfg_type.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "Cap.bar.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Cap.id.offset": {
+      "kind": "offset",
+      "value": 5
+    },
+    "Cap.padding.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "Cap.offset.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Cap.length.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "Cap64.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "Cap64.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Cap64.cap.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Cap64.offset_hi.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Cap64.length_hi.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "NotifyCap.size": {
+      "kind": "size",
+      "value": 20
+    },
+    "NotifyCap.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "NotifyCap.cap.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "NotifyCap.notify_off_multiplier.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "CfgCap.size": {
+      "kind": "size",
+      "value": 20
+    },
+    "CfgCap.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "CfgCap.cap.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "CfgCap.pci_cfg_data.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "CapCfgType.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "CapCfgType.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "DeviceRegisters.size": {
+      "kind": "size",
+      "value": 256
+    },
+    "DeviceRegisters.alignment": {
+      "kind": "alignment",
+      "value": 4
+    }
+  }
+}

@@ -1,0 +1,24 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Named owner handoff data. No request grants authority or performs an effect.
+module transport_seams;
+pub data DiscoveryRequest [copy] { transport: u8; vendor: u16; device: u16; }
+pub data MappingRequest [copy] { physical_base: u64; bytes: u64; }
+pub data DmaRequest [copy] { bytes: u64; alignment: u32; device_writes: bool; }
+pub data InterruptRequest [copy] { queue: u16; vector: u16; }
+pub data QueueActivationRequest [copy] {
+    queue: u16; size: u16; descriptor_address: u64; driver_address: u64;
+    device_address: u64; packed: bool;
+}
+// Only protocol geometry: an owner must bind mappings, DMA custody, cache
+// coherence, barriers and interrupt routing before considering activation.
+pub machine activation_geometry_valid(value: QueueActivationRequest) -> bool {
+    transition value.size > 0 && value.size <= 32768 && (value.descriptor_address & 15) == 0 {
+      true -> format(value) _ -> (false)
+    }
+    state format(value: QueueActivationRequest) -> bool {
+      transition value.packed {
+        true -> ((value.driver_address & 3) == 0 && (value.device_address & 3) == 0)
+        _ -> ((value.size & (value.size - 1)) == 0 && (value.driver_address & 1) == 0 && (value.device_address & 3) == 0)
+      }
+    }
+}

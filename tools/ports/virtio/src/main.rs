@@ -3,6 +3,7 @@ use std::alloc::Layout;
 use virtio_spec::virtq::{Avail, Used};
 fn main() {
     packed_bitfields();
+    wide_word_order();
     for q in [0u16, 255, 256, 257, 65535] {
         for event in [false, true] {
             let avail = Avail::new(q, event);
@@ -44,4 +45,17 @@ fn packed_bitfields() {
         assert_eq!(flags.reserved(), 0x3fff);
     }
     println!("Pinned Rust: packed 15+1-bit offsets/wrap, 2+14-bit flags, and notification encodings passed.");
+}
+
+fn wide_word_order() {
+    use virtio_spec::{le32,le64,be32,be64};
+    let little = le64::from([le32::from_ne(0x89abcdef),le32::from_ne(0x12345678)]);
+    let big = be64::from([be32::from_ne(0x89abcdef),be32::from_ne(0x12345678)]);
+    assert_eq!(little.to_ne(), 0x1234567889abcdef);
+    assert_eq!(big.to_ne(), 0x89abcdef12345678);
+    let little_words: [le32;2] = little.into();
+    let big_words: [be32;2] = big.into();
+    assert_eq!(little_words[0].to_ne(),0x89abcdef);
+    assert_eq!(big_words[0].to_ne(),0x89abcdef);
+    println!("Pinned Rust: wide LE/BE first/second word order passed.");
 }

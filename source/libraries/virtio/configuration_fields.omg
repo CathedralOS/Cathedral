@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Exact pinned CommonCfg field access metadata; offsets alone confer no authority.
+module configuration_fields;
+use transport_access::RegisterField;
+use transport_access::WideField;
+pub const DEVICE_FEATURE_SELECT: RegisterField = RegisterField { offset: 0, bytes: 4, readable: true, writable: true, value_kind: 0 };
+pub const DEVICE_FEATURE: RegisterField = RegisterField { offset: 4, bytes: 4, readable: true, writable: false, value_kind: 0 };
+pub const DRIVER_FEATURE_SELECT: RegisterField = RegisterField { offset: 8, bytes: 4, readable: true, writable: true, value_kind: 0 };
+pub const DRIVER_FEATURE: RegisterField = RegisterField { offset: 12, bytes: 4, readable: true, writable: true, value_kind: 0 };
+pub const CONFIG_MSIX_VECTOR: RegisterField = RegisterField { offset: 16, bytes: 2, readable: true, writable: true, value_kind: 1 };
+pub const NUM_QUEUES: RegisterField = RegisterField { offset: 18, bytes: 2, readable: true, writable: false, value_kind: 1 };
+pub const DEVICE_STATUS: RegisterField = RegisterField { offset: 20, bytes: 1, readable: true, writable: true, value_kind: 4 };
+pub const CONFIG_GENERATION: RegisterField = RegisterField { offset: 21, bytes: 1, readable: true, writable: false, value_kind: 3 };
+pub const QUEUE_SELECT: RegisterField = RegisterField { offset: 22, bytes: 2, readable: true, writable: true, value_kind: 1 };
+pub const QUEUE_SIZE: RegisterField = RegisterField { offset: 24, bytes: 2, readable: true, writable: true, value_kind: 1 };
+pub const QUEUE_MSIX_VECTOR: RegisterField = RegisterField { offset: 26, bytes: 2, readable: true, writable: true, value_kind: 1 };
+pub const QUEUE_ENABLE: RegisterField = RegisterField { offset: 28, bytes: 2, readable: true, writable: true, value_kind: 1 };
+pub const QUEUE_NOTIFY_OFF: RegisterField = RegisterField { offset: 30, bytes: 2, readable: true, writable: false, value_kind: 1 };
+pub const QUEUE_DESC_LOW: RegisterField = RegisterField { offset: 32, bytes: 4, readable: true, writable: true, value_kind: 0 };
+pub const QUEUE_DESC_HIGH: RegisterField = RegisterField { offset: 36, bytes: 4, readable: true, writable: true, value_kind: 0 };
+pub const QUEUE_DRIVER_LOW: RegisterField = RegisterField { offset: 40, bytes: 4, readable: true, writable: true, value_kind: 0 };
+pub const QUEUE_DRIVER_HIGH: RegisterField = RegisterField { offset: 44, bytes: 4, readable: true, writable: true, value_kind: 0 };
+pub const QUEUE_DEVICE_LOW: RegisterField = RegisterField { offset: 48, bytes: 4, readable: true, writable: true, value_kind: 0 };
+pub const QUEUE_DEVICE_HIGH: RegisterField = RegisterField { offset: 52, bytes: 4, readable: true, writable: true, value_kind: 0 };
+pub const QUEUE_NOTIF_CONFIG_DATA: RegisterField = RegisterField { offset: 56, bytes: 2, readable: true, writable: false, value_kind: 1 };
+pub const QUEUE_RESET: RegisterField = RegisterField { offset: 58, bytes: 2, readable: true, writable: true, value_kind: 1 };
+pub const ADMIN_QUEUE_INDEX: RegisterField = RegisterField { offset: 60, bytes: 2, readable: true, writable: false, value_kind: 1 };
+pub const ADMIN_QUEUE_NUM: RegisterField = RegisterField { offset: 62, bytes: 2, readable: true, writable: false, value_kind: 1 };
+pub const QUEUE_DESC: WideField = WideField { low: QUEUE_DESC_LOW, high: QUEUE_DESC_HIGH };
+pub const QUEUE_DRIVER: WideField = WideField { low: QUEUE_DRIVER_LOW, high: QUEUE_DRIVER_HIGH };
+pub const QUEUE_DEVICE: WideField = WideField { low: QUEUE_DEVICE_LOW, high: QUEUE_DEVICE_HIGH };

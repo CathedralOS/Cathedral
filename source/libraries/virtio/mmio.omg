@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Pinned MMIO schemas; every register is an inert descriptor, never a pointer.
+module mmio;
+use transport_access::RegisterField;
+use transport_access::WideField;
+use transport_access::WordResult;
+pub data DeviceRegisters [copy] { words: [u32; 64]; }
+pub data InterruptStatus [copy] { raw: u8; }
+pub const MAGIC_VALUE: u32 = 0x74726976;
+pub const INTERRUPT_USED_BUFFER_NOTIFICATION: u8 = 1;
+pub const INTERRUPT_CONFIGURATION_CHANGE_NOTIFICATION: u8 = 2;
+pub const MAGIC_VALUE_REGISTER: RegisterField = RegisterField { offset: 0x000, bytes: 4, readable: true, writable: false, value_kind: 0 };
+pub const VERSION: RegisterField = RegisterField { offset: 0x004, bytes: 4, readable: true, writable: false, value_kind: 0 };
+pub const DEVICE_ID: RegisterField = RegisterField { offset: 0x008, bytes: 4, readable: true, writable: false, value_kind: 3 };
+pub const VENDOR_ID: RegisterField = RegisterField { offset: 0x00c, bytes: 4, readable: true, writable: false, value_kind: 0 };
+pub const DEVICE_FEATURES: RegisterField = RegisterField { offset: 0x010, bytes: 4, readable: true, writable: false, value_kind: 0 };
+pub const DEVICE_FEATURES_SEL: RegisterField = RegisterField { offset: 0x014, bytes: 4, readable: false, writable: true, value_kind: 0 };
+pub const DRIVER_FEATURES: RegisterField = RegisterField { offset: 0x020, bytes: 4, readable: false, writable: true, value_kind: 0 };
+pub const DRIVER_FEATURES_SEL: RegisterField = RegisterField { offset: 0x024, bytes: 4, readable: false, writable: true, value_kind: 0 };
+pub const QUEUE_SEL: RegisterField = RegisterField { offset: 0x030, bytes: 4, readable: false, writable: true, value_kind: 1 };
+pub const QUEUE_SIZE_MAX: RegisterField = RegisterField { offset: 0x034, bytes: 4, readable: true, writable: false, value_kind: 1 };
+pub const QUEUE_SIZE: RegisterField = RegisterField { offset: 0x038, bytes: 4, readable: false, writable: true, value_kind: 1 };
+pub const QUEUE_READY: RegisterField = RegisterField { offset: 0x044, bytes: 4, readable: true, writable: true, value_kind: 2 };
+pub const QUEUE_NOTIFY: RegisterField = RegisterField { offset: 0x050, bytes: 4, readable: false, writable: true, value_kind: 0 };
+pub const INTERRUPT_STATUS: RegisterField = RegisterField { offset: 0x060, bytes: 4, readable: true, writable: false, value_kind: 5 };
+pub const INTERRUPT_ACK: RegisterField = RegisterField { offset: 0x064, bytes: 4, readable: false, writable: true, value_kind: 5 };
+pub const STATUS: RegisterField = RegisterField { offset: 0x070, bytes: 4, readable: true, writable: true, value_kind: 4 };
+pub const QUEUE_DESC_LOW: RegisterField = RegisterField { offset: 0x080, bytes: 4, readable: false, writable: true, value_kind: 0 };
+pub const QUEUE_DESC_HIGH: RegisterField = RegisterField { offset: 0x084, bytes: 4, readable: false, writable: true, value_kind: 0 };
+pub const QUEUE_DRIVER_LOW: RegisterField = RegisterField { offset: 0x090, bytes: 4, readable: false, writable: true, value_kind: 0 };
+pub const QUEUE_DRIVER_HIGH: RegisterField = RegisterField { offset: 0x094, bytes: 4, readable: false, writable: true, value_kind: 0 };
+pub const QUEUE_DEVICE_LOW: RegisterField = RegisterField { offset: 0x0a0, bytes: 4, readable: false, writable: true, value_kind: 0 };
+pub const QUEUE_DEVICE_HIGH: RegisterField = RegisterField { offset: 0x0a4, bytes: 4, readable: false, writable: true, value_kind: 0 };
+pub const SHM_SEL: RegisterField = RegisterField { offset: 0x0ac, bytes: 4, readable: false, writable: true, value_kind: 0 };
+pub const SHM_LEN_LOW: RegisterField = RegisterField { offset: 0x0b0, bytes: 4, readable: true, writable: false, value_kind: 0 };
+pub const SHM_LEN_HIGH: RegisterField = RegisterField { offset: 0x0b4, bytes: 4, readable: true, writable: false, value_kind: 0 };
+pub const SHM_BASE_LOW: RegisterField = RegisterField { offset: 0x0b8, bytes: 4, readable: true, writable: false, value_kind: 0 };
+pub const SHM_BASE_HIGH: RegisterField = RegisterField { offset: 0x0bc, bytes: 4, readable: true, writable: false, value_kind: 0 };
+pub const QUEUE_RESET: RegisterField = RegisterField { offset: 0x0c0, bytes: 4, readable: true, writable: true, value_kind: 0 };
+pub const CONFIG_GENERATION: RegisterField = RegisterField { offset: 0x0fc, bytes: 4, readable: true, writable: false, value_kind: 0 };
+pub const CONFIG: RegisterField = RegisterField { offset: 0x100, bytes: 0, readable: true, writable: true, value_kind: 6 };
+pub const QUEUE_DESC: WideField = WideField { low: QUEUE_DESC_LOW, high: QUEUE_DESC_HIGH };
+pub const QUEUE_DRIVER: WideField = WideField { low: QUEUE_DRIVER_LOW, high: QUEUE_DRIVER_HIGH };
+pub const QUEUE_DEVICE: WideField = WideField { low: QUEUE_DEVICE_LOW, high: QUEUE_DEVICE_HIGH };
+pub const SHM_LEN: WideField = WideField { low: SHM_LEN_LOW, high: SHM_LEN_HIGH };
+pub const SHM_BASE: WideField = WideField { low: SHM_BASE_LOW, high: SHM_BASE_HIGH };
+// A copied observation, not volatile access. The config tail is outside this fixed prefix.
+pub machine snapshot_word(snapshot: DeviceRegisters, field: RegisterField) -> WordResult {
+    transition field.bytes == 4 && field.offset < 256 && (field.offset & 3) == 0 {
+      true -> read(snapshot, field.offset / 4) _ -> (WordResult {})
+    }
+    state read(snapshot: DeviceRegisters, index: u32) -> WordResult {
+      transition index < 64 { true -> (WordResult { ok: true, value: snapshot.words[index] }) _ -> (WordResult {}) }
+    }
+}
+pub machine modern_device_present(snapshot: DeviceRegisters) -> bool {
+    snapshot.words[0] == MAGIC_VALUE && snapshot.words[1] == 2 && snapshot.words[2] > 0 && snapshot.words[2] <= 255
+}

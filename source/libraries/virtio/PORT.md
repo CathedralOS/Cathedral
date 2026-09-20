@@ -13,11 +13,11 @@ The port changes language representation, replaces pointer projections/allocatio
 with inert plans, adds validation and tests, and retains unknown numeric values.
 
 The core milestone covers VIRTIO-000 and VIRTIO-001; packed queues are covered in
-`packed.PORT.md` for VIRTIO-002. `inventory.json` binds all
+`packed.PORT.md` for VIRTIO-002 and `transport.PORT.md` for VIRTIO-003. `inventory.json` binds all
 16 upstream source files and 629 lexical anchors to their exact hashes. There are
-539 translated anchors, seven deliberately omitted presentation/sealing anchors,
-and 83 explicitly pending transport anchors for VIRTIO-003. Those are
-implementation work, not asserted language blockers. The scanner is not a Rust
+620 translated anchors, nine deliberately omitted presentation/sealing anchors,
+and no pending or blocked source anchors. Effectful owner integration remains
+outside this pure port. The scanner is not a Rust
 semantic parser: `raw-shapes.json` additionally inventories private fields;
 `check.py` compares original widths/order and enum carriers/discriminants.
 

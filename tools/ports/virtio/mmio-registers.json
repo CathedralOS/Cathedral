@@ -1,0 +1,242 @@
+[
+  {
+    "name": "magic_value",
+    "offset": 0,
+    "access": "ReadOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "version",
+    "offset": 4,
+    "access": "ReadOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "device_id",
+    "offset": 8,
+    "access": "ReadOnly",
+    "source_type": "Id",
+    "bytes": 4,
+    "value_kind": 3
+  },
+  {
+    "name": "vendor_id",
+    "offset": 12,
+    "access": "ReadOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "device_features",
+    "offset": 16,
+    "access": "ReadOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "device_features_sel",
+    "offset": 20,
+    "access": "WriteOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "driver_features",
+    "offset": 32,
+    "access": "WriteOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "driver_features_sel",
+    "offset": 36,
+    "access": "WriteOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "queue_sel",
+    "offset": 48,
+    "access": "WriteOnly",
+    "source_type": "le16",
+    "bytes": 4,
+    "value_kind": 1
+  },
+  {
+    "name": "queue_size_max",
+    "offset": 52,
+    "access": "ReadOnly",
+    "source_type": "le16",
+    "bytes": 4,
+    "value_kind": 1
+  },
+  {
+    "name": "queue_size",
+    "offset": 56,
+    "access": "WriteOnly",
+    "source_type": "le16",
+    "bytes": 4,
+    "value_kind": 1
+  },
+  {
+    "name": "queue_ready",
+    "offset": 68,
+    "access": "ReadWrite",
+    "source_type": "bool",
+    "bytes": 4,
+    "value_kind": 2
+  },
+  {
+    "name": "queue_notify",
+    "offset": 80,
+    "access": "WriteOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "interrupt_status",
+    "offset": 96,
+    "access": "ReadOnly",
+    "source_type": "InterruptStatus",
+    "bytes": 4,
+    "value_kind": 5
+  },
+  {
+    "name": "interrupt_ack",
+    "offset": 100,
+    "access": "WriteOnly",
+    "source_type": "InterruptStatus",
+    "bytes": 4,
+    "value_kind": 5
+  },
+  {
+    "name": "status",
+    "offset": 112,
+    "access": "ReadWrite",
+    "source_type": "DeviceStatus",
+    "bytes": 4,
+    "value_kind": 4
+  },
+  {
+    "name": "queue_desc_low",
+    "offset": 128,
+    "access": "WriteOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "queue_desc_high",
+    "offset": 132,
+    "access": "WriteOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "queue_driver_low",
+    "offset": 144,
+    "access": "WriteOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "queue_driver_high",
+    "offset": 148,
+    "access": "WriteOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "queue_device_low",
+    "offset": 160,
+    "access": "WriteOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "queue_device_high",
+    "offset": 164,
+    "access": "WriteOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "shm_sel",
+    "offset": 172,
+    "access": "WriteOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "shm_len_low",
+    "offset": 176,
+    "access": "ReadOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "shm_len_high",
+    "offset": 180,
+    "access": "ReadOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "shm_base_low",
+    "offset": 184,
+    "access": "ReadOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "shm_base_high",
+    "offset": 188,
+    "access": "ReadOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "queue_reset",
+    "offset": 192,
+    "access": "ReadWrite",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "config_generation",
+    "offset": 252,
+    "access": "ReadOnly",
+    "source_type": "le32",
+    "bytes": 4,
+    "value_kind": 0
+  },
+  {
+    "name": "config",
+    "offset": 256,
+    "access": "ReadWrite",
+    "source_type": "()",
+    "bytes": 0,
+    "value_kind": 6
+  }
+]

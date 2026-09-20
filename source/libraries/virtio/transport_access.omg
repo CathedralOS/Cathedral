@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Data-only replacement for pinned volatile.rs; see transport.PORT.md.
+module transport_access;
+pub data ByteResult [copy] { ok: bool; value: u8; }
+pub data HalfResult [copy] { ok: bool; value: u16; }
+pub data BoolResult [copy] { ok: bool; value: bool; }
+pub data WordResult [copy] { ok: bool; value: u32; }
+pub data RegisterField [copy] { offset: u32; bytes: u8; readable: bool; writable: bool; value_kind: u8; }
+pub data WideField [copy] { low: RegisterField; high: RegisterField; }
+pub data AccessOperation [copy] { kind: u8; offset: u32; bytes: u8; value: u32; }
+pub data AccessPlan [copy] { ok: bool; count: u8; operations: [AccessOperation; 2]; }
+pub machine narrow_byte(value: u32) -> ByteResult {
+    transition value <= 255 { true -> (ByteResult { ok: true, value: value as u8 }) _ -> (ByteResult {}) }
+}
+pub machine narrow_half(value: u32) -> HalfResult {
+    transition value <= 65535 { true -> (HalfResult { ok: true, value: value as u16 }) _ -> (HalfResult {}) }
+}
+pub machine decode_bool_pinned(value: u32) -> bool { value == 1 }
+pub machine decode_bool_checked(value: u32) -> BoolResult { BoolResult { ok: value <= 1, value: value == 1 } }
+pub machine encode_bool(value: bool) -> u32 { transition value { true -> (1) _ -> (0) } }
+// Preserve the actual endian_num array ordering used by pinned WideVolatilePtr.
+// The modern VirtIO low/high register convention uses the little-endian branch.
+pub machine wide_decode_pinned(first: u32, second: u32, big_endian: bool) -> u64 {
+    transition big_endian {
+      true -> (((first as u64) << 32) | (second as u64))
+      _ -> ((first as u64) | ((second as u64) << 32))
+    }
+}
+pub machine register_shape_valid(field: RegisterField) -> bool {
+    transition field.bytes {
+      1 -> (true)
+      2 -> ((field.offset & 1) == 0 && field.offset <= 0xfffffffe)
+      4 -> ((field.offset & 3) == 0 && field.offset <= 0xfffffffc)
+      _ -> (false)
+    }
+}
+pub machine read_plan(field: RegisterField) -> AccessPlan {
+    transition field.readable && register_shape_valid(field) { true -> valid(field) _ -> (AccessPlan {}) }
+    state valid(field: RegisterField) -> AccessPlan {
+      let mut result: AccessPlan; result.ok = true; result.count = 1;
+      result.operations[0] = AccessOperation { kind: 1, offset: field.offset, bytes: field.bytes }; result
+    }
+}
+pub machine write_plan(field: RegisterField, value: u32) -> AccessPlan {
+    transition field.writable && register_shape_valid(field) { true -> valid(field, value) _ -> (AccessPlan {}) }
+    state valid(field: RegisterField, value: u32) -> AccessPlan {
+      let mut result: AccessPlan; result.ok = true; result.count = 1;
+      result.operations[0] = AccessOperation { kind: 2, offset: field.offset, bytes: field.bytes, value: value }; result
+    }
+}
+pub machine wide_read_plan(field: WideField) -> AccessPlan {
+    transition field.low.bytes == 4 && field.high.bytes == 4 && field.low.readable && field.high.readable && register_shape_valid(field.low) && register_shape_valid(field.high) && field.low.offset != field.high.offset {
+      true -> valid(field) _ -> (AccessPlan {})
+    }
+    state valid(field: WideField) -> AccessPlan {
+      let mut result: AccessPlan; result.ok = true; result.count = 2;
+      result.operations[0] = AccessOperation { kind: 1, offset: field.low.offset, bytes: 4 };
+      result.operations[1] = AccessOperation { kind: 1, offset: field.high.offset, bytes: 4 }; result
+    }
+}
+pub machine wide_write_plan(field: WideField, value: u64, big_endian: bool) -> AccessPlan {
+    transition field.low.bytes == 4 && field.high.bytes == 4 && field.low.writable && field.high.writable && register_shape_valid(field.low) && register_shape_valid(field.high) && field.low.offset != field.high.offset {
+      true -> valid(field, value, big_endian) _ -> (AccessPlan {})
+    }
+    state valid(field: WideField, value: u64, big_endian: bool) -> AccessPlan {
+      let low: u32 = (value & 0xffffffff) as u32;
+      let high: u32 = ((value >> 32) & 0xffffffff) as u32;
+      transition big_endian { true -> plan(field, high, low) _ -> plan(field, low, high) }
+    }
+    state plan(field: WideField, first: u32, second: u32) -> AccessPlan {
+      let mut result: AccessPlan; result.ok = true; result.count = 2;
+      result.operations[0] = AccessOperation { kind: 2, offset: field.low.offset, bytes: 4, value: first };
+      result.operations[1] = AccessOperation { kind: 2, offset: field.high.offset, bytes: 4, value: second }; result
+    }
+}
