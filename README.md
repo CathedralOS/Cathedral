@@ -37,6 +37,10 @@ driver.
 Current work continues to specify each meaningful contract before the wider
 system hardens around it.
 
+The agent-ready [`rust-osdev` porting queue](TASKS_RUST_OSDEV_PORTS.md) tracks
+licensed mechanical translations that can proceed ahead of compiler and system
+integration work.
+
 Accepted platform behavior lives in the subject-organized
 [`wiki/spec/`](wiki/spec/README.md). The specification is deliberately partial:
 unwritten behavior remains unspecified rather than being inferred from design
