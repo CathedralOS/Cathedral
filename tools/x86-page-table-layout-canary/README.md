@@ -1,24 +1,22 @@
-# x86 page-table layout source canary
+# x86 page-table policy field canary
 
-This compile-only harness checks Cathedral's pure x86-64 paging-entry schema
-and layout policy. It pins one fixed 8-byte, 8-aligned container whose fourteen
-logical fields tile all 64 bits exactly, including the 40-bit page-frame number
-at physical-address bits 12 through 51. Every logical field remains runtime-
-relevant, and the layout constructor's complete write frame is exactly its
-private `self.entries` planning buffer. The compile root also keeps the sibling
-x86 IDT-gate fact live against the same current core-layout dependency.
-
-Run:
+The canonical PTE schema remains in `source/drivers/facts/x86_page_table_entry.omg`.
+Its stateless policy now lives in `x86_page_table_layout.omg`. This canary demands
+all fourteen field projections on a local equivalent schema through that actual
+policy. `check-schema.py` binds the test schema to the canonical one and audits
+all64 requested bit positions, eight-byte size and eight-byte alignment.
 
 ```sh
-tools/x86-page-table-layout-canary/run.sh
+OMEGA_BIN=/path/to/omega tools/x86-page-table-layout-canary/run.sh
 ```
 
-Set `OMEGA_BIN` to test with a specific compiler binary. Otherwise the harness
-uses an installed `omega`, a built sibling `../Omega/target/debug/omega`, or
-builds that sibling with Cargo, in that order. Typed-artifact validation uses
-`jq` and fails with an explicit dependency error when it is unavailable.
+The harness uses current application/package wiring and source checking. Fresh
+Omega eaa7993 passes13sources. The old jq assertion is retained as historical
+material; current Omega no longer emits the JSON artifacts it expected.
+The layout no longer returns a non-copy receiver-owned buffer: it constructs a
+local buffer under an explicit Layout witness. No runtime storage is granted.
 
-The canary validates geometry only. It mints no `Extent`, proves no frame
-ownership, installs no table, invalidates no TLB, and grants no mapping or
-machine-control authority.
+A local schema is needed to distinguish policy normalization from the current
+imported plan-laid private-field visibility limitation. Native emitted geometry
+is not measured, and no table installation, frame ownership or TLB operation is
+claimed. The separate numeric codec tests exercise the actual canonical type.

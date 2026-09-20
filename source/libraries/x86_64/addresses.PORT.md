@@ -22,7 +22,7 @@ four page-table index levels. It is not LA57 or LAM handling. The physical
 profile is the pin's 52-bit numeric envelope, not a discovered processor's
 MAXPHYADDR or a usable-memory claim. Intel's
 [SDM Volume 3A](https://cdrdv2-public.intel.com/874249/253668-090-sdm-vol-3a.pdf),
-chapters 3–4, distinguishes canonicality and paging modes. The existing core
+chapters 4–5, distinguishes canonicality and paging modes. The existing core
 facts and full [reconciliation](RECONCILIATION.md) document Cathedral's selected
 bootstrap profile. Omega data/case, dependent-value, authority and layout
 contracts were consulted before implementation.

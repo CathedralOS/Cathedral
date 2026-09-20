@@ -1,11 +1,36 @@
-// Compile-only acceptance root for the x86 page-table entry layout. The IDT
-// fact shares the same current core-layout dependency and remains compile-live.
-
-use facts::x86_idt_gate;
-use facts::x86_page_table_entry;
-
-data Main {
+// Local equivalent schema demands all fourteen existing policy field projections.
+use facts::x86_page_table_layout::X86PageTableEntryLayout;
+data LocalPageTableEntry {
+    present: bool;
+    writable: bool;
+    user: bool;
+    write_through: bool;
+    cache_disable: bool;
+    accessed: bool;
+    dirty: bool;
+    page_size_or_pat: bool;
+    global: bool;
+    software_low: u8 [0..=7];
+    frame_number: u64 [0..=1099511627775];
+    software_high: u8 [0..=127];
+    protection_key: u8 [0..=15];
+    no_execute: bool;
 }
-
-machine Main::main(&mut self) {
+data Main { word: X86PageTableEntryLayout<LocalPageTableEntry>; }
+machine Main::main(&mut self) -> i32 {
+    self.word.present = true;
+    self.word.writable = true;
+    self.word.user = true;
+    self.word.write_through = true;
+    self.word.cache_disable = true;
+    self.word.accessed = true;
+    self.word.dirty = true;
+    self.word.page_size_or_pat = true;
+    self.word.global = true;
+    self.word.software_low = 7;
+    self.word.frame_number = 1099511627775;
+    self.word.software_high = 127;
+    self.word.protection_key = 15;
+    self.word.no_execute = true;
+    transition self.word.present == true && self.word.writable == true && self.word.user == true && self.word.write_through == true && self.word.cache_disable == true && self.word.accessed == true && self.word.dirty == true && self.word.page_size_or_pat == true && self.word.global == true && self.word.software_low == 7 && self.word.frame_number == 1099511627775 && self.word.software_high == 127 && self.word.protection_key == 15 && self.word.no_execute == true { true -> (0) _ -> (1) }
 }

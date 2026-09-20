@@ -1,0 +1,4 @@
+use facts::x86_page_table_entry;
+use facts::x86_page_table_layout::X86PageTableEntryLayout;
+data Main { value: X86PageTableEntryLayout<X86PageTableEntry>; }
+machine Main::main(&mut self) { self.value.present = true; }

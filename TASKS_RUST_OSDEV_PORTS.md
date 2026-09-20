@@ -213,7 +213,10 @@ underflow handling. The [descriptor slice](source/drivers/facts/x86_descriptors.
 adds semantic descriptor cases, complete byte codecs, GDT append and bitmap
 plans, four Rust tests and four body mutations; native imported-layout limits
 are recorded. Page/frame and detached table work remains; the full task
-checkboxes stay open.
+checkboxes stay open. The [PTE codec slice](source/libraries/x86_64/page-entries.PORT.md)
+reuses the canonical entry schema: 151 Omega scenarios, 143 actual Rust
+witnesses and three body mutations pass. The modernized layout canary demands
+all fourteen fields through the existing bit policy; native ABI is not measured.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

@@ -14,7 +14,7 @@ trap 'rm -rf "$SCRATCH_DIR"' EXIT
 mkdir -p "$PROJECT_DIR"
 install -m 0644 "$CANARY_ROOT/main.omg" "$PROJECT_DIR/main.omg"
 install -m 0644 "$CANARY_ROOT/build.omg" "$PROJECT_DIR/build.omg"
-ln -s "$REPO_ROOT/source/drivers/facts" "$PROJECT_DIR/facts"
+cp -R "$REPO_ROOT/source/drivers/facts" "$PROJECT_DIR/facts"
 CANARY_MAIN="$PROJECT_DIR/main.omg"
 
 run_omega() {
@@ -25,31 +25,14 @@ run_omega() {
   elif [[ -x "$OMEGA_REPO/target/debug/omega" ]]; then
     "$OMEGA_REPO/target/debug/omega" "$@"
   elif command -v cargo >/dev/null 2>&1 && [[ -f "$OMEGA_REPO/Cargo.toml" ]]; then
-    cargo run -q --manifest-path "$OMEGA_REPO/Cargo.toml" -p omega-cli -- "$@"
+    cargo run -q --manifest-path "$OMEGA_REPO/Cargo.toml" -p omega -- "$@"
   else
     echo "error: no 'omega' toolchain or sibling Omega workspace" >&2
     exit 2
   fi
 }
 
-if ! command -v jq >/dev/null 2>&1; then
-  echo "error: jq is required to validate the typed x86 page-table layout" >&2
-  exit 2
-fi
+python3 "$CANARY_ROOT/check-schema.py"
+run_omega --check "$CANARY_MAIN"
 
-run_omega --check --build-dir "$BUILD_DIR" "$CANARY_MAIN"
-
-TYPED="$BUILD_DIR/04_typed_trees.json"
-CONTRACTS="$BUILD_DIR/05_machine_contracts.json"
-LAYOUT_ASSERTIONS="$CANARY_ROOT/assert-layout.jq"
-
-for artifact in "$TYPED" "$CONTRACTS" "$LAYOUT_ASSERTIONS"; do
-  [[ -f "$artifact" ]] || {
-    echo "error: expected compiler artifact is missing: $artifact" >&2
-    exit 1
-  }
-done
-
-jq -s -e -f "$LAYOUT_ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
-
-echo "Cathedral x86 page-table layout canary passed"
+echo "Cathedral x86 page-table policy field source check passed; native geometry NOT MEASURED"

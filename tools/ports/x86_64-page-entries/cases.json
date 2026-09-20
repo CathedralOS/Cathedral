@@ -1,0 +1,606 @@
+[
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(0);\n    transition page_entries::encode(&value) == 0 && page_entries::is_unused(&value) == true && page_entries::address(0) == 0 && page_entries::flags(0) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),true);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(18446744073709551615);\n    transition page_entries::encode(&value) == 18446744073709551615 && page_entries::is_unused(&value) == false && page_entries::address(18446744073709551615) == 4503599627366400 && page_entries::flags(18446744073709551615) == 18442240474082185215 && value.present == true && value.writable == true && value.user == true && value.write_through == true && value.cache_disable == true && value.accessed == true && value.dirty == true && value.page_size_or_pat == true && value.global == true && value.software_low == 7 && value.frame_number == 1099511627775 && value.software_high == 127 && value.protection_key == 15 && value.no_execute == true { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(4503599627366400),PageTableFlags::from_bits_retain(18442240474082185215));assert_eq!(e.addr().as_u64(),4503599627366400);assert_eq!(e.flags().bits(),18442240474082185215);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(12297829382473034410);\n    transition page_entries::encode(&value) == 12297829382473034410 && page_entries::is_unused(&value) == false && page_entries::address(12297829382473034410) == 3002399751577600 && page_entries::flags(12297829382473034410) == 12294826982721456810 && value.present == false && value.writable == true && value.user == false && value.write_through == true && value.cache_disable == false && value.accessed == true && value.dirty == false && value.page_size_or_pat == true && value.global == false && value.software_low == 5 && value.frame_number == 733007751850 && value.software_high == 42 && value.protection_key == 5 && value.no_execute == true { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(3002399751577600),PageTableFlags::from_bits_retain(12294826982721456810));assert_eq!(e.addr().as_u64(),3002399751577600);assert_eq!(e.flags().bits(),12294826982721456810);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(6148914691236517205);\n    transition page_entries::encode(&value) == 6148914691236517205 && page_entries::is_unused(&value) == false && page_entries::address(6148914691236517205) == 1501199875788800 && page_entries::flags(6148914691236517205) == 6147413491360728405 && value.present == true && value.writable == false && value.user == true && value.write_through == false && value.cache_disable == true && value.accessed == false && value.dirty == true && value.page_size_or_pat == false && value.global == true && value.software_low == 2 && value.frame_number == 366503875925 && value.software_high == 85 && value.protection_key == 10 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(1501199875788800),PageTableFlags::from_bits_retain(6147413491360728405));assert_eq!(e.addr().as_u64(),1501199875788800);assert_eq!(e.flags().bits(),6147413491360728405);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(1);\n    transition page_entries::encode(&value) == 1 && page_entries::is_unused(&value) == false && page_entries::address(1) == 0 && page_entries::flags(1) == 1 && value.present == true && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(1));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),1);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(2);\n    transition page_entries::encode(&value) == 2 && page_entries::is_unused(&value) == false && page_entries::address(2) == 0 && page_entries::flags(2) == 2 && value.present == false && value.writable == true && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(2));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),2);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(4);\n    transition page_entries::encode(&value) == 4 && page_entries::is_unused(&value) == false && page_entries::address(4) == 0 && page_entries::flags(4) == 4 && value.present == false && value.writable == false && value.user == true && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(4));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),4);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(8);\n    transition page_entries::encode(&value) == 8 && page_entries::is_unused(&value) == false && page_entries::address(8) == 0 && page_entries::flags(8) == 8 && value.present == false && value.writable == false && value.user == false && value.write_through == true && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(8));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),8);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(16);\n    transition page_entries::encode(&value) == 16 && page_entries::is_unused(&value) == false && page_entries::address(16) == 0 && page_entries::flags(16) == 16 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == true && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(16));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),16);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(32);\n    transition page_entries::encode(&value) == 32 && page_entries::is_unused(&value) == false && page_entries::address(32) == 0 && page_entries::flags(32) == 32 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == true && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(32));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),32);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(64);\n    transition page_entries::encode(&value) == 64 && page_entries::is_unused(&value) == false && page_entries::address(64) == 0 && page_entries::flags(64) == 64 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == true && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(64));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),64);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(128);\n    transition page_entries::encode(&value) == 128 && page_entries::is_unused(&value) == false && page_entries::address(128) == 0 && page_entries::flags(128) == 128 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == true && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(128));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),128);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(256);\n    transition page_entries::encode(&value) == 256 && page_entries::is_unused(&value) == false && page_entries::address(256) == 0 && page_entries::flags(256) == 256 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == true && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(256));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),256);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(512);\n    transition page_entries::encode(&value) == 512 && page_entries::is_unused(&value) == false && page_entries::address(512) == 0 && page_entries::flags(512) == 512 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 1 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(512));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),512);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(1024);\n    transition page_entries::encode(&value) == 1024 && page_entries::is_unused(&value) == false && page_entries::address(1024) == 0 && page_entries::flags(1024) == 1024 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 2 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(1024));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),1024);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(2048);\n    transition page_entries::encode(&value) == 2048 && page_entries::is_unused(&value) == false && page_entries::address(2048) == 0 && page_entries::flags(2048) == 2048 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 4 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(2048));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),2048);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(4096);\n    transition page_entries::encode(&value) == 4096 && page_entries::is_unused(&value) == false && page_entries::address(4096) == 4096 && page_entries::flags(4096) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 1 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(4096),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),4096);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(8192);\n    transition page_entries::encode(&value) == 8192 && page_entries::is_unused(&value) == false && page_entries::address(8192) == 8192 && page_entries::flags(8192) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 2 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(8192),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),8192);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(16384);\n    transition page_entries::encode(&value) == 16384 && page_entries::is_unused(&value) == false && page_entries::address(16384) == 16384 && page_entries::flags(16384) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 4 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(16384),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),16384);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(32768);\n    transition page_entries::encode(&value) == 32768 && page_entries::is_unused(&value) == false && page_entries::address(32768) == 32768 && page_entries::flags(32768) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 8 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(32768),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),32768);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(65536);\n    transition page_entries::encode(&value) == 65536 && page_entries::is_unused(&value) == false && page_entries::address(65536) == 65536 && page_entries::flags(65536) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 16 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(65536),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),65536);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(131072);\n    transition page_entries::encode(&value) == 131072 && page_entries::is_unused(&value) == false && page_entries::address(131072) == 131072 && page_entries::flags(131072) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 32 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(131072),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),131072);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(262144);\n    transition page_entries::encode(&value) == 262144 && page_entries::is_unused(&value) == false && page_entries::address(262144) == 262144 && page_entries::flags(262144) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 64 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(262144),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),262144);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(524288);\n    transition page_entries::encode(&value) == 524288 && page_entries::is_unused(&value) == false && page_entries::address(524288) == 524288 && page_entries::flags(524288) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 128 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(524288),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),524288);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(1048576);\n    transition page_entries::encode(&value) == 1048576 && page_entries::is_unused(&value) == false && page_entries::address(1048576) == 1048576 && page_entries::flags(1048576) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 256 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(1048576),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),1048576);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(2097152);\n    transition page_entries::encode(&value) == 2097152 && page_entries::is_unused(&value) == false && page_entries::address(2097152) == 2097152 && page_entries::flags(2097152) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 512 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(2097152),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),2097152);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(4194304);\n    transition page_entries::encode(&value) == 4194304 && page_entries::is_unused(&value) == false && page_entries::address(4194304) == 4194304 && page_entries::flags(4194304) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 1024 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(4194304),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),4194304);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(8388608);\n    transition page_entries::encode(&value) == 8388608 && page_entries::is_unused(&value) == false && page_entries::address(8388608) == 8388608 && page_entries::flags(8388608) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 2048 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(8388608),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),8388608);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(16777216);\n    transition page_entries::encode(&value) == 16777216 && page_entries::is_unused(&value) == false && page_entries::address(16777216) == 16777216 && page_entries::flags(16777216) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 4096 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(16777216),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),16777216);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(33554432);\n    transition page_entries::encode(&value) == 33554432 && page_entries::is_unused(&value) == false && page_entries::address(33554432) == 33554432 && page_entries::flags(33554432) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 8192 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(33554432),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),33554432);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(67108864);\n    transition page_entries::encode(&value) == 67108864 && page_entries::is_unused(&value) == false && page_entries::address(67108864) == 67108864 && page_entries::flags(67108864) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 16384 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(67108864),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),67108864);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(134217728);\n    transition page_entries::encode(&value) == 134217728 && page_entries::is_unused(&value) == false && page_entries::address(134217728) == 134217728 && page_entries::flags(134217728) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 32768 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(134217728),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),134217728);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(268435456);\n    transition page_entries::encode(&value) == 268435456 && page_entries::is_unused(&value) == false && page_entries::address(268435456) == 268435456 && page_entries::flags(268435456) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 65536 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(268435456),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),268435456);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(536870912);\n    transition page_entries::encode(&value) == 536870912 && page_entries::is_unused(&value) == false && page_entries::address(536870912) == 536870912 && page_entries::flags(536870912) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 131072 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(536870912),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),536870912);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(1073741824);\n    transition page_entries::encode(&value) == 1073741824 && page_entries::is_unused(&value) == false && page_entries::address(1073741824) == 1073741824 && page_entries::flags(1073741824) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 262144 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(1073741824),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),1073741824);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(2147483648);\n    transition page_entries::encode(&value) == 2147483648 && page_entries::is_unused(&value) == false && page_entries::address(2147483648) == 2147483648 && page_entries::flags(2147483648) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 524288 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(2147483648),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),2147483648);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(4294967296);\n    transition page_entries::encode(&value) == 4294967296 && page_entries::is_unused(&value) == false && page_entries::address(4294967296) == 4294967296 && page_entries::flags(4294967296) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 1048576 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(4294967296),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),4294967296);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(8589934592);\n    transition page_entries::encode(&value) == 8589934592 && page_entries::is_unused(&value) == false && page_entries::address(8589934592) == 8589934592 && page_entries::flags(8589934592) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 2097152 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(8589934592),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),8589934592);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(17179869184);\n    transition page_entries::encode(&value) == 17179869184 && page_entries::is_unused(&value) == false && page_entries::address(17179869184) == 17179869184 && page_entries::flags(17179869184) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 4194304 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(17179869184),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),17179869184);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(34359738368);\n    transition page_entries::encode(&value) == 34359738368 && page_entries::is_unused(&value) == false && page_entries::address(34359738368) == 34359738368 && page_entries::flags(34359738368) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 8388608 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(34359738368),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),34359738368);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(68719476736);\n    transition page_entries::encode(&value) == 68719476736 && page_entries::is_unused(&value) == false && page_entries::address(68719476736) == 68719476736 && page_entries::flags(68719476736) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 16777216 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(68719476736),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),68719476736);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(137438953472);\n    transition page_entries::encode(&value) == 137438953472 && page_entries::is_unused(&value) == false && page_entries::address(137438953472) == 137438953472 && page_entries::flags(137438953472) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 33554432 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(137438953472),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),137438953472);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(274877906944);\n    transition page_entries::encode(&value) == 274877906944 && page_entries::is_unused(&value) == false && page_entries::address(274877906944) == 274877906944 && page_entries::flags(274877906944) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 67108864 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(274877906944),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),274877906944);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(549755813888);\n    transition page_entries::encode(&value) == 549755813888 && page_entries::is_unused(&value) == false && page_entries::address(549755813888) == 549755813888 && page_entries::flags(549755813888) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 134217728 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(549755813888),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),549755813888);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(1099511627776);\n    transition page_entries::encode(&value) == 1099511627776 && page_entries::is_unused(&value) == false && page_entries::address(1099511627776) == 1099511627776 && page_entries::flags(1099511627776) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 268435456 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(1099511627776),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),1099511627776);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(2199023255552);\n    transition page_entries::encode(&value) == 2199023255552 && page_entries::is_unused(&value) == false && page_entries::address(2199023255552) == 2199023255552 && page_entries::flags(2199023255552) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 536870912 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(2199023255552),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),2199023255552);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(4398046511104);\n    transition page_entries::encode(&value) == 4398046511104 && page_entries::is_unused(&value) == false && page_entries::address(4398046511104) == 4398046511104 && page_entries::flags(4398046511104) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 1073741824 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(4398046511104),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),4398046511104);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(8796093022208);\n    transition page_entries::encode(&value) == 8796093022208 && page_entries::is_unused(&value) == false && page_entries::address(8796093022208) == 8796093022208 && page_entries::flags(8796093022208) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 2147483648 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(8796093022208),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),8796093022208);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(17592186044416);\n    transition page_entries::encode(&value) == 17592186044416 && page_entries::is_unused(&value) == false && page_entries::address(17592186044416) == 17592186044416 && page_entries::flags(17592186044416) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 4294967296 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(17592186044416),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),17592186044416);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(35184372088832);\n    transition page_entries::encode(&value) == 35184372088832 && page_entries::is_unused(&value) == false && page_entries::address(35184372088832) == 35184372088832 && page_entries::flags(35184372088832) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 8589934592 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(35184372088832),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),35184372088832);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(70368744177664);\n    transition page_entries::encode(&value) == 70368744177664 && page_entries::is_unused(&value) == false && page_entries::address(70368744177664) == 70368744177664 && page_entries::flags(70368744177664) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 17179869184 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(70368744177664),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),70368744177664);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(140737488355328);\n    transition page_entries::encode(&value) == 140737488355328 && page_entries::is_unused(&value) == false && page_entries::address(140737488355328) == 140737488355328 && page_entries::flags(140737488355328) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 34359738368 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(140737488355328),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),140737488355328);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(281474976710656);\n    transition page_entries::encode(&value) == 281474976710656 && page_entries::is_unused(&value) == false && page_entries::address(281474976710656) == 281474976710656 && page_entries::flags(281474976710656) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 68719476736 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(281474976710656),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),281474976710656);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(562949953421312);\n    transition page_entries::encode(&value) == 562949953421312 && page_entries::is_unused(&value) == false && page_entries::address(562949953421312) == 562949953421312 && page_entries::flags(562949953421312) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 137438953472 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(562949953421312),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),562949953421312);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(1125899906842624);\n    transition page_entries::encode(&value) == 1125899906842624 && page_entries::is_unused(&value) == false && page_entries::address(1125899906842624) == 1125899906842624 && page_entries::flags(1125899906842624) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 274877906944 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(1125899906842624),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),1125899906842624);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(2251799813685248);\n    transition page_entries::encode(&value) == 2251799813685248 && page_entries::is_unused(&value) == false && page_entries::address(2251799813685248) == 2251799813685248 && page_entries::flags(2251799813685248) == 0 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 549755813888 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(2251799813685248),PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64(),2251799813685248);assert_eq!(e.flags().bits(),0);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(4503599627370496);\n    transition page_entries::encode(&value) == 4503599627370496 && page_entries::is_unused(&value) == false && page_entries::address(4503599627370496) == 0 && page_entries::flags(4503599627370496) == 4503599627370496 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 1 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(4503599627370496));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),4503599627370496);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(9007199254740992);\n    transition page_entries::encode(&value) == 9007199254740992 && page_entries::is_unused(&value) == false && page_entries::address(9007199254740992) == 0 && page_entries::flags(9007199254740992) == 9007199254740992 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 2 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(9007199254740992));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),9007199254740992);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(18014398509481984);\n    transition page_entries::encode(&value) == 18014398509481984 && page_entries::is_unused(&value) == false && page_entries::address(18014398509481984) == 0 && page_entries::flags(18014398509481984) == 18014398509481984 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 4 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(18014398509481984));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),18014398509481984);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(36028797018963968);\n    transition page_entries::encode(&value) == 36028797018963968 && page_entries::is_unused(&value) == false && page_entries::address(36028797018963968) == 0 && page_entries::flags(36028797018963968) == 36028797018963968 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 8 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(36028797018963968));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),36028797018963968);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(72057594037927936);\n    transition page_entries::encode(&value) == 72057594037927936 && page_entries::is_unused(&value) == false && page_entries::address(72057594037927936) == 0 && page_entries::flags(72057594037927936) == 72057594037927936 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 16 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(72057594037927936));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),72057594037927936);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(144115188075855872);\n    transition page_entries::encode(&value) == 144115188075855872 && page_entries::is_unused(&value) == false && page_entries::address(144115188075855872) == 0 && page_entries::flags(144115188075855872) == 144115188075855872 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 32 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(144115188075855872));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),144115188075855872);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(288230376151711744);\n    transition page_entries::encode(&value) == 288230376151711744 && page_entries::is_unused(&value) == false && page_entries::address(288230376151711744) == 0 && page_entries::flags(288230376151711744) == 288230376151711744 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 64 && value.protection_key == 0 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(288230376151711744));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),288230376151711744);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(576460752303423488);\n    transition page_entries::encode(&value) == 576460752303423488 && page_entries::is_unused(&value) == false && page_entries::address(576460752303423488) == 0 && page_entries::flags(576460752303423488) == 576460752303423488 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 1 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(576460752303423488));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),576460752303423488);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(1152921504606846976);\n    transition page_entries::encode(&value) == 1152921504606846976 && page_entries::is_unused(&value) == false && page_entries::address(1152921504606846976) == 0 && page_entries::flags(1152921504606846976) == 1152921504606846976 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 2 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(1152921504606846976));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),1152921504606846976);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(2305843009213693952);\n    transition page_entries::encode(&value) == 2305843009213693952 && page_entries::is_unused(&value) == false && page_entries::address(2305843009213693952) == 0 && page_entries::flags(2305843009213693952) == 2305843009213693952 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 4 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(2305843009213693952));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),2305843009213693952);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(4611686018427387904);\n    transition page_entries::encode(&value) == 4611686018427387904 && page_entries::is_unused(&value) == false && page_entries::address(4611686018427387904) == 0 && page_entries::flags(4611686018427387904) == 4611686018427387904 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 8 && value.no_execute == false { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(4611686018427387904));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),4611686018427387904);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: X86PageTableEntry = page_entries::decode(9223372036854775808);\n    transition page_entries::encode(&value) == 9223372036854775808 && page_entries::is_unused(&value) == false && page_entries::address(9223372036854775808) == 0 && page_entries::flags(9223372036854775808) == 9223372036854775808 && value.present == false && value.writable == false && value.user == false && value.write_through == false && value.cache_disable == false && value.accessed == false && value.dirty == false && value.page_size_or_pat == false && value.global == false && value.software_low == 0 && value.frame_number == 0 && value.software_high == 0 && value.protection_key == 0 && value.no_execute == true { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(9223372036854775808));assert_eq!(e.addr().as_u64(),0);assert_eq!(e.flags().bits(),9223372036854775808);assert_eq!(e.is_unused(),false);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::set_address(0, 0);\n    transition equal(value, 0) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||{let mut e=PageTableEntry::new(); e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(0)); e.addr().as_u64()|e.flags().bits()}),Some(0));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::set_address(4096, 3);\n    transition equal(value, 4099) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||{let mut e=PageTableEntry::new(); e.set_addr(PhysAddr::new(4096),PageTableFlags::from_bits_retain(3)); e.addr().as_u64()|e.flags().bits()}),Some(4099));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::set_address(4503599627366400, 9223372036854775935);\n    transition equal(value, 9227875636482142335) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||{let mut e=PageTableEntry::new(); e.set_addr(PhysAddr::new(4503599627366400),PageTableFlags::from_bits_retain(9223372036854775935)); e.addr().as_u64()|e.flags().bits()}),Some(9227875636482142335));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::set_address(4096, 8193);\n    transition equal(value, 12289) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||{let mut e=PageTableEntry::new(); e.set_addr(PhysAddr::new(4096),PageTableFlags::from_bits_retain(8193)); e.addr().as_u64()|e.flags().bits()}),Some(12289));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::set_address(1, 3);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||{let mut e=PageTableEntry::new(); e.set_addr(PhysAddr::new(1),PageTableFlags::from_bits_retain(3)); e.addr().as_u64()|e.flags().bits()}),None);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::set_address(4503599627370496, 1);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||{let mut e=PageTableEntry::new(); e.set_addr(PhysAddr::new(4503599627370496),PageTableFlags::from_bits_retain(1)); e.addr().as_u64()|e.flags().bits()}),None);"
+  },
+  {
+    "body": "let result: FrameResult = page_entries::frame(0); transition result in FrameResult::NotPresent { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(0));assert_eq!(e.frame().map(|p|p.start_address().as_u64()),Err(FrameError::FrameNotPresent));"
+  },
+  {
+    "body": "let result: FrameResult = page_entries::frame(128); transition result in FrameResult::NotPresent { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(128));assert_eq!(e.frame().map(|p|p.start_address().as_u64()),Err(FrameError::FrameNotPresent));"
+  },
+  {
+    "body": "let result: FrameResult = page_entries::frame(1); transition result { FrameResult::Value { address } -> finish(address) _ -> (1) } state finish(address: u64) -> i32 { transition address == 0 { true -> (0) _ -> (1) } }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(1));assert_eq!(e.frame().map(|p|p.start_address().as_u64()),Ok(0));"
+  },
+  {
+    "body": "let result: FrameResult = page_entries::frame(129); transition result in FrameResult::HugeFrame { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(129));assert_eq!(e.frame().map(|p|p.start_address().as_u64()),Err(FrameError::HugeFrame));"
+  },
+  {
+    "body": "let result: FrameResult = page_entries::frame(305418241); transition result { FrameResult::Value { address } -> finish(address) _ -> (1) } state finish(address: u64) -> i32 { transition address == 305418240 { true -> (0) _ -> (1) } }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(305418240),PageTableFlags::from_bits_retain(1));assert_eq!(e.frame().map(|p|p.start_address().as_u64()),Ok(305418240));"
+  },
+  {
+    "body": "let result: FrameResult = page_entries::frame(18446744073709551615); transition result in FrameResult::HugeFrame { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(4503599627366400),PageTableFlags::from_bits_retain(18442240474082185215));assert_eq!(e.frame().map(|p|p.start_address().as_u64()),Err(FrameError::HugeFrame));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::set_frame(0, 0);\n    transition equal(value, 0) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||{let mut v=PageTableEntry::new();v.set_frame(PhysFrame::containing_address(PhysAddr::new(0)),PageTableFlags::from_bits_retain(0));v.addr().as_u64()|v.flags().bits()}),Some(0));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::set_frame(4096, 1);\n    transition equal(value, 4097) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||{let mut v=PageTableEntry::new();v.set_frame(PhysFrame::containing_address(PhysAddr::new(4096)),PageTableFlags::from_bits_retain(1));v.addr().as_u64()|v.flags().bits()}),Some(4097));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::set_frame(4096, 129);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||{let mut v=PageTableEntry::new();v.set_frame(PhysFrame::containing_address(PhysAddr::new(4096)),PageTableFlags::from_bits_retain(129));v.addr().as_u64()|v.flags().bits()}),None);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::set_frame(0, 18446744073709551615);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||{let mut v=PageTableEntry::new();v.set_frame(PhysFrame::containing_address(PhysAddr::new(0)),PageTableFlags::from_bits_retain(18446744073709551615));v.addr().as_u64()|v.flags().bits()}),None);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::set_frame(4503599627366400, 9223372036854775809);\n    transition equal(value, 9227875636482142209) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||{let mut v=PageTableEntry::new();v.set_frame(PhysFrame::containing_address(PhysAddr::new(4503599627366400)),PageTableFlags::from_bits_retain(9223372036854775809));v.addr().as_u64()|v.flags().bits()}),Some(9227875636482142209));"
+  },
+  {
+    "body": "transition page_entries::set_flags(18446744073709551615, 0) == 4503599627366400 { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(4503599627366400),PageTableFlags::from_bits_retain(18442240474082185215));e.set_flags(PageTableFlags::from_bits_retain(0));assert_eq!(e.addr().as_u64()|e.flags().bits(),4503599627366400);"
+  },
+  {
+    "body": "transition page_entries::set_flags(4097, 3) == 4099 { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(4096),PageTableFlags::from_bits_retain(1));e.set_flags(PageTableFlags::from_bits_retain(3));assert_eq!(e.addr().as_u64()|e.flags().bits(),4099);"
+  },
+  {
+    "body": "transition page_entries::set_flags(4097, 8193) == 12289 { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(4096),PageTableFlags::from_bits_retain(1));e.set_flags(PageTableFlags::from_bits_retain(8193));assert_eq!(e.addr().as_u64()|e.flags().bits(),12289);"
+  },
+  {
+    "body": "transition page_entries::set_flags(0, 18446744073709551615) == 18446744073709551615 { true -> (0) _ -> (1) }",
+    "rust": "let mut e=PageTableEntry::new();e.set_addr(PhysAddr::new(0),PageTableFlags::from_bits_retain(0));e.set_flags(PageTableFlags::from_bits_retain(18446744073709551615));assert_eq!(e.addr().as_u64()|e.flags().bits(),18446744073709551615);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_checked(0);\n    transition equal(value, 0) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||u64::from(PageTableIndex::new(0))),Some(0));"
+  },
+  {
+    "body": "transition page_entries::index_truncate(0) == 0 { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(u64::from(PageTableIndex::new_truncate(0)),0);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_checked(1);\n    transition equal(value, 1) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||u64::from(PageTableIndex::new(1))),Some(1));"
+  },
+  {
+    "body": "transition page_entries::index_truncate(1) == 1 { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(u64::from(PageTableIndex::new_truncate(1)),1);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_checked(511);\n    transition equal(value, 511) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||u64::from(PageTableIndex::new(511))),Some(511));"
+  },
+  {
+    "body": "transition page_entries::index_truncate(511) == 511 { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(u64::from(PageTableIndex::new_truncate(511)),511);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_checked(512);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||u64::from(PageTableIndex::new(512))),None);"
+  },
+  {
+    "body": "transition page_entries::index_truncate(512) == 0 { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(u64::from(PageTableIndex::new_truncate(512)),0);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_checked(65535);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||u64::from(PageTableIndex::new(65535))),None);"
+  },
+  {
+    "body": "transition page_entries::index_truncate(65535) == 511 { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(u64::from(PageTableIndex::new_truncate(65535)),511);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::offset_checked(0);\n    transition equal(value, 0) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||u64::from(PageOffset::new(0))),Some(0));"
+  },
+  {
+    "body": "transition page_entries::offset_truncate(0) == 0 { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(u64::from(PageOffset::new_truncate(0)),0);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::offset_checked(1);\n    transition equal(value, 1) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||u64::from(PageOffset::new(1))),Some(1));"
+  },
+  {
+    "body": "transition page_entries::offset_truncate(1) == 1 { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(u64::from(PageOffset::new_truncate(1)),1);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::offset_checked(4095);\n    transition equal(value, 4095) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||u64::from(PageOffset::new(4095))),Some(4095));"
+  },
+  {
+    "body": "transition page_entries::offset_truncate(4095) == 4095 { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(u64::from(PageOffset::new_truncate(4095)),4095);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::offset_checked(4096);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||u64::from(PageOffset::new(4096))),None);"
+  },
+  {
+    "body": "transition page_entries::offset_truncate(4096) == 0 { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(u64::from(PageOffset::new_truncate(4096)),0);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::offset_checked(65535);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(caught(||u64::from(PageOffset::new(65535))),None);"
+  },
+  {
+    "body": "transition page_entries::offset_truncate(65535) == 4095 { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(u64::from(PageOffset::new_truncate(65535)),4095);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_step(0, 0, false);\n    transition equal(value, 0) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(Step::forward_checked(PageTableIndex::new(0),0).map(u64::from),Some(0));"
+  },
+  {
+    "body": "let value: OverflowingStep = page_entries::index_overflowing(0, 0, false); transition value.value == 0 && value.overflow == false { true -> (0) _ -> (1) }",
+    "rust": "let (v,o)=Step::forward_overflowing(PageTableIndex::new(0),0);assert_eq!((u64::from(v),o),(0,false));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_step(0, 511, false);\n    transition equal(value, 511) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(Step::forward_checked(PageTableIndex::new(0),511).map(u64::from),Some(511));"
+  },
+  {
+    "body": "let value: OverflowingStep = page_entries::index_overflowing(0, 511, false); transition value.value == 511 && value.overflow == false { true -> (0) _ -> (1) }",
+    "rust": "let (v,o)=Step::forward_overflowing(PageTableIndex::new(0),511);assert_eq!((u64::from(v),o),(511,false));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_step(511, 511, true);\n    transition equal(value, 0) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(Step::backward_checked(PageTableIndex::new(511),511).map(u64::from),Some(0));"
+  },
+  {
+    "body": "let value: OverflowingStep = page_entries::index_overflowing(511, 511, true); transition value.value == 0 && value.overflow == false { true -> (0) _ -> (1) }",
+    "rust": "let (v,o)=Step::backward_overflowing(PageTableIndex::new(511),511);assert_eq!((u64::from(v),o),(0,false));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_step(511, 1, false);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(Step::forward_checked(PageTableIndex::new(511),1).map(u64::from),None);"
+  },
+  {
+    "body": "let value: OverflowingStep = page_entries::index_overflowing(511, 1, false); transition value.value == 511 && value.overflow == true { true -> (0) _ -> (1) }",
+    "rust": "let (v,o)=Step::forward_overflowing(PageTableIndex::new(511),1);assert_eq!((u64::from(v),o),(511,true));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_step(0, 1, true);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(Step::backward_checked(PageTableIndex::new(0),1).map(u64::from),None);"
+  },
+  {
+    "body": "let value: OverflowingStep = page_entries::index_overflowing(0, 1, true); transition value.value == 0 && value.overflow == true { true -> (0) _ -> (1) }",
+    "rust": "let (v,o)=Step::backward_overflowing(PageTableIndex::new(0),1);assert_eq!((u64::from(v),o),(0,true));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_step(511, 18446744073709551615, false);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(Step::forward_checked(PageTableIndex::new(511),18446744073709551615).map(u64::from),None);"
+  },
+  {
+    "body": "let value: OverflowingStep = page_entries::index_overflowing(511, 18446744073709551615, false); transition value.value == 511 && value.overflow == true { true -> (0) _ -> (1) }",
+    "rust": "let (v,o)=Step::forward_overflowing(PageTableIndex::new(511),18446744073709551615);assert_eq!((u64::from(v),o),(511,true));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_step(511, 18446744073709551615, true);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(Step::backward_checked(PageTableIndex::new(511),18446744073709551615).map(u64::from),None);"
+  },
+  {
+    "body": "let value: OverflowingStep = page_entries::index_overflowing(511, 18446744073709551615, true); transition value.value == 511 && value.overflow == true { true -> (0) _ -> (1) }",
+    "rust": "let (v,o)=Step::backward_overflowing(PageTableIndex::new(511),18446744073709551615);assert_eq!((u64::from(v),o),(511,true));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_distance(0, 0);\n    transition equal(value, 0) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(Step::steps_between(&PageTableIndex::new(0),&PageTableIndex::new(0)).1,Some(0));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_distance(0, 511);\n    transition equal(value, 511) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(Step::steps_between(&PageTableIndex::new(0),&PageTableIndex::new(511)).1,Some(511));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_distance(511, 0);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(Step::steps_between(&PageTableIndex::new(511),&PageTableIndex::new(0)).1,None);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_distance(511, 511);\n    transition equal(value, 0) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(Step::steps_between(&PageTableIndex::new(511),&PageTableIndex::new(511)).1,Some(0));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::next_level(1, false);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::One.next_lower_level().map(|v|v as u64),None);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::next_level(1, true);\n    transition equal(value, 2) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::One.next_higher_level().map(|v|v as u64),Some(2));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::level_alignment(1, false);\n    transition equal(value, 4096) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::One.entry_address_space_alignment(),4096);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::level_alignment(1, true);\n    transition equal(value, 2097152) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::One.table_address_space_alignment(),2097152);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::next_level(2, false);\n    transition equal(value, 1) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::Two.next_lower_level().map(|v|v as u64),Some(1));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::next_level(2, true);\n    transition equal(value, 3) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::Two.next_higher_level().map(|v|v as u64),Some(3));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::level_alignment(2, false);\n    transition equal(value, 2097152) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::Two.entry_address_space_alignment(),2097152);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::level_alignment(2, true);\n    transition equal(value, 1073741824) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::Two.table_address_space_alignment(),1073741824);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::next_level(3, false);\n    transition equal(value, 2) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::Three.next_lower_level().map(|v|v as u64),Some(2));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::next_level(3, true);\n    transition equal(value, 4) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::Three.next_higher_level().map(|v|v as u64),Some(4));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::level_alignment(3, false);\n    transition equal(value, 1073741824) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::Three.entry_address_space_alignment(),1073741824);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::level_alignment(3, true);\n    transition equal(value, 549755813888) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::Three.table_address_space_alignment(),549755813888);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::next_level(4, false);\n    transition equal(value, 3) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::Four.next_lower_level().map(|v|v as u64),Some(3));"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::next_level(4, true);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::Four.next_higher_level().map(|v|v as u64),None);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::level_alignment(4, false);\n    transition equal(value, 549755813888) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::Four.entry_address_space_alignment(),549755813888);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::level_alignment(4, true);\n    transition equal(value, 281474976710656) { true -> (0) _ -> (1) }",
+    "rust": "assert_eq!(PageTableLevel::Four.table_address_space_alignment(),281474976710656);"
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_checked(18446744073709551615);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": null
+  },
+  {
+    "body": "let value: NumberResult = page_entries::offset_checked(18446744073709551615);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": null
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_step(512, 0, false);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": null
+  },
+  {
+    "body": "let value: NumberResult = page_entries::index_distance(512, 512);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": null
+  },
+  {
+    "body": "let value: NumberResult = page_entries::next_level(0, true);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": null
+  },
+  {
+    "body": "let value: NumberResult = page_entries::next_level(5, false);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": null
+  },
+  {
+    "body": "let value: NumberResult = page_entries::level_alignment(0, false);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": null
+  },
+  {
+    "body": "let value: NumberResult = page_entries::level_alignment(5, true);\n    transition rejected(value) { true -> (0) _ -> (1) }",
+    "rust": null
+  }
+]

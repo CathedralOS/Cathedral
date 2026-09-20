@@ -1,0 +1,120 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pure page_table.rs algorithms from x86_64 cc35c876d3badb57df54a66e22f7768a52be95f2.
+// Reuses Cathedral's canonical PTE schema. Numeric decoding grants no table access.
+module page_entries;
+use facts::x86_page_table_entry;
+use addresses;
+use addresses::NumberResult;
+use addresses::OverflowingStep;
+
+pub const ADDRESS_MASK: u64 = 0x000ffffffffff000;
+pub const FLAGS_MASK: u64 = 0xfff0000000000fff;
+pub data FrameResult { case NotPresent; case HugeFrame; case Value(address: u64); }
+
+pub machine decode(word: u64) -> X86PageTableEntry {
+    X86PageTableEntry {
+        present: (word & 1) != 0, writable: (word & 2) != 0,
+        user: (word & 4) != 0, write_through: (word & 8) != 0,
+        cache_disable: (word & 16) != 0, accessed: (word & 32) != 0,
+        dirty: (word & 64) != 0, page_size_or_pat: (word & 128) != 0,
+        global: (word & 256) != 0, software_low: ((word >> 9) & 7) as u8,
+        frame_number: (word >> 12) & 1099511627775,
+        software_high: ((word >> 52) & 127) as u8,
+        protection_key: ((word >> 59) & 15) as u8, no_execute: (word >> 63) != 0
+    }
+}
+pub machine encode(value: &X86PageTableEntry) -> u64 {
+    (value.present as u64) | ((value.writable as u64) << 1) |
+    ((value.user as u64) << 2) | ((value.write_through as u64) << 3) |
+    ((value.cache_disable as u64) << 4) | ((value.accessed as u64) << 5) |
+    ((value.dirty as u64) << 6) | ((value.page_size_or_pat as u64) << 7) |
+    ((value.global as u64) << 8) | ((value.software_low as u64) << 9) |
+    (value.frame_number << 12) | ((value.software_high as u64) << 52) |
+    ((value.protection_key as u64) << 59) | ((value.no_execute as u64) << 63)
+}
+pub machine is_unused(value: &X86PageTableEntry) -> bool { encode(value) == 0 }
+pub machine address(word: u64) -> u64 { word & ADDRESS_MASK }
+pub machine flags(word: u64) -> u64 { word & FLAGS_MASK }
+// Matches the pin's generic 4KiB frame accessor; bit7 is treated as HUGE_PAGE
+// even for PT words where hardware assigns PAT. This is not a role validator.
+pub machine frame(word: u64) -> FrameResult {
+    let base: u64 = address(word);
+    let present: bool = (word & 1) != 0;
+    let huge: bool = (word & 128) != 0;
+    transition {
+        !present -> (FrameResult::NotPresent)
+        huge -> (FrameResult::HugeFrame)
+        _ -> (FrameResult::Value { address: base })
+    }
+}
+// Rust from_bits_retain can supply any flag word; preserve its OR semantics,
+// including address-bit contamination. Only the supplied address is checked.
+pub machine set_address(base: u64, bits: u64) -> NumberResult {
+    transition base <= ADDRESS_MASK && (base & 4095) == 0 {
+        true -> (NumberResult::Value { value: base | bits })
+        _ -> (NumberResult::Rejected)
+    }
+}
+pub machine set_frame(base: u64, bits: u64) -> NumberResult {
+    let result: NumberResult = set_address(base, bits);
+    transition (bits & 128) == 0 { true -> (result) _ -> (NumberResult::Rejected) }
+}
+pub machine set_flags(word: u64, bits: u64) -> u64 { (word & ADDRESS_MASK) | bits }
+pub machine index_checked(index: u64) -> NumberResult {
+    transition index < 512 { true -> (NumberResult::Value { value: index }) _ -> (NumberResult::Rejected) }
+}
+pub machine index_truncate(index: u16) -> u16 { index & 511 }
+pub machine offset_checked(offset: u64) -> NumberResult {
+    transition offset < 4096 { true -> (NumberResult::Value { value: offset }) _ -> (NumberResult::Rejected) }
+}
+pub machine offset_truncate(offset: u16) -> u16 { offset & 4095 }
+pub machine index_step(index: u64, count: u64, backwards: bool) -> NumberResult {
+    transition index < 512 { true -> direction(index, count, backwards) _ -> (NumberResult::Rejected) }
+    state direction(index: u64, count: u64, backwards: bool) -> NumberResult {
+        transition backwards { true -> backward(index, count) _ -> forward(index, count) }
+    }
+    state backward(index: u64, count: u64) -> NumberResult {
+        transition count <= index { true -> (NumberResult::Value { value: index - count }) _ -> (NumberResult::Rejected) }
+    }
+    state forward(index: u64, count: u64) -> NumberResult {
+        transition index < 512 && count <= 511 - index {
+            true -> (NumberResult::Value { value: index + count }) _ -> (NumberResult::Rejected)
+        }
+    }
+}
+pub machine index_overflowing(index: u64, count: u64, backwards: bool) -> OverflowingStep {
+    let result: NumberResult = index_step(index, count, backwards);
+    transition result {
+        NumberResult::Value { value } -> (OverflowingStep { value: value, overflow: false })
+        _ -> (OverflowingStep { value: index, overflow: true })
+    }
+}
+pub machine index_distance(start: u64, end: u64) -> NumberResult {
+    transition start < 512 && end < 512 && end >= start {
+        true -> (NumberResult::Value { value: end - start }) _ -> (NumberResult::Rejected)
+    }
+}
+pub machine next_level(level: u8, higher: bool) -> NumberResult {
+    transition level >= 1 && level <= 4 {
+        true -> direction(level, higher) _ -> (NumberResult::Rejected)
+    }
+    state direction(level: u8, higher: bool) -> NumberResult {
+        transition higher { true -> up(level) _ -> down(level) }
+    }
+    state up(level: u8) -> NumberResult {
+        transition level < 4 { true -> (NumberResult::Value { value: (level as u64) + 1 }) _ -> (NumberResult::Rejected) }
+    }
+    state down(level: u8) -> NumberResult {
+        transition level > 1 { true -> (NumberResult::Value { value: (level as u64) - 1 }) _ -> (NumberResult::Rejected) }
+    }
+}
+pub machine level_alignment(level: u8, whole_table: bool) -> NumberResult {
+    transition level { 1 -> choose(4096, 2097152, whole_table)
+        2 -> choose(2097152, 1073741824, whole_table)
+        3 -> choose(1073741824, 549755813888, whole_table)
+        4 -> choose(549755813888, 281474976710656, whole_table)
+        _ -> (NumberResult::Rejected) }
+    state choose(entry: u64, table: u64, whole_table: bool) -> NumberResult {
+        transition whole_table { true -> (NumberResult::Value { value: table }) _ -> (NumberResult::Value { value: entry }) }
+    }
+}

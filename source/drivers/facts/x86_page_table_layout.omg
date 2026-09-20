@@ -1,0 +1,162 @@
+// Existing Cathedral paging-word policy, separated from the semantic carrier.
+// Same 14 bit placements and 8-byte geometry; modern stateless Layout witness.
+module x86_page_table_layout;
+use omega::language::core::layout;
+
+pub data X86PageTableEntryLayout {}
+pub X86PageTableEntryPolicy: X86PageTableEntryLayout satisfies Layout;
+
+pub machine X86PageTableEntryLayout::plan(
+    schema: Schema
+) -> Plan satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry {
+        key: schema.fields[0].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 0,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    entries[1] = FieldEntry {
+        key: schema.fields[1].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 1,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    entries[2] = FieldEntry {
+        key: schema.fields[2].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 2,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    entries[3] = FieldEntry {
+        key: schema.fields[3].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 3,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    entries[4] = FieldEntry {
+        key: schema.fields[4].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 4,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    entries[5] = FieldEntry {
+        key: schema.fields[5].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 5,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    entries[6] = FieldEntry {
+        key: schema.fields[6].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 6,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    entries[7] = FieldEntry {
+        key: schema.fields[7].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 7,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    entries[8] = FieldEntry {
+        key: schema.fields[8].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 8,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+    entries[9] = FieldEntry {
+        key: schema.fields[9].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 9,
+            source_lsb: 0,
+            width: 3,
+        },
+    };
+    entries[10] = FieldEntry {
+        key: schema.fields[10].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 12,
+            source_lsb: 0,
+            width: 40,
+        },
+    };
+    entries[11] = FieldEntry {
+        key: schema.fields[11].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 52,
+            source_lsb: 0,
+            width: 7,
+        },
+    };
+    entries[12] = FieldEntry {
+        key: schema.fields[12].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 59,
+            source_lsb: 0,
+            width: 4,
+        },
+    };
+    entries[13] = FieldEntry {
+        key: schema.fields[13].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 64,
+            destination_lsb: 63,
+            source_lsb: 0,
+            width: 1,
+        },
+    };
+
+    Plan {
+        entries: entries,
+        entry_count: 14,
+        size_fixed: 8,
+        size_is_dynamic: false,
+        align: 8,
+    }
+}
