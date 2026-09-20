@@ -125,3 +125,41 @@ The original suggested sequence (topology, encryption, registers, GDT storage,
 recursive algorithms) has now been implemented at each documented boundary.
 A fresh closure review must distinguish remaining cross-feature composition
 from live provider integration before completing the overall X86-001/002 tasks.
+
+## Subsequent encryption-profile closure review
+
+A fresh read-only review checked all 41 pinned source hashes and reconciled 23
+slice inventories. It found no additional default-profile pure family. The
+unoverlaid `gdt.rs:127:MAX` anchor is a const-generic parameter represented by
+checked owned-table capacity, not a missing hardware constant.
+
+Encryption support still changes ordinary pure compositions. These are queued
+implementation and test work, with no compiler blocker:
+
+- Mapped/recursive leaf, child and routes: profile-dependent frames, flag
+  replacement, redundant writes, capture IDs and typed allocation validation.
+- Generic mapped/recursive translation: profile frames and flags, preserving
+  their different parent zero/PRESENT/HUGE rules.
+- Mapped/recursive cleanup: profile child identities and retirement frame IDs;
+  cursor geometry and self-link exclusion remain reusable.
+- Physical frame PFNs, arithmetic and range selection: crossing the latest
+  encryption bit can invalidate a result. Existing masked address operations
+  supply the primitive arithmetic.
+- Recursive constructor observations: profile-decoded PTE frame versus observed
+  CR3 frame, with the existing ordered errors.
+- Translate-address projection: frame plus offset can hit the configured bit,
+  including an offset inside a huge frame.
+- CR3/APIC register expressions: strict observed CR3 frame rejects a configured
+  bit; APIC truncation removes it. Operand frame admission uses the current bit.
+
+The accumulated PTE address mask and latest physical-address exclusion are
+intentionally different after repeated configuration. Offset addition, recursive
+coordinates, default-parent flags, byte codecs and owned table storage do not
+need duplicate algorithms. Feature-dependent admission/delegation is sufficient.
+Native layout limits, live provider authority and absent universal proofs remain
+separate from this finite numeric implementation queue.
+
+The generic mapped-translation component now passes 330 actual Rust/Omega
+observations and nine body controls: [explicit-profile translation](encrypted-translation.PORT.md).
+Its separate captured-path API validates profile-decoded child identities.
+The other profile compositions above remain queued or under implementation.

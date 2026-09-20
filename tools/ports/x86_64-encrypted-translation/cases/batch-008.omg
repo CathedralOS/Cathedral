@@ -1,0 +1,97 @@
+use x86::encrypted_translation;
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+use x86::translation::Translation;
+use x86::translation::CapturedWalk;
+use x86::mapping_routes::CapturedPath;
+machine matches_encrypted_result(value:Translation, kind:u8, want_frame:u64, want_size:u64, want_offset:u64, want_flags:u64)->bool {
+ transition value {
+  Translation::NotMapped -> (kind==0)
+  Translation::InvalidRootHugePage -> (kind==2)
+  Translation::Mapped { frame, size, offset, flags } ->
+   (kind==1 && frame==want_frame && size==want_size && offset==want_offset && flags==want_flags)
+  _ -> (false)
+ }
+}
+machine captured(observation:CapturedWalk, kind:u8, frame:u64, size:u64, offset:u64, flags:u64)->bool {
+ transition observation {
+  CapturedWalk::Result { value } -> check(value,kind,frame,size,offset,flags)
+  _ -> (false)
+ }
+ state check(inner:Translation,kind:u8,frame:u64,size:u64,offset:u64,flags:u64) {
+  let valid:bool=matches_encrypted_result(inner,kind,frame,size,offset,flags);valid
+ }
+}
+machine row0()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:0 });
+let value:Translation=encrypted_translation::translate_words(&profile,18446623141479811772,4097,8193,320257118826371,0);
+let good:bool=matches_encrypted_result(value,1,320257117913088,2097152,494268,3971);
+let path:CapturedPath=CapturedPath { table_ids:[0,4096,8192,16384],words:[4097,8193,320257118826371,0] };
+let walk:CapturedWalk=encrypted_translation::walk_path(&profile,18446623141479811772,&path);
+let same:bool=captured(walk,1,320257117913088,2097152,494268,3971);
+good && same
+}
+machine row1()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:0 });
+let value:Translation=encrypted_translation::translate_words(&profile,18446623141479811772,4097,8193,16385,513);
+let good:bool=matches_encrypted_result(value,1,0,4096,2748,513);
+let path:CapturedPath=CapturedPath { table_ids:[0,4096,8192,16384],words:[4097,8193,16385,513] };
+let walk:CapturedWalk=encrypted_translation::walk_path(&profile,18446623141479811772,&path);
+let same:bool=captured(walk,1,0,4096,2748,513);
+good && same
+}
+machine row2()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:0 });
+let value:Translation=encrypted_translation::translate_words(&profile,18446623141479811772,4097,8193,16385,128);
+let good:bool=matches_encrypted_result(value,1,0,4096,2748,128);
+let path:CapturedPath=CapturedPath { table_ids:[0,4096,8192,16384],words:[4097,8193,16385,128] };
+let walk:CapturedWalk=encrypted_translation::walk_path(&profile,18446623141479811772,&path);
+let same:bool=captured(walk,1,0,4096,2748,128);
+good && same
+}
+machine row3()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:0 });
+let value:Translation=encrypted_translation::translate_words(&profile,18446623141479811772,4097,18446744073709551615,0,0);
+let good:bool=matches_encrypted_result(value,1,4503598553628672,1073741824,90671804,18442240474082185215);
+let path:CapturedPath=CapturedPath { table_ids:[0,4096,8192,16384],words:[4097,18446744073709551615,0,0] };
+let walk:CapturedWalk=encrypted_translation::walk_path(&profile,18446623141479811772,&path);
+let same:bool=captured(walk,1,4503598553628672,1073741824,90671804,18442240474082185215);
+good && same
+}
+machine row4()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:0 });
+let value:Translation=encrypted_translation::translate_words(&profile,18446623141479811772,4097,8193,18446744073709551615,0);
+let good:bool=matches_encrypted_result(value,1,4503599625273344,2097152,494268,18442240474082185215);
+let path:CapturedPath=CapturedPath { table_ids:[0,4096,8192,16384],words:[4097,8193,18446744073709551615,0] };
+let walk:CapturedWalk=encrypted_translation::walk_path(&profile,18446623141479811772,&path);
+let same:bool=captured(walk,1,4503599625273344,2097152,494268,18442240474082185215);
+good && same
+}
+machine row5()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:0 });
+let value:Translation=encrypted_translation::translate_words(&profile,18446623141479811772,4097,8193,16385,18446744073709551615);
+let good:bool=matches_encrypted_result(value,1,4503599627366400,4096,2748,18442240474082185215);
+let path:CapturedPath=CapturedPath { table_ids:[0,4096,8192,16384],words:[4097,8193,16385,18446744073709551615] };
+let walk:CapturedWalk=encrypted_translation::walk_path(&profile,18446623141479811772,&path);
+let same:bool=captured(walk,1,4503599627366400,4096,2748,18442240474082185215);
+good && same
+}
+machine scenario()->i32 {
+let check0:bool=row0();
+let check1:bool=row1();
+let check2:bool=row2();
+let check3:bool=row3();
+let check4:bool=row4();
+let check5:bool=row5();
+transition check0 && check1 && check2 && check3 && check4 && check5 { true -> (0) _ -> (1) } }
+const RESULT:i32=scenario();
+machine require_success(value:i32) requires value==0; {}
+data Main{}
+machine Main::main(&mut self){require_success(RESULT);}

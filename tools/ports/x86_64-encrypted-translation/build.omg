@@ -1,0 +1,5 @@
+machine build(builder: &mut Build) {
+ builder.application("cathedral-encrypted-translation-tests");
+ builder.freestanding = true;
+ builder.depend_as("x86", Source::Path { location: "../../../source/libraries/x86_64" });
+}

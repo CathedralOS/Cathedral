@@ -1,0 +1,270 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/x86_64",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/paging/mapper/mapped_page_table.rs"
+    ]
+  },
+  "files": {
+    "src/structures/paging/mapper/mapped_page_table.rs": {
+      "sha256": "e250c729f0588d1ce129c1c68ab43337f2f44328d2b38fe896cbeeacc1bc4ff2",
+      "disposition": "pending",
+      "reason": "Explicit encryption profile extension to the existing captured generic translation; all other mapper components retain separate inventories.",
+      "symbols": {
+        "15:MappedPageTable": {
+          "anchor": "pub struct MappedPageTable<'a, P: PageTableFrameMapping> {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "31:new": {
+          "anchor": "pub unsafe fn new(level_4_table: &'a mut PageTable, page_table_frame_mapping: P) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "39:level_4_table": {
+          "anchor": "pub fn level_4_table(&self) -> &PageTable {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "44:level_4_table_mut": {
+          "anchor": "pub fn level_4_table_mut(&mut self) -> &mut PageTable {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "49:page_table_frame_mapping": {
+          "anchor": "pub fn page_table_frame_mapping(&self) -> &P {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "56:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "82:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "108:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "126:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "143:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "151:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "159:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "176:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "207:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "236:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "258:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "275:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "295:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "303:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "321:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "357:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "383:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "408:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "425:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "445:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "468:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "487:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult {",
+          "disposition": "translated",
+          "reason": "Numeric selected-word translation with explicit encryption profile. Child snapshot identities checked separately by walk_path; no live mapper or pointer conversion.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_translation.omg",
+              "anchor": "pub machine translate_words"
+            },
+            {
+              "path": "source/libraries/x86_64/encrypted_translation.omg",
+              "anchor": "pub machine walk_path"
+            }
+          ]
+        },
+        "551:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "566:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "573:clean_up": {
+          "anchor": "unsafe fn clean_up<P: PageTableFrameMapping>(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "644:PageTableWalker": {
+          "anchor": "struct PageTableWalker<P: PageTableFrameMapping> {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "650:new": {
+          "anchor": "pub unsafe fn new(page_table_frame_mapping: P) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "662:next_table": {
+          "anchor": "fn next_table<'b>(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "680:next_table_mut": {
+          "anchor": "fn next_table_mut<'b>(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "701:create_next_table": {
+          "anchor": "fn create_next_table<'b, A>(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "742:PageTableWalkError": {
+          "anchor": "enum PageTableWalkError {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "748:PageTableCreateError": {
+          "anchor": "enum PageTableCreateError {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "755:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "765:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "775:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "785:from": {
+          "anchor": "fn from(err: FrameError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "795:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "805:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "815:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "832:PageTableFrameMapping": {
+          "anchor": "pub unsafe trait PageTableFrameMapping {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "834:frame_to_pointer": {
+          "anchor": "fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable;",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "839:frame_to_pointer": {
+          "anchor": "fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/encrypted_translation.omg",
+          "anchor": "pub machine translate_words"
+        }
+      ]
+    }
+  }
+}

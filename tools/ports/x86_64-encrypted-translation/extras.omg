@@ -1,0 +1,65 @@
+use x86::encrypted_translation;
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+use x86::translation::Translation;
+use x86::translation::CapturedWalk;
+use x86::mapping_routes::CapturedPath;
+machine mismatch3(observation:CapturedWalk)->bool {
+ transition observation { CapturedWalk::MismatchedTable { level,expected_address,supplied_address } ->
+  (level==3 && expected_address==4096 && supplied_address==140737488359424) _ -> (false) }
+}
+machine mismatch2(observation:CapturedWalk)->bool {
+ transition observation { CapturedWalk::MismatchedTable { level,expected_address,supplied_address } ->
+  (level==2 && expected_address==8192 && supplied_address==140737488363520) _ -> (false) }
+}
+machine mismatch1(observation:CapturedWalk)->bool {
+ transition observation { CapturedWalk::MismatchedTable { level,expected_address,supplied_address } ->
+  (level==1 && expected_address==12288 && supplied_address==140737488367616) _ -> (false) }
+}
+machine invalid(observation:CapturedWalk)->bool {
+ transition observation { CapturedWalk::Result { value } -> (value in Translation::InvalidVirtual) _ -> (false) }
+}
+machine missing(observation:CapturedWalk)->bool {
+ transition observation { CapturedWalk::Result { value } -> (value in Translation::NotMapped) _ -> (false) }
+}
+machine huge(observation:CapturedWalk)->bool {
+ transition observation { CapturedWalk::Result { value } -> (value in Translation::InvalidRootHugePage) _ -> (false) }
+}
+machine mapped(observation:CapturedWalk)->bool {
+ transition observation { CapturedWalk::Result { value } -> leaf(value) _ -> (false) }
+ state leaf(inner:Translation) {
+  transition inner { Translation::Mapped { frame,size,offset,flags } ->
+   (frame==1073741824 && size==1073741824 && offset==0 && flags==140737488355457) _ -> (false) }
+ }
+}
+machine scenario()->i32 {
+ let profile:State=memory_encryption::initial();
+ let configured:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:47 });
+ let path:CapturedPath=CapturedPath { table_ids:[0,140737488359424,8192,12288],words:[140737488359425,140737488363521,140737488367617,0] };
+ let r3:CapturedWalk=encrypted_translation::walk_path(&profile,0,&path);
+ let c3:bool=mismatch3(r3);
+ path.table_ids[1]=4096;path.table_ids[2]=140737488363520;
+ let r2:CapturedWalk=encrypted_translation::walk_path(&profile,0,&path);
+ let c2:bool=mismatch2(r2);
+ path.table_ids[2]=8192;path.table_ids[3]=140737488367616;
+ let r1:CapturedWalk=encrypted_translation::walk_path(&profile,0,&path);
+ let c1:bool=mismatch1(r1);
+ let rv:CapturedWalk=encrypted_translation::walk_path(&profile,140737488355328,&path);
+ let cv:bool=invalid(rv);
+ path.words[0]=0;path.table_ids[1]=18446744073709551615;
+ let rn:CapturedWalk=encrypted_translation::walk_path(&profile,0,&path);
+ let cn:bool=missing(rn);
+ path.words[0]=129;
+ let rh:CapturedWalk=encrypted_translation::walk_path(&profile,0,&path);
+ let ch:bool=huge(rh);
+ path.words[0]=140737488359425;path.table_ids[1]=4096;
+ path.words[1]=140738562097281;
+ let rm:CapturedWalk=encrypted_translation::walk_path(&profile,0,&path);
+ let cm:bool=mapped(rm);
+ transition configured && c3 && c2 && c1 && cv && cn && ch && cm { true -> (0) _ -> (1) }
+}
+const RESULT:i32=scenario();
+machine require_success(value:i32) requires value==0; {}
+data Main{}
+machine Main::main(&mut self){require_success(RESULT);}

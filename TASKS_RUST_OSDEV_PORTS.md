@@ -288,6 +288,11 @@ passes 133 Omega profiles against 1,315 actual Rust observations, an additional
 reconfiguration regression and four body mutations. Repeated-mask accumulation
 and both bit polarities are preserved; existing captured walkers remain explicitly
 on their default physical profile.
+[Explicit-profile translation](source/libraries/x86_64/encrypted-translation.PORT.md)
+adds 330 actual Rust/Omega observations, seven boundary assertions and nine body
+mutations for generic mapped translation and captured child identities.
+Remaining encryption-profile routes, cleanup, frame/range and register
+compositions are ordinary implementation work; the closure audit lists them.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

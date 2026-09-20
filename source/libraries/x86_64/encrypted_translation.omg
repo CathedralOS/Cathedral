@@ -1,0 +1,82 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Explicit-state composition of pinned MappedPageTable::translate and PTE masks.
+// See encrypted-translation.PORT.md. Captured words/IDs confer no access authority.
+module encrypted_translation;
+use addresses;
+use translation;
+use translation::Translation;
+use translation::CapturedWalk;
+use memory_encryption;
+use memory_encryption::State;
+use mapping_routes::CapturedPath;
+
+// Reachability and page-size selection depend on zero/PRESENT/HUGE, which valid
+// encryption profiles never remove from the flags. Reuse that checked algorithm,
+// then project the selected original leaf using the explicit address/flag mask.
+pub machine translate_words(profile: &State, va: u64, p4: u64, p3: u64, p2: u64, p1: u64) -> Translation {
+    let shape: Translation = translation::translate_words(va, p4, p3, p2, p1);
+    transition shape {
+        Translation::Mapped { frame, size, offset, flags } -> selected(profile, size, offset, p3, p2, p1)
+        _ -> (shape)
+    }
+    state selected(profile: &State, size: u64, offset: u64, p3: u64, p2: u64, p1: u64) -> Translation {
+        transition size {
+            1073741824 -> leaf(profile, p3, 1073741824, offset)
+            2097152 -> leaf(profile, p2, 2097152, offset)
+            _ -> leaf(profile, p1, 4096, offset)
+        }
+    }
+    state leaf(profile: &State, word: u64, size: u64 [1..=1073741824], offset: u64) -> Translation {
+        let address: u64 = memory_encryption::entry_address(profile, word);
+        let flags: u64 = memory_encryption::entry_flags(profile, word);
+        Translation::Mapped { frame: address & ~(size - 1), size: size, offset: offset, flags: flags }
+    }
+}
+
+// The caller has already selected the four entries by VA indices. Check each
+// supplied child ID only when traversal reaches it, using the profile's mask.
+// As in the ordinary captured walk, a mismatch precedes a later leaf error.
+pub machine walk_path(profile: &State, va: u64, path: &CapturedPath) -> CapturedWalk {
+    let valid: bool = addresses::virtual_valid(va);
+    transition valid {
+        true -> link(profile, va, path)
+        _ -> (CapturedWalk::Result { value: Translation::InvalidVirtual })
+    }
+    state link(profile: &State, va: u64, path: &CapturedPath) -> CapturedWalk {
+        let word: u64 = path.words[0];
+        let expected: u64 = memory_encryption::entry_address(profile, word);
+        let supplied: u64 = path.table_ids[1];
+        let needed: bool = (word & 129) == 1;
+        transition {
+            !needed -> finish(profile, va, path)
+            expected != supplied -> (CapturedWalk::MismatchedTable { level: 3, expected_address: expected, supplied_address: supplied })
+            _ -> third(profile, va, path)
+        }
+    }
+    state third(profile: &State, va: u64, path: &CapturedPath) -> CapturedWalk {
+        let word: u64 = path.words[1];
+        let expected: u64 = memory_encryption::entry_address(profile, word);
+        let supplied: u64 = path.table_ids[2];
+        let needed: bool = (word & 129) == 1;
+        transition {
+            !needed -> finish(profile, va, path)
+            expected != supplied -> (CapturedWalk::MismatchedTable { level: 2, expected_address: expected, supplied_address: supplied })
+            _ -> second(profile, va, path)
+        }
+    }
+    state second(profile: &State, va: u64, path: &CapturedPath) -> CapturedWalk {
+        let word: u64 = path.words[2];
+        let expected: u64 = memory_encryption::entry_address(profile, word);
+        let supplied: u64 = path.table_ids[3];
+        let needed: bool = (word & 129) == 1;
+        transition {
+            !needed -> finish(profile, va, path)
+            expected != supplied -> (CapturedWalk::MismatchedTable { level: 1, expected_address: expected, supplied_address: supplied })
+            _ -> finish(profile, va, path)
+        }
+    }
+    state finish(profile: &State, va: u64, path: &CapturedPath) -> CapturedWalk {
+        let value: Translation = translate_words(profile, va, path.words[0], path.words[1], path.words[2], path.words[3]);
+        CapturedWalk::Result { value: value }
+    }
+}
