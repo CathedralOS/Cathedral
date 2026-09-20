@@ -121,11 +121,14 @@ measurements = {}
 for record in records:
     name, rust = record['name'], record['rust']
     lines += ['// Pinned source: '+rust, 'pub data '+name+' [copy] {']
+    if record['kind'] == 'union':
+        lines += ['    // Untagged foreign storage; member selection comes from protocol context.',
+                  '    // Semantic case data needs a separate checked mapping to this storage.']
     mapped = []
     for field, typ in record['fields']:
         tail = bool(re.search(r';\s*0\s*\]', typ))
         if record['kind'] == 'union':
-            lines.append('    // Union alternative '+field+': '+typ+' (offset 0).')
+            lines.append('    // Overlapping Rust member '+field+': '+typ+' (offset 0).')
         elif tail:
             lines.append('    // PORT-BLOCKED[omega:runtime-layout-strides]: '+field+': '+typ+' needs a bounded runtime tail view.')
         else:

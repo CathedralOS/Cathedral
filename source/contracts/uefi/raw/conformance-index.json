@@ -30,7 +30,7 @@
     },
     "network": {
       "path": "network-inventory.json",
-      "sha256": "68b43e8c17feabacf81514d78b4cfab8f98649a991fe3c9b8359f3a214ad3355"
+      "sha256": "3f23acc17dac9a1ae246af51d3d04513fb76e2109c8f8026686b188650316018"
     },
     "hii": {
       "path": "hii-inventory.json",

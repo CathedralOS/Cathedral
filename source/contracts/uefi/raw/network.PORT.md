@@ -147,6 +147,13 @@ unsafe casts.
 - Rust pointers/function pointers become inert `addr`; full pinned signatures
   remain adjacent. `usize` is explicitly `u64` in this target profile.
 - Untagged unions store full raw bytes/word/address; every alternative is listed.
+  These declarations preserve storage, not typed union construction/projection.
+  Semantic alternatives use ordinary case-bearing data (`IpOctets::V4`/`V6`).
+  Replacing a raw carrier with cases alone would not specify its foreign overlay
+  or establish which member is active. Omega's [layout specification](../../../../../Omega/wiki/spec/layouts/plans.md)
+  leaves programmable union placement unspecified; conventional sums use their
+  own tagged representation. A future typed boundary must supply the protocol
+  context that selects a case and an explicit checked representation mapping.
   Fixed foreign plans provide required size/alignment separately. Default Omega
   layout is never assumed to be the C representation.
 - Rust core IP/Option types become octet arrays and nominal `IpOctets`,

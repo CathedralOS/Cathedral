@@ -44,7 +44,7 @@ for source,file in doc['files'].items():
    if field is None:raise ValueError((source,key,owner,'unknown field'))
    typ=field[1]
    if re.search(r';\s*0\s*\]',typ):value=entry('blocked','PORT-BLOCKED[omega:runtime-layout-strides]: bounded flexible tail must bind runtime extent/stride; fixed prefix and expected tail offset retained.',raw,name+': '+typ+' needs a bounded runtime tail view.')
-   elif records[owner]['kind']=='union':value=entry('translated','Union carrier bytes/address retained with every alternative and offset explicit; does not claim a typed overlay or reference authority.',raw,'Union alternative '+name+': '+typ)
+   elif records[owner]['kind']=='union':value=entry('translated','Union carrier bytes/address retained with every alternative and offset explicit; does not claim a typed overlay or reference authority.',raw,'Overlapping Rust member '+name+': '+typ)
    else:value=entry('translated','Field order/type retained; pointer/function slots are inert addr with full pinned signature adjacent.',raw,name+': '+dict(records[owner]['omega_fields'])[name]+';')
   elif name=='ZERO':value=entry('translated','Explicit all-16-byte initialized zero address.',raw,'pub const IP_ADDRESS_ZERO:')
   elif name in {'tests','dhcp4','http','ip4','ip4_config2','pxe','snp','tcp4','tls'} and 'mod ' in a:

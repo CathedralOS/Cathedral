@@ -42,7 +42,7 @@ for name,record in original.items():
  geometry(name)
  for field,ft in record['fields']:
   if re.search(r';\s*0\s*\]',ft):assert f'{field}: {ft} needs a bounded runtime tail view.' in text
-  if record['kind']=='union':assert f'Union alternative {field}: {ft} (offset 0).' in text
+  if record['kind']=='union':assert f'Overlapping Rust member {field}: {ft} (offset 0).' in text
 for constant in schema['constants']:
  name=constant['name'];expr=re.search(r'pub const '+name+r': [^=]+ = (.*);',text)[1]
  if constant['kind']=='bytes':

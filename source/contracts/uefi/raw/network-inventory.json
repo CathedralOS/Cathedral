@@ -23,7 +23,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative addr: [u32; 4]"
+              "anchor": "Overlapping Rust member addr: [u32; 4]"
             }
           ]
         },
@@ -34,7 +34,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative v4: Ipv4Address"
+              "anchor": "Overlapping Rust member v4: Ipv4Address"
             }
           ]
         },
@@ -45,7 +45,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative v6: Ipv6Address"
+              "anchor": "Overlapping Rust member v6: Ipv6Address"
             }
           ]
         },
@@ -1801,7 +1801,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative request: *const HttpRequestData"
+              "anchor": "Overlapping Rust member request: *const HttpRequestData"
             }
           ]
         },
@@ -1812,7 +1812,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative response: *mut HttpResponseData"
+              "anchor": "Overlapping Rust member response: *mut HttpResponseData"
             }
           ]
         },
@@ -2642,7 +2642,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative ipv4_node: *mut HttpV4AccessPoint"
+              "anchor": "Overlapping Rust member ipv4_node: *mut HttpV4AccessPoint"
             }
           ]
         },
@@ -2653,7 +2653,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative ipv6_node: *mut HttpV6AccessPoint"
+              "anchor": "Overlapping Rust member ipv6_node: *mut HttpV6AccessPoint"
             }
           ]
         },
@@ -4708,7 +4708,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative raw: [u8; 1472]"
+              "anchor": "Overlapping Rust member raw: [u8; 1472]"
             }
           ]
         },
@@ -4719,7 +4719,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative dhcpv4: PxeBaseCodeDhcpV4Packet"
+              "anchor": "Overlapping Rust member dhcpv4: PxeBaseCodeDhcpV4Packet"
             }
           ]
         },
@@ -4730,7 +4730,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative dhcpv6: PxeBaseCodeDhcpV6Packet"
+              "anchor": "Overlapping Rust member dhcpv6: PxeBaseCodeDhcpV6Packet"
             }
           ]
         },
@@ -5411,7 +5411,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative reserved: u32"
+              "anchor": "Overlapping Rust member reserved: u32"
             }
           ]
         },
@@ -5422,7 +5422,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative mtu: u32"
+              "anchor": "Overlapping Rust member mtu: u32"
             }
           ]
         },
@@ -5433,7 +5433,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative pointer: u32"
+              "anchor": "Overlapping Rust member pointer: u32"
             }
           ]
         },
@@ -5444,7 +5444,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative echo: PxeBaseCodeIcmpErrorEcho"
+              "anchor": "Overlapping Rust member echo: PxeBaseCodeIcmpErrorEcho"
             }
           ]
         },
@@ -7553,7 +7553,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative rx_data: *mut Tcp4ReceiveData"
+              "anchor": "Overlapping Rust member rx_data: *mut Tcp4ReceiveData"
             }
           ]
         },
@@ -7564,7 +7564,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "Union alternative tx_data: *mut Tcp4TransmitData"
+              "anchor": "Overlapping Rust member tx_data: *mut Tcp4TransmitData"
             }
           ]
         },

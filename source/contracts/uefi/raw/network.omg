@@ -24,9 +24,11 @@ pub data Ipv6Address [copy] {
 
 // Pinned source: uefi_raw::IpAddress
 pub data IpAddress [copy] {
-    // Union alternative addr: [u32; 4] (offset 0).
-    // Union alternative v4: Ipv4Address (offset 0).
-    // Union alternative v6: Ipv6Address (offset 0).
+    // Untagged foreign storage; member selection comes from protocol context.
+    // Semantic case data needs a separate checked mapping to this storage.
+    // Overlapping Rust member addr: [u32; 4] (offset 0).
+    // Overlapping Rust member v4: Ipv4Address (offset 0).
+    // Overlapping Rust member v6: Ipv6Address (offset 0).
     raw: [u8; 16];
 }
 
@@ -187,8 +189,10 @@ pub data HttpV6AccessPoint [copy] {
 
 // Pinned source: uefi_raw::protocol::network::http::HttpAccessPoint
 pub data HttpAccessPoint [copy] {
-    // Union alternative ipv4_node: *mut HttpV4AccessPoint (offset 0).
-    // Union alternative ipv6_node: *mut HttpV6AccessPoint (offset 0).
+    // Untagged foreign storage; member selection comes from protocol context.
+    // Semantic case data needs a separate checked mapping to this storage.
+    // Overlapping Rust member ipv4_node: *mut HttpV4AccessPoint (offset 0).
+    // Overlapping Rust member ipv6_node: *mut HttpV6AccessPoint (offset 0).
     raw: addr;
 }
 
@@ -230,8 +234,10 @@ pub data HttpResponseData [copy] {
 
 // Pinned source: uefi_raw::protocol::network::http::HttpRequestOrResponse
 pub data HttpRequestOrResponse [copy] {
-    // Union alternative request: *const HttpRequestData (offset 0).
-    // Union alternative response: *mut HttpResponseData (offset 0).
+    // Untagged foreign storage; member selection comes from protocol context.
+    // Semantic case data needs a separate checked mapping to this storage.
+    // Overlapping Rust member request: *const HttpRequestData (offset 0).
+    // Overlapping Rust member response: *mut HttpResponseData (offset 0).
     raw: addr;
 }
 
@@ -467,9 +473,11 @@ pub data PxeBaseCodeMode [copy] {
 
 // Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodePacket
 pub data PxeBaseCodePacket [copy] {
-    // Union alternative raw: [u8; 1472] (offset 0).
-    // Union alternative dhcpv4: PxeBaseCodeDhcpV4Packet (offset 0).
-    // Union alternative dhcpv6: PxeBaseCodeDhcpV6Packet (offset 0).
+    // Untagged foreign storage; member selection comes from protocol context.
+    // Semantic case data needs a separate checked mapping to this storage.
+    // Overlapping Rust member raw: [u8; 1472] (offset 0).
+    // Overlapping Rust member dhcpv4: PxeBaseCodeDhcpV4Packet (offset 0).
+    // Overlapping Rust member dhcpv6: PxeBaseCodeDhcpV6Packet (offset 0).
     raw: [u8; 1472];
 }
 
@@ -542,10 +550,12 @@ pub data PxeBaseCodeIcmpError [copy] {
 
 // Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeIcmpErrorUnion
 pub data PxeBaseCodeIcmpErrorUnion [copy] {
-    // Union alternative reserved: u32 (offset 0).
-    // Union alternative mtu: u32 (offset 0).
-    // Union alternative pointer: u32 (offset 0).
-    // Union alternative echo: PxeBaseCodeIcmpErrorEcho (offset 0).
+    // Untagged foreign storage; member selection comes from protocol context.
+    // Semantic case data needs a separate checked mapping to this storage.
+    // Overlapping Rust member reserved: u32 (offset 0).
+    // Overlapping Rust member mtu: u32 (offset 0).
+    // Overlapping Rust member pointer: u32 (offset 0).
+    // Overlapping Rust member echo: PxeBaseCodeIcmpErrorEcho (offset 0).
     raw: u32;
 }
 
@@ -762,8 +772,10 @@ pub data Tcp4CloseToken [copy] {
 
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4Packet
 pub data Tcp4Packet [copy] {
-    // Union alternative rx_data: *mut Tcp4ReceiveData (offset 0).
-    // Union alternative tx_data: *mut Tcp4TransmitData (offset 0).
+    // Untagged foreign storage; member selection comes from protocol context.
+    // Semantic case data needs a separate checked mapping to this storage.
+    // Overlapping Rust member rx_data: *mut Tcp4ReceiveData (offset 0).
+    // Overlapping Rust member tx_data: *mut Tcp4TransmitData (offset 0).
     raw: addr;
 }
 
@@ -982,7 +994,5 @@ pub const TLS_CONFIG_DATA_TYPE_CERT_REVOCATION_LIST: TlsConfigDataType = TlsConf
 pub const TLS_CONFIG_DATA_TYPE_MAXIMUM: TlsConfigDataType = TlsConfigDataType { raw: 4 };
 pub const TLS_CONFIGURATION_PROTOCOL_GUID: Guid = Guid { data1: 0x1682fe44, data2: 0xbd7a, data3: 0x4407, data4: [0xb7, 0xc7, 0xdc, 0xa3, 0x7c, 0xa3, 0x92, 0x2d] };
 pub const TLS_CONFIGURATION_PROTOCOL_SERVICE_BINDING_GUID: Guid = Guid { data1: 0x952cb795, data2: 0xff36, data3: 0x48cf, data4: [0xa2, 0x49, 0x4d, 0xf4, 0x86, 0xd6, 0xab, 0x8d] };
-
-// Independently transcribed RFC2131 section2/Figure2; differs from pinned
-// PXE_BASE_CODE_DHCP_V4_FLAGS_BROADCAST=1 above (see network.PORT.md).
+// RFC2131 section2/Figure2; differs from pinned BROADCAST=1 (see network.PORT.md).
 pub const DHCP_RFC2131_BROADCAST_BIT: u16 = 0x8000;
