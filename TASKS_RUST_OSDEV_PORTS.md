@@ -126,7 +126,7 @@ Cathedral's authority-bearing boot policy do not belong in this phase.
   `uefi.omg` and `boot_services.omg` declarations to the pinned `uefi-raw`
   source and the UEFI specification.  Record collisions, missing fields, local
   policy, and ABI deviations before adding declarations.
-- [ ] **UEFI-001 — Port scalar foundations.** Status values, GUIDs, handles,
+- [x] **UEFI-001 — Port scalar foundations.** Status values, GUIDs, handles,
   revisions, time, capsules, memory types/attributes, common enums, and base
   aliases.  Add exact-value and representation vectors.
 - [ ] **UEFI-002 — Port table foundations.** Table header, system table,
@@ -157,6 +157,11 @@ Cathedral's authority-bearing boot policy do not belong in this phase.
   and mock service functions usable by both an Omega-authored UEFI producer and
   a Cathedral consumer.  Tests must demonstrate identical raw layouts; they do
   not grant service authority or perform `ExitBootServices` integration.
+
+Phase 1 evidence: the isolated [raw corpus](source/contracts/uefi/raw/PORT.md)
+records status per slice. Scalar helper tests execute in Omega's semantic
+evaluator with a failing assertion control. These checks do not establish
+native execution, firmware behavior, or emitted foreign-layout agreement.
 
 ## Phase 2 — small, high-yield hardware packages
 

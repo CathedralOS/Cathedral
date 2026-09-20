@@ -1,0 +1,120 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Translated uefi-raw Boolean/revision tests plus local scalar edge cases.
+// Pure test application; see raw/scalars.PORT.md for execution evidence.
+use cathedral_uefi_raw::scalars::Boolean;
+use cathedral_uefi_raw::scalars::MemoryType;
+use cathedral_uefi_raw::status::Status;
+use cathedral_uefi_raw::revision::Revision;
+use cathedral_uefi_raw::time::Time;
+use cathedral_uefi_raw::time::Daylight;
+use cathedral_uefi_raw::capsule::CapsuleHeader;
+use cathedral_uefi::scalar_helpers::boolean_from_raw;
+use cathedral_uefi::scalar_helpers::boolean_from_bool;
+use cathedral_uefi::scalar_helpers::boolean_is_true;
+use cathedral_uefi::scalar_helpers::boolean_is_false;
+use cathedral_uefi::scalar_helpers::boolean_equal;
+use cathedral_uefi::scalar_helpers::boolean_compare;
+use cathedral_uefi::scalar_helpers::boolean_hash_byte;
+use cathedral_uefi::scalar_helpers::status_is_success;
+use cathedral_uefi::scalar_helpers::status_is_warning;
+use cathedral_uefi::scalar_helpers::status_is_error;
+use cathedral_uefi::scalar_helpers::revision_new;
+use cathedral_uefi::scalar_helpers::revision_major;
+use cathedral_uefi::scalar_helpers::revision_minor;
+use cathedral_uefi::scalar_helpers::revision_less;
+use cathedral_uefi::scalar_helpers::time_invalid;
+use cathedral_uefi::scalar_helpers::time_is_valid;
+use cathedral_uefi::scalar_helpers::time_equal;
+use cathedral_uefi::scalar_helpers::memory_type_custom;
+
+machine test_boolean_conversions() -> bool {
+    boolean_from_bool(true).raw == 1 && boolean_from_bool(false).raw == 0 &&
+    boolean_is_false(Boolean { raw: 0 }) && boolean_is_true(Boolean { raw: 1 }) &&
+    boolean_is_true(Boolean { raw: 254 }) && boolean_is_true(Boolean { raw: 255 }) &&
+    boolean_from_raw(254).raw == 254
+}
+machine test_boolean_order_equality_hash() -> bool {
+    boolean_compare(Boolean { raw: 0 }, Boolean { raw: 1 }) == -1 &&
+    boolean_compare(Boolean { raw: 1 }, Boolean { raw: 0 }) == 1 &&
+    boolean_compare(Boolean { raw: 13 }, Boolean { raw: 7 }) == 0 &&
+    boolean_equal(Boolean { raw: 0 }, Boolean { raw: 0 }) &&
+    !boolean_equal(Boolean { raw: 0 }, Boolean { raw: 3 }) &&
+    !boolean_equal(Boolean { raw: 7 }, Boolean { raw: 0 }) &&
+    boolean_equal(Boolean { raw: 1 }, Boolean { raw: 1 }) &&
+    boolean_equal(Boolean { raw: 13 }, Boolean { raw: 7 }) &&
+    boolean_hash_byte(Boolean { raw: 1 }) == boolean_hash_byte(Boolean { raw: 13 }) &&
+    boolean_hash_byte(Boolean { raw: 13 }) == boolean_hash_byte(Boolean { raw: 255 }) &&
+    boolean_hash_byte(Boolean { raw: 0 }) != boolean_hash_byte(Boolean { raw: 13 })
+}
+machine test_status() -> bool {
+    status_is_success(Status { raw: 0 }) && !status_is_warning(Status { raw: 0 }) &&
+    !status_is_error(Status { raw: 0 }) && status_is_warning(Status { raw: 7 }) &&
+    status_is_warning(Status { raw: 0x7fff_ffff_ffff_ffff }) &&
+    status_is_error(Status { raw: 0x8000_0000_0000_0000 }) &&
+    status_is_error(Status { raw: 0xffff_ffff_ffff_ffff }) &&
+    !status_is_warning(Status { raw: 0x8000_0000_0000_0005 })
+}
+machine test_revision() -> bool {
+    revision_new(2, 31).raw == 0x0002_001f &&
+    revision_major(Revision { raw: 0x0002_001f }) == 2 &&
+    revision_minor(Revision { raw: 0x0002_001f }) == 31 &&
+    revision_less(Revision { raw: 0x0001_000a }, Revision { raw: 0x0002_0000 }) &&
+    revision_new(65535, 65535).raw == 0xffff_ffff &&
+    revision_major(Revision { raw: 0xffff_ffff }) == 65535 &&
+    revision_minor(Revision { raw: 0xffff_ffff }) == 65535 &&
+    revision_new(0, 0).raw == 0 && revision_new(2, 100).raw == 0x0002_0064
+}
+machine test_time() -> bool {
+    let mut value: Time = Time {
+        year: 1900, month: 1, day: 1, hour: 0, minute: 0, second: 0,
+        nanosecond: 0, time_zone: -1440, daylight: Daylight { raw: 0 },
+    };
+    let lower: bool = time_is_valid(value);
+    value.year = 9999; value.month = 12; value.day = 31; value.hour = 23;
+    value.minute = 59; value.second = 59; value.nanosecond = 999999999;
+    value.time_zone = 1440;
+    let upper: bool = time_is_valid(value);
+    value.time_zone = 2047;
+    let local: bool = time_is_valid(value);
+    let mut padded: Time = value; padded.pad1 = 255; padded.pad2 = 255;
+    let padding_ignored: bool = time_equal(value, padded);
+    value.year = 1899;
+    let bad_year: bool = !time_is_valid(value); value.year = 10000;
+    let large_year: bool = !time_is_valid(value); value.year = 2023;
+    value.month = 0; let bad_month: bool = !time_is_valid(value); value.month = 13;
+    let large_month: bool = !time_is_valid(value); value.month = 2;
+    value.day = 0; let bad_day: bool = !time_is_valid(value); value.day = 32;
+    let large_day: bool = !time_is_valid(value); value.day = 31;
+    let not_calendar_validation: bool = time_is_valid(value);
+    value.hour = 24; let bad_hour: bool = !time_is_valid(value); value.hour = 23;
+    value.minute = 60; let bad_minute: bool = !time_is_valid(value); value.minute = 59;
+    value.second = 60; let bad_second: bool = !time_is_valid(value); value.second = 59;
+    value.nanosecond = 1000000000;
+    let bad_nanosecond: bool = !time_is_valid(value); value.nanosecond = 0;
+    value.time_zone = -1441; let low_zone: bool = !time_is_valid(value);
+    value.time_zone = 1441; let high_zone: bool = !time_is_valid(value);
+    value.time_zone = 2047; value.daylight.raw = 255;
+    let no_daylight_validation: bool = time_is_valid(value);
+    lower && upper && local && padding_ignored && bad_year && large_year &&
+    bad_month && large_month && bad_day && large_day && not_calendar_validation &&
+    bad_hour && bad_minute && bad_second && bad_nanosecond && low_zone && high_zone &&
+    no_daylight_validation && !time_is_valid(time_invalid())
+}
+machine test_custom_memory_type() -> bool {
+    memory_type_custom(0x80000000).raw == 0x80000000 &&
+    memory_type_custom(0xffffffff).raw == 0xffffffff
+}
+machine test_result() -> i32 {
+    transition test_boolean_conversions() && test_boolean_order_equality_hash() &&
+        test_status() && test_revision() && test_time() && test_custom_memory_type() {
+        true -> (0)
+        _ -> (1)
+    }
+}
+
+// Semantic evaluator executes the real Omega helper bodies and fixture cases.
+// The checked call below must prove the computed result is exactly zero.
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

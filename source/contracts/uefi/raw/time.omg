@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Omega translation from rust-osdev/uefi-rs
+// c0facddf9ba42b74906a37fca2869e6cdbc8da6a; see scalars.PORT.md.
+// Inert x86-64 carriers: numeric address/handle bits establish no authority.
+// ABI expectations are scalars.vectors.json, not inferred Omega native layout.
+module time;
+
+pub data Daylight [copy] { raw: u8; }
+pub const DAYLIGHT_ADJUST_DAYLIGHT: Daylight = Daylight { raw: 1 };
+pub const DAYLIGHT_IN_DAYLIGHT: Daylight = Daylight { raw: 2 };
+pub const UNSPECIFIED_TIMEZONE: i16 = 2047;
+
+// UEFI 2.11 section 8.3.1. Raw fields admit invalid input for later validation.
+// Spec TimeZone convention is LocalTime = UTC - TimeZone.
+pub data Time [copy] {
+    year: u16;
+    month: u8;
+    day: u8;
+    hour: u8;
+    minute: u8;
+    second: u8;
+    pad1: u8;
+    nanosecond: u32;
+    time_zone: i16;
+    daylight: Daylight;
+    pad2: u8;
+}
+pub const TIME_INVALID: Time = Time {
+    year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0, pad1: 0,
+    nanosecond: 0, time_zone: 0, daylight: Daylight { raw: 0 }, pad2: 0,
+};
+// Upstream is_valid checks numeric ranges but not month/day compatibility or
+// reserved daylight bits; preserve that behavior in fixtures without claiming
+// it fully validates a firmware SetTime request. Padding is ignored by equality.

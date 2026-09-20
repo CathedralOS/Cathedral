@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Omega translation from rust-osdev/uefi-rs
+// c0facddf9ba42b74906a37fca2869e6cdbc8da6a; see scalars.PORT.md.
+// Inert x86-64 carriers: numeric address/handle bits establish no authority.
+// ABI expectations are scalars.vectors.json, not inferred Omega native layout.
+module status;
+
+pub data Status [copy] { raw: u64; }
+pub const STATUS_ERROR_BIT: u64 = 0x8000_0000_0000_0000;
+pub const STATUS_SUCCESS: Status = Status { raw: 0 };
+pub const STATUS_WARN_UNKNOWN_GLYPH: Status = Status { raw: 1 };
+pub const STATUS_WARN_DELETE_FAILURE: Status = Status { raw: 2 };
+pub const STATUS_WARN_WRITE_FAILURE: Status = Status { raw: 3 };
+pub const STATUS_WARN_BUFFER_TOO_SMALL: Status = Status { raw: 4 };
+pub const STATUS_WARN_STALE_DATA: Status = Status { raw: 5 };
+pub const STATUS_WARN_FILE_SYSTEM: Status = Status { raw: 6 };
+pub const STATUS_WARN_RESET_REQUIRED: Status = Status { raw: 7 };
+pub const STATUS_LOAD_ERROR: Status = Status { raw: STATUS_ERROR_BIT |  1 };
+pub const STATUS_INVALID_PARAMETER: Status = Status { raw: STATUS_ERROR_BIT |  2 };
+pub const STATUS_UNSUPPORTED: Status = Status { raw: STATUS_ERROR_BIT |  3 };
+pub const STATUS_BAD_BUFFER_SIZE: Status = Status { raw: STATUS_ERROR_BIT |  4 };
+pub const STATUS_BUFFER_TOO_SMALL: Status = Status { raw: STATUS_ERROR_BIT |  5 };
+pub const STATUS_NOT_READY: Status = Status { raw: STATUS_ERROR_BIT |  6 };
+pub const STATUS_DEVICE_ERROR: Status = Status { raw: STATUS_ERROR_BIT |  7 };
+pub const STATUS_WRITE_PROTECTED: Status = Status { raw: STATUS_ERROR_BIT |  8 };
+pub const STATUS_OUT_OF_RESOURCES: Status = Status { raw: STATUS_ERROR_BIT |  9 };
+pub const STATUS_VOLUME_CORRUPTED: Status = Status { raw: STATUS_ERROR_BIT | 10 };
+pub const STATUS_VOLUME_FULL: Status = Status { raw: STATUS_ERROR_BIT | 11 };
+pub const STATUS_NO_MEDIA: Status = Status { raw: STATUS_ERROR_BIT | 12 };
+pub const STATUS_MEDIA_CHANGED: Status = Status { raw: STATUS_ERROR_BIT | 13 };
+pub const STATUS_NOT_FOUND: Status = Status { raw: STATUS_ERROR_BIT | 14 };
+pub const STATUS_ACCESS_DENIED: Status = Status { raw: STATUS_ERROR_BIT | 15 };
+pub const STATUS_NO_RESPONSE: Status = Status { raw: STATUS_ERROR_BIT | 16 };
+pub const STATUS_NO_MAPPING: Status = Status { raw: STATUS_ERROR_BIT | 17 };
+pub const STATUS_TIMEOUT: Status = Status { raw: STATUS_ERROR_BIT | 18 };
+pub const STATUS_NOT_STARTED: Status = Status { raw: STATUS_ERROR_BIT | 19 };
+pub const STATUS_ALREADY_STARTED: Status = Status { raw: STATUS_ERROR_BIT | 20 };
+pub const STATUS_ABORTED: Status = Status { raw: STATUS_ERROR_BIT | 21 };
+pub const STATUS_ICMP_ERROR: Status = Status { raw: STATUS_ERROR_BIT | 22 };
+pub const STATUS_TFTP_ERROR: Status = Status { raw: STATUS_ERROR_BIT | 23 };
+pub const STATUS_PROTOCOL_ERROR: Status = Status { raw: STATUS_ERROR_BIT | 24 };
+pub const STATUS_INCOMPATIBLE_VERSION: Status = Status { raw: STATUS_ERROR_BIT | 25 };
+pub const STATUS_SECURITY_VIOLATION: Status = Status { raw: STATUS_ERROR_BIT | 26 };
+pub const STATUS_CRC_ERROR: Status = Status { raw: STATUS_ERROR_BIT | 27 };
+pub const STATUS_END_OF_MEDIA: Status = Status { raw: STATUS_ERROR_BIT | 28 };
+pub const STATUS_END_OF_FILE: Status = Status { raw: STATUS_ERROR_BIT | 31 };
+pub const STATUS_INVALID_LANGUAGE: Status = Status { raw: STATUS_ERROR_BIT | 32 };
+pub const STATUS_COMPROMISED_DATA: Status = Status { raw: STATUS_ERROR_BIT | 33 };
+pub const STATUS_IP_ADDRESS_CONFLICT: Status = Status { raw: STATUS_ERROR_BIT | 34 };
+pub const STATUS_HTTP_ERROR: Status = Status { raw: STATUS_ERROR_BIT | 35 };
+// All 64-bit values remain representable, including vendor-defined statuses.

@@ -1,0 +1,108 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Omega translation from rust-osdev/uefi-rs
+// c0facddf9ba42b74906a37fca2869e6cdbc8da6a; see scalars.PORT.md.
+// Inert x86-64 carriers: numeric address/handle bits establish no authority.
+// ABI expectations are scalars.vectors.json, not inferred Omega native layout.
+module scalars;
+
+pub data Handle [copy] { raw: u64; }
+pub data Event [copy] { raw: u64; }
+pub data Char8 [copy] { raw: u8; }
+pub data Char16 [copy] { raw: u16; }
+pub data PhysicalAddress [copy] { raw: u64; }
+pub data VirtualAddress [copy] { raw: u64; }
+pub data Boolean [copy] { raw: u8; }
+pub data MemoryType [copy] { raw: u32; }
+pub data MemoryAttribute [copy] { raw: u64; }
+pub data AllocateType [copy] { raw: u32; }
+pub data EventType [copy] { raw: u32; }
+pub data InterfaceType [copy] { raw: u32; }
+pub data Tpl [copy] { raw: u64; }
+pub data TimerDelay [copy] { raw: i32; }
+
+// UEFI 2.11 section 7.3 and Appendix A: mixed-width GUID fields.
+// data1/data2/data3 serialize little-endian on this profile; data4 is byte order.
+pub data Guid [copy] { data1: u32; data2: u16; data3: u16; data4: [u8; 8]; }
+
+pub const BOOLEAN_TRUE: Boolean = Boolean { raw: 1 };
+pub const BOOLEAN_FALSE: Boolean = Boolean { raw: 0 };
+// Every nonzero byte is logically true. Exact raw bits remain observable.
+// Logical comparison/order/hash normalization are captured in tools/ports/uefi-scalars/main.omg.
+
+// UEFI 2.11 section 7.2.3. Firmware descriptor stride is returned separately;
+// do not advance a memory-map iterator by this 40-byte minimum representation.
+pub data MemoryDescriptor [copy] {
+    ty: MemoryType;
+    padding: u32;
+    phys_start: PhysicalAddress;
+    virt_start: VirtualAddress;
+    page_count: u64;
+    att: MemoryAttribute;
+}
+pub const MEMORY_DESCRIPTOR_VERSION: u32 = 1;
+pub const PAGE_SIZE: u64 = 4096;
+pub const MEMORY_TYPE_RESERVED_FOR_OEM_MIN: u32 = 0x7000_0000;
+pub const MEMORY_TYPE_RESERVED_FOR_OEM_MAX: u32 = 0x7fff_ffff;
+pub const MEMORY_TYPE_RESERVED_FOR_OS_LOADER_MIN: u32 = 0x8000_0000;
+pub const MEMORY_TYPE_RESERVED_FOR_OS_LOADER_MAX: u32 = 0xffff_ffff;
+// Upstream MemoryType::custom's >= 0x80000000 precondition is retained as a
+// fixture predicate. Historic OVMF revisions mishandled custom types; a raw
+// declaration does not select an allocation policy or firmware call.
+pub const ALLOCATE_TYPE_ANY_PAGES: AllocateType = AllocateType { raw: 0 };
+pub const ALLOCATE_TYPE_MAX_ADDRESS: AllocateType = AllocateType { raw: 1 };
+pub const ALLOCATE_TYPE_ADDRESS: AllocateType = AllocateType { raw: 2 };
+pub const ALLOCATE_TYPE_MAX_ALLOCATE_TYPE: AllocateType = AllocateType { raw: 3 };
+pub const EVENT_TYPE_TIMER: EventType = EventType { raw: 0x8000_0000 };
+pub const EVENT_TYPE_RUNTIME: EventType = EventType { raw: 0x4000_0000 };
+pub const EVENT_TYPE_NOTIFY_WAIT: EventType = EventType { raw: 0x0000_0100 };
+pub const EVENT_TYPE_NOTIFY_SIGNAL: EventType = EventType { raw: 0x0000_0200 };
+pub const EVENT_TYPE_SIGNAL_EXIT_BOOT_SERVICES: EventType = EventType { raw: 0x0000_0201 };
+pub const EVENT_TYPE_SIGNAL_VIRTUAL_ADDRESS_CHANGE: EventType = EventType { raw: 0x6000_0202 };
+pub const INTERFACE_TYPE_NATIVE_INTERFACE: InterfaceType = InterfaceType { raw: 0 };
+pub const MEMORY_TYPE_RESERVED: MemoryType = MemoryType { raw: 0 };
+pub const MEMORY_TYPE_LOADER_CODE: MemoryType = MemoryType { raw: 1 };
+pub const MEMORY_TYPE_LOADER_DATA: MemoryType = MemoryType { raw: 2 };
+pub const MEMORY_TYPE_BOOT_SERVICES_CODE: MemoryType = MemoryType { raw: 3 };
+pub const MEMORY_TYPE_BOOT_SERVICES_DATA: MemoryType = MemoryType { raw: 4 };
+pub const MEMORY_TYPE_RUNTIME_SERVICES_CODE: MemoryType = MemoryType { raw: 5 };
+pub const MEMORY_TYPE_RUNTIME_SERVICES_DATA: MemoryType = MemoryType { raw: 6 };
+pub const MEMORY_TYPE_CONVENTIONAL: MemoryType = MemoryType { raw: 7 };
+pub const MEMORY_TYPE_UNUSABLE: MemoryType = MemoryType { raw: 8 };
+pub const MEMORY_TYPE_ACPI_RECLAIM: MemoryType = MemoryType { raw: 9 };
+pub const MEMORY_TYPE_ACPI_NON_VOLATILE: MemoryType = MemoryType { raw: 10 };
+pub const MEMORY_TYPE_MMIO: MemoryType = MemoryType { raw: 11 };
+pub const MEMORY_TYPE_MMIO_PORT_SPACE: MemoryType = MemoryType { raw: 12 };
+pub const MEMORY_TYPE_PAL_CODE: MemoryType = MemoryType { raw: 13 };
+pub const MEMORY_TYPE_PERSISTENT_MEMORY: MemoryType = MemoryType { raw: 14 };
+pub const MEMORY_TYPE_UNACCEPTED: MemoryType = MemoryType { raw: 15 };
+pub const MEMORY_TYPE_MAX: MemoryType = MemoryType { raw: 16 };
+pub const MEMORY_ATTRIBUTE_UNCACHEABLE: MemoryAttribute = MemoryAttribute { raw: 0x1 };
+pub const MEMORY_ATTRIBUTE_WRITE_COMBINE: MemoryAttribute = MemoryAttribute { raw: 0x2 };
+pub const MEMORY_ATTRIBUTE_WRITE_THROUGH: MemoryAttribute = MemoryAttribute { raw: 0x4 };
+pub const MEMORY_ATTRIBUTE_WRITE_BACK: MemoryAttribute = MemoryAttribute { raw: 0x8 };
+pub const MEMORY_ATTRIBUTE_UNCACHABLE_EXPORTED: MemoryAttribute = MemoryAttribute { raw: 0x10 };
+pub const MEMORY_ATTRIBUTE_WRITE_PROTECT: MemoryAttribute = MemoryAttribute { raw: 0x1000 };
+pub const MEMORY_ATTRIBUTE_READ_PROTECT: MemoryAttribute = MemoryAttribute { raw: 0x2000 };
+pub const MEMORY_ATTRIBUTE_EXECUTE_PROTECT: MemoryAttribute = MemoryAttribute { raw: 0x4000 };
+pub const MEMORY_ATTRIBUTE_NON_VOLATILE: MemoryAttribute = MemoryAttribute { raw: 0x8000 };
+pub const MEMORY_ATTRIBUTE_MORE_RELIABLE: MemoryAttribute = MemoryAttribute { raw: 0x10000 };
+pub const MEMORY_ATTRIBUTE_READ_ONLY: MemoryAttribute = MemoryAttribute { raw: 0x20000 };
+pub const MEMORY_ATTRIBUTE_SPECIAL_PURPOSE: MemoryAttribute = MemoryAttribute { raw: 0x4_0000 };
+pub const MEMORY_ATTRIBUTE_CPU_CRYPTO: MemoryAttribute = MemoryAttribute { raw: 0x8_0000 };
+pub const MEMORY_ATTRIBUTE_HOT_PLUGGABLE: MemoryAttribute = MemoryAttribute { raw: 0x10_0000 };
+pub const MEMORY_ATTRIBUTE_RUNTIME: MemoryAttribute = MemoryAttribute { raw: 0x8000_0000_0000_0000 };
+pub const MEMORY_ATTRIBUTE_ISA_VALID: MemoryAttribute = MemoryAttribute { raw: 0x4000_0000_0000_0000 };
+pub const MEMORY_ATTRIBUTE_ISA_MASK: MemoryAttribute = MemoryAttribute { raw: 0x0FFF_F000_0000_0000 };
+pub const TPL_APPLICATION: Tpl = Tpl { raw: 4 };
+pub const TPL_CALLBACK: Tpl = Tpl { raw: 8 };
+pub const TPL_NOTIFY: Tpl = Tpl { raw: 16 };
+pub const TPL_HIGH_LEVEL: Tpl = Tpl { raw: 31 };
+pub const TIMER_DELAY_CANCEL: TimerDelay = TimerDelay { raw: 0 };
+pub const TIMER_DELAY_PERIODIC: TimerDelay = TimerDelay { raw: 1 };
+pub const TIMER_DELAY_RELATIVE: TimerDelay = TimerDelay { raw: 2 };
+
+// HOT_PLUGGABLE preserves the pinned upstream 0x100000. Primary 2.11 source
+// discrepancy is documented in scalars.PORT.md; do not silently resolve it.
+// ABI-NOT-VERIFIED: install and independently inspect exact foreign layouts
+// before using these semantic records at an ABI. This is remaining port work,
+// not evidence of a language implementation blocker.

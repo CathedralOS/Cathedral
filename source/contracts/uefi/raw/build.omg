@@ -1,0 +1,5 @@
+// Standalone licensed raw-contract corpus. No production boot root depends on
+// this package; individual modules retain their own compilation/ABI evidence.
+machine build(builder: &mut Build) {
+    builder.package("cathedral-uefi-raw");
+}

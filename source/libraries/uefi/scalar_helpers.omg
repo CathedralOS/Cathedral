@@ -1,0 +1,79 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of uefi-raw scalar behavior at
+// c0facddf9ba42b74906a37fca2869e6cdbc8da6a; see contracts/uefi/raw/scalars.PORT.md.
+module scalar_helpers;
+use cathedral_uefi_raw::scalars::Boolean;
+use cathedral_uefi_raw::scalars::MemoryType;
+use cathedral_uefi_raw::scalars::MemoryDescriptor;
+use cathedral_uefi_raw::status::Status;
+use cathedral_uefi_raw::revision::Revision;
+use cathedral_uefi_raw::time::Time;
+
+pub machine boolean_from_raw(value: u8) -> Boolean { Boolean { raw: value } }
+pub machine boolean_from_bool(value: bool) -> Boolean {
+    transition value { true -> (Boolean { raw: 1 }) _ -> (Boolean { raw: 0 }) }
+}
+pub machine boolean_is_true(value: Boolean) -> bool { value.raw != 0 }
+pub machine boolean_is_false(value: Boolean) -> bool { value.raw == 0 }
+pub machine boolean_equal(left: Boolean, right: Boolean) -> bool {
+    (left.raw == 0) == (right.raw == 0)
+}
+// -1, 0, 1 replace Rust Ordering without comparing distinct nonzero byte values.
+pub machine boolean_compare(left: Boolean, right: Boolean) -> i32 {
+    transition left.raw == 0 {
+        true -> left_false(right)
+        _ -> left_true(right)
+    }
+    state left_false(right: Boolean) -> i32 {
+        transition right.raw == 0 { true -> (0) _ -> (-1) }
+    }
+    state left_true(right: Boolean) -> i32 {
+        transition right.raw == 0 { true -> (1) _ -> (0) }
+    }
+}
+// This is the byte fed into any selected hasher, not a general hashing API.
+pub machine boolean_hash_byte(value: Boolean) -> u8 {
+    transition value.raw == 0 { true -> (0) _ -> (1) }
+}
+pub machine status_is_success(value: Status) -> bool { value.raw == 0 }
+pub machine status_is_warning(value: Status) -> bool {
+    value.raw != 0 && (value.raw & 0x8000_0000_0000_0000) == 0
+}
+pub machine status_is_error(value: Status) -> bool {
+    (value.raw & 0x8000_0000_0000_0000) != 0
+}
+pub machine revision_new(major: u16, minor: u16) -> Revision {
+    Revision { raw: ((major as u32) << 16) | (minor as u32) }
+}
+pub machine revision_major(value: Revision) -> u16 { (value.raw >> 16) as u16 }
+pub machine revision_minor(value: Revision) -> u16 { (value.raw & 0xffff) as u16 }
+pub machine revision_less(left: Revision, right: Revision) -> bool { left.raw < right.raw }
+
+pub machine time_invalid() -> Time {
+    Time {
+        year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0, pad1: 0,
+        nanosecond: 0, time_zone: 0, pad2: 0,
+    }
+}
+// Exact upstream range predicate, not complete calendar/SetTime validation.
+pub machine time_is_valid(value: Time) -> bool {
+    value.year >= 1900 && value.year <= 9999 &&
+    value.month >= 1 && value.month <= 12 &&
+    value.day >= 1 && value.day <= 31 &&
+    value.hour <= 23 && value.minute <= 59 && value.second <= 59 &&
+    value.nanosecond <= 999999999 &&
+    ((value.time_zone >= -1440 && value.time_zone <= 1440) || value.time_zone == 2047)
+}
+pub machine time_equal(left: Time, right: Time) -> bool {
+    left.year == right.year && left.month == right.month && left.day == right.day &&
+    left.hour == right.hour && left.minute == right.minute && left.second == right.second &&
+    left.nanosecond == right.nanosecond && left.time_zone == right.time_zone &&
+    left.daylight.raw == right.daylight.raw
+}
+pub machine memory_type_custom(value: u32) -> MemoryType
+    requires value >= 0x80000000;
+{
+    MemoryType { raw: value }
+}
+
+pub machine memory_descriptor_default() -> MemoryDescriptor { MemoryDescriptor {} }

@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Omega translation from rust-osdev/uefi-rs
+// c0facddf9ba42b74906a37fca2869e6cdbc8da6a; see scalars.PORT.md.
+// Inert x86-64 carriers: numeric address/handle bits establish no authority.
+// ABI expectations are scalars.vectors.json, not inferred Omega native layout.
+module revision;
+
+pub data Revision [copy] { raw: u32; }
+pub const REVISION_EFI_1_02: Revision = Revision { raw: 0x00010002 };
+pub const REVISION_EFI_1_10: Revision = Revision { raw: 0x0001000a };
+pub const REVISION_EFI_2_00: Revision = Revision { raw: 0x00020000 };
+pub const REVISION_EFI_2_10: Revision = Revision { raw: 0x0002000a };
+pub const REVISION_EFI_2_20: Revision = Revision { raw: 0x00020014 };
+pub const REVISION_EFI_2_30: Revision = Revision { raw: 0x0002001e };
+pub const REVISION_EFI_2_31: Revision = Revision { raw: 0x0002001f };
+pub const REVISION_EFI_2_40: Revision = Revision { raw: 0x00020028 };
+pub const REVISION_EFI_2_50: Revision = Revision { raw: 0x00020032 };
+pub const REVISION_EFI_2_60: Revision = Revision { raw: 0x0002003c };
+pub const REVISION_EFI_2_70: Revision = Revision { raw: 0x00020046 };
+pub const REVISION_EFI_2_80: Revision = Revision { raw: 0x00020050 };
+pub const REVISION_EFI_2_90: Revision = Revision { raw: 0x0002005a };
+pub const REVISION_EFI_2_100: Revision = Revision { raw: 0x00020064 };
+// Minor is stored as the integer decimal version component, not hexadecimal
+// digit packing: UEFI 2.3.1 is 0x0002001f; UEFI 2.10 is 0x00020064.
+// Pure encode/decode/order cases are retained in tools/ports/uefi-scalars/main.omg.

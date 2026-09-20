@@ -1,0 +1,2564 @@
+{
+  "files": {
+    "uefi-raw/src/capsule.rs": {
+      "disposition": "translated",
+      "sha256": "b3d374ec187282c63d557b22e955a48ea0a7fb5f5314a482b9962d1caa8b9d40",
+      "symbols": {
+        "104:INITIATE_RESET": {
+          "anchor": "const INITIATE_RESET = 1 << 18;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_INITIATE_RESET",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "111:CapsuleHeader": {
+          "anchor": "pub struct CapsuleHeader {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data CapsuleHeader ",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "113:capsule_guid": {
+          "anchor": "pub capsule_guid: Guid,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "capsule_guid:",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "120:header_size": {
+          "anchor": "pub header_size: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "header_size:",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "123:flags": {
+          "anchor": "pub flags: CapsuleFlags,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "126:capsule_image_size": {
+          "anchor": "pub capsule_image_size: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "capsule_image_size:",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "15:CapsuleBlockDescriptor": {
+          "anchor": "pub struct CapsuleBlockDescriptor {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data CapsuleBlockDescriptor ",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "18:length": {
+          "anchor": "pub length: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "length:",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "28:address": {
+          "anchor": "pub address: PhysicalAddress,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "address:",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "37:CapsuleFlags": {
+          "anchor": "pub struct CapsuleFlags: u32 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data CapsuleFlags ",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "39:TYPE_SPECIFIC_BIT_0": {
+          "anchor": "const TYPE_SPECIFIC_BIT_0 = 1 << 0;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_0",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "42:TYPE_SPECIFIC_BIT_1": {
+          "anchor": "const TYPE_SPECIFIC_BIT_1 = 1 << 1;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_1",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "45:TYPE_SPECIFIC_BIT_2": {
+          "anchor": "const TYPE_SPECIFIC_BIT_2 = 1 << 2;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_2",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "48:TYPE_SPECIFIC_BIT_3": {
+          "anchor": "const TYPE_SPECIFIC_BIT_3 = 1 << 3;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_3",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "51:TYPE_SPECIFIC_BIT_4": {
+          "anchor": "const TYPE_SPECIFIC_BIT_4 = 1 << 4;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_4",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "54:TYPE_SPECIFIC_BIT_5": {
+          "anchor": "const TYPE_SPECIFIC_BIT_5 = 1 << 5;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_5",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "57:TYPE_SPECIFIC_BIT_6": {
+          "anchor": "const TYPE_SPECIFIC_BIT_6 = 1 << 6;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_6",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "60:TYPE_SPECIFIC_BIT_7": {
+          "anchor": "const TYPE_SPECIFIC_BIT_7 = 1 << 7;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_7",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "63:TYPE_SPECIFIC_BIT_8": {
+          "anchor": "const TYPE_SPECIFIC_BIT_8 = 1 << 8;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_8",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "66:TYPE_SPECIFIC_BIT_9": {
+          "anchor": "const TYPE_SPECIFIC_BIT_9 = 1 << 9;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_9",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "69:TYPE_SPECIFIC_BIT_10": {
+          "anchor": "const TYPE_SPECIFIC_BIT_10 = 1 << 10;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_10",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "72:TYPE_SPECIFIC_BIT_11": {
+          "anchor": "const TYPE_SPECIFIC_BIT_11 = 1 << 11;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_11",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "75:TYPE_SPECIFIC_BIT_12": {
+          "anchor": "const TYPE_SPECIFIC_BIT_12 = 1 << 12;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_12",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "78:TYPE_SPECIFIC_BIT_13": {
+          "anchor": "const TYPE_SPECIFIC_BIT_13 = 1 << 13;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_13",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "81:TYPE_SPECIFIC_BIT_14": {
+          "anchor": "const TYPE_SPECIFIC_BIT_14 = 1 << 14;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_14",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "84:TYPE_SPECIFIC_BIT_15": {
+          "anchor": "const TYPE_SPECIFIC_BIT_15 = 1 << 15;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_15",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "87:PERSIST_ACROSS_RESET": {
+          "anchor": "const PERSIST_ACROSS_RESET = 1 << 16;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_PERSIST_ACROSS_RESET",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        },
+        "97:POPULATE_SYSTEM_TABLE": {
+          "anchor": "const POPULATE_SYSTEM_TABLE = 1 << 17;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE",
+              "path": "source/contracts/uefi/raw/capsule.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "module capsule;",
+          "path": "source/contracts/uefi/raw/capsule.omg"
+        }
+      ]
+    },
+    "uefi-raw/src/lib.rs": {
+      "disposition": "translated",
+      "sha256": "50923bf48b9896d51a83caf4b4873c83f6a56979fab0a3da3a8933a1cf504464",
+      "symbols": {
+        "108:TRUE": {
+          "anchor": "pub const TRUE: Self = Self(1);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "BOOLEAN_TRUE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "111:FALSE": {
+          "anchor": "pub const FALSE: Self = Self(0);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "BOOLEAN_FALSE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "114:eq_const": {
+          "anchor": "const fn eq_const(self, other: Self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine boolean_equal(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "126:is_true": {
+          "anchor": "pub const fn is_true(self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine boolean_is_true(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "132:is_false": {
+          "anchor": "pub const fn is_false(self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine boolean_is_false(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "138:from": {
+          "anchor": "fn from(value: u8) -> Self {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine boolean_from_raw(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "144:from": {
+          "anchor": "fn from(value: bool) -> Self {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine boolean_from_bool(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "154:from": {
+          "anchor": "fn from(value: Boolean) -> Self {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine boolean_is_true(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "164:eq": {
+          "anchor": "fn eq(&self, other: &Self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine boolean_equal(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "172:partial_cmp": {
+          "anchor": "fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine boolean_compare(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "178:cmp": {
+          "anchor": "fn cmp(&self, other: &Self) -> cmp::Ordering {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine boolean_compare(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "190:hash": {
+          "anchor": "fn hash<H: Hasher>(&self, state: &mut H) {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine boolean_hash_byte(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "197:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Rust test-module organization replaced by tools/ports/uefi-scalars/main.omg."
+        },
+        "204:test_boolean_conversions": {
+          "anchor": "fn test_boolean_conversions() {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine test_boolean_conversions(",
+              "path": "tools/ports/uefi-scalars/main.omg"
+            }
+          ]
+        },
+        "217:test_order": {
+          "anchor": "fn test_order() {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine test_boolean_order_equality_hash(",
+              "path": "tools/ports/uefi-scalars/main.omg"
+            }
+          ]
+        },
+        "223:test_equality": {
+          "anchor": "fn test_equality() {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine test_boolean_order_equality_hash(",
+              "path": "tools/ports/uefi-scalars/main.omg"
+            }
+          ]
+        },
+        "233:test_hash": {
+          "anchor": "fn test_hash() {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine test_boolean_order_equality_hash(",
+              "path": "tools/ports/uefi-scalars/main.omg"
+            }
+          ]
+        },
+        "235:TestHasher": {
+          "anchor": "struct TestHasher(u64);",
+          "disposition": "omitted",
+          "reason": "Upstream local test hasher is not a ported hashing library; test_boolean_order_equality_hash checks the canonical single hash byte directly, preserving tested Boolean hash equivalence."
+        },
+        "238:finish": {
+          "anchor": "fn finish(&self) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Upstream local test hasher is not a ported hashing library; test_boolean_order_equality_hash checks the canonical single hash byte directly, preserving tested Boolean hash equivalence."
+        },
+        "242:write": {
+          "anchor": "fn write(&mut self, bytes: &[u8]) {",
+          "disposition": "omitted",
+          "reason": "Upstream local test hasher is not a ported hashing library; test_boolean_order_equality_hash checks the canonical single hash byte directly, preserving tested Boolean hash equivalence."
+        },
+        "249:calculate_hash": {
+          "anchor": "fn calculate_hash(value: Boolean) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Upstream local test hasher is not a ported hashing library; test_boolean_order_equality_hash checks the canonical single hash byte directly, preserving tested Boolean hash equivalence."
+        },
+        "31:enums": {
+          "anchor": "mod enums;",
+          "disposition": "omitted",
+          "reason": "Rust crate/module/reexport organization is not reproduced. This inventory claims scalar items only; protocols/net/firmware storage are separate queue slices."
+        },
+        "33:capsule": {
+          "anchor": "pub mod capsule;",
+          "disposition": "omitted",
+          "reason": "Rust crate/module/reexport organization is not reproduced. This inventory claims scalar items only; protocols/net/firmware storage are separate queue slices."
+        },
+        "34:firmware_storage": {
+          "anchor": "pub mod firmware_storage;",
+          "disposition": "omitted",
+          "reason": "Rust crate/module/reexport organization is not reproduced. This inventory claims scalar items only; protocols/net/firmware storage are separate queue slices."
+        },
+        "35:protocol": {
+          "anchor": "pub mod protocol;",
+          "disposition": "omitted",
+          "reason": "Rust crate/module/reexport organization is not reproduced. This inventory claims scalar items only; protocols/net/firmware storage are separate queue slices."
+        },
+        "36:table": {
+          "anchor": "pub mod table;",
+          "disposition": "omitted",
+          "reason": "Rust crate/module/reexport organization is not reproduced. This inventory claims scalar items only; protocols/net/firmware storage are separate queue slices."
+        },
+        "37:time": {
+          "anchor": "pub mod time;",
+          "disposition": "omitted",
+          "reason": "Rust crate/module/reexport organization is not reproduced. This inventory claims scalar items only; protocols/net/firmware storage are separate queue slices."
+        },
+        "39:net": {
+          "anchor": "mod net;",
+          "disposition": "omitted",
+          "reason": "Rust crate/module/reexport organization is not reproduced. This inventory claims scalar items only; protocols/net/firmware storage are separate queue slices."
+        },
+        "40:status": {
+          "anchor": "mod status;",
+          "disposition": "omitted",
+          "reason": "Rust crate/module/reexport organization is not reproduced. This inventory claims scalar items only; protocols/net/firmware storage are separate queue slices."
+        },
+        "43:net::*;": {
+          "anchor": "pub use net::*;",
+          "disposition": "omitted",
+          "reason": "Rust crate/module/reexport organization is not reproduced. This inventory claims scalar items only; protocols/net/firmware storage are separate queue slices."
+        },
+        "44:status::Status;": {
+          "anchor": "pub use status::Status;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data Status ",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "45:uguid::{Guid, guid};": {
+          "anchor": "pub use uguid::{Guid, guid};",
+          "disposition": "translated",
+          "reason": "Guid carrier from primary specification; Rust guid! parsing macro and dependency API deliberately omitted.",
+          "targets": [
+            {
+              "anchor": "pub data Guid ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "51:Event": {
+          "anchor": "pub type Event = *mut c_void;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data Event ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "54:Handle": {
+          "anchor": "pub type Handle = *mut c_void;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data Handle ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "61:Char8": {
+          "anchor": "pub type Char8 = u8;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data Char8 ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "69:Char16": {
+          "anchor": "pub type Char16 = u16;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data Char16 ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "73:PhysicalAddress": {
+          "anchor": "pub type PhysicalAddress = u64;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data PhysicalAddress ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "77:VirtualAddress": {
+          "anchor": "pub type VirtualAddress = u64;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data VirtualAddress ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "91:Boolean": {
+          "anchor": "pub struct Boolean(pub u8);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data Boolean ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "96:_": {
+          "anchor": "const _: () = {",
+          "disposition": "translated",
+          "reason": "Expected layout vectors retain these compile-time assertions; Omega comparison remains unexecuted.",
+          "targets": [
+            {
+              "anchor": "Boolean.size",
+              "path": "source/contracts/uefi/raw/scalars.vectors.json"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "module scalars;",
+          "path": "source/contracts/uefi/raw/scalars.omg"
+        }
+      ]
+    },
+    "uefi-raw/src/status.rs": {
+      "disposition": "translated",
+      "sha256": "6110787b359e57278b49babb46f1cb59d7be8a805b4d613accc2d09842ce6e93",
+      "symbols": {
+        "104:ERROR_BIT": {
+          "anchor": "pub const ERROR_BIT: usize = 1 << (usize::BITS - 1);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_ERROR_BIT",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "109:is_success": {
+          "anchor": "pub fn is_success(self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine status_is_success(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "116:is_warning": {
+          "anchor": "pub fn is_warning(self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine status_is_warning(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "123:is_error": {
+          "anchor": "pub const fn is_error(self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine status_is_error(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "129:fmt": {
+          "anchor": "fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust Display/debug formatting is outside the raw ABI/scalar algorithm slice; no formatting API is promised. Original expected display strings are retained as unexecuted fixtures in scalars.PORT.md."
+        },
+        "12:Status": {
+          "anchor": "pub enum Status: usize => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data Status ",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "14:SUCCESS": {
+          "anchor": "SUCCESS                 =  0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_SUCCESS",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "17:WARN_UNKNOWN_GLYPH": {
+          "anchor": "WARN_UNKNOWN_GLYPH      =  1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_WARN_UNKNOWN_GLYPH",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "19:WARN_DELETE_FAILURE": {
+          "anchor": "WARN_DELETE_FAILURE     =  2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_WARN_DELETE_FAILURE",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "21:WARN_WRITE_FAILURE": {
+          "anchor": "WARN_WRITE_FAILURE      =  3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_WARN_WRITE_FAILURE",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "23:WARN_BUFFER_TOO_SMALL": {
+          "anchor": "WARN_BUFFER_TOO_SMALL   =  4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_WARN_BUFFER_TOO_SMALL",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "25:WARN_STALE_DATA": {
+          "anchor": "WARN_STALE_DATA         =  5,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_WARN_STALE_DATA",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "27:WARN_FILE_SYSTEM": {
+          "anchor": "WARN_FILE_SYSTEM        =  6,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_WARN_FILE_SYSTEM",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "29:WARN_RESET_REQUIRED": {
+          "anchor": "WARN_RESET_REQUIRED     =  7,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_WARN_RESET_REQUIRED",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "32:LOAD_ERROR": {
+          "anchor": "LOAD_ERROR              = Self::ERROR_BIT |  1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_LOAD_ERROR",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "34:INVALID_PARAMETER": {
+          "anchor": "INVALID_PARAMETER       = Self::ERROR_BIT |  2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_INVALID_PARAMETER",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "36:UNSUPPORTED": {
+          "anchor": "UNSUPPORTED             = Self::ERROR_BIT |  3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_UNSUPPORTED",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "38:BAD_BUFFER_SIZE": {
+          "anchor": "BAD_BUFFER_SIZE         = Self::ERROR_BIT |  4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_BAD_BUFFER_SIZE",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "41:BUFFER_TOO_SMALL": {
+          "anchor": "BUFFER_TOO_SMALL        = Self::ERROR_BIT |  5,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_BUFFER_TOO_SMALL",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "43:NOT_READY": {
+          "anchor": "NOT_READY               = Self::ERROR_BIT |  6,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_NOT_READY",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "45:DEVICE_ERROR": {
+          "anchor": "DEVICE_ERROR            = Self::ERROR_BIT |  7,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_DEVICE_ERROR",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "47:WRITE_PROTECTED": {
+          "anchor": "WRITE_PROTECTED         = Self::ERROR_BIT |  8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_WRITE_PROTECTED",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "49:OUT_OF_RESOURCES": {
+          "anchor": "OUT_OF_RESOURCES        = Self::ERROR_BIT |  9,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_OUT_OF_RESOURCES",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "51:VOLUME_CORRUPTED": {
+          "anchor": "VOLUME_CORRUPTED        = Self::ERROR_BIT | 10,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_VOLUME_CORRUPTED",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "53:VOLUME_FULL": {
+          "anchor": "VOLUME_FULL             = Self::ERROR_BIT | 11,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_VOLUME_FULL",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "55:NO_MEDIA": {
+          "anchor": "NO_MEDIA                = Self::ERROR_BIT | 12,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_NO_MEDIA",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "57:MEDIA_CHANGED": {
+          "anchor": "MEDIA_CHANGED           = Self::ERROR_BIT | 13,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_MEDIA_CHANGED",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "59:NOT_FOUND": {
+          "anchor": "NOT_FOUND               = Self::ERROR_BIT | 14,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_NOT_FOUND",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "61:ACCESS_DENIED": {
+          "anchor": "ACCESS_DENIED           = Self::ERROR_BIT | 15,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_ACCESS_DENIED",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "63:NO_RESPONSE": {
+          "anchor": "NO_RESPONSE             = Self::ERROR_BIT | 16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_NO_RESPONSE",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "65:NO_MAPPING": {
+          "anchor": "NO_MAPPING              = Self::ERROR_BIT | 17,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_NO_MAPPING",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "67:TIMEOUT": {
+          "anchor": "TIMEOUT                 = Self::ERROR_BIT | 18,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_TIMEOUT",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "69:NOT_STARTED": {
+          "anchor": "NOT_STARTED             = Self::ERROR_BIT | 19,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_NOT_STARTED",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "71:ALREADY_STARTED": {
+          "anchor": "ALREADY_STARTED         = Self::ERROR_BIT | 20,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_ALREADY_STARTED",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "73:ABORTED": {
+          "anchor": "ABORTED                 = Self::ERROR_BIT | 21,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_ABORTED",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "75:ICMP_ERROR": {
+          "anchor": "ICMP_ERROR              = Self::ERROR_BIT | 22,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_ICMP_ERROR",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "77:TFTP_ERROR": {
+          "anchor": "TFTP_ERROR              = Self::ERROR_BIT | 23,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_TFTP_ERROR",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "79:PROTOCOL_ERROR": {
+          "anchor": "PROTOCOL_ERROR          = Self::ERROR_BIT | 24,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_PROTOCOL_ERROR",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "82:INCOMPATIBLE_VERSION": {
+          "anchor": "INCOMPATIBLE_VERSION    = Self::ERROR_BIT | 25,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_INCOMPATIBLE_VERSION",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "84:SECURITY_VIOLATION": {
+          "anchor": "SECURITY_VIOLATION      = Self::ERROR_BIT | 26,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_SECURITY_VIOLATION",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "86:CRC_ERROR": {
+          "anchor": "CRC_ERROR               = Self::ERROR_BIT | 27,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_CRC_ERROR",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "88:END_OF_MEDIA": {
+          "anchor": "END_OF_MEDIA            = Self::ERROR_BIT | 28,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_END_OF_MEDIA",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "90:END_OF_FILE": {
+          "anchor": "END_OF_FILE             = Self::ERROR_BIT | 31,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_END_OF_FILE",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "92:INVALID_LANGUAGE": {
+          "anchor": "INVALID_LANGUAGE        = Self::ERROR_BIT | 32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_INVALID_LANGUAGE",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "95:COMPROMISED_DATA": {
+          "anchor": "COMPROMISED_DATA        = Self::ERROR_BIT | 33,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_COMPROMISED_DATA",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "97:IP_ADDRESS_CONFLICT": {
+          "anchor": "IP_ADDRESS_CONFLICT     = Self::ERROR_BIT | 34,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_IP_ADDRESS_CONFLICT",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        },
+        "99:HTTP_ERROR": {
+          "anchor": "HTTP_ERROR              = Self::ERROR_BIT | 35,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "STATUS_HTTP_ERROR",
+              "path": "source/contracts/uefi/raw/status.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "module status;",
+          "path": "source/contracts/uefi/raw/status.omg"
+        }
+      ]
+    },
+    "uefi-raw/src/table/boot.rs": {
+      "disposition": "translated",
+      "sha256": "974e65e75754522674a708849b81dfdbcfb23a72a7f33109b5bb4c587236df3d",
+      "symbols": {
+        "104:locate_handle": {
+          "anchor": "pub locate_handle: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "111:locate_device_path": {
+          "anchor": "pub locate_device_path: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "116:install_configuration_table": {
+          "anchor": "pub install_configuration_table:",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "120:load_image": {
+          "anchor": "pub load_image: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "128:start_image": {
+          "anchor": "pub start_image: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "133:exit": {
+          "anchor": "pub exit: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "139:unload_image": {
+          "anchor": "pub unload_image: unsafe extern \"efiapi\" fn(image_handle: Handle) -> Status,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "140:exit_boot_services": {
+          "anchor": "pub exit_boot_services:",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "144:get_next_monotonic_count": {
+          "anchor": "pub get_next_monotonic_count: unsafe extern \"efiapi\" fn(count: *mut u64) -> Status,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "145:stall": {
+          "anchor": "pub stall: unsafe extern \"efiapi\" fn(microseconds: usize) -> Status,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "146:set_watchdog_timer": {
+          "anchor": "pub set_watchdog_timer: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "154:connect_controller": {
+          "anchor": "pub connect_controller: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "160:disconnect_controller": {
+          "anchor": "pub disconnect_controller: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "167:open_protocol": {
+          "anchor": "pub open_protocol: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "16:AllocateType": {
+          "anchor": "pub enum AllocateType: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data AllocateType ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "175:close_protocol": {
+          "anchor": "pub close_protocol: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "17:ANY_PAGES": {
+          "anchor": "ANY_PAGES = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "ALLOCATE_TYPE_ANY_PAGES",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "181:open_protocol_information": {
+          "anchor": "pub open_protocol_information: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "189:protocols_per_handle": {
+          "anchor": "pub protocols_per_handle: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "18:MAX_ADDRESS": {
+          "anchor": "MAX_ADDRESS = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "ALLOCATE_TYPE_MAX_ADDRESS",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "194:locate_handle_buffer": {
+          "anchor": "pub locate_handle_buffer: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "19:ADDRESS": {
+          "anchor": "ADDRESS = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "ALLOCATE_TYPE_ADDRESS",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "201:locate_protocol": {
+          "anchor": "pub locate_protocol: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "20:MAX_ALLOCATE_TYPE": {
+          "anchor": "MAX_ALLOCATE_TYPE = 3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "ALLOCATE_TYPE_MAX_ALLOCATE_TYPE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "216:install_multiple_protocol_interfaces": {
+          "anchor": "pub install_multiple_protocol_interfaces:",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "228:uninstall_multiple_protocol_interfaces": {
+          "anchor": "pub uninstall_multiple_protocol_interfaces: unsafe extern \"C\" fn(handle: Handle, ...) -> Status,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "231:calculate_crc32": {
+          "anchor": "pub calculate_crc32:",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "235:copy_mem": {
+          "anchor": "pub copy_mem: unsafe extern \"efiapi\" fn(dest: *mut u8, src: *const u8, len: usize),",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "236:set_mem": {
+          "anchor": "pub set_mem: unsafe extern \"efiapi\" fn(buffer: *mut u8, len: usize, value: u8),",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "239:create_event_ex": {
+          "anchor": "pub create_event_ex: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "253:EventType": {
+          "anchor": "pub struct EventType: u32 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data EventType ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "256:TIMER": {
+          "anchor": "const TIMER = 0x8000_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "EVENT_TYPE_TIMER",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "260:RUNTIME": {
+          "anchor": "const RUNTIME = 0x4000_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "EVENT_TYPE_RUNTIME",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "265:NOTIFY_WAIT": {
+          "anchor": "const NOTIFY_WAIT = 0x0000_0100;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "EVENT_TYPE_NOTIFY_WAIT",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "269:NOTIFY_SIGNAL": {
+          "anchor": "const NOTIFY_SIGNAL = 0x0000_0200;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "EVENT_TYPE_NOTIFY_SIGNAL",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "276:SIGNAL_EXIT_BOOT_SERVICES": {
+          "anchor": "const SIGNAL_EXIT_BOOT_SERVICES = 0x0000_0201;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "EVENT_TYPE_SIGNAL_EXIT_BOOT_SERVICES",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "27:BootServices": {
+          "anchor": "pub struct BootServices {",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "280:SIGNAL_VIRTUAL_ADDRESS_CHANGE": {
+          "anchor": "const SIGNAL_VIRTUAL_ADDRESS_CHANGE = 0x6000_0202;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "EVENT_TYPE_SIGNAL_VIRTUAL_ADDRESS_CHANGE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "286:InterfaceType": {
+          "anchor": "pub enum InterfaceType: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data InterfaceType ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "288:NATIVE_INTERFACE": {
+          "anchor": "NATIVE_INTERFACE = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "INTERFACE_TYPE_NATIVE_INTERFACE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "28:header": {
+          "anchor": "pub header: Header,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "297:EventNotifyFn": {
+          "anchor": "pub type EventNotifyFn = unsafe extern \"efiapi\" fn(event: Event, context: *mut c_void);",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "303:MemoryAttribute": {
+          "anchor": "pub struct MemoryAttribute: u64 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data MemoryAttribute ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "305:UNCACHEABLE": {
+          "anchor": "const UNCACHEABLE = 0x1;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_UNCACHEABLE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "307:WRITE_COMBINE": {
+          "anchor": "const WRITE_COMBINE = 0x2;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_WRITE_COMBINE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "309:WRITE_THROUGH": {
+          "anchor": "const WRITE_THROUGH = 0x4;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_WRITE_THROUGH",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "311:WRITE_BACK": {
+          "anchor": "const WRITE_BACK = 0x8;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_WRITE_BACK",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "314:UNCACHABLE_EXPORTED": {
+          "anchor": "const UNCACHABLE_EXPORTED = 0x10;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_UNCACHABLE_EXPORTED",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "316:WRITE_PROTECT": {
+          "anchor": "const WRITE_PROTECT = 0x1000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_WRITE_PROTECT",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "318:READ_PROTECT": {
+          "anchor": "const READ_PROTECT = 0x2000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_READ_PROTECT",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "31:raise_tpl": {
+          "anchor": "pub raise_tpl: unsafe extern \"efiapi\" fn(new_tpl: Tpl) -> Tpl,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "320:EXECUTE_PROTECT": {
+          "anchor": "const EXECUTE_PROTECT = 0x4000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_EXECUTE_PROTECT",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "322:NON_VOLATILE": {
+          "anchor": "const NON_VOLATILE = 0x8000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_NON_VOLATILE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "324:MORE_RELIABLE": {
+          "anchor": "const MORE_RELIABLE = 0x10000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_MORE_RELIABLE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "326:READ_ONLY": {
+          "anchor": "const READ_ONLY = 0x20000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_READ_ONLY",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "32:restore_tpl": {
+          "anchor": "pub restore_tpl: unsafe extern \"efiapi\" fn(old_tpl: Tpl),",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "330:SPECIAL_PURPOSE": {
+          "anchor": "const SPECIAL_PURPOSE = 0x4_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_SPECIAL_PURPOSE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "333:CPU_CRYPTO": {
+          "anchor": "const CPU_CRYPTO = 0x8_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_CPU_CRYPTO",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "338:HOT_PLUGGABLE": {
+          "anchor": "const HOT_PLUGGABLE = 0x10_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_HOT_PLUGGABLE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "340:RUNTIME": {
+          "anchor": "const RUNTIME = 0x8000_0000_0000_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_RUNTIME",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "343:ISA_VALID": {
+          "anchor": "const ISA_VALID = 0x4000_0000_0000_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_ISA_VALID",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "351:ISA_MASK": {
+          "anchor": "const ISA_MASK = 0x0FFF_F000_0000_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_ATTRIBUTE_ISA_MASK",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "35:allocate_pages": {
+          "anchor": "pub allocate_pages: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "375:MemoryDescriptor": {
+          "anchor": "pub struct MemoryDescriptor {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data MemoryDescriptor ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "377:ty": {
+          "anchor": "pub ty: MemoryType,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "ty:",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "382:padding": {
+          "anchor": "pub padding: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "padding:",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "385:phys_start": {
+          "anchor": "pub phys_start: PhysicalAddress,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "phys_start:",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "387:virt_start": {
+          "anchor": "pub virt_start: VirtualAddress,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "virt_start:",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "389:page_count": {
+          "anchor": "pub page_count: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "page_count:",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "391:att": {
+          "anchor": "pub att: MemoryAttribute,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "att:",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "395:_": {
+          "anchor": "const _: () = {",
+          "disposition": "translated",
+          "reason": "Expected layout vectors retain these compile-time assertions; Omega comparison remains unexecuted.",
+          "targets": [
+            {
+              "anchor": "MemoryDescriptor.size",
+              "path": "source/contracts/uefi/raw/scalars.vectors.json"
+            }
+          ]
+        },
+        "408:VERSION": {
+          "anchor": "pub const VERSION: u32 = 1;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_DESCRIPTOR_VERSION",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "412:default": {
+          "anchor": "fn default() -> Self {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine memory_descriptor_default(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "41:free_pages": {
+          "anchor": "pub free_pages: unsafe extern \"efiapi\" fn(addr: PhysicalAddress, pages: usize) -> Status,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "42:get_memory_map": {
+          "anchor": "pub get_memory_map: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "431:MemoryType": {
+          "anchor": "pub enum MemoryType: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data MemoryType ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "433:RESERVED": {
+          "anchor": "RESERVED                =  0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_RESERVED",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "435:LOADER_CODE": {
+          "anchor": "LOADER_CODE             =  1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_LOADER_CODE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "438:LOADER_DATA": {
+          "anchor": "LOADER_DATA             =  2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_LOADER_DATA",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "442:BOOT_SERVICES_CODE": {
+          "anchor": "BOOT_SERVICES_CODE      =  3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_BOOT_SERVICES_CODE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "446:BOOT_SERVICES_DATA": {
+          "anchor": "BOOT_SERVICES_DATA      =  4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_BOOT_SERVICES_DATA",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "448:RUNTIME_SERVICES_CODE": {
+          "anchor": "RUNTIME_SERVICES_CODE   =  5,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_RUNTIME_SERVICES_CODE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "450:RUNTIME_SERVICES_DATA": {
+          "anchor": "RUNTIME_SERVICES_DATA   =  6,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_RUNTIME_SERVICES_DATA",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "452:CONVENTIONAL": {
+          "anchor": "CONVENTIONAL            =  7,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_CONVENTIONAL",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "454:UNUSABLE": {
+          "anchor": "UNUSABLE                =  8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_UNUSABLE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "457:ACPI_RECLAIM": {
+          "anchor": "ACPI_RECLAIM            =  9,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_ACPI_RECLAIM",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "459:ACPI_NON_VOLATILE": {
+          "anchor": "ACPI_NON_VOLATILE       = 10,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_ACPI_NON_VOLATILE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "461:MMIO": {
+          "anchor": "MMIO                    = 11,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_MMIO",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "463:MMIO_PORT_SPACE": {
+          "anchor": "MMIO_PORT_SPACE         = 12,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_MMIO_PORT_SPACE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "465:PAL_CODE": {
+          "anchor": "PAL_CODE                = 13,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_PAL_CODE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "467:PERSISTENT_MEMORY": {
+          "anchor": "PERSISTENT_MEMORY       = 14,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_PERSISTENT_MEMORY",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "469:UNACCEPTED": {
+          "anchor": "UNACCEPTED              = 15,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_UNACCEPTED",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "472:MAX": {
+          "anchor": "MAX                     = 16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_MAX",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "477:RESERVED_FOR_OEM": {
+          "anchor": "pub const RESERVED_FOR_OEM: RangeInclusive<u32> = 0x7000_0000..=0x7fff_ffff;",
+          "disposition": "translated",
+          "reason": "Inclusive range translated as explicit MIN and MAX constants.",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_RESERVED_FOR_OEM_MIN",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "480:RESERVED_FOR_OS_LOADER": {
+          "anchor": "pub const RESERVED_FOR_OS_LOADER: RangeInclusive<u32> = 0x8000_0000..=0xffff_ffff;",
+          "disposition": "translated",
+          "reason": "Inclusive range translated as explicit MIN and MAX constants.",
+          "targets": [
+            {
+              "anchor": "MEMORY_TYPE_RESERVED_FOR_OS_LOADER_MIN",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "487:custom": {
+          "anchor": "pub const fn custom(value: u32) -> Self {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine memory_type_custom(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "495:OpenProtocolInformationEntry": {
+          "anchor": "pub struct OpenProtocolInformationEntry {",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "496:agent_handle": {
+          "anchor": "pub agent_handle: Handle,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "497:controller_handle": {
+          "anchor": "pub controller_handle: Handle,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "498:attributes": {
+          "anchor": "pub attributes: u32,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "499:open_count": {
+          "anchor": "pub open_count: u32,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "49:allocate_pool": {
+          "anchor": "pub allocate_pool: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "512:Tpl": {
+          "anchor": "pub enum Tpl: usize => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data Tpl ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "514:APPLICATION": {
+          "anchor": "APPLICATION = 4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "TPL_APPLICATION",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "516:CALLBACK": {
+          "anchor": "CALLBACK    = 8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "TPL_CALLBACK",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "520:NOTIFY": {
+          "anchor": "NOTIFY      = 16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "TPL_NOTIFY",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "524:HIGH_LEVEL": {
+          "anchor": "HIGH_LEVEL  = 31,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "TPL_HIGH_LEVEL",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "531:PAGE_SIZE": {
+          "anchor": "pub const PAGE_SIZE: usize = 4096;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "PAGE_SIZE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "534:TimerDelay": {
+          "anchor": "pub enum TimerDelay: i32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data TimerDelay ",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "535:CANCEL": {
+          "anchor": "CANCEL = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "TIMER_DELAY_CANCEL",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "536:PERIODIC": {
+          "anchor": "PERIODIC = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "TIMER_DELAY_PERIODIC",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "537:RELATIVE": {
+          "anchor": "RELATIVE = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "TIMER_DELAY_RELATIVE",
+              "path": "source/contracts/uefi/raw/scalars.omg"
+            }
+          ]
+        },
+        "54:free_pool": {
+          "anchor": "pub free_pool: unsafe extern \"efiapi\" fn(buffer: *mut u8) -> Status,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "57:create_event": {
+          "anchor": "pub create_event: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "64:set_timer": {
+          "anchor": "pub set_timer:",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "66:wait_for_event": {
+          "anchor": "pub wait_for_event: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "71:signal_event": {
+          "anchor": "pub signal_event: unsafe extern \"efiapi\" fn(event: Event) -> Status,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "72:close_event": {
+          "anchor": "pub close_event: unsafe extern \"efiapi\" fn(event: Event) -> Status,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "73:check_event": {
+          "anchor": "pub check_event: unsafe extern \"efiapi\" fn(event: Event) -> Status,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "76:install_protocol_interface": {
+          "anchor": "pub install_protocol_interface: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "82:reinstall_protocol_interface": {
+          "anchor": "pub reinstall_protocol_interface: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "88:uninstall_protocol_interface": {
+          "anchor": "pub uninstall_protocol_interface: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "93:handle_protocol": {
+          "anchor": "pub handle_protocol: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "98:reserved": {
+          "anchor": "pub reserved: *mut c_void,",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        },
+        "99:register_protocol_notify": {
+          "anchor": "pub register_protocol_notify: unsafe extern \"efiapi\" fn(",
+          "disposition": "omitted",
+          "reason": "Outside scalar slice: service tables, callback signature and open-protocol records are owned by UEFI-002 tables inventory."
+        }
+      },
+      "targets": [
+        {
+          "anchor": "module scalars;",
+          "path": "source/contracts/uefi/raw/scalars.omg"
+        }
+      ]
+    },
+    "uefi-raw/src/table/revision.rs": {
+      "disposition": "translated",
+      "sha256": "5d02392396166426583eb448816e7dabb715d403471b3034ed7885fed438026e",
+      "symbols": {
+        "100:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Rust test-module organization replaced by tools/ports/uefi-scalars/main.omg."
+        },
+        "104:test_revision": {
+          "anchor": "fn test_revision() {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine test_revision(",
+              "path": "tools/ports/uefi-scalars/main.omg"
+            }
+          ]
+        },
+        "37:Revision": {
+          "anchor": "pub struct Revision(pub u32);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data Revision ",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "43:EFI_1_02": {
+          "anchor": "pub const EFI_1_02: Self = Self::new(1, 2);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_1_02",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "44:EFI_1_10": {
+          "anchor": "pub const EFI_1_10: Self = Self::new(1, 10);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_1_10",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "45:EFI_2_00": {
+          "anchor": "pub const EFI_2_00: Self = Self::new(2, 00);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_2_00",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "46:EFI_2_10": {
+          "anchor": "pub const EFI_2_10: Self = Self::new(2, 10);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_2_10",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "47:EFI_2_20": {
+          "anchor": "pub const EFI_2_20: Self = Self::new(2, 20);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_2_20",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "48:EFI_2_30": {
+          "anchor": "pub const EFI_2_30: Self = Self::new(2, 30);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_2_30",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "49:EFI_2_31": {
+          "anchor": "pub const EFI_2_31: Self = Self::new(2, 31);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_2_31",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "50:EFI_2_40": {
+          "anchor": "pub const EFI_2_40: Self = Self::new(2, 40);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_2_40",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "51:EFI_2_50": {
+          "anchor": "pub const EFI_2_50: Self = Self::new(2, 50);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_2_50",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "52:EFI_2_60": {
+          "anchor": "pub const EFI_2_60: Self = Self::new(2, 60);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_2_60",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "53:EFI_2_70": {
+          "anchor": "pub const EFI_2_70: Self = Self::new(2, 70);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_2_70",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "54:EFI_2_80": {
+          "anchor": "pub const EFI_2_80: Self = Self::new(2, 80);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_2_80",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "55:EFI_2_90": {
+          "anchor": "pub const EFI_2_90: Self = Self::new(2, 90);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_2_90",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "56:EFI_2_100": {
+          "anchor": "pub const EFI_2_100: Self = Self::new(2, 100);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "REVISION_EFI_2_100",
+              "path": "source/contracts/uefi/raw/revision.omg"
+            }
+          ]
+        },
+        "62:new": {
+          "anchor": "pub const fn new(major: u16, minor: u16) -> Self {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine revision_new(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "71:major": {
+          "anchor": "pub const fn major(self) -> u16 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine revision_major(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "77:minor": {
+          "anchor": "pub const fn minor(self) -> u16 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine revision_minor(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "83:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust Display/debug formatting is outside the raw ABI/scalar algorithm slice; no formatting API is promised. Original expected display strings are retained as unexecuted fixtures in scalars.PORT.md."
+        }
+      },
+      "targets": [
+        {
+          "anchor": "module revision;",
+          "path": "source/contracts/uefi/raw/revision.omg"
+        }
+      ]
+    },
+    "uefi-raw/src/time.rs": {
+      "disposition": "translated",
+      "sha256": "16b13d887c4b5f06eaf4aacf220efddceaac90e13d640252af901e52265cc8da",
+      "symbols": {
+        "117:eq": {
+          "anchor": "fn eq(&self, other: &Self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine time_equal(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "11:Time": {
+          "anchor": "pub struct Time {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data Time ",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "134:Daylight": {
+          "anchor": "pub struct Daylight: u8 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub data Daylight ",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "136:ADJUST_DAYLIGHT": {
+          "anchor": "const ADJUST_DAYLIGHT = 0x01;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "DAYLIGHT_ADJUST_DAYLIGHT",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "139:IN_DAYLIGHT": {
+          "anchor": "const IN_DAYLIGHT = 0x02;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "DAYLIGHT_IN_DAYLIGHT",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "13:year": {
+          "anchor": "pub year: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "year:",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "144:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Rust test-module organization replaced by tools/ports/uefi-scalars/main.omg."
+        },
+        "151:test_time_display": {
+          "anchor": "fn test_time_display() {",
+          "disposition": "omitted",
+          "reason": "Rust Display/debug formatting is outside the raw ABI/scalar algorithm slice; no formatting API is promised. Original expected display strings are retained as unexecuted fixtures in scalars.PORT.md."
+        },
+        "16:month": {
+          "anchor": "pub month: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "month:",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "19:day": {
+          "anchor": "pub day: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "day:",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "22:hour": {
+          "anchor": "pub hour: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "hour:",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "25:minute": {
+          "anchor": "pub minute: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "minute:",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "28:second": {
+          "anchor": "pub second: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "second:",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "31:pad1": {
+          "anchor": "pub pad1: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pad1:",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "34:nanosecond": {
+          "anchor": "pub nanosecond: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "nanosecond:",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "38:time_zone": {
+          "anchor": "pub time_zone: i16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "time_zone:",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "41:daylight": {
+          "anchor": "pub daylight: Daylight,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "daylight:",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "44:pad2": {
+          "anchor": "pub pad2: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pad2:",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "49:UNSPECIFIED_TIMEZONE": {
+          "anchor": "pub const UNSPECIFIED_TIMEZONE: i16 = 0x07ff;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "UNSPECIFIED_TIMEZONE",
+              "path": "source/contracts/uefi/raw/time.omg"
+            }
+          ]
+        },
+        "53:invalid": {
+          "anchor": "pub const fn invalid() -> Self {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine time_invalid(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "71:is_valid": {
+          "anchor": "pub fn is_valid(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pub machine time_is_valid(",
+              "path": "source/libraries/uefi/scalar_helpers.omg"
+            }
+          ]
+        },
+        "85:fmt": {
+          "anchor": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust Display/debug formatting is outside the raw ABI/scalar algorithm slice; no formatting API is promised. Original expected display strings are retained as unexecuted fixtures in scalars.PORT.md."
+        }
+      },
+      "targets": [
+        {
+          "anchor": "module time;",
+          "path": "source/contracts/uefi/raw/time.omg"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a",
+    "roots": [
+      "uefi-raw/src/lib.rs",
+      "uefi-raw/src/status.rs",
+      "uefi-raw/src/time.rs",
+      "uefi-raw/src/capsule.rs",
+      "uefi-raw/src/table/revision.rs",
+      "uefi-raw/src/table/boot.rs"
+    ],
+    "url": "https://github.com/rust-osdev/uefi-rs"
+  }
+}

@@ -1,0 +1,954 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "measurements": {
+    "AllocateType.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "AllocateType.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "AllocateType.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "Boolean.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Boolean.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Boolean.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "CapsuleBlockDescriptor.address": {
+      "kind": "offset",
+      "value": 8
+    },
+    "CapsuleBlockDescriptor.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "CapsuleBlockDescriptor.length": {
+      "kind": "offset",
+      "value": 0
+    },
+    "CapsuleBlockDescriptor.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "CapsuleFlags.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "CapsuleFlags.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "CapsuleFlags.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "CapsuleHeader.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "CapsuleHeader.capsule_guid": {
+      "kind": "offset",
+      "value": 0
+    },
+    "CapsuleHeader.capsule_image_size": {
+      "kind": "offset",
+      "value": 24
+    },
+    "CapsuleHeader.flags": {
+      "kind": "offset",
+      "value": 20
+    },
+    "CapsuleHeader.header_size": {
+      "kind": "offset",
+      "value": 16
+    },
+    "CapsuleHeader.size": {
+      "kind": "size",
+      "value": 28
+    },
+    "Char16.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "Char16.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Char16.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "Char8.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Char8.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Char8.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "Daylight.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Daylight.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Daylight.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "Event.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Event.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Event.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "EventType.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "EventType.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "EventType.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "Guid.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Guid.data1": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Guid.data2": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Guid.data3": {
+      "kind": "offset",
+      "value": 6
+    },
+    "Guid.data4": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Guid.example_00112233_4455_6677_8899_aabbccddeeff": {
+      "kind": "bytes",
+      "value": "33221100554477668899aabbccddeeff"
+    },
+    "Guid.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "Handle.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Handle.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Handle.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "InterfaceType.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "InterfaceType.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "InterfaceType.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "MemoryAttribute.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "MemoryAttribute.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "MemoryAttribute.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "MemoryDescriptor.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "MemoryDescriptor.att": {
+      "kind": "offset",
+      "value": 32
+    },
+    "MemoryDescriptor.padding": {
+      "kind": "offset",
+      "value": 4
+    },
+    "MemoryDescriptor.page_count": {
+      "kind": "offset",
+      "value": 24
+    },
+    "MemoryDescriptor.phys_start": {
+      "kind": "offset",
+      "value": 8
+    },
+    "MemoryDescriptor.size": {
+      "kind": "size",
+      "value": 40
+    },
+    "MemoryDescriptor.ty": {
+      "kind": "offset",
+      "value": 0
+    },
+    "MemoryDescriptor.virt_start": {
+      "kind": "offset",
+      "value": 16
+    },
+    "MemoryType.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "MemoryType.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "MemoryType.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "PhysicalAddress.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "PhysicalAddress.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PhysicalAddress.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "Revision.EFI_2_31.bytes": {
+      "kind": "bytes",
+      "value": "1f000200"
+    },
+    "Revision.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Revision.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Revision.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "Status.BUFFER_TOO_SMALL.bytes": {
+      "kind": "bytes",
+      "value": "0500000000000080"
+    },
+    "Status.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Status.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Status.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "Time.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Time.day": {
+      "kind": "offset",
+      "value": 3
+    },
+    "Time.daylight": {
+      "kind": "offset",
+      "value": 14
+    },
+    "Time.display_example.bytes": {
+      "kind": "bytes",
+      "value": "e70705120b1d390015cd5b07ff070000"
+    },
+    "Time.hour": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Time.minute": {
+      "kind": "offset",
+      "value": 5
+    },
+    "Time.month": {
+      "kind": "offset",
+      "value": 2
+    },
+    "Time.nanosecond": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Time.pad1": {
+      "kind": "offset",
+      "value": 7
+    },
+    "Time.pad2": {
+      "kind": "offset",
+      "value": 15
+    },
+    "Time.second": {
+      "kind": "offset",
+      "value": 6
+    },
+    "Time.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "Time.time_zone": {
+      "kind": "offset",
+      "value": 12
+    },
+    "Time.year": {
+      "kind": "offset",
+      "value": 0
+    },
+    "TimerDelay.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "TimerDelay.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "TimerDelay.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "Tpl.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tpl.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tpl.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "VirtualAddress.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "VirtualAddress.raw": {
+      "kind": "offset",
+      "value": 0
+    },
+    "VirtualAddress.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "capsule.CAPSULE_FLAGS_INITIATE_RESET": {
+      "kind": "value",
+      "value": 262144
+    },
+    "capsule.CAPSULE_FLAGS_PERSIST_ACROSS_RESET": {
+      "kind": "value",
+      "value": 65536
+    },
+    "capsule.CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE": {
+      "kind": "value",
+      "value": 131072
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_0": {
+      "kind": "value",
+      "value": 1
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_1": {
+      "kind": "value",
+      "value": 2
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_10": {
+      "kind": "value",
+      "value": 1024
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_11": {
+      "kind": "value",
+      "value": 2048
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_12": {
+      "kind": "value",
+      "value": 4096
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_13": {
+      "kind": "value",
+      "value": 8192
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_14": {
+      "kind": "value",
+      "value": 16384
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_15": {
+      "kind": "value",
+      "value": 32768
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_2": {
+      "kind": "value",
+      "value": 4
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_3": {
+      "kind": "value",
+      "value": 8
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_4": {
+      "kind": "value",
+      "value": 16
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_5": {
+      "kind": "value",
+      "value": 32
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_6": {
+      "kind": "value",
+      "value": 64
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_7": {
+      "kind": "value",
+      "value": 128
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_8": {
+      "kind": "value",
+      "value": 256
+    },
+    "capsule.CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_9": {
+      "kind": "value",
+      "value": 512
+    },
+    "revision.REVISION_EFI_1_02": {
+      "kind": "value",
+      "value": 65538
+    },
+    "revision.REVISION_EFI_1_10": {
+      "kind": "value",
+      "value": 65546
+    },
+    "revision.REVISION_EFI_2_00": {
+      "kind": "value",
+      "value": 131072
+    },
+    "revision.REVISION_EFI_2_10": {
+      "kind": "value",
+      "value": 131082
+    },
+    "revision.REVISION_EFI_2_100": {
+      "kind": "value",
+      "value": 131172
+    },
+    "revision.REVISION_EFI_2_20": {
+      "kind": "value",
+      "value": 131092
+    },
+    "revision.REVISION_EFI_2_30": {
+      "kind": "value",
+      "value": 131102
+    },
+    "revision.REVISION_EFI_2_31": {
+      "kind": "value",
+      "value": 131103
+    },
+    "revision.REVISION_EFI_2_40": {
+      "kind": "value",
+      "value": 131112
+    },
+    "revision.REVISION_EFI_2_50": {
+      "kind": "value",
+      "value": 131122
+    },
+    "revision.REVISION_EFI_2_60": {
+      "kind": "value",
+      "value": 131132
+    },
+    "revision.REVISION_EFI_2_70": {
+      "kind": "value",
+      "value": 131142
+    },
+    "revision.REVISION_EFI_2_80": {
+      "kind": "value",
+      "value": 131152
+    },
+    "revision.REVISION_EFI_2_90": {
+      "kind": "value",
+      "value": 131162
+    },
+    "scalars.ALLOCATE_TYPE_ADDRESS": {
+      "kind": "value",
+      "value": 2
+    },
+    "scalars.ALLOCATE_TYPE_ANY_PAGES": {
+      "kind": "value",
+      "value": 0
+    },
+    "scalars.ALLOCATE_TYPE_MAX_ADDRESS": {
+      "kind": "value",
+      "value": 1
+    },
+    "scalars.ALLOCATE_TYPE_MAX_ALLOCATE_TYPE": {
+      "kind": "value",
+      "value": 3
+    },
+    "scalars.BOOLEAN_FALSE": {
+      "kind": "value",
+      "value": 0
+    },
+    "scalars.BOOLEAN_TRUE": {
+      "kind": "value",
+      "value": 1
+    },
+    "scalars.EVENT_TYPE_NOTIFY_SIGNAL": {
+      "kind": "value",
+      "value": 512
+    },
+    "scalars.EVENT_TYPE_NOTIFY_WAIT": {
+      "kind": "value",
+      "value": 256
+    },
+    "scalars.EVENT_TYPE_RUNTIME": {
+      "kind": "value",
+      "value": 1073741824
+    },
+    "scalars.EVENT_TYPE_SIGNAL_EXIT_BOOT_SERVICES": {
+      "kind": "value",
+      "value": 513
+    },
+    "scalars.EVENT_TYPE_SIGNAL_VIRTUAL_ADDRESS_CHANGE": {
+      "kind": "value",
+      "value": 1610613250
+    },
+    "scalars.EVENT_TYPE_TIMER": {
+      "kind": "value",
+      "value": 2147483648
+    },
+    "scalars.INTERFACE_TYPE_NATIVE_INTERFACE": {
+      "kind": "value",
+      "value": 0
+    },
+    "scalars.MEMORY_ATTRIBUTE_CPU_CRYPTO": {
+      "kind": "value",
+      "value": 524288
+    },
+    "scalars.MEMORY_ATTRIBUTE_EXECUTE_PROTECT": {
+      "kind": "value",
+      "value": 16384
+    },
+    "scalars.MEMORY_ATTRIBUTE_HOT_PLUGGABLE": {
+      "kind": "value",
+      "value": 1048576
+    },
+    "scalars.MEMORY_ATTRIBUTE_ISA_MASK": {
+      "kind": "value",
+      "value": 1152903912420802560
+    },
+    "scalars.MEMORY_ATTRIBUTE_ISA_VALID": {
+      "kind": "value",
+      "value": 4611686018427387904
+    },
+    "scalars.MEMORY_ATTRIBUTE_MORE_RELIABLE": {
+      "kind": "value",
+      "value": 65536
+    },
+    "scalars.MEMORY_ATTRIBUTE_NON_VOLATILE": {
+      "kind": "value",
+      "value": 32768
+    },
+    "scalars.MEMORY_ATTRIBUTE_READ_ONLY": {
+      "kind": "value",
+      "value": 131072
+    },
+    "scalars.MEMORY_ATTRIBUTE_READ_PROTECT": {
+      "kind": "value",
+      "value": 8192
+    },
+    "scalars.MEMORY_ATTRIBUTE_RUNTIME": {
+      "kind": "value",
+      "value": 9223372036854775808
+    },
+    "scalars.MEMORY_ATTRIBUTE_SPECIAL_PURPOSE": {
+      "kind": "value",
+      "value": 262144
+    },
+    "scalars.MEMORY_ATTRIBUTE_UNCACHABLE_EXPORTED": {
+      "kind": "value",
+      "value": 16
+    },
+    "scalars.MEMORY_ATTRIBUTE_UNCACHEABLE": {
+      "kind": "value",
+      "value": 1
+    },
+    "scalars.MEMORY_ATTRIBUTE_WRITE_BACK": {
+      "kind": "value",
+      "value": 8
+    },
+    "scalars.MEMORY_ATTRIBUTE_WRITE_COMBINE": {
+      "kind": "value",
+      "value": 2
+    },
+    "scalars.MEMORY_ATTRIBUTE_WRITE_PROTECT": {
+      "kind": "value",
+      "value": 4096
+    },
+    "scalars.MEMORY_ATTRIBUTE_WRITE_THROUGH": {
+      "kind": "value",
+      "value": 4
+    },
+    "scalars.MEMORY_DESCRIPTOR_VERSION": {
+      "kind": "value",
+      "value": 1
+    },
+    "scalars.MEMORY_TYPE_ACPI_NON_VOLATILE": {
+      "kind": "value",
+      "value": 10
+    },
+    "scalars.MEMORY_TYPE_ACPI_RECLAIM": {
+      "kind": "value",
+      "value": 9
+    },
+    "scalars.MEMORY_TYPE_BOOT_SERVICES_CODE": {
+      "kind": "value",
+      "value": 3
+    },
+    "scalars.MEMORY_TYPE_BOOT_SERVICES_DATA": {
+      "kind": "value",
+      "value": 4
+    },
+    "scalars.MEMORY_TYPE_CONVENTIONAL": {
+      "kind": "value",
+      "value": 7
+    },
+    "scalars.MEMORY_TYPE_LOADER_CODE": {
+      "kind": "value",
+      "value": 1
+    },
+    "scalars.MEMORY_TYPE_LOADER_DATA": {
+      "kind": "value",
+      "value": 2
+    },
+    "scalars.MEMORY_TYPE_MAX": {
+      "kind": "value",
+      "value": 16
+    },
+    "scalars.MEMORY_TYPE_MMIO": {
+      "kind": "value",
+      "value": 11
+    },
+    "scalars.MEMORY_TYPE_MMIO_PORT_SPACE": {
+      "kind": "value",
+      "value": 12
+    },
+    "scalars.MEMORY_TYPE_PAL_CODE": {
+      "kind": "value",
+      "value": 13
+    },
+    "scalars.MEMORY_TYPE_PERSISTENT_MEMORY": {
+      "kind": "value",
+      "value": 14
+    },
+    "scalars.MEMORY_TYPE_RESERVED": {
+      "kind": "value",
+      "value": 0
+    },
+    "scalars.MEMORY_TYPE_RESERVED_FOR_OEM_MAX": {
+      "kind": "value",
+      "value": 2147483647
+    },
+    "scalars.MEMORY_TYPE_RESERVED_FOR_OEM_MIN": {
+      "kind": "value",
+      "value": 1879048192
+    },
+    "scalars.MEMORY_TYPE_RESERVED_FOR_OS_LOADER_MAX": {
+      "kind": "value",
+      "value": 4294967295
+    },
+    "scalars.MEMORY_TYPE_RESERVED_FOR_OS_LOADER_MIN": {
+      "kind": "value",
+      "value": 2147483648
+    },
+    "scalars.MEMORY_TYPE_RUNTIME_SERVICES_CODE": {
+      "kind": "value",
+      "value": 5
+    },
+    "scalars.MEMORY_TYPE_RUNTIME_SERVICES_DATA": {
+      "kind": "value",
+      "value": 6
+    },
+    "scalars.MEMORY_TYPE_UNACCEPTED": {
+      "kind": "value",
+      "value": 15
+    },
+    "scalars.MEMORY_TYPE_UNUSABLE": {
+      "kind": "value",
+      "value": 8
+    },
+    "scalars.PAGE_SIZE": {
+      "kind": "value",
+      "value": 4096
+    },
+    "scalars.TIMER_DELAY_CANCEL": {
+      "kind": "value",
+      "value": 0
+    },
+    "scalars.TIMER_DELAY_PERIODIC": {
+      "kind": "value",
+      "value": 1
+    },
+    "scalars.TIMER_DELAY_RELATIVE": {
+      "kind": "value",
+      "value": 2
+    },
+    "scalars.TPL_APPLICATION": {
+      "kind": "value",
+      "value": 4
+    },
+    "scalars.TPL_CALLBACK": {
+      "kind": "value",
+      "value": 8
+    },
+    "scalars.TPL_HIGH_LEVEL": {
+      "kind": "value",
+      "value": 31
+    },
+    "scalars.TPL_NOTIFY": {
+      "kind": "value",
+      "value": 16
+    },
+    "status.STATUS_ABORTED": {
+      "kind": "value",
+      "value": 9223372036854775829
+    },
+    "status.STATUS_ACCESS_DENIED": {
+      "kind": "value",
+      "value": 9223372036854775823
+    },
+    "status.STATUS_ALREADY_STARTED": {
+      "kind": "value",
+      "value": 9223372036854775828
+    },
+    "status.STATUS_BAD_BUFFER_SIZE": {
+      "kind": "value",
+      "value": 9223372036854775812
+    },
+    "status.STATUS_BUFFER_TOO_SMALL": {
+      "kind": "value",
+      "value": 9223372036854775813
+    },
+    "status.STATUS_COMPROMISED_DATA": {
+      "kind": "value",
+      "value": 9223372036854775841
+    },
+    "status.STATUS_CRC_ERROR": {
+      "kind": "value",
+      "value": 9223372036854775835
+    },
+    "status.STATUS_DEVICE_ERROR": {
+      "kind": "value",
+      "value": 9223372036854775815
+    },
+    "status.STATUS_END_OF_FILE": {
+      "kind": "value",
+      "value": 9223372036854775839
+    },
+    "status.STATUS_END_OF_MEDIA": {
+      "kind": "value",
+      "value": 9223372036854775836
+    },
+    "status.STATUS_ERROR_BIT": {
+      "kind": "value",
+      "value": 9223372036854775808
+    },
+    "status.STATUS_HTTP_ERROR": {
+      "kind": "value",
+      "value": 9223372036854775843
+    },
+    "status.STATUS_ICMP_ERROR": {
+      "kind": "value",
+      "value": 9223372036854775830
+    },
+    "status.STATUS_INCOMPATIBLE_VERSION": {
+      "kind": "value",
+      "value": 9223372036854775833
+    },
+    "status.STATUS_INVALID_LANGUAGE": {
+      "kind": "value",
+      "value": 9223372036854775840
+    },
+    "status.STATUS_INVALID_PARAMETER": {
+      "kind": "value",
+      "value": 9223372036854775810
+    },
+    "status.STATUS_IP_ADDRESS_CONFLICT": {
+      "kind": "value",
+      "value": 9223372036854775842
+    },
+    "status.STATUS_LOAD_ERROR": {
+      "kind": "value",
+      "value": 9223372036854775809
+    },
+    "status.STATUS_MEDIA_CHANGED": {
+      "kind": "value",
+      "value": 9223372036854775821
+    },
+    "status.STATUS_NOT_FOUND": {
+      "kind": "value",
+      "value": 9223372036854775822
+    },
+    "status.STATUS_NOT_READY": {
+      "kind": "value",
+      "value": 9223372036854775814
+    },
+    "status.STATUS_NOT_STARTED": {
+      "kind": "value",
+      "value": 9223372036854775827
+    },
+    "status.STATUS_NO_MAPPING": {
+      "kind": "value",
+      "value": 9223372036854775825
+    },
+    "status.STATUS_NO_MEDIA": {
+      "kind": "value",
+      "value": 9223372036854775820
+    },
+    "status.STATUS_NO_RESPONSE": {
+      "kind": "value",
+      "value": 9223372036854775824
+    },
+    "status.STATUS_OUT_OF_RESOURCES": {
+      "kind": "value",
+      "value": 9223372036854775817
+    },
+    "status.STATUS_PROTOCOL_ERROR": {
+      "kind": "value",
+      "value": 9223372036854775832
+    },
+    "status.STATUS_SECURITY_VIOLATION": {
+      "kind": "value",
+      "value": 9223372036854775834
+    },
+    "status.STATUS_SUCCESS": {
+      "kind": "value",
+      "value": 0
+    },
+    "status.STATUS_TFTP_ERROR": {
+      "kind": "value",
+      "value": 9223372036854775831
+    },
+    "status.STATUS_TIMEOUT": {
+      "kind": "value",
+      "value": 9223372036854775826
+    },
+    "status.STATUS_UNSUPPORTED": {
+      "kind": "value",
+      "value": 9223372036854775811
+    },
+    "status.STATUS_VOLUME_CORRUPTED": {
+      "kind": "value",
+      "value": 9223372036854775818
+    },
+    "status.STATUS_VOLUME_FULL": {
+      "kind": "value",
+      "value": 9223372036854775819
+    },
+    "status.STATUS_WARN_BUFFER_TOO_SMALL": {
+      "kind": "value",
+      "value": 4
+    },
+    "status.STATUS_WARN_DELETE_FAILURE": {
+      "kind": "value",
+      "value": 2
+    },
+    "status.STATUS_WARN_FILE_SYSTEM": {
+      "kind": "value",
+      "value": 6
+    },
+    "status.STATUS_WARN_RESET_REQUIRED": {
+      "kind": "value",
+      "value": 7
+    },
+    "status.STATUS_WARN_STALE_DATA": {
+      "kind": "value",
+      "value": 5
+    },
+    "status.STATUS_WARN_UNKNOWN_GLYPH": {
+      "kind": "value",
+      "value": 1
+    },
+    "status.STATUS_WARN_WRITE_FAILURE": {
+      "kind": "value",
+      "value": 3
+    },
+    "status.STATUS_WRITE_PROTECTED": {
+      "kind": "value",
+      "value": 9223372036854775816
+    },
+    "time.DAYLIGHT_ADJUST_DAYLIGHT": {
+      "kind": "value",
+      "value": 1
+    },
+    "time.DAYLIGHT_IN_DAYLIGHT": {
+      "kind": "value",
+      "value": 2
+    },
+    "time.UNSPECIFIED_TIMEZONE": {
+      "kind": "value",
+      "value": 2047
+    }
+  },
+  "provenance": {
+    "description": "Expected raw uefi-rs x86-64 values and C representations reviewed from pinned source; not Omega measurements. Guid/CapsuleHeader use upstream C alignment, subject to the specification reconciliation in scalars.PORT.md.",
+    "kind": "upstream",
+    "sources": [
+      "https://github.com/rust-osdev/uefi-rs/tree/c0facddf9ba42b74906a37fca2869e6cdbc8da6a/uefi-raw/src",
+      "https://uefi.org/specs/UEFI/2.11/02_Overview.html#data-types",
+      "https://uefi.org/specs/UEFI/2.11/04_EFI_System_Table.html#efi-table-header",
+      "https://uefi.org/specs/UEFI/2.11/07_Services_Boot_Services.html",
+      "https://uefi.org/specs/UEFI/2.11/08_Services_Runtime_Services.html",
+      "https://uefi.org/specs/UEFI/2.11/Apx_D_Status_Codes.html"
+    ]
+  },
+  "target": {
+    "abi": "uefi-x86_64-pinned-uefi-raw",
+    "endian": "little",
+    "pointer_bits": 64
+  }
+}

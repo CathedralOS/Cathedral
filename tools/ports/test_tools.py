@@ -34,6 +34,13 @@ class InventoryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'not transcribed'):
             inventory.check(self.manifest, self.checkout, self.root, True)
 
+    def test_raw_const_pointer_is_not_a_declaration(self):
+        self.assertEqual(inventory.rust_anchors('    value: *const u8,\n'), {})
+
+    def test_raw_identifier_field_is_inventoried(self):
+        self.assertEqual(inventory.rust_anchors('pub r#type: u8,'),
+                         {'1:r#type': 'pub r#type: u8,'})
+
     def test_missing_checkout_fails(self):
         with self.assertRaisesRegex(ValueError, 'checkout absent'):
             inventory.check(self.manifest, self.root / 'absent')

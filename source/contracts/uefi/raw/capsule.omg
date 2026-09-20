@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Omega translation from rust-osdev/uefi-rs
+// c0facddf9ba42b74906a37fca2869e6cdbc8da6a; see scalars.PORT.md.
+// Inert x86-64 carriers: numeric address/handle bits establish no authority.
+// ABI expectations are scalars.vectors.json, not inferred Omega native layout.
+module capsule;
+use scalars::Guid;
+use scalars::PhysicalAddress;
+
+pub data CapsuleFlags [copy] { raw: u32; }
+// The upstream address union is one physical-address carrier; length selects
+// data (nonzero), continuation (zero, address nonzero), or end (both zero).
+pub data CapsuleBlockDescriptor [copy] { length: u64; address: PhysicalAddress; }
+pub data CapsuleHeader [copy] {
+    capsule_guid: Guid;
+    header_size: u32;
+    flags: CapsuleFlags;
+    capsule_image_size: u32;
+}
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_0: CapsuleFlags = CapsuleFlags { raw: 0x1 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_1: CapsuleFlags = CapsuleFlags { raw: 0x2 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_2: CapsuleFlags = CapsuleFlags { raw: 0x4 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_3: CapsuleFlags = CapsuleFlags { raw: 0x8 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_4: CapsuleFlags = CapsuleFlags { raw: 0x10 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_5: CapsuleFlags = CapsuleFlags { raw: 0x20 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_6: CapsuleFlags = CapsuleFlags { raw: 0x40 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_7: CapsuleFlags = CapsuleFlags { raw: 0x80 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_8: CapsuleFlags = CapsuleFlags { raw: 0x100 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_9: CapsuleFlags = CapsuleFlags { raw: 0x200 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_10: CapsuleFlags = CapsuleFlags { raw: 0x400 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_11: CapsuleFlags = CapsuleFlags { raw: 0x800 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_12: CapsuleFlags = CapsuleFlags { raw: 0x1000 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_13: CapsuleFlags = CapsuleFlags { raw: 0x2000 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_14: CapsuleFlags = CapsuleFlags { raw: 0x4000 };
+pub const CAPSULE_FLAGS_TYPE_SPECIFIC_BIT_15: CapsuleFlags = CapsuleFlags { raw: 0x8000 };
+pub const CAPSULE_FLAGS_PERSIST_ACROSS_RESET: CapsuleFlags = CapsuleFlags { raw: 0x10000 };
+pub const CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE: CapsuleFlags = CapsuleFlags { raw: 0x20000 };
+pub const CAPSULE_FLAGS_INITIATE_RESET: CapsuleFlags = CapsuleFlags { raw: 0x40000 };
+// POPULATE_SYSTEM_TABLE or INITIATE_RESET requires PERSIST_ACROSS_RESET.

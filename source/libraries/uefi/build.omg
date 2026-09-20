@@ -1,0 +1,4 @@
+machine build(builder: &mut Build) {
+    builder.package("cathedral-uefi");
+    builder.depend_as("cathedral_uefi_raw", Source::Path { location: "../../contracts/uefi/raw" });
+}
