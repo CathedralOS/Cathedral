@@ -1,0 +1,9 @@
+module main;
+use cathedral_uefi_raw::network::PxeBaseCodePacket;
+use cathedral_uefi_raw::network::PxeBaseCodeDhcpV4Packet;
+use cathedral_uefi_raw::network_layouts::PxeBaseCodePacketX64Layout;
+use cathedral_uefi_raw::network_layouts::PxeBaseCodeDhcpV4PacketX64Layout;
+data Main { value: PxeBaseCodePacketX64Layout<PxeBaseCodePacket>; }
+machine Main::main(&mut self) {
+ let packet: &PxeBaseCodeDhcpV4PacketX64Layout<PxeBaseCodeDhcpV4Packet> = &self.value.raw[0] as &PxeBaseCodeDhcpV4PacketX64Layout<PxeBaseCodeDhcpV4Packet>;
+}

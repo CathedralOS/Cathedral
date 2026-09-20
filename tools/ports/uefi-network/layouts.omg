@@ -1,0 +1,4 @@
+module main;
+use cathedral_uefi_raw::network_layouts;
+data Main {}
+machine Main::main(&mut self) {}

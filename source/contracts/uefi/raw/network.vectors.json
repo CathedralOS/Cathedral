@@ -1,0 +1,2832 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "abi": "uefi-x86_64-pinned-uefi-raw",
+    "pointer_bits": 64,
+    "endian": "little"
+  },
+  "provenance": {
+    "kind": "upstream",
+    "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a",
+    "description": "Pinned Rust host measurements; every numeric fact and GUID byte independently asserted under x86_64-unknown-uefi. No Omega inspection or execution.",
+    "sources": [
+      "uefi-raw/src/net.rs",
+      "uefi-raw/src/protocol/network"
+    ],
+    "rustc": "rustc 1.94.0-nightly (f6a07efc8 2026-01-16)"
+  },
+  "measurements": {
+    "Ipv4Address.raw.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Ipv4Address.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "Ipv4Address.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Ipv6Address.raw.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Ipv6Address.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "Ipv6Address.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "IpAddress.addr.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "IpAddress.v4.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "IpAddress.v6.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "IpAddress.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "IpAddress.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "MacAddress.raw.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "MacAddress.size": {
+      "kind": "size",
+      "value": 32
+    },
+    "MacAddress.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Dhcp4Event.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "Dhcp4Event.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Dhcp4State.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "Dhcp4State.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Dhcp4Packet.size.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Dhcp4Packet.length.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Dhcp4Packet.header.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Dhcp4Packet.magik.offset": {
+      "kind": "offset",
+      "value": 244
+    },
+    "Dhcp4Packet.option.offset": {
+      "kind": "offset",
+      "value": 248
+    },
+    "Dhcp4Packet.size": {
+      "kind": "size",
+      "value": 248
+    },
+    "Dhcp4Packet.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Dhcp4Header.op_code.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Dhcp4Header.hw_type.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "Dhcp4Header.hw_addr_len.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "Dhcp4Header.hops.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "Dhcp4Header.xid.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Dhcp4Header.seconds.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Dhcp4Header.reserved.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "Dhcp4Header.client_addr.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "Dhcp4Header.your_addr.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Dhcp4Header.server_addr.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "Dhcp4Header.gateway_addr.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "Dhcp4Header.client_hw_addr.offset": {
+      "kind": "offset",
+      "value": 28
+    },
+    "Dhcp4Header.server_name.offset": {
+      "kind": "offset",
+      "value": 44
+    },
+    "Dhcp4Header.boot_file_name.offset": {
+      "kind": "offset",
+      "value": 108
+    },
+    "Dhcp4Header.size": {
+      "kind": "size",
+      "value": 236
+    },
+    "Dhcp4Header.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Dhcp4PacketOption.op_code.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Dhcp4PacketOption.length.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "Dhcp4PacketOption.data.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "Dhcp4PacketOption.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "Dhcp4PacketOption.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Dhcp4ConfigData.discover_try_count.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Dhcp4ConfigData.discover_timeout.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Dhcp4ConfigData.request_try_count.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Dhcp4ConfigData.request_timeout.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "Dhcp4ConfigData.client_address.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "Dhcp4ConfigData.callback.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "Dhcp4ConfigData.callback_context.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "Dhcp4ConfigData.option_count.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "Dhcp4ConfigData.option_list.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "Dhcp4ConfigData.size": {
+      "kind": "size",
+      "value": 72
+    },
+    "Dhcp4ConfigData.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Dhcp4ModeData.state.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Dhcp4ModeData.config_data.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Dhcp4ModeData.client_address.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "Dhcp4ModeData.client_mac_address.offset": {
+      "kind": "offset",
+      "value": 84
+    },
+    "Dhcp4ModeData.server_address.offset": {
+      "kind": "offset",
+      "value": 116
+    },
+    "Dhcp4ModeData.router_address.offset": {
+      "kind": "offset",
+      "value": 120
+    },
+    "Dhcp4ModeData.subnet_mask.offset": {
+      "kind": "offset",
+      "value": 124
+    },
+    "Dhcp4ModeData.lease_time.offset": {
+      "kind": "offset",
+      "value": 128
+    },
+    "Dhcp4ModeData.reply_packet.offset": {
+      "kind": "offset",
+      "value": 136
+    },
+    "Dhcp4ModeData.size": {
+      "kind": "size",
+      "value": 144
+    },
+    "Dhcp4ModeData.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Dhcp4ListenPoint.listen_address.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Dhcp4ListenPoint.subnet_mask.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Dhcp4ListenPoint.listen_port.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Dhcp4ListenPoint.size": {
+      "kind": "size",
+      "value": 10
+    },
+    "Dhcp4ListenPoint.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "Dhcp4TransmitReceiveToken.status.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Dhcp4TransmitReceiveToken.completion_event.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Dhcp4TransmitReceiveToken.remote_address.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Dhcp4TransmitReceiveToken.remote_port.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "Dhcp4TransmitReceiveToken.gateway_address.offset": {
+      "kind": "offset",
+      "value": 22
+    },
+    "Dhcp4TransmitReceiveToken.listen_point_count.offset": {
+      "kind": "offset",
+      "value": 28
+    },
+    "Dhcp4TransmitReceiveToken.listen_points.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "Dhcp4TransmitReceiveToken.timeout_value.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "Dhcp4TransmitReceiveToken.packet.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "Dhcp4TransmitReceiveToken.response_count.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "Dhcp4TransmitReceiveToken.response_list.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "Dhcp4TransmitReceiveToken.size": {
+      "kind": "size",
+      "value": 72
+    },
+    "Dhcp4TransmitReceiveToken.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Dhcp4Protocol.get_mode_data.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Dhcp4Protocol.configure.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Dhcp4Protocol.start.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Dhcp4Protocol.renew_rebind.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "Dhcp4Protocol.release.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "Dhcp4Protocol.stop.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "Dhcp4Protocol.build.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "Dhcp4Protocol.transmit_receive.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "Dhcp4Protocol.parse.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "Dhcp4Protocol.size": {
+      "kind": "size",
+      "value": 72
+    },
+    "Dhcp4Protocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "HttpConfigData.http_version.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpConfigData.time_out_millisec.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "HttpConfigData.local_addr_is_ipv6.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "HttpConfigData.access_point.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "HttpConfigData.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "HttpConfigData.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "HttpVersion.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "HttpVersion.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "HttpV4AccessPoint.use_default_addr.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpV4AccessPoint.local_address.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "HttpV4AccessPoint.local_subnet.offset": {
+      "kind": "offset",
+      "value": 5
+    },
+    "HttpV4AccessPoint.local_port.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "HttpV4AccessPoint.size": {
+      "kind": "size",
+      "value": 12
+    },
+    "HttpV4AccessPoint.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "HttpV6AccessPoint.local_address.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpV6AccessPoint.local_port.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "HttpV6AccessPoint.size": {
+      "kind": "size",
+      "value": 18
+    },
+    "HttpV6AccessPoint.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "HttpAccessPoint.ipv4_node.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpAccessPoint.ipv6_node.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpAccessPoint.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "HttpAccessPoint.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "HttpToken.event.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpToken.status.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "HttpToken.message.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "HttpToken.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "HttpToken.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "HttpMessage.data.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpMessage.header_count.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "HttpMessage.header.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "HttpMessage.body_length.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "HttpMessage.body.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "HttpMessage.size": {
+      "kind": "size",
+      "value": 40
+    },
+    "HttpMessage.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "HttpRequestData.method.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpRequestData.url.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "HttpRequestData.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "HttpRequestData.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "HttpMethod.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "HttpMethod.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "HttpResponseData.status_code.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpResponseData.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "HttpResponseData.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "HttpRequestOrResponse.request.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpRequestOrResponse.response.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpRequestOrResponse.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "HttpRequestOrResponse.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "HttpHeader.field_name.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpHeader.field_value.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "HttpHeader.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "HttpHeader.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "HttpStatusCode.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "HttpStatusCode.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "HttpProtocol.get_mode_data.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HttpProtocol.configure.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "HttpProtocol.request.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "HttpProtocol.cancel.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "HttpProtocol.response.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "HttpProtocol.poll.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "HttpProtocol.size": {
+      "kind": "size",
+      "value": 48
+    },
+    "HttpProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Ip4RouteTable.subnet_addr.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Ip4RouteTable.subnet_mask.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Ip4RouteTable.gateway_addr.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Ip4RouteTable.size": {
+      "kind": "size",
+      "value": 12
+    },
+    "Ip4RouteTable.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Ip4ModeData.is_started.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Ip4ModeData.max_packet_size.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Ip4ModeData.config_data.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Ip4ModeData.is_configured.offset": {
+      "kind": "offset",
+      "value": 36
+    },
+    "Ip4ModeData.group_count.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "Ip4ModeData.group_table.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "Ip4ModeData.route_count.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "Ip4ModeData.route_table.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "Ip4ModeData.icmp_type_count.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "Ip4ModeData.icmp_type_list.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "Ip4ModeData.size": {
+      "kind": "size",
+      "value": 88
+    },
+    "Ip4ModeData.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Ip4IcmpType.type_.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Ip4IcmpType.code.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "Ip4IcmpType.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "Ip4IcmpType.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Ip4ConfigData.default_protocol.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Ip4ConfigData.accept_any_protocol.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "Ip4ConfigData.accept_icmp_errors.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "Ip4ConfigData.accept_broadcast.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "Ip4ConfigData.accept_promiscuous.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Ip4ConfigData.use_default_address.offset": {
+      "kind": "offset",
+      "value": 5
+    },
+    "Ip4ConfigData.station_address.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "Ip4ConfigData.subnet_mask.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "Ip4ConfigData.type_of_service.offset": {
+      "kind": "offset",
+      "value": 14
+    },
+    "Ip4ConfigData.time_to_live.offset": {
+      "kind": "offset",
+      "value": 15
+    },
+    "Ip4ConfigData.do_not_fragment.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Ip4ConfigData.raw_data.offset": {
+      "kind": "offset",
+      "value": 17
+    },
+    "Ip4ConfigData.receive_timeout.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "Ip4ConfigData.transmit_timeout.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "Ip4ConfigData.size": {
+      "kind": "size",
+      "value": 28
+    },
+    "Ip4ConfigData.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Ip4Config2DataType.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "Ip4Config2DataType.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Ip4Config2InterfaceInfo.name.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Ip4Config2InterfaceInfo.if_type.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "Ip4Config2InterfaceInfo.hw_addr_size.offset": {
+      "kind": "offset",
+      "value": 68
+    },
+    "Ip4Config2InterfaceInfo.hw_addr.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "Ip4Config2InterfaceInfo.station_addr.offset": {
+      "kind": "offset",
+      "value": 104
+    },
+    "Ip4Config2InterfaceInfo.subnet_mask.offset": {
+      "kind": "offset",
+      "value": 108
+    },
+    "Ip4Config2InterfaceInfo.route_table_size.offset": {
+      "kind": "offset",
+      "value": 112
+    },
+    "Ip4Config2InterfaceInfo.route_table.offset": {
+      "kind": "offset",
+      "value": 120
+    },
+    "Ip4Config2InterfaceInfo.size": {
+      "kind": "size",
+      "value": 128
+    },
+    "Ip4Config2InterfaceInfo.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Ip4Config2Policy.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "Ip4Config2Policy.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Ip4Config2ManualAddress.address.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Ip4Config2ManualAddress.subnet_mask.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Ip4Config2ManualAddress.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "Ip4Config2ManualAddress.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Ip4Config2Protocol.set_data.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Ip4Config2Protocol.get_data.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Ip4Config2Protocol.register_data_notify.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Ip4Config2Protocol.unregister_data_notify.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "Ip4Config2Protocol.size": {
+      "kind": "size",
+      "value": 32
+    },
+    "Ip4Config2Protocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "PxeBaseCodeProtocol.revision.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeProtocol.start.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "PxeBaseCodeProtocol.stop.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "PxeBaseCodeProtocol.dhcp.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "PxeBaseCodeProtocol.discover.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "PxeBaseCodeProtocol.mtftp.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "PxeBaseCodeProtocol.udp_write.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "PxeBaseCodeProtocol.udp_read.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "PxeBaseCodeProtocol.set_ip_filter.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "PxeBaseCodeProtocol.arp.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "PxeBaseCodeProtocol.set_parameters.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "PxeBaseCodeProtocol.set_station_ip.offset": {
+      "kind": "offset",
+      "value": 88
+    },
+    "PxeBaseCodeProtocol.set_packets.offset": {
+      "kind": "offset",
+      "value": 96
+    },
+    "PxeBaseCodeProtocol.mode.offset": {
+      "kind": "offset",
+      "value": 104
+    },
+    "PxeBaseCodeProtocol.size": {
+      "kind": "size",
+      "value": 112
+    },
+    "PxeBaseCodeProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "PxeBaseCodeBootType.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "PxeBaseCodeBootType.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "PxeBaseCodeTftpOpcode.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "PxeBaseCodeTftpOpcode.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PxeBaseCodeDiscoverInfo.use_m_cast.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeDiscoverInfo.use_b_cast.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "PxeBaseCodeDiscoverInfo.use_u_cast.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "PxeBaseCodeDiscoverInfo.must_use_list.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "PxeBaseCodeDiscoverInfo.server_m_cast_ip.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "PxeBaseCodeDiscoverInfo.ip_cnt.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "PxeBaseCodeDiscoverInfo.srv_list.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "PxeBaseCodeDiscoverInfo.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "PxeBaseCodeDiscoverInfo.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PxeBaseCodeSrvlist.server_type.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeSrvlist.accept_any_response.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "PxeBaseCodeSrvlist.reserved.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "PxeBaseCodeSrvlist.ip_addr.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "PxeBaseCodeSrvlist.size": {
+      "kind": "size",
+      "value": 20
+    },
+    "PxeBaseCodeSrvlist.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PxeBaseCodeMtftpInfo.m_cast_ip.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeMtftpInfo.c_port.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "PxeBaseCodeMtftpInfo.s_port.offset": {
+      "kind": "offset",
+      "value": 18
+    },
+    "PxeBaseCodeMtftpInfo.listen_timeout.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "PxeBaseCodeMtftpInfo.transmit_timeout.offset": {
+      "kind": "offset",
+      "value": 22
+    },
+    "PxeBaseCodeMtftpInfo.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "PxeBaseCodeMtftpInfo.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PxeBaseCodeUdpOpFlags.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "PxeBaseCodeUdpOpFlags.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "PxeBaseCodeMode.started.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeMode.ipv6_available.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "PxeBaseCodeMode.ipv6_supported.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "PxeBaseCodeMode.using_ipv6.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "PxeBaseCodeMode.bis_supported.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "PxeBaseCodeMode.bis_detected.offset": {
+      "kind": "offset",
+      "value": 5
+    },
+    "PxeBaseCodeMode.auto_arp.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "PxeBaseCodeMode.send_guid.offset": {
+      "kind": "offset",
+      "value": 7
+    },
+    "PxeBaseCodeMode.dhcp_discover_valid.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "PxeBaseCodeMode.dhcp_ack_received.offset": {
+      "kind": "offset",
+      "value": 9
+    },
+    "PxeBaseCodeMode.proxy_offer_received.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "PxeBaseCodeMode.pxe_discover_valid.offset": {
+      "kind": "offset",
+      "value": 11
+    },
+    "PxeBaseCodeMode.pxe_reply_received.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "PxeBaseCodeMode.pxe_bis_reply_received.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "PxeBaseCodeMode.icmp_error_received.offset": {
+      "kind": "offset",
+      "value": 14
+    },
+    "PxeBaseCodeMode.tftp_error_received.offset": {
+      "kind": "offset",
+      "value": 15
+    },
+    "PxeBaseCodeMode.make_callbacks.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "PxeBaseCodeMode.ttl.offset": {
+      "kind": "offset",
+      "value": 17
+    },
+    "PxeBaseCodeMode.tos.offset": {
+      "kind": "offset",
+      "value": 18
+    },
+    "PxeBaseCodeMode.station_ip.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "PxeBaseCodeMode.subnet_mask.offset": {
+      "kind": "offset",
+      "value": 36
+    },
+    "PxeBaseCodeMode.dhcp_discover.offset": {
+      "kind": "offset",
+      "value": 52
+    },
+    "PxeBaseCodeMode.dhcp_ack.offset": {
+      "kind": "offset",
+      "value": 1524
+    },
+    "PxeBaseCodeMode.proxy_offer.offset": {
+      "kind": "offset",
+      "value": 2996
+    },
+    "PxeBaseCodeMode.pxe_discover.offset": {
+      "kind": "offset",
+      "value": 4468
+    },
+    "PxeBaseCodeMode.pxe_reply.offset": {
+      "kind": "offset",
+      "value": 5940
+    },
+    "PxeBaseCodeMode.pxe_bis_reply.offset": {
+      "kind": "offset",
+      "value": 7412
+    },
+    "PxeBaseCodeMode.ip_filter.offset": {
+      "kind": "offset",
+      "value": 8884
+    },
+    "PxeBaseCodeMode.arp_cache_entries.offset": {
+      "kind": "offset",
+      "value": 9016
+    },
+    "PxeBaseCodeMode.arp_cache.offset": {
+      "kind": "offset",
+      "value": 9020
+    },
+    "PxeBaseCodeMode.route_table_entries.offset": {
+      "kind": "offset",
+      "value": 9404
+    },
+    "PxeBaseCodeMode.route_table.offset": {
+      "kind": "offset",
+      "value": 9408
+    },
+    "PxeBaseCodeMode.icmp_error.offset": {
+      "kind": "offset",
+      "value": 9792
+    },
+    "PxeBaseCodeMode.tftp_error.offset": {
+      "kind": "offset",
+      "value": 10296
+    },
+    "PxeBaseCodeMode.size": {
+      "kind": "size",
+      "value": 10424
+    },
+    "PxeBaseCodeMode.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PxeBaseCodePacket.raw.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodePacket.dhcpv4.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodePacket.dhcpv6.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodePacket.size": {
+      "kind": "size",
+      "value": 1472
+    },
+    "PxeBaseCodePacket.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_opcode.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_hw_type.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_hw_addr_len.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_gate_hops.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_ident.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_seconds.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_flags.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_ci_addr.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_yi_addr.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_si_addr.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_gi_addr.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_hw_addr.offset": {
+      "kind": "offset",
+      "value": 28
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_srv_name.offset": {
+      "kind": "offset",
+      "value": 44
+    },
+    "PxeBaseCodeDhcpV4Packet.bootp_boot_file.offset": {
+      "kind": "offset",
+      "value": 108
+    },
+    "PxeBaseCodeDhcpV4Packet.dhcp_magik.offset": {
+      "kind": "offset",
+      "value": 236
+    },
+    "PxeBaseCodeDhcpV4Packet.dhcp_options.offset": {
+      "kind": "offset",
+      "value": 240
+    },
+    "PxeBaseCodeDhcpV4Packet.size": {
+      "kind": "size",
+      "value": 296
+    },
+    "PxeBaseCodeDhcpV4Packet.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PxeBaseCodeDhcpV4Flags.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "PxeBaseCodeDhcpV4Flags.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "PxeBaseCodeDhcpV6Packet.message_type.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeDhcpV6Packet.transaction_id.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "PxeBaseCodeDhcpV6Packet.dhcp_options.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "PxeBaseCodeDhcpV6Packet.size": {
+      "kind": "size",
+      "value": 1028
+    },
+    "PxeBaseCodeDhcpV6Packet.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "PxeBaseCodeIpFilter.filters.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeIpFilter.ip_cnt.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "PxeBaseCodeIpFilter.reserved.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "PxeBaseCodeIpFilter.ip_list.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "PxeBaseCodeIpFilter.size": {
+      "kind": "size",
+      "value": 132
+    },
+    "PxeBaseCodeIpFilter.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PxeBaseCodeIpFilterFlags.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "PxeBaseCodeIpFilterFlags.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "PxeBaseCodeArpEntry.ip_addr.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeArpEntry.mac_addr.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "PxeBaseCodeArpEntry.size": {
+      "kind": "size",
+      "value": 48
+    },
+    "PxeBaseCodeArpEntry.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PxeBaseCodeRouteEntry.ip_addr.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeRouteEntry.subnet_mask.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "PxeBaseCodeRouteEntry.gw_addr.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "PxeBaseCodeRouteEntry.size": {
+      "kind": "size",
+      "value": 48
+    },
+    "PxeBaseCodeRouteEntry.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PxeBaseCodeIcmpError.ty.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeIcmpError.code.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "PxeBaseCodeIcmpError.checksum.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "PxeBaseCodeIcmpError.u.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "PxeBaseCodeIcmpError.data.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "PxeBaseCodeIcmpError.size": {
+      "kind": "size",
+      "value": 504
+    },
+    "PxeBaseCodeIcmpError.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PxeBaseCodeIcmpErrorUnion.reserved.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeIcmpErrorUnion.mtu.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeIcmpErrorUnion.pointer.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeIcmpErrorUnion.echo.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeIcmpErrorUnion.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "PxeBaseCodeIcmpErrorUnion.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PxeBaseCodeIcmpErrorEcho.identifier.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeIcmpErrorEcho.sequence.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "PxeBaseCodeIcmpErrorEcho.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "PxeBaseCodeIcmpErrorEcho.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "PxeBaseCodeTftpError.error_code.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PxeBaseCodeTftpError.error_string.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "PxeBaseCodeTftpError.size": {
+      "kind": "size",
+      "value": 128
+    },
+    "PxeBaseCodeTftpError.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "SimpleNetworkProtocol.revision.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "SimpleNetworkProtocol.start.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "SimpleNetworkProtocol.stop.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "SimpleNetworkProtocol.initialize.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "SimpleNetworkProtocol.reset.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "SimpleNetworkProtocol.shutdown.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "SimpleNetworkProtocol.receive_filters.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "SimpleNetworkProtocol.station_address.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "SimpleNetworkProtocol.statistics.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "SimpleNetworkProtocol.multicast_ip_to_mac.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "SimpleNetworkProtocol.non_volatile_data.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "SimpleNetworkProtocol.get_status.offset": {
+      "kind": "offset",
+      "value": 88
+    },
+    "SimpleNetworkProtocol.transmit.offset": {
+      "kind": "offset",
+      "value": 96
+    },
+    "SimpleNetworkProtocol.receive.offset": {
+      "kind": "offset",
+      "value": 104
+    },
+    "SimpleNetworkProtocol.wait_for_packet.offset": {
+      "kind": "offset",
+      "value": 112
+    },
+    "SimpleNetworkProtocol.mode.offset": {
+      "kind": "offset",
+      "value": 120
+    },
+    "SimpleNetworkProtocol.size": {
+      "kind": "size",
+      "value": 128
+    },
+    "SimpleNetworkProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "ReceiveFlags.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "ReceiveFlags.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "InterruptStatus.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "InterruptStatus.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "NetworkStatistics.rx_total_frames.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "NetworkStatistics.rx_good_frames.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "NetworkStatistics.rx_undersize_frames.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "NetworkStatistics.rx_oversize_frames.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "NetworkStatistics.rx_dropped_frames.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "NetworkStatistics.rx_unicast_frames.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "NetworkStatistics.rx_broadcast_frames.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "NetworkStatistics.rx_multicast_frames.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "NetworkStatistics.rx_crc_error_frames.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "NetworkStatistics.rx_total_bytes.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "NetworkStatistics.tx_total_frames.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "NetworkStatistics.tx_good_frames.offset": {
+      "kind": "offset",
+      "value": 88
+    },
+    "NetworkStatistics.tx_undersize_frames.offset": {
+      "kind": "offset",
+      "value": 96
+    },
+    "NetworkStatistics.tx_oversize_frames.offset": {
+      "kind": "offset",
+      "value": 104
+    },
+    "NetworkStatistics.tx_dropped_frames.offset": {
+      "kind": "offset",
+      "value": 112
+    },
+    "NetworkStatistics.tx_unicast_frames.offset": {
+      "kind": "offset",
+      "value": 120
+    },
+    "NetworkStatistics.tx_broadcast_frames.offset": {
+      "kind": "offset",
+      "value": 128
+    },
+    "NetworkStatistics.tx_multicast_frames.offset": {
+      "kind": "offset",
+      "value": 136
+    },
+    "NetworkStatistics.tx_crc_error_frames.offset": {
+      "kind": "offset",
+      "value": 144
+    },
+    "NetworkStatistics.tx_total_bytes.offset": {
+      "kind": "offset",
+      "value": 152
+    },
+    "NetworkStatistics.collisions.offset": {
+      "kind": "offset",
+      "value": 160
+    },
+    "NetworkStatistics.unsupported_protocol.offset": {
+      "kind": "offset",
+      "value": 168
+    },
+    "NetworkStatistics.rx_duplicated_frames.offset": {
+      "kind": "offset",
+      "value": 176
+    },
+    "NetworkStatistics.rx_decrypt_error_frames.offset": {
+      "kind": "offset",
+      "value": 184
+    },
+    "NetworkStatistics.tx_error_frames.offset": {
+      "kind": "offset",
+      "value": 192
+    },
+    "NetworkStatistics.tx_retry_frames.offset": {
+      "kind": "offset",
+      "value": 200
+    },
+    "NetworkStatistics.size": {
+      "kind": "size",
+      "value": 208
+    },
+    "NetworkStatistics.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "NetworkMode.state.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "NetworkMode.hw_address_size.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "NetworkMode.media_header_size.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "NetworkMode.max_packet_size.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "NetworkMode.nv_ram_size.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "NetworkMode.nv_ram_access_size.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "NetworkMode.receive_filter_mask.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "NetworkMode.receive_filter_setting.offset": {
+      "kind": "offset",
+      "value": 28
+    },
+    "NetworkMode.max_mcast_filter_count.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "NetworkMode.mcast_filter_count.offset": {
+      "kind": "offset",
+      "value": 36
+    },
+    "NetworkMode.mcast_filter.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "NetworkMode.current_address.offset": {
+      "kind": "offset",
+      "value": 552
+    },
+    "NetworkMode.broadcast_address.offset": {
+      "kind": "offset",
+      "value": 584
+    },
+    "NetworkMode.permanent_address.offset": {
+      "kind": "offset",
+      "value": 616
+    },
+    "NetworkMode.if_type.offset": {
+      "kind": "offset",
+      "value": 648
+    },
+    "NetworkMode.mac_address_changeable.offset": {
+      "kind": "offset",
+      "value": 649
+    },
+    "NetworkMode.multiple_tx_supported.offset": {
+      "kind": "offset",
+      "value": 650
+    },
+    "NetworkMode.media_present_supported.offset": {
+      "kind": "offset",
+      "value": 651
+    },
+    "NetworkMode.media_present.offset": {
+      "kind": "offset",
+      "value": 652
+    },
+    "NetworkMode.size": {
+      "kind": "size",
+      "value": 656
+    },
+    "NetworkMode.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "NetworkState.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "NetworkState.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Tcp4Protocol.get_mode_data.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4Protocol.configure.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Tcp4Protocol.routes.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Tcp4Protocol.connect.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "Tcp4Protocol.accept.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "Tcp4Protocol.transmit.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "Tcp4Protocol.receive.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "Tcp4Protocol.close.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "Tcp4Protocol.cancel.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "Tcp4Protocol.poll.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "Tcp4Protocol.size": {
+      "kind": "size",
+      "value": 80
+    },
+    "Tcp4Protocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcp4ConnectionState.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "Tcp4ConnectionState.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Tcp4ConfigData.type_of_service.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4ConfigData.time_to_live.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "Tcp4ConfigData.access_point.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "Tcp4ConfigData.control_option.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "Tcp4ConfigData.size": {
+      "kind": "size",
+      "value": 32
+    },
+    "Tcp4ConfigData.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcp4AccessPoint.use_default_address.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4AccessPoint.station_address.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "Tcp4AccessPoint.subnet_mask.offset": {
+      "kind": "offset",
+      "value": 5
+    },
+    "Tcp4AccessPoint.station_port.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "Tcp4AccessPoint.remote_address.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "Tcp4AccessPoint.remote_port.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Tcp4AccessPoint.active_flag.offset": {
+      "kind": "offset",
+      "value": 18
+    },
+    "Tcp4AccessPoint.size": {
+      "kind": "size",
+      "value": 20
+    },
+    "Tcp4AccessPoint.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "Tcp4Option.receive_buffer_size.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4Option.send_buffer_size.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Tcp4Option.max_syn_back_log.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Tcp4Option.connection_timeout.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "Tcp4Option.data_retries.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Tcp4Option.fin_timeout.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "Tcp4Option.time_wait_timeout.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "Tcp4Option.keep_alive_probes.offset": {
+      "kind": "offset",
+      "value": 28
+    },
+    "Tcp4Option.keep_alive_time.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "Tcp4Option.keep_alive_interval.offset": {
+      "kind": "offset",
+      "value": 36
+    },
+    "Tcp4Option.enable_nagle.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "Tcp4Option.enable_time_stamp.offset": {
+      "kind": "offset",
+      "value": 41
+    },
+    "Tcp4Option.enable_window_scaling.offset": {
+      "kind": "offset",
+      "value": 42
+    },
+    "Tcp4Option.enable_selective_ack.offset": {
+      "kind": "offset",
+      "value": 43
+    },
+    "Tcp4Option.enable_path_mtu_discovery.offset": {
+      "kind": "offset",
+      "value": 44
+    },
+    "Tcp4Option.size": {
+      "kind": "size",
+      "value": 48
+    },
+    "Tcp4Option.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Tcp4CompletionToken.event.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4CompletionToken.status.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Tcp4CompletionToken.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "Tcp4CompletionToken.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcp4ConnectionToken.completion_token.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4ConnectionToken.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "Tcp4ConnectionToken.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcp4ListenToken.completion_token.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4ListenToken.new_child_handle.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Tcp4ListenToken.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "Tcp4ListenToken.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcp4IoToken.completion_token.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4IoToken.packet.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Tcp4IoToken.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "Tcp4IoToken.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcp4CloseToken.completion_token.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4CloseToken.abort_on_close.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Tcp4CloseToken.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "Tcp4CloseToken.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcp4Packet.rx_data.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4Packet.tx_data.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4Packet.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "Tcp4Packet.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcp4FragmentData.fragment_length.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4FragmentData.fragment_buf.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Tcp4FragmentData.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "Tcp4FragmentData.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcp4ReceiveData.urgent.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4ReceiveData.data_length.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Tcp4ReceiveData.fragment_count.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Tcp4ReceiveData.fragment_table.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Tcp4ReceiveData.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "Tcp4ReceiveData.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcp4TransmitData.push.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4TransmitData.urgent.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "Tcp4TransmitData.data_length.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Tcp4TransmitData.fragment_count.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Tcp4TransmitData.fragment_table.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Tcp4TransmitData.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "Tcp4TransmitData.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Tcp4ClientConnectionModeParams.remote_ip.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Tcp4ClientConnectionModeParams.remote_port.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Tcp4ClientConnectionModeParams.size": {
+      "kind": "size",
+      "value": 6
+    },
+    "Tcp4ClientConnectionModeParams.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "TlsConfigDataType.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "TlsConfigDataType.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "TlsConfigurationProtocol.set_data.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "TlsConfigurationProtocol.get_data.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "TlsConfigurationProtocol.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "TlsConfigurationProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "PxeBaseCodeUdpPort.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "PxeBaseCodeUdpPort.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "DHCP4_EVENT_SEND_DISCOVER": {
+      "kind": "value",
+      "value": 1
+    },
+    "DHCP4_EVENT_RCVD_OFFER": {
+      "kind": "value",
+      "value": 2
+    },
+    "DHCP4_EVENT_SELECT_OFFER": {
+      "kind": "value",
+      "value": 3
+    },
+    "DHCP4_EVENT_SEND_REQUEST": {
+      "kind": "value",
+      "value": 4
+    },
+    "DHCP4_EVENT_RCVD_ACK": {
+      "kind": "value",
+      "value": 5
+    },
+    "DHCP4_EVENT_RCVD_NAK": {
+      "kind": "value",
+      "value": 6
+    },
+    "DHCP4_EVENT_SEND_DECLINE": {
+      "kind": "value",
+      "value": 7
+    },
+    "DHCP4_EVENT_BOUND_COMPLETED": {
+      "kind": "value",
+      "value": 8
+    },
+    "DHCP4_EVENT_ENTER_RENEWING": {
+      "kind": "value",
+      "value": 9
+    },
+    "DHCP4_EVENT_ENTER_REBINDING": {
+      "kind": "value",
+      "value": 10
+    },
+    "DHCP4_EVENT_ADDRESS_LOST": {
+      "kind": "value",
+      "value": 11
+    },
+    "DHCP4_EVENT_FAIL": {
+      "kind": "value",
+      "value": 12
+    },
+    "DHCP4_STATE_STOPPED": {
+      "kind": "value",
+      "value": 0
+    },
+    "DHCP4_STATE_INIT": {
+      "kind": "value",
+      "value": 1
+    },
+    "DHCP4_STATE_SELECTING": {
+      "kind": "value",
+      "value": 2
+    },
+    "DHCP4_STATE_REQUESTING": {
+      "kind": "value",
+      "value": 3
+    },
+    "DHCP4_STATE_BOUND": {
+      "kind": "value",
+      "value": 4
+    },
+    "DHCP4_STATE_RENEWING": {
+      "kind": "value",
+      "value": 5
+    },
+    "DHCP4_STATE_REBINDING": {
+      "kind": "value",
+      "value": 6
+    },
+    "DHCP4_STATE_INIT_REBOOT": {
+      "kind": "value",
+      "value": 7
+    },
+    "DHCP4_STATE_REBOOTING": {
+      "kind": "value",
+      "value": 8
+    },
+    "DHCP4_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "1897218af54e614791c8c0f04bda9e56"
+    },
+    "DHCP4_PROTOCOL_SERVICE_BINDING_GUID": {
+      "kind": "bytes",
+      "value": "d8399a9d42bd734aa4d58ee94be11380"
+    },
+    "HTTP_VERSION_HTTP_VERSION_10": {
+      "kind": "value",
+      "value": 0
+    },
+    "HTTP_VERSION_HTTP_VERSION_11": {
+      "kind": "value",
+      "value": 1
+    },
+    "HTTP_VERSION_HTTP_VERSION_UNSUPPORTED": {
+      "kind": "value",
+      "value": 2
+    },
+    "HTTP_METHOD_GET": {
+      "kind": "value",
+      "value": 0
+    },
+    "HTTP_METHOD_POST": {
+      "kind": "value",
+      "value": 1
+    },
+    "HTTP_METHOD_PATCH": {
+      "kind": "value",
+      "value": 2
+    },
+    "HTTP_METHOD_OPTIONS": {
+      "kind": "value",
+      "value": 3
+    },
+    "HTTP_METHOD_CONNECT": {
+      "kind": "value",
+      "value": 4
+    },
+    "HTTP_METHOD_HEAD": {
+      "kind": "value",
+      "value": 5
+    },
+    "HTTP_METHOD_PUT": {
+      "kind": "value",
+      "value": 6
+    },
+    "HTTP_METHOD_DELETE": {
+      "kind": "value",
+      "value": 7
+    },
+    "HTTP_METHOD_TRACE": {
+      "kind": "value",
+      "value": 8
+    },
+    "HTTP_METHOD_MAX": {
+      "kind": "value",
+      "value": 9
+    },
+    "HTTP_STATUS_CODE_STATUS_UNSUPPORTED": {
+      "kind": "value",
+      "value": 0
+    },
+    "HTTP_STATUS_CODE_STATUS_100_CONTINUE": {
+      "kind": "value",
+      "value": 1
+    },
+    "HTTP_STATUS_CODE_STATUS_101_SWITCHING_PROTOCOLS": {
+      "kind": "value",
+      "value": 2
+    },
+    "HTTP_STATUS_CODE_STATUS_200_OK": {
+      "kind": "value",
+      "value": 3
+    },
+    "HTTP_STATUS_CODE_STATUS_201_CREATED": {
+      "kind": "value",
+      "value": 4
+    },
+    "HTTP_STATUS_CODE_STATUS_202_ACCEPTED": {
+      "kind": "value",
+      "value": 5
+    },
+    "HTTP_STATUS_CODE_STATUS_203_NON_AUTHORITATIVE_INFORMATION": {
+      "kind": "value",
+      "value": 6
+    },
+    "HTTP_STATUS_CODE_STATUS_204_NO_CONTENT": {
+      "kind": "value",
+      "value": 7
+    },
+    "HTTP_STATUS_CODE_STATUS_205_RESET_CONTENT": {
+      "kind": "value",
+      "value": 8
+    },
+    "HTTP_STATUS_CODE_STATUS_206_PARTIAL_CONTENT": {
+      "kind": "value",
+      "value": 9
+    },
+    "HTTP_STATUS_CODE_STATUS_300_MULTIPLE_CHOICES": {
+      "kind": "value",
+      "value": 10
+    },
+    "HTTP_STATUS_CODE_STATUS_301_MOVED_PERMANENTLY": {
+      "kind": "value",
+      "value": 11
+    },
+    "HTTP_STATUS_CODE_STATUS_302_FOUND": {
+      "kind": "value",
+      "value": 12
+    },
+    "HTTP_STATUS_CODE_STATUS_303_SEE_OTHER": {
+      "kind": "value",
+      "value": 13
+    },
+    "HTTP_STATUS_CODE_STATUS_304_NOT_MODIFIED": {
+      "kind": "value",
+      "value": 14
+    },
+    "HTTP_STATUS_CODE_STATUS_305_USE_PROXY": {
+      "kind": "value",
+      "value": 15
+    },
+    "HTTP_STATUS_CODE_STATUS_307_TEMPORARY_REDIRECT": {
+      "kind": "value",
+      "value": 16
+    },
+    "HTTP_STATUS_CODE_STATUS_400_BAD_REQUEST": {
+      "kind": "value",
+      "value": 17
+    },
+    "HTTP_STATUS_CODE_STATUS_401_UNAUTHORIZED": {
+      "kind": "value",
+      "value": 18
+    },
+    "HTTP_STATUS_CODE_STATUS_402_PAYMENT_REQUIRED": {
+      "kind": "value",
+      "value": 19
+    },
+    "HTTP_STATUS_CODE_STATUS_403_FORBIDDEN": {
+      "kind": "value",
+      "value": 20
+    },
+    "HTTP_STATUS_CODE_STATUS_404_NOT_FOUND": {
+      "kind": "value",
+      "value": 21
+    },
+    "HTTP_STATUS_CODE_STATUS_405_METHOD_NOT_ALLOWED": {
+      "kind": "value",
+      "value": 22
+    },
+    "HTTP_STATUS_CODE_STATUS_406_NOT_ACCEPTABLE": {
+      "kind": "value",
+      "value": 23
+    },
+    "HTTP_STATUS_CODE_STATUS_407_PROXY_AUTHENTICATION_REQUIRED": {
+      "kind": "value",
+      "value": 24
+    },
+    "HTTP_STATUS_CODE_STATUS_408_REQUEST_TIME_OUT": {
+      "kind": "value",
+      "value": 25
+    },
+    "HTTP_STATUS_CODE_STATUS_409_CONFLICT": {
+      "kind": "value",
+      "value": 26
+    },
+    "HTTP_STATUS_CODE_STATUS_410_GONE": {
+      "kind": "value",
+      "value": 27
+    },
+    "HTTP_STATUS_CODE_STATUS_411_LENGTH_REQUIRED": {
+      "kind": "value",
+      "value": 28
+    },
+    "HTTP_STATUS_CODE_STATUS_412_PRECONDITION_FAILED": {
+      "kind": "value",
+      "value": 29
+    },
+    "HTTP_STATUS_CODE_STATUS_413_REQUEST_ENTITY_TOO_LARGE": {
+      "kind": "value",
+      "value": 30
+    },
+    "HTTP_STATUS_CODE_STATUS_414_REQUEST_URI_TOO_LARGE": {
+      "kind": "value",
+      "value": 31
+    },
+    "HTTP_STATUS_CODE_STATUS_415_UNSUPPORTED_MEDIA_TYPE": {
+      "kind": "value",
+      "value": 32
+    },
+    "HTTP_STATUS_CODE_STATUS_416_REQUESTED_RANGE_NOT_SATISFIED": {
+      "kind": "value",
+      "value": 33
+    },
+    "HTTP_STATUS_CODE_STATUS_417_EXPECTATION_FAILED": {
+      "kind": "value",
+      "value": 34
+    },
+    "HTTP_STATUS_CODE_STATUS_500_INTERNAL_SERVER_ERROR": {
+      "kind": "value",
+      "value": 35
+    },
+    "HTTP_STATUS_CODE_STATUS_501_NOT_IMPLEMENTED": {
+      "kind": "value",
+      "value": 36
+    },
+    "HTTP_STATUS_CODE_STATUS_502_BAD_GATEWAY": {
+      "kind": "value",
+      "value": 37
+    },
+    "HTTP_STATUS_CODE_STATUS_503_SERVICE_UNAVAILABLE": {
+      "kind": "value",
+      "value": 38
+    },
+    "HTTP_STATUS_CODE_STATUS_504_GATEWAY_TIME_OUT": {
+      "kind": "value",
+      "value": 39
+    },
+    "HTTP_STATUS_CODE_STATUS_505_VERSION_NOT_SUPPORTED": {
+      "kind": "value",
+      "value": 40
+    },
+    "HTTP_STATUS_CODE_STATUS_308_PERMANENT_REDIRECT": {
+      "kind": "value",
+      "value": 41
+    },
+    "HTTP_STATUS_CODE_STATUS_429_TOO_MANY_REQUESTS": {
+      "kind": "value",
+      "value": 42
+    },
+    "HTTP_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "9bb2597a0b9171418242a85a0df25b5b"
+    },
+    "HTTP_PROTOCOL_SERVICE_BINDING_GUID": {
+      "kind": "bytes",
+      "value": "afe6c8bdbcd97943a72ae0c4e75dae1c"
+    },
+    "IP4_CONFIG2_DATA_TYPE_INTERFACE_INFO": {
+      "kind": "value",
+      "value": 0
+    },
+    "IP4_CONFIG2_DATA_TYPE_POLICY": {
+      "kind": "value",
+      "value": 1
+    },
+    "IP4_CONFIG2_DATA_TYPE_MANUAL_ADDRESS": {
+      "kind": "value",
+      "value": 2
+    },
+    "IP4_CONFIG2_DATA_TYPE_GATEWAY": {
+      "kind": "value",
+      "value": 3
+    },
+    "IP4_CONFIG2_DATA_TYPE_DNS_SERVER": {
+      "kind": "value",
+      "value": 4
+    },
+    "IP4_CONFIG2_DATA_TYPE_MAXIMUM": {
+      "kind": "value",
+      "value": 5
+    },
+    "IP4_CONFIG2_POLICY_STATIC": {
+      "kind": "value",
+      "value": 0
+    },
+    "IP4_CONFIG2_POLICY_DHCP": {
+      "kind": "value",
+      "value": 1
+    },
+    "IP4_CONFIG2_POLICY_MAX": {
+      "kind": "value",
+      "value": 2
+    },
+    "IP4_CONFIG2_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "d16e445b0be3aa4f871a3654eca36080"
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_BOOTSTRAP": {
+      "kind": "value",
+      "value": 0
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_MS_WINNT_RIS": {
+      "kind": "value",
+      "value": 1
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_INTEL_LCM": {
+      "kind": "value",
+      "value": 2
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_DOS_UNDI": {
+      "kind": "value",
+      "value": 3
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_NEC_ESMPRO": {
+      "kind": "value",
+      "value": 4
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_IBM_WSOD": {
+      "kind": "value",
+      "value": 5
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_IBM_LCCM": {
+      "kind": "value",
+      "value": 6
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_CA_UNICENTER_TNG": {
+      "kind": "value",
+      "value": 7
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_HP_OPENVIEW": {
+      "kind": "value",
+      "value": 8
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_ALTIRIS_9": {
+      "kind": "value",
+      "value": 9
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_ALTIRIS_10": {
+      "kind": "value",
+      "value": 10
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_ALTIRIS_11": {
+      "kind": "value",
+      "value": 11
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_NOT_USED_12": {
+      "kind": "value",
+      "value": 12
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_REDHAT_INSTALL": {
+      "kind": "value",
+      "value": 13
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_REDHAT_BOOT": {
+      "kind": "value",
+      "value": 14
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_REMBO": {
+      "kind": "value",
+      "value": 15
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_BEOBOOT": {
+      "kind": "value",
+      "value": 16
+    },
+    "PXE_BASE_CODE_BOOT_TYPE_PXETEST": {
+      "kind": "value",
+      "value": 65535
+    },
+    "PXE_BASE_CODE_TFTP_OPCODE_TFTP_FIRST": {
+      "kind": "value",
+      "value": 0
+    },
+    "PXE_BASE_CODE_TFTP_OPCODE_TFTP_GET_FILE_SIZE": {
+      "kind": "value",
+      "value": 1
+    },
+    "PXE_BASE_CODE_TFTP_OPCODE_TFTP_READ_FILE": {
+      "kind": "value",
+      "value": 2
+    },
+    "PXE_BASE_CODE_TFTP_OPCODE_TFTP_WRITE_FILE": {
+      "kind": "value",
+      "value": 3
+    },
+    "PXE_BASE_CODE_TFTP_OPCODE_TFTP_READ_DIRECTORY": {
+      "kind": "value",
+      "value": 4
+    },
+    "PXE_BASE_CODE_TFTP_OPCODE_MTFTP_GET_FILE_SIZE": {
+      "kind": "value",
+      "value": 5
+    },
+    "PXE_BASE_CODE_TFTP_OPCODE_MTFTP_READ_FILE": {
+      "kind": "value",
+      "value": 6
+    },
+    "PXE_BASE_CODE_TFTP_OPCODE_MTFTP_READ_DIRECTORY": {
+      "kind": "value",
+      "value": 7
+    },
+    "PXE_BASE_CODE_TFTP_OPCODE_MTFTP_LAST": {
+      "kind": "value",
+      "value": 8
+    },
+    "PXE_BASE_CODE_UDP_OP_FLAGS_ANY_SRC_IP": {
+      "kind": "value",
+      "value": 1
+    },
+    "PXE_BASE_CODE_UDP_OP_FLAGS_ANY_SRC_PORT": {
+      "kind": "value",
+      "value": 2
+    },
+    "PXE_BASE_CODE_UDP_OP_FLAGS_ANY_DEST_IP": {
+      "kind": "value",
+      "value": 4
+    },
+    "PXE_BASE_CODE_UDP_OP_FLAGS_ANY_DEST_PORT": {
+      "kind": "value",
+      "value": 8
+    },
+    "PXE_BASE_CODE_UDP_OP_FLAGS_USE_FILTER": {
+      "kind": "value",
+      "value": 16
+    },
+    "PXE_BASE_CODE_UDP_OP_FLAGS_MAY_FRAGMENT": {
+      "kind": "value",
+      "value": 32
+    },
+    "PXE_BASE_CODE_DHCP_V4_FLAGS_BROADCAST": {
+      "kind": "value",
+      "value": 1
+    },
+    "PXE_BASE_CODE_IP_FILTER_FLAGS_STATION_IP": {
+      "kind": "value",
+      "value": 1
+    },
+    "PXE_BASE_CODE_IP_FILTER_FLAGS_BROADCAST": {
+      "kind": "value",
+      "value": 2
+    },
+    "PXE_BASE_CODE_IP_FILTER_FLAGS_PROMISCUOUS": {
+      "kind": "value",
+      "value": 4
+    },
+    "PXE_BASE_CODE_IP_FILTER_FLAGS_PROMISCUOUS_MULTICAST": {
+      "kind": "value",
+      "value": 8
+    },
+    "PXE_BASE_CODE_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "03e6c40328acd3119a2d0090273fc14d"
+    },
+    "PXE_BASE_CODE_DHCP_V4_PACKET_DHCP_MAGIK": {
+      "kind": "value",
+      "value": 1669485411
+    },
+    "RECEIVE_FLAGS_UNICAST": {
+      "kind": "value",
+      "value": 1
+    },
+    "RECEIVE_FLAGS_MULTICAST": {
+      "kind": "value",
+      "value": 2
+    },
+    "RECEIVE_FLAGS_BROADCAST": {
+      "kind": "value",
+      "value": 4
+    },
+    "RECEIVE_FLAGS_PROMISCUOUS": {
+      "kind": "value",
+      "value": 8
+    },
+    "RECEIVE_FLAGS_PROMISCUOUS_MULTICAST": {
+      "kind": "value",
+      "value": 16
+    },
+    "INTERRUPT_STATUS_RECEIVE": {
+      "kind": "value",
+      "value": 1
+    },
+    "INTERRUPT_STATUS_TRANSMIT": {
+      "kind": "value",
+      "value": 2
+    },
+    "INTERRUPT_STATUS_COMMAND": {
+      "kind": "value",
+      "value": 4
+    },
+    "INTERRUPT_STATUS_SOFTWARE": {
+      "kind": "value",
+      "value": 8
+    },
+    "NETWORK_STATE_STOPPED": {
+      "kind": "value",
+      "value": 0
+    },
+    "NETWORK_STATE_STARTED": {
+      "kind": "value",
+      "value": 1
+    },
+    "NETWORK_STATE_INITIALIZED": {
+      "kind": "value",
+      "value": 2
+    },
+    "NETWORK_STATE_MAX_STATE": {
+      "kind": "value",
+      "value": 3
+    },
+    "SIMPLE_NETWORK_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "b93298a125acd3119a2d0090273fc14d"
+    },
+    "TCP4_CONNECTION_STATE_CLOSED": {
+      "kind": "value",
+      "value": 0
+    },
+    "TCP4_CONNECTION_STATE_LISTEN": {
+      "kind": "value",
+      "value": 1
+    },
+    "TCP4_CONNECTION_STATE_SYN_SENT": {
+      "kind": "value",
+      "value": 2
+    },
+    "TCP4_CONNECTION_STATE_SYN_RECEIVED": {
+      "kind": "value",
+      "value": 3
+    },
+    "TCP4_CONNECTION_STATE_ESTABLISHED": {
+      "kind": "value",
+      "value": 4
+    },
+    "TCP4_CONNECTION_STATE_FIN_WAIT1": {
+      "kind": "value",
+      "value": 5
+    },
+    "TCP4_CONNECTION_STATE_FIN_WAIT2": {
+      "kind": "value",
+      "value": 6
+    },
+    "TCP4_CONNECTION_STATE_CLOSING": {
+      "kind": "value",
+      "value": 7
+    },
+    "TCP4_CONNECTION_STATE_TIME_WAIT": {
+      "kind": "value",
+      "value": 8
+    },
+    "TCP4_CONNECTION_STATE_CLOSE_WAIT": {
+      "kind": "value",
+      "value": 9
+    },
+    "TCP4_CONNECTION_STATE_LAST_ACK": {
+      "kind": "value",
+      "value": 10
+    },
+    "TCP4_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "c70b536559a30f41b0105aadc7ec2b62"
+    },
+    "TCP4_PROTOCOL_SERVICE_BINDING_GUID": {
+      "kind": "bytes",
+      "value": "65067200eb67994abaf7d3c33a1c7cc9"
+    },
+    "TLS_CONFIG_DATA_TYPE_HOST_PUBLIC_CERT": {
+      "kind": "value",
+      "value": 0
+    },
+    "TLS_CONFIG_DATA_TYPE_HOST_PRIVATE_KEY": {
+      "kind": "value",
+      "value": 1
+    },
+    "TLS_CONFIG_DATA_TYPE_CA_CERTIFICATE": {
+      "kind": "value",
+      "value": 2
+    },
+    "TLS_CONFIG_DATA_TYPE_CERT_REVOCATION_LIST": {
+      "kind": "value",
+      "value": 3
+    },
+    "TLS_CONFIG_DATA_TYPE_MAXIMUM": {
+      "kind": "value",
+      "value": 4
+    },
+    "TLS_CONFIGURATION_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "44fe82167abd0744b7c7dca37ca3922d"
+    },
+    "TLS_CONFIGURATION_PROTOCOL_SERVICE_BINDING_GUID": {
+      "kind": "bytes",
+      "value": "95b72c9536ffcf48a2494df486d6ab8d"
+    }
+  }
+}

@@ -1,0 +1,5 @@
+module main;
+use cathedral_uefi_raw::network::NetworkStatistics;
+use cathedral_uefi_raw::network_layouts::NetworkStatisticsX64Layout;
+data Main { value: NetworkStatisticsX64Layout<NetworkStatistics>; }
+machine Main::main(&mut self) -> u64 { self.value.rx_total_frames }

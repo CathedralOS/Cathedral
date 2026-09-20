@@ -1,0 +1,8 @@
+[package]
+name = "cathedral-uefi-network-probe"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+uefi-raw = { path = "../../../reference_code/rust-osdev/uefi-rs/uefi-raw" }

@@ -1,0 +1,163 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pure behavior from pinned uefi-rs; see raw/network.PORT.md.
+// All storage is ordinary initialized Omega data; no protocol call or raw dereference.
+module network_helpers;
+use cathedral_uefi_raw::network::Ipv4Address;
+use cathedral_uefi_raw::network::Ipv6Address;
+use cathedral_uefi_raw::network::IpAddress;
+use cathedral_uefi_raw::network::MacAddress;
+use cathedral_uefi_raw::network::NetworkStatistics;
+use cathedral_uefi_raw::network::PxeBaseCodeSrvlist;
+use cathedral_uefi_raw::network::PxeBaseCodeBootType;
+use cathedral_uefi_raw::network::PxeBaseCodeIpFilter;
+use cathedral_uefi_raw::network::PxeBaseCodeIpFilterFlags;
+use cathedral_uefi_raw::network::PxeBaseCodeDhcpV4Packet;
+use cathedral_uefi_raw::network::PxeBaseCodeDhcpV4Flags;
+use cathedral_uefi_raw::network::PxeBaseCodeDhcpV6Packet;
+use cathedral_uefi_raw::network::PxeBaseCodePacket;
+use cathedral_uefi_raw::network::HttpAccessPoint;
+use cathedral_uefi_raw::network::HttpToken;
+use cathedral_uefi_raw::network::HttpMessage;
+use cathedral_uefi_raw::network::HttpRequestData;
+use cathedral_uefi_raw::network::HttpRequestOrResponse;
+use cathedral_uefi_raw::network::HttpHeader;
+use cathedral_uefi_raw::scalars::Boolean;
+
+pub data NetworkStatistic [copy] { case Unavailable; case Available(value: u64); }
+pub data OptionalIpAddress [copy] { case None; case Some(value: IpAddress); }
+pub data IpOctets [copy] { case V4(value: [u8; 4]); case V6(value: [u8; 16]); }
+pub machine network_statistic_available(value: u64) -> bool { value != 0xffff_ffff_ffff_ffff }
+pub machine network_statistic(value: u64) -> NetworkStatistic {
+    transition value == 0xffff_ffff_ffff_ffff {
+        true -> (NetworkStatistic::Unavailable)
+        _ -> (NetworkStatistic::Available { value: value })
+    }
+}
+pub machine network_statistic_rx_total_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.rx_total_frames) }
+pub machine network_statistic_rx_good_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.rx_good_frames) }
+pub machine network_statistic_rx_undersize_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.rx_undersize_frames) }
+pub machine network_statistic_rx_oversize_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.rx_oversize_frames) }
+pub machine network_statistic_rx_dropped_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.rx_dropped_frames) }
+pub machine network_statistic_rx_unicast_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.rx_unicast_frames) }
+pub machine network_statistic_rx_broadcast_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.rx_broadcast_frames) }
+pub machine network_statistic_rx_multicast_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.rx_multicast_frames) }
+pub machine network_statistic_rx_crc_error_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.rx_crc_error_frames) }
+pub machine network_statistic_rx_total_bytes(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.rx_total_bytes) }
+pub machine network_statistic_tx_total_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.tx_total_frames) }
+pub machine network_statistic_tx_good_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.tx_good_frames) }
+pub machine network_statistic_tx_undersize_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.tx_undersize_frames) }
+pub machine network_statistic_tx_oversize_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.tx_oversize_frames) }
+pub machine network_statistic_tx_dropped_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.tx_dropped_frames) }
+pub machine network_statistic_tx_unicast_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.tx_unicast_frames) }
+pub machine network_statistic_tx_broadcast_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.tx_broadcast_frames) }
+pub machine network_statistic_tx_multicast_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.tx_multicast_frames) }
+pub machine network_statistic_tx_crc_error_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.tx_crc_error_frames) }
+pub machine network_statistic_tx_total_bytes(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.tx_total_bytes) }
+pub machine network_statistic_collisions(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.collisions) }
+pub machine network_statistic_unsupported_protocol(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.unsupported_protocol) }
+pub machine network_statistic_rx_duplicated_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.rx_duplicated_frames) }
+pub machine network_statistic_rx_decrypt_error_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.rx_decrypt_error_frames) }
+pub machine network_statistic_tx_error_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.tx_error_frames) }
+pub machine network_statistic_tx_retry_frames(value: NetworkStatistics) -> NetworkStatistic { network_statistic(value.tx_retry_frames) }
+
+pub machine ipv4_from_octets(value: [u8; 4]) -> Ipv4Address { Ipv4Address { raw: value } }
+pub machine ipv4_octets(value: Ipv4Address) -> [u8; 4] { value.raw }
+pub machine ipv6_from_octets(value: [u8; 16]) -> Ipv6Address { Ipv6Address { raw: value } }
+pub machine ipv6_octets(value: Ipv6Address) -> [u8; 16] { value.raw }
+pub machine ip_default() -> IpAddress { IpAddress {} }
+pub machine ip_new_v4(value: [u8; 4]) -> IpAddress {
+    IpAddress { raw: [value[0], value[1], value[2], value[3], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
+}
+pub machine ip_new_v6(value: [u8; 16]) -> IpAddress { IpAddress { raw: value } }
+pub machine ip_as_v4(value: IpAddress) -> Ipv4Address {
+    Ipv4Address { raw: [value.raw[0], value.raw[1], value.raw[2], value.raw[3]] }
+}
+pub machine ip_as_v6(value: IpAddress) -> Ipv6Address { Ipv6Address { raw: value.raw } }
+pub machine ip_into_octets(value: IpAddress, is_ipv6: bool) -> IpOctets {
+    transition is_ipv6 {
+        true -> (IpOctets::V6 { value: value.raw })
+        _ -> (IpOctets::V4 { value: [value.raw[0], value.raw[1], value.raw[2], value.raw[3]] })
+    }
+}
+pub machine ip_from_octets(value: IpOctets) -> IpAddress {
+    transition value {
+        IpOctets::V4 { value } -> (ip_new_v4(value))
+        IpOctets::V6 { value } -> (ip_new_v6(value))
+    }
+}
+pub machine mac_from_octets(value: [u8; 32]) -> MacAddress { MacAddress { raw: value } }
+pub machine mac_octets(value: MacAddress) -> [u8; 32] { value.raw }
+pub machine mac_from_ethernet(value: [u8; 6]) -> MacAddress {
+    MacAddress { raw: [value[0], value[1], value[2], value[3], value[4], value[5], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
+}
+pub machine mac_ethernet(value: MacAddress) -> [u8; 6] {
+    [value.raw[0], value.raw[1], value.raw[2], value.raw[3], value.raw[4], value.raw[5]]
+}
+pub machine pxe_server_new(server_type: PxeBaseCodeBootType, address: OptionalIpAddress) -> PxeBaseCodeSrvlist {
+    transition address {
+        OptionalIpAddress::Some { value } -> specific(server_type, value)
+        _ -> (PxeBaseCodeSrvlist { server_type: server_type, accept_any_response: Boolean { raw: 1 } })
+    }
+    state specific(server_type: PxeBaseCodeBootType, address: IpAddress) -> PxeBaseCodeSrvlist {
+        PxeBaseCodeSrvlist { server_type: server_type, accept_any_response: Boolean { raw: 0 }, reserved: 0, ip_addr: address }
+    }
+}
+// Returns an owned optional snapshot instead of borrowing an untagged union.
+pub machine pxe_server_address(value: PxeBaseCodeSrvlist) -> OptionalIpAddress {
+    transition value.accept_any_response.raw != 0 {
+        true -> (OptionalIpAddress::None)
+        _ -> (OptionalIpAddress::Some { value: value.ip_addr })
+    }
+}
+// x86-64-specific byte conversion for fields stored in network byte order.
+pub machine network_swap16(value: u16) -> u16 { (value >> 8) | ((value & 0xff) << 8) }
+pub machine network_swap32(value: u32) -> u32 {
+    (value >> 24) | ((value & 0x00ff0000) >> 8) | ((value & 0x0000ff00) << 8) | ((value & 0x000000ff) << 24)
+}
+pub machine pxe_bootp_ident(value: PxeBaseCodeDhcpV4Packet) -> u32 { network_swap32(value.bootp_ident) }
+pub machine pxe_bootp_seconds(value: PxeBaseCodeDhcpV4Packet) -> u16 { network_swap16(value.bootp_seconds) }
+pub machine pxe_bootp_flags_upstream(value: PxeBaseCodeDhcpV4Packet) -> PxeBaseCodeDhcpV4Flags {
+    PxeBaseCodeDhcpV4Flags { raw: network_swap16(value.bootp_flags) & 1 }
+}
+pub machine pxe_dhcp_magik(value: PxeBaseCodeDhcpV4Packet) -> u32 { network_swap32(value.dhcp_magik) }
+pub machine pxe_transaction_id(value: PxeBaseCodeDhcpV6Packet) -> u32 {
+    ((value.transaction_id[0] as u32) << 16) | ((value.transaction_id[1] as u32) << 8) | (value.transaction_id[2] as u32)
+}
+pub machine pxe_packet_bytes(value: &PxeBaseCodePacket) -> &[u8; 1472] { &value.raw }
+// PORT-BLOCKED[omega:plan-laid-public-fields]: the checked shared-byte recast
+// fixture cannot select public raw storage through the synthesized packet policy.
+// Borrowed DHCPv4/v6 projections remain blocked at that first proven failure;
+// no unsupported union or unchecked reference semantics are presumed.
+
+machine ip_filter_selected(value: IpAddress, index: u8, count: u8) -> IpAddress {
+    transition index < count { true -> (value) _ -> (IpAddress {}) }
+}
+// Fixed capacity + explicit length replaces the Rust slice, preserving the
+// eight-entry bound and zeroing every unoccupied address slot.
+pub machine pxe_ip_filter_new(filters: PxeBaseCodeIpFilterFlags, values: [IpAddress; 8], count: u8) -> PxeBaseCodeIpFilter
+    requires count <= 8;
+{
+    PxeBaseCodeIpFilter { filters: filters, ip_cnt: count, reserved: 0, ip_list: [ip_filter_selected(values[0], 0, count), ip_filter_selected(values[1], 1, count), ip_filter_selected(values[2], 2, count), ip_filter_selected(values[3], 3, count), ip_filter_selected(values[4], 4, count), ip_filter_selected(values[5], 5, count), ip_filter_selected(values[6], 6, count), ip_filter_selected(values[7], 7, count)] }
+}
+// Checked indexed lookup replaces an unchecked slice construction on raw counts.
+pub machine pxe_ip_filter_address(value: PxeBaseCodeIpFilter, index: u8) -> OptionalIpAddress {
+    transition index < 8 && value.ip_cnt <= 8 && index < value.ip_cnt {
+        true -> read(value, index)
+        _ -> (OptionalIpAddress::None)
+    }
+    state read(value: PxeBaseCodeIpFilter, index: u8) -> OptionalIpAddress {
+        OptionalIpAddress::Some { value: value.ip_list[index] }
+    }
+}
+pub machine http_access_point_default() -> HttpAccessPoint { HttpAccessPoint {} }
+pub machine http_token_default() -> HttpToken { HttpToken {} }
+pub machine http_message_default() -> HttpMessage { HttpMessage {} }
+pub machine http_request_data_default() -> HttpRequestData { HttpRequestData {} }
+pub machine http_request_or_response_default() -> HttpRequestOrResponse { HttpRequestOrResponse {} }
+pub machine http_header_default() -> HttpHeader { HttpHeader {} }
+
+// RFC2131 section2/Figure2: primary broadcast-bit predicate. The pinned helper
+// above instead masks bit0; both are explicit so compatibility cannot hide it.
+pub machine pxe_bootp_broadcast(value: PxeBaseCodeDhcpV4Packet) -> bool {
+    (network_swap16(value.bootp_flags) & 0x8000) != 0
+}

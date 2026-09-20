@@ -1,0 +1,47 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Cathedral plans for pinned uefi-rs network representations; see network.PORT.md.
+// These declarations are not proof of an evaluated foreign-layout consumer.
+module network_large_layouts;
+use omega::language::core::layout;
+
+// PORT-BLOCKED[omega:layout-reflection-capacity]: all 34 fields retained; current Schema capacity is 32.
+pub data PxeBaseCodeModeX64Layout {}
+pub PxeBaseCodeModeX64LayoutEvidence: PxeBaseCodeModeX64Layout satisfies Layout;
+pub machine PxeBaseCodeModeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 1 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 2 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 3 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 4 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 5 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 6 } };
+    entries[7] = FieldEntry { key: schema.fields[7].key, placement: FieldPlan::At { offset: 7 } };
+    entries[8] = FieldEntry { key: schema.fields[8].key, placement: FieldPlan::At { offset: 8 } };
+    entries[9] = FieldEntry { key: schema.fields[9].key, placement: FieldPlan::At { offset: 9 } };
+    entries[10] = FieldEntry { key: schema.fields[10].key, placement: FieldPlan::At { offset: 10 } };
+    entries[11] = FieldEntry { key: schema.fields[11].key, placement: FieldPlan::At { offset: 11 } };
+    entries[12] = FieldEntry { key: schema.fields[12].key, placement: FieldPlan::At { offset: 12 } };
+    entries[13] = FieldEntry { key: schema.fields[13].key, placement: FieldPlan::At { offset: 13 } };
+    entries[14] = FieldEntry { key: schema.fields[14].key, placement: FieldPlan::At { offset: 14 } };
+    entries[15] = FieldEntry { key: schema.fields[15].key, placement: FieldPlan::At { offset: 15 } };
+    entries[16] = FieldEntry { key: schema.fields[16].key, placement: FieldPlan::At { offset: 16 } };
+    entries[17] = FieldEntry { key: schema.fields[17].key, placement: FieldPlan::At { offset: 17 } };
+    entries[18] = FieldEntry { key: schema.fields[18].key, placement: FieldPlan::At { offset: 18 } };
+    entries[19] = FieldEntry { key: schema.fields[19].key, placement: FieldPlan::At { offset: 20 } };
+    entries[20] = FieldEntry { key: schema.fields[20].key, placement: FieldPlan::At { offset: 36 } };
+    entries[21] = FieldEntry { key: schema.fields[21].key, placement: FieldPlan::At { offset: 52 } };
+    entries[22] = FieldEntry { key: schema.fields[22].key, placement: FieldPlan::At { offset: 1524 } };
+    entries[23] = FieldEntry { key: schema.fields[23].key, placement: FieldPlan::At { offset: 2996 } };
+    entries[24] = FieldEntry { key: schema.fields[24].key, placement: FieldPlan::At { offset: 4468 } };
+    entries[25] = FieldEntry { key: schema.fields[25].key, placement: FieldPlan::At { offset: 5940 } };
+    entries[26] = FieldEntry { key: schema.fields[26].key, placement: FieldPlan::At { offset: 7412 } };
+    entries[27] = FieldEntry { key: schema.fields[27].key, placement: FieldPlan::At { offset: 8884 } };
+    entries[28] = FieldEntry { key: schema.fields[28].key, placement: FieldPlan::At { offset: 9016 } };
+    entries[29] = FieldEntry { key: schema.fields[29].key, placement: FieldPlan::At { offset: 9020 } };
+    entries[30] = FieldEntry { key: schema.fields[30].key, placement: FieldPlan::At { offset: 9404 } };
+    entries[31] = FieldEntry { key: schema.fields[31].key, placement: FieldPlan::At { offset: 9408 } };
+    entries[32] = FieldEntry { key: schema.fields[32].key, placement: FieldPlan::At { offset: 9792 } };
+    entries[33] = FieldEntry { key: schema.fields[33].key, placement: FieldPlan::At { offset: 10296 } };
+    Plan { entries: entries, entry_count: 34, size_fixed: 10424, size_is_dynamic: false, align: 4 }
+}

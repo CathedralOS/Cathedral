@@ -1,0 +1,5391 @@
+{
+  "records": [
+    {
+      "name": "Ipv4Address",
+      "rust": "uefi_raw::Ipv4Address",
+      "path": "uefi-raw/src/net.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": "[u8; 4]",
+      "fields": [
+        [
+          "raw",
+          "[u8; 4]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "[u8; 4]"
+        ]
+      ]
+    },
+    {
+      "name": "Ipv6Address",
+      "rust": "uefi_raw::Ipv6Address",
+      "path": "uefi-raw/src/net.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": "[u8; 16]",
+      "fields": [
+        [
+          "raw",
+          "[u8; 16]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "[u8; 16]"
+        ]
+      ]
+    },
+    {
+      "name": "IpAddress",
+      "rust": "uefi_raw::IpAddress",
+      "path": "uefi-raw/src/net.rs",
+      "kind": "union",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "addr",
+          "[u32; 4]"
+        ],
+        [
+          "v4",
+          "Ipv4Address"
+        ],
+        [
+          "v6",
+          "Ipv6Address"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "[u8; 16]"
+        ]
+      ]
+    },
+    {
+      "name": "MacAddress",
+      "rust": "uefi_raw::MacAddress",
+      "path": "uefi-raw/src/net.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": "[u8; 32]",
+      "fields": [
+        [
+          "raw",
+          "[u8; 32]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "[u8; 32]"
+        ]
+      ]
+    },
+    {
+      "name": "Dhcp4Event",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event",
+      "path": "uefi-raw/src/protocol/network/dhcp4.rs",
+      "kind": "enum",
+      "packed": false,
+      "base": "i32",
+      "fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ]
+    },
+    {
+      "name": "Dhcp4State",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4State",
+      "path": "uefi-raw/src/protocol/network/dhcp4.rs",
+      "kind": "enum",
+      "packed": false,
+      "base": "i32",
+      "fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ]
+    },
+    {
+      "name": "Dhcp4Packet",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Packet",
+      "path": "uefi-raw/src/protocol/network/dhcp4.rs",
+      "kind": "struct",
+      "packed": true,
+      "base": null,
+      "fields": [
+        [
+          "size",
+          "u32"
+        ],
+        [
+          "length",
+          "u32"
+        ],
+        [
+          "header",
+          "Dhcp4Header"
+        ],
+        [
+          "magik",
+          "u32"
+        ],
+        [
+          "option",
+          "[u8; 0]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "size",
+          "u32"
+        ],
+        [
+          "length",
+          "u32"
+        ],
+        [
+          "header",
+          "Dhcp4Header"
+        ],
+        [
+          "magik",
+          "u32"
+        ]
+      ]
+    },
+    {
+      "name": "Dhcp4Header",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Header",
+      "path": "uefi-raw/src/protocol/network/dhcp4.rs",
+      "kind": "struct",
+      "packed": true,
+      "base": null,
+      "fields": [
+        [
+          "op_code",
+          "u8"
+        ],
+        [
+          "hw_type",
+          "u8"
+        ],
+        [
+          "hw_addr_len",
+          "u8"
+        ],
+        [
+          "hops",
+          "u8"
+        ],
+        [
+          "xid",
+          "u32"
+        ],
+        [
+          "seconds",
+          "u16"
+        ],
+        [
+          "reserved",
+          "u16"
+        ],
+        [
+          "client_addr",
+          "Ipv4Address"
+        ],
+        [
+          "your_addr",
+          "Ipv4Address"
+        ],
+        [
+          "server_addr",
+          "Ipv4Address"
+        ],
+        [
+          "gateway_addr",
+          "Ipv4Address"
+        ],
+        [
+          "client_hw_addr",
+          "[u8; 16]"
+        ],
+        [
+          "server_name",
+          "[Char8; 64]"
+        ],
+        [
+          "boot_file_name",
+          "[Char8; 128]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "op_code",
+          "u8"
+        ],
+        [
+          "hw_type",
+          "u8"
+        ],
+        [
+          "hw_addr_len",
+          "u8"
+        ],
+        [
+          "hops",
+          "u8"
+        ],
+        [
+          "xid",
+          "u32"
+        ],
+        [
+          "seconds",
+          "u16"
+        ],
+        [
+          "reserved",
+          "u16"
+        ],
+        [
+          "client_addr",
+          "Ipv4Address"
+        ],
+        [
+          "your_addr",
+          "Ipv4Address"
+        ],
+        [
+          "server_addr",
+          "Ipv4Address"
+        ],
+        [
+          "gateway_addr",
+          "Ipv4Address"
+        ],
+        [
+          "client_hw_addr",
+          "[u8; 16]"
+        ],
+        [
+          "server_name",
+          "[Char8; 64]"
+        ],
+        [
+          "boot_file_name",
+          "[Char8; 128]"
+        ]
+      ]
+    },
+    {
+      "name": "Dhcp4PacketOption",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4PacketOption",
+      "path": "uefi-raw/src/protocol/network/dhcp4.rs",
+      "kind": "struct",
+      "packed": true,
+      "base": null,
+      "fields": [
+        [
+          "op_code",
+          "u8"
+        ],
+        [
+          "length",
+          "u8"
+        ],
+        [
+          "data",
+          "[u8; 0]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "op_code",
+          "u8"
+        ],
+        [
+          "length",
+          "u8"
+        ]
+      ]
+    },
+    {
+      "name": "Dhcp4ConfigData",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4ConfigData",
+      "path": "uefi-raw/src/protocol/network/dhcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "discover_try_count",
+          "u32"
+        ],
+        [
+          "discover_timeout",
+          "*mut u32"
+        ],
+        [
+          "request_try_count",
+          "u32"
+        ],
+        [
+          "request_timeout",
+          "*mut u32"
+        ],
+        [
+          "client_address",
+          "Ipv4Address"
+        ],
+        [
+          "callback",
+          "Option< unsafe extern \"efiapi\" fn( this: *mut Dhcp4Protocol, context: *const c_void, current_state: Dhcp4State, dhcp4_event: Dhcp4Event, packet: *const Dhcp4Packet, new_packet: *mut *mut Dhcp4Packet, ) -> Status, >"
+        ],
+        [
+          "callback_context",
+          "*mut c_void"
+        ],
+        [
+          "option_count",
+          "u32"
+        ],
+        [
+          "option_list",
+          "*mut *const Dhcp4PacketOption"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "discover_try_count",
+          "u32"
+        ],
+        [
+          "discover_timeout",
+          "addr"
+        ],
+        [
+          "request_try_count",
+          "u32"
+        ],
+        [
+          "request_timeout",
+          "addr"
+        ],
+        [
+          "client_address",
+          "Ipv4Address"
+        ],
+        [
+          "callback",
+          "addr"
+        ],
+        [
+          "callback_context",
+          "addr"
+        ],
+        [
+          "option_count",
+          "u32"
+        ],
+        [
+          "option_list",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "Dhcp4ModeData",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4ModeData",
+      "path": "uefi-raw/src/protocol/network/dhcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "state",
+          "Dhcp4State"
+        ],
+        [
+          "config_data",
+          "Dhcp4ConfigData"
+        ],
+        [
+          "client_address",
+          "Ipv4Address"
+        ],
+        [
+          "client_mac_address",
+          "MacAddress"
+        ],
+        [
+          "server_address",
+          "Ipv4Address"
+        ],
+        [
+          "router_address",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ],
+        [
+          "lease_time",
+          "u32"
+        ],
+        [
+          "reply_packet",
+          "*const Dhcp4Packet"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "state",
+          "Dhcp4State"
+        ],
+        [
+          "config_data",
+          "Dhcp4ConfigData"
+        ],
+        [
+          "client_address",
+          "Ipv4Address"
+        ],
+        [
+          "client_mac_address",
+          "MacAddress"
+        ],
+        [
+          "server_address",
+          "Ipv4Address"
+        ],
+        [
+          "router_address",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ],
+        [
+          "lease_time",
+          "u32"
+        ],
+        [
+          "reply_packet",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "Dhcp4ListenPoint",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4ListenPoint",
+      "path": "uefi-raw/src/protocol/network/dhcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "listen_address",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ],
+        [
+          "listen_port",
+          "u16"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "listen_address",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ],
+        [
+          "listen_port",
+          "u16"
+        ]
+      ]
+    },
+    {
+      "name": "Dhcp4TransmitReceiveToken",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4TransmitReceiveToken",
+      "path": "uefi-raw/src/protocol/network/dhcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "status",
+          "Status"
+        ],
+        [
+          "completion_event",
+          "Event"
+        ],
+        [
+          "remote_address",
+          "Ipv4Address"
+        ],
+        [
+          "remote_port",
+          "u16"
+        ],
+        [
+          "gateway_address",
+          "Ipv4Address"
+        ],
+        [
+          "listen_point_count",
+          "u32"
+        ],
+        [
+          "listen_points",
+          "*mut Dhcp4ListenPoint"
+        ],
+        [
+          "timeout_value",
+          "u32"
+        ],
+        [
+          "packet",
+          "*mut Dhcp4Packet"
+        ],
+        [
+          "response_count",
+          "u32"
+        ],
+        [
+          "response_list",
+          "*mut Dhcp4Packet"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "status",
+          "Status"
+        ],
+        [
+          "completion_event",
+          "Event"
+        ],
+        [
+          "remote_address",
+          "Ipv4Address"
+        ],
+        [
+          "remote_port",
+          "u16"
+        ],
+        [
+          "gateway_address",
+          "Ipv4Address"
+        ],
+        [
+          "listen_point_count",
+          "u32"
+        ],
+        [
+          "listen_points",
+          "addr"
+        ],
+        [
+          "timeout_value",
+          "u32"
+        ],
+        [
+          "packet",
+          "addr"
+        ],
+        [
+          "response_count",
+          "u32"
+        ],
+        [
+          "response_list",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "Dhcp4Protocol",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Protocol",
+      "path": "uefi-raw/src/protocol/network/dhcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "get_mode_data",
+          "unsafe extern \"efiapi\" fn(this: *const Self, mode_data: *mut Dhcp4ModeData) -> Status"
+        ],
+        [
+          "configure",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, cfg_data: *const Dhcp4ConfigData) -> Status"
+        ],
+        [
+          "start",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, completion_event: Event) -> Status"
+        ],
+        [
+          "renew_rebind",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, rebind_request: Boolean, completion_event: Event, ) -> Status"
+        ],
+        [
+          "release",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status"
+        ],
+        [
+          "stop",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status"
+        ],
+        [
+          "build",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, seed_packet: *const Dhcp4Packet, delete_count: u32, delete_list: *const u8, append_count: u32, append_list: *const *const Dhcp4PacketOption, new_packet: *mut *mut Dhcp4Packet, ) -> Status"
+        ],
+        [
+          "transmit_receive",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut Dhcp4TransmitReceiveToken) -> Status"
+        ],
+        [
+          "parse",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, packet: *const Dhcp4Packet, option_count: *mut u32, packet_option_list: *mut *mut Dhcp4PacketOption, ) -> Status"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "get_mode_data",
+          "addr"
+        ],
+        [
+          "configure",
+          "addr"
+        ],
+        [
+          "start",
+          "addr"
+        ],
+        [
+          "renew_rebind",
+          "addr"
+        ],
+        [
+          "release",
+          "addr"
+        ],
+        [
+          "stop",
+          "addr"
+        ],
+        [
+          "build",
+          "addr"
+        ],
+        [
+          "transmit_receive",
+          "addr"
+        ],
+        [
+          "parse",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "HttpConfigData",
+      "rust": "uefi_raw::protocol::network::http::HttpConfigData",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "http_version",
+          "HttpVersion"
+        ],
+        [
+          "time_out_millisec",
+          "u32"
+        ],
+        [
+          "local_addr_is_ipv6",
+          "Boolean"
+        ],
+        [
+          "access_point",
+          "HttpAccessPoint"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "http_version",
+          "HttpVersion"
+        ],
+        [
+          "time_out_millisec",
+          "u32"
+        ],
+        [
+          "local_addr_is_ipv6",
+          "Boolean"
+        ],
+        [
+          "access_point",
+          "HttpAccessPoint"
+        ]
+      ]
+    },
+    {
+      "name": "HttpVersion",
+      "rust": "uefi_raw::protocol::network::http::HttpVersion",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "enum",
+      "packed": false,
+      "base": "i32",
+      "fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ]
+    },
+    {
+      "name": "HttpV4AccessPoint",
+      "rust": "uefi_raw::protocol::network::http::HttpV4AccessPoint",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "use_default_addr",
+          "Boolean"
+        ],
+        [
+          "local_address",
+          "Ipv4Address"
+        ],
+        [
+          "local_subnet",
+          "Ipv4Address"
+        ],
+        [
+          "local_port",
+          "u16"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "use_default_addr",
+          "Boolean"
+        ],
+        [
+          "local_address",
+          "Ipv4Address"
+        ],
+        [
+          "local_subnet",
+          "Ipv4Address"
+        ],
+        [
+          "local_port",
+          "u16"
+        ]
+      ]
+    },
+    {
+      "name": "HttpV6AccessPoint",
+      "rust": "uefi_raw::protocol::network::http::HttpV6AccessPoint",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "local_address",
+          "Ipv6Address"
+        ],
+        [
+          "local_port",
+          "u16"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "local_address",
+          "Ipv6Address"
+        ],
+        [
+          "local_port",
+          "u16"
+        ]
+      ]
+    },
+    {
+      "name": "HttpAccessPoint",
+      "rust": "uefi_raw::protocol::network::http::HttpAccessPoint",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "union",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "ipv4_node",
+          "*mut HttpV4AccessPoint"
+        ],
+        [
+          "ipv6_node",
+          "*mut HttpV6AccessPoint"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "HttpToken",
+      "rust": "uefi_raw::protocol::network::http::HttpToken",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "event",
+          "Event"
+        ],
+        [
+          "status",
+          "Status"
+        ],
+        [
+          "message",
+          "*mut HttpMessage"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "event",
+          "Event"
+        ],
+        [
+          "status",
+          "Status"
+        ],
+        [
+          "message",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "HttpMessage",
+      "rust": "uefi_raw::protocol::network::http::HttpMessage",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "data",
+          "HttpRequestOrResponse"
+        ],
+        [
+          "header_count",
+          "usize"
+        ],
+        [
+          "header",
+          "*mut HttpHeader"
+        ],
+        [
+          "body_length",
+          "usize"
+        ],
+        [
+          "body",
+          "*mut c_void"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "data",
+          "HttpRequestOrResponse"
+        ],
+        [
+          "header_count",
+          "u64"
+        ],
+        [
+          "header",
+          "addr"
+        ],
+        [
+          "body_length",
+          "u64"
+        ],
+        [
+          "body",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "HttpRequestData",
+      "rust": "uefi_raw::protocol::network::http::HttpRequestData",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "method",
+          "HttpMethod"
+        ],
+        [
+          "url",
+          "*const Char16"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "method",
+          "HttpMethod"
+        ],
+        [
+          "url",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "HttpMethod",
+      "rust": "uefi_raw::protocol::network::http::HttpMethod",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "enum",
+      "packed": false,
+      "base": "i32",
+      "fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ]
+    },
+    {
+      "name": "HttpResponseData",
+      "rust": "uefi_raw::protocol::network::http::HttpResponseData",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "status_code",
+          "HttpStatusCode"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "status_code",
+          "HttpStatusCode"
+        ]
+      ]
+    },
+    {
+      "name": "HttpRequestOrResponse",
+      "rust": "uefi_raw::protocol::network::http::HttpRequestOrResponse",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "union",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "request",
+          "*const HttpRequestData"
+        ],
+        [
+          "response",
+          "*mut HttpResponseData"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "HttpHeader",
+      "rust": "uefi_raw::protocol::network::http::HttpHeader",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "field_name",
+          "*const Char8"
+        ],
+        [
+          "field_value",
+          "*const Char8"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "field_name",
+          "addr"
+        ],
+        [
+          "field_value",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "HttpStatusCode",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "enum",
+      "packed": false,
+      "base": "i32",
+      "fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ]
+    },
+    {
+      "name": "HttpProtocol",
+      "rust": "uefi_raw::protocol::network::http::HttpProtocol",
+      "path": "uefi-raw/src/protocol/network/http.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "get_mode_data",
+          "unsafe extern \"efiapi\" fn(this: *const Self, config_data: *mut HttpConfigData) -> Status"
+        ],
+        [
+          "configure",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, config_data: *const HttpConfigData) -> Status"
+        ],
+        [
+          "request",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut HttpToken) -> Status"
+        ],
+        [
+          "cancel",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut HttpToken) -> Status"
+        ],
+        [
+          "response",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut HttpToken) -> Status"
+        ],
+        [
+          "poll",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "get_mode_data",
+          "addr"
+        ],
+        [
+          "configure",
+          "addr"
+        ],
+        [
+          "request",
+          "addr"
+        ],
+        [
+          "cancel",
+          "addr"
+        ],
+        [
+          "response",
+          "addr"
+        ],
+        [
+          "poll",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "Ip4RouteTable",
+      "rust": "uefi_raw::protocol::network::ip4::Ip4RouteTable",
+      "path": "uefi-raw/src/protocol/network/ip4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "subnet_addr",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ],
+        [
+          "gateway_addr",
+          "Ipv4Address"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "subnet_addr",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ],
+        [
+          "gateway_addr",
+          "Ipv4Address"
+        ]
+      ]
+    },
+    {
+      "name": "Ip4ModeData",
+      "rust": "uefi_raw::protocol::network::ip4::Ip4ModeData",
+      "path": "uefi-raw/src/protocol/network/ip4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "is_started",
+          "Boolean"
+        ],
+        [
+          "max_packet_size",
+          "u32"
+        ],
+        [
+          "config_data",
+          "Ip4ConfigData"
+        ],
+        [
+          "is_configured",
+          "Boolean"
+        ],
+        [
+          "group_count",
+          "u32"
+        ],
+        [
+          "group_table",
+          "*const Ipv4Address"
+        ],
+        [
+          "route_count",
+          "u32"
+        ],
+        [
+          "route_table",
+          "*const Ip4RouteTable"
+        ],
+        [
+          "icmp_type_count",
+          "u32"
+        ],
+        [
+          "icmp_type_list",
+          "*const Ip4IcmpType"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "is_started",
+          "Boolean"
+        ],
+        [
+          "max_packet_size",
+          "u32"
+        ],
+        [
+          "config_data",
+          "Ip4ConfigData"
+        ],
+        [
+          "is_configured",
+          "Boolean"
+        ],
+        [
+          "group_count",
+          "u32"
+        ],
+        [
+          "group_table",
+          "addr"
+        ],
+        [
+          "route_count",
+          "u32"
+        ],
+        [
+          "route_table",
+          "addr"
+        ],
+        [
+          "icmp_type_count",
+          "u32"
+        ],
+        [
+          "icmp_type_list",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "Ip4IcmpType",
+      "rust": "uefi_raw::protocol::network::ip4::Ip4IcmpType",
+      "path": "uefi-raw/src/protocol/network/ip4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "type_",
+          "u8"
+        ],
+        [
+          "code",
+          "u8"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "type_",
+          "u8"
+        ],
+        [
+          "code",
+          "u8"
+        ]
+      ]
+    },
+    {
+      "name": "Ip4ConfigData",
+      "rust": "uefi_raw::protocol::network::ip4::Ip4ConfigData",
+      "path": "uefi-raw/src/protocol/network/ip4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "default_protocol",
+          "u8"
+        ],
+        [
+          "accept_any_protocol",
+          "Boolean"
+        ],
+        [
+          "accept_icmp_errors",
+          "Boolean"
+        ],
+        [
+          "accept_broadcast",
+          "Boolean"
+        ],
+        [
+          "accept_promiscuous",
+          "Boolean"
+        ],
+        [
+          "use_default_address",
+          "Boolean"
+        ],
+        [
+          "station_address",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ],
+        [
+          "type_of_service",
+          "u8"
+        ],
+        [
+          "time_to_live",
+          "u8"
+        ],
+        [
+          "do_not_fragment",
+          "Boolean"
+        ],
+        [
+          "raw_data",
+          "Boolean"
+        ],
+        [
+          "receive_timeout",
+          "u32"
+        ],
+        [
+          "transmit_timeout",
+          "u32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "default_protocol",
+          "u8"
+        ],
+        [
+          "accept_any_protocol",
+          "Boolean"
+        ],
+        [
+          "accept_icmp_errors",
+          "Boolean"
+        ],
+        [
+          "accept_broadcast",
+          "Boolean"
+        ],
+        [
+          "accept_promiscuous",
+          "Boolean"
+        ],
+        [
+          "use_default_address",
+          "Boolean"
+        ],
+        [
+          "station_address",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ],
+        [
+          "type_of_service",
+          "u8"
+        ],
+        [
+          "time_to_live",
+          "u8"
+        ],
+        [
+          "do_not_fragment",
+          "Boolean"
+        ],
+        [
+          "raw_data",
+          "Boolean"
+        ],
+        [
+          "receive_timeout",
+          "u32"
+        ],
+        [
+          "transmit_timeout",
+          "u32"
+        ]
+      ]
+    },
+    {
+      "name": "Ip4Config2DataType",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2DataType",
+      "path": "uefi-raw/src/protocol/network/ip4_config2.rs",
+      "kind": "enum",
+      "packed": false,
+      "base": "i32",
+      "fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ]
+    },
+    {
+      "name": "Ip4Config2InterfaceInfo",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2InterfaceInfo",
+      "path": "uefi-raw/src/protocol/network/ip4_config2.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "name",
+          "[Char16; 32]"
+        ],
+        [
+          "if_type",
+          "u8"
+        ],
+        [
+          "hw_addr_size",
+          "u32"
+        ],
+        [
+          "hw_addr",
+          "MacAddress"
+        ],
+        [
+          "station_addr",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ],
+        [
+          "route_table_size",
+          "u32"
+        ],
+        [
+          "route_table",
+          "*mut Ip4RouteTable"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "name",
+          "[Char16; 32]"
+        ],
+        [
+          "if_type",
+          "u8"
+        ],
+        [
+          "hw_addr_size",
+          "u32"
+        ],
+        [
+          "hw_addr",
+          "MacAddress"
+        ],
+        [
+          "station_addr",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ],
+        [
+          "route_table_size",
+          "u32"
+        ],
+        [
+          "route_table",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "Ip4Config2Policy",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2Policy",
+      "path": "uefi-raw/src/protocol/network/ip4_config2.rs",
+      "kind": "enum",
+      "packed": false,
+      "base": "i32",
+      "fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ]
+    },
+    {
+      "name": "Ip4Config2ManualAddress",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2ManualAddress",
+      "path": "uefi-raw/src/protocol/network/ip4_config2.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "address",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "address",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ]
+      ]
+    },
+    {
+      "name": "Ip4Config2Protocol",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2Protocol",
+      "path": "uefi-raw/src/protocol/network/ip4_config2.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "set_data",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, data_type: Ip4Config2DataType, data_size: usize, data: *const c_void, ) -> Status"
+        ],
+        [
+          "get_data",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, data_type: Ip4Config2DataType, data_size: *mut usize, data: *mut c_void, ) -> Status"
+        ],
+        [
+          "register_data_notify",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, data_type: Ip4Config2DataType, event: Event, ) -> Status"
+        ],
+        [
+          "unregister_data_notify",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, data_type: Ip4Config2DataType, event: Event, ) -> Status"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "set_data",
+          "addr"
+        ],
+        [
+          "get_data",
+          "addr"
+        ],
+        [
+          "register_data_notify",
+          "addr"
+        ],
+        [
+          "unregister_data_notify",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeProtocol",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeProtocol",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "revision",
+          "u64"
+        ],
+        [
+          "start",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, use_ipv6: Boolean) -> Status"
+        ],
+        [
+          "stop",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status"
+        ],
+        [
+          "dhcp",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, sort_offers: Boolean) -> Status"
+        ],
+        [
+          "discover",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, ty: PxeBaseCodeBootType, layer: *mut u16, use_bis: Boolean, info: *const PxeBaseCodeDiscoverInfo, ) -> Status"
+        ],
+        [
+          "mtftp",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, operation: PxeBaseCodeTftpOpcode, buffer: *mut c_void, overwrite: Boolean, buffer_size: *mut u64, block_size: *const usize, server_ip: *const IpAddress, filename: *const Char8, info: *const PxeBaseCodeMtftpInfo, dont_use_buffer: Boolean, ) -> Status"
+        ],
+        [
+          "udp_write",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, op_flags: PxeBaseCodeUdpOpFlags, dest_ip: *const IpAddress, dest_port: *const PxeBaseCodeUdpPort, gateway_ip: *const IpAddress, src_ip: *const IpAddress, src_port: *mut PxeBaseCodeUdpPort, header_size: *const usize, header_ptr: *const c_void, buffer_size: *const usize, buffer_ptr: *const c_void, ) -> Status"
+        ],
+        [
+          "udp_read",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, op_flags: PxeBaseCodeUdpOpFlags, dest_ip: *mut IpAddress, dest_port: *mut PxeBaseCodeUdpPort, src_ip: *mut IpAddress, src_port: *mut PxeBaseCodeUdpPort, header_size: *const usize, header_ptr: *mut c_void, buffer_size: *mut usize, buffer_ptr: *mut c_void, ) -> Status"
+        ],
+        [
+          "set_ip_filter",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, new_filter: *const PxeBaseCodeIpFilter, ) -> Status"
+        ],
+        [
+          "arp",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, ip_addr: *const IpAddress, mac_addr: *mut MacAddress, ) -> Status"
+        ],
+        [
+          "set_parameters",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, new_auto_arp: *const Boolean, new_send_guid: *const Boolean, new_ttl: *const u8, new_tos: *const u8, new_make_callback: *const Boolean, ) -> Status"
+        ],
+        [
+          "set_station_ip",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, new_station_ip: *const IpAddress, new_subnet_mask: *const IpAddress, ) -> Status"
+        ],
+        [
+          "set_packets",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, new_dhcp_discover_valid: *const Boolean, new_dhcp_ack_received: *const Boolean, new_proxy_offer_received: *const Boolean, new_pxe_discover_valid: *const Boolean, new_pxe_reply_received: *const Boolean, new_pxe_bis_reply_received: *const Boolean, new_dhcp_discover: *const PxeBaseCodePacket, new_dhcp_ack: *const PxeBaseCodePacket, new_proxy_offer: *const PxeBaseCodePacket, new_pxe_discover: *const PxeBaseCodePacket, new_pxe_reply: *const PxeBaseCodePacket, new_pxe_bis_reply: *const PxeBaseCodePacket, ) -> Status"
+        ],
+        [
+          "mode",
+          "*const PxeBaseCodeMode"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "revision",
+          "u64"
+        ],
+        [
+          "start",
+          "addr"
+        ],
+        [
+          "stop",
+          "addr"
+        ],
+        [
+          "dhcp",
+          "addr"
+        ],
+        [
+          "discover",
+          "addr"
+        ],
+        [
+          "mtftp",
+          "addr"
+        ],
+        [
+          "udp_write",
+          "addr"
+        ],
+        [
+          "udp_read",
+          "addr"
+        ],
+        [
+          "set_ip_filter",
+          "addr"
+        ],
+        [
+          "arp",
+          "addr"
+        ],
+        [
+          "set_parameters",
+          "addr"
+        ],
+        [
+          "set_station_ip",
+          "addr"
+        ],
+        [
+          "set_packets",
+          "addr"
+        ],
+        [
+          "mode",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeBootType",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "enum",
+      "packed": false,
+      "base": "u16",
+      "fields": [
+        [
+          "raw",
+          "u16"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "u16"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeTftpOpcode",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeTftpOpcode",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "enum",
+      "packed": false,
+      "base": "i32",
+      "fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeDiscoverInfo",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeDiscoverInfo",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "use_m_cast",
+          "Boolean"
+        ],
+        [
+          "use_b_cast",
+          "Boolean"
+        ],
+        [
+          "use_u_cast",
+          "Boolean"
+        ],
+        [
+          "must_use_list",
+          "Boolean"
+        ],
+        [
+          "server_m_cast_ip",
+          "IpAddress"
+        ],
+        [
+          "ip_cnt",
+          "u16"
+        ],
+        [
+          "srv_list",
+          "[PxeBaseCodeSrvlist; 0]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "use_m_cast",
+          "Boolean"
+        ],
+        [
+          "use_b_cast",
+          "Boolean"
+        ],
+        [
+          "use_u_cast",
+          "Boolean"
+        ],
+        [
+          "must_use_list",
+          "Boolean"
+        ],
+        [
+          "server_m_cast_ip",
+          "IpAddress"
+        ],
+        [
+          "ip_cnt",
+          "u16"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeSrvlist",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeSrvlist",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "server_type",
+          "PxeBaseCodeBootType"
+        ],
+        [
+          "accept_any_response",
+          "Boolean"
+        ],
+        [
+          "reserved",
+          "u8"
+        ],
+        [
+          "ip_addr",
+          "IpAddress"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "server_type",
+          "PxeBaseCodeBootType"
+        ],
+        [
+          "accept_any_response",
+          "Boolean"
+        ],
+        [
+          "reserved",
+          "u8"
+        ],
+        [
+          "ip_addr",
+          "IpAddress"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeMtftpInfo",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeMtftpInfo",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "m_cast_ip",
+          "IpAddress"
+        ],
+        [
+          "c_port",
+          "PxeBaseCodeUdpPort"
+        ],
+        [
+          "s_port",
+          "PxeBaseCodeUdpPort"
+        ],
+        [
+          "listen_timeout",
+          "u16"
+        ],
+        [
+          "transmit_timeout",
+          "u16"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "m_cast_ip",
+          "IpAddress"
+        ],
+        [
+          "c_port",
+          "PxeBaseCodeUdpPort"
+        ],
+        [
+          "s_port",
+          "PxeBaseCodeUdpPort"
+        ],
+        [
+          "listen_timeout",
+          "u16"
+        ],
+        [
+          "transmit_timeout",
+          "u16"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeUdpOpFlags",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeUdpOpFlags",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": "u16",
+      "fields": [
+        [
+          "raw",
+          "u16"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "u16"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeMode",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeMode",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "started",
+          "Boolean"
+        ],
+        [
+          "ipv6_available",
+          "Boolean"
+        ],
+        [
+          "ipv6_supported",
+          "Boolean"
+        ],
+        [
+          "using_ipv6",
+          "Boolean"
+        ],
+        [
+          "bis_supported",
+          "Boolean"
+        ],
+        [
+          "bis_detected",
+          "Boolean"
+        ],
+        [
+          "auto_arp",
+          "Boolean"
+        ],
+        [
+          "send_guid",
+          "Boolean"
+        ],
+        [
+          "dhcp_discover_valid",
+          "Boolean"
+        ],
+        [
+          "dhcp_ack_received",
+          "Boolean"
+        ],
+        [
+          "proxy_offer_received",
+          "Boolean"
+        ],
+        [
+          "pxe_discover_valid",
+          "Boolean"
+        ],
+        [
+          "pxe_reply_received",
+          "Boolean"
+        ],
+        [
+          "pxe_bis_reply_received",
+          "Boolean"
+        ],
+        [
+          "icmp_error_received",
+          "Boolean"
+        ],
+        [
+          "tftp_error_received",
+          "Boolean"
+        ],
+        [
+          "make_callbacks",
+          "Boolean"
+        ],
+        [
+          "ttl",
+          "u8"
+        ],
+        [
+          "tos",
+          "u8"
+        ],
+        [
+          "station_ip",
+          "IpAddress"
+        ],
+        [
+          "subnet_mask",
+          "IpAddress"
+        ],
+        [
+          "dhcp_discover",
+          "PxeBaseCodePacket"
+        ],
+        [
+          "dhcp_ack",
+          "PxeBaseCodePacket"
+        ],
+        [
+          "proxy_offer",
+          "PxeBaseCodePacket"
+        ],
+        [
+          "pxe_discover",
+          "PxeBaseCodePacket"
+        ],
+        [
+          "pxe_reply",
+          "PxeBaseCodePacket"
+        ],
+        [
+          "pxe_bis_reply",
+          "PxeBaseCodePacket"
+        ],
+        [
+          "ip_filter",
+          "PxeBaseCodeIpFilter"
+        ],
+        [
+          "arp_cache_entries",
+          "u32"
+        ],
+        [
+          "arp_cache",
+          "[PxeBaseCodeArpEntry; 8]"
+        ],
+        [
+          "route_table_entries",
+          "u32"
+        ],
+        [
+          "route_table",
+          "[PxeBaseCodeRouteEntry; 8]"
+        ],
+        [
+          "icmp_error",
+          "PxeBaseCodeIcmpError"
+        ],
+        [
+          "tftp_error",
+          "PxeBaseCodeTftpError"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "started",
+          "Boolean"
+        ],
+        [
+          "ipv6_available",
+          "Boolean"
+        ],
+        [
+          "ipv6_supported",
+          "Boolean"
+        ],
+        [
+          "using_ipv6",
+          "Boolean"
+        ],
+        [
+          "bis_supported",
+          "Boolean"
+        ],
+        [
+          "bis_detected",
+          "Boolean"
+        ],
+        [
+          "auto_arp",
+          "Boolean"
+        ],
+        [
+          "send_guid",
+          "Boolean"
+        ],
+        [
+          "dhcp_discover_valid",
+          "Boolean"
+        ],
+        [
+          "dhcp_ack_received",
+          "Boolean"
+        ],
+        [
+          "proxy_offer_received",
+          "Boolean"
+        ],
+        [
+          "pxe_discover_valid",
+          "Boolean"
+        ],
+        [
+          "pxe_reply_received",
+          "Boolean"
+        ],
+        [
+          "pxe_bis_reply_received",
+          "Boolean"
+        ],
+        [
+          "icmp_error_received",
+          "Boolean"
+        ],
+        [
+          "tftp_error_received",
+          "Boolean"
+        ],
+        [
+          "make_callbacks",
+          "Boolean"
+        ],
+        [
+          "ttl",
+          "u8"
+        ],
+        [
+          "tos",
+          "u8"
+        ],
+        [
+          "station_ip",
+          "IpAddress"
+        ],
+        [
+          "subnet_mask",
+          "IpAddress"
+        ],
+        [
+          "dhcp_discover",
+          "PxeBaseCodePacket"
+        ],
+        [
+          "dhcp_ack",
+          "PxeBaseCodePacket"
+        ],
+        [
+          "proxy_offer",
+          "PxeBaseCodePacket"
+        ],
+        [
+          "pxe_discover",
+          "PxeBaseCodePacket"
+        ],
+        [
+          "pxe_reply",
+          "PxeBaseCodePacket"
+        ],
+        [
+          "pxe_bis_reply",
+          "PxeBaseCodePacket"
+        ],
+        [
+          "ip_filter",
+          "PxeBaseCodeIpFilter"
+        ],
+        [
+          "arp_cache_entries",
+          "u32"
+        ],
+        [
+          "arp_cache",
+          "[PxeBaseCodeArpEntry; 8]"
+        ],
+        [
+          "route_table_entries",
+          "u32"
+        ],
+        [
+          "route_table",
+          "[PxeBaseCodeRouteEntry; 8]"
+        ],
+        [
+          "icmp_error",
+          "PxeBaseCodeIcmpError"
+        ],
+        [
+          "tftp_error",
+          "PxeBaseCodeTftpError"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodePacket",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodePacket",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "union",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "raw",
+          "[u8; 1472]"
+        ],
+        [
+          "dhcpv4",
+          "PxeBaseCodeDhcpV4Packet"
+        ],
+        [
+          "dhcpv6",
+          "PxeBaseCodeDhcpV6Packet"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "[u8; 1472]"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeDhcpV4Packet",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeDhcpV4Packet",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "bootp_opcode",
+          "u8"
+        ],
+        [
+          "bootp_hw_type",
+          "u8"
+        ],
+        [
+          "bootp_hw_addr_len",
+          "u8"
+        ],
+        [
+          "bootp_gate_hops",
+          "u8"
+        ],
+        [
+          "bootp_ident",
+          "u32"
+        ],
+        [
+          "bootp_seconds",
+          "u16"
+        ],
+        [
+          "bootp_flags",
+          "u16"
+        ],
+        [
+          "bootp_ci_addr",
+          "[u8; 4]"
+        ],
+        [
+          "bootp_yi_addr",
+          "[u8; 4]"
+        ],
+        [
+          "bootp_si_addr",
+          "[u8; 4]"
+        ],
+        [
+          "bootp_gi_addr",
+          "[u8; 4]"
+        ],
+        [
+          "bootp_hw_addr",
+          "[u8; 16]"
+        ],
+        [
+          "bootp_srv_name",
+          "[u8; 64]"
+        ],
+        [
+          "bootp_boot_file",
+          "[u8; 128]"
+        ],
+        [
+          "dhcp_magik",
+          "u32"
+        ],
+        [
+          "dhcp_options",
+          "[u8; 56]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "bootp_opcode",
+          "u8"
+        ],
+        [
+          "bootp_hw_type",
+          "u8"
+        ],
+        [
+          "bootp_hw_addr_len",
+          "u8"
+        ],
+        [
+          "bootp_gate_hops",
+          "u8"
+        ],
+        [
+          "bootp_ident",
+          "u32"
+        ],
+        [
+          "bootp_seconds",
+          "u16"
+        ],
+        [
+          "bootp_flags",
+          "u16"
+        ],
+        [
+          "bootp_ci_addr",
+          "[u8; 4]"
+        ],
+        [
+          "bootp_yi_addr",
+          "[u8; 4]"
+        ],
+        [
+          "bootp_si_addr",
+          "[u8; 4]"
+        ],
+        [
+          "bootp_gi_addr",
+          "[u8; 4]"
+        ],
+        [
+          "bootp_hw_addr",
+          "[u8; 16]"
+        ],
+        [
+          "bootp_srv_name",
+          "[u8; 64]"
+        ],
+        [
+          "bootp_boot_file",
+          "[u8; 128]"
+        ],
+        [
+          "dhcp_magik",
+          "u32"
+        ],
+        [
+          "dhcp_options",
+          "[u8; 56]"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeDhcpV4Flags",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeDhcpV4Flags",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": "u16",
+      "fields": [
+        [
+          "raw",
+          "u16"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "u16"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeDhcpV6Packet",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeDhcpV6Packet",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "message_type",
+          "u8"
+        ],
+        [
+          "transaction_id",
+          "[u8; 3]"
+        ],
+        [
+          "dhcp_options",
+          "[u8; 1024]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "message_type",
+          "u8"
+        ],
+        [
+          "transaction_id",
+          "[u8; 3]"
+        ],
+        [
+          "dhcp_options",
+          "[u8; 1024]"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeIpFilter",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeIpFilter",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "filters",
+          "PxeBaseCodeIpFilterFlags"
+        ],
+        [
+          "ip_cnt",
+          "u8"
+        ],
+        [
+          "reserved",
+          "u16"
+        ],
+        [
+          "ip_list",
+          "[IpAddress; 8]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "filters",
+          "PxeBaseCodeIpFilterFlags"
+        ],
+        [
+          "ip_cnt",
+          "u8"
+        ],
+        [
+          "reserved",
+          "u16"
+        ],
+        [
+          "ip_list",
+          "[IpAddress; 8]"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeIpFilterFlags",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeIpFilterFlags",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": "u8",
+      "fields": [
+        [
+          "raw",
+          "u8"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "u8"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeArpEntry",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeArpEntry",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "ip_addr",
+          "IpAddress"
+        ],
+        [
+          "mac_addr",
+          "MacAddress"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "ip_addr",
+          "IpAddress"
+        ],
+        [
+          "mac_addr",
+          "MacAddress"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeRouteEntry",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeRouteEntry",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "ip_addr",
+          "IpAddress"
+        ],
+        [
+          "subnet_mask",
+          "IpAddress"
+        ],
+        [
+          "gw_addr",
+          "IpAddress"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "ip_addr",
+          "IpAddress"
+        ],
+        [
+          "subnet_mask",
+          "IpAddress"
+        ],
+        [
+          "gw_addr",
+          "IpAddress"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeIcmpError",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeIcmpError",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "ty",
+          "u8"
+        ],
+        [
+          "code",
+          "u8"
+        ],
+        [
+          "checksum",
+          "u16"
+        ],
+        [
+          "u",
+          "PxeBaseCodeIcmpErrorUnion"
+        ],
+        [
+          "data",
+          "[u8; 494]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "ty",
+          "u8"
+        ],
+        [
+          "code",
+          "u8"
+        ],
+        [
+          "checksum",
+          "u16"
+        ],
+        [
+          "u",
+          "PxeBaseCodeIcmpErrorUnion"
+        ],
+        [
+          "data",
+          "[u8; 494]"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeIcmpErrorUnion",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeIcmpErrorUnion",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "union",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "reserved",
+          "u32"
+        ],
+        [
+          "mtu",
+          "u32"
+        ],
+        [
+          "pointer",
+          "u32"
+        ],
+        [
+          "echo",
+          "PxeBaseCodeIcmpErrorEcho"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "u32"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeIcmpErrorEcho",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeIcmpErrorEcho",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "identifier",
+          "u16"
+        ],
+        [
+          "sequence",
+          "u16"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "identifier",
+          "u16"
+        ],
+        [
+          "sequence",
+          "u16"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeTftpError",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeTftpError",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "error_code",
+          "u8"
+        ],
+        [
+          "error_string",
+          "[Char8; 127]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "error_code",
+          "u8"
+        ],
+        [
+          "error_string",
+          "[Char8; 127]"
+        ]
+      ]
+    },
+    {
+      "name": "SimpleNetworkProtocol",
+      "rust": "uefi_raw::protocol::network::snp::SimpleNetworkProtocol",
+      "path": "uefi-raw/src/protocol/network/snp.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "revision",
+          "u64"
+        ],
+        [
+          "start",
+          "unsafe extern \"efiapi\" fn(this: *const Self) -> Status"
+        ],
+        [
+          "stop",
+          "unsafe extern \"efiapi\" fn(this: *const Self) -> Status"
+        ],
+        [
+          "initialize",
+          "unsafe extern \"efiapi\" fn( this: *const Self, extra_receive_buffer_size: usize, extra_transmit_buffer_size: usize, ) -> Status"
+        ],
+        [
+          "reset",
+          "unsafe extern \"efiapi\" fn(this: *const Self, extended_verification: Boolean) -> Status"
+        ],
+        [
+          "shutdown",
+          "unsafe extern \"efiapi\" fn(this: *const Self) -> Status"
+        ],
+        [
+          "receive_filters",
+          "unsafe extern \"efiapi\" fn( this: *const Self, enable: ReceiveFlags, disable: ReceiveFlags, reset_multicast_filter: Boolean, multicast_filter_count: usize, multicast_filter: *const MacAddress, ) -> Status"
+        ],
+        [
+          "station_address",
+          "unsafe extern \"efiapi\" fn( this: *const Self, reset: Boolean, new: *const MacAddress, ) -> Status"
+        ],
+        [
+          "statistics",
+          "unsafe extern \"efiapi\" fn( this: *const Self, reset: Boolean, statistics_size: *mut usize, statistics_table: *mut NetworkStatistics, ) -> Status"
+        ],
+        [
+          "multicast_ip_to_mac",
+          "unsafe extern \"efiapi\" fn( this: *const Self, ipv6: Boolean, ip: *const IpAddress, mac: *mut MacAddress, ) -> Status"
+        ],
+        [
+          "non_volatile_data",
+          "unsafe extern \"efiapi\" fn( this: *const Self, read: Boolean, offset: usize, buffer_size: usize, buffer: *mut ffi::c_void, ) -> Status"
+        ],
+        [
+          "get_status",
+          "unsafe extern \"efiapi\" fn( this: *const Self, interrupt_status: *mut InterruptStatus, transmit_buffer: *mut *mut ffi::c_void, ) -> Status"
+        ],
+        [
+          "transmit",
+          "unsafe extern \"efiapi\" fn( this: *const Self, header_size: usize, buffer_size: usize, buffer: *const ffi::c_void, source_address: *const MacAddress, dest_address: *const MacAddress, protocol: *const u16, ) -> Status"
+        ],
+        [
+          "receive",
+          "unsafe extern \"efiapi\" fn( this: *const Self, header_size: *mut usize, buffer_size: *mut usize, buffer: *mut ffi::c_void, source_address: *mut MacAddress, dest_address: *mut MacAddress, protocol: *mut u16, ) -> Status"
+        ],
+        [
+          "wait_for_packet",
+          "Event"
+        ],
+        [
+          "mode",
+          "*const NetworkMode"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "revision",
+          "u64"
+        ],
+        [
+          "start",
+          "addr"
+        ],
+        [
+          "stop",
+          "addr"
+        ],
+        [
+          "initialize",
+          "addr"
+        ],
+        [
+          "reset",
+          "addr"
+        ],
+        [
+          "shutdown",
+          "addr"
+        ],
+        [
+          "receive_filters",
+          "addr"
+        ],
+        [
+          "station_address",
+          "addr"
+        ],
+        [
+          "statistics",
+          "addr"
+        ],
+        [
+          "multicast_ip_to_mac",
+          "addr"
+        ],
+        [
+          "non_volatile_data",
+          "addr"
+        ],
+        [
+          "get_status",
+          "addr"
+        ],
+        [
+          "transmit",
+          "addr"
+        ],
+        [
+          "receive",
+          "addr"
+        ],
+        [
+          "wait_for_packet",
+          "Event"
+        ],
+        [
+          "mode",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "ReceiveFlags",
+      "rust": "uefi_raw::protocol::network::snp::ReceiveFlags",
+      "path": "uefi-raw/src/protocol/network/snp.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": "u32",
+      "fields": [
+        [
+          "raw",
+          "u32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "u32"
+        ]
+      ]
+    },
+    {
+      "name": "InterruptStatus",
+      "rust": "uefi_raw::protocol::network::snp::InterruptStatus",
+      "path": "uefi-raw/src/protocol/network/snp.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": "u32",
+      "fields": [
+        [
+          "raw",
+          "u32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "u32"
+        ]
+      ]
+    },
+    {
+      "name": "NetworkStatistics",
+      "rust": "uefi_raw::protocol::network::snp::NetworkStatistics",
+      "path": "uefi-raw/src/protocol/network/snp.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "rx_total_frames",
+          "u64"
+        ],
+        [
+          "rx_good_frames",
+          "u64"
+        ],
+        [
+          "rx_undersize_frames",
+          "u64"
+        ],
+        [
+          "rx_oversize_frames",
+          "u64"
+        ],
+        [
+          "rx_dropped_frames",
+          "u64"
+        ],
+        [
+          "rx_unicast_frames",
+          "u64"
+        ],
+        [
+          "rx_broadcast_frames",
+          "u64"
+        ],
+        [
+          "rx_multicast_frames",
+          "u64"
+        ],
+        [
+          "rx_crc_error_frames",
+          "u64"
+        ],
+        [
+          "rx_total_bytes",
+          "u64"
+        ],
+        [
+          "tx_total_frames",
+          "u64"
+        ],
+        [
+          "tx_good_frames",
+          "u64"
+        ],
+        [
+          "tx_undersize_frames",
+          "u64"
+        ],
+        [
+          "tx_oversize_frames",
+          "u64"
+        ],
+        [
+          "tx_dropped_frames",
+          "u64"
+        ],
+        [
+          "tx_unicast_frames",
+          "u64"
+        ],
+        [
+          "tx_broadcast_frames",
+          "u64"
+        ],
+        [
+          "tx_multicast_frames",
+          "u64"
+        ],
+        [
+          "tx_crc_error_frames",
+          "u64"
+        ],
+        [
+          "tx_total_bytes",
+          "u64"
+        ],
+        [
+          "collisions",
+          "u64"
+        ],
+        [
+          "unsupported_protocol",
+          "u64"
+        ],
+        [
+          "rx_duplicated_frames",
+          "u64"
+        ],
+        [
+          "rx_decrypt_error_frames",
+          "u64"
+        ],
+        [
+          "tx_error_frames",
+          "u64"
+        ],
+        [
+          "tx_retry_frames",
+          "u64"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "rx_total_frames",
+          "u64"
+        ],
+        [
+          "rx_good_frames",
+          "u64"
+        ],
+        [
+          "rx_undersize_frames",
+          "u64"
+        ],
+        [
+          "rx_oversize_frames",
+          "u64"
+        ],
+        [
+          "rx_dropped_frames",
+          "u64"
+        ],
+        [
+          "rx_unicast_frames",
+          "u64"
+        ],
+        [
+          "rx_broadcast_frames",
+          "u64"
+        ],
+        [
+          "rx_multicast_frames",
+          "u64"
+        ],
+        [
+          "rx_crc_error_frames",
+          "u64"
+        ],
+        [
+          "rx_total_bytes",
+          "u64"
+        ],
+        [
+          "tx_total_frames",
+          "u64"
+        ],
+        [
+          "tx_good_frames",
+          "u64"
+        ],
+        [
+          "tx_undersize_frames",
+          "u64"
+        ],
+        [
+          "tx_oversize_frames",
+          "u64"
+        ],
+        [
+          "tx_dropped_frames",
+          "u64"
+        ],
+        [
+          "tx_unicast_frames",
+          "u64"
+        ],
+        [
+          "tx_broadcast_frames",
+          "u64"
+        ],
+        [
+          "tx_multicast_frames",
+          "u64"
+        ],
+        [
+          "tx_crc_error_frames",
+          "u64"
+        ],
+        [
+          "tx_total_bytes",
+          "u64"
+        ],
+        [
+          "collisions",
+          "u64"
+        ],
+        [
+          "unsupported_protocol",
+          "u64"
+        ],
+        [
+          "rx_duplicated_frames",
+          "u64"
+        ],
+        [
+          "rx_decrypt_error_frames",
+          "u64"
+        ],
+        [
+          "tx_error_frames",
+          "u64"
+        ],
+        [
+          "tx_retry_frames",
+          "u64"
+        ]
+      ]
+    },
+    {
+      "name": "NetworkMode",
+      "rust": "uefi_raw::protocol::network::snp::NetworkMode",
+      "path": "uefi-raw/src/protocol/network/snp.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "state",
+          "NetworkState"
+        ],
+        [
+          "hw_address_size",
+          "u32"
+        ],
+        [
+          "media_header_size",
+          "u32"
+        ],
+        [
+          "max_packet_size",
+          "u32"
+        ],
+        [
+          "nv_ram_size",
+          "u32"
+        ],
+        [
+          "nv_ram_access_size",
+          "u32"
+        ],
+        [
+          "receive_filter_mask",
+          "u32"
+        ],
+        [
+          "receive_filter_setting",
+          "u32"
+        ],
+        [
+          "max_mcast_filter_count",
+          "u32"
+        ],
+        [
+          "mcast_filter_count",
+          "u32"
+        ],
+        [
+          "mcast_filter",
+          "[MacAddress; 16]"
+        ],
+        [
+          "current_address",
+          "MacAddress"
+        ],
+        [
+          "broadcast_address",
+          "MacAddress"
+        ],
+        [
+          "permanent_address",
+          "MacAddress"
+        ],
+        [
+          "if_type",
+          "u8"
+        ],
+        [
+          "mac_address_changeable",
+          "Boolean"
+        ],
+        [
+          "multiple_tx_supported",
+          "Boolean"
+        ],
+        [
+          "media_present_supported",
+          "Boolean"
+        ],
+        [
+          "media_present",
+          "Boolean"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "state",
+          "NetworkState"
+        ],
+        [
+          "hw_address_size",
+          "u32"
+        ],
+        [
+          "media_header_size",
+          "u32"
+        ],
+        [
+          "max_packet_size",
+          "u32"
+        ],
+        [
+          "nv_ram_size",
+          "u32"
+        ],
+        [
+          "nv_ram_access_size",
+          "u32"
+        ],
+        [
+          "receive_filter_mask",
+          "u32"
+        ],
+        [
+          "receive_filter_setting",
+          "u32"
+        ],
+        [
+          "max_mcast_filter_count",
+          "u32"
+        ],
+        [
+          "mcast_filter_count",
+          "u32"
+        ],
+        [
+          "mcast_filter",
+          "[MacAddress; 16]"
+        ],
+        [
+          "current_address",
+          "MacAddress"
+        ],
+        [
+          "broadcast_address",
+          "MacAddress"
+        ],
+        [
+          "permanent_address",
+          "MacAddress"
+        ],
+        [
+          "if_type",
+          "u8"
+        ],
+        [
+          "mac_address_changeable",
+          "Boolean"
+        ],
+        [
+          "multiple_tx_supported",
+          "Boolean"
+        ],
+        [
+          "media_present_supported",
+          "Boolean"
+        ],
+        [
+          "media_present",
+          "Boolean"
+        ]
+      ]
+    },
+    {
+      "name": "NetworkState",
+      "rust": "uefi_raw::protocol::network::snp::NetworkState",
+      "path": "uefi-raw/src/protocol/network/snp.rs",
+      "kind": "enum",
+      "packed": false,
+      "base": "u32",
+      "fields": [
+        [
+          "raw",
+          "u32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "u32"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4Protocol",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4Protocol",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "get_mode_data",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, connection_state: *mut Tcp4ConnectionState, config_data: *mut Tcp4ConfigData, ip4_mode_data: *mut Ip4ModeData, managed_network_config_data: *mut c_void, simple_network_mode: *mut NetworkMode, ) -> Status"
+        ],
+        [
+          "configure",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, config_data: *const Tcp4ConfigData) -> Status"
+        ],
+        [
+          "routes",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, delete_route: Boolean, subnet_address: *const Ipv4Address, subnet_mask: *const Ipv4Address, gateway_address: *const Ipv4Address, ) -> Status"
+        ],
+        [
+          "connect",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut Tcp4ConnectionToken) -> Status"
+        ],
+        [
+          "accept",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, listen_token: *mut Tcp4ListenToken) -> Status"
+        ],
+        [
+          "transmit",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut Tcp4IoToken) -> Status"
+        ],
+        [
+          "receive",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut Tcp4IoToken) -> Status"
+        ],
+        [
+          "close",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, close_token: *mut Tcp4CloseToken) -> Status"
+        ],
+        [
+          "cancel",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, completion_token: *mut Tcp4CompletionToken, ) -> Status"
+        ],
+        [
+          "poll",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "get_mode_data",
+          "addr"
+        ],
+        [
+          "configure",
+          "addr"
+        ],
+        [
+          "routes",
+          "addr"
+        ],
+        [
+          "connect",
+          "addr"
+        ],
+        [
+          "accept",
+          "addr"
+        ],
+        [
+          "transmit",
+          "addr"
+        ],
+        [
+          "receive",
+          "addr"
+        ],
+        [
+          "close",
+          "addr"
+        ],
+        [
+          "cancel",
+          "addr"
+        ],
+        [
+          "poll",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4ConnectionState",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionState",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "enum",
+      "packed": false,
+      "base": "i32",
+      "fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4ConfigData",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConfigData",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "type_of_service",
+          "u8"
+        ],
+        [
+          "time_to_live",
+          "u8"
+        ],
+        [
+          "access_point",
+          "Tcp4AccessPoint"
+        ],
+        [
+          "control_option",
+          "*mut Tcp4Option"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "type_of_service",
+          "u8"
+        ],
+        [
+          "time_to_live",
+          "u8"
+        ],
+        [
+          "access_point",
+          "Tcp4AccessPoint"
+        ],
+        [
+          "control_option",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4AccessPoint",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4AccessPoint",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "use_default_address",
+          "Boolean"
+        ],
+        [
+          "station_address",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ],
+        [
+          "station_port",
+          "u16"
+        ],
+        [
+          "remote_address",
+          "Ipv4Address"
+        ],
+        [
+          "remote_port",
+          "u16"
+        ],
+        [
+          "active_flag",
+          "Boolean"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "use_default_address",
+          "Boolean"
+        ],
+        [
+          "station_address",
+          "Ipv4Address"
+        ],
+        [
+          "subnet_mask",
+          "Ipv4Address"
+        ],
+        [
+          "station_port",
+          "u16"
+        ],
+        [
+          "remote_address",
+          "Ipv4Address"
+        ],
+        [
+          "remote_port",
+          "u16"
+        ],
+        [
+          "active_flag",
+          "Boolean"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4Option",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4Option",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "receive_buffer_size",
+          "u32"
+        ],
+        [
+          "send_buffer_size",
+          "u32"
+        ],
+        [
+          "max_syn_back_log",
+          "u32"
+        ],
+        [
+          "connection_timeout",
+          "u32"
+        ],
+        [
+          "data_retries",
+          "u32"
+        ],
+        [
+          "fin_timeout",
+          "u32"
+        ],
+        [
+          "time_wait_timeout",
+          "u32"
+        ],
+        [
+          "keep_alive_probes",
+          "u32"
+        ],
+        [
+          "keep_alive_time",
+          "u32"
+        ],
+        [
+          "keep_alive_interval",
+          "u32"
+        ],
+        [
+          "enable_nagle",
+          "Boolean"
+        ],
+        [
+          "enable_time_stamp",
+          "Boolean"
+        ],
+        [
+          "enable_window_scaling",
+          "Boolean"
+        ],
+        [
+          "enable_selective_ack",
+          "Boolean"
+        ],
+        [
+          "enable_path_mtu_discovery",
+          "Boolean"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "receive_buffer_size",
+          "u32"
+        ],
+        [
+          "send_buffer_size",
+          "u32"
+        ],
+        [
+          "max_syn_back_log",
+          "u32"
+        ],
+        [
+          "connection_timeout",
+          "u32"
+        ],
+        [
+          "data_retries",
+          "u32"
+        ],
+        [
+          "fin_timeout",
+          "u32"
+        ],
+        [
+          "time_wait_timeout",
+          "u32"
+        ],
+        [
+          "keep_alive_probes",
+          "u32"
+        ],
+        [
+          "keep_alive_time",
+          "u32"
+        ],
+        [
+          "keep_alive_interval",
+          "u32"
+        ],
+        [
+          "enable_nagle",
+          "Boolean"
+        ],
+        [
+          "enable_time_stamp",
+          "Boolean"
+        ],
+        [
+          "enable_window_scaling",
+          "Boolean"
+        ],
+        [
+          "enable_selective_ack",
+          "Boolean"
+        ],
+        [
+          "enable_path_mtu_discovery",
+          "Boolean"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4CompletionToken",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4CompletionToken",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "event",
+          "Event"
+        ],
+        [
+          "status",
+          "Status"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "event",
+          "Event"
+        ],
+        [
+          "status",
+          "Status"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4ConnectionToken",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionToken",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "completion_token",
+          "Tcp4CompletionToken"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "completion_token",
+          "Tcp4CompletionToken"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4ListenToken",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ListenToken",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "completion_token",
+          "Tcp4CompletionToken"
+        ],
+        [
+          "new_child_handle",
+          "Handle"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "completion_token",
+          "Tcp4CompletionToken"
+        ],
+        [
+          "new_child_handle",
+          "Handle"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4IoToken",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4IoToken",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "completion_token",
+          "Tcp4CompletionToken"
+        ],
+        [
+          "packet",
+          "Tcp4Packet"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "completion_token",
+          "Tcp4CompletionToken"
+        ],
+        [
+          "packet",
+          "Tcp4Packet"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4CloseToken",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4CloseToken",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "completion_token",
+          "Tcp4CompletionToken"
+        ],
+        [
+          "abort_on_close",
+          "Boolean"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "completion_token",
+          "Tcp4CompletionToken"
+        ],
+        [
+          "abort_on_close",
+          "Boolean"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4Packet",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4Packet",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "union",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "rx_data",
+          "*mut Tcp4ReceiveData"
+        ],
+        [
+          "tx_data",
+          "*mut Tcp4TransmitData"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4FragmentData",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4FragmentData",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "fragment_length",
+          "u32"
+        ],
+        [
+          "fragment_buf",
+          "*mut u8"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "fragment_length",
+          "u32"
+        ],
+        [
+          "fragment_buf",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4ReceiveData",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ReceiveData",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "urgent",
+          "Boolean"
+        ],
+        [
+          "data_length",
+          "u32"
+        ],
+        [
+          "fragment_count",
+          "u32"
+        ],
+        [
+          "fragment_table",
+          "[Tcp4FragmentData; 0]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "urgent",
+          "Boolean"
+        ],
+        [
+          "data_length",
+          "u32"
+        ],
+        [
+          "fragment_count",
+          "u32"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4TransmitData",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4TransmitData",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "push",
+          "Boolean"
+        ],
+        [
+          "urgent",
+          "Boolean"
+        ],
+        [
+          "data_length",
+          "u32"
+        ],
+        [
+          "fragment_count",
+          "u32"
+        ],
+        [
+          "fragment_table",
+          "[Tcp4FragmentData; 0]"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "push",
+          "Boolean"
+        ],
+        [
+          "urgent",
+          "Boolean"
+        ],
+        [
+          "data_length",
+          "u32"
+        ],
+        [
+          "fragment_count",
+          "u32"
+        ]
+      ]
+    },
+    {
+      "name": "Tcp4ClientConnectionModeParams",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ClientConnectionModeParams",
+      "path": "uefi-raw/src/protocol/network/tcp4.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "remote_ip",
+          "Ipv4Address"
+        ],
+        [
+          "remote_port",
+          "u16"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "remote_ip",
+          "Ipv4Address"
+        ],
+        [
+          "remote_port",
+          "u16"
+        ]
+      ]
+    },
+    {
+      "name": "TlsConfigDataType",
+      "rust": "uefi_raw::protocol::network::tls::TlsConfigDataType",
+      "path": "uefi-raw/src/protocol/network/tls.rs",
+      "kind": "enum",
+      "packed": false,
+      "base": "i32",
+      "fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "i32"
+        ]
+      ]
+    },
+    {
+      "name": "TlsConfigurationProtocol",
+      "rust": "uefi_raw::protocol::network::tls::TlsConfigurationProtocol",
+      "path": "uefi-raw/src/protocol/network/tls.rs",
+      "kind": "struct",
+      "packed": false,
+      "base": null,
+      "fields": [
+        [
+          "set_data",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, typ: TlsConfigDataType, data: *const c_void, size: usize, ) -> Status"
+        ],
+        [
+          "get_data",
+          "unsafe extern \"efiapi\" fn( this: *const Self, typ: TlsConfigDataType, data: *mut c_void, size: *mut usize, ) -> Status"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "set_data",
+          "addr"
+        ],
+        [
+          "get_data",
+          "addr"
+        ]
+      ]
+    },
+    {
+      "name": "PxeBaseCodeUdpPort",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeUdpPort",
+      "path": "uefi-raw/src/protocol/network/pxe.rs",
+      "kind": "alias",
+      "packed": false,
+      "base": "u16",
+      "fields": [
+        [
+          "raw",
+          "u16"
+        ]
+      ],
+      "omega_fields": [
+        [
+          "raw",
+          "u16"
+        ]
+      ]
+    }
+  ],
+  "constants": [
+    {
+      "owner": "Dhcp4Event",
+      "name": "DHCP4_EVENT_SEND_DISCOVER",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event::SEND_DISCOVER",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4Event",
+      "name": "DHCP4_EVENT_RCVD_OFFER",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event::RCVD_OFFER",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4Event",
+      "name": "DHCP4_EVENT_SELECT_OFFER",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event::SELECT_OFFER",
+      "value": 3,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4Event",
+      "name": "DHCP4_EVENT_SEND_REQUEST",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event::SEND_REQUEST",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4Event",
+      "name": "DHCP4_EVENT_RCVD_ACK",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event::RCVD_ACK",
+      "value": 5,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4Event",
+      "name": "DHCP4_EVENT_RCVD_NAK",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event::RCVD_NAK",
+      "value": 6,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4Event",
+      "name": "DHCP4_EVENT_SEND_DECLINE",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event::SEND_DECLINE",
+      "value": 7,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4Event",
+      "name": "DHCP4_EVENT_BOUND_COMPLETED",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event::BOUND_COMPLETED",
+      "value": 8,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4Event",
+      "name": "DHCP4_EVENT_ENTER_RENEWING",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event::ENTER_RENEWING",
+      "value": 9,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4Event",
+      "name": "DHCP4_EVENT_ENTER_REBINDING",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event::ENTER_REBINDING",
+      "value": 10,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4Event",
+      "name": "DHCP4_EVENT_ADDRESS_LOST",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event::ADDRESS_LOST",
+      "value": 11,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4Event",
+      "name": "DHCP4_EVENT_FAIL",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Event::FAIL",
+      "value": 12,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4State",
+      "name": "DHCP4_STATE_STOPPED",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4State::STOPPED",
+      "value": 0,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4State",
+      "name": "DHCP4_STATE_INIT",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4State::INIT",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4State",
+      "name": "DHCP4_STATE_SELECTING",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4State::SELECTING",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4State",
+      "name": "DHCP4_STATE_REQUESTING",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4State::REQUESTING",
+      "value": 3,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4State",
+      "name": "DHCP4_STATE_BOUND",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4State::BOUND",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4State",
+      "name": "DHCP4_STATE_RENEWING",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4State::RENEWING",
+      "value": 5,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4State",
+      "name": "DHCP4_STATE_REBINDING",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4State::REBINDING",
+      "value": 6,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4State",
+      "name": "DHCP4_STATE_INIT_REBOOT",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4State::INIT_REBOOT",
+      "value": 7,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4State",
+      "name": "DHCP4_STATE_REBOOTING",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4State::REBOOTING",
+      "value": 8,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Dhcp4Protocol",
+      "name": "DHCP4_PROTOCOL_GUID",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Protocol::GUID",
+      "kind": "bytes",
+      "value": "1897218af54e614791c8c0f04bda9e56",
+      "guid": "8a219718-4ef5-4761-91c8-c0f04bda9e56"
+    },
+    {
+      "owner": "Dhcp4Protocol",
+      "name": "DHCP4_PROTOCOL_SERVICE_BINDING_GUID",
+      "rust": "uefi_raw::protocol::network::dhcp4::Dhcp4Protocol::SERVICE_BINDING_GUID",
+      "kind": "bytes",
+      "value": "d8399a9d42bd734aa4d58ee94be11380",
+      "guid": "9d9a39d8-bd42-4a73-a4d5-8ee94be11380"
+    },
+    {
+      "owner": "HttpVersion",
+      "name": "HTTP_VERSION_HTTP_VERSION_10",
+      "rust": "uefi_raw::protocol::network::http::HttpVersion::HTTP_VERSION_10",
+      "value": 0,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpVersion",
+      "name": "HTTP_VERSION_HTTP_VERSION_11",
+      "rust": "uefi_raw::protocol::network::http::HttpVersion::HTTP_VERSION_11",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpVersion",
+      "name": "HTTP_VERSION_HTTP_VERSION_UNSUPPORTED",
+      "rust": "uefi_raw::protocol::network::http::HttpVersion::HTTP_VERSION_UNSUPPORTED",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpMethod",
+      "name": "HTTP_METHOD_GET",
+      "rust": "uefi_raw::protocol::network::http::HttpMethod::GET",
+      "value": 0,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpMethod",
+      "name": "HTTP_METHOD_POST",
+      "rust": "uefi_raw::protocol::network::http::HttpMethod::POST",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpMethod",
+      "name": "HTTP_METHOD_PATCH",
+      "rust": "uefi_raw::protocol::network::http::HttpMethod::PATCH",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpMethod",
+      "name": "HTTP_METHOD_OPTIONS",
+      "rust": "uefi_raw::protocol::network::http::HttpMethod::OPTIONS",
+      "value": 3,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpMethod",
+      "name": "HTTP_METHOD_CONNECT",
+      "rust": "uefi_raw::protocol::network::http::HttpMethod::CONNECT",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpMethod",
+      "name": "HTTP_METHOD_HEAD",
+      "rust": "uefi_raw::protocol::network::http::HttpMethod::HEAD",
+      "value": 5,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpMethod",
+      "name": "HTTP_METHOD_PUT",
+      "rust": "uefi_raw::protocol::network::http::HttpMethod::PUT",
+      "value": 6,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpMethod",
+      "name": "HTTP_METHOD_DELETE",
+      "rust": "uefi_raw::protocol::network::http::HttpMethod::DELETE",
+      "value": 7,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpMethod",
+      "name": "HTTP_METHOD_TRACE",
+      "rust": "uefi_raw::protocol::network::http::HttpMethod::TRACE",
+      "value": 8,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpMethod",
+      "name": "HTTP_METHOD_MAX",
+      "rust": "uefi_raw::protocol::network::http::HttpMethod::MAX",
+      "value": 9,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_UNSUPPORTED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_UNSUPPORTED",
+      "value": 0,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_100_CONTINUE",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_100_CONTINUE",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_101_SWITCHING_PROTOCOLS",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_101_SWITCHING_PROTOCOLS",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_200_OK",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_200_OK",
+      "value": 3,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_201_CREATED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_201_CREATED",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_202_ACCEPTED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_202_ACCEPTED",
+      "value": 5,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_203_NON_AUTHORITATIVE_INFORMATION",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_203_NON_AUTHORITATIVE_INFORMATION",
+      "value": 6,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_204_NO_CONTENT",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_204_NO_CONTENT",
+      "value": 7,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_205_RESET_CONTENT",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_205_RESET_CONTENT",
+      "value": 8,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_206_PARTIAL_CONTENT",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_206_PARTIAL_CONTENT",
+      "value": 9,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_300_MULTIPLE_CHOICES",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_300_MULTIPLE_CHOICES",
+      "value": 10,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_301_MOVED_PERMANENTLY",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_301_MOVED_PERMANENTLY",
+      "value": 11,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_302_FOUND",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_302_FOUND",
+      "value": 12,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_303_SEE_OTHER",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_303_SEE_OTHER",
+      "value": 13,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_304_NOT_MODIFIED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_304_NOT_MODIFIED",
+      "value": 14,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_305_USE_PROXY",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_305_USE_PROXY",
+      "value": 15,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_307_TEMPORARY_REDIRECT",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_307_TEMPORARY_REDIRECT",
+      "value": 16,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_400_BAD_REQUEST",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_400_BAD_REQUEST",
+      "value": 17,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_401_UNAUTHORIZED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_401_UNAUTHORIZED",
+      "value": 18,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_402_PAYMENT_REQUIRED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_402_PAYMENT_REQUIRED",
+      "value": 19,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_403_FORBIDDEN",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_403_FORBIDDEN",
+      "value": 20,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_404_NOT_FOUND",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_404_NOT_FOUND",
+      "value": 21,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_405_METHOD_NOT_ALLOWED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_405_METHOD_NOT_ALLOWED",
+      "value": 22,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_406_NOT_ACCEPTABLE",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_406_NOT_ACCEPTABLE",
+      "value": 23,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_407_PROXY_AUTHENTICATION_REQUIRED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_407_PROXY_AUTHENTICATION_REQUIRED",
+      "value": 24,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_408_REQUEST_TIME_OUT",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_408_REQUEST_TIME_OUT",
+      "value": 25,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_409_CONFLICT",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_409_CONFLICT",
+      "value": 26,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_410_GONE",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_410_GONE",
+      "value": 27,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_411_LENGTH_REQUIRED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_411_LENGTH_REQUIRED",
+      "value": 28,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_412_PRECONDITION_FAILED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_412_PRECONDITION_FAILED",
+      "value": 29,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_413_REQUEST_ENTITY_TOO_LARGE",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_413_REQUEST_ENTITY_TOO_LARGE",
+      "value": 30,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_414_REQUEST_URI_TOO_LARGE",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_414_REQUEST_URI_TOO_LARGE",
+      "value": 31,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_415_UNSUPPORTED_MEDIA_TYPE",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_415_UNSUPPORTED_MEDIA_TYPE",
+      "value": 32,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_416_REQUESTED_RANGE_NOT_SATISFIED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_416_REQUESTED_RANGE_NOT_SATISFIED",
+      "value": 33,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_417_EXPECTATION_FAILED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_417_EXPECTATION_FAILED",
+      "value": 34,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_500_INTERNAL_SERVER_ERROR",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_500_INTERNAL_SERVER_ERROR",
+      "value": 35,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_501_NOT_IMPLEMENTED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_501_NOT_IMPLEMENTED",
+      "value": 36,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_502_BAD_GATEWAY",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_502_BAD_GATEWAY",
+      "value": 37,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_503_SERVICE_UNAVAILABLE",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_503_SERVICE_UNAVAILABLE",
+      "value": 38,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_504_GATEWAY_TIME_OUT",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_504_GATEWAY_TIME_OUT",
+      "value": 39,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_505_VERSION_NOT_SUPPORTED",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_505_VERSION_NOT_SUPPORTED",
+      "value": 40,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_308_PERMANENT_REDIRECT",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_308_PERMANENT_REDIRECT",
+      "value": 41,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpStatusCode",
+      "name": "HTTP_STATUS_CODE_STATUS_429_TOO_MANY_REQUESTS",
+      "rust": "uefi_raw::protocol::network::http::HttpStatusCode::STATUS_429_TOO_MANY_REQUESTS",
+      "value": 42,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "HttpProtocol",
+      "name": "HTTP_PROTOCOL_GUID",
+      "rust": "uefi_raw::protocol::network::http::HttpProtocol::GUID",
+      "kind": "bytes",
+      "value": "9bb2597a0b9171418242a85a0df25b5b",
+      "guid": "7a59b29b-910b-4171-8242-a85a0df25b5b"
+    },
+    {
+      "owner": "HttpProtocol",
+      "name": "HTTP_PROTOCOL_SERVICE_BINDING_GUID",
+      "rust": "uefi_raw::protocol::network::http::HttpProtocol::SERVICE_BINDING_GUID",
+      "kind": "bytes",
+      "value": "afe6c8bdbcd97943a72ae0c4e75dae1c",
+      "guid": "bdc8e6af-d9bc-4379-a72a-e0c4e75dae1c"
+    },
+    {
+      "owner": "Ip4Config2DataType",
+      "name": "IP4_CONFIG2_DATA_TYPE_INTERFACE_INFO",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2DataType::INTERFACE_INFO",
+      "value": 0,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Ip4Config2DataType",
+      "name": "IP4_CONFIG2_DATA_TYPE_POLICY",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2DataType::POLICY",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Ip4Config2DataType",
+      "name": "IP4_CONFIG2_DATA_TYPE_MANUAL_ADDRESS",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2DataType::MANUAL_ADDRESS",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Ip4Config2DataType",
+      "name": "IP4_CONFIG2_DATA_TYPE_GATEWAY",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2DataType::GATEWAY",
+      "value": 3,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Ip4Config2DataType",
+      "name": "IP4_CONFIG2_DATA_TYPE_DNS_SERVER",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2DataType::DNS_SERVER",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Ip4Config2DataType",
+      "name": "IP4_CONFIG2_DATA_TYPE_MAXIMUM",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2DataType::MAXIMUM",
+      "value": 5,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Ip4Config2Policy",
+      "name": "IP4_CONFIG2_POLICY_STATIC",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2Policy::STATIC",
+      "value": 0,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Ip4Config2Policy",
+      "name": "IP4_CONFIG2_POLICY_DHCP",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2Policy::DHCP",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Ip4Config2Policy",
+      "name": "IP4_CONFIG2_POLICY_MAX",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2Policy::MAX",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Ip4Config2Protocol",
+      "name": "IP4_CONFIG2_PROTOCOL_GUID",
+      "rust": "uefi_raw::protocol::network::ip4_config2::Ip4Config2Protocol::GUID",
+      "kind": "bytes",
+      "value": "d16e445b0be3aa4f871a3654eca36080",
+      "guid": "5b446ed1-e30b-4faa-871a-3654eca36080"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_BOOTSTRAP",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::BOOTSTRAP",
+      "value": 0,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_MS_WINNT_RIS",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::MS_WINNT_RIS",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_INTEL_LCM",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::INTEL_LCM",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_DOS_UNDI",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::DOS_UNDI",
+      "value": 3,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_NEC_ESMPRO",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::NEC_ESMPRO",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_IBM_WSOD",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::IBM_WSOD",
+      "value": 5,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_IBM_LCCM",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::IBM_LCCM",
+      "value": 6,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_CA_UNICENTER_TNG",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::CA_UNICENTER_TNG",
+      "value": 7,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_HP_OPENVIEW",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::HP_OPENVIEW",
+      "value": 8,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_ALTIRIS_9",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::ALTIRIS_9",
+      "value": 9,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_ALTIRIS_10",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::ALTIRIS_10",
+      "value": 10,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_ALTIRIS_11",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::ALTIRIS_11",
+      "value": 11,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_NOT_USED_12",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::NOT_USED_12",
+      "value": 12,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_REDHAT_INSTALL",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::REDHAT_INSTALL",
+      "value": 13,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_REDHAT_BOOT",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::REDHAT_BOOT",
+      "value": 14,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_REMBO",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::REMBO",
+      "value": 15,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_BEOBOOT",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::BEOBOOT",
+      "value": 16,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeBootType",
+      "name": "PXE_BASE_CODE_BOOT_TYPE_PXETEST",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeBootType::PXETEST",
+      "value": 65535,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeTftpOpcode",
+      "name": "PXE_BASE_CODE_TFTP_OPCODE_TFTP_FIRST",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeTftpOpcode::TFTP_FIRST",
+      "value": 0,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeTftpOpcode",
+      "name": "PXE_BASE_CODE_TFTP_OPCODE_TFTP_GET_FILE_SIZE",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeTftpOpcode::TFTP_GET_FILE_SIZE",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeTftpOpcode",
+      "name": "PXE_BASE_CODE_TFTP_OPCODE_TFTP_READ_FILE",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeTftpOpcode::TFTP_READ_FILE",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeTftpOpcode",
+      "name": "PXE_BASE_CODE_TFTP_OPCODE_TFTP_WRITE_FILE",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeTftpOpcode::TFTP_WRITE_FILE",
+      "value": 3,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeTftpOpcode",
+      "name": "PXE_BASE_CODE_TFTP_OPCODE_TFTP_READ_DIRECTORY",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeTftpOpcode::TFTP_READ_DIRECTORY",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeTftpOpcode",
+      "name": "PXE_BASE_CODE_TFTP_OPCODE_MTFTP_GET_FILE_SIZE",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeTftpOpcode::MTFTP_GET_FILE_SIZE",
+      "value": 5,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeTftpOpcode",
+      "name": "PXE_BASE_CODE_TFTP_OPCODE_MTFTP_READ_FILE",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeTftpOpcode::MTFTP_READ_FILE",
+      "value": 6,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeTftpOpcode",
+      "name": "PXE_BASE_CODE_TFTP_OPCODE_MTFTP_READ_DIRECTORY",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeTftpOpcode::MTFTP_READ_DIRECTORY",
+      "value": 7,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeTftpOpcode",
+      "name": "PXE_BASE_CODE_TFTP_OPCODE_MTFTP_LAST",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeTftpOpcode::MTFTP_LAST",
+      "value": 8,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "PxeBaseCodeUdpOpFlags",
+      "name": "PXE_BASE_CODE_UDP_OP_FLAGS_ANY_SRC_IP",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeUdpOpFlags::ANY_SRC_IP",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "PxeBaseCodeUdpOpFlags",
+      "name": "PXE_BASE_CODE_UDP_OP_FLAGS_ANY_SRC_PORT",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeUdpOpFlags::ANY_SRC_PORT",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "PxeBaseCodeUdpOpFlags",
+      "name": "PXE_BASE_CODE_UDP_OP_FLAGS_ANY_DEST_IP",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeUdpOpFlags::ANY_DEST_IP",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "PxeBaseCodeUdpOpFlags",
+      "name": "PXE_BASE_CODE_UDP_OP_FLAGS_ANY_DEST_PORT",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeUdpOpFlags::ANY_DEST_PORT",
+      "value": 8,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "PxeBaseCodeUdpOpFlags",
+      "name": "PXE_BASE_CODE_UDP_OP_FLAGS_USE_FILTER",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeUdpOpFlags::USE_FILTER",
+      "value": 16,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "PxeBaseCodeUdpOpFlags",
+      "name": "PXE_BASE_CODE_UDP_OP_FLAGS_MAY_FRAGMENT",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeUdpOpFlags::MAY_FRAGMENT",
+      "value": 32,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "PxeBaseCodeDhcpV4Flags",
+      "name": "PXE_BASE_CODE_DHCP_V4_FLAGS_BROADCAST",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeDhcpV4Flags::BROADCAST",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "PxeBaseCodeIpFilterFlags",
+      "name": "PXE_BASE_CODE_IP_FILTER_FLAGS_STATION_IP",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeIpFilterFlags::STATION_IP",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "PxeBaseCodeIpFilterFlags",
+      "name": "PXE_BASE_CODE_IP_FILTER_FLAGS_BROADCAST",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeIpFilterFlags::BROADCAST",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "PxeBaseCodeIpFilterFlags",
+      "name": "PXE_BASE_CODE_IP_FILTER_FLAGS_PROMISCUOUS",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeIpFilterFlags::PROMISCUOUS",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "PxeBaseCodeIpFilterFlags",
+      "name": "PXE_BASE_CODE_IP_FILTER_FLAGS_PROMISCUOUS_MULTICAST",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeIpFilterFlags::PROMISCUOUS_MULTICAST",
+      "value": 8,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "PxeBaseCodeProtocol",
+      "name": "PXE_BASE_CODE_PROTOCOL_GUID",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeProtocol::GUID",
+      "kind": "bytes",
+      "value": "03e6c40328acd3119a2d0090273fc14d",
+      "guid": "03c4e603-ac28-11d3-9a2d-0090273fc14d"
+    },
+    {
+      "owner": "PxeBaseCodeDhcpV4Packet",
+      "name": "PXE_BASE_CODE_DHCP_V4_PACKET_DHCP_MAGIK",
+      "rust": "uefi_raw::protocol::network::pxe::PxeBaseCodeDhcpV4Packet::DHCP_MAGIK",
+      "kind": "value",
+      "value": 1669485411,
+      "primitive": "u32",
+      "accessor": ""
+    },
+    {
+      "owner": "ReceiveFlags",
+      "name": "RECEIVE_FLAGS_UNICAST",
+      "rust": "uefi_raw::protocol::network::snp::ReceiveFlags::UNICAST",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "ReceiveFlags",
+      "name": "RECEIVE_FLAGS_MULTICAST",
+      "rust": "uefi_raw::protocol::network::snp::ReceiveFlags::MULTICAST",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "ReceiveFlags",
+      "name": "RECEIVE_FLAGS_BROADCAST",
+      "rust": "uefi_raw::protocol::network::snp::ReceiveFlags::BROADCAST",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "ReceiveFlags",
+      "name": "RECEIVE_FLAGS_PROMISCUOUS",
+      "rust": "uefi_raw::protocol::network::snp::ReceiveFlags::PROMISCUOUS",
+      "value": 8,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "ReceiveFlags",
+      "name": "RECEIVE_FLAGS_PROMISCUOUS_MULTICAST",
+      "rust": "uefi_raw::protocol::network::snp::ReceiveFlags::PROMISCUOUS_MULTICAST",
+      "value": 16,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "InterruptStatus",
+      "name": "INTERRUPT_STATUS_RECEIVE",
+      "rust": "uefi_raw::protocol::network::snp::InterruptStatus::RECEIVE",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "InterruptStatus",
+      "name": "INTERRUPT_STATUS_TRANSMIT",
+      "rust": "uefi_raw::protocol::network::snp::InterruptStatus::TRANSMIT",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "InterruptStatus",
+      "name": "INTERRUPT_STATUS_COMMAND",
+      "rust": "uefi_raw::protocol::network::snp::InterruptStatus::COMMAND",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "InterruptStatus",
+      "name": "INTERRUPT_STATUS_SOFTWARE",
+      "rust": "uefi_raw::protocol::network::snp::InterruptStatus::SOFTWARE",
+      "value": 8,
+      "kind": "value",
+      "accessor": ".bits()"
+    },
+    {
+      "owner": "NetworkState",
+      "name": "NETWORK_STATE_STOPPED",
+      "rust": "uefi_raw::protocol::network::snp::NetworkState::STOPPED",
+      "value": 0,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "NetworkState",
+      "name": "NETWORK_STATE_STARTED",
+      "rust": "uefi_raw::protocol::network::snp::NetworkState::STARTED",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "NetworkState",
+      "name": "NETWORK_STATE_INITIALIZED",
+      "rust": "uefi_raw::protocol::network::snp::NetworkState::INITIALIZED",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "NetworkState",
+      "name": "NETWORK_STATE_MAX_STATE",
+      "rust": "uefi_raw::protocol::network::snp::NetworkState::MAX_STATE",
+      "value": 3,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "SimpleNetworkProtocol",
+      "name": "SIMPLE_NETWORK_PROTOCOL_GUID",
+      "rust": "uefi_raw::protocol::network::snp::SimpleNetworkProtocol::GUID",
+      "kind": "bytes",
+      "value": "b93298a125acd3119a2d0090273fc14d",
+      "guid": "a19832b9-ac25-11d3-9a2d-0090273fc14d"
+    },
+    {
+      "owner": "Tcp4ConnectionState",
+      "name": "TCP4_CONNECTION_STATE_CLOSED",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionState::CLOSED",
+      "value": 0,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Tcp4ConnectionState",
+      "name": "TCP4_CONNECTION_STATE_LISTEN",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionState::LISTEN",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Tcp4ConnectionState",
+      "name": "TCP4_CONNECTION_STATE_SYN_SENT",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionState::SYN_SENT",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Tcp4ConnectionState",
+      "name": "TCP4_CONNECTION_STATE_SYN_RECEIVED",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionState::SYN_RECEIVED",
+      "value": 3,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Tcp4ConnectionState",
+      "name": "TCP4_CONNECTION_STATE_ESTABLISHED",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionState::ESTABLISHED",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Tcp4ConnectionState",
+      "name": "TCP4_CONNECTION_STATE_FIN_WAIT1",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionState::FIN_WAIT1",
+      "value": 5,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Tcp4ConnectionState",
+      "name": "TCP4_CONNECTION_STATE_FIN_WAIT2",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionState::FIN_WAIT2",
+      "value": 6,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Tcp4ConnectionState",
+      "name": "TCP4_CONNECTION_STATE_CLOSING",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionState::CLOSING",
+      "value": 7,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Tcp4ConnectionState",
+      "name": "TCP4_CONNECTION_STATE_TIME_WAIT",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionState::TIME_WAIT",
+      "value": 8,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Tcp4ConnectionState",
+      "name": "TCP4_CONNECTION_STATE_CLOSE_WAIT",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionState::CLOSE_WAIT",
+      "value": 9,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Tcp4ConnectionState",
+      "name": "TCP4_CONNECTION_STATE_LAST_ACK",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4ConnectionState::LAST_ACK",
+      "value": 10,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "Tcp4Protocol",
+      "name": "TCP4_PROTOCOL_GUID",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4Protocol::GUID",
+      "kind": "bytes",
+      "value": "c70b536559a30f41b0105aadc7ec2b62",
+      "guid": "65530BC7-A359-410F-B010-5AADC7EC2B62"
+    },
+    {
+      "owner": "Tcp4Protocol",
+      "name": "TCP4_PROTOCOL_SERVICE_BINDING_GUID",
+      "rust": "uefi_raw::protocol::network::tcp4::Tcp4Protocol::SERVICE_BINDING_GUID",
+      "kind": "bytes",
+      "value": "65067200eb67994abaf7d3c33a1c7cc9",
+      "guid": "00720665-67EB-4a99-BAF7-D3C33A1C7CC9"
+    },
+    {
+      "owner": "TlsConfigDataType",
+      "name": "TLS_CONFIG_DATA_TYPE_HOST_PUBLIC_CERT",
+      "rust": "uefi_raw::protocol::network::tls::TlsConfigDataType::HOST_PUBLIC_CERT",
+      "value": 0,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "TlsConfigDataType",
+      "name": "TLS_CONFIG_DATA_TYPE_HOST_PRIVATE_KEY",
+      "rust": "uefi_raw::protocol::network::tls::TlsConfigDataType::HOST_PRIVATE_KEY",
+      "value": 1,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "TlsConfigDataType",
+      "name": "TLS_CONFIG_DATA_TYPE_CA_CERTIFICATE",
+      "rust": "uefi_raw::protocol::network::tls::TlsConfigDataType::CA_CERTIFICATE",
+      "value": 2,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "TlsConfigDataType",
+      "name": "TLS_CONFIG_DATA_TYPE_CERT_REVOCATION_LIST",
+      "rust": "uefi_raw::protocol::network::tls::TlsConfigDataType::CERT_REVOCATION_LIST",
+      "value": 3,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "TlsConfigDataType",
+      "name": "TLS_CONFIG_DATA_TYPE_MAXIMUM",
+      "rust": "uefi_raw::protocol::network::tls::TlsConfigDataType::MAXIMUM",
+      "value": 4,
+      "kind": "value",
+      "accessor": ".0"
+    },
+    {
+      "owner": "TlsConfigurationProtocol",
+      "name": "TLS_CONFIGURATION_PROTOCOL_GUID",
+      "rust": "uefi_raw::protocol::network::tls::TlsConfigurationProtocol::GUID",
+      "kind": "bytes",
+      "value": "44fe82167abd0744b7c7dca37ca3922d",
+      "guid": "1682fe44-bd7a-4407-b7c7-dca37ca3922d"
+    },
+    {
+      "owner": "TlsConfigurationProtocol",
+      "name": "TLS_CONFIGURATION_PROTOCOL_SERVICE_BINDING_GUID",
+      "rust": "uefi_raw::protocol::network::tls::TlsConfigurationProtocol::SERVICE_BINDING_GUID",
+      "kind": "bytes",
+      "value": "95b72c9536ffcf48a2494df486d6ab8d",
+      "guid": "952cb795-ff36-48cf-a249-4df486d6ab8d"
+    }
+  ]
+}

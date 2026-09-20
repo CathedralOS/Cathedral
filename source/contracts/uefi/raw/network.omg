@@ -1,0 +1,988 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Omega translation of rust-osdev/uefi-rs at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
+// See network.PORT.md; generator tools/ports/uefi-network/generate.py.
+// Inert raw x86-64 shapes. Addresses and function slots grant no authority.
+// Fixed foreign geometry is supplied separately, never inferred from native data.
+module network;
+use scalars::Boolean;
+use scalars::Char8;
+use scalars::Char16;
+use scalars::Event;
+use scalars::Guid;
+use scalars::Handle;
+use status::Status;
+
+// Pinned source: uefi_raw::Ipv4Address
+pub data Ipv4Address [copy] {
+    raw: [u8; 4];
+}
+
+// Pinned source: uefi_raw::Ipv6Address
+pub data Ipv6Address [copy] {
+    raw: [u8; 16];
+}
+
+// Pinned source: uefi_raw::IpAddress
+pub data IpAddress [copy] {
+    // Union alternative addr: [u32; 4] (offset 0).
+    // Union alternative v4: Ipv4Address (offset 0).
+    // Union alternative v6: Ipv6Address (offset 0).
+    raw: [u8; 16];
+}
+
+// Pinned source: uefi_raw::MacAddress
+pub data MacAddress [copy] {
+    raw: [u8; 32];
+}
+
+// Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4Event
+pub data Dhcp4Event [copy] {
+    raw: i32;
+}
+
+// Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4State
+pub data Dhcp4State [copy] {
+    raw: i32;
+}
+
+// Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4Packet
+pub data Dhcp4Packet [copy] {
+    size: u32;
+    length: u32;
+    header: Dhcp4Header;
+    magik: u32;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: option: [u8; 0] needs a bounded runtime tail view.
+}
+
+// Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4Header
+pub data Dhcp4Header [copy] {
+    op_code: u8;
+    hw_type: u8;
+    hw_addr_len: u8;
+    hops: u8;
+    xid: u32;
+    seconds: u16;
+    reserved: u16;
+    client_addr: Ipv4Address;
+    your_addr: Ipv4Address;
+    server_addr: Ipv4Address;
+    gateway_addr: Ipv4Address;
+    client_hw_addr: [u8; 16];
+    server_name: [Char8; 64];
+    boot_file_name: [Char8; 128];
+}
+
+// Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4PacketOption
+pub data Dhcp4PacketOption [copy] {
+    op_code: u8;
+    length: u8;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: data: [u8; 0] needs a bounded runtime tail view.
+}
+
+// Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4ConfigData
+pub data Dhcp4ConfigData [copy] {
+    discover_try_count: u32;
+    discover_timeout: addr;
+    // Foreign carrier: *mut u32
+    request_try_count: u32;
+    request_timeout: addr;
+    // Foreign carrier: *mut u32
+    client_address: Ipv4Address;
+    callback: addr;
+    // Foreign carrier: Option< unsafe extern "efiapi" fn( this: *mut Dhcp4Protocol, context: *const c_void, current_state: Dhcp4State, dhcp4_event: Dhcp4Event, packet: *const Dhcp4Packet, new_packet: *mut *mut Dhcp4Packet, ) -> Status, >
+    callback_context: addr;
+    // Foreign carrier: *mut c_void
+    option_count: u32;
+    option_list: addr;
+    // Foreign carrier: *mut *const Dhcp4PacketOption
+}
+
+// Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4ModeData
+pub data Dhcp4ModeData [copy] {
+    state: Dhcp4State;
+    config_data: Dhcp4ConfigData;
+    client_address: Ipv4Address;
+    client_mac_address: MacAddress;
+    server_address: Ipv4Address;
+    router_address: Ipv4Address;
+    subnet_mask: Ipv4Address;
+    lease_time: u32;
+    reply_packet: addr;
+    // Foreign carrier: *const Dhcp4Packet
+}
+
+// Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4ListenPoint
+pub data Dhcp4ListenPoint [copy] {
+    listen_address: Ipv4Address;
+    subnet_mask: Ipv4Address;
+    listen_port: u16;
+}
+
+// Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4TransmitReceiveToken
+pub data Dhcp4TransmitReceiveToken [copy] {
+    status: Status;
+    completion_event: Event;
+    remote_address: Ipv4Address;
+    remote_port: u16;
+    gateway_address: Ipv4Address;
+    listen_point_count: u32;
+    listen_points: addr;
+    // Foreign carrier: *mut Dhcp4ListenPoint
+    timeout_value: u32;
+    packet: addr;
+    // Foreign carrier: *mut Dhcp4Packet
+    response_count: u32;
+    response_list: addr;
+    // Foreign carrier: *mut Dhcp4Packet
+}
+
+// Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4Protocol
+pub data Dhcp4Protocol [copy] {
+    get_mode_data: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, mode_data: *mut Dhcp4ModeData) -> Status
+    configure: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, cfg_data: *const Dhcp4ConfigData) -> Status
+    start: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, completion_event: Event) -> Status
+    renew_rebind: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, rebind_request: Boolean, completion_event: Event, ) -> Status
+    release: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+    stop: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+    build: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, seed_packet: *const Dhcp4Packet, delete_count: u32, delete_list: *const u8, append_count: u32, append_list: *const *const Dhcp4PacketOption, new_packet: *mut *mut Dhcp4Packet, ) -> Status
+    transmit_receive: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut Dhcp4TransmitReceiveToken) -> Status
+    parse: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, packet: *const Dhcp4Packet, option_count: *mut u32, packet_option_list: *mut *mut Dhcp4PacketOption, ) -> Status
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpConfigData
+pub data HttpConfigData [copy] {
+    http_version: HttpVersion;
+    time_out_millisec: u32;
+    local_addr_is_ipv6: Boolean;
+    access_point: HttpAccessPoint;
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpVersion
+pub data HttpVersion [copy] {
+    raw: i32;
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpV4AccessPoint
+pub data HttpV4AccessPoint [copy] {
+    use_default_addr: Boolean;
+    local_address: Ipv4Address;
+    local_subnet: Ipv4Address;
+    local_port: u16;
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpV6AccessPoint
+pub data HttpV6AccessPoint [copy] {
+    local_address: Ipv6Address;
+    local_port: u16;
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpAccessPoint
+pub data HttpAccessPoint [copy] {
+    // Union alternative ipv4_node: *mut HttpV4AccessPoint (offset 0).
+    // Union alternative ipv6_node: *mut HttpV6AccessPoint (offset 0).
+    raw: addr;
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpToken
+pub data HttpToken [copy] {
+    event: Event;
+    status: Status;
+    message: addr;
+    // Foreign carrier: *mut HttpMessage
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpMessage
+pub data HttpMessage [copy] {
+    data: HttpRequestOrResponse;
+    header_count: u64;
+    header: addr;
+    // Foreign carrier: *mut HttpHeader
+    body_length: u64;
+    body: addr;
+    // Foreign carrier: *mut c_void
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpRequestData
+pub data HttpRequestData [copy] {
+    method: HttpMethod;
+    url: addr;
+    // Foreign carrier: *const Char16
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpMethod
+pub data HttpMethod [copy] {
+    raw: i32;
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpResponseData
+pub data HttpResponseData [copy] {
+    status_code: HttpStatusCode;
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpRequestOrResponse
+pub data HttpRequestOrResponse [copy] {
+    // Union alternative request: *const HttpRequestData (offset 0).
+    // Union alternative response: *mut HttpResponseData (offset 0).
+    raw: addr;
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpHeader
+pub data HttpHeader [copy] {
+    field_name: addr;
+    // Foreign carrier: *const Char8
+    field_value: addr;
+    // Foreign carrier: *const Char8
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpStatusCode
+pub data HttpStatusCode [copy] {
+    raw: i32;
+}
+
+// Pinned source: uefi_raw::protocol::network::http::HttpProtocol
+pub data HttpProtocol [copy] {
+    get_mode_data: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, config_data: *mut HttpConfigData) -> Status
+    configure: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, config_data: *const HttpConfigData) -> Status
+    request: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut HttpToken) -> Status
+    cancel: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut HttpToken) -> Status
+    response: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut HttpToken) -> Status
+    poll: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+}
+
+// Pinned source: uefi_raw::protocol::network::ip4::Ip4RouteTable
+pub data Ip4RouteTable [copy] {
+    subnet_addr: Ipv4Address;
+    subnet_mask: Ipv4Address;
+    gateway_addr: Ipv4Address;
+}
+
+// Pinned source: uefi_raw::protocol::network::ip4::Ip4ModeData
+pub data Ip4ModeData [copy] {
+    is_started: Boolean;
+    max_packet_size: u32;
+    config_data: Ip4ConfigData;
+    is_configured: Boolean;
+    group_count: u32;
+    group_table: addr;
+    // Foreign carrier: *const Ipv4Address
+    route_count: u32;
+    route_table: addr;
+    // Foreign carrier: *const Ip4RouteTable
+    icmp_type_count: u32;
+    icmp_type_list: addr;
+    // Foreign carrier: *const Ip4IcmpType
+}
+
+// Pinned source: uefi_raw::protocol::network::ip4::Ip4IcmpType
+pub data Ip4IcmpType [copy] {
+    type_: u8;
+    code: u8;
+}
+
+// Pinned source: uefi_raw::protocol::network::ip4::Ip4ConfigData
+pub data Ip4ConfigData [copy] {
+    default_protocol: u8;
+    accept_any_protocol: Boolean;
+    accept_icmp_errors: Boolean;
+    accept_broadcast: Boolean;
+    accept_promiscuous: Boolean;
+    use_default_address: Boolean;
+    station_address: Ipv4Address;
+    subnet_mask: Ipv4Address;
+    type_of_service: u8;
+    time_to_live: u8;
+    do_not_fragment: Boolean;
+    raw_data: Boolean;
+    receive_timeout: u32;
+    transmit_timeout: u32;
+}
+
+// Pinned source: uefi_raw::protocol::network::ip4_config2::Ip4Config2DataType
+pub data Ip4Config2DataType [copy] {
+    raw: i32;
+}
+
+// Pinned source: uefi_raw::protocol::network::ip4_config2::Ip4Config2InterfaceInfo
+pub data Ip4Config2InterfaceInfo [copy] {
+    name: [Char16; 32];
+    if_type: u8;
+    hw_addr_size: u32;
+    hw_addr: MacAddress;
+    station_addr: Ipv4Address;
+    subnet_mask: Ipv4Address;
+    route_table_size: u32;
+    route_table: addr;
+    // Foreign carrier: *mut Ip4RouteTable
+}
+
+// Pinned source: uefi_raw::protocol::network::ip4_config2::Ip4Config2Policy
+pub data Ip4Config2Policy [copy] {
+    raw: i32;
+}
+
+// Pinned source: uefi_raw::protocol::network::ip4_config2::Ip4Config2ManualAddress
+pub data Ip4Config2ManualAddress [copy] {
+    address: Ipv4Address;
+    subnet_mask: Ipv4Address;
+}
+
+// Pinned source: uefi_raw::protocol::network::ip4_config2::Ip4Config2Protocol
+pub data Ip4Config2Protocol [copy] {
+    set_data: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, data_type: Ip4Config2DataType, data_size: usize, data: *const c_void, ) -> Status
+    get_data: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, data_type: Ip4Config2DataType, data_size: *mut usize, data: *mut c_void, ) -> Status
+    register_data_notify: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, data_type: Ip4Config2DataType, event: Event, ) -> Status
+    unregister_data_notify: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, data_type: Ip4Config2DataType, event: Event, ) -> Status
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeProtocol
+pub data PxeBaseCodeProtocol [copy] {
+    revision: u64;
+    start: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, use_ipv6: Boolean) -> Status
+    stop: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+    dhcp: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, sort_offers: Boolean) -> Status
+    discover: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, ty: PxeBaseCodeBootType, layer: *mut u16, use_bis: Boolean, info: *const PxeBaseCodeDiscoverInfo, ) -> Status
+    mtftp: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, operation: PxeBaseCodeTftpOpcode, buffer: *mut c_void, overwrite: Boolean, buffer_size: *mut u64, block_size: *const usize, server_ip: *const IpAddress, filename: *const Char8, info: *const PxeBaseCodeMtftpInfo, dont_use_buffer: Boolean, ) -> Status
+    udp_write: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, op_flags: PxeBaseCodeUdpOpFlags, dest_ip: *const IpAddress, dest_port: *const PxeBaseCodeUdpPort, gateway_ip: *const IpAddress, src_ip: *const IpAddress, src_port: *mut PxeBaseCodeUdpPort, header_size: *const usize, header_ptr: *const c_void, buffer_size: *const usize, buffer_ptr: *const c_void, ) -> Status
+    udp_read: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, op_flags: PxeBaseCodeUdpOpFlags, dest_ip: *mut IpAddress, dest_port: *mut PxeBaseCodeUdpPort, src_ip: *mut IpAddress, src_port: *mut PxeBaseCodeUdpPort, header_size: *const usize, header_ptr: *mut c_void, buffer_size: *mut usize, buffer_ptr: *mut c_void, ) -> Status
+    set_ip_filter: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, new_filter: *const PxeBaseCodeIpFilter, ) -> Status
+    arp: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, ip_addr: *const IpAddress, mac_addr: *mut MacAddress, ) -> Status
+    set_parameters: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, new_auto_arp: *const Boolean, new_send_guid: *const Boolean, new_ttl: *const u8, new_tos: *const u8, new_make_callback: *const Boolean, ) -> Status
+    set_station_ip: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, new_station_ip: *const IpAddress, new_subnet_mask: *const IpAddress, ) -> Status
+    set_packets: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, new_dhcp_discover_valid: *const Boolean, new_dhcp_ack_received: *const Boolean, new_proxy_offer_received: *const Boolean, new_pxe_discover_valid: *const Boolean, new_pxe_reply_received: *const Boolean, new_pxe_bis_reply_received: *const Boolean, new_dhcp_discover: *const PxeBaseCodePacket, new_dhcp_ack: *const PxeBaseCodePacket, new_proxy_offer: *const PxeBaseCodePacket, new_pxe_discover: *const PxeBaseCodePacket, new_pxe_reply: *const PxeBaseCodePacket, new_pxe_bis_reply: *const PxeBaseCodePacket, ) -> Status
+    mode: addr;
+    // Foreign carrier: *const PxeBaseCodeMode
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeBootType
+pub data PxeBaseCodeBootType [copy] {
+    raw: u16;
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeTftpOpcode
+pub data PxeBaseCodeTftpOpcode [copy] {
+    raw: i32;
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeDiscoverInfo
+pub data PxeBaseCodeDiscoverInfo [copy] {
+    use_m_cast: Boolean;
+    use_b_cast: Boolean;
+    use_u_cast: Boolean;
+    must_use_list: Boolean;
+    server_m_cast_ip: IpAddress;
+    ip_cnt: u16;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: srv_list: [PxeBaseCodeSrvlist; 0] needs a bounded runtime tail view.
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeSrvlist
+pub data PxeBaseCodeSrvlist [copy] {
+    server_type: PxeBaseCodeBootType;
+    accept_any_response: Boolean;
+    reserved: u8;
+    ip_addr: IpAddress;
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeMtftpInfo
+pub data PxeBaseCodeMtftpInfo [copy] {
+    m_cast_ip: IpAddress;
+    c_port: PxeBaseCodeUdpPort;
+    s_port: PxeBaseCodeUdpPort;
+    listen_timeout: u16;
+    transmit_timeout: u16;
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeUdpOpFlags
+pub data PxeBaseCodeUdpOpFlags [copy] {
+    raw: u16;
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeMode
+pub data PxeBaseCodeMode [copy] {
+    started: Boolean;
+    ipv6_available: Boolean;
+    ipv6_supported: Boolean;
+    using_ipv6: Boolean;
+    bis_supported: Boolean;
+    bis_detected: Boolean;
+    auto_arp: Boolean;
+    send_guid: Boolean;
+    dhcp_discover_valid: Boolean;
+    dhcp_ack_received: Boolean;
+    proxy_offer_received: Boolean;
+    pxe_discover_valid: Boolean;
+    pxe_reply_received: Boolean;
+    pxe_bis_reply_received: Boolean;
+    icmp_error_received: Boolean;
+    tftp_error_received: Boolean;
+    make_callbacks: Boolean;
+    ttl: u8;
+    tos: u8;
+    station_ip: IpAddress;
+    subnet_mask: IpAddress;
+    dhcp_discover: PxeBaseCodePacket;
+    dhcp_ack: PxeBaseCodePacket;
+    proxy_offer: PxeBaseCodePacket;
+    pxe_discover: PxeBaseCodePacket;
+    pxe_reply: PxeBaseCodePacket;
+    pxe_bis_reply: PxeBaseCodePacket;
+    ip_filter: PxeBaseCodeIpFilter;
+    arp_cache_entries: u32;
+    arp_cache: [PxeBaseCodeArpEntry; 8];
+    route_table_entries: u32;
+    route_table: [PxeBaseCodeRouteEntry; 8];
+    icmp_error: PxeBaseCodeIcmpError;
+    tftp_error: PxeBaseCodeTftpError;
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodePacket
+pub data PxeBaseCodePacket [copy] {
+    // Union alternative raw: [u8; 1472] (offset 0).
+    // Union alternative dhcpv4: PxeBaseCodeDhcpV4Packet (offset 0).
+    // Union alternative dhcpv6: PxeBaseCodeDhcpV6Packet (offset 0).
+    raw: [u8; 1472];
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeDhcpV4Packet
+pub data PxeBaseCodeDhcpV4Packet [copy] {
+    bootp_opcode: u8;
+    bootp_hw_type: u8;
+    bootp_hw_addr_len: u8;
+    bootp_gate_hops: u8;
+    bootp_ident: u32;
+    bootp_seconds: u16;
+    bootp_flags: u16;
+    bootp_ci_addr: [u8; 4];
+    bootp_yi_addr: [u8; 4];
+    bootp_si_addr: [u8; 4];
+    bootp_gi_addr: [u8; 4];
+    bootp_hw_addr: [u8; 16];
+    bootp_srv_name: [u8; 64];
+    bootp_boot_file: [u8; 128];
+    dhcp_magik: u32;
+    dhcp_options: [u8; 56];
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeDhcpV4Flags
+pub data PxeBaseCodeDhcpV4Flags [copy] {
+    raw: u16;
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeDhcpV6Packet
+pub data PxeBaseCodeDhcpV6Packet [copy] {
+    message_type: u8;
+    transaction_id: [u8; 3];
+    dhcp_options: [u8; 1024];
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeIpFilter
+pub data PxeBaseCodeIpFilter [copy] {
+    filters: PxeBaseCodeIpFilterFlags;
+    ip_cnt: u8;
+    reserved: u16;
+    ip_list: [IpAddress; 8];
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeIpFilterFlags
+pub data PxeBaseCodeIpFilterFlags [copy] {
+    raw: u8;
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeArpEntry
+pub data PxeBaseCodeArpEntry [copy] {
+    ip_addr: IpAddress;
+    mac_addr: MacAddress;
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeRouteEntry
+pub data PxeBaseCodeRouteEntry [copy] {
+    ip_addr: IpAddress;
+    subnet_mask: IpAddress;
+    gw_addr: IpAddress;
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeIcmpError
+pub data PxeBaseCodeIcmpError [copy] {
+    ty: u8;
+    code: u8;
+    checksum: u16;
+    u: PxeBaseCodeIcmpErrorUnion;
+    data: [u8; 494];
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeIcmpErrorUnion
+pub data PxeBaseCodeIcmpErrorUnion [copy] {
+    // Union alternative reserved: u32 (offset 0).
+    // Union alternative mtu: u32 (offset 0).
+    // Union alternative pointer: u32 (offset 0).
+    // Union alternative echo: PxeBaseCodeIcmpErrorEcho (offset 0).
+    raw: u32;
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeIcmpErrorEcho
+pub data PxeBaseCodeIcmpErrorEcho [copy] {
+    identifier: u16;
+    sequence: u16;
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeTftpError
+pub data PxeBaseCodeTftpError [copy] {
+    error_code: u8;
+    error_string: [Char8; 127];
+}
+
+// Pinned source: uefi_raw::protocol::network::snp::SimpleNetworkProtocol
+pub data SimpleNetworkProtocol [copy] {
+    revision: u64;
+    start: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self) -> Status
+    stop: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self) -> Status
+    initialize: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, extra_receive_buffer_size: usize, extra_transmit_buffer_size: usize, ) -> Status
+    reset: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, extended_verification: Boolean) -> Status
+    shutdown: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self) -> Status
+    receive_filters: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, enable: ReceiveFlags, disable: ReceiveFlags, reset_multicast_filter: Boolean, multicast_filter_count: usize, multicast_filter: *const MacAddress, ) -> Status
+    station_address: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, reset: Boolean, new: *const MacAddress, ) -> Status
+    statistics: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, reset: Boolean, statistics_size: *mut usize, statistics_table: *mut NetworkStatistics, ) -> Status
+    multicast_ip_to_mac: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, ipv6: Boolean, ip: *const IpAddress, mac: *mut MacAddress, ) -> Status
+    non_volatile_data: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, read: Boolean, offset: usize, buffer_size: usize, buffer: *mut ffi::c_void, ) -> Status
+    get_status: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, interrupt_status: *mut InterruptStatus, transmit_buffer: *mut *mut ffi::c_void, ) -> Status
+    transmit: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, header_size: usize, buffer_size: usize, buffer: *const ffi::c_void, source_address: *const MacAddress, dest_address: *const MacAddress, protocol: *const u16, ) -> Status
+    receive: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, header_size: *mut usize, buffer_size: *mut usize, buffer: *mut ffi::c_void, source_address: *mut MacAddress, dest_address: *mut MacAddress, protocol: *mut u16, ) -> Status
+    wait_for_packet: Event;
+    mode: addr;
+    // Foreign carrier: *const NetworkMode
+}
+
+// Pinned source: uefi_raw::protocol::network::snp::ReceiveFlags
+pub data ReceiveFlags [copy] {
+    raw: u32;
+}
+
+// Pinned source: uefi_raw::protocol::network::snp::InterruptStatus
+pub data InterruptStatus [copy] {
+    raw: u32;
+}
+
+// Pinned source: uefi_raw::protocol::network::snp::NetworkStatistics
+pub data NetworkStatistics [copy] {
+    rx_total_frames: u64;
+    rx_good_frames: u64;
+    rx_undersize_frames: u64;
+    rx_oversize_frames: u64;
+    rx_dropped_frames: u64;
+    rx_unicast_frames: u64;
+    rx_broadcast_frames: u64;
+    rx_multicast_frames: u64;
+    rx_crc_error_frames: u64;
+    rx_total_bytes: u64;
+    tx_total_frames: u64;
+    tx_good_frames: u64;
+    tx_undersize_frames: u64;
+    tx_oversize_frames: u64;
+    tx_dropped_frames: u64;
+    tx_unicast_frames: u64;
+    tx_broadcast_frames: u64;
+    tx_multicast_frames: u64;
+    tx_crc_error_frames: u64;
+    tx_total_bytes: u64;
+    collisions: u64;
+    unsupported_protocol: u64;
+    rx_duplicated_frames: u64;
+    rx_decrypt_error_frames: u64;
+    tx_error_frames: u64;
+    tx_retry_frames: u64;
+}
+
+// Pinned source: uefi_raw::protocol::network::snp::NetworkMode
+pub data NetworkMode [copy] {
+    state: NetworkState;
+    hw_address_size: u32;
+    media_header_size: u32;
+    max_packet_size: u32;
+    nv_ram_size: u32;
+    nv_ram_access_size: u32;
+    receive_filter_mask: u32;
+    receive_filter_setting: u32;
+    max_mcast_filter_count: u32;
+    mcast_filter_count: u32;
+    mcast_filter: [MacAddress; 16];
+    current_address: MacAddress;
+    broadcast_address: MacAddress;
+    permanent_address: MacAddress;
+    if_type: u8;
+    mac_address_changeable: Boolean;
+    multiple_tx_supported: Boolean;
+    media_present_supported: Boolean;
+    media_present: Boolean;
+}
+
+// Pinned source: uefi_raw::protocol::network::snp::NetworkState
+pub data NetworkState [copy] {
+    raw: u32;
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4Protocol
+pub data Tcp4Protocol [copy] {
+    get_mode_data: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, connection_state: *mut Tcp4ConnectionState, config_data: *mut Tcp4ConfigData, ip4_mode_data: *mut Ip4ModeData, managed_network_config_data: *mut c_void, simple_network_mode: *mut NetworkMode, ) -> Status
+    configure: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, config_data: *const Tcp4ConfigData) -> Status
+    routes: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, delete_route: Boolean, subnet_address: *const Ipv4Address, subnet_mask: *const Ipv4Address, gateway_address: *const Ipv4Address, ) -> Status
+    connect: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut Tcp4ConnectionToken) -> Status
+    accept: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, listen_token: *mut Tcp4ListenToken) -> Status
+    transmit: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut Tcp4IoToken) -> Status
+    receive: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut Tcp4IoToken) -> Status
+    close: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, close_token: *mut Tcp4CloseToken) -> Status
+    cancel: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, completion_token: *mut Tcp4CompletionToken, ) -> Status
+    poll: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4ConnectionState
+pub data Tcp4ConnectionState [copy] {
+    raw: i32;
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4ConfigData
+pub data Tcp4ConfigData [copy] {
+    type_of_service: u8;
+    time_to_live: u8;
+    access_point: Tcp4AccessPoint;
+    control_option: addr;
+    // Foreign carrier: *mut Tcp4Option
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4AccessPoint
+pub data Tcp4AccessPoint [copy] {
+    use_default_address: Boolean;
+    station_address: Ipv4Address;
+    subnet_mask: Ipv4Address;
+    station_port: u16;
+    remote_address: Ipv4Address;
+    remote_port: u16;
+    active_flag: Boolean;
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4Option
+pub data Tcp4Option [copy] {
+    receive_buffer_size: u32;
+    send_buffer_size: u32;
+    max_syn_back_log: u32;
+    connection_timeout: u32;
+    data_retries: u32;
+    fin_timeout: u32;
+    time_wait_timeout: u32;
+    keep_alive_probes: u32;
+    keep_alive_time: u32;
+    keep_alive_interval: u32;
+    enable_nagle: Boolean;
+    enable_time_stamp: Boolean;
+    enable_window_scaling: Boolean;
+    enable_selective_ack: Boolean;
+    enable_path_mtu_discovery: Boolean;
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4CompletionToken
+pub data Tcp4CompletionToken [copy] {
+    event: Event;
+    status: Status;
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4ConnectionToken
+pub data Tcp4ConnectionToken [copy] {
+    completion_token: Tcp4CompletionToken;
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4ListenToken
+pub data Tcp4ListenToken [copy] {
+    completion_token: Tcp4CompletionToken;
+    new_child_handle: Handle;
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4IoToken
+pub data Tcp4IoToken [copy] {
+    completion_token: Tcp4CompletionToken;
+    packet: Tcp4Packet;
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4CloseToken
+pub data Tcp4CloseToken [copy] {
+    completion_token: Tcp4CompletionToken;
+    abort_on_close: Boolean;
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4Packet
+pub data Tcp4Packet [copy] {
+    // Union alternative rx_data: *mut Tcp4ReceiveData (offset 0).
+    // Union alternative tx_data: *mut Tcp4TransmitData (offset 0).
+    raw: addr;
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4FragmentData
+pub data Tcp4FragmentData [copy] {
+    fragment_length: u32;
+    fragment_buf: addr;
+    // Foreign carrier: *mut u8
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4ReceiveData
+pub data Tcp4ReceiveData [copy] {
+    urgent: Boolean;
+    data_length: u32;
+    fragment_count: u32;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: fragment_table: [Tcp4FragmentData; 0] needs a bounded runtime tail view.
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4TransmitData
+pub data Tcp4TransmitData [copy] {
+    push: Boolean;
+    urgent: Boolean;
+    data_length: u32;
+    fragment_count: u32;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: fragment_table: [Tcp4FragmentData; 0] needs a bounded runtime tail view.
+}
+
+// Pinned source: uefi_raw::protocol::network::tcp4::Tcp4ClientConnectionModeParams
+pub data Tcp4ClientConnectionModeParams [copy] {
+    remote_ip: Ipv4Address;
+    remote_port: u16;
+}
+
+// Pinned source: uefi_raw::protocol::network::tls::TlsConfigDataType
+pub data TlsConfigDataType [copy] {
+    raw: i32;
+}
+
+// Pinned source: uefi_raw::protocol::network::tls::TlsConfigurationProtocol
+pub data TlsConfigurationProtocol [copy] {
+    set_data: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, typ: TlsConfigDataType, data: *const c_void, size: usize, ) -> Status
+    get_data: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, typ: TlsConfigDataType, data: *mut c_void, size: *mut usize, ) -> Status
+}
+
+// Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeUdpPort
+pub data PxeBaseCodeUdpPort [copy] {
+    raw: u16;
+}
+
+pub const IP_ADDRESS_ZERO: IpAddress = IpAddress { raw: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
+
+pub const DHCP4_EVENT_SEND_DISCOVER: Dhcp4Event = Dhcp4Event { raw: 1 };
+pub const DHCP4_EVENT_RCVD_OFFER: Dhcp4Event = Dhcp4Event { raw: 2 };
+pub const DHCP4_EVENT_SELECT_OFFER: Dhcp4Event = Dhcp4Event { raw: 3 };
+pub const DHCP4_EVENT_SEND_REQUEST: Dhcp4Event = Dhcp4Event { raw: 4 };
+pub const DHCP4_EVENT_RCVD_ACK: Dhcp4Event = Dhcp4Event { raw: 5 };
+pub const DHCP4_EVENT_RCVD_NAK: Dhcp4Event = Dhcp4Event { raw: 6 };
+pub const DHCP4_EVENT_SEND_DECLINE: Dhcp4Event = Dhcp4Event { raw: 7 };
+pub const DHCP4_EVENT_BOUND_COMPLETED: Dhcp4Event = Dhcp4Event { raw: 8 };
+pub const DHCP4_EVENT_ENTER_RENEWING: Dhcp4Event = Dhcp4Event { raw: 9 };
+pub const DHCP4_EVENT_ENTER_REBINDING: Dhcp4Event = Dhcp4Event { raw: 10 };
+pub const DHCP4_EVENT_ADDRESS_LOST: Dhcp4Event = Dhcp4Event { raw: 11 };
+pub const DHCP4_EVENT_FAIL: Dhcp4Event = Dhcp4Event { raw: 12 };
+pub const DHCP4_STATE_STOPPED: Dhcp4State = Dhcp4State { raw: 0 };
+pub const DHCP4_STATE_INIT: Dhcp4State = Dhcp4State { raw: 1 };
+pub const DHCP4_STATE_SELECTING: Dhcp4State = Dhcp4State { raw: 2 };
+pub const DHCP4_STATE_REQUESTING: Dhcp4State = Dhcp4State { raw: 3 };
+pub const DHCP4_STATE_BOUND: Dhcp4State = Dhcp4State { raw: 4 };
+pub const DHCP4_STATE_RENEWING: Dhcp4State = Dhcp4State { raw: 5 };
+pub const DHCP4_STATE_REBINDING: Dhcp4State = Dhcp4State { raw: 6 };
+pub const DHCP4_STATE_INIT_REBOOT: Dhcp4State = Dhcp4State { raw: 7 };
+pub const DHCP4_STATE_REBOOTING: Dhcp4State = Dhcp4State { raw: 8 };
+pub const DHCP4_PROTOCOL_GUID: Guid = Guid { data1: 0x8a219718, data2: 0x4ef5, data3: 0x4761, data4: [0x91, 0xc8, 0xc0, 0xf0, 0x4b, 0xda, 0x9e, 0x56] };
+pub const DHCP4_PROTOCOL_SERVICE_BINDING_GUID: Guid = Guid { data1: 0x9d9a39d8, data2: 0xbd42, data3: 0x4a73, data4: [0xa4, 0xd5, 0x8e, 0xe9, 0x4b, 0xe1, 0x13, 0x80] };
+pub const HTTP_VERSION_HTTP_VERSION_10: HttpVersion = HttpVersion { raw: 0 };
+pub const HTTP_VERSION_HTTP_VERSION_11: HttpVersion = HttpVersion { raw: 1 };
+pub const HTTP_VERSION_HTTP_VERSION_UNSUPPORTED: HttpVersion = HttpVersion { raw: 2 };
+pub const HTTP_METHOD_GET: HttpMethod = HttpMethod { raw: 0 };
+pub const HTTP_METHOD_POST: HttpMethod = HttpMethod { raw: 1 };
+pub const HTTP_METHOD_PATCH: HttpMethod = HttpMethod { raw: 2 };
+pub const HTTP_METHOD_OPTIONS: HttpMethod = HttpMethod { raw: 3 };
+pub const HTTP_METHOD_CONNECT: HttpMethod = HttpMethod { raw: 4 };
+pub const HTTP_METHOD_HEAD: HttpMethod = HttpMethod { raw: 5 };
+pub const HTTP_METHOD_PUT: HttpMethod = HttpMethod { raw: 6 };
+pub const HTTP_METHOD_DELETE: HttpMethod = HttpMethod { raw: 7 };
+pub const HTTP_METHOD_TRACE: HttpMethod = HttpMethod { raw: 8 };
+pub const HTTP_METHOD_MAX: HttpMethod = HttpMethod { raw: 9 };
+pub const HTTP_STATUS_CODE_STATUS_UNSUPPORTED: HttpStatusCode = HttpStatusCode { raw: 0 };
+pub const HTTP_STATUS_CODE_STATUS_100_CONTINUE: HttpStatusCode = HttpStatusCode { raw: 1 };
+pub const HTTP_STATUS_CODE_STATUS_101_SWITCHING_PROTOCOLS: HttpStatusCode = HttpStatusCode { raw: 2 };
+pub const HTTP_STATUS_CODE_STATUS_200_OK: HttpStatusCode = HttpStatusCode { raw: 3 };
+pub const HTTP_STATUS_CODE_STATUS_201_CREATED: HttpStatusCode = HttpStatusCode { raw: 4 };
+pub const HTTP_STATUS_CODE_STATUS_202_ACCEPTED: HttpStatusCode = HttpStatusCode { raw: 5 };
+pub const HTTP_STATUS_CODE_STATUS_203_NON_AUTHORITATIVE_INFORMATION: HttpStatusCode = HttpStatusCode { raw: 6 };
+pub const HTTP_STATUS_CODE_STATUS_204_NO_CONTENT: HttpStatusCode = HttpStatusCode { raw: 7 };
+pub const HTTP_STATUS_CODE_STATUS_205_RESET_CONTENT: HttpStatusCode = HttpStatusCode { raw: 8 };
+pub const HTTP_STATUS_CODE_STATUS_206_PARTIAL_CONTENT: HttpStatusCode = HttpStatusCode { raw: 9 };
+pub const HTTP_STATUS_CODE_STATUS_300_MULTIPLE_CHOICES: HttpStatusCode = HttpStatusCode { raw: 10 };
+pub const HTTP_STATUS_CODE_STATUS_301_MOVED_PERMANENTLY: HttpStatusCode = HttpStatusCode { raw: 11 };
+pub const HTTP_STATUS_CODE_STATUS_302_FOUND: HttpStatusCode = HttpStatusCode { raw: 12 };
+pub const HTTP_STATUS_CODE_STATUS_303_SEE_OTHER: HttpStatusCode = HttpStatusCode { raw: 13 };
+pub const HTTP_STATUS_CODE_STATUS_304_NOT_MODIFIED: HttpStatusCode = HttpStatusCode { raw: 14 };
+pub const HTTP_STATUS_CODE_STATUS_305_USE_PROXY: HttpStatusCode = HttpStatusCode { raw: 15 };
+pub const HTTP_STATUS_CODE_STATUS_307_TEMPORARY_REDIRECT: HttpStatusCode = HttpStatusCode { raw: 16 };
+pub const HTTP_STATUS_CODE_STATUS_400_BAD_REQUEST: HttpStatusCode = HttpStatusCode { raw: 17 };
+pub const HTTP_STATUS_CODE_STATUS_401_UNAUTHORIZED: HttpStatusCode = HttpStatusCode { raw: 18 };
+pub const HTTP_STATUS_CODE_STATUS_402_PAYMENT_REQUIRED: HttpStatusCode = HttpStatusCode { raw: 19 };
+pub const HTTP_STATUS_CODE_STATUS_403_FORBIDDEN: HttpStatusCode = HttpStatusCode { raw: 20 };
+pub const HTTP_STATUS_CODE_STATUS_404_NOT_FOUND: HttpStatusCode = HttpStatusCode { raw: 21 };
+pub const HTTP_STATUS_CODE_STATUS_405_METHOD_NOT_ALLOWED: HttpStatusCode = HttpStatusCode { raw: 22 };
+pub const HTTP_STATUS_CODE_STATUS_406_NOT_ACCEPTABLE: HttpStatusCode = HttpStatusCode { raw: 23 };
+pub const HTTP_STATUS_CODE_STATUS_407_PROXY_AUTHENTICATION_REQUIRED: HttpStatusCode = HttpStatusCode { raw: 24 };
+pub const HTTP_STATUS_CODE_STATUS_408_REQUEST_TIME_OUT: HttpStatusCode = HttpStatusCode { raw: 25 };
+pub const HTTP_STATUS_CODE_STATUS_409_CONFLICT: HttpStatusCode = HttpStatusCode { raw: 26 };
+pub const HTTP_STATUS_CODE_STATUS_410_GONE: HttpStatusCode = HttpStatusCode { raw: 27 };
+pub const HTTP_STATUS_CODE_STATUS_411_LENGTH_REQUIRED: HttpStatusCode = HttpStatusCode { raw: 28 };
+pub const HTTP_STATUS_CODE_STATUS_412_PRECONDITION_FAILED: HttpStatusCode = HttpStatusCode { raw: 29 };
+pub const HTTP_STATUS_CODE_STATUS_413_REQUEST_ENTITY_TOO_LARGE: HttpStatusCode = HttpStatusCode { raw: 30 };
+pub const HTTP_STATUS_CODE_STATUS_414_REQUEST_URI_TOO_LARGE: HttpStatusCode = HttpStatusCode { raw: 31 };
+pub const HTTP_STATUS_CODE_STATUS_415_UNSUPPORTED_MEDIA_TYPE: HttpStatusCode = HttpStatusCode { raw: 32 };
+pub const HTTP_STATUS_CODE_STATUS_416_REQUESTED_RANGE_NOT_SATISFIED: HttpStatusCode = HttpStatusCode { raw: 33 };
+pub const HTTP_STATUS_CODE_STATUS_417_EXPECTATION_FAILED: HttpStatusCode = HttpStatusCode { raw: 34 };
+pub const HTTP_STATUS_CODE_STATUS_500_INTERNAL_SERVER_ERROR: HttpStatusCode = HttpStatusCode { raw: 35 };
+pub const HTTP_STATUS_CODE_STATUS_501_NOT_IMPLEMENTED: HttpStatusCode = HttpStatusCode { raw: 36 };
+pub const HTTP_STATUS_CODE_STATUS_502_BAD_GATEWAY: HttpStatusCode = HttpStatusCode { raw: 37 };
+pub const HTTP_STATUS_CODE_STATUS_503_SERVICE_UNAVAILABLE: HttpStatusCode = HttpStatusCode { raw: 38 };
+pub const HTTP_STATUS_CODE_STATUS_504_GATEWAY_TIME_OUT: HttpStatusCode = HttpStatusCode { raw: 39 };
+pub const HTTP_STATUS_CODE_STATUS_505_VERSION_NOT_SUPPORTED: HttpStatusCode = HttpStatusCode { raw: 40 };
+pub const HTTP_STATUS_CODE_STATUS_308_PERMANENT_REDIRECT: HttpStatusCode = HttpStatusCode { raw: 41 };
+pub const HTTP_STATUS_CODE_STATUS_429_TOO_MANY_REQUESTS: HttpStatusCode = HttpStatusCode { raw: 42 };
+pub const HTTP_PROTOCOL_GUID: Guid = Guid { data1: 0x7a59b29b, data2: 0x910b, data3: 0x4171, data4: [0x82, 0x42, 0xa8, 0x5a, 0x0d, 0xf2, 0x5b, 0x5b] };
+pub const HTTP_PROTOCOL_SERVICE_BINDING_GUID: Guid = Guid { data1: 0xbdc8e6af, data2: 0xd9bc, data3: 0x4379, data4: [0xa7, 0x2a, 0xe0, 0xc4, 0xe7, 0x5d, 0xae, 0x1c] };
+pub const IP4_CONFIG2_DATA_TYPE_INTERFACE_INFO: Ip4Config2DataType = Ip4Config2DataType { raw: 0 };
+pub const IP4_CONFIG2_DATA_TYPE_POLICY: Ip4Config2DataType = Ip4Config2DataType { raw: 1 };
+pub const IP4_CONFIG2_DATA_TYPE_MANUAL_ADDRESS: Ip4Config2DataType = Ip4Config2DataType { raw: 2 };
+pub const IP4_CONFIG2_DATA_TYPE_GATEWAY: Ip4Config2DataType = Ip4Config2DataType { raw: 3 };
+pub const IP4_CONFIG2_DATA_TYPE_DNS_SERVER: Ip4Config2DataType = Ip4Config2DataType { raw: 4 };
+pub const IP4_CONFIG2_DATA_TYPE_MAXIMUM: Ip4Config2DataType = Ip4Config2DataType { raw: 5 };
+pub const IP4_CONFIG2_POLICY_STATIC: Ip4Config2Policy = Ip4Config2Policy { raw: 0 };
+pub const IP4_CONFIG2_POLICY_DHCP: Ip4Config2Policy = Ip4Config2Policy { raw: 1 };
+pub const IP4_CONFIG2_POLICY_MAX: Ip4Config2Policy = Ip4Config2Policy { raw: 2 };
+pub const IP4_CONFIG2_PROTOCOL_GUID: Guid = Guid { data1: 0x5b446ed1, data2: 0xe30b, data3: 0x4faa, data4: [0x87, 0x1a, 0x36, 0x54, 0xec, 0xa3, 0x60, 0x80] };
+pub const PXE_BASE_CODE_BOOT_TYPE_BOOTSTRAP: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 0 };
+pub const PXE_BASE_CODE_BOOT_TYPE_MS_WINNT_RIS: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 1 };
+pub const PXE_BASE_CODE_BOOT_TYPE_INTEL_LCM: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 2 };
+pub const PXE_BASE_CODE_BOOT_TYPE_DOS_UNDI: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 3 };
+pub const PXE_BASE_CODE_BOOT_TYPE_NEC_ESMPRO: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 4 };
+pub const PXE_BASE_CODE_BOOT_TYPE_IBM_WSOD: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 5 };
+pub const PXE_BASE_CODE_BOOT_TYPE_IBM_LCCM: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 6 };
+pub const PXE_BASE_CODE_BOOT_TYPE_CA_UNICENTER_TNG: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 7 };
+pub const PXE_BASE_CODE_BOOT_TYPE_HP_OPENVIEW: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 8 };
+pub const PXE_BASE_CODE_BOOT_TYPE_ALTIRIS_9: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 9 };
+pub const PXE_BASE_CODE_BOOT_TYPE_ALTIRIS_10: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 10 };
+pub const PXE_BASE_CODE_BOOT_TYPE_ALTIRIS_11: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 11 };
+pub const PXE_BASE_CODE_BOOT_TYPE_NOT_USED_12: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 12 };
+pub const PXE_BASE_CODE_BOOT_TYPE_REDHAT_INSTALL: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 13 };
+pub const PXE_BASE_CODE_BOOT_TYPE_REDHAT_BOOT: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 14 };
+pub const PXE_BASE_CODE_BOOT_TYPE_REMBO: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 15 };
+pub const PXE_BASE_CODE_BOOT_TYPE_BEOBOOT: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 16 };
+pub const PXE_BASE_CODE_BOOT_TYPE_PXETEST: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 65535 };
+pub const PXE_BASE_CODE_TFTP_OPCODE_TFTP_FIRST: PxeBaseCodeTftpOpcode = PxeBaseCodeTftpOpcode { raw: 0 };
+pub const PXE_BASE_CODE_TFTP_OPCODE_TFTP_GET_FILE_SIZE: PxeBaseCodeTftpOpcode = PxeBaseCodeTftpOpcode { raw: 1 };
+pub const PXE_BASE_CODE_TFTP_OPCODE_TFTP_READ_FILE: PxeBaseCodeTftpOpcode = PxeBaseCodeTftpOpcode { raw: 2 };
+pub const PXE_BASE_CODE_TFTP_OPCODE_TFTP_WRITE_FILE: PxeBaseCodeTftpOpcode = PxeBaseCodeTftpOpcode { raw: 3 };
+pub const PXE_BASE_CODE_TFTP_OPCODE_TFTP_READ_DIRECTORY: PxeBaseCodeTftpOpcode = PxeBaseCodeTftpOpcode { raw: 4 };
+pub const PXE_BASE_CODE_TFTP_OPCODE_MTFTP_GET_FILE_SIZE: PxeBaseCodeTftpOpcode = PxeBaseCodeTftpOpcode { raw: 5 };
+pub const PXE_BASE_CODE_TFTP_OPCODE_MTFTP_READ_FILE: PxeBaseCodeTftpOpcode = PxeBaseCodeTftpOpcode { raw: 6 };
+pub const PXE_BASE_CODE_TFTP_OPCODE_MTFTP_READ_DIRECTORY: PxeBaseCodeTftpOpcode = PxeBaseCodeTftpOpcode { raw: 7 };
+pub const PXE_BASE_CODE_TFTP_OPCODE_MTFTP_LAST: PxeBaseCodeTftpOpcode = PxeBaseCodeTftpOpcode { raw: 8 };
+pub const PXE_BASE_CODE_UDP_OP_FLAGS_ANY_SRC_IP: PxeBaseCodeUdpOpFlags = PxeBaseCodeUdpOpFlags { raw: 1 };
+pub const PXE_BASE_CODE_UDP_OP_FLAGS_ANY_SRC_PORT: PxeBaseCodeUdpOpFlags = PxeBaseCodeUdpOpFlags { raw: 2 };
+pub const PXE_BASE_CODE_UDP_OP_FLAGS_ANY_DEST_IP: PxeBaseCodeUdpOpFlags = PxeBaseCodeUdpOpFlags { raw: 4 };
+pub const PXE_BASE_CODE_UDP_OP_FLAGS_ANY_DEST_PORT: PxeBaseCodeUdpOpFlags = PxeBaseCodeUdpOpFlags { raw: 8 };
+pub const PXE_BASE_CODE_UDP_OP_FLAGS_USE_FILTER: PxeBaseCodeUdpOpFlags = PxeBaseCodeUdpOpFlags { raw: 16 };
+pub const PXE_BASE_CODE_UDP_OP_FLAGS_MAY_FRAGMENT: PxeBaseCodeUdpOpFlags = PxeBaseCodeUdpOpFlags { raw: 32 };
+pub const PXE_BASE_CODE_DHCP_V4_FLAGS_BROADCAST: PxeBaseCodeDhcpV4Flags = PxeBaseCodeDhcpV4Flags { raw: 1 };
+pub const PXE_BASE_CODE_IP_FILTER_FLAGS_STATION_IP: PxeBaseCodeIpFilterFlags = PxeBaseCodeIpFilterFlags { raw: 1 };
+pub const PXE_BASE_CODE_IP_FILTER_FLAGS_BROADCAST: PxeBaseCodeIpFilterFlags = PxeBaseCodeIpFilterFlags { raw: 2 };
+pub const PXE_BASE_CODE_IP_FILTER_FLAGS_PROMISCUOUS: PxeBaseCodeIpFilterFlags = PxeBaseCodeIpFilterFlags { raw: 4 };
+pub const PXE_BASE_CODE_IP_FILTER_FLAGS_PROMISCUOUS_MULTICAST: PxeBaseCodeIpFilterFlags = PxeBaseCodeIpFilterFlags { raw: 8 };
+pub const PXE_BASE_CODE_PROTOCOL_GUID: Guid = Guid { data1: 0x03c4e603, data2: 0xac28, data3: 0x11d3, data4: [0x9a, 0x2d, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+pub const PXE_BASE_CODE_DHCP_V4_PACKET_DHCP_MAGIK: u32 = 1669485411;
+pub const RECEIVE_FLAGS_UNICAST: ReceiveFlags = ReceiveFlags { raw: 1 };
+pub const RECEIVE_FLAGS_MULTICAST: ReceiveFlags = ReceiveFlags { raw: 2 };
+pub const RECEIVE_FLAGS_BROADCAST: ReceiveFlags = ReceiveFlags { raw: 4 };
+pub const RECEIVE_FLAGS_PROMISCUOUS: ReceiveFlags = ReceiveFlags { raw: 8 };
+pub const RECEIVE_FLAGS_PROMISCUOUS_MULTICAST: ReceiveFlags = ReceiveFlags { raw: 16 };
+pub const INTERRUPT_STATUS_RECEIVE: InterruptStatus = InterruptStatus { raw: 1 };
+pub const INTERRUPT_STATUS_TRANSMIT: InterruptStatus = InterruptStatus { raw: 2 };
+pub const INTERRUPT_STATUS_COMMAND: InterruptStatus = InterruptStatus { raw: 4 };
+pub const INTERRUPT_STATUS_SOFTWARE: InterruptStatus = InterruptStatus { raw: 8 };
+pub const NETWORK_STATE_STOPPED: NetworkState = NetworkState { raw: 0 };
+pub const NETWORK_STATE_STARTED: NetworkState = NetworkState { raw: 1 };
+pub const NETWORK_STATE_INITIALIZED: NetworkState = NetworkState { raw: 2 };
+pub const NETWORK_STATE_MAX_STATE: NetworkState = NetworkState { raw: 3 };
+pub const SIMPLE_NETWORK_PROTOCOL_GUID: Guid = Guid { data1: 0xa19832b9, data2: 0xac25, data3: 0x11d3, data4: [0x9a, 0x2d, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+pub const TCP4_CONNECTION_STATE_CLOSED: Tcp4ConnectionState = Tcp4ConnectionState { raw: 0 };
+pub const TCP4_CONNECTION_STATE_LISTEN: Tcp4ConnectionState = Tcp4ConnectionState { raw: 1 };
+pub const TCP4_CONNECTION_STATE_SYN_SENT: Tcp4ConnectionState = Tcp4ConnectionState { raw: 2 };
+pub const TCP4_CONNECTION_STATE_SYN_RECEIVED: Tcp4ConnectionState = Tcp4ConnectionState { raw: 3 };
+pub const TCP4_CONNECTION_STATE_ESTABLISHED: Tcp4ConnectionState = Tcp4ConnectionState { raw: 4 };
+pub const TCP4_CONNECTION_STATE_FIN_WAIT1: Tcp4ConnectionState = Tcp4ConnectionState { raw: 5 };
+pub const TCP4_CONNECTION_STATE_FIN_WAIT2: Tcp4ConnectionState = Tcp4ConnectionState { raw: 6 };
+pub const TCP4_CONNECTION_STATE_CLOSING: Tcp4ConnectionState = Tcp4ConnectionState { raw: 7 };
+pub const TCP4_CONNECTION_STATE_TIME_WAIT: Tcp4ConnectionState = Tcp4ConnectionState { raw: 8 };
+pub const TCP4_CONNECTION_STATE_CLOSE_WAIT: Tcp4ConnectionState = Tcp4ConnectionState { raw: 9 };
+pub const TCP4_CONNECTION_STATE_LAST_ACK: Tcp4ConnectionState = Tcp4ConnectionState { raw: 10 };
+pub const TCP4_PROTOCOL_GUID: Guid = Guid { data1: 0x65530bc7, data2: 0xa359, data3: 0x410f, data4: [0xb0, 0x10, 0x5a, 0xad, 0xc7, 0xec, 0x2b, 0x62] };
+pub const TCP4_PROTOCOL_SERVICE_BINDING_GUID: Guid = Guid { data1: 0x00720665, data2: 0x67eb, data3: 0x4a99, data4: [0xba, 0xf7, 0xd3, 0xc3, 0x3a, 0x1c, 0x7c, 0xc9] };
+pub const TLS_CONFIG_DATA_TYPE_HOST_PUBLIC_CERT: TlsConfigDataType = TlsConfigDataType { raw: 0 };
+pub const TLS_CONFIG_DATA_TYPE_HOST_PRIVATE_KEY: TlsConfigDataType = TlsConfigDataType { raw: 1 };
+pub const TLS_CONFIG_DATA_TYPE_CA_CERTIFICATE: TlsConfigDataType = TlsConfigDataType { raw: 2 };
+pub const TLS_CONFIG_DATA_TYPE_CERT_REVOCATION_LIST: TlsConfigDataType = TlsConfigDataType { raw: 3 };
+pub const TLS_CONFIG_DATA_TYPE_MAXIMUM: TlsConfigDataType = TlsConfigDataType { raw: 4 };
+pub const TLS_CONFIGURATION_PROTOCOL_GUID: Guid = Guid { data1: 0x1682fe44, data2: 0xbd7a, data3: 0x4407, data4: [0xb7, 0xc7, 0xdc, 0xa3, 0x7c, 0xa3, 0x92, 0x2d] };
+pub const TLS_CONFIGURATION_PROTOCOL_SERVICE_BINDING_GUID: Guid = Guid { data1: 0x952cb795, data2: 0xff36, data3: 0x48cf, data4: [0xa2, 0x49, 0x4d, 0xf4, 0x86, 0xd6, 0xab, 0x8d] };
+
+// Independently transcribed RFC2131 section2/Figure2; differs from pinned
+// PXE_BASE_CODE_DHCP_V4_FLAGS_BROADCAST=1 above (see network.PORT.md).
+pub const DHCP_RFC2131_BROADCAST_BIT: u16 = 0x8000;

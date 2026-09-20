@@ -1,0 +1,6 @@
+machine build(builder: &mut Build) {
+    builder.application("cathedral-uefi-network-tests");
+    builder.freestanding = true;
+    builder.depend_as("cathedral_uefi_raw", Source::Path { location: "../../../source/contracts/uefi/raw" });
+    builder.depend_as("cathedral_uefi", Source::Path { location: "../../../source/libraries/uefi" });
+}

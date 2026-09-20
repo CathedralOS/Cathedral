@@ -1,0 +1,261 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Pinned uefi-raw/src/net.rs cases, plus local sentinel/endian/bounds tests.
+// Semantic-evaluator assertions; no network I/O or live firmware callbacks.
+use cathedral_uefi::network_helpers::ip_from_octets;
+use cathedral_uefi::network_helpers::http_token_default;
+use cathedral_uefi::network_helpers::http_message_default;
+use cathedral_uefi::network_helpers::http_request_data_default;
+use cathedral_uefi::network_helpers::pxe_packet_bytes;
+use cathedral_uefi_raw::network::HttpToken;
+use cathedral_uefi_raw::network::HttpMessage;
+use cathedral_uefi_raw::network::HttpRequestData;
+use cathedral_uefi_raw::network::PxeBaseCodePacket;
+use cathedral_uefi_raw::network::Ipv4Address;
+use cathedral_uefi_raw::network::Ipv6Address;
+use cathedral_uefi_raw::network::IpAddress;
+use cathedral_uefi_raw::network::MacAddress;
+use cathedral_uefi_raw::network::NetworkStatistics;
+use cathedral_uefi_raw::network::PxeBaseCodeSrvlist;
+use cathedral_uefi_raw::network::PxeBaseCodeBootType;
+use cathedral_uefi_raw::network::PxeBaseCodeIpFilter;
+use cathedral_uefi_raw::network::PxeBaseCodeIpFilterFlags;
+use cathedral_uefi_raw::network::PxeBaseCodeDhcpV4Packet;
+use cathedral_uefi_raw::network::PxeBaseCodeDhcpV6Packet;
+use cathedral_uefi_raw::network::PxeBaseCodePacket;
+use cathedral_uefi::network_helpers::network_statistic_available;
+use cathedral_uefi::network_helpers::network_statistic;
+use cathedral_uefi::network_helpers::network_statistic_rx_total_frames;
+use cathedral_uefi::network_helpers::network_statistic_rx_good_frames;
+use cathedral_uefi::network_helpers::network_statistic_rx_undersize_frames;
+use cathedral_uefi::network_helpers::network_statistic_rx_oversize_frames;
+use cathedral_uefi::network_helpers::network_statistic_rx_dropped_frames;
+use cathedral_uefi::network_helpers::network_statistic_rx_unicast_frames;
+use cathedral_uefi::network_helpers::network_statistic_rx_broadcast_frames;
+use cathedral_uefi::network_helpers::network_statistic_rx_multicast_frames;
+use cathedral_uefi::network_helpers::network_statistic_rx_crc_error_frames;
+use cathedral_uefi::network_helpers::network_statistic_rx_total_bytes;
+use cathedral_uefi::network_helpers::network_statistic_tx_total_frames;
+use cathedral_uefi::network_helpers::network_statistic_tx_good_frames;
+use cathedral_uefi::network_helpers::network_statistic_tx_undersize_frames;
+use cathedral_uefi::network_helpers::network_statistic_tx_oversize_frames;
+use cathedral_uefi::network_helpers::network_statistic_tx_dropped_frames;
+use cathedral_uefi::network_helpers::network_statistic_tx_unicast_frames;
+use cathedral_uefi::network_helpers::network_statistic_tx_broadcast_frames;
+use cathedral_uefi::network_helpers::network_statistic_tx_multicast_frames;
+use cathedral_uefi::network_helpers::network_statistic_tx_crc_error_frames;
+use cathedral_uefi::network_helpers::network_statistic_tx_total_bytes;
+use cathedral_uefi::network_helpers::network_statistic_collisions;
+use cathedral_uefi::network_helpers::network_statistic_unsupported_protocol;
+use cathedral_uefi::network_helpers::network_statistic_rx_duplicated_frames;
+use cathedral_uefi::network_helpers::network_statistic_rx_decrypt_error_frames;
+use cathedral_uefi::network_helpers::network_statistic_tx_error_frames;
+use cathedral_uefi::network_helpers::network_statistic_tx_retry_frames;
+use cathedral_uefi::network_helpers::ipv4_from_octets;
+use cathedral_uefi::network_helpers::ipv4_octets;
+use cathedral_uefi::network_helpers::ipv6_from_octets;
+use cathedral_uefi::network_helpers::ipv6_octets;
+use cathedral_uefi::network_helpers::ip_default;
+use cathedral_uefi::network_helpers::ip_new_v4;
+use cathedral_uefi::network_helpers::ip_new_v6;
+use cathedral_uefi::network_helpers::ip_as_v4;
+use cathedral_uefi::network_helpers::ip_as_v6;
+use cathedral_uefi::network_helpers::ip_into_octets;
+use cathedral_uefi::network_helpers::mac_from_octets;
+use cathedral_uefi::network_helpers::mac_octets;
+use cathedral_uefi::network_helpers::mac_from_ethernet;
+use cathedral_uefi::network_helpers::mac_ethernet;
+use cathedral_uefi::network_helpers::pxe_server_new;
+use cathedral_uefi::network_helpers::pxe_server_address;
+use cathedral_uefi::network_helpers::network_swap16;
+use cathedral_uefi::network_helpers::network_swap32;
+use cathedral_uefi::network_helpers::pxe_bootp_ident;
+use cathedral_uefi::network_helpers::pxe_bootp_seconds;
+use cathedral_uefi::network_helpers::pxe_bootp_flags_upstream;
+use cathedral_uefi::network_helpers::pxe_dhcp_magik;
+use cathedral_uefi::network_helpers::pxe_transaction_id;
+use cathedral_uefi::network_helpers::pxe_packet_bytes;
+use cathedral_uefi::network_helpers::pxe_ip_filter_new;
+use cathedral_uefi::network_helpers::pxe_ip_filter_address;
+use cathedral_uefi::network_helpers::http_access_point_default;
+use cathedral_uefi::network_helpers::http_token_default;
+use cathedral_uefi::network_helpers::http_message_default;
+use cathedral_uefi::network_helpers::http_request_data_default;
+use cathedral_uefi::network_helpers::http_request_or_response_default;
+use cathedral_uefi::network_helpers::http_header_default;
+use cathedral_uefi::network_helpers::pxe_bootp_broadcast;
+use cathedral_uefi::network_helpers::NetworkStatistic;
+use cathedral_uefi::network_helpers::OptionalIpAddress;
+use cathedral_uefi::network_helpers::IpOctets;
+machine equal4(left: [u8; 4], right: [u8; 4]) -> bool {
+    left[0] == right[0] && left[1] == right[1] && left[2] == right[2] && left[3] == right[3]
+}
+machine equal6(left: [u8; 6], right: [u8; 6]) -> bool {
+    left[0] == right[0] && left[1] == right[1] && left[2] == right[2] && left[3] == right[3] && left[4] == right[4] && left[5] == right[5]
+}
+machine equal16(left: [u8; 16], right: [u8; 16]) -> bool {
+    left[0] == right[0] && left[1] == right[1] && left[2] == right[2] && left[3] == right[3] && left[4] == right[4] && left[5] == right[5] && left[6] == right[6] && left[7] == right[7] && left[8] == right[8] && left[9] == right[9] && left[10] == right[10] && left[11] == right[11] && left[12] == right[12] && left[13] == right[13] && left[14] == right[14] && left[15] == right[15]
+}
+machine equal32(left: [u8; 32], right: [u8; 32]) -> bool {
+    left[0] == right[0] && left[1] == right[1] && left[2] == right[2] && left[3] == right[3] && left[4] == right[4] && left[5] == right[5] && left[6] == right[6] && left[7] == right[7] && left[8] == right[8] && left[9] == right[9] && left[10] == right[10] && left[11] == right[11] && left[12] == right[12] && left[13] == right[13] && left[14] == right[14] && left[15] == right[15] && left[16] == right[16] && left[17] == right[17] && left[18] == right[18] && left[19] == right[19] && left[20] == right[20] && left[21] == right[21] && left[22] == right[22] && left[23] == right[23] && left[24] == right[24] && left[25] == right[25] && left[26] == right[26] && left[27] == right[27] && left[28] == right[28] && left[29] == right[29] && left[30] == right[30] && left[31] == right[31]
+}
+
+const TEST_IPV4: [u8; 4] = [91, 92, 93, 94];
+const TEST_IPV6: [u8; 16] = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116];
+machine test_ip_roundtrips() -> bool {
+    let v4: Ipv4Address = ipv4_from_octets(TEST_IPV4);
+    let v6: Ipv6Address = ipv6_from_octets(TEST_IPV6);
+    equal4(ipv4_octets(v4), TEST_IPV4) && equal16(ipv6_octets(v6), TEST_IPV6) &&
+    equal4(ip_as_v4(ip_new_v4(TEST_IPV4)).raw, TEST_IPV4) &&
+    equal16(ip_as_v6(ip_new_v6(TEST_IPV6)).raw, TEST_IPV6) &&
+    equal16(ip_new_v4(TEST_IPV4).raw, [91, 92, 93, 94, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) &&
+    equal16(ip_default().raw, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+}
+machine test_promised_conversions() -> bool {
+    equal4(ipv4_octets(ipv4_from_octets([0, 1, 2, 3])), [0, 1, 2, 3]) &&
+    equal4(ip_as_v4(ip_new_v4([7, 5, 3, 1])).raw, [7, 5, 3, 1]) &&
+    equal4(ip_as_v4(ip_new_v4([8, 8, 2, 6])).raw, [8, 8, 2, 6]) &&
+    equal16(ipv6_octets(ipv6_from_octets([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])),
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]) &&
+    equal16(ip_as_v6(ip_new_v6([7, 5, 3, 1, 6, 3, 8, 5, 2, 5, 2, 7, 3, 5, 2, 6])).raw,
+        [7, 5, 3, 1, 6, 3, 8, 5, 2, 5, 2, 7, 3, 5, 2, 6]) &&
+    equal6(mac_ethernet(mac_from_ethernet([8, 8, 2, 6, 6, 7])), [8, 8, 2, 6, 6, 7]) &&
+    equal32(mac_octets(mac_from_octets([8, 8, 2, 6, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 7, 0, 0, 0, 0, 0, 0, 0, 42])),
+        [8, 8, 2, 6, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 7, 0, 0, 0, 0, 0, 0, 0, 42])
+}
+machine test_mac_conversions() -> bool {
+    let value: MacAddress = mac_from_ethernet([0, 1, 2, 3, 4, 5]);
+    let all: MacAddress = mac_from_octets([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]);
+    equal32(mac_octets(value), [0, 1, 2, 3, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) &&
+    equal6(mac_ethernet(value), [0, 1, 2, 3, 4, 5]) &&
+    equal6(mac_ethernet(all), [0, 1, 2, 3, 4, 5]) &&
+    equal32(mac_octets(all), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31])
+}
+// Owned mock writes replace the upstream unsafe FFI helper; no foreign call.
+machine mock_receive_v4() -> IpAddress {
+    let mut value: IpAddress = ip_default();
+    value.raw[0] = 42; value.raw[1] = 42; value.raw[2] = 42; value.raw[3] = 42;
+    value
+}
+machine mock_receive_v6() -> IpAddress {
+    let mut value: IpAddress = mock_receive_v4();
+    value.raw[14] = 42; value.raw[15] = 42;
+    value
+}
+machine test_flow_v4() -> bool {
+    transition ip_into_octets(mock_receive_v4(), false) {
+        IpOctets::V4 { value } -> (equal4(value, [42, 42, 42, 42]))
+        _ -> (false)
+    }
+}
+machine test_flow_v6() -> bool {
+    transition ip_into_octets(mock_receive_v6(), true) {
+        IpOctets::V6 { value } -> (equal16(value, [42, 42, 42, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 42]))
+        _ -> (false)
+    }
+}
+machine statistic_is(value: NetworkStatistic, expected: u64) -> bool {
+    transition value {
+        NetworkStatistic::Available { value } -> (value == expected)
+        _ -> (false)
+    }
+}
+machine statistic_missing(value: NetworkStatistic) -> bool {
+    transition value { NetworkStatistic::Unavailable -> (true) _ -> (false) }
+}
+machine test_statistics() -> bool {
+    let zero: NetworkStatistics = NetworkStatistics {};
+    let unavailable: NetworkStatistics = NetworkStatistics {rx_total_frames: 0xffff_ffff_ffff_ffff, rx_good_frames: 0xffff_ffff_ffff_ffff, rx_undersize_frames: 0xffff_ffff_ffff_ffff, rx_oversize_frames: 0xffff_ffff_ffff_ffff, rx_dropped_frames: 0xffff_ffff_ffff_ffff, rx_unicast_frames: 0xffff_ffff_ffff_ffff, rx_broadcast_frames: 0xffff_ffff_ffff_ffff, rx_multicast_frames: 0xffff_ffff_ffff_ffff, rx_crc_error_frames: 0xffff_ffff_ffff_ffff, rx_total_bytes: 0xffff_ffff_ffff_ffff, tx_total_frames: 0xffff_ffff_ffff_ffff, tx_good_frames: 0xffff_ffff_ffff_ffff, tx_undersize_frames: 0xffff_ffff_ffff_ffff, tx_oversize_frames: 0xffff_ffff_ffff_ffff, tx_dropped_frames: 0xffff_ffff_ffff_ffff, tx_unicast_frames: 0xffff_ffff_ffff_ffff, tx_broadcast_frames: 0xffff_ffff_ffff_ffff, tx_multicast_frames: 0xffff_ffff_ffff_ffff, tx_crc_error_frames: 0xffff_ffff_ffff_ffff, tx_total_bytes: 0xffff_ffff_ffff_ffff, collisions: 0xffff_ffff_ffff_ffff, unsupported_protocol: 0xffff_ffff_ffff_ffff, rx_duplicated_frames: 0xffff_ffff_ffff_ffff, rx_decrypt_error_frames: 0xffff_ffff_ffff_ffff, tx_error_frames: 0xffff_ffff_ffff_ffff, tx_retry_frames: 0xffff_ffff_ffff_ffff};
+    network_statistic_available(0) && network_statistic_available(0x8000_0000_0000_0000) &&
+    statistic_is(network_statistic(0xffff_ffff_ffff_fffe), 0xffff_ffff_ffff_fffe) &&
+    !network_statistic_available(0xffff_ffff_ffff_ffff) &&
+    statistic_is(network_statistic_rx_total_frames(zero), 0) && statistic_missing(network_statistic_rx_total_frames(unavailable)) &&
+    statistic_is(network_statistic_rx_good_frames(zero), 0) && statistic_missing(network_statistic_rx_good_frames(unavailable)) &&
+    statistic_is(network_statistic_rx_undersize_frames(zero), 0) && statistic_missing(network_statistic_rx_undersize_frames(unavailable)) &&
+    statistic_is(network_statistic_rx_oversize_frames(zero), 0) && statistic_missing(network_statistic_rx_oversize_frames(unavailable)) &&
+    statistic_is(network_statistic_rx_dropped_frames(zero), 0) && statistic_missing(network_statistic_rx_dropped_frames(unavailable)) &&
+    statistic_is(network_statistic_rx_unicast_frames(zero), 0) && statistic_missing(network_statistic_rx_unicast_frames(unavailable)) &&
+    statistic_is(network_statistic_rx_broadcast_frames(zero), 0) && statistic_missing(network_statistic_rx_broadcast_frames(unavailable)) &&
+    statistic_is(network_statistic_rx_multicast_frames(zero), 0) && statistic_missing(network_statistic_rx_multicast_frames(unavailable)) &&
+    statistic_is(network_statistic_rx_crc_error_frames(zero), 0) && statistic_missing(network_statistic_rx_crc_error_frames(unavailable)) &&
+    statistic_is(network_statistic_rx_total_bytes(zero), 0) && statistic_missing(network_statistic_rx_total_bytes(unavailable)) &&
+    statistic_is(network_statistic_tx_total_frames(zero), 0) && statistic_missing(network_statistic_tx_total_frames(unavailable)) &&
+    statistic_is(network_statistic_tx_good_frames(zero), 0) && statistic_missing(network_statistic_tx_good_frames(unavailable)) &&
+    statistic_is(network_statistic_tx_undersize_frames(zero), 0) && statistic_missing(network_statistic_tx_undersize_frames(unavailable)) &&
+    statistic_is(network_statistic_tx_oversize_frames(zero), 0) && statistic_missing(network_statistic_tx_oversize_frames(unavailable)) &&
+    statistic_is(network_statistic_tx_dropped_frames(zero), 0) && statistic_missing(network_statistic_tx_dropped_frames(unavailable)) &&
+    statistic_is(network_statistic_tx_unicast_frames(zero), 0) && statistic_missing(network_statistic_tx_unicast_frames(unavailable)) &&
+    statistic_is(network_statistic_tx_broadcast_frames(zero), 0) && statistic_missing(network_statistic_tx_broadcast_frames(unavailable)) &&
+    statistic_is(network_statistic_tx_multicast_frames(zero), 0) && statistic_missing(network_statistic_tx_multicast_frames(unavailable)) &&
+    statistic_is(network_statistic_tx_crc_error_frames(zero), 0) && statistic_missing(network_statistic_tx_crc_error_frames(unavailable)) &&
+    statistic_is(network_statistic_tx_total_bytes(zero), 0) && statistic_missing(network_statistic_tx_total_bytes(unavailable)) &&
+    statistic_is(network_statistic_collisions(zero), 0) && statistic_missing(network_statistic_collisions(unavailable)) &&
+    statistic_is(network_statistic_unsupported_protocol(zero), 0) && statistic_missing(network_statistic_unsupported_protocol(unavailable)) &&
+    statistic_is(network_statistic_rx_duplicated_frames(zero), 0) && statistic_missing(network_statistic_rx_duplicated_frames(unavailable)) &&
+    statistic_is(network_statistic_rx_decrypt_error_frames(zero), 0) && statistic_missing(network_statistic_rx_decrypt_error_frames(unavailable)) &&
+    statistic_is(network_statistic_tx_error_frames(zero), 0) && statistic_missing(network_statistic_tx_error_frames(unavailable)) &&
+    statistic_is(network_statistic_tx_retry_frames(zero), 0) && statistic_missing(network_statistic_tx_retry_frames(unavailable))
+}
+machine test_endian() -> bool {
+    let packet: PxeBaseCodeDhcpV4Packet = PxeBaseCodeDhcpV4Packet {
+        bootp_ident: 0x78563412, bootp_seconds: 0x3412, bootp_flags: 0x0080, dhcp_magik: 0x63538263,
+    };
+    let maximum: PxeBaseCodeDhcpV6Packet = PxeBaseCodeDhcpV6Packet { transaction_id: [255, 255, 255] };
+    let typical: PxeBaseCodeDhcpV6Packet = PxeBaseCodeDhcpV6Packet { transaction_id: [18, 52, 86] };
+    network_swap16(0) == 0 && network_swap16(65535) == 65535 &&
+    network_swap32(0) == 0 && network_swap32(0xffffffff) == 0xffffffff &&
+    pxe_bootp_ident(packet) == 0x12345678 && pxe_bootp_seconds(packet) == 0x1234 &&
+    pxe_dhcp_magik(packet) == 0x63825363 && pxe_transaction_id(typical) == 0x123456 &&
+    pxe_transaction_id(maximum) == 0xffffff &&
+    pxe_bootp_flags_upstream(packet).raw == 0 && pxe_bootp_broadcast(packet)
+}
+machine optional_missing(value: OptionalIpAddress) -> bool {
+    transition value { OptionalIpAddress::None -> (true) _ -> (false) }
+}
+machine optional_is_v4(value: OptionalIpAddress, expected: [u8; 4]) -> bool {
+    transition value {
+        OptionalIpAddress::Some { value } -> (equal4(ip_as_v4(value).raw, expected))
+        _ -> (false)
+    }
+}
+machine test_pxe_filter_server() -> bool {
+    let address: IpAddress = ip_new_v4(TEST_IPV4);
+    let any: PxeBaseCodeSrvlist = pxe_server_new(PxeBaseCodeBootType { raw: 0 }, OptionalIpAddress::None);
+    let only: PxeBaseCodeSrvlist = pxe_server_new(PxeBaseCodeBootType { raw: 65535 }, OptionalIpAddress::Some { value: address });
+    let values: [IpAddress; 8] = [address, address, address, address, address, address, address, address];
+    let empty: PxeBaseCodeIpFilter = pxe_ip_filter_new(PxeBaseCodeIpFilterFlags { raw: 1 }, values, 0);
+    let one: PxeBaseCodeIpFilter = pxe_ip_filter_new(PxeBaseCodeIpFilterFlags { raw: 2 }, values, 1);
+    let full: PxeBaseCodeIpFilter = pxe_ip_filter_new(PxeBaseCodeIpFilterFlags { raw: 4 }, values, 8);
+    any.accept_any_response.raw == 1 && any.reserved == 0 && optional_missing(pxe_server_address(any)) &&
+    only.accept_any_response.raw == 0 && only.reserved == 0 && only.server_type.raw == 65535 &&
+    optional_is_v4(pxe_server_address(only), TEST_IPV4) && empty.ip_cnt == 0 &&
+    empty.ip_list[0].raw[0] == 0 && empty.ip_list[7].raw[15] == 0 &&
+    one.ip_cnt == 1 && optional_is_v4(pxe_ip_filter_address(one, 0), TEST_IPV4) &&
+    one.ip_list[1].raw[0] == 0 && full.ip_cnt == 8 &&
+    optional_is_v4(pxe_ip_filter_address(full, 7), TEST_IPV4) &&
+    optional_missing(pxe_ip_filter_address(empty, 0)) && optional_missing(pxe_ip_filter_address(full, 8)) &&
+    optional_missing(pxe_ip_filter_address(PxeBaseCodeIpFilter { ip_cnt: 9 }, 0))
+}
+machine test_defaults_and_tagged_input() -> bool {
+    let token: HttpToken = http_token_default();
+    let message: HttpMessage = http_message_default();
+    let request: HttpRequestData = http_request_data_default();
+    let mut packet: PxeBaseCodePacket;
+    packet.raw[0] = 17;
+    packet.raw[1471] = 42;
+    let bytes: &[u8; 1472] = pxe_packet_bytes(&packet);
+    token.event.raw == 0 && token.status.raw == 0 && message.header_count == 0 && message.body_length == 0 &&
+    request.method.raw == 0 && bytes[0] == 17 && bytes[1471] == 42 &&
+    equal4(ip_as_v4(ip_from_octets(IpOctets::V4 { value: TEST_IPV4 })).raw, TEST_IPV4) &&
+    equal16(ip_as_v6(ip_from_octets(IpOctets::V6 { value: TEST_IPV6 })).raw, TEST_IPV6)
+}
+machine test_result() -> i32 {
+    transition test_ip_roundtrips() && test_promised_conversions() && test_mac_conversions() &&
+        test_flow_v4() && test_flow_v6() && test_statistics() && test_defaults_and_tagged_input() && test_endian() && test_pxe_filter_server() {
+        true -> (0)
+        _ -> (1)
+    }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

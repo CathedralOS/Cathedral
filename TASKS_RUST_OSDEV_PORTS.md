@@ -141,7 +141,7 @@ Cathedral's authority-bearing boot policy do not belong in this phase.
 - [x] **UEFI-005 — Port display, bus, and machine protocols.** Graphics output,
   PCI/root bridge, USB, IOMMU, RNG, ACPI, memory-protection, and miscellaneous
   protocol shapes and GUIDs.
-- [ ] **UEFI-006 — Port network protocols.** SNP, PXE, DHCPv4, IPv4/config,
+- [x] **UEFI-006 — Port network protocols.** SNP, PXE, DHCPv4, IPv4/config,
   TCPv4, HTTP, and TLS representations.  This is ABI transcription only, not a
   Cathedral network stack.
 - [x] **UEFI-007 — Port HII protocols.** HII database, forms/IFR, strings,
