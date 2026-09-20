@@ -31,7 +31,9 @@ Rust stays in the ignored reading room; no Rust vendor tree enters Cathedral.
 ## Source and public-symbol map
 
 [hii-inventory.json](hii-inventory.json) binds every source hash and anchor:
-nine files; 948 translated, 131 blocked, 13 omitted, zero pending.
+nine files; 828 translated, 131 blocked, 13 omitted, zero pending.
+Size-assertion macro invocation rows are not declarations in the lexical index;
+the target probe still checks every recorded size.
 [The schema](../../../../tools/ports/uefi-hii/schema.json) supplements the lexical
 inventory with every complete field mapping. The corpus has 185 inert carriers,
 391 named constants, and 185 authored fixed policies in

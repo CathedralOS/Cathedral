@@ -1,0 +1,29 @@
+// Source-only whole raw-corpus check; no native entry or service call.
+use cathedral_uefi_raw::scalars;
+use cathedral_uefi_raw::status;
+use cathedral_uefi_raw::time;
+use cathedral_uefi_raw::capsule;
+use cathedral_uefi_raw::revision;
+use cathedral_uefi_raw::tables;
+use cathedral_uefi_raw::console;
+use cathedral_uefi_raw::serial;
+use cathedral_uefi_raw::loaded_image;
+use cathedral_uefi_raw::device_path;
+use cathedral_uefi_raw::load_file;
+use cathedral_uefi_raw::shell_params;
+use cathedral_uefi_raw::storage;
+use cathedral_uefi_raw::machine_protocols;
+use cathedral_uefi_raw::network;
+use cathedral_uefi_raw::hii;
+use cathedral_uefi_raw::hii_config;
+use cathedral_uefi_raw::hii_database;
+use cathedral_uefi_raw::hii_font;
+use cathedral_uefi_raw::hii_form_browser;
+use cathedral_uefi_raw::hii_ifr;
+use cathedral_uefi_raw::hii_image;
+use cathedral_uefi_raw::hii_popup;
+use cathedral_uefi_raw::hii_string;
+use cathedral_uefi_raw::tcg;
+use cathedral_uefi_raw::shell_protocols;
+data Main {}
+machine Main::main(&mut self) {}

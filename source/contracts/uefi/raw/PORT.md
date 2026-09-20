@@ -6,6 +6,9 @@ This isolated package translates `uefi-raw` from
 See the repository [notices](../../../../THIRD_PARTY_NOTICES.md) and each slice's
 source inventory, vectors, verification commands, and deviations.
 
+The [whole-crate conformance audit](CONFORMANCE.md) closes the pinned source
+inventory and records fresh-compiler verification and unresolved consumers.
+
 | Slice | Status and evidence |
 | --- | --- |
 | Scalars and pure scalar helpers | [Tested by Omega semantic evaluation](scalars.PORT.md) |

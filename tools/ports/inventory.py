@@ -63,10 +63,11 @@ def rust_anchors(source):
                 clean += line[index]
                 index += 1
         clean = clean.strip()
-        declaration = re.search(r'\b(?:fn|struct|enum|union|trait|type|static|mod)\s+([A-Za-z_][A-Za-z_0-9]*)', clean)
+        declaration = re.search(r"(?<!['\w])(?:fn|struct|enum|union|trait|type|mod)\s+([A-Za-z_][A-Za-z_0-9]*)", clean)
+        declaration = declaration or re.search(r"(?<!['\w])static\s+(?:(?:ref|mut)\s+)?([A-Za-z_][A-Za-z_0-9]*)", clean)
         declaration = declaration or re.search(r'\bconst\s+([A-Za-z_][A-Za-z_0-9]*)\s*(?::(?!:)|=)', clean)
         field = re.match(r'pub(?:\([^)]*\))?\s+((?:r#)?[A-Za-z_][A-Za-z_0-9]*)\s*:', clean)
-        variant = re.match(r'([A-Z][A-Za-z_0-9]*)\s*=', clean)
+        variant = re.match(r'([A-Z][A-Za-z_0-9]*)\s*=(?![=>])', clean)
         exported = re.match(r'pub\s+use\s+(.+)', clean)
         matched = declaration or field or variant or exported
         if matched:

@@ -1,0 +1,658 @@
+{
+  "format": "cathedral-uefi-conformance-index-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/uefi-rs",
+    "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a",
+    "roots": [
+      "uefi-raw/src"
+    ]
+  },
+  "slices": {
+    "scalar": {
+      "path": "scalar-inventory.json",
+      "sha256": "54b44e03447c49a941d1486d5794c2881d84e3990c5d9019c72866e25a4d070b"
+    },
+    "tables": {
+      "path": "tables-inventory.json",
+      "sha256": "656b941032da28d7355688fe66a886e80c19946f23c13aec551ea4ba5a49c103"
+    },
+    "console": {
+      "path": "console-inventory.json",
+      "sha256": "cd1398e78f52f415f0b9ef07142046847f1a13780faf4f5aa05fcdad327b20b7"
+    },
+    "storage": {
+      "path": "storage-inventory.json",
+      "sha256": "ff18b428c9e53d626039f28b954df99dca07dcdcbb9a01ecc9ed9259aac2315e"
+    },
+    "machine": {
+      "path": "machine-inventory.json",
+      "sha256": "d771d5312f07ea5e55926785ffb35164a48a12c02a2e62c88ef959648fce3853"
+    },
+    "network": {
+      "path": "network-inventory.json",
+      "sha256": "68b43e8c17feabacf81514d78b4cfab8f98649a991fe3c9b8359f3a214ad3355"
+    },
+    "hii": {
+      "path": "hii-inventory.json",
+      "sha256": "1fdc2bf3ae817b6b99835c3fdd48499681f66a31429c581f8dda805f6b82bb1a"
+    },
+    "tcg": {
+      "path": "tcg-inventory.json",
+      "sha256": "3411c0fdbdf80513380d151767eddc63911aa9b6a49fa5941385ce528b838282"
+    },
+    "shell": {
+      "path": "shell-inventory.json",
+      "sha256": "dec207ffd698d2cb708877e455494d3d4db0e1b043dea2c99d6ee3a4f2ef89ea"
+    }
+  },
+  "files": {
+    "uefi-raw/src/capsule.rs": {
+      "sha256": "b3d374ec187282c63d557b22e955a48ea0a7fb5f5314a482b9962d1caa8b9d40",
+      "review_slices": [
+        "scalar"
+      ],
+      "symbols": {
+        "translated": 28
+      }
+    },
+    "uefi-raw/src/enums.rs": {
+      "sha256": "f1ecac9894f55f589c1323bfcdaafa8a69f0ab3d45dcb5992a06bf09ae0015cb",
+      "review_slices": [],
+      "symbols": {
+        "omitted": 1
+      },
+      "scaffold_omission": "Rust newtype_enum macro and formatting machinery deliberately omitted; every invocation is expanded into open raw carriers and named constants in its owning slice."
+    },
+    "uefi-raw/src/firmware_storage.rs": {
+      "sha256": "73d3b7b10cc59b0304eaa26f236468336168b52ba649119a62e58c60874fdbb4",
+      "review_slices": [
+        "storage"
+      ],
+      "symbols": {
+        "translated": 66
+      }
+    },
+    "uefi-raw/src/lib.rs": {
+      "sha256": "50923bf48b9896d51a83caf4b4873c83f6a56979fab0a3da3a8933a1cf504464",
+      "review_slices": [
+        "scalar"
+      ],
+      "symbols": {
+        "omitted": 14,
+        "translated": 26
+      }
+    },
+    "uefi-raw/src/net.rs": {
+      "sha256": "d4e9c720e22bb65b8fb9ab0d9c5f3b2ffe8545fe80f39c4f91edf27157d5ca25",
+      "review_slices": [
+        "network"
+      ],
+      "symbols": {
+        "omitted": 4,
+        "translated": 43
+      }
+    },
+    "uefi-raw/src/protocol/acpi.rs": {
+      "sha256": "151e06ede7b2d59364b71686ebbbc5855958ceadc778a7eca2503a2e9b2584f8",
+      "review_slices": [
+        "machine"
+      ],
+      "symbols": {
+        "translated": 4
+      }
+    },
+    "uefi-raw/src/protocol/ata.rs": {
+      "sha256": "4f8f4449e00cbe8fb984218b13c0e1e937c2dbcc9296988b35055456d08b7e84",
+      "review_slices": [
+        "storage"
+      ],
+      "symbols": {
+        "translated": 79
+      }
+    },
+    "uefi-raw/src/protocol/block.rs": {
+      "sha256": "2317605a26ddd4312745ab8e34206df739b39cc0188ddcfd47c17e7fbdf8da6c",
+      "review_slices": [
+        "storage"
+      ],
+      "symbols": {
+        "translated": 35
+      }
+    },
+    "uefi-raw/src/protocol/console.rs": {
+      "sha256": "331ad38065e138d1ac03d5bba9343f58645c4ac2318559ab1dda6f0fd03ffcb2",
+      "review_slices": [
+        "console"
+      ],
+      "symbols": {
+        "translated": 148
+      }
+    },
+    "uefi-raw/src/protocol/console/serial.rs": {
+      "sha256": "9142a0d1ab94ad5552261c316b488d739c35548834d21b9c94b38e16b89dc6fd",
+      "review_slices": [
+        "console"
+      ],
+      "symbols": {
+        "translated": 50
+      }
+    },
+    "uefi-raw/src/protocol/device_path.rs": {
+      "sha256": "60e91f13a4163930d3dbb410e86e4d860d363ae2b8a9d940cc8fb9577fa4ef2b",
+      "review_slices": [
+        "console"
+      ],
+      "symbols": {
+        "omitted": 1,
+        "translated": 88
+      }
+    },
+    "uefi-raw/src/protocol/device_path/device_path_gen.rs": {
+      "sha256": "441172a48c1203a0ba3a78a8ad7e0ec0895a4b6a5066a1531e75e9735282a5df",
+      "review_slices": [
+        "console"
+      ],
+      "symbols": {
+        "blocked": 15,
+        "translated": 248
+      }
+    },
+    "uefi-raw/src/protocol/disk.rs": {
+      "sha256": "10e06e8e2b8a05e96639753985184aea3863bf548ede8119ea32238cfbcce153",
+      "review_slices": [
+        "storage"
+      ],
+      "symbols": {
+        "translated": 31
+      }
+    },
+    "uefi-raw/src/protocol/driver.rs": {
+      "sha256": "3482958cbc7960c79916b9ae02249c56c58e1d4031814086c748ee2d4e72d03d",
+      "review_slices": [
+        "machine"
+      ],
+      "symbols": {
+        "translated": 17
+      }
+    },
+    "uefi-raw/src/protocol/file_system.rs": {
+      "sha256": "1c38e902ca2a4edf9d9f0dfe970375ce4e0ea335fb52fe378db44cfd5194c199",
+      "review_slices": [
+        "storage"
+      ],
+      "symbols": {
+        "translated": 62
+      }
+    },
+    "uefi-raw/src/protocol/firmware_management.rs": {
+      "sha256": "b0e86889b10e14d0a36dde30ac7cbd509a81e3b57ae84a94af1fc61cfcfe7e1c",
+      "review_slices": [
+        "storage"
+      ],
+      "symbols": {
+        "translated": 82
+      }
+    },
+    "uefi-raw/src/protocol/firmware_volume.rs": {
+      "sha256": "d2fb2141fa7bc430c4737e48983f62b715c8a38645c63dc5edf370f625a4055a",
+      "review_slices": [
+        "storage"
+      ],
+      "symbols": {
+        "translated": 121
+      }
+    },
+    "uefi-raw/src/protocol/hii/config.rs": {
+      "sha256": "1f2a9516441daa91c8da661b406abce4832e3a70c17e7b8b21081f393129ab2d",
+      "review_slices": [
+        "hii"
+      ],
+      "symbols": {
+        "translated": 30
+      }
+    },
+    "uefi-raw/src/protocol/hii/database.rs": {
+      "sha256": "04715ba5f4556db557b86670198e5aad6c6e133e705a52300cc3e8081cd224a2",
+      "review_slices": [
+        "hii"
+      ],
+      "symbols": {
+        "blocked": 1,
+        "omitted": 1,
+        "translated": 24
+      }
+    },
+    "uefi-raw/src/protocol/hii/font.rs": {
+      "sha256": "45ea5a83d5dea5810505f039ac6416de87eebc9db8060e3c27888b1094388b78",
+      "review_slices": [
+        "hii"
+      ],
+      "symbols": {
+        "blocked": 1,
+        "translated": 63
+      }
+    },
+    "uefi-raw/src/protocol/hii/form_browser.rs": {
+      "sha256": "10d7a2099c0a491bcd7ff458a25c3a421105996071c149b68c10acc5bcf70ac6",
+      "review_slices": [
+        "hii"
+      ],
+      "symbols": {
+        "translated": 20
+      }
+    },
+    "uefi-raw/src/protocol/hii/ifr.rs": {
+      "sha256": "a1d255ec82be889e95a91b65752cf3f897e1a26f1949f15145e1df43b8afff47",
+      "review_slices": [
+        "hii"
+      ],
+      "symbols": {
+        "blocked": 120,
+        "omitted": 4,
+        "translated": 433
+      }
+    },
+    "uefi-raw/src/protocol/hii/image.rs": {
+      "sha256": "d6fa689a78e0928b8f1665793c43147efafe5ecd6178acc983462b50b966f88e",
+      "review_slices": [
+        "hii"
+      ],
+      "symbols": {
+        "blocked": 8,
+        "omitted": 1,
+        "translated": 29
+      }
+    },
+    "uefi-raw/src/protocol/hii/mod.rs": {
+      "sha256": "8055615b2323c40400af8c52dc24d304d2a04189698f5f5fde52938816bf4071",
+      "review_slices": [
+        "hii"
+      ],
+      "symbols": {
+        "blocked": 1,
+        "omitted": 7,
+        "translated": 203
+      }
+    },
+    "uefi-raw/src/protocol/hii/popup.rs": {
+      "sha256": "c9dba5facb99cd714d41a144fb6338d863f77f39a6500ae135feaf4510829e5e",
+      "review_slices": [
+        "hii"
+      ],
+      "symbols": {
+        "translated": 19
+      }
+    },
+    "uefi-raw/src/protocol/hii/string.rs": {
+      "sha256": "24ae0b88afb1b1725155a48e766c2870cb4873fe13978075a22bb7325667b2b2",
+      "review_slices": [
+        "hii"
+      ],
+      "symbols": {
+        "translated": 7
+      }
+    },
+    "uefi-raw/src/protocol/iommu.rs": {
+      "sha256": "26a9b198163112a96911cfdd2338b94b3a27985bb8cd32eb1d5a89802beddaba",
+      "review_slices": [
+        "machine"
+      ],
+      "symbols": {
+        "translated": 26
+      }
+    },
+    "uefi-raw/src/protocol/loaded_image.rs": {
+      "sha256": "6b8ac35541bb05f0d53a52419f9646f0e3d672e62406f55ab62d0c15d5ad50ca",
+      "review_slices": [
+        "console"
+      ],
+      "symbols": {
+        "translated": 15
+      }
+    },
+    "uefi-raw/src/protocol/media.rs": {
+      "sha256": "559eee69d99ec9d2abc88f291f3c7a8d433b4ea8c55cc80bff988183d8978521",
+      "review_slices": [
+        "console"
+      ],
+      "symbols": {
+        "translated": 10
+      }
+    },
+    "uefi-raw/src/protocol/memory_protection.rs": {
+      "sha256": "fc34714da247c998d49ae6583fd288894001ef2729fda2a1e1d738c01f98967f",
+      "review_slices": [
+        "machine"
+      ],
+      "symbols": {
+        "translated": 5
+      }
+    },
+    "uefi-raw/src/protocol/misc.rs": {
+      "sha256": "0988a70511e5b1a0278ed5dff646d05f874f2ff4b4cf8a644de2da5117d25825",
+      "review_slices": [
+        "machine"
+      ],
+      "symbols": {
+        "translated": 12
+      }
+    },
+    "uefi-raw/src/protocol/mod.rs": {
+      "sha256": "43a99bb45fe993bdd6e1a1c54a853308cd16f56437a06d815036d9af745319c3",
+      "review_slices": [],
+      "symbols": {
+        "omitted": 26
+      },
+      "scaffold_omission": "Rust module/reexport topology deliberately flattened into the reviewed Omega slice modules; all referenced source files are independently covered by this complete inventory."
+    },
+    "uefi-raw/src/protocol/network/dhcp4.rs": {
+      "sha256": "7bc13cb4583040c2fb5e89ff48290ada4ce1a523cb4c7c799fa1b3c7cf5ee0ce",
+      "review_slices": [
+        "network"
+      ],
+      "symbols": {
+        "blocked": 2,
+        "translated": 94
+      }
+    },
+    "uefi-raw/src/protocol/network/http.rs": {
+      "sha256": "760a531805b323e01ce56bb25c9fd7815616866b6b7785c86ff11b7568069314",
+      "review_slices": [
+        "network"
+      ],
+      "symbols": {
+        "omitted": 2,
+        "translated": 111
+      }
+    },
+    "uefi-raw/src/protocol/network/ip4.rs": {
+      "sha256": "195d736494c73b94410c32903c4165970944c96b030f09f2e495f780ad495500",
+      "review_slices": [
+        "network"
+      ],
+      "symbols": {
+        "translated": 33
+      }
+    },
+    "uefi-raw/src/protocol/network/ip4_config2.rs": {
+      "sha256": "d5c27ebe8e3814fe55a9731f16eea19c865d26e60c48e811d5b565a500da69aa",
+      "review_slices": [
+        "network"
+      ],
+      "symbols": {
+        "translated": 29
+      }
+    },
+    "uefi-raw/src/protocol/network/mod.rs": {
+      "sha256": "e8fbddcc09e2fbf002767e470177909458ab9ae8d767371a31ee262aac3ac6a3",
+      "review_slices": [
+        "network"
+      ],
+      "symbols": {
+        "omitted": 8
+      }
+    },
+    "uefi-raw/src/protocol/network/pxe.rs": {
+      "sha256": "77d053bea35d7c25430559ddbce938c87060537a7f87d354e7b6733d125904c3",
+      "review_slices": [
+        "network"
+      ],
+      "symbols": {
+        "blocked": 3,
+        "omitted": 4,
+        "translated": 178
+      }
+    },
+    "uefi-raw/src/protocol/network/snp.rs": {
+      "sha256": "f5d16731689151025a61f1ec8d58c4c9ff3dc01b6fa1cd67fe38256645495906",
+      "review_slices": [
+        "network"
+      ],
+      "symbols": {
+        "translated": 109
+      }
+    },
+    "uefi-raw/src/protocol/network/tcp4.rs": {
+      "sha256": "01b40c15ada569aca7cbc51f2d39ef7471ac71d2bb7d462538f89f12d42ea5b3",
+      "review_slices": [
+        "network"
+      ],
+      "symbols": {
+        "blocked": 2,
+        "omitted": 1,
+        "translated": 86
+      }
+    },
+    "uefi-raw/src/protocol/network/tls.rs": {
+      "sha256": "ffdeefc4fc2b7434297720fc325cad1816d6ce5a6897ef6cdbbf9858cba9d30c",
+      "review_slices": [
+        "network"
+      ],
+      "symbols": {
+        "translated": 11
+      }
+    },
+    "uefi-raw/src/protocol/nvme.rs": {
+      "sha256": "5ac4c828d44c695953b94453c46189ef8c19abf970ac4a61fe740196339eac8b",
+      "review_slices": [
+        "storage"
+      ],
+      "symbols": {
+        "translated": 54
+      }
+    },
+    "uefi-raw/src/protocol/pci/mod.rs": {
+      "sha256": "fbffc428043fabad36fcdad58000adc4aee2fc6af18aa8c94d182d91c943980d",
+      "review_slices": [
+        "machine"
+      ],
+      "symbols": {
+        "omitted": 1
+      }
+    },
+    "uefi-raw/src/protocol/pci/root_bridge.rs": {
+      "sha256": "c36fdfaf791cba3e31fd5029d792c96ac58bd45668962037d8662a9bce7bf394",
+      "review_slices": [
+        "machine"
+      ],
+      "symbols": {
+        "translated": 58
+      }
+    },
+    "uefi-raw/src/protocol/rng.rs": {
+      "sha256": "045b790e1af2c94f064c055098684019b123440264051d19a4da67853c075f86",
+      "review_slices": [
+        "machine"
+      ],
+      "symbols": {
+        "translated": 12
+      }
+    },
+    "uefi-raw/src/protocol/scsi.rs": {
+      "sha256": "b2ad48dcdaecf7449ad781810a4dc49ddd1f300a67ec81ae8b75778d4916e97a",
+      "review_slices": [
+        "storage"
+      ],
+      "symbols": {
+        "translated": 83
+      }
+    },
+    "uefi-raw/src/protocol/shell.rs": {
+      "sha256": "fc029c28b3db2d020c38cb85f15bf6f343762153942ff4d61680cde5c1b555b3",
+      "review_slices": [
+        "shell"
+      ],
+      "symbols": {
+        "translated": 61
+      }
+    },
+    "uefi-raw/src/protocol/shell_params.rs": {
+      "sha256": "c307635059db417d773f2214de16d64b7fcfa2518540cc28d737e0fc9bf780af",
+      "review_slices": [
+        "console"
+      ],
+      "symbols": {
+        "translated": 8
+      }
+    },
+    "uefi-raw/src/protocol/string.rs": {
+      "sha256": "7bc8f117619f6b7d9db974da6ce90efa37eb4271a677ca7e38043b56fffecedf",
+      "review_slices": [
+        "machine"
+      ],
+      "symbols": {
+        "translated": 9
+      }
+    },
+    "uefi-raw/src/protocol/tcg.rs": {
+      "sha256": "1bce7821019b8ad2b2f727b42984b29ec53563146fc54b993890c12501f3155c",
+      "review_slices": [
+        "tcg"
+      ],
+      "symbols": {
+        "omitted": 4
+      }
+    },
+    "uefi-raw/src/protocol/tcg/enums.rs": {
+      "sha256": "ea9270b5d9e387452169a54aec8e71f2077717956ad5bdc573364c0221fb68bf",
+      "review_slices": [
+        "tcg"
+      ],
+      "symbols": {
+        "translated": 53
+      }
+    },
+    "uefi-raw/src/protocol/tcg/v1.rs": {
+      "sha256": "ea12a4f4c83540506a7b7a7ffeadd1ef9b436cec74762c8aa4fbbcde6ec65a3c",
+      "review_slices": [
+        "tcg"
+      ],
+      "symbols": {
+        "translated": 19
+      }
+    },
+    "uefi-raw/src/protocol/tcg/v2.rs": {
+      "sha256": "2bf4d08ff35d972a0b06a14f683ac409bdad97cc41937499a4a8441ed419c9e3",
+      "review_slices": [
+        "tcg"
+      ],
+      "symbols": {
+        "omitted": 1,
+        "translated": 41
+      }
+    },
+    "uefi-raw/src/protocol/usb/host_controller.rs": {
+      "sha256": "e7ae9b0037406ea9deeb828b04b9b2c677ae305542d95cb48809e6e0f3e191b1",
+      "review_slices": [
+        "machine"
+      ],
+      "symbols": {
+        "translated": 65
+      }
+    },
+    "uefi-raw/src/protocol/usb/io.rs": {
+      "sha256": "6f1a26ae33ed580d66777788567194680115f366d0efc2b0b30b4a7562a67aa2",
+      "review_slices": [
+        "machine"
+      ],
+      "symbols": {
+        "translated": 15
+      }
+    },
+    "uefi-raw/src/protocol/usb/mod.rs": {
+      "sha256": "65ea5e06b609513925a15fc205cce8b1351b7c6309d390818e7c14d1c575cf6b",
+      "review_slices": [
+        "machine"
+      ],
+      "symbols": {
+        "omitted": 7,
+        "translated": 63
+      }
+    },
+    "uefi-raw/src/status.rs": {
+      "sha256": "6110787b359e57278b49babb46f1cb59d7be8a805b4d613accc2d09842ce6e93",
+      "review_slices": [
+        "scalar"
+      ],
+      "symbols": {
+        "omitted": 1,
+        "translated": 46
+      }
+    },
+    "uefi-raw/src/table/boot.rs": {
+      "sha256": "974e65e75754522674a708849b81dfdbcfb23a72a7f33109b5bb4c587236df3d",
+      "review_slices": [
+        "scalar",
+        "tables"
+      ],
+      "symbols": {
+        "translated": 125
+      }
+    },
+    "uefi-raw/src/table/configuration.rs": {
+      "sha256": "3ead898b2c0c930ad594b8ca408c8620c028959867905493f876f2807e9dc097",
+      "review_slices": [
+        "tables"
+      ],
+      "symbols": {
+        "translated": 3
+      }
+    },
+    "uefi-raw/src/table/header.rs": {
+      "sha256": "1eb16456b68e08f68938d0bc81abea3985d065bd4ad1dbf04bde4326e5776c5f",
+      "review_slices": [
+        "tables"
+      ],
+      "symbols": {
+        "translated": 6
+      }
+    },
+    "uefi-raw/src/table/mod.rs": {
+      "sha256": "60a188f7cdf374f2bdb158f421105685c82aaa7fca22ec91f4d3a017f52475ab",
+      "review_slices": [],
+      "symbols": {
+        "omitted": 8
+      },
+      "scaffold_omission": "Rust module/reexport topology deliberately flattened into the reviewed Omega slice modules; all referenced source files are independently covered by this complete inventory."
+    },
+    "uefi-raw/src/table/revision.rs": {
+      "sha256": "5d02392396166426583eb448816e7dabb715d403471b3034ed7885fed438026e",
+      "review_slices": [
+        "scalar"
+      ],
+      "symbols": {
+        "omitted": 2,
+        "translated": 19
+      }
+    },
+    "uefi-raw/src/table/runtime.rs": {
+      "sha256": "c1948496cf4e18413b86903290ef945efba3c60224b876395715fdf3621a494e",
+      "review_slices": [
+        "tables"
+      ],
+      "symbols": {
+        "translated": 37
+      }
+    },
+    "uefi-raw/src/table/system.rs": {
+      "sha256": "1a5f4649dc67ea3cc39e5ad3bab23dfc2600ff94060b2a6f2e5e10d566fad8db",
+      "review_slices": [
+        "tables"
+      ],
+      "symbols": {
+        "omitted": 1,
+        "translated": 15
+      }
+    },
+    "uefi-raw/src/time.rs": {
+      "sha256": "16b13d887c4b5f06eaf4aacf220efddceaac90e13d640252af901e52265cc8da",
+      "review_slices": [
+        "scalar"
+      ],
+      "symbols": {
+        "omitted": 3,
+        "translated": 19
+      }
+    }
+  }
+}

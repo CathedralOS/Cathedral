@@ -48,6 +48,13 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(inventory.rust_anchors('pub r#type: u8,'),
                          {'1:r#type': 'pub r#type: u8,'})
 
+    def test_lifetimes_and_static_modifiers(self):
+        anchors = inventory.rust_anchors("pub const NAME: &'static str = \"x\";\nstatic mut NEXT: u64 = 0;\nstatic ref VALUE: u64 = 1;")
+        self.assertEqual(list(anchors), ['1:NAME', '2:NEXT', '3:VALUE'])
+
+    def test_match_arm_is_not_enum_value(self):
+        self.assertEqual(inventory.rust_anchors('None => 0,\nVALUE == 0'), {})
+
     def test_missing_checkout_fails(self):
         with self.assertRaisesRegex(ValueError, 'checkout absent'):
             inventory.check(self.manifest, self.root / 'absent')

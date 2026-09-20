@@ -150,7 +150,7 @@ Cathedral's authority-bearing boot policy do not belong in this phase.
 - [x] **UEFI-008 — Port measured-boot protocols.** TCG v1/v2 raw structures,
   event/log shapes, constants, and GUIDs.  Do not interpret their presence as
   trusted boot or mint Cathedral attestation authority.
-- [ ] **UEFI-009 — Complete raw-contract conformance.** Close every mapped
+- [x] **UEFI-009 — Complete raw-contract conformance.** Close every mapped
   `uefi-raw/src` omission, run all available compile/layout/value checks, and
   produce an explicit list of tests still blocked by Omega.
 - [ ] **UEFI-010 — Add producer/consumer fixtures.** Build inert table images
@@ -162,8 +162,10 @@ Phase 1 evidence: the isolated [raw corpus](source/contracts/uefi/raw/PORT.md)
 records status per slice. Scalar helper tests execute in Omega's semantic
 evaluator with a failing assertion control. These checks do not establish
 native execution, firmware behavior, or emitted foreign-layout agreement.
-The shell-protocol remainder is transcribed with 65 verified representation
-vectors; UEFI-009 remains open until the whole-crate audit is complete.
+The [whole-crate audit](source/contracts/uefi/raw/CONFORMANCE.md) covers all 65
+pinned raw source files and 4,194 expected measurements. Combined source and
+semantic checks pass on a fresh build of Omega `eaa7993`; exact reflection,
+projection, union/tail and native-boundary limitations remain recorded there.
 
 ## Phase 2 — small, high-yield hardware packages
 
