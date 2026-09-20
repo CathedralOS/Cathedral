@@ -34,12 +34,13 @@ def main():
    selected=list(range(start,min(start+4,args.end or len(blocks),len(blocks))));evaluate(fixture(selected));print('PASS range',selected,flush=True)
  if args.end is None:
   extra=(HERE/'extras.omg').read_text();prefix_extra=extra[:extra.index('machine begin_checks')]
-  names=['begin_checks','inactive','forged','mismatch','resume_two']
+  names=['begin_checks','inactive','forged','mismatch','resume_two','max_budget']
   extra_blocks=re.findall(r'machine (?:'+ '|'.join(names)+r')\(\)->i32 \{.*?(?=\nmachine (?:'+ '|'.join(names)+r')|\Z)',extra,re.S)
   assert len(extra_blocks)==len(names)
   for name,block in zip(names,extra_blocks):
    body=prefix_extra+block+f'\nmachine test_result()->i32 {{ let value:i32={name}(); value }}'+suffix
    evaluate(body);print('PASS extra',name,flush=True)
+   if name=='max_budget':evaluate(body,('done_budget==18446744073709551614','done_budget==18446744073709551615'));print('PASS maximum budget body mutation',flush=True)
    if name=='resume_two':evaluate(body,('second.branch.frames_to_retire[0]==20480','second.branch.frames_to_retire[0]==12288'));print('PASS resumed order body mutation',flush=True)
   for n,old,new in [(0,'value.cursor.status in RangeStatus::Done','value.cursor.status in RangeStatus::Exhausted'),(2,'value.cursor.next_page==2097152','value.cursor.next_page==4096')]:
    evaluate(fixture([n]),(old,new));print('PASS body mutation',n,old,flush=True)

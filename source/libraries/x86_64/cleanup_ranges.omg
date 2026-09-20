@@ -81,13 +81,16 @@ machine covered_span(words: &[u64; 4], root_has_other: bool) -> u64 {
 machine advance(cursor: Cursor, span: u64) -> Cursor {
     let current: u64 = cursor.next_page & 281474976710655;
     let last: u64 = cursor.last_page & 281474976710655;
-    transition cursor.budget > 0 && span >= 4096 && span <= 281474976710656 {
-        true -> interval(cursor, current, last, span)
+    // Stage the u64 field before ordered comparison; the current evaluator
+    // misclassifies a direct record-field comparison at the top-bit boundary.
+    let budget: u64 = cursor.budget;
+    transition budget > 0 && span >= 4096 && span <= 281474976710656 {
+        true -> interval(cursor, current, last, span, budget)
         _ -> (Cursor {})
     }
-    state interval(cursor: Cursor, current: u64, last: u64, span: u64) -> Cursor {
+    state interval(cursor: Cursor, current: u64, last: u64, span: u64, budget: u64) -> Cursor {
         let end: u64 = (current | (span - 1)) & 18446744073709547520;
-        let remaining: u64 = cursor.budget - 1;
+        let remaining: u64 = budget - 1;
         transition last <= end {
             true -> (Cursor { next_page: cursor.next_page, last_page: cursor.last_page, budget: remaining, status: RangeStatus::Done })
             _ -> next(cursor.last_page, end, remaining)

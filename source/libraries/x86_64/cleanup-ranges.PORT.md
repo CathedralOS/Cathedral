@@ -1,7 +1,7 @@
 # Bounded captured cleanup ranges
 
 Current stage: **tested**. Thirteen actual pinned whole-range Rust witnesses,
-18 Omega cursor-step fixtures, five additional fixtures and three body-mutating
+18 Omega cursor-step fixtures, six additional fixtures and four body-mutating
 controls pass. No native Omega or live reclamation execution is claimed.
 
 Modified pure orchestration of x86_64
@@ -72,6 +72,10 @@ plans. It checks full-table occupancy through the branch helper, coalesces
 already settled address coverage and exposes exhaustion/missing capture.
 These are deliberate API and work-accounting changes. The resource budget
 counts successful branches, not CPU instructions or compiler evaluation steps.
+The budget is staged as a typed scalar before comparison/subtraction: direct
+record-field ordering at `u64::MAX` misbehaved in the pinned Omega evaluator.
+The high-bit/max regression evaluates the real cursor helper; no compiler source
+was changed.
 
 ## Evidence
 
@@ -86,10 +90,11 @@ ranges, non-present words, huge parents, high-half addresses, the canonical
 gap, the final page and a reversed interval.
 
 Original cursor fixtures check every step of those nonempty scenarios plus a
-budget-limited prefix. Five additional Omega fixtures check malformed inputs,
+budget-limited prefix. Six additional Omega fixtures check malformed inputs,
 inactive steps, forged Active state, deep snapshot mismatch and an exhausted
-two-child traversal resumed to completion. Three body mutations change Done
-to Exhausted, the next-page skip and the resumed retirement order. Each must
+two-child traversal resumed to completion, and budgets at `2^63` and `u64::MAX`.
+Four body mutations change Done to Exhausted, the next-page skip, the resumed
+retirement order and the maximum-budget decrement. Each must
 compute failure under the unchanged success requirement.
 
 [The complete source-file inventory](cleanup-ranges-inventory.json) marks its

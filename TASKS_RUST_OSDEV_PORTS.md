@@ -249,7 +249,8 @@ three body mutations. It retains non-present nonzero entries, checks all 512
 entries for sibling occupancy and records deepest-first retirement requests.
 The [cleanup range cursor](source/libraries/x86_64/cleanup-ranges.PORT.md) adds
 bounded, resumable inclusive-range traversal: 13 whole-range Rust witnesses,
-18 Omega steps, five additional fixtures and three body mutations pass. Exhaustion
+18 Omega steps, six additional fixtures and four body mutations pass, including
+high-bit and maximum budgets. Exhaustion
 retains the exact next page; actual custody, invalidation and reclamation remain
 separate integration work.
 

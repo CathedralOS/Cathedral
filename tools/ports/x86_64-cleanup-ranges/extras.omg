@@ -42,3 +42,16 @@ machine resume_two()->i32 {
     let correct:bool=first.cursor.status in RangeStatus::Exhausted && first.cursor.next_page==2097152 && first.branch.retire_count==1 && first.branch.frames_to_retire[0]==12288 && second.cursor.status in RangeStatus::Done && second.branch.retire_count==3 && second.branch.frames_to_retire[0]==20480 && second.branch.frames_to_retire[1]==8192 && second.branch.frames_to_retire[2]==4096;
     transition correct { true -> (0) _ -> (1) }
 }
+machine max_budget()->i32 {
+    let empty:[u64;4];let ids:[u64;4];let others:[bool;4];
+    let maximum:Cursor=cleanup_ranges::begin(0,18446744073709547520,18446744073709551615);
+    let done:RangeStep=cleanup_ranges::step(maximum,&empty,&ids,&others);
+    let done_budget:u64=done.cursor.budget;
+    let words:[u64;4]=[4097,8193,12289,1];let path:[u64;4]=[16384,4096,8192,12288];
+    let top_bit:Cursor=cleanup_ranges::begin(0,2097152,9223372036854775808);
+    let active:RangeStep=cleanup_ranges::step(top_bit,&words,&path,&others);
+    let active_budget:u64=active.cursor.budget;
+    transition done.cursor.status in RangeStatus::Done && done_budget==18446744073709551614 && active.cursor.status in RangeStatus::Active && active_budget==9223372036854775807 && active.cursor.next_page==2097152 && active.branch.retire_count==0 {
+        true -> (0) _ -> (1)
+    }
+}
