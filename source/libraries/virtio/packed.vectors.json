@@ -1,0 +1,73 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "abi": "x86_64-unknown-uefi:repr(C)-facts",
+    "pointer_bits": 64,
+    "endian": "little"
+  },
+  "provenance": {
+    "kind": "upstream",
+    "description": "Expected packed-record Rust geometry checked by compiling actual pinned types; this does not observe Omega ABI. Protocol region alignment remains a separate fact.",
+    "sources": [
+      "https://github.com/rust-osdev/virtio-spec-rs/blob/ad565bd701e93fa47bc288d45701e1ae53ac3c12/src/pvirtq.rs"
+    ]
+  },
+  "measurements": {
+    "Desc.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "Desc.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Desc.addr.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Desc.len.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Desc.id.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "Desc.flags.offset": {
+      "kind": "offset",
+      "value": 14
+    },
+    "EventSuppress.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "EventSuppress.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "EventSuppress.desc.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "EventSuppress.flags.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "EventSuppressDesc.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "EventSuppressDesc.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "EventSuppressFlags.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "EventSuppressFlags.alignment": {
+      "kind": "alignment",
+      "value": 2
+    }
+  }
+}

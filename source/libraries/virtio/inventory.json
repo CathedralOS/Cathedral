@@ -3059,8 +3059,14 @@
         },
         "109:pvirtq": {
           "anchor": "pub mod pvirtq;",
-          "disposition": "pending",
-          "reason": "Transport/packed companion work in VIRTIO-002/003; full-pin file remains explicitly inventoried."
+          "disposition": "translated",
+          "reason": "Packed companion module translated; see packed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "module packed;",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "110:virtq": {
           "anchor": "pub mod virtq;",
@@ -5245,81 +5251,171 @@
       }
     },
     "src/pvirtq.rs": {
-      "disposition": "pending",
-      "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone.",
+      "disposition": "translated",
+      "reason": "Packed raw schemas, bitfield codecs, wrap and event validation; see packed.PORT.md.",
       "sha256": "f1e8d0f480bdf0c301e5078d7337c733d94ba1238c4c731bcb3397f25f8441ee",
       "symbols": {
         "10:Desc": {
           "anchor": "pub struct Desc {",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "module packed;",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "12:addr": {
           "anchor": "pub addr: le64,",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "module packed;",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "15:len": {
           "anchor": "pub len: le32,",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "module packed;",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "18:id": {
           "anchor": "pub id: le16,",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "module packed;",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "21:flags": {
           "anchor": "pub flags: virtq::DescF,",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "module packed;",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "27:EventSuppress": {
           "anchor": "pub struct EventSuppress {",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "module packed;",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "29:desc": {
           "anchor": "pub desc: EventSuppressDesc,",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "module packed;",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "30:flags": {
           "anchor": "pub flags: EventSuppressFlags,",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "module packed;",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "35:EventSuppressDesc": {
           "anchor": "pub struct EventSuppressDesc {",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "module packed;",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "38:desc_event_off": {
           "anchor": "pub desc_event_off: u16,",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "pub machine event_offset",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "42:desc_event_wrap": {
           "anchor": "pub desc_event_wrap: u8,",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "pub machine event_wrap",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "46:EventSuppressFlags": {
           "anchor": "pub struct EventSuppressFlags {",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "module packed;",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "49:desc_event_flags": {
           "anchor": "pub desc_event_flags: RingEventFlags,",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "pub machine event_flags",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         },
         "53:reserved": {
           "anchor": "pub reserved: u16,",
-          "disposition": "pending",
-          "reason": "VIRTIO-002 packed rings or VIRTIO-003 MMIO/access plans pending; no claim these source files are ported in core/split milestone."
+          "disposition": "translated",
+          "reason": "Exact field carrier/order retained; generated bitfield projections map to pure checked constructors/getters/codecs.",
+          "targets": [
+            {
+              "anchor": "pub machine event_reserved",
+              "path": "source/libraries/virtio/packed.omg"
+            }
+          ]
         }
-      }
+      },
+      "targets": [
+        {
+          "anchor": "module packed;",
+          "path": "source/libraries/virtio/packed.omg"
+        }
+      ]
     },
     "src/virtq/alloc.rs": {
       "disposition": "translated",

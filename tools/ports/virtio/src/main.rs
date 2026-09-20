@@ -2,6 +2,7 @@
 use std::alloc::Layout;
 use virtio_spec::virtq::{Avail, Used};
 fn main() {
+    packed_bitfields();
     for q in [0u16, 255, 256, 257, 65535] {
         for event in [false, true] {
             let avail = Avail::new(q, event);
@@ -20,4 +21,27 @@ fn main() {
         }
     }
     println!("Pinned Rust: 20 split-ring allocations/layouts, zeroed elements, optional event words passed.");
+}
+
+fn packed_bitfields() {
+    use virtio_spec::{pvirtq::{EventSuppressDesc, EventSuppressFlags}, pci::NotificationData, RingEventFlags, le16, le32};
+    for offset in [0u16, 1, 255, 32767] {
+        for wrap in [0u8, 1] {
+            let desc = EventSuppressDesc::new().with_desc_event_off(offset).with_desc_event_wrap(wrap);
+            let raw: le16 = desc.into();
+            assert_eq!(raw.to_ne(), offset | ((wrap as u16) << 15));
+            assert_eq!(desc.desc_event_off(), offset);
+            assert_eq!(desc.desc_event_wrap(), wrap);
+            let notification = NotificationData::new().with_vq_notif_config_data(0x1234).with_next_off(offset).with_next_wrap(wrap);
+            let data: le32 = notification.into();
+            assert_eq!(data.to_ne(), 0x1234 | ((offset as u32) << 16) | ((wrap as u32) << 31));
+        }
+    }
+    for (mode, code) in [(RingEventFlags::Enable,0), (RingEventFlags::Disable,1), (RingEventFlags::Desc,2), (RingEventFlags::Reserved,3)] {
+        let flags = EventSuppressFlags::new().with_desc_event_flags(mode).with_reserved(0x3fff);
+        let raw: le16 = flags.into();
+        assert_eq!(raw.to_ne(), 0xfffc | code);
+        assert_eq!(flags.reserved(), 0x3fff);
+    }
+    println!("Pinned Rust: packed 15+1-bit offsets/wrap, 2+14-bit flags, and notification encodings passed.");
 }

@@ -1,0 +1,109 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use cathedral_virtio::packed::Desc;
+use cathedral_virtio::packed::Cursor;
+use cathedral_virtio::packed::CursorResult;
+use cathedral_virtio::packed::DistanceResult;
+use cathedral_virtio::packed::FlagsResult;
+use cathedral_virtio::packed::EventResult;
+use cathedral_virtio::packed::EventSuppress;
+use cathedral_virtio::packed::EventSuppressDesc;
+use cathedral_virtio::packed::EventSuppressFlags;
+use cathedral_virtio::packed::queue_size_valid;
+use cathedral_virtio::packed::cursor_valid;
+use cathedral_virtio::packed::advance;
+use cathedral_virtio::packed::distance;
+use cathedral_virtio::packed::event_offset;
+use cathedral_virtio::packed::event_wrap;
+use cathedral_virtio::packed::event_flags;
+use cathedral_virtio::packed::event_reserved;
+use cathedral_virtio::packed::event_construct;
+use cathedral_virtio::packed::event_valid;
+use cathedral_virtio::packed::notify;
+use cathedral_virtio::packed::descriptor_available;
+use cathedral_virtio::packed::descriptor_used;
+use cathedral_virtio::packed::available_flags;
+use cathedral_virtio::packed::used_flags;
+use cathedral_virtio::packed::descriptor_valid;
+use cathedral_virtio::packed::indirect_element_valid;
+use cathedral_virtio::packed::descriptor_encode;
+use cathedral_virtio::packed::descriptor_decode;
+use cathedral_virtio::packed::event_encode;
+use cathedral_virtio::packed::event_decode;
+use cathedral_virtio::notifications::NotificationResult;
+use cathedral_virtio::notifications::notification_packed;
+
+machine cursor_cases() -> bool {
+    let next: CursorResult = advance(3, Cursor { offset: 2, wrap: 1 }, 1);
+    let multi: CursorResult = advance(3, Cursor { offset: 2, wrap: 1 }, 5);
+    let single: CursorResult = advance(1, Cursor { wrap: 1 }, 65535);
+    let max: CursorResult = advance(32768, Cursor { offset: 32767, wrap: 1 }, 1);
+    let delta: DistanceResult = distance(3, Cursor { offset: 2, wrap: 1 }, Cursor { offset: 1 });
+    queue_size_valid(3) && queue_size_valid(32768) && !queue_size_valid(0) && !queue_size_valid(32769) &&
+    next.ok && next.value.offset == 0 && next.value.wrap == 0 && multi.value.offset == 1 && multi.value.wrap == 1 &&
+    single.value.offset == 0 && single.value.wrap == 0 && max.value.offset == 0 && max.value.wrap == 0 &&
+    delta.ok && delta.value == 2 && !distance(0, Cursor {}, Cursor {}).ok &&
+    !advance(3, Cursor { offset: 3, wrap: 1 }, 0).ok && !advance(1, Cursor { wrap: 2 }, 0).ok
+}
+machine flag_cases() -> bool {
+    let avail1: FlagsResult = available_flags(3, 1);
+    let avail0: FlagsResult = available_flags(2, 0);
+    let used1: FlagsResult = used_flags(2, 1);
+    let used0: FlagsResult = used_flags(0, 0);
+    avail1.ok && avail1.value == 131 && avail0.value == 32770 && used1.value == 32898 && used0.value == 0 &&
+    descriptor_available(avail1.value, 1) && !descriptor_used(avail1.value, 1) &&
+    descriptor_available(avail0.value, 0) && !descriptor_available(avail0.value, 1) &&
+    descriptor_used(used1.value, 1) && descriptor_used(used0.value, 0) &&
+    !descriptor_used(0, 1) && !descriptor_available(0, 1) && !descriptor_used(0, 2) &&
+    !available_flags(128, 1).ok && !used_flags(0, 2).ok
+}
+machine event_cases() -> bool {
+    let all: EventResult = event_construct(Cursor { offset: 32767, wrap: 1 }, 3);
+    let value: EventResult = event_construct(Cursor { offset: 2, wrap: 1 }, 2);
+    let notification: NotificationResult = notification_packed(0x1234, 32767, 1);
+    let bytes: [u8; 4] = event_encode(all.value);
+    let decoded: EventSuppress = event_decode(bytes);
+    all.ok && all.value.desc.raw == 65535 && all.value.flags.raw == 3 &&
+    event_offset(all.value.desc) == 32767 && event_wrap(all.value.desc) == 1 &&
+    event_flags(EventSuppressFlags { raw: 65535 }) == 3 && event_reserved(EventSuppressFlags { raw: 65535 }) == 16383 &&
+    bytes[0] == 255 && bytes[1] == 255 && bytes[2] == 3 && bytes[3] == 0 && decoded.desc.raw == 65535 &&
+    !event_valid(all.value, 32768, true) && event_valid(value.value, 3, true) && !event_valid(value.value, 3, false) &&
+    !event_valid(value.value, 2, true) && !event_valid(EventSuppress { flags: EventSuppressFlags { raw: 4 } }, 3, true) &&
+    !event_construct(Cursor { offset: 32768 }, 0).ok && !event_construct(Cursor { wrap: 2 }, 0).ok &&
+    !event_construct(Cursor {}, 4).ok && notification.ok && notification.value.raw == 0xffff1234
+}
+machine notify_cases() -> bool {
+    let old: Cursor = Cursor { offset: 2, wrap: 1 };
+    let new: Cursor = Cursor { offset: 1, wrap: 0 };
+    let crossed: EventResult = event_construct(Cursor { offset: 0, wrap: 0 }, 2);
+    let first: EventResult = event_construct(old, 2);
+    let next: EventResult = event_construct(new, 2);
+    let previous_epoch: EventResult = event_construct(Cursor { offset: 0, wrap: 1 }, 2);
+    notify(crossed.value, 3, true, old, new).notify && notify(first.value, 3, true, old, new).notify &&
+    !notify(next.value, 3, true, old, new).notify && !notify(previous_epoch.value, 3, true, old, new).notify &&
+    !notify(crossed.value, 3, true, old, old).notify && !notify(crossed.value, 3, false, old, new).ok &&
+    notify(EventSuppress {}, 3, false, old, old).notify &&
+    !notify(EventSuppress { flags: EventSuppressFlags { raw: 1 } }, 3, false, old, new).notify &&
+    !notify(EventSuppress {}, 3, true, Cursor { wrap: 1 }, Cursor { offset: 2 }).ok &&
+    !notify(EventSuppress {}, 3, true, Cursor { offset: 3 }, new).ok
+}
+machine descriptor_cases() -> bool {
+    let value: Desc = Desc { addr: 0x0123456789abcdef, len: 0x10203040, id: 0x7654, flags: 0x8082 };
+    let bytes: [u8; 16] = descriptor_encode(value);
+    let decoded: Desc = descriptor_decode(bytes);
+    bytes[0] == 0xef && bytes[7] == 1 && bytes[12] == 0x54 && bytes[13] == 0x76 && bytes[14] == 0x82 && bytes[15] == 0x80 &&
+    decoded.addr == value.addr && decoded.id == value.id && decoded.flags == value.flags &&
+    descriptor_valid(value, false) && descriptor_valid(Desc { addr: 4096, len: 32, flags: 0x84 }, true) &&
+    !descriptor_valid(Desc { addr: 4096, len: 32, flags: 0x84 }, false) &&
+    !descriptor_valid(Desc { len: 32, flags: 0x85 }, true) && !descriptor_valid(Desc { len: 15, flags: 4 }, true) &&
+    !descriptor_valid(Desc { flags: 4 }, true) && !descriptor_valid(Desc { flags: 8 }, false) &&
+    !descriptor_valid(Desc { addr: 0xffffffffffffffff, len: 1 }, false) &&
+    indirect_element_valid(Desc { flags: 2, id: 65535 }) && !indirect_element_valid(Desc { flags: 0x82 }) &&
+    !indirect_element_valid(Desc { flags: 1 }) && !indirect_element_valid(Desc { flags: 4 })
+}
+machine test_result() -> i32 {
+    transition cursor_cases() && flag_cases() && event_cases() && notify_cases() && descriptor_cases() { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

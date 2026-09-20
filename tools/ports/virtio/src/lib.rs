@@ -260,3 +260,5 @@ pub static CATHEDRAL_VIRTIO_LAYOUT: [u64; 255] = [
     (virtio_spec::balloon::F::PAGE_REPORTING.bits().to_ne() >> 0) as u64 as u64, // features.BALLOON_PAGE_REPORTING.low
     (virtio_spec::balloon::F::PAGE_REPORTING.bits().to_ne() >> 64) as u64 as u64, // features.BALLOON_PAGE_REPORTING.high
 ];
+
+mod packed_probe;

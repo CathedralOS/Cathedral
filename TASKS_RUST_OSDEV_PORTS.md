@@ -225,7 +225,7 @@ confirmed instruction-catalog gaps are limited to their exact live operations.
 - [x] **VIRTIO-001 — Port split virtqueue representations.** Descriptor,
   available, and used rings; event-index arithmetic; validation; wraparound;
   and upstream tests.  DMA ownership is deliberately absent.
-- [ ] **VIRTIO-002 — Port packed virtqueue representations.** Descriptor/event
+- [x] **VIRTIO-002 — Port packed virtqueue representations.** Descriptor/event
   structures, wrap counters, notification data, validation, and tests.
 - [ ] **VIRTIO-003 — Port transport shapes.** PCI capability and MMIO transport
   representations.  Leave discovery, MMIO access, DMA grants, interrupts, and
@@ -239,6 +239,11 @@ retains 343 expected vectors, 255 actual Rust UEFI-target measurements, 20 upstr
 allocation cases, and eight Omega behavior groups with eight body-mutating
 controls. All 24 policy declarations check separately; combined fixture/layout
 import exposes a recorded compiler diagnostic. No DMA or native ABI claim.
+
+VIRTIO-002 evidence: [packed queues](source/libraries/virtio/packed.PORT.md)
+passes five semantic groups/five body-mutating controls, actual Rust bitfield
+checks and 14 Rust UEFI-target layout measurements. Four policy declarations
+check independently; wrap/event predicates confer no DMA or ordering authority.
 
 ## Phase 4 — ACPI tables, then AML
 
