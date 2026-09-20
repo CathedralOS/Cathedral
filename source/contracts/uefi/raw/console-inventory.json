@@ -1,0 +1,5958 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/uefi-rs",
+    "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a",
+    "roots": [
+      "uefi-raw/src/protocol/console.rs",
+      "uefi-raw/src/protocol/console/serial.rs",
+      "uefi-raw/src/protocol/loaded_image.rs",
+      "uefi-raw/src/protocol/device_path.rs",
+      "uefi-raw/src/protocol/device_path/device_path_gen.rs",
+      "uefi-raw/src/protocol/media.rs",
+      "uefi-raw/src/protocol/shell_params.rs"
+    ]
+  },
+  "files": {
+    "uefi-raw/src/protocol/console.rs": {
+      "sha256": "331ad38065e138d1ac03d5bba9343f58645c4ac2318559ab1dda6f0fd03ffcb2",
+      "disposition": "translated",
+      "symbols": {
+        "3:serial": {
+          "anchor": "pub mod serial;",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "module console;"
+            }
+          ]
+        },
+        "13:AbsolutePointerModeAttributes": {
+          "anchor": "pub struct AbsolutePointerModeAttributes: u32 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data AbsolutePointerModeAttributes "
+            }
+          ]
+        },
+        "15:SUPPORTS_ALT_ACTIVE": {
+          "anchor": "const SUPPORTS_ALT_ACTIVE = 1;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "ABSOLUTE_POINTER_MODE_ATTRIBUTES_SUPPORTS_ALT_ACTIVE"
+            }
+          ]
+        },
+        "19:SUPPORTS_PRESSURE_AS_Z": {
+          "anchor": "const SUPPORTS_PRESSURE_AS_Z = 2;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "ABSOLUTE_POINTER_MODE_ATTRIBUTES_SUPPORTS_PRESSURE_AS_Z"
+            }
+          ]
+        },
+        "25:AbsolutePointerMode": {
+          "anchor": "pub struct AbsolutePointerMode {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data AbsolutePointerMode "
+            }
+          ]
+        },
+        "26:absolute_min_x": {
+          "anchor": "pub absolute_min_x: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "absolute_min_x:"
+            }
+          ]
+        },
+        "27:absolute_min_y": {
+          "anchor": "pub absolute_min_y: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "absolute_min_y:"
+            }
+          ]
+        },
+        "28:absolute_min_z": {
+          "anchor": "pub absolute_min_z: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "absolute_min_z:"
+            }
+          ]
+        },
+        "29:absolute_max_x": {
+          "anchor": "pub absolute_max_x: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "absolute_max_x:"
+            }
+          ]
+        },
+        "30:absolute_max_y": {
+          "anchor": "pub absolute_max_y: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "absolute_max_y:"
+            }
+          ]
+        },
+        "31:absolute_max_z": {
+          "anchor": "pub absolute_max_z: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "absolute_max_z:"
+            }
+          ]
+        },
+        "32:attributes": {
+          "anchor": "pub attributes: AbsolutePointerModeAttributes,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "attributes:"
+            }
+          ]
+        },
+        "37:AbsolutePointerState": {
+          "anchor": "pub struct AbsolutePointerState {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data AbsolutePointerState "
+            }
+          ]
+        },
+        "38:current_x": {
+          "anchor": "pub current_x: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "current_x:"
+            }
+          ]
+        },
+        "39:current_y": {
+          "anchor": "pub current_y: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "current_y:"
+            }
+          ]
+        },
+        "40:current_z": {
+          "anchor": "pub current_z: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "current_z:"
+            }
+          ]
+        },
+        "41:active_buttons": {
+          "anchor": "pub active_buttons: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "active_buttons:"
+            }
+          ]
+        },
+        "46:AbsolutePointerProtocol": {
+          "anchor": "pub struct AbsolutePointerProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data AbsolutePointerProtocol "
+            }
+          ]
+        },
+        "47:reset": {
+          "anchor": "pub reset: unsafe extern \"efiapi\" fn(this: *mut Self, extended_verification: Boolean) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "reset:"
+            }
+          ]
+        },
+        "48:get_state": {
+          "anchor": "pub get_state:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "get_state:"
+            }
+          ]
+        },
+        "50:wait_for_input": {
+          "anchor": "pub wait_for_input: Event,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "wait_for_input:"
+            }
+          ]
+        },
+        "51:mode": {
+          "anchor": "pub mode: *const AbsolutePointerMode,",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "module console;"
+            }
+          ]
+        },
+        "55:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"8d59d32b-c655-4ae9-9b15-f25904992a43\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "ABSOLUTE_POINTER_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "60:InputKey": {
+          "anchor": "pub struct InputKey {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data InputKey "
+            }
+          ]
+        },
+        "61:scan_code": {
+          "anchor": "pub scan_code: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "scan_code:"
+            }
+          ]
+        },
+        "62:unicode_char": {
+          "anchor": "pub unicode_char: Char16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "unicode_char:"
+            }
+          ]
+        },
+        "67:SimpleTextInputProtocol": {
+          "anchor": "pub struct SimpleTextInputProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data SimpleTextInputProtocol "
+            }
+          ]
+        },
+        "68:reset": {
+          "anchor": "pub reset: unsafe extern \"efiapi\" fn(this: *mut Self, extended_verification: Boolean) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "reset:"
+            }
+          ]
+        },
+        "69:read_key_stroke": {
+          "anchor": "pub read_key_stroke: unsafe extern \"efiapi\" fn(this: *mut Self, key: *mut InputKey) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "read_key_stroke:"
+            }
+          ]
+        },
+        "70:wait_for_key": {
+          "anchor": "pub wait_for_key: Event,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "wait_for_key:"
+            }
+          ]
+        },
+        "74:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"387477c1-69c7-11d2-8e39-00a0c969723b\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "SIMPLE_TEXT_INPUT_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "79:KeyData": {
+          "anchor": "pub struct KeyData {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data KeyData "
+            }
+          ]
+        },
+        "80:key": {
+          "anchor": "pub key: InputKey,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "key:"
+            }
+          ]
+        },
+        "81:key_state": {
+          "anchor": "pub key_state: KeyState,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "key_state:"
+            }
+          ]
+        },
+        "86:KeyState": {
+          "anchor": "pub struct KeyState {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data KeyState "
+            }
+          ]
+        },
+        "87:key_shift_state": {
+          "anchor": "pub key_shift_state: KeyShiftState,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "key_shift_state:"
+            }
+          ]
+        },
+        "88:key_toggle_state": {
+          "anchor": "pub key_toggle_state: KeyToggleState,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "key_toggle_state:"
+            }
+          ]
+        },
+        "94:KeyShiftState": {
+          "anchor": "pub struct KeyShiftState: u32 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data KeyShiftState "
+            }
+          ]
+        },
+        "95:VALID": {
+          "anchor": "const VALID               = 0x8000_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_SHIFT_STATE_VALID"
+            }
+          ]
+        },
+        "96:RIGHT_SHIFT": {
+          "anchor": "const RIGHT_SHIFT         = 0x0000_0001;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_SHIFT_STATE_RIGHT_SHIFT"
+            }
+          ]
+        },
+        "97:LEFT_SHIFT": {
+          "anchor": "const LEFT_SHIFT          = 0x0000_0002;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_SHIFT_STATE_LEFT_SHIFT"
+            }
+          ]
+        },
+        "98:RIGHT_CONTROL": {
+          "anchor": "const RIGHT_CONTROL       = 0x0000_0004;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_SHIFT_STATE_RIGHT_CONTROL"
+            }
+          ]
+        },
+        "99:LEFT_CONTROL": {
+          "anchor": "const LEFT_CONTROL        = 0x0000_0008;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_SHIFT_STATE_LEFT_CONTROL"
+            }
+          ]
+        },
+        "100:RIGHT_ALT": {
+          "anchor": "const RIGHT_ALT           = 0x0000_0010;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_SHIFT_STATE_RIGHT_ALT"
+            }
+          ]
+        },
+        "101:LEFT_ALT": {
+          "anchor": "const LEFT_ALT            = 0x0000_0020;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_SHIFT_STATE_LEFT_ALT"
+            }
+          ]
+        },
+        "102:RIGHT_LOGO": {
+          "anchor": "const RIGHT_LOGO          = 0x0000_0040;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_SHIFT_STATE_RIGHT_LOGO"
+            }
+          ]
+        },
+        "103:LEFT_LOGO": {
+          "anchor": "const LEFT_LOGO           = 0x0000_0080;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_SHIFT_STATE_LEFT_LOGO"
+            }
+          ]
+        },
+        "104:MENU_KEY": {
+          "anchor": "const MENU_KEY            = 0x0000_0100;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_SHIFT_STATE_MENU_KEY"
+            }
+          ]
+        },
+        "105:SYS_REQ": {
+          "anchor": "const SYS_REQ             = 0x0000_0200;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_SHIFT_STATE_SYS_REQ"
+            }
+          ]
+        },
+        "112:KeyToggleState": {
+          "anchor": "pub struct KeyToggleState: u8 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data KeyToggleState "
+            }
+          ]
+        },
+        "113:SCROLL_LOCK_ACTIVE": {
+          "anchor": "const SCROLL_LOCK_ACTIVE = 0x01;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_TOGGLE_STATE_SCROLL_LOCK_ACTIVE"
+            }
+          ]
+        },
+        "114:NUM_LOCK_ACTIVE": {
+          "anchor": "const NUM_LOCK_ACTIVE = 0x02;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_TOGGLE_STATE_NUM_LOCK_ACTIVE"
+            }
+          ]
+        },
+        "115:CAPS_LOCK_ACTIVE": {
+          "anchor": "const CAPS_LOCK_ACTIVE = 0x04;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_TOGGLE_STATE_CAPS_LOCK_ACTIVE"
+            }
+          ]
+        },
+        "116:EXPOSED": {
+          "anchor": "const EXPOSED = 0x40;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_TOGGLE_STATE_EXPOSED"
+            }
+          ]
+        },
+        "117:VALID": {
+          "anchor": "const VALID = 0x80;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "KEY_SHIFT_STATE_VALID"
+            }
+          ]
+        },
+        "121:KeyNotifyFn": {
+          "anchor": "pub type KeyNotifyFn = unsafe extern \"efiapi\" fn(key_data: *const KeyData) -> Status;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data KeyNotifyFn "
+            }
+          ]
+        },
+        "125:SimpleTextInputExProtocol": {
+          "anchor": "pub struct SimpleTextInputExProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data SimpleTextInputExProtocol "
+            }
+          ]
+        },
+        "126:reset": {
+          "anchor": "pub reset: unsafe extern \"efiapi\" fn(this: *mut Self, extended_verification: Boolean) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "reset:"
+            }
+          ]
+        },
+        "127:read_key_stroke_ex": {
+          "anchor": "pub read_key_stroke_ex: unsafe extern \"efiapi\" fn(this: *mut Self, key: *mut KeyData) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "read_key_stroke_ex:"
+            }
+          ]
+        },
+        "128:wait_for_key_ex": {
+          "anchor": "pub wait_for_key_ex: Event,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "wait_for_key_ex:"
+            }
+          ]
+        },
+        "129:set_state": {
+          "anchor": "pub set_state:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "set_state:"
+            }
+          ]
+        },
+        "131:register_key_notify": {
+          "anchor": "pub register_key_notify: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "register_key_notify:"
+            }
+          ]
+        },
+        "137:unregister_key_notify": {
+          "anchor": "pub unregister_key_notify: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "unregister_key_notify:"
+            }
+          ]
+        },
+        "144:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"dd9e7534-7762-4698-8c14-f58517a625aa\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "SIMPLE_TEXT_INPUT_EX_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "149:SimpleTextOutputMode": {
+          "anchor": "pub struct SimpleTextOutputMode {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data SimpleTextOutputMode "
+            }
+          ]
+        },
+        "150:max_mode": {
+          "anchor": "pub max_mode: i32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "max_mode:"
+            }
+          ]
+        },
+        "151:mode": {
+          "anchor": "pub mode: i32,",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "module console;"
+            }
+          ]
+        },
+        "152:attribute": {
+          "anchor": "pub attribute: i32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "attribute:"
+            }
+          ]
+        },
+        "153:cursor_column": {
+          "anchor": "pub cursor_column: i32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "cursor_column:"
+            }
+          ]
+        },
+        "154:cursor_row": {
+          "anchor": "pub cursor_row: i32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "cursor_row:"
+            }
+          ]
+        },
+        "155:cursor_visible": {
+          "anchor": "pub cursor_visible: Boolean,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "cursor_visible:"
+            }
+          ]
+        },
+        "160:SimpleTextOutputProtocol": {
+          "anchor": "pub struct SimpleTextOutputProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data SimpleTextOutputProtocol "
+            }
+          ]
+        },
+        "161:reset": {
+          "anchor": "pub reset: unsafe extern \"efiapi\" fn(this: *mut Self, extended: Boolean) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "reset:"
+            }
+          ]
+        },
+        "162:output_string": {
+          "anchor": "pub output_string: unsafe extern \"efiapi\" fn(this: *mut Self, string: *const Char16) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "output_string:"
+            }
+          ]
+        },
+        "163:test_string": {
+          "anchor": "pub test_string: unsafe extern \"efiapi\" fn(this: *mut Self, string: *const Char16) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "test_string:"
+            }
+          ]
+        },
+        "164:query_mode": {
+          "anchor": "pub query_mode: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "query_mode:"
+            }
+          ]
+        },
+        "170:set_mode": {
+          "anchor": "pub set_mode: unsafe extern \"efiapi\" fn(this: *mut Self, mode: usize) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "set_mode:"
+            }
+          ]
+        },
+        "171:set_attribute": {
+          "anchor": "pub set_attribute: unsafe extern \"efiapi\" fn(this: *mut Self, attribute: usize) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "set_attribute:"
+            }
+          ]
+        },
+        "172:clear_screen": {
+          "anchor": "pub clear_screen: unsafe extern \"efiapi\" fn(this: *mut Self) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "clear_screen:"
+            }
+          ]
+        },
+        "173:set_cursor_position": {
+          "anchor": "pub set_cursor_position:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "set_cursor_position:"
+            }
+          ]
+        },
+        "175:enable_cursor": {
+          "anchor": "pub enable_cursor: unsafe extern \"efiapi\" fn(this: *mut Self, visible: Boolean) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "enable_cursor:"
+            }
+          ]
+        },
+        "176:mode": {
+          "anchor": "pub mode: *const SimpleTextOutputMode,",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "module console;"
+            }
+          ]
+        },
+        "180:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"387477c2-69c7-11d2-8e39-00a0c969723b\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "SIMPLE_TEXT_OUTPUT_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "185:SimplePointerMode": {
+          "anchor": "pub struct SimplePointerMode {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data SimplePointerMode "
+            }
+          ]
+        },
+        "186:resolution_x": {
+          "anchor": "pub resolution_x: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "resolution_x:"
+            }
+          ]
+        },
+        "187:resolution_y": {
+          "anchor": "pub resolution_y: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "resolution_y:"
+            }
+          ]
+        },
+        "188:resolution_z": {
+          "anchor": "pub resolution_z: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "resolution_z:"
+            }
+          ]
+        },
+        "189:left_button": {
+          "anchor": "pub left_button: Boolean,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "left_button:"
+            }
+          ]
+        },
+        "190:right_button": {
+          "anchor": "pub right_button: Boolean,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "right_button:"
+            }
+          ]
+        },
+        "195:SimplePointerState": {
+          "anchor": "pub struct SimplePointerState {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data SimplePointerState "
+            }
+          ]
+        },
+        "196:relative_movement_x": {
+          "anchor": "pub relative_movement_x: i32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "relative_movement_x:"
+            }
+          ]
+        },
+        "197:relative_movement_y": {
+          "anchor": "pub relative_movement_y: i32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "relative_movement_y:"
+            }
+          ]
+        },
+        "198:relative_movement_z": {
+          "anchor": "pub relative_movement_z: i32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "relative_movement_z:"
+            }
+          ]
+        },
+        "199:left_button": {
+          "anchor": "pub left_button: Boolean,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "left_button:"
+            }
+          ]
+        },
+        "200:right_button": {
+          "anchor": "pub right_button: Boolean,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "right_button:"
+            }
+          ]
+        },
+        "205:SimplePointerProtocol": {
+          "anchor": "pub struct SimplePointerProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data SimplePointerProtocol "
+            }
+          ]
+        },
+        "206:reset": {
+          "anchor": "pub reset: unsafe extern \"efiapi\" fn(this: *mut Self, extended_verification: Boolean) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "reset:"
+            }
+          ]
+        },
+        "207:get_state": {
+          "anchor": "pub get_state:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "get_state:"
+            }
+          ]
+        },
+        "209:wait_for_input": {
+          "anchor": "pub wait_for_input: Event,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "wait_for_input:"
+            }
+          ]
+        },
+        "210:mode": {
+          "anchor": "pub mode: *const SimplePointerMode,",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "module console;"
+            }
+          ]
+        },
+        "214:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"31878c87-0b75-11d5-9a4f-0090273fc14d\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "SIMPLE_POINTER_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "219:GraphicsOutputProtocol": {
+          "anchor": "pub struct GraphicsOutputProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data GraphicsOutputProtocol "
+            }
+          ]
+        },
+        "220:query_mode": {
+          "anchor": "pub query_mode: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "query_mode:"
+            }
+          ]
+        },
+        "226:set_mode": {
+          "anchor": "pub set_mode: unsafe extern \"efiapi\" fn(*mut Self, mode_number: u32) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "set_mode:"
+            }
+          ]
+        },
+        "227:blt": {
+          "anchor": "pub blt: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "blt:"
+            }
+          ]
+        },
+        "241:mode": {
+          "anchor": "pub mode: *const GraphicsOutputProtocolMode,",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "module console;"
+            }
+          ]
+        },
+        "245:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"9042a9de-23dc-4a38-96fb-7aded080516a\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "GRAPHICS_OUTPUT_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "250:GraphicsOutputProtocolMode": {
+          "anchor": "pub struct GraphicsOutputProtocolMode {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data GraphicsOutputProtocolMode "
+            }
+          ]
+        },
+        "251:max_mode": {
+          "anchor": "pub max_mode: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "max_mode:"
+            }
+          ]
+        },
+        "252:mode": {
+          "anchor": "pub mode: u32,",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "module console;"
+            }
+          ]
+        },
+        "253:info": {
+          "anchor": "pub info: *const GraphicsOutputModeInformation,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "info:"
+            }
+          ]
+        },
+        "254:size_of_info": {
+          "anchor": "pub size_of_info: usize,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "size_of_info:"
+            }
+          ]
+        },
+        "255:frame_buffer_base": {
+          "anchor": "pub frame_buffer_base: PhysicalAddress,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "frame_buffer_base:"
+            }
+          ]
+        },
+        "256:frame_buffer_size": {
+          "anchor": "pub frame_buffer_size: usize,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "frame_buffer_size:"
+            }
+          ]
+        },
+        "260:default": {
+          "anchor": "fn default() -> Self {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/libraries/uefi/console_helpers.omg",
+              "anchor": "pub machine graphics_output_mode_default("
+            }
+          ]
+        },
+        "274:GraphicsOutputModeInformation": {
+          "anchor": "pub struct GraphicsOutputModeInformation {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data GraphicsOutputModeInformation "
+            }
+          ]
+        },
+        "275:version": {
+          "anchor": "pub version: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "version:"
+            }
+          ]
+        },
+        "276:horizontal_resolution": {
+          "anchor": "pub horizontal_resolution: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "horizontal_resolution:"
+            }
+          ]
+        },
+        "277:vertical_resolution": {
+          "anchor": "pub vertical_resolution: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "vertical_resolution:"
+            }
+          ]
+        },
+        "278:pixel_format": {
+          "anchor": "pub pixel_format: GraphicsPixelFormat,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pixel_format:"
+            }
+          ]
+        },
+        "279:pixel_information": {
+          "anchor": "pub pixel_information: PixelBitmask,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pixel_information:"
+            }
+          ]
+        },
+        "280:pixels_per_scan_line": {
+          "anchor": "pub pixels_per_scan_line: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pixels_per_scan_line:"
+            }
+          ]
+        },
+        "286:PixelBitmask": {
+          "anchor": "pub struct PixelBitmask {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data PixelBitmask "
+            }
+          ]
+        },
+        "288:red": {
+          "anchor": "pub red: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "red:"
+            }
+          ]
+        },
+        "291:green": {
+          "anchor": "pub green: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "green:"
+            }
+          ]
+        },
+        "294:blue": {
+          "anchor": "pub blue: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "blue:"
+            }
+          ]
+        },
+        "297:reserved": {
+          "anchor": "pub reserved: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "reserved:"
+            }
+          ]
+        },
+        "302:GraphicsPixelFormat": {
+          "anchor": "pub enum GraphicsPixelFormat: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data GraphicsPixelFormat "
+            }
+          ]
+        },
+        "303:PIXEL_RED_GREEN_BLUE_RESERVED_8_BIT_PER_COLOR": {
+          "anchor": "PIXEL_RED_GREEN_BLUE_RESERVED_8_BIT_PER_COLOR = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "GRAPHICS_PIXEL_FORMAT_PIXEL_RED_GREEN_BLUE_RESERVED_8_BIT_PER_COLOR"
+            }
+          ]
+        },
+        "304:PIXEL_BLUE_GREEN_RED_RESERVED_8_BIT_PER_COLOR": {
+          "anchor": "PIXEL_BLUE_GREEN_RED_RESERVED_8_BIT_PER_COLOR = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "GRAPHICS_PIXEL_FORMAT_PIXEL_BLUE_GREEN_RED_RESERVED_8_BIT_PER_COLOR"
+            }
+          ]
+        },
+        "305:PIXEL_BIT_MASK": {
+          "anchor": "PIXEL_BIT_MASK = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "GRAPHICS_PIXEL_FORMAT_PIXEL_BIT_MASK"
+            }
+          ]
+        },
+        "306:PIXEL_BLT_ONLY": {
+          "anchor": "PIXEL_BLT_ONLY = 3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "GRAPHICS_PIXEL_FORMAT_PIXEL_BLT_ONLY"
+            }
+          ]
+        },
+        "307:PIXEL_FORMAT_MAX": {
+          "anchor": "PIXEL_FORMAT_MAX = 4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "GRAPHICS_PIXEL_FORMAT_PIXEL_FORMAT_MAX"
+            }
+          ]
+        },
+        "313:GraphicsOutputBltPixel": {
+          "anchor": "pub struct GraphicsOutputBltPixel {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data GraphicsOutputBltPixel "
+            }
+          ]
+        },
+        "314:blue": {
+          "anchor": "pub blue: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "blue:"
+            }
+          ]
+        },
+        "315:green": {
+          "anchor": "pub green: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "green:"
+            }
+          ]
+        },
+        "316:red": {
+          "anchor": "pub red: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "red:"
+            }
+          ]
+        },
+        "317:reserved": {
+          "anchor": "pub reserved: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "reserved:"
+            }
+          ]
+        },
+        "322:GraphicsOutputBltOperation": {
+          "anchor": "pub enum GraphicsOutputBltOperation: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data GraphicsOutputBltOperation "
+            }
+          ]
+        },
+        "323:BLT_VIDEO_FILL": {
+          "anchor": "BLT_VIDEO_FILL = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "GRAPHICS_OUTPUT_BLT_OPERATION_BLT_VIDEO_FILL"
+            }
+          ]
+        },
+        "324:BLT_VIDEO_TO_BLT_BUFFER": {
+          "anchor": "BLT_VIDEO_TO_BLT_BUFFER = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "GRAPHICS_OUTPUT_BLT_OPERATION_BLT_VIDEO_TO_BLT_BUFFER"
+            }
+          ]
+        },
+        "325:BLT_BUFFER_TO_VIDEO": {
+          "anchor": "BLT_BUFFER_TO_VIDEO = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "GRAPHICS_OUTPUT_BLT_OPERATION_BLT_BUFFER_TO_VIDEO"
+            }
+          ]
+        },
+        "326:BLT_VIDEO_TO_VIDEO": {
+          "anchor": "BLT_VIDEO_TO_VIDEO = 3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "GRAPHICS_OUTPUT_BLT_OPERATION_BLT_VIDEO_TO_VIDEO"
+            }
+          ]
+        },
+        "327:GRAPHICS_OUTPUT_BLT_OPERATION_MAX": {
+          "anchor": "GRAPHICS_OUTPUT_BLT_OPERATION_MAX = 4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "GRAPHICS_OUTPUT_BLT_OPERATION_GRAPHICS_OUTPUT_BLT_OPERATION_MAX"
+            }
+          ]
+        },
+        "333:EdidDiscoveredProtocol": {
+          "anchor": "pub struct EdidDiscoveredProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "pub data EdidDiscoveredProtocol "
+            }
+          ]
+        },
+        "334:size_of_edid": {
+          "anchor": "pub size_of_edid: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "size_of_edid:"
+            }
+          ]
+        },
+        "335:edid": {
+          "anchor": "pub edid: *const u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "edid:"
+            }
+          ]
+        },
+        "339:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"1c0c34f6-d380-41fa-a049-8ad06c1a66aa\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/console.omg",
+              "anchor": "EDID_DISCOVERED_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/console.omg",
+          "anchor": "module console;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/console/serial.rs": {
+      "sha256": "9142a0d1ab94ad5552261c316b488d739c35548834d21b9c94b38e16b89dc6fd",
+      "disposition": "translated",
+      "symbols": {
+        "12:ControlBits": {
+          "anchor": "pub struct ControlBits: u32 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "pub data ControlBits "
+            }
+          ]
+        },
+        "14:CLEAR_TO_SEND": {
+          "anchor": "const CLEAR_TO_SEND = 0x10;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "CONTROL_BITS_CLEAR_TO_SEND"
+            }
+          ]
+        },
+        "16:DATA_SET_READY": {
+          "anchor": "const DATA_SET_READY = 0x20;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "CONTROL_BITS_DATA_SET_READY"
+            }
+          ]
+        },
+        "18:RING_INDICATE": {
+          "anchor": "const RING_INDICATE = 0x40;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "CONTROL_BITS_RING_INDICATE"
+            }
+          ]
+        },
+        "20:CARRIER_DETECT": {
+          "anchor": "const CARRIER_DETECT = 0x80;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "CONTROL_BITS_CARRIER_DETECT"
+            }
+          ]
+        },
+        "22:INPUT_BUFFER_EMPTY": {
+          "anchor": "const INPUT_BUFFER_EMPTY = 0x100;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "CONTROL_BITS_INPUT_BUFFER_EMPTY"
+            }
+          ]
+        },
+        "24:OUTPUT_BUFFER_EMPTY": {
+          "anchor": "const OUTPUT_BUFFER_EMPTY = 0x200;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "CONTROL_BITS_OUTPUT_BUFFER_EMPTY"
+            }
+          ]
+        },
+        "27:DATA_TERMINAL_READY": {
+          "anchor": "const DATA_TERMINAL_READY = 0x1;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "CONTROL_BITS_DATA_TERMINAL_READY"
+            }
+          ]
+        },
+        "29:REQUEST_TO_SEND": {
+          "anchor": "const REQUEST_TO_SEND = 0x2;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "CONTROL_BITS_REQUEST_TO_SEND"
+            }
+          ]
+        },
+        "31:HARDWARE_LOOPBACK_ENABLE": {
+          "anchor": "const HARDWARE_LOOPBACK_ENABLE = 0x1000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "CONTROL_BITS_HARDWARE_LOOPBACK_ENABLE"
+            }
+          ]
+        },
+        "33:SOFTWARE_LOOPBACK_ENABLE": {
+          "anchor": "const SOFTWARE_LOOPBACK_ENABLE = 0x2000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "CONTROL_BITS_SOFTWARE_LOOPBACK_ENABLE"
+            }
+          ]
+        },
+        "35:HARDWARE_FLOW_CONTROL_ENABLE": {
+          "anchor": "const HARDWARE_FLOW_CONTROL_ENABLE = 0x4000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "CONTROL_BITS_HARDWARE_FLOW_CONTROL_ENABLE"
+            }
+          ]
+        },
+        "40:SETTABLE": {
+          "anchor": "const SETTABLE =",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "CONTROL_BITS_SETTABLE"
+            }
+          ]
+        },
+        "62:SerialIoMode": {
+          "anchor": "pub struct SerialIoMode {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "pub data SerialIoMode "
+            }
+          ]
+        },
+        "64:control_mask": {
+          "anchor": "pub control_mask: ControlBits,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "control_mask:"
+            }
+          ]
+        },
+        "67:timeout": {
+          "anchor": "pub timeout: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "timeout:"
+            }
+          ]
+        },
+        "69:baud_rate": {
+          "anchor": "pub baud_rate: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "baud_rate:"
+            }
+          ]
+        },
+        "71:receive_fifo_depth": {
+          "anchor": "pub receive_fifo_depth: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "receive_fifo_depth:"
+            }
+          ]
+        },
+        "73:data_bits": {
+          "anchor": "pub data_bits: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "data_bits:"
+            }
+          ]
+        },
+        "75:parity": {
+          "anchor": "pub parity: Parity,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "parity:"
+            }
+          ]
+        },
+        "77:stop_bits": {
+          "anchor": "pub stop_bits: StopBits,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "stop_bits:"
+            }
+          ]
+        },
+        "83:SerialIoProtocolRevision": {
+          "anchor": "pub enum SerialIoProtocolRevision: u32  => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "pub data SerialIoProtocolRevision "
+            }
+          ]
+        },
+        "85:REVISION_1_0": {
+          "anchor": "REVISION_1_0 = 0x00010000,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "SERIAL_IO_PROTOCOL_REVISION_REVISION_1_0"
+            }
+          ]
+        },
+        "87:REVISION_1_1": {
+          "anchor": "REVISION_1_1 = 0x00010001,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "SERIAL_IO_PROTOCOL_REVISION_REVISION_1_1"
+            }
+          ]
+        },
+        "94:SerialIoProtocol": {
+          "anchor": "pub struct SerialIoProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "pub data SerialIoProtocol "
+            }
+          ]
+        },
+        "95:revision": {
+          "anchor": "pub revision: SerialIoProtocolRevision,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "revision:"
+            }
+          ]
+        },
+        "96:reset": {
+          "anchor": "pub reset: unsafe extern \"efiapi\" fn(*mut Self) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "reset:"
+            }
+          ]
+        },
+        "97:set_attributes": {
+          "anchor": "pub set_attributes: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "set_attributes:"
+            }
+          ]
+        },
+        "106:set_control_bits": {
+          "anchor": "pub set_control_bits: unsafe extern \"efiapi\" fn(*mut Self, ControlBits) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "set_control_bits:"
+            }
+          ]
+        },
+        "107:get_control_bits": {
+          "anchor": "pub get_control_bits: unsafe extern \"efiapi\" fn(*const Self, *mut ControlBits) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "get_control_bits:"
+            }
+          ]
+        },
+        "108:write": {
+          "anchor": "pub write: unsafe extern \"efiapi\" fn(*mut Self, *mut usize, *const u8) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "write:"
+            }
+          ]
+        },
+        "109:read": {
+          "anchor": "pub read: unsafe extern \"efiapi\" fn(*mut Self, *mut usize, *mut u8) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "read:"
+            }
+          ]
+        },
+        "110:mode": {
+          "anchor": "pub mode: *const SerialIoMode,",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "module serial;"
+            }
+          ]
+        },
+        "114:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"bb25cf6f-f1d4-11d2-9a0c-0090273fc1fd\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "SERIAL_IO_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "120:SerialIoProtocol_1_1": {
+          "anchor": "pub struct SerialIoProtocol_1_1 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "pub data SerialIoProtocol_1_1 "
+            }
+          ]
+        },
+        "121:base_protocol": {
+          "anchor": "pub base_protocol: SerialIoProtocol,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "base_protocol:"
+            }
+          ]
+        },
+        "122:device_type_guid": {
+          "anchor": "pub device_type_guid: *const Guid,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "device_type_guid:"
+            }
+          ]
+        },
+        "126:GUID": {
+          "anchor": "pub const GUID: Guid = SerialIoProtocol::GUID;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "SERIAL_IO_PROTOCOL_1_1_GUID:"
+            }
+          ]
+        },
+        "131:Parity": {
+          "anchor": "pub enum Parity: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "pub data Parity "
+            }
+          ]
+        },
+        "133:DEFAULT": {
+          "anchor": "DEFAULT = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "PARITY_DEFAULT"
+            }
+          ]
+        },
+        "135:NONE": {
+          "anchor": "NONE = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "PARITY_NONE"
+            }
+          ]
+        },
+        "137:EVEN": {
+          "anchor": "EVEN = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "PARITY_EVEN"
+            }
+          ]
+        },
+        "139:ODD": {
+          "anchor": "ODD = 3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "PARITY_ODD"
+            }
+          ]
+        },
+        "141:MARK": {
+          "anchor": "MARK = 4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "PARITY_MARK"
+            }
+          ]
+        },
+        "143:SPACE": {
+          "anchor": "SPACE = 5,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "PARITY_SPACE"
+            }
+          ]
+        },
+        "149:StopBits": {
+          "anchor": "pub enum StopBits: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "pub data StopBits "
+            }
+          ]
+        },
+        "151:DEFAULT": {
+          "anchor": "DEFAULT = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "PARITY_DEFAULT"
+            }
+          ]
+        },
+        "153:ONE": {
+          "anchor": "ONE = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "STOP_BITS_ONE"
+            }
+          ]
+        },
+        "155:ONE_FIVE": {
+          "anchor": "ONE_FIVE = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "STOP_BITS_ONE_FIVE"
+            }
+          ]
+        },
+        "157:TWO": {
+          "anchor": "TWO = 3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/serial.omg",
+              "anchor": "STOP_BITS_TWO"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/serial.omg",
+          "anchor": "module serial;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/device_path.rs": {
+      "sha256": "60e91f13a4163930d3dbb410e86e4d860d363ae2b8a9d940cc8fb9577fa4ef2b",
+      "disposition": "translated",
+      "symbols": {
+        "43:device_path_gen": {
+          "anchor": "mod device_path_gen;",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "module device_path;"
+            }
+          ]
+        },
+        "47:device_path_gen::{acpi, bios_boot_spec, end, hardware, media, messaging};": {
+          "anchor": "pub use device_path_gen::{acpi, bios_boot_spec, end, hardware, media, messaging};",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "module device_path;"
+            }
+          ]
+        },
+        "59:DevicePathProtocol": {
+          "anchor": "pub struct DevicePathProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data DevicePathProtocol "
+            }
+          ]
+        },
+        "60:major_type": {
+          "anchor": "pub major_type: DeviceType,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "major_type:"
+            }
+          ]
+        },
+        "61:sub_type": {
+          "anchor": "pub sub_type: DeviceSubType,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "sub_type:"
+            }
+          ]
+        },
+        "63:length": {
+          "anchor": "pub length: [u8; 2],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/libraries/uefi/console_helpers.omg",
+              "anchor": "pub machine device_path_length("
+            }
+          ]
+        },
+        "69:_": {
+          "anchor": "const _: () = {",
+          "disposition": "omitted",
+          "reason": "Compile-time ABI assertions retained as measured geometry vectors."
+        },
+        "75:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"09576e91-6d3f-11d2-8e39-00a0c969723b\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_PATH_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "79:length": {
+          "anchor": "pub const fn length(&self) -> u16 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/libraries/uefi/console_helpers.omg",
+              "anchor": "pub machine device_path_length("
+            }
+          ]
+        },
+        "86:DeviceType": {
+          "anchor": "pub enum DeviceType: u8 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data DeviceType "
+            }
+          ]
+        },
+        "91:HARDWARE": {
+          "anchor": "HARDWARE = 0x01,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_TYPE_HARDWARE"
+            }
+          ]
+        },
+        "97:ACPI": {
+          "anchor": "ACPI = 0x02,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_TYPE_ACPI"
+            }
+          ]
+        },
+        "103:MESSAGING": {
+          "anchor": "MESSAGING = 0x03,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_TYPE_MESSAGING"
+            }
+          ]
+        },
+        "108:MEDIA": {
+          "anchor": "MEDIA = 0x04,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_TYPE_MEDIA"
+            }
+          ]
+        },
+        "113:BIOS_BOOT_SPEC": {
+          "anchor": "BIOS_BOOT_SPEC = 0x05,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_TYPE_BIOS_BOOT_SPEC"
+            }
+          ]
+        },
+        "118:END": {
+          "anchor": "END = 0x7F,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_TYPE_END"
+            }
+          ]
+        },
+        "124:DeviceSubType": {
+          "anchor": "pub struct DeviceSubType(pub u8);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data DeviceSubType "
+            }
+          ]
+        },
+        "128:HARDWARE_PCI": {
+          "anchor": "pub const HARDWARE_PCI: Self = Self(1);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_HARDWARE_PCI"
+            }
+          ]
+        },
+        "130:HARDWARE_PCCARD": {
+          "anchor": "pub const HARDWARE_PCCARD: Self = Self(2);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_HARDWARE_PCCARD"
+            }
+          ]
+        },
+        "132:HARDWARE_MEMORY_MAPPED": {
+          "anchor": "pub const HARDWARE_MEMORY_MAPPED: Self = Self(3);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_HARDWARE_MEMORY_MAPPED"
+            }
+          ]
+        },
+        "134:HARDWARE_VENDOR": {
+          "anchor": "pub const HARDWARE_VENDOR: Self = Self(4);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_HARDWARE_VENDOR"
+            }
+          ]
+        },
+        "136:HARDWARE_CONTROLLER": {
+          "anchor": "pub const HARDWARE_CONTROLLER: Self = Self(5);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_HARDWARE_CONTROLLER"
+            }
+          ]
+        },
+        "138:HARDWARE_BMC": {
+          "anchor": "pub const HARDWARE_BMC: Self = Self(6);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_HARDWARE_BMC"
+            }
+          ]
+        },
+        "141:ACPI": {
+          "anchor": "pub const ACPI: Self = Self(1);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_TYPE_ACPI"
+            }
+          ]
+        },
+        "143:ACPI_EXPANDED": {
+          "anchor": "pub const ACPI_EXPANDED: Self = Self(2);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_ACPI_EXPANDED"
+            }
+          ]
+        },
+        "145:ACPI_ADR": {
+          "anchor": "pub const ACPI_ADR: Self = Self(3);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_ACPI_ADR"
+            }
+          ]
+        },
+        "147:ACPI_NVDIMM": {
+          "anchor": "pub const ACPI_NVDIMM: Self = Self(4);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_ACPI_NVDIMM"
+            }
+          ]
+        },
+        "150:MESSAGING_ATAPI": {
+          "anchor": "pub const MESSAGING_ATAPI: Self = Self(1);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_ATAPI"
+            }
+          ]
+        },
+        "152:MESSAGING_SCSI": {
+          "anchor": "pub const MESSAGING_SCSI: Self = Self(2);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_SCSI"
+            }
+          ]
+        },
+        "154:MESSAGING_FIBRE_CHANNEL": {
+          "anchor": "pub const MESSAGING_FIBRE_CHANNEL: Self = Self(3);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_FIBRE_CHANNEL"
+            }
+          ]
+        },
+        "156:MESSAGING_1394": {
+          "anchor": "pub const MESSAGING_1394: Self = Self(4);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_1394"
+            }
+          ]
+        },
+        "158:MESSAGING_USB": {
+          "anchor": "pub const MESSAGING_USB: Self = Self(5);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_USB"
+            }
+          ]
+        },
+        "160:MESSAGING_I2O": {
+          "anchor": "pub const MESSAGING_I2O: Self = Self(6);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_I2O"
+            }
+          ]
+        },
+        "162:MESSAGING_INFINIBAND": {
+          "anchor": "pub const MESSAGING_INFINIBAND: Self = Self(9);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_INFINIBAND"
+            }
+          ]
+        },
+        "164:MESSAGING_VENDOR": {
+          "anchor": "pub const MESSAGING_VENDOR: Self = Self(10);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_VENDOR"
+            }
+          ]
+        },
+        "166:MESSAGING_MAC_ADDRESS": {
+          "anchor": "pub const MESSAGING_MAC_ADDRESS: Self = Self(11);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_MAC_ADDRESS"
+            }
+          ]
+        },
+        "168:MESSAGING_IPV4": {
+          "anchor": "pub const MESSAGING_IPV4: Self = Self(12);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_IPV4"
+            }
+          ]
+        },
+        "170:MESSAGING_IPV6": {
+          "anchor": "pub const MESSAGING_IPV6: Self = Self(13);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_IPV6"
+            }
+          ]
+        },
+        "172:MESSAGING_UART": {
+          "anchor": "pub const MESSAGING_UART: Self = Self(14);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_UART"
+            }
+          ]
+        },
+        "174:MESSAGING_USB_CLASS": {
+          "anchor": "pub const MESSAGING_USB_CLASS: Self = Self(15);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_USB_CLASS"
+            }
+          ]
+        },
+        "176:MESSAGING_USB_WWID": {
+          "anchor": "pub const MESSAGING_USB_WWID: Self = Self(16);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_USB_WWID"
+            }
+          ]
+        },
+        "178:MESSAGING_DEVICE_LOGICAL_UNIT": {
+          "anchor": "pub const MESSAGING_DEVICE_LOGICAL_UNIT: Self = Self(17);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_DEVICE_LOGICAL_UNIT"
+            }
+          ]
+        },
+        "180:MESSAGING_SATA": {
+          "anchor": "pub const MESSAGING_SATA: Self = Self(18);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_SATA"
+            }
+          ]
+        },
+        "182:MESSAGING_ISCSI": {
+          "anchor": "pub const MESSAGING_ISCSI: Self = Self(19);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_ISCSI"
+            }
+          ]
+        },
+        "184:MESSAGING_VLAN": {
+          "anchor": "pub const MESSAGING_VLAN: Self = Self(20);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_VLAN"
+            }
+          ]
+        },
+        "186:MESSAGING_FIBRE_CHANNEL_EX": {
+          "anchor": "pub const MESSAGING_FIBRE_CHANNEL_EX: Self = Self(21);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_FIBRE_CHANNEL_EX"
+            }
+          ]
+        },
+        "188:MESSAGING_SCSI_SAS_EX": {
+          "anchor": "pub const MESSAGING_SCSI_SAS_EX: Self = Self(22);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_SCSI_SAS_EX"
+            }
+          ]
+        },
+        "190:MESSAGING_NVME_NAMESPACE": {
+          "anchor": "pub const MESSAGING_NVME_NAMESPACE: Self = Self(23);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_NVME_NAMESPACE"
+            }
+          ]
+        },
+        "192:MESSAGING_URI": {
+          "anchor": "pub const MESSAGING_URI: Self = Self(24);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_URI"
+            }
+          ]
+        },
+        "194:MESSAGING_UFS": {
+          "anchor": "pub const MESSAGING_UFS: Self = Self(25);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_UFS"
+            }
+          ]
+        },
+        "196:MESSAGING_SD": {
+          "anchor": "pub const MESSAGING_SD: Self = Self(26);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_SD"
+            }
+          ]
+        },
+        "198:MESSAGING_BLUETOOTH": {
+          "anchor": "pub const MESSAGING_BLUETOOTH: Self = Self(27);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_BLUETOOTH"
+            }
+          ]
+        },
+        "200:MESSAGING_WIFI": {
+          "anchor": "pub const MESSAGING_WIFI: Self = Self(28);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_WIFI"
+            }
+          ]
+        },
+        "202:MESSAGING_EMMC": {
+          "anchor": "pub const MESSAGING_EMMC: Self = Self(29);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_EMMC"
+            }
+          ]
+        },
+        "204:MESSAGING_BLUETOOTH_LE": {
+          "anchor": "pub const MESSAGING_BLUETOOTH_LE: Self = Self(30);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_BLUETOOTH_LE"
+            }
+          ]
+        },
+        "206:MESSAGING_DNS": {
+          "anchor": "pub const MESSAGING_DNS: Self = Self(31);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_DNS"
+            }
+          ]
+        },
+        "208:MESSAGING_NVDIMM_NAMESPACE": {
+          "anchor": "pub const MESSAGING_NVDIMM_NAMESPACE: Self = Self(32);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_NVDIMM_NAMESPACE"
+            }
+          ]
+        },
+        "210:MESSAGING_REST_SERVICE": {
+          "anchor": "pub const MESSAGING_REST_SERVICE: Self = Self(33);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_REST_SERVICE"
+            }
+          ]
+        },
+        "212:MESSAGING_NVME_OF_NAMESPACE": {
+          "anchor": "pub const MESSAGING_NVME_OF_NAMESPACE: Self = Self(34);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MESSAGING_NVME_OF_NAMESPACE"
+            }
+          ]
+        },
+        "215:MEDIA_HARD_DRIVE": {
+          "anchor": "pub const MEDIA_HARD_DRIVE: Self = Self(1);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MEDIA_HARD_DRIVE"
+            }
+          ]
+        },
+        "217:MEDIA_CD_ROM": {
+          "anchor": "pub const MEDIA_CD_ROM: Self = Self(2);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MEDIA_CD_ROM"
+            }
+          ]
+        },
+        "219:MEDIA_VENDOR": {
+          "anchor": "pub const MEDIA_VENDOR: Self = Self(3);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MEDIA_VENDOR"
+            }
+          ]
+        },
+        "221:MEDIA_FILE_PATH": {
+          "anchor": "pub const MEDIA_FILE_PATH: Self = Self(4);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MEDIA_FILE_PATH"
+            }
+          ]
+        },
+        "223:MEDIA_PROTOCOL": {
+          "anchor": "pub const MEDIA_PROTOCOL: Self = Self(5);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MEDIA_PROTOCOL"
+            }
+          ]
+        },
+        "225:MEDIA_PIWG_FIRMWARE_FILE": {
+          "anchor": "pub const MEDIA_PIWG_FIRMWARE_FILE: Self = Self(6);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MEDIA_PIWG_FIRMWARE_FILE"
+            }
+          ]
+        },
+        "227:MEDIA_PIWG_FIRMWARE_VOLUME": {
+          "anchor": "pub const MEDIA_PIWG_FIRMWARE_VOLUME: Self = Self(7);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MEDIA_PIWG_FIRMWARE_VOLUME"
+            }
+          ]
+        },
+        "229:MEDIA_RELATIVE_OFFSET_RANGE": {
+          "anchor": "pub const MEDIA_RELATIVE_OFFSET_RANGE: Self = Self(8);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MEDIA_RELATIVE_OFFSET_RANGE"
+            }
+          ]
+        },
+        "231:MEDIA_RAM_DISK": {
+          "anchor": "pub const MEDIA_RAM_DISK: Self = Self(9);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_MEDIA_RAM_DISK"
+            }
+          ]
+        },
+        "234:BIOS_BOOT_SPECIFICATION": {
+          "anchor": "pub const BIOS_BOOT_SPECIFICATION: Self = Self(1);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_BIOS_BOOT_SPECIFICATION"
+            }
+          ]
+        },
+        "237:END_INSTANCE": {
+          "anchor": "pub const END_INSTANCE: Self = Self(0x01);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_END_INSTANCE"
+            }
+          ]
+        },
+        "239:END_ENTIRE": {
+          "anchor": "pub const END_ENTIRE: Self = Self(0xff);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_SUB_TYPE_END_ENTIRE"
+            }
+          ]
+        },
+        "244:DevicePathToTextProtocol": {
+          "anchor": "pub struct DevicePathToTextProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data DevicePathToTextProtocol "
+            }
+          ]
+        },
+        "245:convert_device_node_to_text": {
+          "anchor": "pub convert_device_node_to_text: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "convert_device_node_to_text:"
+            }
+          ]
+        },
+        "250:convert_device_path_to_text": {
+          "anchor": "pub convert_device_path_to_text: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "convert_device_path_to_text:"
+            }
+          ]
+        },
+        "258:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"8b843e20-8132-4852-90cc-551a4e4a7f1c\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_PATH_TO_TEXT_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "263:DevicePathFromTextProtocol": {
+          "anchor": "pub struct DevicePathFromTextProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data DevicePathFromTextProtocol "
+            }
+          ]
+        },
+        "264:convert_text_to_device_node": {
+          "anchor": "pub convert_text_to_device_node:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "convert_text_to_device_node:"
+            }
+          ]
+        },
+        "266:convert_text_to_device_path": {
+          "anchor": "pub convert_text_to_device_path:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "convert_text_to_device_path:"
+            }
+          ]
+        },
+        "271:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"05c99a21-c70f-4ad2-8a5f-35df3343f51e\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_PATH_FROM_TEXT_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "276:DevicePathUtilitiesProtocol": {
+          "anchor": "pub struct DevicePathUtilitiesProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data DevicePathUtilitiesProtocol "
+            }
+          ]
+        },
+        "277:get_device_path_size": {
+          "anchor": "pub get_device_path_size:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "get_device_path_size:"
+            }
+          ]
+        },
+        "279:duplicate_device_path": {
+          "anchor": "pub duplicate_device_path: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "duplicate_device_path:"
+            }
+          ]
+        },
+        "282:append_device_path": {
+          "anchor": "pub append_device_path: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "append_device_path:"
+            }
+          ]
+        },
+        "286:append_device_node": {
+          "anchor": "pub append_device_node: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "append_device_node:"
+            }
+          ]
+        },
+        "290:append_device_path_instance": {
+          "anchor": "pub append_device_path_instance: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "append_device_path_instance:"
+            }
+          ]
+        },
+        "294:get_next_device_path_instance": {
+          "anchor": "pub get_next_device_path_instance: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "get_next_device_path_instance:"
+            }
+          ]
+        },
+        "298:is_device_path_multi_instance": {
+          "anchor": "pub is_device_path_multi_instance:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "is_device_path_multi_instance:"
+            }
+          ]
+        },
+        "300:create_device_node": {
+          "anchor": "pub create_device_node: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "create_device_node:"
+            }
+          ]
+        },
+        "308:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"0379be4e-d706-437d-b037-edb82fb772a4\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "DEVICE_PATH_UTILITIES_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/device_path.omg",
+          "anchor": "module device_path;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/device_path/device_path_gen.rs": {
+      "sha256": "441172a48c1203a0ba3a78a8ad7e0ec0895a4b6a5066a1531e75e9735282a5df",
+      "disposition": "translated",
+      "symbols": {
+        "19:end": {
+          "anchor": "pub mod end {",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "module device_path;"
+            }
+          ]
+        },
+        "22:Instance": {
+          "anchor": "pub struct Instance {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data EndInstance "
+            }
+          ]
+        },
+        "23:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "27:Entire": {
+          "anchor": "pub struct Entire {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data EndEntire "
+            }
+          ]
+        },
+        "28:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "33:hardware": {
+          "anchor": "pub mod hardware {",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "module device_path;"
+            }
+          ]
+        },
+        "36:Pci": {
+          "anchor": "pub struct Pci {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data HardwarePci "
+            }
+          ]
+        },
+        "37:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "38:function": {
+          "anchor": "pub function: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "function:"
+            }
+          ]
+        },
+        "39:device": {
+          "anchor": "pub device: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "device:"
+            }
+          ]
+        },
+        "43:Pccard": {
+          "anchor": "pub struct Pccard {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data HardwarePccard "
+            }
+          ]
+        },
+        "44:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "45:function": {
+          "anchor": "pub function: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "function:"
+            }
+          ]
+        },
+        "49:MemoryMapped": {
+          "anchor": "pub struct MemoryMapped {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data HardwareMemoryMapped "
+            }
+          ]
+        },
+        "50:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "51:memory_type": {
+          "anchor": "pub memory_type: MemoryType,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "memory_type:"
+            }
+          ]
+        },
+        "52:start_address": {
+          "anchor": "pub start_address: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "start_address:"
+            }
+          ]
+        },
+        "53:end_address": {
+          "anchor": "pub end_address: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "end_address:"
+            }
+          ]
+        },
+        "57:Vendor": {
+          "anchor": "pub struct Vendor {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data HardwareVendor "
+            }
+          ]
+        },
+        "58:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "59:vendor_guid": {
+          "anchor": "pub vendor_guid: Guid,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "vendor_guid:"
+            }
+          ]
+        },
+        "60:vendor_defined_data": {
+          "anchor": "pub vendor_defined_data: [u8; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing vendor_defined_data ("
+            }
+          ]
+        },
+        "64:Controller": {
+          "anchor": "pub struct Controller {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data HardwareController "
+            }
+          ]
+        },
+        "65:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "66:controller_number": {
+          "anchor": "pub controller_number: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "controller_number:"
+            }
+          ]
+        },
+        "70:Bmc": {
+          "anchor": "pub struct Bmc {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data HardwareBmc "
+            }
+          ]
+        },
+        "71:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "72:interface_type": {
+          "anchor": "pub interface_type: device_path::hardware::BmcInterfaceType,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "interface_type:"
+            }
+          ]
+        },
+        "73:base_address": {
+          "anchor": "pub base_address: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "base_address:"
+            }
+          ]
+        },
+        "76:BmcInterfaceType": {
+          "anchor": "newtype_enum! { # [doc = \" Baseboard Management Controller (BMC) host interface type.\"] pub enum BmcInterfaceType : u8 => { # [doc = \" Unknown.\"] UNKNOWN = 0x00 , # [doc = \" Keyboard controller style.\"] KEYBOARD_CONTROLLER_STYLE = 0x01 , # [doc = \" Server management interface chip.\"] SERVER_MANAGEMENT_INTERFACE_CHIP = 0x02 , # [doc = \" Block transfer.\"] BLOCK_TRANSFER = 0x03 , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data HardwareBmcInterfaceType "
+            }
+          ]
+        },
+        "82:acpi": {
+          "anchor": "pub mod acpi {",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "module device_path;"
+            }
+          ]
+        },
+        "85:Acpi": {
+          "anchor": "pub struct Acpi {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data AcpiAcpi "
+            }
+          ]
+        },
+        "86:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "87:hid": {
+          "anchor": "pub hid: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "hid:"
+            }
+          ]
+        },
+        "88:uid": {
+          "anchor": "pub uid: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "uid:"
+            }
+          ]
+        },
+        "92:Expanded": {
+          "anchor": "pub struct Expanded {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data AcpiExpanded "
+            }
+          ]
+        },
+        "93:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "94:hid": {
+          "anchor": "pub hid: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "hid:"
+            }
+          ]
+        },
+        "95:uid": {
+          "anchor": "pub uid: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "uid:"
+            }
+          ]
+        },
+        "96:cid": {
+          "anchor": "pub cid: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "cid:"
+            }
+          ]
+        },
+        "97:data": {
+          "anchor": "pub data: [u8; 0],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing data ("
+            }
+          ]
+        },
+        "101:Adr": {
+          "anchor": "pub struct Adr {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data AcpiAdr "
+            }
+          ]
+        },
+        "102:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "103:adr": {
+          "anchor": "pub adr: [u32; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing adr ("
+            }
+          ]
+        },
+        "107:Nvdimm": {
+          "anchor": "pub struct Nvdimm {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data AcpiNvdimm "
+            }
+          ]
+        },
+        "108:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "109:nfit_device_handle": {
+          "anchor": "pub nfit_device_handle: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "nfit_device_handle:"
+            }
+          ]
+        },
+        "114:messaging": {
+          "anchor": "pub mod messaging {",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "module device_path;"
+            }
+          ]
+        },
+        "117:Atapi": {
+          "anchor": "pub struct Atapi {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingAtapi "
+            }
+          ]
+        },
+        "118:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "119:primary_secondary": {
+          "anchor": "pub primary_secondary: device_path::messaging::PrimarySecondary,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "primary_secondary:"
+            }
+          ]
+        },
+        "120:master_slave": {
+          "anchor": "pub master_slave: device_path::messaging::MasterSlave,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "master_slave:"
+            }
+          ]
+        },
+        "121:logical_unit_number": {
+          "anchor": "pub logical_unit_number: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "logical_unit_number:"
+            }
+          ]
+        },
+        "125:Scsi": {
+          "anchor": "pub struct Scsi {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingScsi "
+            }
+          ]
+        },
+        "126:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "127:target_id": {
+          "anchor": "pub target_id: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "target_id:"
+            }
+          ]
+        },
+        "128:logical_unit_number": {
+          "anchor": "pub logical_unit_number: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "logical_unit_number:"
+            }
+          ]
+        },
+        "132:FibreChannel": {
+          "anchor": "pub struct FibreChannel {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingFibreChannel "
+            }
+          ]
+        },
+        "133:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "134:_reserved": {
+          "anchor": "pub _reserved: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "_reserved:"
+            }
+          ]
+        },
+        "135:world_wide_name": {
+          "anchor": "pub world_wide_name: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "world_wide_name:"
+            }
+          ]
+        },
+        "136:logical_unit_number": {
+          "anchor": "pub logical_unit_number: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "logical_unit_number:"
+            }
+          ]
+        },
+        "140:FibreChannelEx": {
+          "anchor": "pub struct FibreChannelEx {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingFibreChannelEx "
+            }
+          ]
+        },
+        "141:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "142:_reserved": {
+          "anchor": "pub _reserved: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "_reserved:"
+            }
+          ]
+        },
+        "143:world_wide_name": {
+          "anchor": "pub world_wide_name: [u8; 8usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "world_wide_name:"
+            }
+          ]
+        },
+        "144:logical_unit_number": {
+          "anchor": "pub logical_unit_number: [u8; 8usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "logical_unit_number:"
+            }
+          ]
+        },
+        "148:Ieee1394": {
+          "anchor": "pub struct Ieee1394 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingIeee1394 "
+            }
+          ]
+        },
+        "149:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "150:_reserved": {
+          "anchor": "pub _reserved: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "_reserved:"
+            }
+          ]
+        },
+        "151:guid": {
+          "anchor": "pub guid: [u8; 8usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "guid:"
+            }
+          ]
+        },
+        "155:Usb": {
+          "anchor": "pub struct Usb {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingUsb "
+            }
+          ]
+        },
+        "156:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "157:parent_port_number": {
+          "anchor": "pub parent_port_number: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "parent_port_number:"
+            }
+          ]
+        },
+        "158:interface": {
+          "anchor": "pub interface: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "interface:"
+            }
+          ]
+        },
+        "162:Sata": {
+          "anchor": "pub struct Sata {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingSata "
+            }
+          ]
+        },
+        "163:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "164:hba_port_number": {
+          "anchor": "pub hba_port_number: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "hba_port_number:"
+            }
+          ]
+        },
+        "165:port_multiplier_port_number": {
+          "anchor": "pub port_multiplier_port_number: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "port_multiplier_port_number:"
+            }
+          ]
+        },
+        "166:logical_unit_number": {
+          "anchor": "pub logical_unit_number: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "logical_unit_number:"
+            }
+          ]
+        },
+        "170:UsbWwid": {
+          "anchor": "pub struct UsbWwid {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingUsbWwid "
+            }
+          ]
+        },
+        "171:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "172:interface_number": {
+          "anchor": "pub interface_number: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "interface_number:"
+            }
+          ]
+        },
+        "173:device_vendor_id": {
+          "anchor": "pub device_vendor_id: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "device_vendor_id:"
+            }
+          ]
+        },
+        "174:device_product_id": {
+          "anchor": "pub device_product_id: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "device_product_id:"
+            }
+          ]
+        },
+        "175:serial_number": {
+          "anchor": "pub serial_number: [u16; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing serial_number ("
+            }
+          ]
+        },
+        "179:DeviceLogicalUnit": {
+          "anchor": "pub struct DeviceLogicalUnit {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingDeviceLogicalUnit "
+            }
+          ]
+        },
+        "180:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "181:logical_unit_number": {
+          "anchor": "pub logical_unit_number: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "logical_unit_number:"
+            }
+          ]
+        },
+        "185:UsbClass": {
+          "anchor": "pub struct UsbClass {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingUsbClass "
+            }
+          ]
+        },
+        "186:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "187:vendor_id": {
+          "anchor": "pub vendor_id: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "vendor_id:"
+            }
+          ]
+        },
+        "188:product_id": {
+          "anchor": "pub product_id: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "product_id:"
+            }
+          ]
+        },
+        "189:device_class": {
+          "anchor": "pub device_class: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "device_class:"
+            }
+          ]
+        },
+        "190:device_subclass": {
+          "anchor": "pub device_subclass: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "device_subclass:"
+            }
+          ]
+        },
+        "191:device_protocol": {
+          "anchor": "pub device_protocol: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "device_protocol:"
+            }
+          ]
+        },
+        "195:I2o": {
+          "anchor": "pub struct I2o {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingI2o "
+            }
+          ]
+        },
+        "196:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "197:target_id": {
+          "anchor": "pub target_id: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "target_id:"
+            }
+          ]
+        },
+        "201:MacAddress": {
+          "anchor": "pub struct MacAddress {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingMacAddress "
+            }
+          ]
+        },
+        "202:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "203:mac_address": {
+          "anchor": "pub mac_address: [u8; 32usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "mac_address:"
+            }
+          ]
+        },
+        "204:interface_type": {
+          "anchor": "pub interface_type: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "interface_type:"
+            }
+          ]
+        },
+        "208:Ipv4": {
+          "anchor": "pub struct Ipv4 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingIpv4 "
+            }
+          ]
+        },
+        "209:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "210:local_ip_address": {
+          "anchor": "pub local_ip_address: [u8; 4usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "local_ip_address:"
+            }
+          ]
+        },
+        "211:remote_ip_address": {
+          "anchor": "pub remote_ip_address: [u8; 4usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "remote_ip_address:"
+            }
+          ]
+        },
+        "212:local_port": {
+          "anchor": "pub local_port: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "local_port:"
+            }
+          ]
+        },
+        "213:remote_port": {
+          "anchor": "pub remote_port: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "remote_port:"
+            }
+          ]
+        },
+        "214:protocol": {
+          "anchor": "pub protocol: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "protocol:"
+            }
+          ]
+        },
+        "215:ip_address_origin": {
+          "anchor": "pub ip_address_origin: device_path::messaging::Ipv4AddressOrigin,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "ip_address_origin:"
+            }
+          ]
+        },
+        "216:gateway_ip_address": {
+          "anchor": "pub gateway_ip_address: [u8; 4usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "gateway_ip_address:"
+            }
+          ]
+        },
+        "217:subnet_mask": {
+          "anchor": "pub subnet_mask: [u8; 4usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "subnet_mask:"
+            }
+          ]
+        },
+        "221:Ipv6": {
+          "anchor": "pub struct Ipv6 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingIpv6 "
+            }
+          ]
+        },
+        "222:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "223:local_ip_address": {
+          "anchor": "pub local_ip_address: [u8; 16usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "local_ip_address:"
+            }
+          ]
+        },
+        "224:remote_ip_address": {
+          "anchor": "pub remote_ip_address: [u8; 16usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "remote_ip_address:"
+            }
+          ]
+        },
+        "225:local_port": {
+          "anchor": "pub local_port: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "local_port:"
+            }
+          ]
+        },
+        "226:remote_port": {
+          "anchor": "pub remote_port: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "remote_port:"
+            }
+          ]
+        },
+        "227:protocol": {
+          "anchor": "pub protocol: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "protocol:"
+            }
+          ]
+        },
+        "228:ip_address_origin": {
+          "anchor": "pub ip_address_origin: device_path::messaging::Ipv6AddressOrigin,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "ip_address_origin:"
+            }
+          ]
+        },
+        "229:prefix_length": {
+          "anchor": "pub prefix_length: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "prefix_length:"
+            }
+          ]
+        },
+        "230:gateway_ip_address": {
+          "anchor": "pub gateway_ip_address: [u8; 16usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "gateway_ip_address:"
+            }
+          ]
+        },
+        "234:Vlan": {
+          "anchor": "pub struct Vlan {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingVlan "
+            }
+          ]
+        },
+        "235:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "236:vlan_id": {
+          "anchor": "pub vlan_id: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "vlan_id:"
+            }
+          ]
+        },
+        "240:Infiniband": {
+          "anchor": "pub struct Infiniband {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingInfiniband "
+            }
+          ]
+        },
+        "241:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "242:resource_flags": {
+          "anchor": "pub resource_flags: device_path::messaging::InfinibandResourceFlags,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "resource_flags:"
+            }
+          ]
+        },
+        "243:port_gid": {
+          "anchor": "pub port_gid: [u8; 16usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "port_gid:"
+            }
+          ]
+        },
+        "244:ioc_guid_or_service_id": {
+          "anchor": "pub ioc_guid_or_service_id: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "ioc_guid_or_service_id:"
+            }
+          ]
+        },
+        "245:target_port_id": {
+          "anchor": "pub target_port_id: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "target_port_id:"
+            }
+          ]
+        },
+        "246:device_id": {
+          "anchor": "pub device_id: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "device_id:"
+            }
+          ]
+        },
+        "250:Uart": {
+          "anchor": "pub struct Uart {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingUart "
+            }
+          ]
+        },
+        "251:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "252:_reserved": {
+          "anchor": "pub _reserved: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "_reserved:"
+            }
+          ]
+        },
+        "253:baud_rate": {
+          "anchor": "pub baud_rate: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "baud_rate:"
+            }
+          ]
+        },
+        "254:data_bits": {
+          "anchor": "pub data_bits: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "data_bits:"
+            }
+          ]
+        },
+        "255:parity": {
+          "anchor": "pub parity: device_path::messaging::Parity,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "parity:"
+            }
+          ]
+        },
+        "256:stop_bits": {
+          "anchor": "pub stop_bits: device_path::messaging::StopBits,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "stop_bits:"
+            }
+          ]
+        },
+        "260:Vendor": {
+          "anchor": "pub struct Vendor {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingVendor "
+            }
+          ]
+        },
+        "261:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "262:vendor_guid": {
+          "anchor": "pub vendor_guid: Guid,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "vendor_guid:"
+            }
+          ]
+        },
+        "263:vendor_defined_data": {
+          "anchor": "pub vendor_defined_data: [u8; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing vendor_defined_data ("
+            }
+          ]
+        },
+        "267:SasEx": {
+          "anchor": "pub struct SasEx {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingSasEx "
+            }
+          ]
+        },
+        "268:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "269:sas_address": {
+          "anchor": "pub sas_address: [u8; 8usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "sas_address:"
+            }
+          ]
+        },
+        "270:logical_unit_number": {
+          "anchor": "pub logical_unit_number: [u8; 8usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "logical_unit_number:"
+            }
+          ]
+        },
+        "271:info": {
+          "anchor": "pub info: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "info:"
+            }
+          ]
+        },
+        "272:relative_target_port": {
+          "anchor": "pub relative_target_port: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "relative_target_port:"
+            }
+          ]
+        },
+        "276:Iscsi": {
+          "anchor": "pub struct Iscsi {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingIscsi "
+            }
+          ]
+        },
+        "277:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "278:protocol": {
+          "anchor": "pub protocol: device_path::messaging::IscsiProtocol,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "protocol:"
+            }
+          ]
+        },
+        "279:options": {
+          "anchor": "pub options: device_path::messaging::IscsiLoginOptions,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "options:"
+            }
+          ]
+        },
+        "280:logical_unit_number": {
+          "anchor": "pub logical_unit_number: [u8; 8usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "logical_unit_number:"
+            }
+          ]
+        },
+        "281:target_portal_group_tag": {
+          "anchor": "pub target_portal_group_tag: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "target_portal_group_tag:"
+            }
+          ]
+        },
+        "282:iscsi_target_name": {
+          "anchor": "pub iscsi_target_name: [u8; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing iscsi_target_name ("
+            }
+          ]
+        },
+        "286:NvmeNamespace": {
+          "anchor": "pub struct NvmeNamespace {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingNvmeNamespace "
+            }
+          ]
+        },
+        "287:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "288:namespace_identifier": {
+          "anchor": "pub namespace_identifier: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "namespace_identifier:"
+            }
+          ]
+        },
+        "289:ieee_extended_unique_identifier": {
+          "anchor": "pub ieee_extended_unique_identifier: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "ieee_extended_unique_identifier:"
+            }
+          ]
+        },
+        "293:Uri": {
+          "anchor": "pub struct Uri {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingUri "
+            }
+          ]
+        },
+        "294:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "295:value": {
+          "anchor": "pub value: [u8; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing value ("
+            }
+          ]
+        },
+        "299:Ufs": {
+          "anchor": "pub struct Ufs {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingUfs "
+            }
+          ]
+        },
+        "300:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "301:target_id": {
+          "anchor": "pub target_id: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "target_id:"
+            }
+          ]
+        },
+        "302:logical_unit_number": {
+          "anchor": "pub logical_unit_number: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "logical_unit_number:"
+            }
+          ]
+        },
+        "306:Sd": {
+          "anchor": "pub struct Sd {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingSd "
+            }
+          ]
+        },
+        "307:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "308:slot_number": {
+          "anchor": "pub slot_number: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "slot_number:"
+            }
+          ]
+        },
+        "312:Bluetooth": {
+          "anchor": "pub struct Bluetooth {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingBluetooth "
+            }
+          ]
+        },
+        "313:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "314:device_address": {
+          "anchor": "pub device_address: [u8; 6usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "device_address:"
+            }
+          ]
+        },
+        "318:Wifi": {
+          "anchor": "pub struct Wifi {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingWifi "
+            }
+          ]
+        },
+        "319:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "320:ssid": {
+          "anchor": "pub ssid: [u8; 32usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "ssid:"
+            }
+          ]
+        },
+        "324:Emmc": {
+          "anchor": "pub struct Emmc {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingEmmc "
+            }
+          ]
+        },
+        "325:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "326:slot_number": {
+          "anchor": "pub slot_number: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "slot_number:"
+            }
+          ]
+        },
+        "330:BluetoothLe": {
+          "anchor": "pub struct BluetoothLe {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingBluetoothLe "
+            }
+          ]
+        },
+        "331:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "332:device_address": {
+          "anchor": "pub device_address: [u8; 6usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "device_address:"
+            }
+          ]
+        },
+        "333:address_type": {
+          "anchor": "pub address_type: device_path::messaging::BluetoothLeAddressType,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "address_type:"
+            }
+          ]
+        },
+        "337:Dns": {
+          "anchor": "pub struct Dns {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingDns "
+            }
+          ]
+        },
+        "338:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "339:address_type": {
+          "anchor": "pub address_type: device_path::messaging::DnsAddressType,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "address_type:"
+            }
+          ]
+        },
+        "340:addresses": {
+          "anchor": "pub addresses: [IpAddress; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing addresses ("
+            }
+          ]
+        },
+        "344:NvdimmNamespace": {
+          "anchor": "pub struct NvdimmNamespace {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingNvdimmNamespace "
+            }
+          ]
+        },
+        "345:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "346:uuid": {
+          "anchor": "pub uuid: [u8; 16usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "uuid:"
+            }
+          ]
+        },
+        "350:RestService": {
+          "anchor": "pub struct RestService {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingRestService "
+            }
+          ]
+        },
+        "351:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "352:service_type": {
+          "anchor": "pub service_type: device_path::messaging::RestServiceType,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "service_type:"
+            }
+          ]
+        },
+        "353:access_mode": {
+          "anchor": "pub access_mode: device_path::messaging::RestServiceAccessMode,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "access_mode:"
+            }
+          ]
+        },
+        "354:vendor_guid_and_data": {
+          "anchor": "pub vendor_guid_and_data: [u8; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing vendor_guid_and_data ("
+            }
+          ]
+        },
+        "358:NvmeOfNamespace": {
+          "anchor": "pub struct NvmeOfNamespace {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingNvmeOfNamespace "
+            }
+          ]
+        },
+        "359:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "360:nidt": {
+          "anchor": "pub nidt: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "nidt:"
+            }
+          ]
+        },
+        "361:nid": {
+          "anchor": "pub nid: [u8; 16usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "nid:"
+            }
+          ]
+        },
+        "362:subsystem_nqn": {
+          "anchor": "pub subsystem_nqn: [u8; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing subsystem_nqn ("
+            }
+          ]
+        },
+        "365:PrimarySecondary": {
+          "anchor": "newtype_enum! { # [doc = \" Whether the ATAPI device is primary or secondary.\"] pub enum PrimarySecondary : u8 => { # [doc = \" Primary.\"] PRIMARY = 0x00 , # [doc = \" Secondary.\"] SECONDARY = 0x01 , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingPrimarySecondary "
+            }
+          ]
+        },
+        "369:MasterSlave": {
+          "anchor": "newtype_enum! { # [doc = \" Whether the ATAPI device is master or slave.\"] pub enum MasterSlave : u8 => { # [doc = \" Master mode.\"] MASTER = 0x00 , # [doc = \" Slave mode.\"] SLAVE = 0x01 , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingMasterSlave "
+            }
+          ]
+        },
+        "373:Ipv4AddressOrigin": {
+          "anchor": "newtype_enum! { # [doc = \" Origin of the source IP address.\"] pub enum Ipv4AddressOrigin : u8 => { # [doc = \" Source IP address was assigned through DHCP.\"] DHCP = 0x00 , # [doc = \" Source IP address is statically bound.\"] STATIC = 0x01 , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingIpv4AddressOrigin "
+            }
+          ]
+        },
+        "377:Ipv6AddressOrigin": {
+          "anchor": "newtype_enum! { # [doc = \" Origin of the local IP address.\"] pub enum Ipv6AddressOrigin : u8 => { # [doc = \" Local IP address was manually configured.\"] MANUAL = 0x00 , # [doc = \" Local IP address assigned through IPv6 stateless\"] # [doc = \" auto-configuration.\"] STATELESS_AUTO_CONFIGURATION = 0x01 , # [doc = \" Local IP address assigned through IPv6 stateful\"] # [doc = \" configuration.\"] STATEFUL_CONFIGURATION = 0x02 , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingIpv6AddressOrigin "
+            }
+          ]
+        },
+        "381:InfinibandResourceFlags": {
+          "anchor": "bitflags! { # [doc = \" Flags to identify/manage InfiniBand elements.\"] # [derive (Clone , Copy , Debug , Default , PartialEq , Eq , PartialOrd , Ord)] # [repr (transparent)] pub struct InfinibandResourceFlags : u32 { # [doc = \" Set = service, unset = IOC.\"] const SERVICE = 0x0000_0001 ; # [doc = \" Extended boot environment.\"] const EXTENDED_BOOT_ENVIRONMENT = 0x0000_0002 ; # [doc = \" Console protocol.\"] const CONSOLE_PROTOCOL = 0x0000_0004 ; # [doc = \" Storage protocol.\"] const STORAGE_PROTOCOL = 0x0000_0008 ; # [doc = \" Network protocol.\"] const NETWORK_PROTOCOL = 0x0000_0010 ; }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingInfinibandResourceFlags "
+            }
+          ]
+        },
+        "385:Parity": {
+          "anchor": "newtype_enum! { # [doc = \" UART parity setting.\"] pub enum Parity : u8 => { # [doc = \" Default parity.\"] DEFAULT = 0x00 , # [doc = \" No parity.\"] NO = 0x01 , # [doc = \" Even parity.\"] EVEN = 0x02 , # [doc = \" Odd parity.\"] ODD = 0x03 , # [doc = \" Mark parity.\"] MARK = 0x04 , # [doc = \" Space parity.\"] SPACE = 0x05 , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingParity "
+            }
+          ]
+        },
+        "389:StopBits": {
+          "anchor": "newtype_enum! { # [doc = \" UART number of stop bits.\"] pub enum StopBits : u8 => { # [doc = \" Default number of stop bits.\"] DEFAULT = 0x00 , # [doc = \" 1 stop bit.\"] ONE = 0x01 , # [doc = \" 1.5 stop bits.\"] ONE_POINT_FIVE = 0x02 , # [doc = \" 2 stop bits.\"] TWO = 0x03 , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingStopBits "
+            }
+          ]
+        },
+        "393:IscsiProtocol": {
+          "anchor": "newtype_enum! { # [doc = \" iSCSI network protocol.\"] pub enum IscsiProtocol : u16 => { # [doc = \" TCP.\"] TCP = 0x0000 , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingIscsiProtocol "
+            }
+          ]
+        },
+        "397:IscsiLoginOptions": {
+          "anchor": "bitflags! { # [doc = \" iSCSI login options.\"] # [derive (Clone , Copy , Debug , Default , PartialEq , Eq , PartialOrd , Ord)] # [repr (transparent)] pub struct IscsiLoginOptions : u16 { # [doc = \" Header digest using CRC32. If not set, no header digest.\"] const HEADER_DIGEST_USING_CRC32 = 0x0002 ; # [doc = \" Data digest using CRC32. If not set, no data digest.\"] const DATA_DIGEST_USING_CRC32 = 0x0008 ; # [doc = \" Auth method none. If not set, auth method CHAP.\"] const AUTH_METHOD_NONE = 0x0800 ; # [doc = \" CHAP UNI. If not set, CHAP BI.\"] const CHAP_UNI = 0x1000 ; }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingIscsiLoginOptions "
+            }
+          ]
+        },
+        "401:BluetoothLeAddressType": {
+          "anchor": "newtype_enum! { # [doc = \" BluetoothLE address type.\"] pub enum BluetoothLeAddressType : u8 => { # [doc = \" Public device address.\"] PUBLIC = 0x00 , # [doc = \" Random device address.\"] RANDOM = 0x01 , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingBluetoothLeAddressType "
+            }
+          ]
+        },
+        "405:DnsAddressType": {
+          "anchor": "newtype_enum! { # [doc = \" Whether the address is IPv4 or IPv6.\"] pub enum DnsAddressType : u8 => { # [doc = \" DNS server address is IPv4.\"] IPV4 = 0x00 , # [doc = \" DNS server address is IPv6.\"] IPV6 = 0x01 , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingDnsAddressType "
+            }
+          ]
+        },
+        "409:RestServiceType": {
+          "anchor": "newtype_enum! { # [doc = \" Type of REST service.\"] pub enum RestServiceType : u8 => { # [doc = \" Redfish REST service.\"] REDFISH = 0x01 , # [doc = \" OData REST service.\"] ODATA = 0x02 , # [doc = \" Vendor-specific REST service.\"] VENDOR = 0xff , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingRestServiceType "
+            }
+          ]
+        },
+        "413:RestServiceAccessMode": {
+          "anchor": "newtype_enum! { # [doc = \" Whether the service is in-band or out-of-band.\"] pub enum RestServiceAccessMode : u8 => { # [doc = \" In-band REST service.\"] IN_BAND = 0x01 , # [doc = \" Out-of-band REST service.\"] OUT_OF_BAND = 0x02 , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MessagingRestServiceAccessMode "
+            }
+          ]
+        },
+        "419:media": {
+          "anchor": "pub mod media {",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "module device_path;"
+            }
+          ]
+        },
+        "422:HardDrive": {
+          "anchor": "pub struct HardDrive {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MediaHardDrive "
+            }
+          ]
+        },
+        "423:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "424:partition_number": {
+          "anchor": "pub partition_number: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "partition_number:"
+            }
+          ]
+        },
+        "425:partition_start": {
+          "anchor": "pub partition_start: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "partition_start:"
+            }
+          ]
+        },
+        "426:partition_size": {
+          "anchor": "pub partition_size: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "partition_size:"
+            }
+          ]
+        },
+        "427:partition_signature": {
+          "anchor": "pub partition_signature: [u8; 16usize],",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "partition_signature:"
+            }
+          ]
+        },
+        "428:partition_format": {
+          "anchor": "pub partition_format: device_path::media::PartitionFormat,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "partition_format:"
+            }
+          ]
+        },
+        "429:signature_type": {
+          "anchor": "pub signature_type: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "signature_type:"
+            }
+          ]
+        },
+        "433:CdRom": {
+          "anchor": "pub struct CdRom {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MediaCdRom "
+            }
+          ]
+        },
+        "434:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "435:boot_entry": {
+          "anchor": "pub boot_entry: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "boot_entry:"
+            }
+          ]
+        },
+        "436:partition_start": {
+          "anchor": "pub partition_start: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "partition_start:"
+            }
+          ]
+        },
+        "437:partition_size": {
+          "anchor": "pub partition_size: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "partition_size:"
+            }
+          ]
+        },
+        "441:Vendor": {
+          "anchor": "pub struct Vendor {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MediaVendor "
+            }
+          ]
+        },
+        "442:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "443:vendor_guid": {
+          "anchor": "pub vendor_guid: Guid,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "vendor_guid:"
+            }
+          ]
+        },
+        "444:vendor_defined_data": {
+          "anchor": "pub vendor_defined_data: [u8; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing vendor_defined_data ("
+            }
+          ]
+        },
+        "448:FilePath": {
+          "anchor": "pub struct FilePath {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MediaFilePath "
+            }
+          ]
+        },
+        "449:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "450:path_name": {
+          "anchor": "pub path_name: [u16; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing path_name ("
+            }
+          ]
+        },
+        "454:Protocol": {
+          "anchor": "pub struct Protocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MediaProtocol "
+            }
+          ]
+        },
+        "455:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "456:protocol_guid": {
+          "anchor": "pub protocol_guid: Guid,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "protocol_guid:"
+            }
+          ]
+        },
+        "460:PiwgFirmwareFile": {
+          "anchor": "pub struct PiwgFirmwareFile {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MediaPiwgFirmwareFile "
+            }
+          ]
+        },
+        "461:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "462:data": {
+          "anchor": "pub data: [u8; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing data ("
+            }
+          ]
+        },
+        "466:PiwgFirmwareVolume": {
+          "anchor": "pub struct PiwgFirmwareVolume {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MediaPiwgFirmwareVolume "
+            }
+          ]
+        },
+        "467:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "468:data": {
+          "anchor": "pub data: [u8; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing data ("
+            }
+          ]
+        },
+        "472:RelativeOffsetRange": {
+          "anchor": "pub struct RelativeOffsetRange {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MediaRelativeOffsetRange "
+            }
+          ]
+        },
+        "473:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "474:_reserved": {
+          "anchor": "pub _reserved: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "_reserved:"
+            }
+          ]
+        },
+        "475:starting_offset": {
+          "anchor": "pub starting_offset: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "starting_offset:"
+            }
+          ]
+        },
+        "476:ending_offset": {
+          "anchor": "pub ending_offset: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "ending_offset:"
+            }
+          ]
+        },
+        "480:RamDisk": {
+          "anchor": "pub struct RamDisk {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MediaRamDisk "
+            }
+          ]
+        },
+        "481:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "482:starting_address": {
+          "anchor": "pub starting_address: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "starting_address:"
+            }
+          ]
+        },
+        "483:ending_address": {
+          "anchor": "pub ending_address: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "ending_address:"
+            }
+          ]
+        },
+        "484:disk_type": {
+          "anchor": "pub disk_type: device_path::media::RamDiskType,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "disk_type:"
+            }
+          ]
+        },
+        "485:disk_instance": {
+          "anchor": "pub disk_instance: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "disk_instance:"
+            }
+          ]
+        },
+        "488:PartitionFormat": {
+          "anchor": "newtype_enum! { # [doc = \" Hard drive partition format.\"] pub enum PartitionFormat : u8 => { # [doc = \" MBR (PC-AT compatible Master Boot Record) format.\"] MBR = 0x01 , # [doc = \" GPT (GUID Partition Table) format.\"] GPT = 0x02 , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MediaPartitionFormat "
+            }
+          ]
+        },
+        "492:RamDiskType": {
+          "anchor": "newtype_enum! { # [doc = \" RAM disk type.\"] pub enum RamDiskType : Guid => { # [doc = \" RAM disk with a raw disk format in volatile memory.\"] VIRTUAL_DISK = guid ! (\"77ab535a-45fc-624b-5560-f7b281d1f96e\") , # [doc = \" RAM disk of an ISO image in volatile memory.\"] VIRTUAL_CD = guid ! (\"3d5abd30-4175-87ce-6d64-d2ade523c4bb\") , # [doc = \" RAM disk with a raw disk format in persistent memory.\"] PERSISTENT_VIRTUAL_DISK = guid ! (\"5cea02c9-4d07-69d3-269f-4496fbe096f9\") , # [doc = \" RAM disk of an ISO image in persistent memory.\"] PERSISTENT_VIRTUAL_CD = guid ! (\"08018188-42cd-bb48-100f-5387d53ded3d\") , }",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data MediaRamDiskType "
+            }
+          ]
+        },
+        "498:bios_boot_spec": {
+          "anchor": "pub mod bios_boot_spec {",
+          "disposition": "translated",
+          "reason": "Rust module/reexport organization flattened into named Omega modules/category prefixes.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "module device_path;"
+            }
+          ]
+        },
+        "501:BootSpecification": {
+          "anchor": "pub struct BootSpecification {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "pub data BiosBootSpecBootSpecification "
+            }
+          ]
+        },
+        "502:header": {
+          "anchor": "pub header: DevicePathHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "503:device_type": {
+          "anchor": "pub device_type: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "device_type:"
+            }
+          ]
+        },
+        "504:status_flag": {
+          "anchor": "pub status_flag: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "status_flag:"
+            }
+          ]
+        },
+        "505:description_string": {
+          "anchor": "pub description_string: [u8; 0usize],",
+          "disposition": "blocked",
+          "reason": "omega:runtime-layout-strides: fixed prefix retained; runtime trailing element view requires a checked extent/stride shape.",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/device_path.omg",
+              "anchor": "typed trailing description_string ("
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/device_path.omg",
+          "anchor": "module device_path;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/loaded_image.rs": {
+      "sha256": "6b8ac35541bb05f0d53a52419f9646f0e3d672e62406f55ab62d0c15d5ad50ca",
+      "disposition": "translated",
+      "symbols": {
+        "11:LoadedImageProtocol": {
+          "anchor": "pub struct LoadedImageProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "pub data LoadedImageProtocol "
+            }
+          ]
+        },
+        "12:revision": {
+          "anchor": "pub revision: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "revision:"
+            }
+          ]
+        },
+        "13:parent_handle": {
+          "anchor": "pub parent_handle: Handle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "parent_handle:"
+            }
+          ]
+        },
+        "14:system_table": {
+          "anchor": "pub system_table: *const SystemTable,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "system_table:"
+            }
+          ]
+        },
+        "17:device_handle": {
+          "anchor": "pub device_handle: Handle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "device_handle:"
+            }
+          ]
+        },
+        "18:file_path": {
+          "anchor": "pub file_path: *const DevicePathProtocol,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "file_path:"
+            }
+          ]
+        },
+        "20:reserved": {
+          "anchor": "pub reserved: *const c_void,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "reserved:"
+            }
+          ]
+        },
+        "23:load_options_size": {
+          "anchor": "pub load_options_size: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "load_options_size:"
+            }
+          ]
+        },
+        "24:load_options": {
+          "anchor": "pub load_options: *const c_void,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "load_options:"
+            }
+          ]
+        },
+        "27:image_base": {
+          "anchor": "pub image_base: *const c_void,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "image_base:"
+            }
+          ]
+        },
+        "28:image_size": {
+          "anchor": "pub image_size: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "image_size:"
+            }
+          ]
+        },
+        "29:image_code_type": {
+          "anchor": "pub image_code_type: MemoryType,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "image_code_type:"
+            }
+          ]
+        },
+        "30:image_data_type": {
+          "anchor": "pub image_data_type: MemoryType,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "image_data_type:"
+            }
+          ]
+        },
+        "31:unload": {
+          "anchor": "pub unload: Option<unsafe extern \"efiapi\" fn(image_handle: Handle) -> Status>,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "unload:"
+            }
+          ]
+        },
+        "35:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"5b1b31a1-9562-11d2-8e3f-00a0c969723b\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/loaded_image.omg",
+              "anchor": "LOADED_IMAGE_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/loaded_image.omg",
+          "anchor": "module loaded_image;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/media.rs": {
+      "sha256": "559eee69d99ec9d2abc88f291f3c7a8d433b4ea8c55cc80bff988183d8978521",
+      "disposition": "translated",
+      "symbols": {
+        "9:LoadFileProtocol": {
+          "anchor": "pub struct LoadFileProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/load_file.omg",
+              "anchor": "pub data LoadFileProtocol "
+            }
+          ]
+        },
+        "10:load_file": {
+          "anchor": "pub load_file: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/load_file.omg",
+              "anchor": "load_file:"
+            }
+          ]
+        },
+        "20:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"56ec3091-954c-11d2-8e3f-00a0c969723b\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/load_file.omg",
+              "anchor": "LOAD_FILE_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "25:LoadFile2Protocol": {
+          "anchor": "pub struct LoadFile2Protocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/load_file.omg",
+              "anchor": "pub data LoadFile2Protocol "
+            }
+          ]
+        },
+        "26:load_file": {
+          "anchor": "pub load_file: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/load_file.omg",
+              "anchor": "load_file:"
+            }
+          ]
+        },
+        "36:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"4006c0c1-fcb3-403e-996d-4a6c8724e06d\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/load_file.omg",
+              "anchor": "LOAD_FILE2_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "41:StorageSecurityCommandProtocol": {
+          "anchor": "pub struct StorageSecurityCommandProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/load_file.omg",
+              "anchor": "pub data StorageSecurityCommandProtocol "
+            }
+          ]
+        },
+        "42:receive_data": {
+          "anchor": "pub receive_data: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/load_file.omg",
+              "anchor": "receive_data:"
+            }
+          ]
+        },
+        "53:send_data": {
+          "anchor": "pub send_data: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/load_file.omg",
+              "anchor": "send_data:"
+            }
+          ]
+        },
+        "65:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"c88b0b6d-0dfc-49a7-9cb4-49074b4c3a78\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/load_file.omg",
+              "anchor": "STORAGE_SECURITY_COMMAND_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/load_file.omg",
+          "anchor": "module load_file;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/shell_params.rs": {
+      "sha256": "c307635059db417d773f2214de16d64b7fcfa2518540cc28d737e0fc9bf780af",
+      "disposition": "translated",
+      "symbols": {
+        "6:ShellFileHandle": {
+          "anchor": "pub type ShellFileHandle = *mut c_void;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_params.omg",
+              "anchor": "pub data ShellFileHandle "
+            }
+          ]
+        },
+        "10:ShellParametersProtocol": {
+          "anchor": "pub struct ShellParametersProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_params.omg",
+              "anchor": "pub data ShellParametersProtocol "
+            }
+          ]
+        },
+        "12:argv": {
+          "anchor": "pub argv: *const *const Char16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_params.omg",
+              "anchor": "argv:"
+            }
+          ]
+        },
+        "14:argc": {
+          "anchor": "pub argc: usize,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_params.omg",
+              "anchor": "argc:"
+            }
+          ]
+        },
+        "16:std_in": {
+          "anchor": "pub std_in: ShellFileHandle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_params.omg",
+              "anchor": "std_in:"
+            }
+          ]
+        },
+        "18:std_out": {
+          "anchor": "pub std_out: ShellFileHandle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_params.omg",
+              "anchor": "std_out:"
+            }
+          ]
+        },
+        "20:std_err": {
+          "anchor": "pub std_err: ShellFileHandle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_params.omg",
+              "anchor": "std_err:"
+            }
+          ]
+        },
+        "24:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"752f3136-4e16-4fdc-a22a-e5f46812f4ca\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_params.omg",
+              "anchor": "SHELL_PARAMETERS_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/shell_params.omg",
+          "anchor": "module shell_params;"
+        }
+      ]
+    }
+  }
+}

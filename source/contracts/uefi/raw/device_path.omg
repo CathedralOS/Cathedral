@@ -1,0 +1,710 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Omega translation of rust-osdev/uefi-rs at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
+// See console.PORT.md; reproduced by tools/ports/uefi-console/generate.py.
+// Inert x86-64 representation corpus. No pointer dereference or callable authority.
+// Layout vectors describe required foreign geometry, not default Omega layout.
+module device_path;
+use scalars;
+
+// Upstream: uefi_raw::protocol::device_path::DevicePathProtocol
+pub data DevicePathProtocol [copy] {
+    major_type: DeviceType;
+    sub_type: DeviceSubType;
+    length: [u8; 2];
+}
+
+// Upstream: uefi_raw::protocol::device_path::DeviceType
+pub data DeviceType [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::DeviceSubType
+pub data DeviceSubType [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::DevicePathToTextProtocol
+pub data DevicePathToTextProtocol [copy] {
+    convert_device_node_to_text: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( device_node: *const DevicePathProtocol, display_only: Boolean, allow_shortcuts: Boolean, ) -> *mut Char16
+    convert_device_path_to_text: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( device_path: *const DevicePathProtocol, display_only: Boolean, allow_shortcuts: Boolean, ) -> *mut Char16
+}
+
+// Upstream: uefi_raw::protocol::device_path::DevicePathFromTextProtocol
+pub data DevicePathFromTextProtocol [copy] {
+    convert_text_to_device_node: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(text_device_node: *const Char16) -> *mut DevicePathProtocol
+    convert_text_to_device_path: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(text_device_path: *const Char16) -> *mut DevicePathProtocol
+}
+
+// Upstream: uefi_raw::protocol::device_path::DevicePathUtilitiesProtocol
+pub data DevicePathUtilitiesProtocol [copy] {
+    get_device_path_size: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(device_path: *const DevicePathProtocol) -> usize
+    duplicate_device_path: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( device_path: *const DevicePathProtocol, ) -> *mut DevicePathProtocol
+    append_device_path: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( src1: *const DevicePathProtocol, src2: *const DevicePathProtocol, ) -> *mut DevicePathProtocol
+    append_device_node: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( device_path: *const DevicePathProtocol, device_node: *const DevicePathProtocol, ) -> *mut DevicePathProtocol
+    append_device_path_instance: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( device_path: *const DevicePathProtocol, device_path_instance: *const DevicePathProtocol, ) -> *mut DevicePathProtocol
+    get_next_device_path_instance: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( device_path_instance: *mut *const DevicePathProtocol, device_path_instance_size: *mut usize, ) -> *mut DevicePathProtocol
+    is_device_path_multi_instance: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(device_path: *const DevicePathProtocol) -> Boolean
+    create_device_node: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( node_type: DeviceType, node_sub_type: DeviceSubType, node_length: u16, ) -> *mut DevicePathProtocol
+}
+
+// Upstream: uefi_raw::protocol::device_path::end::Instance
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data EndInstance [copy] {
+    header: DevicePathProtocol;
+}
+
+// Upstream: uefi_raw::protocol::device_path::end::Entire
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data EndEntire [copy] {
+    header: DevicePathProtocol;
+}
+
+// Upstream: uefi_raw::protocol::device_path::hardware::Pci
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data HardwarePci [copy] {
+    header: DevicePathProtocol;
+    function: u8;
+    device: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::hardware::Pccard
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data HardwarePccard [copy] {
+    header: DevicePathProtocol;
+    function: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::hardware::MemoryMapped
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data HardwareMemoryMapped [copy] {
+    header: DevicePathProtocol;
+    memory_type: u32;
+    start_address: u64;
+    end_address: u64;
+}
+
+// Upstream: uefi_raw::protocol::device_path::hardware::Vendor
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data HardwareVendor [copy] {
+    header: DevicePathProtocol;
+    vendor_guid: scalars::Guid;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing vendor_defined_data ([u8; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::hardware::Controller
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data HardwareController [copy] {
+    header: DevicePathProtocol;
+    controller_number: u32;
+}
+
+// Upstream: uefi_raw::protocol::device_path::hardware::Bmc
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data HardwareBmc [copy] {
+    header: DevicePathProtocol;
+    interface_type: HardwareBmcInterfaceType;
+    base_address: u64;
+}
+
+// Upstream: uefi_raw::protocol::device_path::hardware::BmcInterfaceType
+pub data HardwareBmcInterfaceType [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::acpi::Acpi
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data AcpiAcpi [copy] {
+    header: DevicePathProtocol;
+    hid: u32;
+    uid: u32;
+}
+
+// Upstream: uefi_raw::protocol::device_path::acpi::Expanded
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data AcpiExpanded [copy] {
+    header: DevicePathProtocol;
+    hid: u32;
+    uid: u32;
+    cid: u32;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing data ([u8; 0]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::acpi::Adr
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data AcpiAdr [copy] {
+    header: DevicePathProtocol;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing adr ([u32; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::acpi::Nvdimm
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data AcpiNvdimm [copy] {
+    header: DevicePathProtocol;
+    nfit_device_handle: u32;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Atapi
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingAtapi [copy] {
+    header: DevicePathProtocol;
+    primary_secondary: MessagingPrimarySecondary;
+    master_slave: MessagingMasterSlave;
+    logical_unit_number: u16;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Scsi
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingScsi [copy] {
+    header: DevicePathProtocol;
+    target_id: u16;
+    logical_unit_number: u16;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::FibreChannel
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingFibreChannel [copy] {
+    header: DevicePathProtocol;
+    _reserved: u32;
+    world_wide_name: u64;
+    logical_unit_number: u64;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::FibreChannelEx
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingFibreChannelEx [copy] {
+    header: DevicePathProtocol;
+    _reserved: u32;
+    world_wide_name: [u8; 8];
+    logical_unit_number: [u8; 8];
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Ieee1394
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingIeee1394 [copy] {
+    header: DevicePathProtocol;
+    _reserved: u32;
+    guid: [u8; 8];
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Usb
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingUsb [copy] {
+    header: DevicePathProtocol;
+    parent_port_number: u8;
+    interface: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Sata
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingSata [copy] {
+    header: DevicePathProtocol;
+    hba_port_number: u16;
+    port_multiplier_port_number: u16;
+    logical_unit_number: u16;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::UsbWwid
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingUsbWwid [copy] {
+    header: DevicePathProtocol;
+    interface_number: u16;
+    device_vendor_id: u16;
+    device_product_id: u16;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing serial_number ([u16; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::DeviceLogicalUnit
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingDeviceLogicalUnit [copy] {
+    header: DevicePathProtocol;
+    logical_unit_number: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::UsbClass
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingUsbClass [copy] {
+    header: DevicePathProtocol;
+    vendor_id: u16;
+    product_id: u16;
+    device_class: u8;
+    device_subclass: u8;
+    device_protocol: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::I2o
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingI2o [copy] {
+    header: DevicePathProtocol;
+    target_id: u32;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::MacAddress
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingMacAddress [copy] {
+    header: DevicePathProtocol;
+    mac_address: [u8; 32];
+    interface_type: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Ipv4
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingIpv4 [copy] {
+    header: DevicePathProtocol;
+    local_ip_address: [u8; 4];
+    remote_ip_address: [u8; 4];
+    local_port: u16;
+    remote_port: u16;
+    protocol: u16;
+    ip_address_origin: MessagingIpv4AddressOrigin;
+    gateway_ip_address: [u8; 4];
+    subnet_mask: [u8; 4];
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Ipv6
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingIpv6 [copy] {
+    header: DevicePathProtocol;
+    local_ip_address: [u8; 16];
+    remote_ip_address: [u8; 16];
+    local_port: u16;
+    remote_port: u16;
+    protocol: u16;
+    ip_address_origin: MessagingIpv6AddressOrigin;
+    prefix_length: u8;
+    gateway_ip_address: [u8; 16];
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Vlan
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingVlan [copy] {
+    header: DevicePathProtocol;
+    vlan_id: u16;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Infiniband
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingInfiniband [copy] {
+    header: DevicePathProtocol;
+    resource_flags: MessagingInfinibandResourceFlags;
+    port_gid: [u8; 16];
+    ioc_guid_or_service_id: u64;
+    target_port_id: u64;
+    device_id: u64;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Uart
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingUart [copy] {
+    header: DevicePathProtocol;
+    _reserved: u32;
+    baud_rate: u64;
+    data_bits: u8;
+    parity: MessagingParity;
+    stop_bits: MessagingStopBits;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Vendor
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingVendor [copy] {
+    header: DevicePathProtocol;
+    vendor_guid: scalars::Guid;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing vendor_defined_data ([u8; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::SasEx
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingSasEx [copy] {
+    header: DevicePathProtocol;
+    sas_address: [u8; 8];
+    logical_unit_number: [u8; 8];
+    info: u16;
+    relative_target_port: u16;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Iscsi
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingIscsi [copy] {
+    header: DevicePathProtocol;
+    protocol: MessagingIscsiProtocol;
+    options: MessagingIscsiLoginOptions;
+    logical_unit_number: [u8; 8];
+    target_portal_group_tag: u16;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing iscsi_target_name ([u8; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::NvmeNamespace
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingNvmeNamespace [copy] {
+    header: DevicePathProtocol;
+    namespace_identifier: u32;
+    ieee_extended_unique_identifier: u64;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Uri
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingUri [copy] {
+    header: DevicePathProtocol;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing value ([u8; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Ufs
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingUfs [copy] {
+    header: DevicePathProtocol;
+    target_id: u8;
+    logical_unit_number: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Sd
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingSd [copy] {
+    header: DevicePathProtocol;
+    slot_number: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Bluetooth
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingBluetooth [copy] {
+    header: DevicePathProtocol;
+    device_address: [u8; 6];
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Wifi
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingWifi [copy] {
+    header: DevicePathProtocol;
+    ssid: [u8; 32];
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Emmc
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingEmmc [copy] {
+    header: DevicePathProtocol;
+    slot_number: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::BluetoothLe
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingBluetoothLe [copy] {
+    header: DevicePathProtocol;
+    device_address: [u8; 6];
+    address_type: MessagingBluetoothLeAddressType;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Dns
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingDns [copy] {
+    header: DevicePathProtocol;
+    address_type: MessagingDnsAddressType;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing addresses ([IpAddress; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::NvdimmNamespace
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingNvdimmNamespace [copy] {
+    header: DevicePathProtocol;
+    uuid: [u8; 16];
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::RestService
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingRestService [copy] {
+    header: DevicePathProtocol;
+    service_type: MessagingRestServiceType;
+    access_mode: MessagingRestServiceAccessMode;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing vendor_guid_and_data ([u8; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::NvmeOfNamespace
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MessagingNvmeOfNamespace [copy] {
+    header: DevicePathProtocol;
+    nidt: u8;
+    nid: [u8; 16];
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing subsystem_nqn ([u8; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::PrimarySecondary
+pub data MessagingPrimarySecondary [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::MasterSlave
+pub data MessagingMasterSlave [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Ipv4AddressOrigin
+pub data MessagingIpv4AddressOrigin [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Ipv6AddressOrigin
+pub data MessagingIpv6AddressOrigin [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::InfinibandResourceFlags
+pub data MessagingInfinibandResourceFlags [copy] {
+    raw: u32;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::Parity
+pub data MessagingParity [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::StopBits
+pub data MessagingStopBits [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::IscsiProtocol
+pub data MessagingIscsiProtocol [copy] {
+    raw: u16;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::IscsiLoginOptions
+pub data MessagingIscsiLoginOptions [copy] {
+    raw: u16;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::BluetoothLeAddressType
+pub data MessagingBluetoothLeAddressType [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::DnsAddressType
+pub data MessagingDnsAddressType [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::RestServiceType
+pub data MessagingRestServiceType [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::messaging::RestServiceAccessMode
+pub data MessagingRestServiceAccessMode [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::media::HardDrive
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MediaHardDrive [copy] {
+    header: DevicePathProtocol;
+    partition_number: u32;
+    partition_start: u64;
+    partition_size: u64;
+    partition_signature: [u8; 16];
+    partition_format: MediaPartitionFormat;
+    signature_type: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::media::CdRom
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MediaCdRom [copy] {
+    header: DevicePathProtocol;
+    boot_entry: u32;
+    partition_start: u64;
+    partition_size: u64;
+}
+
+// Upstream: uefi_raw::protocol::device_path::media::Vendor
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MediaVendor [copy] {
+    header: DevicePathProtocol;
+    vendor_guid: scalars::Guid;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing vendor_defined_data ([u8; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::media::FilePath
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MediaFilePath [copy] {
+    header: DevicePathProtocol;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing path_name ([u16; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::media::Protocol
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MediaProtocol [copy] {
+    header: DevicePathProtocol;
+    protocol_guid: scalars::Guid;
+}
+
+// Upstream: uefi_raw::protocol::device_path::media::PiwgFirmwareFile
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MediaPiwgFirmwareFile [copy] {
+    header: DevicePathProtocol;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing data ([u8; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::media::PiwgFirmwareVolume
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MediaPiwgFirmwareVolume [copy] {
+    header: DevicePathProtocol;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing data ([u8; 0usize]) needs runtime extent/stride contract.
+}
+
+// Upstream: uefi_raw::protocol::device_path::media::RelativeOffsetRange
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MediaRelativeOffsetRange [copy] {
+    header: DevicePathProtocol;
+    _reserved: u32;
+    starting_offset: u64;
+    ending_offset: u64;
+}
+
+// Upstream: uefi_raw::protocol::device_path::media::RamDisk
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data MediaRamDisk [copy] {
+    header: DevicePathProtocol;
+    starting_address: u64;
+    ending_address: u64;
+    disk_type: MediaRamDiskType;
+    disk_instance: u16;
+}
+
+// Upstream: uefi_raw::protocol::device_path::media::PartitionFormat
+pub data MediaPartitionFormat [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::device_path::media::RamDiskType
+pub data MediaRamDiskType [copy] {
+    raw: scalars::Guid;
+}
+
+// Upstream: uefi_raw::protocol::device_path::bios_boot_spec::BootSpecification
+// Required packed placement: alignment 1; no implicit inter-field padding.
+pub data BiosBootSpecBootSpecification [copy] {
+    header: DevicePathProtocol;
+    device_type: u16;
+    status_flag: u16;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing description_string ([u8; 0usize]) needs runtime extent/stride contract.
+}
+
+pub const DEVICE_TYPE_HARDWARE: DeviceType = DeviceType { raw: 1 };
+pub const DEVICE_TYPE_ACPI: DeviceType = DeviceType { raw: 2 };
+pub const DEVICE_TYPE_MESSAGING: DeviceType = DeviceType { raw: 3 };
+pub const DEVICE_TYPE_MEDIA: DeviceType = DeviceType { raw: 4 };
+pub const DEVICE_TYPE_BIOS_BOOT_SPEC: DeviceType = DeviceType { raw: 5 };
+pub const DEVICE_TYPE_END: DeviceType = DeviceType { raw: 127 };
+pub const DEVICE_PATH_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x09576e91, data2: 0x6d3f, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const DEVICE_SUB_TYPE_HARDWARE_PCI: DeviceSubType = DeviceSubType { raw: 1 };
+pub const DEVICE_SUB_TYPE_HARDWARE_PCCARD: DeviceSubType = DeviceSubType { raw: 2 };
+pub const DEVICE_SUB_TYPE_HARDWARE_MEMORY_MAPPED: DeviceSubType = DeviceSubType { raw: 3 };
+pub const DEVICE_SUB_TYPE_HARDWARE_VENDOR: DeviceSubType = DeviceSubType { raw: 4 };
+pub const DEVICE_SUB_TYPE_HARDWARE_CONTROLLER: DeviceSubType = DeviceSubType { raw: 5 };
+pub const DEVICE_SUB_TYPE_HARDWARE_BMC: DeviceSubType = DeviceSubType { raw: 6 };
+pub const DEVICE_SUB_TYPE_ACPI: DeviceSubType = DeviceSubType { raw: 1 };
+pub const DEVICE_SUB_TYPE_ACPI_EXPANDED: DeviceSubType = DeviceSubType { raw: 2 };
+pub const DEVICE_SUB_TYPE_ACPI_ADR: DeviceSubType = DeviceSubType { raw: 3 };
+pub const DEVICE_SUB_TYPE_ACPI_NVDIMM: DeviceSubType = DeviceSubType { raw: 4 };
+pub const DEVICE_SUB_TYPE_MESSAGING_ATAPI: DeviceSubType = DeviceSubType { raw: 1 };
+pub const DEVICE_SUB_TYPE_MESSAGING_SCSI: DeviceSubType = DeviceSubType { raw: 2 };
+pub const DEVICE_SUB_TYPE_MESSAGING_FIBRE_CHANNEL: DeviceSubType = DeviceSubType { raw: 3 };
+pub const DEVICE_SUB_TYPE_MESSAGING_1394: DeviceSubType = DeviceSubType { raw: 4 };
+pub const DEVICE_SUB_TYPE_MESSAGING_USB: DeviceSubType = DeviceSubType { raw: 5 };
+pub const DEVICE_SUB_TYPE_MESSAGING_I2O: DeviceSubType = DeviceSubType { raw: 6 };
+pub const DEVICE_SUB_TYPE_MESSAGING_INFINIBAND: DeviceSubType = DeviceSubType { raw: 9 };
+pub const DEVICE_SUB_TYPE_MESSAGING_VENDOR: DeviceSubType = DeviceSubType { raw: 10 };
+pub const DEVICE_SUB_TYPE_MESSAGING_MAC_ADDRESS: DeviceSubType = DeviceSubType { raw: 11 };
+pub const DEVICE_SUB_TYPE_MESSAGING_IPV4: DeviceSubType = DeviceSubType { raw: 12 };
+pub const DEVICE_SUB_TYPE_MESSAGING_IPV6: DeviceSubType = DeviceSubType { raw: 13 };
+pub const DEVICE_SUB_TYPE_MESSAGING_UART: DeviceSubType = DeviceSubType { raw: 14 };
+pub const DEVICE_SUB_TYPE_MESSAGING_USB_CLASS: DeviceSubType = DeviceSubType { raw: 15 };
+pub const DEVICE_SUB_TYPE_MESSAGING_USB_WWID: DeviceSubType = DeviceSubType { raw: 16 };
+pub const DEVICE_SUB_TYPE_MESSAGING_DEVICE_LOGICAL_UNIT: DeviceSubType = DeviceSubType { raw: 17 };
+pub const DEVICE_SUB_TYPE_MESSAGING_SATA: DeviceSubType = DeviceSubType { raw: 18 };
+pub const DEVICE_SUB_TYPE_MESSAGING_ISCSI: DeviceSubType = DeviceSubType { raw: 19 };
+pub const DEVICE_SUB_TYPE_MESSAGING_VLAN: DeviceSubType = DeviceSubType { raw: 20 };
+pub const DEVICE_SUB_TYPE_MESSAGING_FIBRE_CHANNEL_EX: DeviceSubType = DeviceSubType { raw: 21 };
+pub const DEVICE_SUB_TYPE_MESSAGING_SCSI_SAS_EX: DeviceSubType = DeviceSubType { raw: 22 };
+pub const DEVICE_SUB_TYPE_MESSAGING_NVME_NAMESPACE: DeviceSubType = DeviceSubType { raw: 23 };
+pub const DEVICE_SUB_TYPE_MESSAGING_URI: DeviceSubType = DeviceSubType { raw: 24 };
+pub const DEVICE_SUB_TYPE_MESSAGING_UFS: DeviceSubType = DeviceSubType { raw: 25 };
+pub const DEVICE_SUB_TYPE_MESSAGING_SD: DeviceSubType = DeviceSubType { raw: 26 };
+pub const DEVICE_SUB_TYPE_MESSAGING_BLUETOOTH: DeviceSubType = DeviceSubType { raw: 27 };
+pub const DEVICE_SUB_TYPE_MESSAGING_WIFI: DeviceSubType = DeviceSubType { raw: 28 };
+pub const DEVICE_SUB_TYPE_MESSAGING_EMMC: DeviceSubType = DeviceSubType { raw: 29 };
+pub const DEVICE_SUB_TYPE_MESSAGING_BLUETOOTH_LE: DeviceSubType = DeviceSubType { raw: 30 };
+pub const DEVICE_SUB_TYPE_MESSAGING_DNS: DeviceSubType = DeviceSubType { raw: 31 };
+pub const DEVICE_SUB_TYPE_MESSAGING_NVDIMM_NAMESPACE: DeviceSubType = DeviceSubType { raw: 32 };
+pub const DEVICE_SUB_TYPE_MESSAGING_REST_SERVICE: DeviceSubType = DeviceSubType { raw: 33 };
+pub const DEVICE_SUB_TYPE_MESSAGING_NVME_OF_NAMESPACE: DeviceSubType = DeviceSubType { raw: 34 };
+pub const DEVICE_SUB_TYPE_MEDIA_HARD_DRIVE: DeviceSubType = DeviceSubType { raw: 1 };
+pub const DEVICE_SUB_TYPE_MEDIA_CD_ROM: DeviceSubType = DeviceSubType { raw: 2 };
+pub const DEVICE_SUB_TYPE_MEDIA_VENDOR: DeviceSubType = DeviceSubType { raw: 3 };
+pub const DEVICE_SUB_TYPE_MEDIA_FILE_PATH: DeviceSubType = DeviceSubType { raw: 4 };
+pub const DEVICE_SUB_TYPE_MEDIA_PROTOCOL: DeviceSubType = DeviceSubType { raw: 5 };
+pub const DEVICE_SUB_TYPE_MEDIA_PIWG_FIRMWARE_FILE: DeviceSubType = DeviceSubType { raw: 6 };
+pub const DEVICE_SUB_TYPE_MEDIA_PIWG_FIRMWARE_VOLUME: DeviceSubType = DeviceSubType { raw: 7 };
+pub const DEVICE_SUB_TYPE_MEDIA_RELATIVE_OFFSET_RANGE: DeviceSubType = DeviceSubType { raw: 8 };
+pub const DEVICE_SUB_TYPE_MEDIA_RAM_DISK: DeviceSubType = DeviceSubType { raw: 9 };
+pub const DEVICE_SUB_TYPE_BIOS_BOOT_SPECIFICATION: DeviceSubType = DeviceSubType { raw: 1 };
+pub const DEVICE_SUB_TYPE_END_INSTANCE: DeviceSubType = DeviceSubType { raw: 1 };
+pub const DEVICE_SUB_TYPE_END_ENTIRE: DeviceSubType = DeviceSubType { raw: 255 };
+pub const DEVICE_PATH_TO_TEXT_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x8b843e20, data2: 0x8132, data3: 0x4852, data4: [0x90, 0xcc, 0x55, 0x1a, 0x4e, 0x4a, 0x7f, 0x1c] };
+pub const DEVICE_PATH_FROM_TEXT_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x05c99a21, data2: 0xc70f, data3: 0x4ad2, data4: [0x8a, 0x5f, 0x35, 0xdf, 0x33, 0x43, 0xf5, 0x1e] };
+pub const DEVICE_PATH_UTILITIES_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x0379be4e, data2: 0xd706, data3: 0x437d, data4: [0xb0, 0x37, 0xed, 0xb8, 0x2f, 0xb7, 0x72, 0xa4] };
+pub const HARDWARE_BMC_INTERFACE_TYPE_UNKNOWN: HardwareBmcInterfaceType = HardwareBmcInterfaceType { raw: 0 };
+pub const HARDWARE_BMC_INTERFACE_TYPE_KEYBOARD_CONTROLLER_STYLE: HardwareBmcInterfaceType = HardwareBmcInterfaceType { raw: 1 };
+pub const HARDWARE_BMC_INTERFACE_TYPE_SERVER_MANAGEMENT_INTERFACE_CHIP: HardwareBmcInterfaceType = HardwareBmcInterfaceType { raw: 2 };
+pub const HARDWARE_BMC_INTERFACE_TYPE_BLOCK_TRANSFER: HardwareBmcInterfaceType = HardwareBmcInterfaceType { raw: 3 };
+pub const MESSAGING_PRIMARY_SECONDARY_PRIMARY: MessagingPrimarySecondary = MessagingPrimarySecondary { raw: 0 };
+pub const MESSAGING_PRIMARY_SECONDARY_SECONDARY: MessagingPrimarySecondary = MessagingPrimarySecondary { raw: 1 };
+pub const MESSAGING_MASTER_SLAVE_MASTER: MessagingMasterSlave = MessagingMasterSlave { raw: 0 };
+pub const MESSAGING_MASTER_SLAVE_SLAVE: MessagingMasterSlave = MessagingMasterSlave { raw: 1 };
+pub const MESSAGING_IPV4_ADDRESS_ORIGIN_DHCP: MessagingIpv4AddressOrigin = MessagingIpv4AddressOrigin { raw: 0 };
+pub const MESSAGING_IPV4_ADDRESS_ORIGIN_STATIC: MessagingIpv4AddressOrigin = MessagingIpv4AddressOrigin { raw: 1 };
+pub const MESSAGING_IPV6_ADDRESS_ORIGIN_MANUAL: MessagingIpv6AddressOrigin = MessagingIpv6AddressOrigin { raw: 0 };
+pub const MESSAGING_IPV6_ADDRESS_ORIGIN_STATELESS_AUTO_CONFIGURATION: MessagingIpv6AddressOrigin = MessagingIpv6AddressOrigin { raw: 1 };
+pub const MESSAGING_IPV6_ADDRESS_ORIGIN_STATEFUL_CONFIGURATION: MessagingIpv6AddressOrigin = MessagingIpv6AddressOrigin { raw: 2 };
+pub const MESSAGING_INFINIBAND_RESOURCE_FLAGS_SERVICE: MessagingInfinibandResourceFlags = MessagingInfinibandResourceFlags { raw: 1 };
+pub const MESSAGING_INFINIBAND_RESOURCE_FLAGS_EXTENDED_BOOT_ENVIRONMENT: MessagingInfinibandResourceFlags = MessagingInfinibandResourceFlags { raw: 2 };
+pub const MESSAGING_INFINIBAND_RESOURCE_FLAGS_CONSOLE_PROTOCOL: MessagingInfinibandResourceFlags = MessagingInfinibandResourceFlags { raw: 4 };
+pub const MESSAGING_INFINIBAND_RESOURCE_FLAGS_STORAGE_PROTOCOL: MessagingInfinibandResourceFlags = MessagingInfinibandResourceFlags { raw: 8 };
+pub const MESSAGING_INFINIBAND_RESOURCE_FLAGS_NETWORK_PROTOCOL: MessagingInfinibandResourceFlags = MessagingInfinibandResourceFlags { raw: 16 };
+pub const MESSAGING_PARITY_DEFAULT: MessagingParity = MessagingParity { raw: 0 };
+pub const MESSAGING_PARITY_NO: MessagingParity = MessagingParity { raw: 1 };
+pub const MESSAGING_PARITY_EVEN: MessagingParity = MessagingParity { raw: 2 };
+pub const MESSAGING_PARITY_ODD: MessagingParity = MessagingParity { raw: 3 };
+pub const MESSAGING_PARITY_MARK: MessagingParity = MessagingParity { raw: 4 };
+pub const MESSAGING_PARITY_SPACE: MessagingParity = MessagingParity { raw: 5 };
+pub const MESSAGING_STOP_BITS_DEFAULT: MessagingStopBits = MessagingStopBits { raw: 0 };
+pub const MESSAGING_STOP_BITS_ONE: MessagingStopBits = MessagingStopBits { raw: 1 };
+pub const MESSAGING_STOP_BITS_ONE_POINT_FIVE: MessagingStopBits = MessagingStopBits { raw: 2 };
+pub const MESSAGING_STOP_BITS_TWO: MessagingStopBits = MessagingStopBits { raw: 3 };
+pub const MESSAGING_ISCSI_PROTOCOL_TCP: MessagingIscsiProtocol = MessagingIscsiProtocol { raw: 0 };
+pub const MESSAGING_ISCSI_LOGIN_OPTIONS_HEADER_DIGEST_USING_CRC32: MessagingIscsiLoginOptions = MessagingIscsiLoginOptions { raw: 2 };
+pub const MESSAGING_ISCSI_LOGIN_OPTIONS_DATA_DIGEST_USING_CRC32: MessagingIscsiLoginOptions = MessagingIscsiLoginOptions { raw: 8 };
+pub const MESSAGING_ISCSI_LOGIN_OPTIONS_AUTH_METHOD_NONE: MessagingIscsiLoginOptions = MessagingIscsiLoginOptions { raw: 2048 };
+pub const MESSAGING_ISCSI_LOGIN_OPTIONS_CHAP_UNI: MessagingIscsiLoginOptions = MessagingIscsiLoginOptions { raw: 4096 };
+pub const MESSAGING_BLUETOOTH_LE_ADDRESS_TYPE_PUBLIC: MessagingBluetoothLeAddressType = MessagingBluetoothLeAddressType { raw: 0 };
+pub const MESSAGING_BLUETOOTH_LE_ADDRESS_TYPE_RANDOM: MessagingBluetoothLeAddressType = MessagingBluetoothLeAddressType { raw: 1 };
+pub const MESSAGING_DNS_ADDRESS_TYPE_IPV4: MessagingDnsAddressType = MessagingDnsAddressType { raw: 0 };
+pub const MESSAGING_DNS_ADDRESS_TYPE_IPV6: MessagingDnsAddressType = MessagingDnsAddressType { raw: 1 };
+pub const MESSAGING_REST_SERVICE_TYPE_REDFISH: MessagingRestServiceType = MessagingRestServiceType { raw: 1 };
+pub const MESSAGING_REST_SERVICE_TYPE_ODATA: MessagingRestServiceType = MessagingRestServiceType { raw: 2 };
+pub const MESSAGING_REST_SERVICE_TYPE_VENDOR: MessagingRestServiceType = MessagingRestServiceType { raw: 255 };
+pub const MESSAGING_REST_SERVICE_ACCESS_MODE_IN_BAND: MessagingRestServiceAccessMode = MessagingRestServiceAccessMode { raw: 1 };
+pub const MESSAGING_REST_SERVICE_ACCESS_MODE_OUT_OF_BAND: MessagingRestServiceAccessMode = MessagingRestServiceAccessMode { raw: 2 };
+pub const MEDIA_PARTITION_FORMAT_MBR: MediaPartitionFormat = MediaPartitionFormat { raw: 1 };
+pub const MEDIA_PARTITION_FORMAT_GPT: MediaPartitionFormat = MediaPartitionFormat { raw: 2 };
+pub const MEDIA_RAM_DISK_TYPE_VIRTUAL_DISK: MediaRamDiskType = MediaRamDiskType { raw: scalars::Guid { data1: 0x77ab535a, data2: 0x45fc, data3: 0x624b, data4: [0x55, 0x60, 0xf7, 0xb2, 0x81, 0xd1, 0xf9, 0x6e] } };
+pub const MEDIA_RAM_DISK_TYPE_VIRTUAL_CD: MediaRamDiskType = MediaRamDiskType { raw: scalars::Guid { data1: 0x3d5abd30, data2: 0x4175, data3: 0x87ce, data4: [0x6d, 0x64, 0xd2, 0xad, 0xe5, 0x23, 0xc4, 0xbb] } };
+pub const MEDIA_RAM_DISK_TYPE_PERSISTENT_VIRTUAL_DISK: MediaRamDiskType = MediaRamDiskType { raw: scalars::Guid { data1: 0x5cea02c9, data2: 0x4d07, data3: 0x69d3, data4: [0x26, 0x9f, 0x44, 0x96, 0xfb, 0xe0, 0x96, 0xf9] } };
+pub const MEDIA_RAM_DISK_TYPE_PERSISTENT_VIRTUAL_CD: MediaRamDiskType = MediaRamDiskType { raw: scalars::Guid { data1: 0x08018188, data2: 0x42cd, data3: 0xbb48, data4: [0x10, 0x0f, 0x53, 0x87, 0xd5, 0x3d, 0xed, 0x3d] } };

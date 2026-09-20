@@ -1,0 +1,2396 @@
+[
+  {
+    "module": "console",
+    "name": "AbsolutePointerModeAttributes",
+    "upstream": "uefi_raw::protocol::console::AbsolutePointerModeAttributes",
+    "fields": [
+      [
+        "raw",
+        "u32"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "AbsolutePointerMode",
+    "upstream": "uefi_raw::protocol::console::AbsolutePointerMode",
+    "fields": [
+      [
+        "absolute_min_x",
+        "u64"
+      ],
+      [
+        "absolute_min_y",
+        "u64"
+      ],
+      [
+        "absolute_min_z",
+        "u64"
+      ],
+      [
+        "absolute_max_x",
+        "u64"
+      ],
+      [
+        "absolute_max_y",
+        "u64"
+      ],
+      [
+        "absolute_max_z",
+        "u64"
+      ],
+      [
+        "attributes",
+        "AbsolutePointerModeAttributes"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "AbsolutePointerState",
+    "upstream": "uefi_raw::protocol::console::AbsolutePointerState",
+    "fields": [
+      [
+        "current_x",
+        "u64"
+      ],
+      [
+        "current_y",
+        "u64"
+      ],
+      [
+        "current_z",
+        "u64"
+      ],
+      [
+        "active_buttons",
+        "u32"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "AbsolutePointerProtocol",
+    "upstream": "uefi_raw::protocol::console::AbsolutePointerProtocol",
+    "fields": [
+      [
+        "reset",
+        "addr"
+      ],
+      [
+        "get_state",
+        "addr"
+      ],
+      [
+        "wait_for_input",
+        "addr"
+      ],
+      [
+        "mode",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "InputKey",
+    "upstream": "uefi_raw::protocol::console::InputKey",
+    "fields": [
+      [
+        "scan_code",
+        "u16"
+      ],
+      [
+        "unicode_char",
+        "u16"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "SimpleTextInputProtocol",
+    "upstream": "uefi_raw::protocol::console::SimpleTextInputProtocol",
+    "fields": [
+      [
+        "reset",
+        "addr"
+      ],
+      [
+        "read_key_stroke",
+        "addr"
+      ],
+      [
+        "wait_for_key",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "KeyData",
+    "upstream": "uefi_raw::protocol::console::KeyData",
+    "fields": [
+      [
+        "key",
+        "InputKey"
+      ],
+      [
+        "key_state",
+        "KeyState"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "KeyState",
+    "upstream": "uefi_raw::protocol::console::KeyState",
+    "fields": [
+      [
+        "key_shift_state",
+        "KeyShiftState"
+      ],
+      [
+        "key_toggle_state",
+        "KeyToggleState"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "KeyShiftState",
+    "upstream": "uefi_raw::protocol::console::KeyShiftState",
+    "fields": [
+      [
+        "raw",
+        "u32"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "KeyToggleState",
+    "upstream": "uefi_raw::protocol::console::KeyToggleState",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "SimpleTextInputExProtocol",
+    "upstream": "uefi_raw::protocol::console::SimpleTextInputExProtocol",
+    "fields": [
+      [
+        "reset",
+        "addr"
+      ],
+      [
+        "read_key_stroke_ex",
+        "addr"
+      ],
+      [
+        "wait_for_key_ex",
+        "addr"
+      ],
+      [
+        "set_state",
+        "addr"
+      ],
+      [
+        "register_key_notify",
+        "addr"
+      ],
+      [
+        "unregister_key_notify",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "SimpleTextOutputMode",
+    "upstream": "uefi_raw::protocol::console::SimpleTextOutputMode",
+    "fields": [
+      [
+        "max_mode",
+        "i32"
+      ],
+      [
+        "mode",
+        "i32"
+      ],
+      [
+        "attribute",
+        "i32"
+      ],
+      [
+        "cursor_column",
+        "i32"
+      ],
+      [
+        "cursor_row",
+        "i32"
+      ],
+      [
+        "cursor_visible",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "SimpleTextOutputProtocol",
+    "upstream": "uefi_raw::protocol::console::SimpleTextOutputProtocol",
+    "fields": [
+      [
+        "reset",
+        "addr"
+      ],
+      [
+        "output_string",
+        "addr"
+      ],
+      [
+        "test_string",
+        "addr"
+      ],
+      [
+        "query_mode",
+        "addr"
+      ],
+      [
+        "set_mode",
+        "addr"
+      ],
+      [
+        "set_attribute",
+        "addr"
+      ],
+      [
+        "clear_screen",
+        "addr"
+      ],
+      [
+        "set_cursor_position",
+        "addr"
+      ],
+      [
+        "enable_cursor",
+        "addr"
+      ],
+      [
+        "mode",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "SimplePointerMode",
+    "upstream": "uefi_raw::protocol::console::SimplePointerMode",
+    "fields": [
+      [
+        "resolution_x",
+        "u64"
+      ],
+      [
+        "resolution_y",
+        "u64"
+      ],
+      [
+        "resolution_z",
+        "u64"
+      ],
+      [
+        "left_button",
+        "u8"
+      ],
+      [
+        "right_button",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "SimplePointerState",
+    "upstream": "uefi_raw::protocol::console::SimplePointerState",
+    "fields": [
+      [
+        "relative_movement_x",
+        "i32"
+      ],
+      [
+        "relative_movement_y",
+        "i32"
+      ],
+      [
+        "relative_movement_z",
+        "i32"
+      ],
+      [
+        "left_button",
+        "u8"
+      ],
+      [
+        "right_button",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "SimplePointerProtocol",
+    "upstream": "uefi_raw::protocol::console::SimplePointerProtocol",
+    "fields": [
+      [
+        "reset",
+        "addr"
+      ],
+      [
+        "get_state",
+        "addr"
+      ],
+      [
+        "wait_for_input",
+        "addr"
+      ],
+      [
+        "mode",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "GraphicsOutputProtocol",
+    "upstream": "uefi_raw::protocol::console::GraphicsOutputProtocol",
+    "fields": [
+      [
+        "query_mode",
+        "addr"
+      ],
+      [
+        "set_mode",
+        "addr"
+      ],
+      [
+        "blt",
+        "addr"
+      ],
+      [
+        "mode",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "GraphicsOutputProtocolMode",
+    "upstream": "uefi_raw::protocol::console::GraphicsOutputProtocolMode",
+    "fields": [
+      [
+        "max_mode",
+        "u32"
+      ],
+      [
+        "mode",
+        "u32"
+      ],
+      [
+        "info",
+        "addr"
+      ],
+      [
+        "size_of_info",
+        "u64"
+      ],
+      [
+        "frame_buffer_base",
+        "u64"
+      ],
+      [
+        "frame_buffer_size",
+        "u64"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "GraphicsOutputModeInformation",
+    "upstream": "uefi_raw::protocol::console::GraphicsOutputModeInformation",
+    "fields": [
+      [
+        "version",
+        "u32"
+      ],
+      [
+        "horizontal_resolution",
+        "u32"
+      ],
+      [
+        "vertical_resolution",
+        "u32"
+      ],
+      [
+        "pixel_format",
+        "GraphicsPixelFormat"
+      ],
+      [
+        "pixel_information",
+        "PixelBitmask"
+      ],
+      [
+        "pixels_per_scan_line",
+        "u32"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "PixelBitmask",
+    "upstream": "uefi_raw::protocol::console::PixelBitmask",
+    "fields": [
+      [
+        "red",
+        "u32"
+      ],
+      [
+        "green",
+        "u32"
+      ],
+      [
+        "blue",
+        "u32"
+      ],
+      [
+        "reserved",
+        "u32"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "GraphicsPixelFormat",
+    "upstream": "uefi_raw::protocol::console::GraphicsPixelFormat",
+    "fields": [
+      [
+        "raw",
+        "u32"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "GraphicsOutputBltPixel",
+    "upstream": "uefi_raw::protocol::console::GraphicsOutputBltPixel",
+    "fields": [
+      [
+        "blue",
+        "u8"
+      ],
+      [
+        "green",
+        "u8"
+      ],
+      [
+        "red",
+        "u8"
+      ],
+      [
+        "reserved",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "GraphicsOutputBltOperation",
+    "upstream": "uefi_raw::protocol::console::GraphicsOutputBltOperation",
+    "fields": [
+      [
+        "raw",
+        "u32"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "console",
+    "name": "EdidDiscoveredProtocol",
+    "upstream": "uefi_raw::protocol::console::EdidDiscoveredProtocol",
+    "fields": [
+      [
+        "size_of_edid",
+        "u32"
+      ],
+      [
+        "edid",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "serial",
+    "name": "ControlBits",
+    "upstream": "uefi_raw::protocol::console::serial::ControlBits",
+    "fields": [
+      [
+        "raw",
+        "u32"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "serial",
+    "name": "SerialIoMode",
+    "upstream": "uefi_raw::protocol::console::serial::SerialIoMode",
+    "fields": [
+      [
+        "control_mask",
+        "ControlBits"
+      ],
+      [
+        "timeout",
+        "u32"
+      ],
+      [
+        "baud_rate",
+        "u64"
+      ],
+      [
+        "receive_fifo_depth",
+        "u32"
+      ],
+      [
+        "data_bits",
+        "u32"
+      ],
+      [
+        "parity",
+        "Parity"
+      ],
+      [
+        "stop_bits",
+        "StopBits"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "serial",
+    "name": "SerialIoProtocolRevision",
+    "upstream": "uefi_raw::protocol::console::serial::SerialIoProtocolRevision",
+    "fields": [
+      [
+        "raw",
+        "u32"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "serial",
+    "name": "SerialIoProtocol",
+    "upstream": "uefi_raw::protocol::console::serial::SerialIoProtocol",
+    "fields": [
+      [
+        "revision",
+        "SerialIoProtocolRevision"
+      ],
+      [
+        "reset",
+        "addr"
+      ],
+      [
+        "set_attributes",
+        "addr"
+      ],
+      [
+        "set_control_bits",
+        "addr"
+      ],
+      [
+        "get_control_bits",
+        "addr"
+      ],
+      [
+        "write",
+        "addr"
+      ],
+      [
+        "read",
+        "addr"
+      ],
+      [
+        "mode",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "serial",
+    "name": "SerialIoProtocol_1_1",
+    "upstream": "uefi_raw::protocol::console::serial::SerialIoProtocol_1_1",
+    "fields": [
+      [
+        "base_protocol",
+        "SerialIoProtocol"
+      ],
+      [
+        "device_type_guid",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "serial",
+    "name": "Parity",
+    "upstream": "uefi_raw::protocol::console::serial::Parity",
+    "fields": [
+      [
+        "raw",
+        "u32"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "serial",
+    "name": "StopBits",
+    "upstream": "uefi_raw::protocol::console::serial::StopBits",
+    "fields": [
+      [
+        "raw",
+        "u32"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "loaded_image",
+    "name": "LoadedImageProtocol",
+    "upstream": "uefi_raw::protocol::loaded_image::LoadedImageProtocol",
+    "fields": [
+      [
+        "revision",
+        "u32"
+      ],
+      [
+        "parent_handle",
+        "addr"
+      ],
+      [
+        "system_table",
+        "addr"
+      ],
+      [
+        "device_handle",
+        "addr"
+      ],
+      [
+        "file_path",
+        "addr"
+      ],
+      [
+        "reserved",
+        "addr"
+      ],
+      [
+        "load_options_size",
+        "u32"
+      ],
+      [
+        "load_options",
+        "addr"
+      ],
+      [
+        "image_base",
+        "addr"
+      ],
+      [
+        "image_size",
+        "u64"
+      ],
+      [
+        "image_code_type",
+        "u32"
+      ],
+      [
+        "image_data_type",
+        "u32"
+      ],
+      [
+        "unload",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "DevicePathProtocol",
+    "upstream": "uefi_raw::protocol::device_path::DevicePathProtocol",
+    "fields": [
+      [
+        "major_type",
+        "DeviceType"
+      ],
+      [
+        "sub_type",
+        "DeviceSubType"
+      ],
+      [
+        "length",
+        "[u8; 2]"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "DeviceType",
+    "upstream": "uefi_raw::protocol::device_path::DeviceType",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "DeviceSubType",
+    "upstream": "uefi_raw::protocol::device_path::DeviceSubType",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "DevicePathToTextProtocol",
+    "upstream": "uefi_raw::protocol::device_path::DevicePathToTextProtocol",
+    "fields": [
+      [
+        "convert_device_node_to_text",
+        "addr"
+      ],
+      [
+        "convert_device_path_to_text",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "DevicePathFromTextProtocol",
+    "upstream": "uefi_raw::protocol::device_path::DevicePathFromTextProtocol",
+    "fields": [
+      [
+        "convert_text_to_device_node",
+        "addr"
+      ],
+      [
+        "convert_text_to_device_path",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "DevicePathUtilitiesProtocol",
+    "upstream": "uefi_raw::protocol::device_path::DevicePathUtilitiesProtocol",
+    "fields": [
+      [
+        "get_device_path_size",
+        "addr"
+      ],
+      [
+        "duplicate_device_path",
+        "addr"
+      ],
+      [
+        "append_device_path",
+        "addr"
+      ],
+      [
+        "append_device_node",
+        "addr"
+      ],
+      [
+        "append_device_path_instance",
+        "addr"
+      ],
+      [
+        "get_next_device_path_instance",
+        "addr"
+      ],
+      [
+        "is_device_path_multi_instance",
+        "addr"
+      ],
+      [
+        "create_device_node",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "EndInstance",
+    "upstream": "uefi_raw::protocol::device_path::end::Instance",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "EndEntire",
+    "upstream": "uefi_raw::protocol::device_path::end::Entire",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "HardwarePci",
+    "upstream": "uefi_raw::protocol::device_path::hardware::Pci",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "function",
+        "u8"
+      ],
+      [
+        "device",
+        "u8"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "HardwarePccard",
+    "upstream": "uefi_raw::protocol::device_path::hardware::Pccard",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "function",
+        "u8"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "HardwareMemoryMapped",
+    "upstream": "uefi_raw::protocol::device_path::hardware::MemoryMapped",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "memory_type",
+        "u32"
+      ],
+      [
+        "start_address",
+        "u64"
+      ],
+      [
+        "end_address",
+        "u64"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "HardwareVendor",
+    "upstream": "uefi_raw::protocol::device_path::hardware::Vendor",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "vendor_guid",
+        "scalars::Guid"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "vendor_defined_data"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "HardwareController",
+    "upstream": "uefi_raw::protocol::device_path::hardware::Controller",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "controller_number",
+        "u32"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "HardwareBmc",
+    "upstream": "uefi_raw::protocol::device_path::hardware::Bmc",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "interface_type",
+        "HardwareBmcInterfaceType"
+      ],
+      [
+        "base_address",
+        "u64"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "HardwareBmcInterfaceType",
+    "upstream": "uefi_raw::protocol::device_path::hardware::BmcInterfaceType",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "AcpiAcpi",
+    "upstream": "uefi_raw::protocol::device_path::acpi::Acpi",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "hid",
+        "u32"
+      ],
+      [
+        "uid",
+        "u32"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "AcpiExpanded",
+    "upstream": "uefi_raw::protocol::device_path::acpi::Expanded",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "hid",
+        "u32"
+      ],
+      [
+        "uid",
+        "u32"
+      ],
+      [
+        "cid",
+        "u32"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "data"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "AcpiAdr",
+    "upstream": "uefi_raw::protocol::device_path::acpi::Adr",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "adr"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "AcpiNvdimm",
+    "upstream": "uefi_raw::protocol::device_path::acpi::Nvdimm",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "nfit_device_handle",
+        "u32"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingAtapi",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Atapi",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "primary_secondary",
+        "MessagingPrimarySecondary"
+      ],
+      [
+        "master_slave",
+        "MessagingMasterSlave"
+      ],
+      [
+        "logical_unit_number",
+        "u16"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingScsi",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Scsi",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "target_id",
+        "u16"
+      ],
+      [
+        "logical_unit_number",
+        "u16"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingFibreChannel",
+    "upstream": "uefi_raw::protocol::device_path::messaging::FibreChannel",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "_reserved",
+        "u32"
+      ],
+      [
+        "world_wide_name",
+        "u64"
+      ],
+      [
+        "logical_unit_number",
+        "u64"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingFibreChannelEx",
+    "upstream": "uefi_raw::protocol::device_path::messaging::FibreChannelEx",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "_reserved",
+        "u32"
+      ],
+      [
+        "world_wide_name",
+        "[u8; 8]"
+      ],
+      [
+        "logical_unit_number",
+        "[u8; 8]"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingIeee1394",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Ieee1394",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "_reserved",
+        "u32"
+      ],
+      [
+        "guid",
+        "[u8; 8]"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingUsb",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Usb",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "parent_port_number",
+        "u8"
+      ],
+      [
+        "interface",
+        "u8"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingSata",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Sata",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "hba_port_number",
+        "u16"
+      ],
+      [
+        "port_multiplier_port_number",
+        "u16"
+      ],
+      [
+        "logical_unit_number",
+        "u16"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingUsbWwid",
+    "upstream": "uefi_raw::protocol::device_path::messaging::UsbWwid",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "interface_number",
+        "u16"
+      ],
+      [
+        "device_vendor_id",
+        "u16"
+      ],
+      [
+        "device_product_id",
+        "u16"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "serial_number"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingDeviceLogicalUnit",
+    "upstream": "uefi_raw::protocol::device_path::messaging::DeviceLogicalUnit",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "logical_unit_number",
+        "u8"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingUsbClass",
+    "upstream": "uefi_raw::protocol::device_path::messaging::UsbClass",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "vendor_id",
+        "u16"
+      ],
+      [
+        "product_id",
+        "u16"
+      ],
+      [
+        "device_class",
+        "u8"
+      ],
+      [
+        "device_subclass",
+        "u8"
+      ],
+      [
+        "device_protocol",
+        "u8"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingI2o",
+    "upstream": "uefi_raw::protocol::device_path::messaging::I2o",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "target_id",
+        "u32"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingMacAddress",
+    "upstream": "uefi_raw::protocol::device_path::messaging::MacAddress",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "mac_address",
+        "[u8; 32]"
+      ],
+      [
+        "interface_type",
+        "u8"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingIpv4",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Ipv4",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "local_ip_address",
+        "[u8; 4]"
+      ],
+      [
+        "remote_ip_address",
+        "[u8; 4]"
+      ],
+      [
+        "local_port",
+        "u16"
+      ],
+      [
+        "remote_port",
+        "u16"
+      ],
+      [
+        "protocol",
+        "u16"
+      ],
+      [
+        "ip_address_origin",
+        "MessagingIpv4AddressOrigin"
+      ],
+      [
+        "gateway_ip_address",
+        "[u8; 4]"
+      ],
+      [
+        "subnet_mask",
+        "[u8; 4]"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingIpv6",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Ipv6",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "local_ip_address",
+        "[u8; 16]"
+      ],
+      [
+        "remote_ip_address",
+        "[u8; 16]"
+      ],
+      [
+        "local_port",
+        "u16"
+      ],
+      [
+        "remote_port",
+        "u16"
+      ],
+      [
+        "protocol",
+        "u16"
+      ],
+      [
+        "ip_address_origin",
+        "MessagingIpv6AddressOrigin"
+      ],
+      [
+        "prefix_length",
+        "u8"
+      ],
+      [
+        "gateway_ip_address",
+        "[u8; 16]"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingVlan",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Vlan",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "vlan_id",
+        "u16"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingInfiniband",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Infiniband",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "resource_flags",
+        "MessagingInfinibandResourceFlags"
+      ],
+      [
+        "port_gid",
+        "[u8; 16]"
+      ],
+      [
+        "ioc_guid_or_service_id",
+        "u64"
+      ],
+      [
+        "target_port_id",
+        "u64"
+      ],
+      [
+        "device_id",
+        "u64"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingUart",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Uart",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "_reserved",
+        "u32"
+      ],
+      [
+        "baud_rate",
+        "u64"
+      ],
+      [
+        "data_bits",
+        "u8"
+      ],
+      [
+        "parity",
+        "MessagingParity"
+      ],
+      [
+        "stop_bits",
+        "MessagingStopBits"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingVendor",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Vendor",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "vendor_guid",
+        "scalars::Guid"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "vendor_defined_data"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingSasEx",
+    "upstream": "uefi_raw::protocol::device_path::messaging::SasEx",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "sas_address",
+        "[u8; 8]"
+      ],
+      [
+        "logical_unit_number",
+        "[u8; 8]"
+      ],
+      [
+        "info",
+        "u16"
+      ],
+      [
+        "relative_target_port",
+        "u16"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingIscsi",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Iscsi",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "protocol",
+        "MessagingIscsiProtocol"
+      ],
+      [
+        "options",
+        "MessagingIscsiLoginOptions"
+      ],
+      [
+        "logical_unit_number",
+        "[u8; 8]"
+      ],
+      [
+        "target_portal_group_tag",
+        "u16"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "iscsi_target_name"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingNvmeNamespace",
+    "upstream": "uefi_raw::protocol::device_path::messaging::NvmeNamespace",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "namespace_identifier",
+        "u32"
+      ],
+      [
+        "ieee_extended_unique_identifier",
+        "u64"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingUri",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Uri",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "value"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingUfs",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Ufs",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "target_id",
+        "u8"
+      ],
+      [
+        "logical_unit_number",
+        "u8"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingSd",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Sd",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "slot_number",
+        "u8"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingBluetooth",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Bluetooth",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "device_address",
+        "[u8; 6]"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingWifi",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Wifi",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "ssid",
+        "[u8; 32]"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingEmmc",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Emmc",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "slot_number",
+        "u8"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingBluetoothLe",
+    "upstream": "uefi_raw::protocol::device_path::messaging::BluetoothLe",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "device_address",
+        "[u8; 6]"
+      ],
+      [
+        "address_type",
+        "MessagingBluetoothLeAddressType"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingDns",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Dns",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "address_type",
+        "MessagingDnsAddressType"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "addresses"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingNvdimmNamespace",
+    "upstream": "uefi_raw::protocol::device_path::messaging::NvdimmNamespace",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "uuid",
+        "[u8; 16]"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingRestService",
+    "upstream": "uefi_raw::protocol::device_path::messaging::RestService",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "service_type",
+        "MessagingRestServiceType"
+      ],
+      [
+        "access_mode",
+        "MessagingRestServiceAccessMode"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "vendor_guid_and_data"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingNvmeOfNamespace",
+    "upstream": "uefi_raw::protocol::device_path::messaging::NvmeOfNamespace",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "nidt",
+        "u8"
+      ],
+      [
+        "nid",
+        "[u8; 16]"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "subsystem_nqn"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingPrimarySecondary",
+    "upstream": "uefi_raw::protocol::device_path::messaging::PrimarySecondary",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingMasterSlave",
+    "upstream": "uefi_raw::protocol::device_path::messaging::MasterSlave",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingIpv4AddressOrigin",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Ipv4AddressOrigin",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingIpv6AddressOrigin",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Ipv6AddressOrigin",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingInfinibandResourceFlags",
+    "upstream": "uefi_raw::protocol::device_path::messaging::InfinibandResourceFlags",
+    "fields": [
+      [
+        "raw",
+        "u32"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingParity",
+    "upstream": "uefi_raw::protocol::device_path::messaging::Parity",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingStopBits",
+    "upstream": "uefi_raw::protocol::device_path::messaging::StopBits",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingIscsiProtocol",
+    "upstream": "uefi_raw::protocol::device_path::messaging::IscsiProtocol",
+    "fields": [
+      [
+        "raw",
+        "u16"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingIscsiLoginOptions",
+    "upstream": "uefi_raw::protocol::device_path::messaging::IscsiLoginOptions",
+    "fields": [
+      [
+        "raw",
+        "u16"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingBluetoothLeAddressType",
+    "upstream": "uefi_raw::protocol::device_path::messaging::BluetoothLeAddressType",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingDnsAddressType",
+    "upstream": "uefi_raw::protocol::device_path::messaging::DnsAddressType",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingRestServiceType",
+    "upstream": "uefi_raw::protocol::device_path::messaging::RestServiceType",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MessagingRestServiceAccessMode",
+    "upstream": "uefi_raw::protocol::device_path::messaging::RestServiceAccessMode",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MediaHardDrive",
+    "upstream": "uefi_raw::protocol::device_path::media::HardDrive",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "partition_number",
+        "u32"
+      ],
+      [
+        "partition_start",
+        "u64"
+      ],
+      [
+        "partition_size",
+        "u64"
+      ],
+      [
+        "partition_signature",
+        "[u8; 16]"
+      ],
+      [
+        "partition_format",
+        "MediaPartitionFormat"
+      ],
+      [
+        "signature_type",
+        "u8"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MediaCdRom",
+    "upstream": "uefi_raw::protocol::device_path::media::CdRom",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "boot_entry",
+        "u32"
+      ],
+      [
+        "partition_start",
+        "u64"
+      ],
+      [
+        "partition_size",
+        "u64"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MediaVendor",
+    "upstream": "uefi_raw::protocol::device_path::media::Vendor",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "vendor_guid",
+        "scalars::Guid"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "vendor_defined_data"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "MediaFilePath",
+    "upstream": "uefi_raw::protocol::device_path::media::FilePath",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "path_name"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "MediaProtocol",
+    "upstream": "uefi_raw::protocol::device_path::media::Protocol",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "protocol_guid",
+        "scalars::Guid"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MediaPiwgFirmwareFile",
+    "upstream": "uefi_raw::protocol::device_path::media::PiwgFirmwareFile",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "data"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "MediaPiwgFirmwareVolume",
+    "upstream": "uefi_raw::protocol::device_path::media::PiwgFirmwareVolume",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "data"
+    ]
+  },
+  {
+    "module": "device_path",
+    "name": "MediaRelativeOffsetRange",
+    "upstream": "uefi_raw::protocol::device_path::media::RelativeOffsetRange",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "_reserved",
+        "u32"
+      ],
+      [
+        "starting_offset",
+        "u64"
+      ],
+      [
+        "ending_offset",
+        "u64"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MediaRamDisk",
+    "upstream": "uefi_raw::protocol::device_path::media::RamDisk",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "starting_address",
+        "u64"
+      ],
+      [
+        "ending_address",
+        "u64"
+      ],
+      [
+        "disk_type",
+        "MediaRamDiskType"
+      ],
+      [
+        "disk_instance",
+        "u16"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MediaPartitionFormat",
+    "upstream": "uefi_raw::protocol::device_path::media::PartitionFormat",
+    "fields": [
+      [
+        "raw",
+        "u8"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "MediaRamDiskType",
+    "upstream": "uefi_raw::protocol::device_path::media::RamDiskType",
+    "fields": [
+      [
+        "raw",
+        "scalars::Guid"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "device_path",
+    "name": "BiosBootSpecBootSpecification",
+    "upstream": "uefi_raw::protocol::device_path::bios_boot_spec::BootSpecification",
+    "fields": [
+      [
+        "header",
+        "DevicePathProtocol"
+      ],
+      [
+        "device_type",
+        "u16"
+      ],
+      [
+        "status_flag",
+        "u16"
+      ]
+    ],
+    "packed": true,
+    "tail_fields": [
+      "description_string"
+    ]
+  },
+  {
+    "module": "load_file",
+    "name": "LoadFileProtocol",
+    "upstream": "uefi_raw::protocol::media::LoadFileProtocol",
+    "fields": [
+      [
+        "load_file",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "load_file",
+    "name": "LoadFile2Protocol",
+    "upstream": "uefi_raw::protocol::media::LoadFile2Protocol",
+    "fields": [
+      [
+        "load_file",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "load_file",
+    "name": "StorageSecurityCommandProtocol",
+    "upstream": "uefi_raw::protocol::media::StorageSecurityCommandProtocol",
+    "fields": [
+      [
+        "receive_data",
+        "addr"
+      ],
+      [
+        "send_data",
+        "addr"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  },
+  {
+    "module": "shell_params",
+    "name": "ShellParametersProtocol",
+    "upstream": "uefi_raw::protocol::shell_params::ShellParametersProtocol",
+    "fields": [
+      [
+        "argv",
+        "addr"
+      ],
+      [
+        "argc",
+        "u64"
+      ],
+      [
+        "std_in",
+        "ShellFileHandle"
+      ],
+      [
+        "std_out",
+        "ShellFileHandle"
+      ],
+      [
+        "std_err",
+        "ShellFileHandle"
+      ]
+    ],
+    "packed": false,
+    "tail_fields": []
+  }
+]

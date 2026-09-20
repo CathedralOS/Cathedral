@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Omega translation of rust-osdev/uefi-rs at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
+// See console.PORT.md; reproduced by tools/ports/uefi-console/generate.py.
+// Inert x86-64 representation corpus. No pointer dereference or callable authority.
+// Layout vectors describe required foreign geometry, not default Omega layout.
+module shell_params;
+use scalars;
+
+// Upstream: uefi_raw::protocol::shell_params::ShellParametersProtocol
+pub data ShellParametersProtocol [copy] {
+    argv: addr;
+    // Foreign carrier: *const *const Char16
+    argc: u64;
+    std_in: ShellFileHandle;
+    std_out: ShellFileHandle;
+    std_err: ShellFileHandle;
+}
+
+// Upstream carrier: *mut c_void
+pub data ShellFileHandle [copy] { raw: addr; }
+
+pub const SHELL_PARAMETERS_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x752f3136, data2: 0x4e16, data3: 0x4fdc, data4: [0xa2, 0x2a, 0xe5, 0xf4, 0x68, 0x12, 0xf4, 0xca] };

@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Omega translation of rust-osdev/uefi-rs at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
+// See console.PORT.md; reproduced by tools/ports/uefi-console/generate.py.
+// Inert x86-64 representation corpus. No pointer dereference or callable authority.
+// Layout vectors describe required foreign geometry, not default Omega layout.
+module loaded_image;
+use scalars;
+
+// Upstream: uefi_raw::protocol::loaded_image::LoadedImageProtocol
+pub data LoadedImageProtocol [copy] {
+    revision: u32;
+    parent_handle: addr;
+    // Foreign carrier: Handle
+    system_table: addr;
+    // Foreign carrier: *const SystemTable
+    device_handle: addr;
+    // Foreign carrier: Handle
+    file_path: addr;
+    // Foreign carrier: *const DevicePathProtocol
+    reserved: addr;
+    // Foreign carrier: *const c_void
+    load_options_size: u32;
+    load_options: addr;
+    // Foreign carrier: *const c_void
+    image_base: addr;
+    // Foreign carrier: *const c_void
+    image_size: u64;
+    image_code_type: u32;
+    image_data_type: u32;
+    unload: addr;
+    // Foreign carrier: Option<unsafe extern "efiapi" fn(image_handle: Handle) -> Status>
+}
+
+pub const LOADED_IMAGE_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x5b1b31a1, data2: 0x9562, data3: 0x11d2, data4: [0x8e, 0x3f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };

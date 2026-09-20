@@ -1,0 +1,91 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Omega translation of rust-osdev/uefi-rs at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
+// See console.PORT.md; reproduced by tools/ports/uefi-console/generate.py.
+// Inert x86-64 representation corpus. No pointer dereference or callable authority.
+// Layout vectors describe required foreign geometry, not default Omega layout.
+module serial;
+use scalars;
+
+// Upstream: uefi_raw::protocol::console::serial::ControlBits
+pub data ControlBits [copy] {
+    raw: u32;
+}
+
+// Upstream: uefi_raw::protocol::console::serial::SerialIoMode
+pub data SerialIoMode [copy] {
+    control_mask: ControlBits;
+    timeout: u32;
+    baud_rate: u64;
+    receive_fifo_depth: u32;
+    data_bits: u32;
+    parity: Parity;
+    stop_bits: StopBits;
+}
+
+// Upstream: uefi_raw::protocol::console::serial::SerialIoProtocolRevision
+pub data SerialIoProtocolRevision [copy] {
+    raw: u32;
+}
+
+// Upstream: uefi_raw::protocol::console::serial::SerialIoProtocol
+pub data SerialIoProtocol [copy] {
+    revision: SerialIoProtocolRevision;
+    reset: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(*mut Self) -> Status
+    set_attributes: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( *mut Self, baud_rate: u64, receive_fifo_depth: u32, timeout: u32, parity: Parity, data_bits: u8, stop_bits_type: StopBits, ) -> Status
+    set_control_bits: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(*mut Self, ControlBits) -> Status
+    get_control_bits: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(*const Self, *mut ControlBits) -> Status
+    write: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(*mut Self, *mut usize, *const u8) -> Status
+    read: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(*mut Self, *mut usize, *mut u8) -> Status
+    mode: addr;
+    // Foreign carrier: *const SerialIoMode
+}
+
+// Upstream: uefi_raw::protocol::console::serial::SerialIoProtocol_1_1
+pub data SerialIoProtocol_1_1 [copy] {
+    base_protocol: SerialIoProtocol;
+    device_type_guid: addr;
+    // Foreign carrier: *const Guid
+}
+
+// Upstream: uefi_raw::protocol::console::serial::Parity
+pub data Parity [copy] {
+    raw: u32;
+}
+
+// Upstream: uefi_raw::protocol::console::serial::StopBits
+pub data StopBits [copy] {
+    raw: u32;
+}
+
+pub const CONTROL_BITS_CLEAR_TO_SEND: ControlBits = ControlBits { raw: 16 };
+pub const CONTROL_BITS_DATA_SET_READY: ControlBits = ControlBits { raw: 32 };
+pub const CONTROL_BITS_RING_INDICATE: ControlBits = ControlBits { raw: 64 };
+pub const CONTROL_BITS_CARRIER_DETECT: ControlBits = ControlBits { raw: 128 };
+pub const CONTROL_BITS_INPUT_BUFFER_EMPTY: ControlBits = ControlBits { raw: 256 };
+pub const CONTROL_BITS_OUTPUT_BUFFER_EMPTY: ControlBits = ControlBits { raw: 512 };
+pub const CONTROL_BITS_DATA_TERMINAL_READY: ControlBits = ControlBits { raw: 1 };
+pub const CONTROL_BITS_REQUEST_TO_SEND: ControlBits = ControlBits { raw: 2 };
+pub const CONTROL_BITS_HARDWARE_LOOPBACK_ENABLE: ControlBits = ControlBits { raw: 4096 };
+pub const CONTROL_BITS_SOFTWARE_LOOPBACK_ENABLE: ControlBits = ControlBits { raw: 8192 };
+pub const CONTROL_BITS_HARDWARE_FLOW_CONTROL_ENABLE: ControlBits = ControlBits { raw: 16384 };
+pub const CONTROL_BITS_SETTABLE: ControlBits = ControlBits { raw: 28675 };
+pub const SERIAL_IO_PROTOCOL_REVISION_REVISION_1_0: SerialIoProtocolRevision = SerialIoProtocolRevision { raw: 65536 };
+pub const SERIAL_IO_PROTOCOL_REVISION_REVISION_1_1: SerialIoProtocolRevision = SerialIoProtocolRevision { raw: 65537 };
+pub const PARITY_DEFAULT: Parity = Parity { raw: 0 };
+pub const PARITY_NONE: Parity = Parity { raw: 1 };
+pub const PARITY_EVEN: Parity = Parity { raw: 2 };
+pub const PARITY_ODD: Parity = Parity { raw: 3 };
+pub const PARITY_MARK: Parity = Parity { raw: 4 };
+pub const PARITY_SPACE: Parity = Parity { raw: 5 };
+pub const STOP_BITS_DEFAULT: StopBits = StopBits { raw: 0 };
+pub const STOP_BITS_ONE: StopBits = StopBits { raw: 1 };
+pub const STOP_BITS_ONE_FIVE: StopBits = StopBits { raw: 2 };
+pub const STOP_BITS_TWO: StopBits = StopBits { raw: 3 };
+pub const SERIAL_IO_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0xbb25cf6f, data2: 0xf1d4, data3: 0x11d2, data4: [0x9a, 0x0c, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0xfd] };
+pub const SERIAL_IO_PROTOCOL_1_1_GUID: scalars::Guid = SERIAL_IO_PROTOCOL_GUID;

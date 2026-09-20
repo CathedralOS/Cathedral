@@ -1,0 +1,1159 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Authored fixed geometry for UEFI-003, derived from pinned target-checked vectors.
+// Selecting a policy grants no backing, foreign call or runtime-tail authority.
+module console_layouts;
+use omega::language::core::layout;
+
+pub data AbsolutePointerModeAttributesX64Layout { }
+pub AbsolutePointerModeAttributesX64Policy: AbsolutePointerModeAttributesX64Layout satisfies Layout;
+pub machine AbsolutePointerModeAttributesX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+pub data AbsolutePointerModeX64Layout { }
+pub AbsolutePointerModeX64Policy: AbsolutePointerModeX64Layout satisfies Layout;
+pub machine AbsolutePointerModeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 32 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 40 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 48 } };
+    Plan { entries: entries, entry_count: 7, size_fixed: 56, size_is_dynamic: false, align: 8 }
+}
+
+pub data AbsolutePointerStateX64Layout { }
+pub AbsolutePointerStateX64Policy: AbsolutePointerStateX64Layout satisfies Layout;
+pub machine AbsolutePointerStateX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 32, size_is_dynamic: false, align: 8 }
+}
+
+pub data AbsolutePointerProtocolX64Layout { }
+pub AbsolutePointerProtocolX64Policy: AbsolutePointerProtocolX64Layout satisfies Layout;
+pub machine AbsolutePointerProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 32, size_is_dynamic: false, align: 8 }
+}
+
+pub data InputKeyX64Layout { }
+pub InputKeyX64Policy: InputKeyX64Layout satisfies Layout;
+pub machine InputKeyX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 2 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 4, size_is_dynamic: false, align: 2 }
+}
+
+pub data SimpleTextInputProtocolX64Layout { }
+pub SimpleTextInputProtocolX64Policy: SimpleTextInputProtocolX64Layout satisfies Layout;
+pub machine SimpleTextInputProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 24, size_is_dynamic: false, align: 8 }
+}
+
+pub data KeyDataX64Layout { }
+pub KeyDataX64Policy: KeyDataX64Layout satisfies Layout;
+pub machine KeyDataX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 12, size_is_dynamic: false, align: 4 }
+}
+
+pub data KeyStateX64Layout { }
+pub KeyStateX64Policy: KeyStateX64Layout satisfies Layout;
+pub machine KeyStateX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 8, size_is_dynamic: false, align: 4 }
+}
+
+pub data KeyShiftStateX64Layout { }
+pub KeyShiftStateX64Policy: KeyShiftStateX64Layout satisfies Layout;
+pub machine KeyShiftStateX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+pub data KeyToggleStateX64Layout { }
+pub KeyToggleStateX64Policy: KeyToggleStateX64Layout satisfies Layout;
+pub machine KeyToggleStateX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data SimpleTextInputExProtocolX64Layout { }
+pub SimpleTextInputExProtocolX64Policy: SimpleTextInputExProtocolX64Layout satisfies Layout;
+pub machine SimpleTextInputExProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 32 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 40 } };
+    Plan { entries: entries, entry_count: 6, size_fixed: 48, size_is_dynamic: false, align: 8 }
+}
+
+pub data SimpleTextOutputModeX64Layout { }
+pub SimpleTextOutputModeX64Policy: SimpleTextOutputModeX64Layout satisfies Layout;
+pub machine SimpleTextOutputModeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 12 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 16 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 20 } };
+    Plan { entries: entries, entry_count: 6, size_fixed: 24, size_is_dynamic: false, align: 4 }
+}
+
+pub data SimpleTextOutputProtocolX64Layout { }
+pub SimpleTextOutputProtocolX64Policy: SimpleTextOutputProtocolX64Layout satisfies Layout;
+pub machine SimpleTextOutputProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 32 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 40 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 48 } };
+    entries[7] = FieldEntry { key: schema.fields[7].key, placement: FieldPlan::At { offset: 56 } };
+    entries[8] = FieldEntry { key: schema.fields[8].key, placement: FieldPlan::At { offset: 64 } };
+    entries[9] = FieldEntry { key: schema.fields[9].key, placement: FieldPlan::At { offset: 72 } };
+    Plan { entries: entries, entry_count: 10, size_fixed: 80, size_is_dynamic: false, align: 8 }
+}
+
+pub data SimplePointerModeX64Layout { }
+pub SimplePointerModeX64Policy: SimplePointerModeX64Layout satisfies Layout;
+pub machine SimplePointerModeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 25 } };
+    Plan { entries: entries, entry_count: 5, size_fixed: 32, size_is_dynamic: false, align: 8 }
+}
+
+pub data SimplePointerStateX64Layout { }
+pub SimplePointerStateX64Policy: SimplePointerStateX64Layout satisfies Layout;
+pub machine SimplePointerStateX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 12 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 13 } };
+    Plan { entries: entries, entry_count: 5, size_fixed: 16, size_is_dynamic: false, align: 4 }
+}
+
+pub data SimplePointerProtocolX64Layout { }
+pub SimplePointerProtocolX64Policy: SimplePointerProtocolX64Layout satisfies Layout;
+pub machine SimplePointerProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 32, size_is_dynamic: false, align: 8 }
+}
+
+pub data GraphicsOutputProtocolX64Layout { }
+pub GraphicsOutputProtocolX64Policy: GraphicsOutputProtocolX64Layout satisfies Layout;
+pub machine GraphicsOutputProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 32, size_is_dynamic: false, align: 8 }
+}
+
+pub data GraphicsOutputProtocolModeX64Layout { }
+pub GraphicsOutputProtocolModeX64Policy: GraphicsOutputProtocolModeX64Layout satisfies Layout;
+pub machine GraphicsOutputProtocolModeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 16 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 24 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 32 } };
+    Plan { entries: entries, entry_count: 6, size_fixed: 40, size_is_dynamic: false, align: 8 }
+}
+
+pub data GraphicsOutputModeInformationX64Layout { }
+pub GraphicsOutputModeInformationX64Policy: GraphicsOutputModeInformationX64Layout satisfies Layout;
+pub machine GraphicsOutputModeInformationX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 12 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 16 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 32 } };
+    Plan { entries: entries, entry_count: 6, size_fixed: 36, size_is_dynamic: false, align: 4 }
+}
+
+pub data PixelBitmaskX64Layout { }
+pub PixelBitmaskX64Policy: PixelBitmaskX64Layout satisfies Layout;
+pub machine PixelBitmaskX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 12 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 4 }
+}
+
+pub data GraphicsPixelFormatX64Layout { }
+pub GraphicsPixelFormatX64Policy: GraphicsPixelFormatX64Layout satisfies Layout;
+pub machine GraphicsPixelFormatX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+pub data GraphicsOutputBltPixelX64Layout { }
+pub GraphicsOutputBltPixelX64Policy: GraphicsOutputBltPixelX64Layout satisfies Layout;
+pub machine GraphicsOutputBltPixelX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 1 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 2 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 3 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 4, size_is_dynamic: false, align: 1 }
+}
+
+pub data GraphicsOutputBltOperationX64Layout { }
+pub GraphicsOutputBltOperationX64Policy: GraphicsOutputBltOperationX64Layout satisfies Layout;
+pub machine GraphicsOutputBltOperationX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+pub data EdidDiscoveredProtocolX64Layout { }
+pub EdidDiscoveredProtocolX64Policy: EdidDiscoveredProtocolX64Layout satisfies Layout;
+pub machine EdidDiscoveredProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 16, size_is_dynamic: false, align: 8 }
+}
+
+pub data ControlBitsX64Layout { }
+pub ControlBitsX64Policy: ControlBitsX64Layout satisfies Layout;
+pub machine ControlBitsX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+pub data SerialIoModeX64Layout { }
+pub SerialIoModeX64Policy: SerialIoModeX64Layout satisfies Layout;
+pub machine SerialIoModeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 16 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 20 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 24 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 28 } };
+    Plan { entries: entries, entry_count: 7, size_fixed: 32, size_is_dynamic: false, align: 8 }
+}
+
+pub data SerialIoProtocolRevisionX64Layout { }
+pub SerialIoProtocolRevisionX64Policy: SerialIoProtocolRevisionX64Layout satisfies Layout;
+pub machine SerialIoProtocolRevisionX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+pub data SerialIoProtocolX64Layout { }
+pub SerialIoProtocolX64Policy: SerialIoProtocolX64Layout satisfies Layout;
+pub machine SerialIoProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 32 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 40 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 48 } };
+    entries[7] = FieldEntry { key: schema.fields[7].key, placement: FieldPlan::At { offset: 56 } };
+    Plan { entries: entries, entry_count: 8, size_fixed: 64, size_is_dynamic: false, align: 8 }
+}
+
+pub data SerialIoProtocol_1_1X64Layout { }
+pub SerialIoProtocol_1_1X64Policy: SerialIoProtocol_1_1X64Layout satisfies Layout;
+pub machine SerialIoProtocol_1_1X64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 64 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 72, size_is_dynamic: false, align: 8 }
+}
+
+pub data ParityX64Layout { }
+pub ParityX64Policy: ParityX64Layout satisfies Layout;
+pub machine ParityX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+pub data StopBitsX64Layout { }
+pub StopBitsX64Policy: StopBitsX64Layout satisfies Layout;
+pub machine StopBitsX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+pub data LoadedImageProtocolX64Layout { }
+pub LoadedImageProtocolX64Policy: LoadedImageProtocolX64Layout satisfies Layout;
+pub machine LoadedImageProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 32 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 40 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 48 } };
+    entries[7] = FieldEntry { key: schema.fields[7].key, placement: FieldPlan::At { offset: 56 } };
+    entries[8] = FieldEntry { key: schema.fields[8].key, placement: FieldPlan::At { offset: 64 } };
+    entries[9] = FieldEntry { key: schema.fields[9].key, placement: FieldPlan::At { offset: 72 } };
+    entries[10] = FieldEntry { key: schema.fields[10].key, placement: FieldPlan::At { offset: 80 } };
+    entries[11] = FieldEntry { key: schema.fields[11].key, placement: FieldPlan::At { offset: 84 } };
+    entries[12] = FieldEntry { key: schema.fields[12].key, placement: FieldPlan::At { offset: 88 } };
+    Plan { entries: entries, entry_count: 13, size_fixed: 96, size_is_dynamic: false, align: 8 }
+}
+
+pub data DevicePathProtocolX64Layout { }
+pub DevicePathProtocolX64Policy: DevicePathProtocolX64Layout satisfies Layout;
+pub machine DevicePathProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 1 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 2 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 4, size_is_dynamic: false, align: 1 }
+}
+
+pub data DeviceTypeX64Layout { }
+pub DeviceTypeX64Policy: DeviceTypeX64Layout satisfies Layout;
+pub machine DeviceTypeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data DeviceSubTypeX64Layout { }
+pub DeviceSubTypeX64Policy: DeviceSubTypeX64Layout satisfies Layout;
+pub machine DeviceSubTypeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data DevicePathToTextProtocolX64Layout { }
+pub DevicePathToTextProtocolX64Policy: DevicePathToTextProtocolX64Layout satisfies Layout;
+pub machine DevicePathToTextProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 16, size_is_dynamic: false, align: 8 }
+}
+
+pub data DevicePathFromTextProtocolX64Layout { }
+pub DevicePathFromTextProtocolX64Policy: DevicePathFromTextProtocolX64Layout satisfies Layout;
+pub machine DevicePathFromTextProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 16, size_is_dynamic: false, align: 8 }
+}
+
+pub data DevicePathUtilitiesProtocolX64Layout { }
+pub DevicePathUtilitiesProtocolX64Policy: DevicePathUtilitiesProtocolX64Layout satisfies Layout;
+pub machine DevicePathUtilitiesProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 32 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 40 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 48 } };
+    entries[7] = FieldEntry { key: schema.fields[7].key, placement: FieldPlan::At { offset: 56 } };
+    Plan { entries: entries, entry_count: 8, size_fixed: 64, size_is_dynamic: false, align: 8 }
+}
+
+pub data EndInstanceX64Layout { }
+pub EndInstanceX64Policy: EndInstanceX64Layout satisfies Layout;
+pub machine EndInstanceX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 1 }
+}
+
+pub data EndEntireX64Layout { }
+pub EndEntireX64Policy: EndEntireX64Layout satisfies Layout;
+pub machine EndEntireX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 1 }
+}
+
+pub data HardwarePciX64Layout { }
+pub HardwarePciX64Policy: HardwarePciX64Layout satisfies Layout;
+pub machine HardwarePciX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 5 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 6, size_is_dynamic: false, align: 1 }
+}
+
+pub data HardwarePccardX64Layout { }
+pub HardwarePccardX64Policy: HardwarePccardX64Layout satisfies Layout;
+pub machine HardwarePccardX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 5, size_is_dynamic: false, align: 1 }
+}
+
+pub data HardwareMemoryMappedX64Layout { }
+pub HardwareMemoryMappedX64Policy: HardwareMemoryMappedX64Layout satisfies Layout;
+pub machine HardwareMemoryMappedX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 16 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 24, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data HardwareVendorX64Layout { }
+pub HardwareVendorX64Policy: HardwareVendorX64Layout satisfies Layout;
+pub machine HardwareVendorX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 20, size_is_dynamic: false, align: 1 }
+}
+
+pub data HardwareControllerX64Layout { }
+pub HardwareControllerX64Policy: HardwareControllerX64Layout satisfies Layout;
+pub machine HardwareControllerX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 8, size_is_dynamic: false, align: 1 }
+}
+
+pub data HardwareBmcX64Layout { }
+pub HardwareBmcX64Policy: HardwareBmcX64Layout satisfies Layout;
+pub machine HardwareBmcX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 5 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 13, size_is_dynamic: false, align: 1 }
+}
+
+pub data HardwareBmcInterfaceTypeX64Layout { }
+pub HardwareBmcInterfaceTypeX64Policy: HardwareBmcInterfaceTypeX64Layout satisfies Layout;
+pub machine HardwareBmcInterfaceTypeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data AcpiAcpiX64Layout { }
+pub AcpiAcpiX64Policy: AcpiAcpiX64Layout satisfies Layout;
+pub machine AcpiAcpiX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 12, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data AcpiExpandedX64Layout { }
+pub AcpiExpandedX64Policy: AcpiExpandedX64Layout satisfies Layout;
+pub machine AcpiExpandedX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 12 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data AcpiAdrX64Layout { }
+pub AcpiAdrX64Policy: AcpiAdrX64Layout satisfies Layout;
+pub machine AcpiAdrX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 1 }
+}
+
+pub data AcpiNvdimmX64Layout { }
+pub AcpiNvdimmX64Policy: AcpiNvdimmX64Layout satisfies Layout;
+pub machine AcpiNvdimmX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 8, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingAtapiX64Layout { }
+pub MessagingAtapiX64Policy: MessagingAtapiX64Layout satisfies Layout;
+pub machine MessagingAtapiX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 5 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 6 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 8, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingScsiX64Layout { }
+pub MessagingScsiX64Policy: MessagingScsiX64Layout satisfies Layout;
+pub machine MessagingScsiX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 6 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 8, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingFibreChannelX64Layout { }
+pub MessagingFibreChannelX64Policy: MessagingFibreChannelX64Layout satisfies Layout;
+pub machine MessagingFibreChannelX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 16 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 24, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingFibreChannelExX64Layout { }
+pub MessagingFibreChannelExX64Policy: MessagingFibreChannelExX64Layout satisfies Layout;
+pub machine MessagingFibreChannelExX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 16 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 24, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingIeee1394X64Layout { }
+pub MessagingIeee1394X64Policy: MessagingIeee1394X64Layout satisfies Layout;
+pub machine MessagingIeee1394X64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 16, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingUsbX64Layout { }
+pub MessagingUsbX64Policy: MessagingUsbX64Layout satisfies Layout;
+pub machine MessagingUsbX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 5 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 6, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingSataX64Layout { }
+pub MessagingSataX64Policy: MessagingSataX64Layout satisfies Layout;
+pub machine MessagingSataX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 6 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 8 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 10, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data MessagingUsbWwidX64Layout { }
+pub MessagingUsbWwidX64Policy: MessagingUsbWwidX64Layout satisfies Layout;
+pub machine MessagingUsbWwidX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 6 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 8 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 10, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingDeviceLogicalUnitX64Layout { }
+pub MessagingDeviceLogicalUnitX64Policy: MessagingDeviceLogicalUnitX64Layout satisfies Layout;
+pub machine MessagingDeviceLogicalUnitX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 5, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingUsbClassX64Layout { }
+pub MessagingUsbClassX64Policy: MessagingUsbClassX64Layout satisfies Layout;
+pub machine MessagingUsbClassX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 6 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 8 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 9 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 10 } };
+    Plan { entries: entries, entry_count: 6, size_fixed: 11, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingI2oX64Layout { }
+pub MessagingI2oX64Policy: MessagingI2oX64Layout satisfies Layout;
+pub machine MessagingI2oX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 8, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingMacAddressX64Layout { }
+pub MessagingMacAddressX64Policy: MessagingMacAddressX64Layout satisfies Layout;
+pub machine MessagingMacAddressX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 36 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 37, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingIpv4X64Layout { }
+pub MessagingIpv4X64Policy: MessagingIpv4X64Layout satisfies Layout;
+pub machine MessagingIpv4X64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 12 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 14 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 16 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 18 } };
+    entries[7] = FieldEntry { key: schema.fields[7].key, placement: FieldPlan::At { offset: 19 } };
+    entries[8] = FieldEntry { key: schema.fields[8].key, placement: FieldPlan::At { offset: 23 } };
+    Plan { entries: entries, entry_count: 9, size_fixed: 27, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingIpv6X64Layout { }
+pub MessagingIpv6X64Policy: MessagingIpv6X64Layout satisfies Layout;
+pub machine MessagingIpv6X64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 20 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 36 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 38 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 40 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 42 } };
+    entries[7] = FieldEntry { key: schema.fields[7].key, placement: FieldPlan::At { offset: 43 } };
+    entries[8] = FieldEntry { key: schema.fields[8].key, placement: FieldPlan::At { offset: 44 } };
+    Plan { entries: entries, entry_count: 9, size_fixed: 60, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingVlanX64Layout { }
+pub MessagingVlanX64Policy: MessagingVlanX64Layout satisfies Layout;
+pub machine MessagingVlanX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 6, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingInfinibandX64Layout { }
+pub MessagingInfinibandX64Policy: MessagingInfinibandX64Layout satisfies Layout;
+pub machine MessagingInfinibandX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 32 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 40 } };
+    Plan { entries: entries, entry_count: 6, size_fixed: 48, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingUartX64Layout { }
+pub MessagingUartX64Policy: MessagingUartX64Layout satisfies Layout;
+pub machine MessagingUartX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 16 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 17 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 18 } };
+    Plan { entries: entries, entry_count: 6, size_fixed: 19, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data MessagingVendorX64Layout { }
+pub MessagingVendorX64Policy: MessagingVendorX64Layout satisfies Layout;
+pub machine MessagingVendorX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 20, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingSasExX64Layout { }
+pub MessagingSasExX64Policy: MessagingSasExX64Layout satisfies Layout;
+pub machine MessagingSasExX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 12 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 20 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 22 } };
+    Plan { entries: entries, entry_count: 5, size_fixed: 24, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data MessagingIscsiX64Layout { }
+pub MessagingIscsiX64Policy: MessagingIscsiX64Layout satisfies Layout;
+pub machine MessagingIscsiX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 6 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 8 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 16 } };
+    Plan { entries: entries, entry_count: 5, size_fixed: 18, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingNvmeNamespaceX64Layout { }
+pub MessagingNvmeNamespaceX64Policy: MessagingNvmeNamespaceX64Layout satisfies Layout;
+pub machine MessagingNvmeNamespaceX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 16, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data MessagingUriX64Layout { }
+pub MessagingUriX64Policy: MessagingUriX64Layout satisfies Layout;
+pub machine MessagingUriX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingUfsX64Layout { }
+pub MessagingUfsX64Policy: MessagingUfsX64Layout satisfies Layout;
+pub machine MessagingUfsX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 5 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 6, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingSdX64Layout { }
+pub MessagingSdX64Policy: MessagingSdX64Layout satisfies Layout;
+pub machine MessagingSdX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 5, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingBluetoothX64Layout { }
+pub MessagingBluetoothX64Policy: MessagingBluetoothX64Layout satisfies Layout;
+pub machine MessagingBluetoothX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 10, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingWifiX64Layout { }
+pub MessagingWifiX64Policy: MessagingWifiX64Layout satisfies Layout;
+pub machine MessagingWifiX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 36, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingEmmcX64Layout { }
+pub MessagingEmmcX64Policy: MessagingEmmcX64Layout satisfies Layout;
+pub machine MessagingEmmcX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 5, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingBluetoothLeX64Layout { }
+pub MessagingBluetoothLeX64Policy: MessagingBluetoothLeX64Layout satisfies Layout;
+pub machine MessagingBluetoothLeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 10 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 11, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data MessagingDnsX64Layout { }
+pub MessagingDnsX64Policy: MessagingDnsX64Layout satisfies Layout;
+pub machine MessagingDnsX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 5, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingNvdimmNamespaceX64Layout { }
+pub MessagingNvdimmNamespaceX64Policy: MessagingNvdimmNamespaceX64Layout satisfies Layout;
+pub machine MessagingNvdimmNamespaceX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 20, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data MessagingRestServiceX64Layout { }
+pub MessagingRestServiceX64Policy: MessagingRestServiceX64Layout satisfies Layout;
+pub machine MessagingRestServiceX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 5 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 6, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data MessagingNvmeOfNamespaceX64Layout { }
+pub MessagingNvmeOfNamespaceX64Policy: MessagingNvmeOfNamespaceX64Layout satisfies Layout;
+pub machine MessagingNvmeOfNamespaceX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 5 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 21, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingPrimarySecondaryX64Layout { }
+pub MessagingPrimarySecondaryX64Policy: MessagingPrimarySecondaryX64Layout satisfies Layout;
+pub machine MessagingPrimarySecondaryX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingMasterSlaveX64Layout { }
+pub MessagingMasterSlaveX64Policy: MessagingMasterSlaveX64Layout satisfies Layout;
+pub machine MessagingMasterSlaveX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingIpv4AddressOriginX64Layout { }
+pub MessagingIpv4AddressOriginX64Policy: MessagingIpv4AddressOriginX64Layout satisfies Layout;
+pub machine MessagingIpv4AddressOriginX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingIpv6AddressOriginX64Layout { }
+pub MessagingIpv6AddressOriginX64Policy: MessagingIpv6AddressOriginX64Layout satisfies Layout;
+pub machine MessagingIpv6AddressOriginX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingInfinibandResourceFlagsX64Layout { }
+pub MessagingInfinibandResourceFlagsX64Policy: MessagingInfinibandResourceFlagsX64Layout satisfies Layout;
+pub machine MessagingInfinibandResourceFlagsX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+pub data MessagingParityX64Layout { }
+pub MessagingParityX64Policy: MessagingParityX64Layout satisfies Layout;
+pub machine MessagingParityX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingStopBitsX64Layout { }
+pub MessagingStopBitsX64Policy: MessagingStopBitsX64Layout satisfies Layout;
+pub machine MessagingStopBitsX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingIscsiProtocolX64Layout { }
+pub MessagingIscsiProtocolX64Policy: MessagingIscsiProtocolX64Layout satisfies Layout;
+pub machine MessagingIscsiProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 2, size_is_dynamic: false, align: 2 }
+}
+
+pub data MessagingIscsiLoginOptionsX64Layout { }
+pub MessagingIscsiLoginOptionsX64Policy: MessagingIscsiLoginOptionsX64Layout satisfies Layout;
+pub machine MessagingIscsiLoginOptionsX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 2, size_is_dynamic: false, align: 2 }
+}
+
+pub data MessagingBluetoothLeAddressTypeX64Layout { }
+pub MessagingBluetoothLeAddressTypeX64Policy: MessagingBluetoothLeAddressTypeX64Layout satisfies Layout;
+pub machine MessagingBluetoothLeAddressTypeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingDnsAddressTypeX64Layout { }
+pub MessagingDnsAddressTypeX64Policy: MessagingDnsAddressTypeX64Layout satisfies Layout;
+pub machine MessagingDnsAddressTypeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingRestServiceTypeX64Layout { }
+pub MessagingRestServiceTypeX64Policy: MessagingRestServiceTypeX64Layout satisfies Layout;
+pub machine MessagingRestServiceTypeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data MessagingRestServiceAccessModeX64Layout { }
+pub MessagingRestServiceAccessModeX64Policy: MessagingRestServiceAccessModeX64Layout satisfies Layout;
+pub machine MessagingRestServiceAccessModeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data MediaHardDriveX64Layout { }
+pub MediaHardDriveX64Policy: MediaHardDriveX64Layout satisfies Layout;
+pub machine MediaHardDriveX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 16 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 24 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 40 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 41 } };
+    Plan { entries: entries, entry_count: 7, size_fixed: 42, size_is_dynamic: false, align: 1 }
+}
+
+pub data MediaCdRomX64Layout { }
+pub MediaCdRomX64Policy: MediaCdRomX64Layout satisfies Layout;
+pub machine MediaCdRomX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 16 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 24, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data MediaVendorX64Layout { }
+pub MediaVendorX64Policy: MediaVendorX64Layout satisfies Layout;
+pub machine MediaVendorX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 20, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data MediaFilePathX64Layout { }
+pub MediaFilePathX64Policy: MediaFilePathX64Layout satisfies Layout;
+pub machine MediaFilePathX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 1 }
+}
+
+pub data MediaProtocolX64Layout { }
+pub MediaProtocolX64Policy: MediaProtocolX64Layout satisfies Layout;
+pub machine MediaProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 20, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data MediaPiwgFirmwareFileX64Layout { }
+pub MediaPiwgFirmwareFileX64Policy: MediaPiwgFirmwareFileX64Layout satisfies Layout;
+pub machine MediaPiwgFirmwareFileX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 1 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data MediaPiwgFirmwareVolumeX64Layout { }
+pub MediaPiwgFirmwareVolumeX64Policy: MediaPiwgFirmwareVolumeX64Layout satisfies Layout;
+pub machine MediaPiwgFirmwareVolumeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 1 }
+}
+
+pub data MediaRelativeOffsetRangeX64Layout { }
+pub MediaRelativeOffsetRangeX64Policy: MediaRelativeOffsetRangeX64Layout satisfies Layout;
+pub machine MediaRelativeOffsetRangeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 16 } };
+    Plan { entries: entries, entry_count: 4, size_fixed: 24, size_is_dynamic: false, align: 1 }
+}
+
+pub data MediaRamDiskX64Layout { }
+pub MediaRamDiskX64Policy: MediaRamDiskX64Layout satisfies Layout;
+pub machine MediaRamDiskX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 12 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 20 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 36 } };
+    Plan { entries: entries, entry_count: 5, size_fixed: 38, size_is_dynamic: false, align: 1 }
+}
+
+pub data MediaPartitionFormatX64Layout { }
+pub MediaPartitionFormatX64Policy: MediaPartitionFormatX64Layout satisfies Layout;
+pub machine MediaPartitionFormatX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 1, size_is_dynamic: false, align: 1 }
+}
+
+pub data MediaRamDiskTypeX64Layout { }
+pub MediaRamDiskTypeX64Policy: MediaRamDiskTypeX64Layout satisfies Layout;
+pub machine MediaRamDiskTypeX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 16, size_is_dynamic: false, align: 4 }
+}
+
+// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.
+pub data BiosBootSpecBootSpecificationX64Layout { }
+pub BiosBootSpecBootSpecificationX64Policy: BiosBootSpecBootSpecificationX64Layout satisfies Layout;
+pub machine BiosBootSpecBootSpecificationX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 6 } };
+    Plan { entries: entries, entry_count: 3, size_fixed: 8, size_is_dynamic: false, align: 1 }
+}
+
+pub data LoadFileProtocolX64Layout { }
+pub LoadFileProtocolX64Policy: LoadFileProtocolX64Layout satisfies Layout;
+pub machine LoadFileProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 8, size_is_dynamic: false, align: 8 }
+}
+
+pub data LoadFile2ProtocolX64Layout { }
+pub LoadFile2ProtocolX64Policy: LoadFile2ProtocolX64Layout satisfies Layout;
+pub machine LoadFile2ProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 8, size_is_dynamic: false, align: 8 }
+}
+
+pub data StorageSecurityCommandProtocolX64Layout { }
+pub StorageSecurityCommandProtocolX64Policy: StorageSecurityCommandProtocolX64Layout satisfies Layout;
+pub machine StorageSecurityCommandProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 16, size_is_dynamic: false, align: 8 }
+}
+
+pub data ShellParametersProtocolX64Layout { }
+pub ShellParametersProtocolX64Policy: ShellParametersProtocolX64Layout satisfies Layout;
+pub machine ShellParametersProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 32 } };
+    Plan { entries: entries, entry_count: 5, size_fixed: 40, size_is_dynamic: false, align: 8 }
+}
+
+pub data KeyNotifyFnX64Layout { }
+pub KeyNotifyFnX64Policy: KeyNotifyFnX64Layout satisfies Layout;
+pub machine KeyNotifyFnX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 8, size_is_dynamic: false, align: 8 }
+}
+
+pub data ShellFileHandleX64Layout { }
+pub ShellFileHandleX64Policy: ShellFileHandleX64Layout satisfies Layout;
+pub machine ShellFileHandleX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 8, size_is_dynamic: false, align: 8 }
+}

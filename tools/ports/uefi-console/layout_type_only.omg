@@ -1,0 +1,5 @@
+// Minimal selected-policy carrier; no field projection or firmware operation.
+use cathedral_uefi_raw::console::InputKey;
+use cathedral_uefi_raw::console_layouts::InputKeyX64Layout;
+data Main { key: InputKeyX64Layout<InputKey>; }
+machine Main::main(&mut self) -> i32 { 0 }

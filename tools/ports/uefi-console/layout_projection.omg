@@ -1,0 +1,11 @@
+// PORT-BLOCKED[omega:plan-laid-public-fields]: preserve public source field visibility through selected layout views.
+// Regression probe: public source fields become private after policy selection.
+// The corresponding unwrapped InputKey field use passes source checking.
+use cathedral_uefi_raw::console::InputKey;
+use cathedral_uefi_raw::console_layouts::InputKeyX64Layout;
+
+data Main { key: InputKeyX64Layout<InputKey>; }
+machine Main::main(&mut self) -> i32 {
+    self.key.scan_code = 7;
+    transition self.key.scan_code == 7 { true -> (0) _ -> (1) }
+}

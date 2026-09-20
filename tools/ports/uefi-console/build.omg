@@ -1,0 +1,7 @@
+// Isolated source/behavior fixture; never a production boot dependency.
+machine build(builder: &mut Build) {
+    builder.application("cathedral-uefi-console-tests");
+    builder.freestanding = true;
+    builder.depend_as("cathedral_uefi_raw", Source::Path { location: "../../../source/contracts/uefi/raw" });
+    builder.depend_as("cathedral_uefi", Source::Path { location: "../../../source/libraries/uefi" });
+}

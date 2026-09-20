@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Omega translation of rust-osdev/uefi-rs at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
+// See console.PORT.md; reproduced by tools/ports/uefi-console/generate.py.
+// Inert x86-64 representation corpus. No pointer dereference or callable authority.
+// Layout vectors describe required foreign geometry, not default Omega layout.
+module load_file;
+use scalars;
+
+// Upstream: uefi_raw::protocol::media::LoadFileProtocol
+pub data LoadFileProtocol [copy] {
+    load_file: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, file_path: *const DevicePathProtocol, boot_policy: Boolean, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status
+}
+
+// Upstream: uefi_raw::protocol::media::LoadFile2Protocol
+pub data LoadFile2Protocol [copy] {
+    load_file: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, file_path: *const DevicePathProtocol, boot_policy: Boolean, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status
+}
+
+// Upstream: uefi_raw::protocol::media::StorageSecurityCommandProtocol
+pub data StorageSecurityCommandProtocol [copy] {
+    receive_data: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, timeout: u64, security_protocol: u8, security_protocol_specific_data: u16, buffer_size: usize, buffer: *mut c_void, transfer_size: *mut usize, ) -> Status
+    send_data: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, timeout: u64, security_protocol: u8, security_protocol_specific_data: u16, buffer_size: usize, buffer: *const c_void, ) -> Status
+}
+
+pub const LOAD_FILE_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x56ec3091, data2: 0x954c, data3: 0x11d2, data4: [0x8e, 0x3f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const LOAD_FILE2_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x4006c0c1, data2: 0xfcb3, data3: 0x403e, data4: [0x99, 0x6d, 0x4a, 0x6c, 0x87, 0x24, 0xe0, 0x6d] };
+pub const STORAGE_SECURITY_COMMAND_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0xc88b0b6d, data2: 0x0dfc, data3: 0x49a7, data4: [0x9c, 0xb4, 0x49, 0x07, 0x4b, 0x4c, 0x3a, 0x78] };

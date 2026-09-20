@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Omega semantic-evaluator fixtures from pinned uefi-raw behavior/spec cases.
+// main.omg requires their evaluated result to succeed; no native/hardware claim.
+module fixtures;
+use cathedral_uefi_raw::device_path::DevicePathProtocol;
+use cathedral_uefi_raw::device_path::DeviceType;
+use cathedral_uefi_raw::device_path::DeviceSubType;
+use cathedral_uefi::console_helpers;
+use cathedral_uefi_raw::console::GraphicsOutputProtocolMode;
+
+pub machine device_path_length_cases() -> bool {
+    let zero: DevicePathProtocol = DevicePathProtocol { major_type: DeviceType { raw: 127 },
+        sub_type: DeviceSubType { raw: 255 }, length: [0, 0] };
+    let header: DevicePathProtocol = DevicePathProtocol { major_type: DeviceType { raw: 127 },
+        sub_type: DeviceSubType { raw: 255 }, length: [4, 0] };
+    let carry: DevicePathProtocol = DevicePathProtocol { major_type: DeviceType { raw: 1 },
+        sub_type: DeviceSubType { raw: 1 }, length: [0, 1] };
+    let maximum: DevicePathProtocol = DevicePathProtocol { major_type: DeviceType { raw: 1 },
+        sub_type: DeviceSubType { raw: 1 }, length: [255, 255] };
+    console_helpers::device_path_length(&zero) == 0 &&
+    console_helpers::device_path_length(&header) == 4 &&
+    console_helpers::device_path_length(&carry) == 256 &&
+    console_helpers::device_path_length(&maximum) == 65535
+}
+
+pub machine device_path_bounds_cases() -> bool {
+    !console_helpers::device_path_node_fits(0, 0) &&
+    !console_helpers::device_path_node_fits(3, 65535) &&
+    !console_helpers::device_path_node_fits(4, 3) &&
+    console_helpers::device_path_node_fits(4, 4) &&
+    !console_helpers::device_path_node_fits(65535, 65534) &&
+    console_helpers::device_path_node_fits(65535, 65535) &&
+    console_helpers::device_path_node_fits(65535, 0xffff_ffff_ffff_ffff)
+}
+
+pub machine graphics_default_case() -> bool {
+    let mode: GraphicsOutputProtocolMode = console_helpers::graphics_output_mode_default();
+    mode.max_mode == 0 && mode.mode == 0 && mode.info == 0 &&
+    mode.size_of_info == 0 && mode.frame_buffer_base == 0 && mode.frame_buffer_size == 0
+}

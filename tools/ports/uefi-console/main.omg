@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Pure fixture execution; no firmware call or pointer access.
+use fixtures;
+
+machine test_result() -> i32 {
+    transition fixtures::device_path_length_cases() &&
+        fixtures::device_path_bounds_cases() &&
+        fixtures::graphics_default_case() {
+        true -> (0)
+        _ -> (1)
+    }
+}
+
+// Evaluate real helper bodies and require the computed success, not just typecheck.
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main { }
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

@@ -1,0 +1,266 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Omega translation of rust-osdev/uefi-rs at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
+// See console.PORT.md; reproduced by tools/ports/uefi-console/generate.py.
+// Inert x86-64 representation corpus. No pointer dereference or callable authority.
+// Layout vectors describe required foreign geometry, not default Omega layout.
+module console;
+use scalars;
+
+// Upstream: uefi_raw::protocol::console::AbsolutePointerModeAttributes
+pub data AbsolutePointerModeAttributes [copy] {
+    raw: u32;
+}
+
+// Upstream: uefi_raw::protocol::console::AbsolutePointerMode
+pub data AbsolutePointerMode [copy] {
+    absolute_min_x: u64;
+    absolute_min_y: u64;
+    absolute_min_z: u64;
+    absolute_max_x: u64;
+    absolute_max_y: u64;
+    absolute_max_z: u64;
+    attributes: AbsolutePointerModeAttributes;
+}
+
+// Upstream: uefi_raw::protocol::console::AbsolutePointerState
+pub data AbsolutePointerState [copy] {
+    current_x: u64;
+    current_y: u64;
+    current_z: u64;
+    active_buttons: u32;
+}
+
+// Upstream: uefi_raw::protocol::console::AbsolutePointerProtocol
+pub data AbsolutePointerProtocol [copy] {
+    reset: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, extended_verification: Boolean) -> Status
+    get_state: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, state: *mut AbsolutePointerState) -> Status
+    wait_for_input: addr;
+    // Foreign carrier: Event
+    mode: addr;
+    // Foreign carrier: *const AbsolutePointerMode
+}
+
+// Upstream: uefi_raw::protocol::console::InputKey
+pub data InputKey [copy] {
+    scan_code: u16;
+    unicode_char: u16;
+}
+
+// Upstream: uefi_raw::protocol::console::SimpleTextInputProtocol
+pub data SimpleTextInputProtocol [copy] {
+    reset: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, extended_verification: Boolean) -> Status
+    read_key_stroke: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, key: *mut InputKey) -> Status
+    wait_for_key: addr;
+    // Foreign carrier: Event
+}
+
+// Upstream: uefi_raw::protocol::console::KeyData
+pub data KeyData [copy] {
+    key: InputKey;
+    key_state: KeyState;
+}
+
+// Upstream: uefi_raw::protocol::console::KeyState
+pub data KeyState [copy] {
+    key_shift_state: KeyShiftState;
+    key_toggle_state: KeyToggleState;
+}
+
+// Upstream: uefi_raw::protocol::console::KeyShiftState
+pub data KeyShiftState [copy] {
+    raw: u32;
+}
+
+// Upstream: uefi_raw::protocol::console::KeyToggleState
+pub data KeyToggleState [copy] {
+    raw: u8;
+}
+
+// Upstream: uefi_raw::protocol::console::SimpleTextInputExProtocol
+pub data SimpleTextInputExProtocol [copy] {
+    reset: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, extended_verification: Boolean) -> Status
+    read_key_stroke_ex: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, key: *mut KeyData) -> Status
+    wait_for_key_ex: addr;
+    // Foreign carrier: Event
+    set_state: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, state: *const KeyToggleState) -> Status
+    register_key_notify: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, key_data: *const KeyData, notification_fn: KeyNotifyFn, notify_handle: *mut *mut core::ffi::c_void, ) -> Status
+    unregister_key_notify: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, notify_handle: *const core::ffi::c_void, ) -> Status
+}
+
+// Upstream: uefi_raw::protocol::console::SimpleTextOutputMode
+pub data SimpleTextOutputMode [copy] {
+    max_mode: i32;
+    mode: i32;
+    attribute: i32;
+    cursor_column: i32;
+    cursor_row: i32;
+    cursor_visible: u8;
+}
+
+// Upstream: uefi_raw::protocol::console::SimpleTextOutputProtocol
+pub data SimpleTextOutputProtocol [copy] {
+    reset: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, extended: Boolean) -> Status
+    output_string: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, string: *const Char16) -> Status
+    test_string: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, string: *const Char16) -> Status
+    query_mode: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, mode: usize, columns: *mut usize, rows: *mut usize, ) -> Status
+    set_mode: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, mode: usize) -> Status
+    set_attribute: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, attribute: usize) -> Status
+    clear_screen: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+    set_cursor_position: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, column: usize, row: usize) -> Status
+    enable_cursor: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, visible: Boolean) -> Status
+    mode: addr;
+    // Foreign carrier: *const SimpleTextOutputMode
+}
+
+// Upstream: uefi_raw::protocol::console::SimplePointerMode
+pub data SimplePointerMode [copy] {
+    resolution_x: u64;
+    resolution_y: u64;
+    resolution_z: u64;
+    left_button: u8;
+    right_button: u8;
+}
+
+// Upstream: uefi_raw::protocol::console::SimplePointerState
+pub data SimplePointerState [copy] {
+    relative_movement_x: i32;
+    relative_movement_y: i32;
+    relative_movement_z: i32;
+    left_button: u8;
+    right_button: u8;
+}
+
+// Upstream: uefi_raw::protocol::console::SimplePointerProtocol
+pub data SimplePointerProtocol [copy] {
+    reset: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, extended_verification: Boolean) -> Status
+    get_state: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, state: *mut SimplePointerState) -> Status
+    wait_for_input: addr;
+    // Foreign carrier: Event
+    mode: addr;
+    // Foreign carrier: *const SimplePointerMode
+}
+
+// Upstream: uefi_raw::protocol::console::GraphicsOutputProtocol
+pub data GraphicsOutputProtocol [copy] {
+    query_mode: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( *const Self, mode_number: u32, size_of_info: *mut usize, info: *mut *mut GraphicsOutputModeInformation, ) -> Status
+    set_mode: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(*mut Self, mode_number: u32) -> Status
+    blt: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( *mut Self, blt_buffer: *mut GraphicsOutputBltPixel, blt_operation: GraphicsOutputBltOperation, source_x: usize, source_y: usize, destination_x: usize, destination_y: usize, width: usize, height: usize, delta: usize, ) -> Status
+    mode: addr;
+    // Foreign carrier: *const GraphicsOutputProtocolMode
+}
+
+// Upstream: uefi_raw::protocol::console::GraphicsOutputProtocolMode
+pub data GraphicsOutputProtocolMode [copy] {
+    max_mode: u32;
+    mode: u32;
+    info: addr;
+    // Foreign carrier: *const GraphicsOutputModeInformation
+    size_of_info: u64;
+    frame_buffer_base: u64;
+    frame_buffer_size: u64;
+}
+
+// Upstream: uefi_raw::protocol::console::GraphicsOutputModeInformation
+pub data GraphicsOutputModeInformation [copy] {
+    version: u32;
+    horizontal_resolution: u32;
+    vertical_resolution: u32;
+    pixel_format: GraphicsPixelFormat;
+    pixel_information: PixelBitmask;
+    pixels_per_scan_line: u32;
+}
+
+// Upstream: uefi_raw::protocol::console::PixelBitmask
+pub data PixelBitmask [copy] {
+    red: u32;
+    green: u32;
+    blue: u32;
+    reserved: u32;
+}
+
+// Upstream: uefi_raw::protocol::console::GraphicsPixelFormat
+pub data GraphicsPixelFormat [copy] {
+    raw: u32;
+}
+
+// Upstream: uefi_raw::protocol::console::GraphicsOutputBltPixel
+pub data GraphicsOutputBltPixel [copy] {
+    blue: u8;
+    green: u8;
+    red: u8;
+    reserved: u8;
+}
+
+// Upstream: uefi_raw::protocol::console::GraphicsOutputBltOperation
+pub data GraphicsOutputBltOperation [copy] {
+    raw: u32;
+}
+
+// Upstream: uefi_raw::protocol::console::EdidDiscoveredProtocol
+pub data EdidDiscoveredProtocol [copy] {
+    size_of_edid: u32;
+    edid: addr;
+    // Foreign carrier: *const u8
+}
+
+// Upstream carrier: unsafe extern "efiapi" fn(key_data: *const KeyData) -> Status
+pub data KeyNotifyFn [copy] { raw: addr; }
+
+pub const ABSOLUTE_POINTER_MODE_ATTRIBUTES_SUPPORTS_ALT_ACTIVE: AbsolutePointerModeAttributes = AbsolutePointerModeAttributes { raw: 1 };
+pub const ABSOLUTE_POINTER_MODE_ATTRIBUTES_SUPPORTS_PRESSURE_AS_Z: AbsolutePointerModeAttributes = AbsolutePointerModeAttributes { raw: 2 };
+pub const KEY_SHIFT_STATE_VALID: KeyShiftState = KeyShiftState { raw: 2147483648 };
+pub const KEY_SHIFT_STATE_RIGHT_SHIFT: KeyShiftState = KeyShiftState { raw: 1 };
+pub const KEY_SHIFT_STATE_LEFT_SHIFT: KeyShiftState = KeyShiftState { raw: 2 };
+pub const KEY_SHIFT_STATE_RIGHT_CONTROL: KeyShiftState = KeyShiftState { raw: 4 };
+pub const KEY_SHIFT_STATE_LEFT_CONTROL: KeyShiftState = KeyShiftState { raw: 8 };
+pub const KEY_SHIFT_STATE_RIGHT_ALT: KeyShiftState = KeyShiftState { raw: 16 };
+pub const KEY_SHIFT_STATE_LEFT_ALT: KeyShiftState = KeyShiftState { raw: 32 };
+pub const KEY_SHIFT_STATE_RIGHT_LOGO: KeyShiftState = KeyShiftState { raw: 64 };
+pub const KEY_SHIFT_STATE_LEFT_LOGO: KeyShiftState = KeyShiftState { raw: 128 };
+pub const KEY_SHIFT_STATE_MENU_KEY: KeyShiftState = KeyShiftState { raw: 256 };
+pub const KEY_SHIFT_STATE_SYS_REQ: KeyShiftState = KeyShiftState { raw: 512 };
+pub const KEY_TOGGLE_STATE_SCROLL_LOCK_ACTIVE: KeyToggleState = KeyToggleState { raw: 1 };
+pub const KEY_TOGGLE_STATE_NUM_LOCK_ACTIVE: KeyToggleState = KeyToggleState { raw: 2 };
+pub const KEY_TOGGLE_STATE_CAPS_LOCK_ACTIVE: KeyToggleState = KeyToggleState { raw: 4 };
+pub const KEY_TOGGLE_STATE_EXPOSED: KeyToggleState = KeyToggleState { raw: 64 };
+pub const KEY_TOGGLE_STATE_VALID: KeyToggleState = KeyToggleState { raw: 128 };
+pub const GRAPHICS_PIXEL_FORMAT_PIXEL_RED_GREEN_BLUE_RESERVED_8_BIT_PER_COLOR: GraphicsPixelFormat = GraphicsPixelFormat { raw: 0 };
+pub const GRAPHICS_PIXEL_FORMAT_PIXEL_BLUE_GREEN_RED_RESERVED_8_BIT_PER_COLOR: GraphicsPixelFormat = GraphicsPixelFormat { raw: 1 };
+pub const GRAPHICS_PIXEL_FORMAT_PIXEL_BIT_MASK: GraphicsPixelFormat = GraphicsPixelFormat { raw: 2 };
+pub const GRAPHICS_PIXEL_FORMAT_PIXEL_BLT_ONLY: GraphicsPixelFormat = GraphicsPixelFormat { raw: 3 };
+pub const GRAPHICS_PIXEL_FORMAT_PIXEL_FORMAT_MAX: GraphicsPixelFormat = GraphicsPixelFormat { raw: 4 };
+pub const GRAPHICS_OUTPUT_BLT_OPERATION_BLT_VIDEO_FILL: GraphicsOutputBltOperation = GraphicsOutputBltOperation { raw: 0 };
+pub const GRAPHICS_OUTPUT_BLT_OPERATION_BLT_VIDEO_TO_BLT_BUFFER: GraphicsOutputBltOperation = GraphicsOutputBltOperation { raw: 1 };
+pub const GRAPHICS_OUTPUT_BLT_OPERATION_BLT_BUFFER_TO_VIDEO: GraphicsOutputBltOperation = GraphicsOutputBltOperation { raw: 2 };
+pub const GRAPHICS_OUTPUT_BLT_OPERATION_BLT_VIDEO_TO_VIDEO: GraphicsOutputBltOperation = GraphicsOutputBltOperation { raw: 3 };
+pub const GRAPHICS_OUTPUT_BLT_OPERATION_GRAPHICS_OUTPUT_BLT_OPERATION_MAX: GraphicsOutputBltOperation = GraphicsOutputBltOperation { raw: 4 };
+pub const ABSOLUTE_POINTER_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x8d59d32b, data2: 0xc655, data3: 0x4ae9, data4: [0x9b, 0x15, 0xf2, 0x59, 0x04, 0x99, 0x2a, 0x43] };
+pub const SIMPLE_TEXT_INPUT_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x387477c1, data2: 0x69c7, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const SIMPLE_TEXT_INPUT_EX_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0xdd9e7534, data2: 0x7762, data3: 0x4698, data4: [0x8c, 0x14, 0xf5, 0x85, 0x17, 0xa6, 0x25, 0xaa] };
+pub const SIMPLE_TEXT_OUTPUT_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x387477c2, data2: 0x69c7, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const SIMPLE_POINTER_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x31878c87, data2: 0x0b75, data3: 0x11d5, data4: [0x9a, 0x4f, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+pub const GRAPHICS_OUTPUT_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x9042a9de, data2: 0x23dc, data3: 0x4a38, data4: [0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a] };
+pub const EDID_DISCOVERED_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x1c0c34f6, data2: 0xd380, data3: 0x41fa, data4: [0xa0, 0x49, 0x8a, 0xd0, 0x6c, 0x1a, 0x66, 0xaa] };
