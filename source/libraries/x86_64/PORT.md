@@ -28,14 +28,18 @@ Completed slices: [tested numeric address algorithms](addresses.PORT.md),
 [MSR word transport](msr-words.PORT.md),
 [numeric mapper topology](mapper-topology.PORT.md),
 [explicit memory-encryption state](memory-encryption.PORT.md),
-[encryption-profile captured translation](encrypted-translation.PORT.md), and
+[encryption-profile captured translation](encrypted-translation.PORT.md),
+[encryption-profile register expressions](encrypted-registers.PORT.md), and
 [CPUID observation predicates](instruction-observations.PORT.md).
 The [remaining pure-work audit](remaining-pure.RECONCILIATION.md) reconciles all
 41 files and identifies the concrete unfinished algorithm families.
 Baseline reviewed 2026-09-20 against
 Cathedral `77544518fc947973a5607f28b278aca2e2ffa462` and
-Omega `eaa7993a23623cd8fabf45350340479c5c9c7879`. X86-001/002 are implementation work,
-not language blockers merely because their code has not yet been authored.
+Omega `eaa7993a23623cd8fabf45350340479c5c9c7879`. The subsequent full-source
+closure review completes X86-001 at its pure numeric/schema boundary. X86-002
+remains open for encryption-profile algorithm compositions; these are ordinary
+implementation work, not language blockers. Native layout and live authority
+limits retain their separate evidence below.
 
 ## Upstream pin and licensing
 

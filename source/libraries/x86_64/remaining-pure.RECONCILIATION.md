@@ -163,3 +163,8 @@ The generic mapped-translation component now passes 330 actual Rust/Omega
 observations and nine body controls: [explicit-profile translation](encrypted-translation.PORT.md).
 Its separate captured-path API validates profile-decoded child identities.
 The other profile compositions above remain queued or under implementation.
+
+[Encryption-profile register expressions](encrypted-registers.PORT.md) now pass
+100 Rust rows, 800 Omega calls and twelve controls. CR3/APIC composition is
+complete. No additional pure representation family remains; X86-001 can close
+at its numeric/schema boundary while X86-002 retains the algorithm queue.

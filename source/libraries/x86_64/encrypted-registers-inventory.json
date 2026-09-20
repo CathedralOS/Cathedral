@@ -1,0 +1,898 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/x86_64",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/registers/control.rs",
+      "src/registers/model_specific.rs"
+    ]
+  },
+  "files": {
+    "src/registers/control.rs": {
+      "sha256": "805cb1e92e674510c61fc4f910b2ef16f769b5bbbc4f1264b455967d72a8b311",
+      "disposition": "pending",
+      "reason": "Only pure profile-sensitive observation/operand expressions; live register APIs and unrelated components remain outside this overlay.",
+      "symbols": {
+        "3:super::model_specific::{Efer, EferFlags};": {
+          "anchor": "pub use super::model_specific::{Efer, EferFlags};",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "8:Cr0": {
+          "anchor": "pub struct Cr0;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "14:Cr0Flags": {
+          "anchor": "pub struct Cr0Flags: u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "16:PROTECTED_MODE_ENABLE": {
+          "anchor": "const PROTECTED_MODE_ENABLE = 1;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "21:MONITOR_COPROCESSOR": {
+          "anchor": "const MONITOR_COPROCESSOR = 1 << 1;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "23:EMULATE_COPROCESSOR": {
+          "anchor": "const EMULATE_COPROCESSOR = 1 << 2;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "27:TASK_SWITCHED": {
+          "anchor": "const TASK_SWITCHED = 1 << 3;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "31:EXTENSION_TYPE": {
+          "anchor": "const EXTENSION_TYPE = 1 << 4;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "33:NUMERIC_ERROR": {
+          "anchor": "const NUMERIC_ERROR = 1 << 5;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "37:WRITE_PROTECT": {
+          "anchor": "const WRITE_PROTECT = 1 << 16;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "39:ALIGNMENT_MASK": {
+          "anchor": "const ALIGNMENT_MASK = 1 << 18;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "44:NOT_WRITE_THROUGH": {
+          "anchor": "const NOT_WRITE_THROUGH = 1 << 29;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "46:CACHE_DISABLE": {
+          "anchor": "const CACHE_DISABLE = 1 << 30;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "50:PAGING": {
+          "anchor": "const PAGING = 1 << 31;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "58:Cr2": {
+          "anchor": "pub struct Cr2;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "62:Cr3": {
+          "anchor": "pub struct Cr3;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "69:Cr3Flags": {
+          "anchor": "pub struct Cr3Flags: u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "71:PAGE_LEVEL_WRITETHROUGH": {
+          "anchor": "const PAGE_LEVEL_WRITETHROUGH = 1 << 3;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "73:PAGE_LEVEL_CACHE_DISABLE": {
+          "anchor": "const PAGE_LEVEL_CACHE_DISABLE = 1 << 4;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "80:Cr4": {
+          "anchor": "pub struct Cr4;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "86:Cr4Flags": {
+          "anchor": "pub struct Cr4Flags: u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "89:VIRTUAL_8086_MODE_EXTENSIONS": {
+          "anchor": "const VIRTUAL_8086_MODE_EXTENSIONS = 1;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "91:PROTECTED_MODE_VIRTUAL_INTERRUPTS": {
+          "anchor": "const PROTECTED_MODE_VIRTUAL_INTERRUPTS = 1 << 1;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "93:TIMESTAMP_DISABLE": {
+          "anchor": "const TIMESTAMP_DISABLE = 1 << 2;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "96:DEBUGGING_EXTENSIONS": {
+          "anchor": "const DEBUGGING_EXTENSIONS = 1 << 3;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "100:PAGE_SIZE_EXTENSION": {
+          "anchor": "const PAGE_SIZE_EXTENSION = 1 << 4;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "102:PHYSICAL_ADDRESS_EXTENSION": {
+          "anchor": "const PHYSICAL_ADDRESS_EXTENSION = 1 << 5;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "104:MACHINE_CHECK_EXCEPTION": {
+          "anchor": "const MACHINE_CHECK_EXCEPTION = 1 << 6;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "107:PAGE_GLOBAL": {
+          "anchor": "const PAGE_GLOBAL = 1 << 7;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "109:PERFORMANCE_MONITOR_COUNTER": {
+          "anchor": "const PERFORMANCE_MONITOR_COUNTER = 1 << 8;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "112:OSFXSR": {
+          "anchor": "const OSFXSR = 1 << 9;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "115:OSXMMEXCPT_ENABLE": {
+          "anchor": "const OSXMMEXCPT_ENABLE = 1 << 10;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "118:USER_MODE_INSTRUCTION_PREVENTION": {
+          "anchor": "const USER_MODE_INSTRUCTION_PREVENTION = 1 << 11;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "120:L5_PAGING": {
+          "anchor": "const L5_PAGING = 1 << 12;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "122:VIRTUAL_MACHINE_EXTENSIONS": {
+          "anchor": "const VIRTUAL_MACHINE_EXTENSIONS = 1 << 13;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "124:SAFER_MODE_EXTENSIONS": {
+          "anchor": "const SAFER_MODE_EXTENSIONS = 1 << 14;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "127:FSGSBASE": {
+          "anchor": "const FSGSBASE = 1 << 16;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "129:PCID": {
+          "anchor": "const PCID = 1 << 17;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "131:OSXSAVE": {
+          "anchor": "const OSXSAVE = 1 << 18;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "137:KEY_LOCKER": {
+          "anchor": "const KEY_LOCKER = 1 << 19;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "140:SUPERVISOR_MODE_EXECUTION_PROTECTION": {
+          "anchor": "const SUPERVISOR_MODE_EXECUTION_PROTECTION = 1 << 20;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "143:SUPERVISOR_MODE_ACCESS_PREVENTION": {
+          "anchor": "const SUPERVISOR_MODE_ACCESS_PREVENTION = 1 << 21;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "148:PROTECTION_KEY_USER": {
+          "anchor": "const PROTECTION_KEY_USER = 1 << 22;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "153:CONTROL_FLOW_ENFORCEMENT": {
+          "anchor": "const CONTROL_FLOW_ENFORCEMENT = 1 << 23;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "158:PROTECTION_KEY_SUPERVISOR": {
+          "anchor": "const PROTECTION_KEY_SUPERVISOR = 1 << 24;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "164:Cr8": {
+          "anchor": "pub struct Cr8;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "171:PriorityClass": {
+          "anchor": "pub enum PriorityClass {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "174:PriorityClass1": {
+          "anchor": "PriorityClass1 = 1,",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "207:new": {
+          "anchor": "pub const fn new(priority_class: u8) -> Option<Self> {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "230:x86_64": {
+          "anchor": "mod x86_64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "241:read": {
+          "anchor": "pub fn read() -> Cr0Flags {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "247:read_raw": {
+          "anchor": "pub fn read_raw() -> u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "266:write": {
+          "anchor": "pub unsafe fn write(flags: Cr0Flags) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "285:write_raw": {
+          "anchor": "pub unsafe fn write_raw(value: u64) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "300:update": {
+          "anchor": "pub unsafe fn update<F>(f: F)",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "320:read": {
+          "anchor": "pub fn read() -> Result<VirtAddr, VirtAddrNotValid> {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "326:read_raw": {
+          "anchor": "pub fn read_raw() -> u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "340:read": {
+          "anchor": "pub fn read() -> (PhysFrame, Cr3Flags) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "348:read_raw": {
+          "anchor": "pub fn read_raw() -> (PhysFrame, u16) {",
+          "disposition": "translated",
+          "reason": "Encryption-aware numeric expression component only. Caller supplies raw observation/frame; no CPU read/write, support discovery or authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_register_operands.omg",
+              "anchor": "pub machine cr3_observed"
+            }
+          ]
+        },
+        "364:read_pcid": {
+          "anchor": "pub fn read_pcid() -> (PhysFrame, Pcid) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "376:write": {
+          "anchor": "pub unsafe fn write(frame: PhysFrame, flags: Cr3Flags) {",
+          "disposition": "translated",
+          "reason": "Encryption-aware numeric expression component only. Caller supplies raw observation/frame; no CPU read/write, support discovery or authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_register_operands.omg",
+              "anchor": "pub machine cr3_flags_operand"
+            }
+          ]
+        },
+        "390:write_pcid": {
+          "anchor": "pub unsafe fn write_pcid(frame: PhysFrame, pcid: Pcid) {",
+          "disposition": "translated",
+          "reason": "Encryption-aware numeric expression component only. Caller supplies raw observation/frame; no CPU read/write, support discovery or authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_register_operands.omg",
+              "anchor": "pub machine cr3_pcid_operand"
+            }
+          ]
+        },
+        "405:write_pcid_no_flush": {
+          "anchor": "pub unsafe fn write_pcid_no_flush(frame: PhysFrame, pcid: Pcid) {",
+          "disposition": "translated",
+          "reason": "Encryption-aware numeric expression component only. Caller supplies raw observation/frame; no CPU read/write, support discovery or authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_register_operands.omg",
+              "anchor": "pub machine cr3_pcid_operand"
+            }
+          ]
+        },
+        "418:write_raw": {
+          "anchor": "pub unsafe fn write_raw(frame: PhysFrame, val: u16) {",
+          "disposition": "translated",
+          "reason": "Encryption-aware numeric expression component only. Caller supplies raw observation/frame; no CPU read/write, support discovery or authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_register_operands.omg",
+              "anchor": "pub machine cr3_raw_operand"
+            }
+          ]
+        },
+        "423:write_raw_impl": {
+          "anchor": "unsafe fn write_raw_impl(top_bit: bool, frame: PhysFrame, val: u16) {",
+          "disposition": "translated",
+          "reason": "Encryption-aware numeric expression component only. Caller supplies raw observation/frame; no CPU read/write, support discovery or authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_register_operands.omg",
+              "anchor": "pub machine cr3_raw_operand"
+            }
+          ]
+        },
+        "439:update": {
+          "anchor": "pub unsafe fn update<F>(f: F)",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "458:update_pcid": {
+          "anchor": "pub unsafe fn update_pcid<F>(f: F)",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "478:update_pcid_no_flush": {
+          "anchor": "pub unsafe fn update_pcid_no_flush<F>(f: F)",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "493:read": {
+          "anchor": "pub fn read() -> Cr4Flags {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "499:read_raw": {
+          "anchor": "pub fn read_raw() -> u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "519:write": {
+          "anchor": "pub unsafe fn write(flags: Cr4Flags) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "539:write_raw": {
+          "anchor": "pub unsafe fn write_raw(value: u64) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "555:update": {
+          "anchor": "pub unsafe fn update<F>(f: F)",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "570:read": {
+          "anchor": "pub fn read() -> Option<PriorityClass> {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "576:read_raw": {
+          "anchor": "pub fn read_raw() -> u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "588:write": {
+          "anchor": "pub fn write(priority_class: Option<PriorityClass>) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "595:write_raw": {
+          "anchor": "pub fn write_raw(value: u64) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "603:update": {
+          "anchor": "pub fn update<F>(f: F)",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/encrypted_register_operands.omg",
+          "anchor": "module encrypted_register_operands;"
+        }
+      ]
+    },
+    "src/registers/model_specific.rs": {
+      "sha256": "8315473c0eabb3178350f24ff284c3f6947f210cc341279c1b22bff6a599c29b",
+      "disposition": "pending",
+      "reason": "Only pure profile-sensitive observation/operand expressions; live register APIs and unrelated components remain outside this overlay.",
+      "symbols": {
+        "14:Msr": {
+          "anchor": "pub struct Msr(u32);",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "19:new": {
+          "anchor": "pub const fn new(reg: u32) -> Msr {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "26:Efer": {
+          "anchor": "pub struct Efer;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "30:FsBase": {
+          "anchor": "pub struct FsBase;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "39:GsBase": {
+          "anchor": "pub struct GsBase;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "48:KernelGsBase": {
+          "anchor": "pub struct KernelGsBase;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "52:Star": {
+          "anchor": "pub struct Star;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "56:LStar": {
+          "anchor": "pub struct LStar;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "61:SFMask": {
+          "anchor": "pub struct SFMask;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "65:UCet": {
+          "anchor": "pub struct UCet;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "69:SCet": {
+          "anchor": "pub struct SCet;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "75:ApicBase": {
+          "anchor": "pub struct ApicBase;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "79:MSR": {
+          "anchor": "pub const MSR: Msr = Msr(0xC000_0080);",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "84:MSR": {
+          "anchor": "pub const MSR: Msr = Msr(0xC000_0100);",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "89:MSR": {
+          "anchor": "pub const MSR: Msr = Msr(0xC000_0101);",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "94:MSR": {
+          "anchor": "pub const MSR: Msr = Msr(0xC000_0102);",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "99:MSR": {
+          "anchor": "pub const MSR: Msr = Msr(0xC000_0081);",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "104:MSR": {
+          "anchor": "pub const MSR: Msr = Msr(0xC000_0082);",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "109:MSR": {
+          "anchor": "pub const MSR: Msr = Msr(0xC000_0084);",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "114:MSR": {
+          "anchor": "pub const MSR: Msr = Msr(0x6A0);",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "119:MSR": {
+          "anchor": "pub const MSR: Msr = Msr(0x6A2);",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "124:MSR": {
+          "anchor": "pub const MSR: Msr = Msr(0x1B);",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "131:EferFlags": {
+          "anchor": "pub struct EferFlags: u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "133:SYSTEM_CALL_EXTENSIONS": {
+          "anchor": "const SYSTEM_CALL_EXTENSIONS = 1;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "135:LONG_MODE_ENABLE": {
+          "anchor": "const LONG_MODE_ENABLE = 1 << 8;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "137:LONG_MODE_ACTIVE": {
+          "anchor": "const LONG_MODE_ACTIVE = 1 << 10;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "139:NO_EXECUTE_ENABLE": {
+          "anchor": "const NO_EXECUTE_ENABLE = 1 << 11;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "141:SECURE_VIRTUAL_MACHINE_ENABLE": {
+          "anchor": "const SECURE_VIRTUAL_MACHINE_ENABLE = 1 << 12;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "143:LONG_MODE_SEGMENT_LIMIT_ENABLE": {
+          "anchor": "const LONG_MODE_SEGMENT_LIMIT_ENABLE = 1 << 13;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "145:FAST_FXSAVE_FXRSTOR": {
+          "anchor": "const FAST_FXSAVE_FXRSTOR = 1 << 14;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "147:TRANSLATION_CACHE_EXTENSION": {
+          "anchor": "const TRANSLATION_CACHE_EXTENSION = 1 << 15;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "156:CetFlags": {
+          "anchor": "pub struct CetFlags: u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "158:SS_ENABLE": {
+          "anchor": "const SS_ENABLE = 1 << 0;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "160:SS_WRITE_ENABLE": {
+          "anchor": "const SS_WRITE_ENABLE = 1 << 1;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "162:IBT_ENABLE": {
+          "anchor": "const IBT_ENABLE = 1 << 2;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "164:IBT_LEGACY_ENABLE": {
+          "anchor": "const IBT_LEGACY_ENABLE = 1 << 3;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "166:IBT_NO_TRACK_ENABLE": {
+          "anchor": "const IBT_NO_TRACK_ENABLE = 1 << 4;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "168:IBT_LEGACY_SUPPRESS_ENABLE": {
+          "anchor": "const IBT_LEGACY_SUPPRESS_ENABLE = 1 << 5;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "170:IBT_SUPPRESS_ENABLE": {
+          "anchor": "const IBT_SUPPRESS_ENABLE = 1 << 10;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "172:IBT_TRACKED": {
+          "anchor": "const IBT_TRACKED = 1 << 11;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "180:ApicBaseFlags": {
+          "anchor": "pub struct ApicBaseFlags: u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "183:BSP": {
+          "anchor": "const BSP = 1 << 8;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "187:X2APIC_ENABLE": {
+          "anchor": "const X2APIC_ENABLE = 1 << 10;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "189:LAPIC_ENABLE": {
+          "anchor": "const LAPIC_ENABLE = 1 << 11;",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "194:x86_64": {
+          "anchor": "mod x86_64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "223:read": {
+          "anchor": "pub unsafe fn read(&self) -> u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "243:write": {
+          "anchor": "pub unsafe fn write(&mut self, value: u64) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "261:read": {
+          "anchor": "pub fn read() -> EferFlags {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "267:read_raw": {
+          "anchor": "pub fn read_raw() -> u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "280:write": {
+          "anchor": "pub unsafe fn write(flags: EferFlags) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "299:write_raw": {
+          "anchor": "pub unsafe fn write_raw(flags: u64) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "315:update": {
+          "anchor": "pub unsafe fn update<F>(f: F)",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "333:read": {
+          "anchor": "pub fn read() -> VirtAddr {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "342:write": {
+          "anchor": "pub fn write(address: VirtAddr) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "354:read": {
+          "anchor": "pub fn read() -> VirtAddr {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "363:write": {
+          "anchor": "pub fn write(address: VirtAddr) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "372:read": {
+          "anchor": "pub fn read() -> VirtAddr {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "378:write": {
+          "anchor": "pub fn write(address: VirtAddr) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "397:read_raw": {
+          "anchor": "pub fn read_raw() -> (u16, u16) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "411:read": {
+          "anchor": "pub fn read() -> (",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "446:write_raw": {
+          "anchor": "pub unsafe fn write_raw(sysret: u16, syscall: u16) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "468:write": {
+          "anchor": "pub fn write(",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "503:InvalidStarSegmentSelectors": {
+          "anchor": "pub enum InvalidStarSegmentSelectors {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "511:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "529:read": {
+          "anchor": "pub fn read() -> VirtAddr {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "536:write": {
+          "anchor": "pub fn write(address: VirtAddr) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "551:read": {
+          "anchor": "pub fn read() -> RFlags {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "563:write": {
+          "anchor": "pub fn write(value: RFlags) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "577:update": {
+          "anchor": "pub fn update<F>(f: F)",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "590:read_raw": {
+          "anchor": "fn read_raw() -> u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "596:write_raw": {
+          "anchor": "fn write_raw(value: u64) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "605:read": {
+          "anchor": "pub fn read() -> (CetFlags, Page) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "617:write": {
+          "anchor": "pub fn write(flags: CetFlags, legacy_bitmap: Page) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "623:update": {
+          "anchor": "pub fn update<F>(f: F)",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "636:read_raw": {
+          "anchor": "fn read_raw() -> u64 {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "642:write_raw": {
+          "anchor": "fn write_raw(value: u64) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "651:read": {
+          "anchor": "pub fn read() -> (CetFlags, Page) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "663:write": {
+          "anchor": "pub fn write(flags: CetFlags, legacy_bitmap: Page) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "669:update": {
+          "anchor": "pub fn update<F>(f: F)",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "682:read": {
+          "anchor": "pub fn read() -> (PhysFrame, ApicBaseFlags) {",
+          "disposition": "pending",
+          "reason": "Outside the profile-sensitive component overlay; prior register inventories retain their own scopes."
+        },
+        "689:read_raw": {
+          "anchor": "pub fn read_raw() -> (PhysFrame, u64) {",
+          "disposition": "translated",
+          "reason": "Encryption-aware numeric expression component only. Caller supplies raw observation/frame; no CPU read/write, support discovery or authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_register_operands.omg",
+              "anchor": "pub machine apic_observed"
+            }
+          ]
+        },
+        "705:write": {
+          "anchor": "pub unsafe fn write(frame: PhysFrame, flags: ApicBaseFlags) {",
+          "disposition": "translated",
+          "reason": "Encryption-aware numeric expression component only. Caller supplies raw observation/frame; no CPU read/write, support discovery or authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_register_operands.omg",
+              "anchor": "pub machine apic_preserving_operand"
+            }
+          ]
+        },
+        "723:write_raw": {
+          "anchor": "pub unsafe fn write_raw(frame: PhysFrame, flags: u64) {",
+          "disposition": "translated",
+          "reason": "Encryption-aware numeric expression component only. Caller supplies raw observation/frame; no CPU read/write, support discovery or authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_register_operands.omg",
+              "anchor": "pub machine apic_raw_operand"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/encrypted_register_operands.omg",
+          "anchor": "module encrypted_register_operands;"
+        }
+      ]
+    }
+  }
+}

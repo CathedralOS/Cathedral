@@ -1,0 +1,74 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Explicit encryption-profile composition of pinned CR3/APIC pure expressions.
+// No live register access. See encrypted-registers.PORT.md.
+module encrypted_register_operands;
+use memory_encryption;
+use memory_encryption::State;
+use addresses::NumberResult;
+use register_operands;
+use register_operands::Cr3Observation;
+use register_operands::ApicObservation;
+use facts::x86_registers::Cr3Flags;
+use facts::x86_registers::ApicBaseFlags;
+use facts::x86_tlb_operands::Pcid;
+
+pub data ObservedCr3 {
+    case Rejected;
+    case Value(observation: Cr3Observation);
+}
+// The pin uses strict PhysAddr::new here: a configured bit in the masked
+// observed frame is rejected, rather than silently removed.
+pub machine cr3_observed(profile: &State, raw: u64) -> ObservedCr3 {
+    let observation: Cr3Observation = register_operands::cr3_observed(raw);
+    let checked: NumberResult = memory_encryption::physical_check(profile, observation.frame);
+    transition checked {
+        NumberResult::Value { value } -> (ObservedCr3::Value { observation: observation })
+        _ -> (ObservedCr3::Rejected)
+    }
+}
+pub machine cr3_raw_operand(profile: &State, frame: u64, low: u16, no_flush: bool) -> NumberResult {
+    let checked: NumberResult = memory_encryption::physical_check(profile, frame);
+    transition checked {
+        NumberResult::Value { value } -> compose(frame, low, no_flush)
+        _ -> (NumberResult::Rejected)
+    }
+    state compose(frame: u64, low: u16, no_flush: bool) -> NumberResult {
+        let result: NumberResult = register_operands::cr3_raw_operand(frame, low, no_flush);
+        result
+    }
+}
+pub machine cr3_flags_operand(profile: &State, frame: u64, flags: Cr3Flags) -> NumberResult {
+    cr3_raw_operand(profile, frame, (flags.raw & 65535) as u16, false)
+}
+pub machine cr3_pcid_operand(profile: &State, frame: u64, pcid: Pcid, no_flush: bool) -> NumberResult {
+    cr3_raw_operand(profile, frame, pcid.value, no_flush)
+}
+// APIC uses PhysAddr::new_truncate, unlike CR3. Only the latest encryption bit
+// is removed; historical PTE mask bits do not belong to this physical operation.
+pub machine apic_observed(profile: &State, raw: u64) -> ApicObservation {
+    let observation: ApicObservation = register_operands::apic_observed(raw);
+    observation.frame = observation.frame & ~profile.bit_mask;
+    observation
+}
+pub machine apic_raw_operand(profile: &State, frame: u64, flags: u64) -> NumberResult {
+    let checked: NumberResult = memory_encryption::physical_check(profile, frame);
+    transition checked {
+        NumberResult::Value { value } -> compose(frame, flags)
+        _ -> (NumberResult::Rejected)
+    }
+    state compose(frame: u64, flags: u64) -> NumberResult {
+        let result: NumberResult = register_operands::apic_raw_operand(frame, flags);
+        result
+    }
+}
+pub machine apic_preserving_operand(profile: &State, old: u64, frame: u64, flags: ApicBaseFlags) -> NumberResult {
+    let checked: NumberResult = memory_encryption::physical_check(profile, frame);
+    transition checked {
+        NumberResult::Value { value } -> compose(old, frame, flags)
+        _ -> (NumberResult::Rejected)
+    }
+    state compose(old: u64, frame: u64, flags: ApicBaseFlags) -> NumberResult {
+        let result: NumberResult = register_operands::apic_preserving_operand(old, frame, flags);
+        result
+    }
+}

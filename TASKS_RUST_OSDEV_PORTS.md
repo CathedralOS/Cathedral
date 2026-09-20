@@ -187,7 +187,7 @@ projection, union/tail and native-boundary limitations remain recorded there.
 - [x] **X86-000 — Inventory `x86_64` against Cathedral.** Classify every module
   as already represented, generic fact/layout work, instruction boundary,
   policy-bearing Cathedral work, or deliberate rejection.
-- [ ] **X86-001 — Port missing pure x86 representations.** Addresses, page-table
+- [x] **X86-001 — Port missing pure x86 representations.** Addresses, page-table
   encodings, descriptor tables, selectors, registers, flags, MSRs, and
   instruction operands.  Extend existing files rather than introduce parallel
   types.
@@ -205,7 +205,7 @@ existing facts, 168 pinned values/ordinals, 45 Rust tests, translated Omega
 behavior and body-mutating controls. The existing fact canary passes; live
 port-I/O/MMIO and polling remain explicit owner boundaries.
 
-X86-001/002 partial evidence: [address arithmetic](source/libraries/x86_64/addresses.PORT.md)
+X86-001 representation evidence and X86-002 partial algorithm evidence: [address arithmetic](source/libraries/x86_64/addresses.PORT.md)
 passes 110 Omega numeric cases, 102 actual pinned Rust witnesses, finite stepping
 relations and three body-mutating controls. The [register slice](source/drivers/facts/x86_registers.PORT.md)
 adds 177 observed constants and 31 tested helpers, including checked STAR
@@ -293,6 +293,13 @@ adds 330 actual Rust/Omega observations, seven boundary assertions and nine body
 mutations for generic mapped translation and captured child identities.
 Remaining encryption-profile routes, cleanup, frame/range and register
 compositions are ordinary implementation work; the closure audit lists them.
+[Encryption-aware register expressions](source/libraries/x86_64/encrypted-registers.PORT.md)
+pass 100 Rust reference rows, 800 Omega calls and twelve body controls, preserving
+strict CR3 rejection versus APIC truncation and typed-frame operand admission.
+The full-source closure review found no remaining pure representation family:
+X86-001 is complete at the documented numeric/schema boundary. Native layout,
+instruction/provider and proof limits remain separate; X86-002 stays open for
+the remaining encryption-profile algorithm compositions.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

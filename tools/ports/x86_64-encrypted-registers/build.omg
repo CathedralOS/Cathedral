@@ -1,0 +1,6 @@
+machine build(builder: &mut Build) {
+ builder.application("cathedral-encrypted-register-tests");
+ builder.freestanding = true;
+ builder.depend_as("x86", Source::Path { location: "../../../source/libraries/x86_64" });
+ builder.depend_as("facts", Source::Path { location: "../../../source/drivers/facts" });
+}

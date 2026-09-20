@@ -12142,9 +12142,13 @@
       "encryption-profile-cleanup",
       "encryption-profile-frames-ranges",
       "encryption-profile-recursive-constructor",
-      "encryption-profile-translated-address",
-      "encryption-profile-cr3-apic"
+      "encryption-profile-translated-address"
     ],
-    "reason": "All twelve historical default-profile families completed; memory_encryption affects these pure compositions. Existing masked address primitives are reusable. No language blocker asserted."
+    "reason": "All twelve historical default-profile families completed; memory_encryption affects these pure compositions. Existing masked address primitives are reusable. No language blocker asserted.",
+    "completed_components": {
+      "encryption-profile-mapped-generic-translation": "source/libraries/x86_64/encrypted-translation.PORT.md",
+      "encryption-profile-cr3-apic": "source/libraries/x86_64/encrypted-registers.PORT.md"
+    },
+    "representation_milestone": "X86-001 complete at pure numeric/schema boundary; native layout and authority limits separate"
   }
 }

@@ -1,0 +1,242 @@
+use x86::encrypted_register_operands;
+use x86::encrypted_register_operands::ObservedCr3;
+use x86::register_operands::ApicObservation;
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+use x86::addresses::NumberResult;
+use facts::x86_registers::Cr3Flags;
+use facts::x86_registers::ApicBaseFlags;
+use facts::x86_tlb_operands::Pcid;
+machine matches_profile_number(result:NumberResult, valid:bool, expected:u64)->bool {
+ transition result { NumberResult::Value {value} -> (valid && value==expected) _ -> (!valid) }
+}
+machine matches_profile_cr3(result:ObservedCr3, valid:bool, expected:u64, low:u16)->bool {
+ transition result { ObservedCr3::Value {observation} -> (valid && observation.frame==expected && observation.low==low) _ -> (!valid) }
+}
+machine row0()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:12});
+let observation:ObservedCr3=encrypted_register_operands::cr3_observed(&profile,0);
+let cr3_ok:bool=matches_profile_cr3(observation,true,0,0);
+let apic:ApicObservation=encrypted_register_operands::apic_observed(&profile,0);
+let apic_ok:bool=apic.frame==0 && apic.raw_flags==0 && apic.flags.raw==0;
+let operand0:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,0,64188,false);
+let pass0:bool=matches_profile_number(operand0,true,64188);
+let operand1:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,0,64188,true);
+let pass1:bool=matches_profile_number(operand1,true,9223372036854839996);
+let operand2:NumberResult=encrypted_register_operands::cr3_flags_operand(&profile,0,Cr3Flags {raw:32792});
+let pass2:bool=matches_profile_number(operand2,true,32792);
+let operand3:NumberResult=encrypted_register_operands::cr3_pcid_operand(&profile,0,Pcid {value:2748},true);
+let pass3:bool=matches_profile_number(operand3,true,9223372036854778556);
+let operand4:NumberResult=encrypted_register_operands::apic_raw_operand(&profile,0,9223372036854843392);
+let pass4:bool=matches_profile_number(operand4,true,9223372036854843392);
+let operand5:NumberResult=encrypted_register_operands::apic_preserving_operand(&profile,48358647703818240,0,ApicBaseFlags {raw:526336});
+let pass5:bool=matches_profile_number(operand5,true,48358647704344576);
+cr3_ok && apic_ok && pass0 && pass1 && pass2 && pass3 && pass4 && pass5
+}
+machine row1()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:12});
+let observation:ObservedCr3=encrypted_register_operands::cr3_observed(&profile,1);
+let cr3_ok:bool=matches_profile_cr3(observation,true,0,1);
+let apic:ApicObservation=encrypted_register_operands::apic_observed(&profile,1);
+let apic_ok:bool=apic.frame==0 && apic.raw_flags==1 && apic.flags.raw==0;
+let operand0:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,1,64188,false);
+let pass0:bool=matches_profile_number(operand0,false,0);
+let operand1:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,1,64188,true);
+let pass1:bool=matches_profile_number(operand1,false,0);
+let operand2:NumberResult=encrypted_register_operands::cr3_flags_operand(&profile,1,Cr3Flags {raw:32792});
+let pass2:bool=matches_profile_number(operand2,false,0);
+let operand3:NumberResult=encrypted_register_operands::cr3_pcid_operand(&profile,1,Pcid {value:2748},true);
+let pass3:bool=matches_profile_number(operand3,false,0);
+let operand4:NumberResult=encrypted_register_operands::apic_raw_operand(&profile,1,9223372036854843392);
+let pass4:bool=matches_profile_number(operand4,false,0);
+let operand5:NumberResult=encrypted_register_operands::apic_preserving_operand(&profile,48358647703818240,1,ApicBaseFlags {raw:526336});
+let pass5:bool=matches_profile_number(operand5,false,0);
+cr3_ok && apic_ok && pass0 && pass1 && pass2 && pass3 && pass4 && pass5
+}
+machine row2()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:12});
+let observation:ObservedCr3=encrypted_register_operands::cr3_observed(&profile,8192);
+let cr3_ok:bool=matches_profile_cr3(observation,true,8192,0);
+let apic:ApicObservation=encrypted_register_operands::apic_observed(&profile,8192);
+let apic_ok:bool=apic.frame==8192 && apic.raw_flags==8192 && apic.flags.raw==0;
+let operand0:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,8192,64188,false);
+let pass0:bool=matches_profile_number(operand0,true,64188);
+let operand1:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,8192,64188,true);
+let pass1:bool=matches_profile_number(operand1,true,9223372036854839996);
+let operand2:NumberResult=encrypted_register_operands::cr3_flags_operand(&profile,8192,Cr3Flags {raw:32792});
+let pass2:bool=matches_profile_number(operand2,true,40984);
+let operand3:NumberResult=encrypted_register_operands::cr3_pcid_operand(&profile,8192,Pcid {value:2748},true);
+let pass3:bool=matches_profile_number(operand3,true,9223372036854786748);
+let operand4:NumberResult=encrypted_register_operands::apic_raw_operand(&profile,8192,9223372036854843392);
+let pass4:bool=matches_profile_number(operand4,true,9223372036854851584);
+let operand5:NumberResult=encrypted_register_operands::apic_preserving_operand(&profile,48358647703818240,8192,ApicBaseFlags {raw:526336});
+let pass5:bool=matches_profile_number(operand5,true,48358647704352768);
+cr3_ok && apic_ok && pass0 && pass1 && pass2 && pass3 && pass4 && pass5
+}
+machine row3()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:12});
+let observation:ObservedCr3=encrypted_register_operands::cr3_observed(&profile,305420988);
+let cr3_ok:bool=matches_profile_cr3(observation,false,0,0);
+let apic:ApicObservation=encrypted_register_operands::apic_observed(&profile,305420988);
+let apic_ok:bool=apic.frame==305414144 && apic.raw_flags==305420988 && apic.flags.raw==2048;
+let operand0:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,305420988,64188,false);
+let pass0:bool=matches_profile_number(operand0,false,0);
+let operand1:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,305420988,64188,true);
+let pass1:bool=matches_profile_number(operand1,false,0);
+let operand2:NumberResult=encrypted_register_operands::cr3_flags_operand(&profile,305420988,Cr3Flags {raw:32792});
+let pass2:bool=matches_profile_number(operand2,false,0);
+let operand3:NumberResult=encrypted_register_operands::cr3_pcid_operand(&profile,305420988,Pcid {value:2748},true);
+let pass3:bool=matches_profile_number(operand3,false,0);
+let operand4:NumberResult=encrypted_register_operands::apic_raw_operand(&profile,305420988,9223372036854843392);
+let pass4:bool=matches_profile_number(operand4,false,0);
+let operand5:NumberResult=encrypted_register_operands::apic_preserving_operand(&profile,48358647703818240,305420988,ApicBaseFlags {raw:526336});
+let pass5:bool=matches_profile_number(operand5,false,0);
+cr3_ok && apic_ok && pass0 && pass1 && pass2 && pass3 && pass4 && pass5
+}
+machine row4()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:12});
+let observation:ObservedCr3=encrypted_register_operands::cr3_observed(&profile,4096);
+let cr3_ok:bool=matches_profile_cr3(observation,false,0,0);
+let apic:ApicObservation=encrypted_register_operands::apic_observed(&profile,4096);
+let apic_ok:bool=apic.frame==0 && apic.raw_flags==4096 && apic.flags.raw==0;
+let operand0:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,4096,64188,false);
+let pass0:bool=matches_profile_number(operand0,false,0);
+let operand1:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,4096,64188,true);
+let pass1:bool=matches_profile_number(operand1,false,0);
+let operand2:NumberResult=encrypted_register_operands::cr3_flags_operand(&profile,4096,Cr3Flags {raw:32792});
+let pass2:bool=matches_profile_number(operand2,false,0);
+let operand3:NumberResult=encrypted_register_operands::cr3_pcid_operand(&profile,4096,Pcid {value:2748},true);
+let pass3:bool=matches_profile_number(operand3,false,0);
+let operand4:NumberResult=encrypted_register_operands::apic_raw_operand(&profile,4096,9223372036854843392);
+let pass4:bool=matches_profile_number(operand4,false,0);
+let operand5:NumberResult=encrypted_register_operands::apic_preserving_operand(&profile,48358647703818240,4096,ApicBaseFlags {raw:526336});
+let pass5:bool=matches_profile_number(operand5,false,0);
+cr3_ok && apic_ok && pass0 && pass1 && pass2 && pass3 && pass4 && pass5
+}
+machine row5()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:12});
+let observation:ObservedCr3=encrypted_register_operands::cr3_observed(&profile,12289);
+let cr3_ok:bool=matches_profile_cr3(observation,false,0,0);
+let apic:ApicObservation=encrypted_register_operands::apic_observed(&profile,12289);
+let apic_ok:bool=apic.frame==8192 && apic.raw_flags==12289 && apic.flags.raw==0;
+let operand0:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,12289,64188,false);
+let pass0:bool=matches_profile_number(operand0,false,0);
+let operand1:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,12289,64188,true);
+let pass1:bool=matches_profile_number(operand1,false,0);
+let operand2:NumberResult=encrypted_register_operands::cr3_flags_operand(&profile,12289,Cr3Flags {raw:32792});
+let pass2:bool=matches_profile_number(operand2,false,0);
+let operand3:NumberResult=encrypted_register_operands::cr3_pcid_operand(&profile,12289,Pcid {value:2748},true);
+let pass3:bool=matches_profile_number(operand3,false,0);
+let operand4:NumberResult=encrypted_register_operands::apic_raw_operand(&profile,12289,9223372036854843392);
+let pass4:bool=matches_profile_number(operand4,false,0);
+let operand5:NumberResult=encrypted_register_operands::apic_preserving_operand(&profile,48358647703818240,12289,ApicBaseFlags {raw:526336});
+let pass5:bool=matches_profile_number(operand5,false,0);
+cr3_ok && apic_ok && pass0 && pass1 && pass2 && pass3 && pass4 && pass5
+}
+machine row6()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:12});
+let observation:ObservedCr3=encrypted_register_operands::cr3_observed(&profile,140737488355328);
+let cr3_ok:bool=matches_profile_cr3(observation,true,140737488355328,0);
+let apic:ApicObservation=encrypted_register_operands::apic_observed(&profile,140737488355328);
+let apic_ok:bool=apic.frame==140737488355328 && apic.raw_flags==140737488355328 && apic.flags.raw==0;
+let operand0:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,140737488355328,64188,false);
+let pass0:bool=matches_profile_number(operand0,true,140737488419516);
+let operand1:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,140737488355328,64188,true);
+let pass1:bool=matches_profile_number(operand1,true,9223512774343195324);
+let operand2:NumberResult=encrypted_register_operands::cr3_flags_operand(&profile,140737488355328,Cr3Flags {raw:32792});
+let pass2:bool=matches_profile_number(operand2,true,140737488388120);
+let operand3:NumberResult=encrypted_register_operands::cr3_pcid_operand(&profile,140737488355328,Pcid {value:2748},true);
+let pass3:bool=matches_profile_number(operand3,true,9223512774343133884);
+let operand4:NumberResult=encrypted_register_operands::apic_raw_operand(&profile,140737488355328,9223372036854843392);
+let pass4:bool=matches_profile_number(operand4,true,9223512774343198720);
+let operand5:NumberResult=encrypted_register_operands::apic_preserving_operand(&profile,48358647703818240,140737488355328,ApicBaseFlags {raw:526336});
+let pass5:bool=matches_profile_number(operand5,true,48358647704344576);
+cr3_ok && apic_ok && pass0 && pass1 && pass2 && pass3 && pass4 && pass5
+}
+machine row7()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:12});
+let observation:ObservedCr3=encrypted_register_operands::cr3_observed(&profile,281474976710656);
+let cr3_ok:bool=matches_profile_cr3(observation,true,281474976710656,0);
+let apic:ApicObservation=encrypted_register_operands::apic_observed(&profile,281474976710656);
+let apic_ok:bool=apic.frame==281474976710656 && apic.raw_flags==281474976710656 && apic.flags.raw==0;
+let operand0:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,281474976710656,64188,false);
+let pass0:bool=matches_profile_number(operand0,true,281474976774844);
+let operand1:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,281474976710656,64188,true);
+let pass1:bool=matches_profile_number(operand1,true,9223653511831550652);
+let operand2:NumberResult=encrypted_register_operands::cr3_flags_operand(&profile,281474976710656,Cr3Flags {raw:32792});
+let pass2:bool=matches_profile_number(operand2,true,281474976743448);
+let operand3:NumberResult=encrypted_register_operands::cr3_pcid_operand(&profile,281474976710656,Pcid {value:2748},true);
+let pass3:bool=matches_profile_number(operand3,true,9223653511831489212);
+let operand4:NumberResult=encrypted_register_operands::apic_raw_operand(&profile,281474976710656,9223372036854843392);
+let pass4:bool=matches_profile_number(operand4,true,9223653511831554048);
+let operand5:NumberResult=encrypted_register_operands::apic_preserving_operand(&profile,48358647703818240,281474976710656,ApicBaseFlags {raw:526336});
+let pass5:bool=matches_profile_number(operand5,true,48358647704344576);
+cr3_ok && apic_ok && pass0 && pass1 && pass2 && pass3 && pass4 && pass5
+}
+machine row8()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:12});
+let observation:ObservedCr3=encrypted_register_operands::cr3_observed(&profile,2251799813685248);
+let cr3_ok:bool=matches_profile_cr3(observation,true,2251799813685248,0);
+let apic:ApicObservation=encrypted_register_operands::apic_observed(&profile,2251799813685248);
+let apic_ok:bool=apic.frame==2251799813685248 && apic.raw_flags==2251799813685248 && apic.flags.raw==0;
+let operand0:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,2251799813685248,64188,false);
+let pass0:bool=matches_profile_number(operand0,true,2251799813749436);
+let operand1:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,2251799813685248,64188,true);
+let pass1:bool=matches_profile_number(operand1,true,9225623836668525244);
+let operand2:NumberResult=encrypted_register_operands::cr3_flags_operand(&profile,2251799813685248,Cr3Flags {raw:32792});
+let pass2:bool=matches_profile_number(operand2,true,2251799813718040);
+let operand3:NumberResult=encrypted_register_operands::cr3_pcid_operand(&profile,2251799813685248,Pcid {value:2748},true);
+let pass3:bool=matches_profile_number(operand3,true,9225623836668463804);
+let operand4:NumberResult=encrypted_register_operands::apic_raw_operand(&profile,2251799813685248,9223372036854843392);
+let pass4:bool=matches_profile_number(operand4,true,9225623836668528640);
+let operand5:NumberResult=encrypted_register_operands::apic_preserving_operand(&profile,48358647703818240,2251799813685248,ApicBaseFlags {raw:526336});
+let pass5:bool=matches_profile_number(operand5,true,48358647704344576);
+cr3_ok && apic_ok && pass0 && pass1 && pass2 && pass3 && pass4 && pass5
+}
+machine row9()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:12});
+let observation:ObservedCr3=encrypted_register_operands::cr3_observed(&profile,18446744073709551615);
+let cr3_ok:bool=matches_profile_cr3(observation,false,0,0);
+let apic:ApicObservation=encrypted_register_operands::apic_observed(&profile,18446744073709551615);
+let apic_ok:bool=apic.frame==4503599627362304 && apic.raw_flags==18446744073709551615 && apic.flags.raw==3328;
+let operand0:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,18446744073709551615,64188,false);
+let pass0:bool=matches_profile_number(operand0,false,0);
+let operand1:NumberResult=encrypted_register_operands::cr3_raw_operand(&profile,18446744073709551615,64188,true);
+let pass1:bool=matches_profile_number(operand1,false,0);
+let operand2:NumberResult=encrypted_register_operands::cr3_flags_operand(&profile,18446744073709551615,Cr3Flags {raw:32792});
+let pass2:bool=matches_profile_number(operand2,false,0);
+let operand3:NumberResult=encrypted_register_operands::cr3_pcid_operand(&profile,18446744073709551615,Pcid {value:2748},true);
+let pass3:bool=matches_profile_number(operand3,false,0);
+let operand4:NumberResult=encrypted_register_operands::apic_raw_operand(&profile,18446744073709551615,9223372036854843392);
+let pass4:bool=matches_profile_number(operand4,false,0);
+let operand5:NumberResult=encrypted_register_operands::apic_preserving_operand(&profile,48358647703818240,18446744073709551615,ApicBaseFlags {raw:526336});
+let pass5:bool=matches_profile_number(operand5,false,0);
+cr3_ok && apic_ok && pass0 && pass1 && pass2 && pass3 && pass4 && pass5
+}
+machine scenario()->i32 {
+let case0:bool=row0();
+let case1:bool=row1();
+let case2:bool=row2();
+let case3:bool=row3();
+let case4:bool=row4();
+let case5:bool=row5();
+let case6:bool=row6();
+let case7:bool=row7();
+let case8:bool=row8();
+let case9:bool=row9();
+transition case0 && case1 && case2 && case3 && case4 && case5 && case6 && case7 && case8 && case9 { true -> (0) _ -> (1) } }
+const RESULT:i32=scenario();
+machine require_success(value:i32) requires value==0; {}
+data Main{}
+machine Main::main(&mut self){require_success(RESULT);}
