@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pure RecursivePageTable::translate at cc35c876d3badb57df54a66e22f7768a52be95f2.
+// Selected initialized words only; no recursive virtual references or authority.
+module recursive_translation;
+use addresses;
+use page_entries;
+use translation::Translation;
+
+// Preserve the canonical mapped result; only the additional P1 panic needs a case.
+pub data RecursiveTranslation { case InvalidLeafHugePage; case Result(value: Translation); }
+pub machine translate_words(va: u64, p4: u64, p3: u64, p2: u64, p1: u64) -> RecursiveTranslation {
+    let valid: bool = addresses::virtual_valid(va);
+    transition valid {
+        true -> level4(va, p4, p3, p2, p1)
+        _ -> (RecursiveTranslation::Result { value: Translation::InvalidVirtual })
+    }
+    state level4(va: u64, p4: u64, p3: u64, p2: u64, p1: u64) -> RecursiveTranslation {
+        let huge: bool = (p4 & 128) != 0;
+        transition {
+            p4 == 0 -> (RecursiveTranslation::Result { value: Translation::NotMapped })
+            huge -> (RecursiveTranslation::Result { value: Translation::InvalidRootHugePage })
+            _ -> level3(va, p3, p2, p1)
+        }
+    }
+    state level3(va: u64, p3: u64, p2: u64, p1: u64) -> RecursiveTranslation {
+        let huge: bool = (p3 & 128) != 0;
+        transition {
+            p3 == 0 -> (RecursiveTranslation::Result { value: Translation::NotMapped })
+            huge -> leaf(va, p3, 1073741824)
+            _ -> level2(va, p2, p1)
+        }
+    }
+    state level2(va: u64, p2: u64, p1: u64) -> RecursiveTranslation {
+        let huge: bool = (p2 & 128) != 0;
+        transition {
+            p2 == 0 -> (RecursiveTranslation::Result { value: Translation::NotMapped })
+            huge -> leaf(va, p2, 2097152)
+            _ -> level1(va, p1)
+        }
+    }
+    state level1(va: u64, p1: u64) -> RecursiveTranslation {
+        let huge: bool = (p1 & 128) != 0;
+        transition {
+            p1 == 0 -> (RecursiveTranslation::Result { value: Translation::NotMapped })
+            huge -> (RecursiveTranslation::InvalidLeafHugePage)
+            _ -> leaf(va, p1, 4096)
+        }
+    }
+    state leaf(va: u64, word: u64, size: u64 [1..=1073741824]) -> RecursiveTranslation {
+        let mask: u64 = size - 1;
+        let frame: u64 = page_entries::address(word) & ~mask;
+        let flags: u64 = page_entries::flags(word);
+        RecursiveTranslation::Result { value: Translation::Mapped { frame: frame, size: size, offset: va & mask, flags: flags } }
+    }
+}

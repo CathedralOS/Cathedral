@@ -1,0 +1,21 @@
+module translation_checks;
+use x86::recursive_translation;
+use x86::recursive_translation::RecursiveTranslation;
+use x86::translation::Translation;
+pub machine check(va: u64, p4: u64, p3: u64, p2: u64, p1: u64,
+    tag: u64, expected_frame: u64, expected_size: u64, expected_offset: u64, expected_flags: u64) -> bool {
+    let outcome: RecursiveTranslation = recursive_translation::translate_words(va, p4, p3, p2, p1);
+    transition outcome {
+        RecursiveTranslation::InvalidLeafHugePage -> (tag == 3 && expected_frame == 0 && expected_size == 0 && expected_offset == 0 && expected_flags == 0)
+        RecursiveTranslation::Result { value } -> result(value, tag, expected_frame, expected_size, expected_offset, expected_flags)
+    }
+    state result(value: Translation, tag: u64, expected_frame: u64, expected_size: u64, expected_offset: u64, expected_flags: u64) -> bool {
+        let empty: bool = expected_frame == 0 && expected_size == 0 && expected_offset == 0 && expected_flags == 0;
+        transition value {
+            Translation::NotMapped -> (tag == 1 && empty)
+            Translation::InvalidVirtual -> (tag == 5 && empty)
+            Translation::InvalidRootHugePage -> (tag == 2 && empty)
+            Translation::Mapped { frame, size, offset, flags } -> (tag == 0 && frame == expected_frame && size == expected_size && offset == expected_offset && flags == expected_flags)
+        }
+    }
+}

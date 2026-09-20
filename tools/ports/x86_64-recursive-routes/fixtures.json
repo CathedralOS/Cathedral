@@ -1,0 +1,268 @@
+{
+  "routes": [
+    {
+      "path": "route_00.omg",
+      "start": 0,
+      "count": 6
+    },
+    {
+      "path": "route_01.omg",
+      "start": 6,
+      "count": 6
+    },
+    {
+      "path": "route_02.omg",
+      "start": 12,
+      "count": 6
+    },
+    {
+      "path": "route_03.omg",
+      "start": 18,
+      "count": 6
+    },
+    {
+      "path": "route_04.omg",
+      "start": 24,
+      "count": 6
+    },
+    {
+      "path": "route_05.omg",
+      "start": 30,
+      "count": 6
+    },
+    {
+      "path": "route_06.omg",
+      "start": 36,
+      "count": 6
+    },
+    {
+      "path": "route_07.omg",
+      "start": 42,
+      "count": 6
+    },
+    {
+      "path": "route_08.omg",
+      "start": 48,
+      "count": 6
+    },
+    {
+      "path": "route_09.omg",
+      "start": 54,
+      "count": 6
+    },
+    {
+      "path": "route_10.omg",
+      "start": 60,
+      "count": 6
+    },
+    {
+      "path": "route_11.omg",
+      "start": 66,
+      "count": 6
+    },
+    {
+      "path": "route_12.omg",
+      "start": 72,
+      "count": 6
+    },
+    {
+      "path": "route_13.omg",
+      "start": 78,
+      "count": 6
+    },
+    {
+      "path": "route_14.omg",
+      "start": 84,
+      "count": 6
+    },
+    {
+      "path": "route_15.omg",
+      "start": 90,
+      "count": 6
+    },
+    {
+      "path": "route_16.omg",
+      "start": 96,
+      "count": 6
+    },
+    {
+      "path": "route_17.omg",
+      "start": 102,
+      "count": 6
+    },
+    {
+      "path": "route_18.omg",
+      "start": 108,
+      "count": 6
+    },
+    {
+      "path": "route_19.omg",
+      "start": 114,
+      "count": 6
+    },
+    {
+      "path": "route_20.omg",
+      "start": 120,
+      "count": 6
+    },
+    {
+      "path": "route_21.omg",
+      "start": 126,
+      "count": 6
+    },
+    {
+      "path": "route_22.omg",
+      "start": 132,
+      "count": 6
+    },
+    {
+      "path": "route_23.omg",
+      "start": 138,
+      "count": 6
+    },
+    {
+      "path": "route_24.omg",
+      "start": 144,
+      "count": 6
+    },
+    {
+      "path": "route_25.omg",
+      "start": 150,
+      "count": 6
+    },
+    {
+      "path": "route_26.omg",
+      "start": 156,
+      "count": 6
+    },
+    {
+      "path": "route_27.omg",
+      "start": 162,
+      "count": 6
+    },
+    {
+      "path": "route_28.omg",
+      "start": 168,
+      "count": 6
+    },
+    {
+      "path": "route_29.omg",
+      "start": 174,
+      "count": 6
+    },
+    {
+      "path": "route_30.omg",
+      "start": 180,
+      "count": 6
+    },
+    {
+      "path": "route_31.omg",
+      "start": 186,
+      "count": 6
+    },
+    {
+      "path": "route_32.omg",
+      "start": 192,
+      "count": 6
+    },
+    {
+      "path": "route_33.omg",
+      "start": 198,
+      "count": 6
+    },
+    {
+      "path": "route_34.omg",
+      "start": 204,
+      "count": 6
+    },
+    {
+      "path": "route_35.omg",
+      "start": 210,
+      "count": 6
+    },
+    {
+      "path": "route_36.omg",
+      "start": 216,
+      "count": 6
+    },
+    {
+      "path": "route_37.omg",
+      "start": 222,
+      "count": 6
+    },
+    {
+      "path": "route_38.omg",
+      "start": 228,
+      "count": 4
+    }
+  ],
+  "translations": [
+    {
+      "path": "translate_00.omg",
+      "start": 0,
+      "count": 30
+    },
+    {
+      "path": "translate_01.omg",
+      "start": 30,
+      "count": 30
+    },
+    {
+      "path": "translate_02.omg",
+      "start": 60,
+      "count": 30
+    }
+  ],
+  "case_count": 232,
+  "translation_count": 90,
+  "controls": [
+    {
+      "path": "route_06.omg",
+      "old": "checks::route(CapturedPath { table_ids:[16384, 0, 8192, 12288], words:[0, 8193, 12289, 512] }, AllocationInputs { frames:[FrameSupply::Supplied { address:4096 }, FrameSupply::Supplied { address:8192 }, FrameSupply::Supplied { address:12288 }] }, 18446623141389139968, 1073741824, Request::Map { frame:3221225472, flags:3, parent_flags:0 }, Expected { words:[4099, 3221225603, 12289, 512], ids:[16384, 4096, 8192, 12288], indices:[292, 13, 0, 0], writes:3, zeros:2, calls:1, visited:2, code:0, location:2, payload:3221225472, result_word:3221225603, result_write:true })",
+      "new": "checks::route(CapturedPath { table_ids:[16384, 0, 8192, 12288], words:[0, 8193, 12289, 512] }, AllocationInputs { frames:[FrameSupply::Supplied { address:4096 }, FrameSupply::Supplied { address:8192 }, FrameSupply::Supplied { address:12288 }] }, 18446623141389139968, 1073741824, Request::Map { frame:3221225472, flags:3, parent_flags:0 }, Expected { words:[4097, 3221225603, 12289, 512], ids:[16384, 4096, 8192, 12288], indices:[292, 13, 0, 0], writes:3, zeros:2, calls:1, visited:2, code:0, location:2, payload:3221225472, result_word:3221225603, result_write:true })",
+      "family": "new-parent-flags-0"
+    },
+    {
+      "path": "route_09.omg",
+      "old": "checks::route(CapturedPath { table_ids:[16384, 4096, 8192, 12288], words:[4224, 8193, 12289, 0] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 1073741824, Request::Map { frame:3221225472, flags:3, parent_flags:2 }, Expected { words:[4226, 8193, 12289, 0], ids:[16384, 4096, 8192, 12288], indices:[292, 13, 0, 0], writes:1, zeros:0, calls:0, visited:1, code:2, location:1, payload:0, result_word:4226, result_write:true })",
+      "new": "checks::route(CapturedPath { table_ids:[16384, 4096, 8192, 12288], words:[4224, 8193, 12289, 0] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 1073741824, Request::Map { frame:3221225472, flags:3, parent_flags:2 }, Expected { words:[4226, 8193, 12289, 0], ids:[16384, 4096, 8192, 12288], indices:[292, 13, 0, 0], writes:0, zeros:0, calls:0, visited:1, code:2, location:1, payload:0, result_word:4226, result_write:true })",
+      "family": "retain-write-before-huge-failure"
+    },
+    {
+      "path": "route_38.omg",
+      "old": "checks::route(CapturedPath { table_ids:[16384, 4096, 8192, 12288], words:[4096, 8192, 12288, 0] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 4096, Request::Map { frame:3221225472, flags:3, parent_flags:0 }, Expected { words:[4096, 8192, 12288, 3221225475], ids:[16384, 4096, 8192, 12288], indices:[292, 13, 0, 0], writes:8, zeros:0, calls:0, visited:4, code:0, location:2, payload:3221225472, result_word:3221225475, result_write:true })",
+      "new": "checks::route(CapturedPath { table_ids:[16384, 4096, 8192, 12288], words:[4096, 8192, 12288, 0] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 4096, Request::Map { frame:3221225472, flags:3, parent_flags:0 }, Expected { words:[4096, 8192, 12288, 3221225475], ids:[16384, 4096, 8192, 12288], indices:[292, 13, 0, 0], writes:8, zeros:0, calls:0, visited:4, code:1, location:2, payload:3221225472, result_word:3221225475, result_write:true })",
+      "family": "existing-no-present-parent-flags-zero"
+    },
+    {
+      "path": "route_37.omg",
+      "old": "checks::route(CapturedPath { table_ids:[16384, 4096, 8192, 12288], words:[4224, 8193, 12289, 0] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 4096, Request::SetParent { level:2, table_flags:18446744073709551615 }, Expected { words:[4224, 8193, 18446744073709551615, 0], ids:[16384, 4096, 8192, 12288], indices:[292, 13, 0, 0], writes:4, zeros:0, calls:0, visited:3, code:0, location:2, payload:12288, result_word:18446744073709551615, result_write:true })",
+      "new": "checks::route(CapturedPath { table_ids:[16384, 4096, 8192, 12288], words:[4224, 8193, 12289, 0] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 4096, Request::SetParent { level:2, table_flags:18446744073709551615 }, Expected { words:[4224, 8193, 18446744073709551615, 0], ids:[16384, 4096, 8192, 12288], indices:[292, 13, 0, 0], writes:4, zeros:0, calls:0, visited:3, code:2, location:2, payload:12288, result_word:18446744073709551615, result_write:true })",
+      "family": "parent-nonpresent-huge-2-0"
+    },
+    {
+      "path": "route_33.omg",
+      "old": "checks::route(CapturedPath { table_ids:[16384, 0, 8192, 12288], words:[0, 8193, 12289, 512] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 4096, Request::Map { frame:3221225472, flags:3, parent_flags:3 }, Expected { words:[0, 8193, 12289, 512], ids:[16384, 0, 8192, 12288], indices:[292, 13, 0, 0], writes:0, zeros:0, calls:1, visited:1, code:6, location:1, payload:0, result_word:0, result_write:false })",
+      "new": "checks::route(CapturedPath { table_ids:[16384, 0, 8192, 12288], words:[0, 8193, 12289, 512] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 4096, Request::Map { frame:3221225472, flags:3, parent_flags:3 }, Expected { words:[0, 8193, 12289, 512], ids:[16384, 0, 8192, 12288], indices:[292, 13, 0, 0], writes:0, zeros:0, calls:0, visited:1, code:6, location:1, payload:0, result_word:0, result_write:false })",
+      "family": "new-tables-0"
+    },
+    {
+      "path": "translate_00.omg",
+      "old": "translation_checks::check(0, 4096, 8192, 12288, 2147483648, 0, 2147483648, 4096, 0, 0)",
+      "new": "translation_checks::check(0, 4096, 8192, 12288, 2147483648, 1, 2147483648, 4096, 0, 0)",
+      "family": "nonpresent-translation"
+    },
+    {
+      "path": "translate_00.omg",
+      "old": "translation_checks::check(0, 4225, 8193, 12289, 2147483649, 2, 0, 0, 0, 0)",
+      "new": "translation_checks::check(0, 4225, 8193, 12289, 2147483649, 1, 0, 0, 0, 0)",
+      "family": "root-huge-order"
+    },
+    {
+      "path": "translate_00.omg",
+      "old": "translation_checks::check(0, 4097, 8193, 12289, 16513, 3, 0, 0, 0, 0)",
+      "new": "translation_checks::check(0, 4097, 8193, 12289, 16513, 1, 0, 0, 0, 0)",
+      "family": "leaf-huge-outcome"
+    }
+  ]
+}

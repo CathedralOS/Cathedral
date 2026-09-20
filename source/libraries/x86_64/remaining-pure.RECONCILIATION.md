@@ -28,6 +28,11 @@ the remaining raw MSR word-splitting component is completed by
 changed into encryption-profile walkers.
 [Recursive cleanup](recursive-cleanup.PORT.md) completes `recursive-cleanup`
 with tested self-link exclusion, bounded resumption and full-budget handling.
+[Recursive routes and translation](recursive-routes.PORT.md) complete the final
+two historical families with 232 route and 90 translation cases, four additional
+checks and nine body mutations. All twelve original families now have subsequent
+completion records. Cross-feature composition is under fresh review; this audit
+does not silently generalize default-mask walkers to encryption configurations.
 
 ## Work that already has a reusable implementation
 
@@ -116,9 +121,7 @@ remain explicit provider/custody work. A copied numeric result or completed
 cursor grants none of them. Rust marker/unsafe traits, pointer conversions and
 must-use tokens are deliberately not reproduced as authority facsimiles.
 
-Suggested next slices are numeric topology (offset/recursive coordinates and
-constructor observations), explicit encryption, remaining register operand
-recipes, owned GDT storage, then recursive route/translation/cleanup composition.
-This ordering reuses already tested pieces without hiding the recursive
-algorithm's different conditions. Each remains ordinary implementation and test
-work until a concrete source/native diagnostic establishes otherwise.
+The original suggested sequence (topology, encryption, registers, GDT storage,
+recursive algorithms) has now been implemented at each documented boundary.
+A fresh closure review must distinguish remaining cross-feature composition
+from live provider integration before completing the overall X86-001/002 tasks.

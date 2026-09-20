@@ -12117,6 +12117,18 @@
       "stage": "tested",
       "evidence": "source/libraries/x86_64/recursive-cleanup.PORT.md",
       "inventory": "source/libraries/x86_64/recursive-cleanup-inventory.json"
+    },
+    {
+      "family": "recursive-routes",
+      "stage": "tested",
+      "evidence": "source/libraries/x86_64/recursive-routes.PORT.md",
+      "inventory": "source/libraries/x86_64/recursive-routes-inventory.json"
+    },
+    {
+      "family": "recursive-translation",
+      "stage": "tested",
+      "evidence": "source/libraries/x86_64/recursive-routes.PORT.md",
+      "inventory": "source/libraries/x86_64/recursive-routes-inventory.json"
     }
   ]
 }

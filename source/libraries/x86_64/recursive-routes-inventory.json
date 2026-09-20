@@ -1,0 +1,419 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/x86_64",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/paging/mapper/recursive_page_table.rs"
+    ]
+  },
+  "files": {
+    "src/structures/paging/mapper/recursive_page_table.rs": {
+      "sha256": "e6a796d07b191d4857c931c7b4daf156a707c51fba675af6d9f1cee62c970e6f",
+      "disposition": "translated",
+      "reason": "Captured numeric route/translation component only. Constructors/topology/cleanup and live unsafe interfaces retain separate inventory boundaries.",
+      "symbols": {
+        "31:RecursivePageTable": {
+          "anchor": "pub struct RecursivePageTable<'a> {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "57:new": {
+          "anchor": "pub fn new(table: &'a mut PageTable) -> Result<Self, InvalidPageTable> {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "85:new_unchecked": {
+          "anchor": "pub unsafe fn new_unchecked(table: &'a mut PageTable, recursive_index: PageTableIndex) -> Self {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "93:level_4_table": {
+          "anchor": "pub fn level_4_table(&self) -> &PageTable {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "98:level_4_table_mut": {
+          "anchor": "pub fn level_4_table_mut(&mut self) -> &mut PageTable {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "117:create_next_table": {
+          "anchor": "unsafe fn create_next_table<'b, A, S: PageSize>(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine prepare_child("
+            }
+          ]
+        },
+        "129:inner": {
+          "anchor": "fn inner<'b, A, S: PageSize>(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine prepare_child("
+            }
+          ]
+        },
+        "173:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "205:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "235:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "257:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "274:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "282:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "290:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "311:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "353:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "389:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "418:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "435:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "458:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "466:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "494:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "545:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "582:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "616:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "633:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "656:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "685:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "720:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult {",
+          "disposition": "translated",
+          "reason": "Pinned decisions and mutation order extracted into numeric captured results; no recursive references, CPU state, hierarchy authority or invalidation settlement.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/recursive_translation.omg",
+              "anchor": "pub machine translate_words("
+            }
+          ]
+        },
+        "793:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "808:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "815:clean_up": {
+          "anchor": "fn clean_up(",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "890:InvalidPageTable": {
+          "anchor": "pub enum InvalidPageTable {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "905:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "916:p3_ptr": {
+          "anchor": "fn p3_ptr<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> *mut PageTable {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "921:p3_page": {
+          "anchor": "fn p3_page<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "931:p2_ptr": {
+          "anchor": "fn p2_ptr<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) -> *mut PageTable {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "936:p2_page": {
+          "anchor": "fn p2_page<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "946:p1_ptr": {
+          "anchor": "fn p1_ptr(page: Page<Size4KiB>, recursive_index: PageTableIndex) -> *mut PageTable {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        },
+        "951:p1_page": {
+          "anchor": "fn p1_page(page: Page<Size4KiB>, recursive_index: PageTableIndex) -> Page {",
+          "disposition": "omitted",
+          "reason": "Separate topology/constructor or cleanup slice, Rust formatting, raw pointer access, or live RecursivePageTable representation. This bounded inventory does not classify ordinary remaining engineering as blocked."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/recursive_routes.omg",
+          "anchor": "pub machine plan("
+        },
+        {
+          "path": "source/libraries/x86_64/recursive_translation.omg",
+          "anchor": "pub machine translate_words("
+        }
+      ]
+    }
+  },
+  "reference": {
+    "kind": "Adapted exact source-body mirror, not execution through an actual RecursivePageTable object.",
+    "source": "tools/ports/x86_64-recursive-routes/src/pinned.rs",
+    "adaptations": [
+      "Free functions receive disjoint borrowed initialized tables instead of self.p4 and raw recursive pointer resolutions.",
+      "p3/p2/p1 coordinate values become their corresponding supplied snapshot reference; topology arithmetic has a separate slice.",
+      "PageTableEntry and PageTable aliases are instrumented safe adapters executing actual pinned PTE operations and PageTable::zero.",
+      "Unsafe FrameAllocator trait replaced by safe numeric allocation-observation queue; no backing or uniqueness grant constructed.",
+      "crate flag imports point to x86_64; the unused Page constructor gets explicit Size4KiB after removal of pointer-driven type inference.",
+      "Branch conditions, typed errors, parent flag OR, PTE setter calls and zero ordering remain source-extracted."
+    ],
+    "scenarios": {
+      "routes": 232,
+      "translations": 90
+    },
+    "measurements": [
+      "Final selected words",
+      "Assignment and zero masks including redundant setters",
+      "Allocation attempts",
+      "Deepest accessed selected table",
+      "Typed return/errors and caught setter/translation panics",
+      "Nonselected dirty sentinel cleared by actual PageTable::zero"
+    ],
+    "not_measured": [
+      "Live recursive mapping",
+      "Hardware writes/CPU permissions",
+      "Native Omega layout/execution",
+      "Numeric table ID provenance"
+    ]
+  },
+  "capture_policy": {
+    "ids": "Additional consistency check over supplied physical snapshot identities; equality confers no provenance. New zero requests update next identity from resulting parent address.",
+    "partial_effects": "Earlier parent writes remain on child error, allocation exhaustion, leaf error or capture mismatch.",
+    "defaults": "Canonical48 virtual and default physical52 masks.",
+    "reused_types": [
+      "mapping_routes::CapturedPath",
+      "mapping_routes::AllocationInputs",
+      "mapping_routes::Request",
+      "mapping_routes::Edits",
+      "mapping_routes::Outcome",
+      "mapping_routes::RoutePlan",
+      "mapping_plans::ChildPlan",
+      "mapping_plans::LeafPlan",
+      "translation::Translation"
+    ]
+  }
+}

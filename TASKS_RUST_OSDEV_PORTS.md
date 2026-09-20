@@ -264,8 +264,12 @@ mutations, including partial edits, allocation failures and capture mismatches.
 [Mapper conveniences](source/libraries/x86_64/mapper-conveniences.PORT.md) add
 actual trait-default witnesses, three Omega fixtures and four body mutations.
 The [remaining pure-work audit](source/libraries/x86_64/remaining-pure.RECONCILIATION.md)
-identifies unfinished recursive mapper algorithms; these are implementation work. The later register slices complete the
-remaining operand recipes and raw word transport.
+now records completion of its twelve historical families.
+[Recursive routes and translation](source/libraries/x86_64/recursive-routes.PORT.md)
+pass 232 route and 90 translation cases against adapted pinned Rust bodies, four
+additional checks and nine body mutations. Child allocation, non-present/huge
+ancestor rules and partial writes retain the recursive mapper's distinct order.
+Cross-feature composition remains under review before closing X86-001/002.
 [Owned GDT storage](source/libraries/x86_64/gdt-storage.PORT.md) now passes 16
 actual Rust/Omega scenarios, malformed-input/reset checks and four body mutations,
 including full 8192-word import and failed system appends without partial writes.

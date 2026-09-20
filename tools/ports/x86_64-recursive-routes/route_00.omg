@@ -1,0 +1,18 @@
+use checks;
+use checks::Expected;
+use x86::mapping_routes::CapturedPath;
+use x86::mapping_routes::AllocationInputs;
+use x86::mapping_routes::Request;
+use x86::mapping_plans::FrameSupply;
+machine test_result() -> i32 {
+    transition checks::route(CapturedPath { table_ids:[16384, 4096, 0, 12288], words:[4097, 0, 12289, 0] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 1073741824, Request::Map { frame:3221225472, flags:3, parent_flags:3 }, Expected { words:[4099, 3221225603, 12289, 0], ids:[16384, 4096, 0, 12288], indices:[292, 13, 0, 0], writes:3, zeros:0, calls:0, visited:2, code:0, location:2, payload:3221225472, result_word:3221225603, result_write:true }) &&
+        checks::route(CapturedPath { table_ids:[16384, 0, 0, 12288], words:[0, 0, 12289, 0] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 1073741824, Request::Map { frame:3221225472, flags:3, parent_flags:3 }, Expected { words:[0, 0, 12289, 0], ids:[16384, 0, 0, 12288], indices:[292, 13, 0, 0], writes:0, zeros:0, calls:1, visited:1, code:6, location:1, payload:0, result_word:0, result_write:false }) &&
+        checks::route(CapturedPath { table_ids:[16384, 0, 0, 12288], words:[128, 0, 12289, 0] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 1073741824, Request::Map { frame:3221225472, flags:3, parent_flags:3 }, Expected { words:[131, 0, 12289, 0], ids:[16384, 0, 0, 12288], indices:[292, 13, 0, 0], writes:1, zeros:0, calls:0, visited:1, code:2, location:1, payload:0, result_word:131, result_write:true }) &&
+        checks::route(CapturedPath { table_ids:[16384, 4096, 0, 12288], words:[4096, 0, 12289, 0] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 1073741824, Request::Map { frame:3221225472, flags:3, parent_flags:3 }, Expected { words:[4099, 3221225603, 12289, 0], ids:[16384, 4096, 0, 12288], indices:[292, 13, 0, 0], writes:3, zeros:0, calls:0, visited:2, code:0, location:2, payload:3221225472, result_word:3221225603, result_write:true }) &&
+        checks::route(CapturedPath { table_ids:[16384, 4096, 0, 12288], words:[4225, 0, 12289, 0] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 1073741824, Request::Map { frame:3221225472, flags:3, parent_flags:3 }, Expected { words:[4227, 0, 12289, 0], ids:[16384, 4096, 0, 12288], indices:[292, 13, 0, 0], writes:1, zeros:0, calls:0, visited:1, code:2, location:1, payload:0, result_word:4227, result_write:true }) &&
+        checks::route(CapturedPath { table_ids:[16384, 4096, 0, 12288], words:[4097, 0, 12289, 0] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 1073741824, Request::Map { frame:3221225472, flags:3, parent_flags:3 }, Expected { words:[4099, 3221225603, 12289, 0], ids:[16384, 4096, 0, 12288], indices:[292, 13, 0, 0], writes:3, zeros:0, calls:0, visited:2, code:0, location:2, payload:3221225472, result_word:3221225603, result_write:true }) { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }
