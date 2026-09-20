@@ -301,7 +301,7 @@ eight-slot direct-buffer profile is explicit; asynchronous DMA is not modeled.
 - [ ] **ACPI-006 — Add AML resource limits.** Bound input, namespace growth,
   recursion, method work, and returned data.  Fail closed on unsupported or
   exhausted behavior.
-- [ ] **ACPI-007 — Define the later Cathedral adapter.** Specify—but do not yet
+- [x] **ACPI-007 — Define the later Cathedral adapter.** Specify—but do not yet
   integrate—the attenuation from discovered regions to separately granted
   physical/MMIO/I/O capabilities.
 
@@ -327,6 +327,12 @@ passes 77 Omega scenarios and three body mutations. Ordered typed CPU/controller
 facts, timer descriptions and checked PCI-region queries retain unknown entries
 and separate observed boot identity from table order. ECAM uses bus-0-relative
 addressing. NUMA extraction, native execution and hardware activation remain open.
+
+ACPI-007 evidence: [adapter contract](source/libraries/acpi/ADAPTER.md) specifies
+discovery snapshots, named source custody, device-scoped requests, conserved
+attenuation, complete transfer/page footprints, mediated versus placed lifetimes,
+and teardown/rejection obligations. This is a specification milestone; no grants,
+provider integration or adapter execution tests are claimed.
 
 ## Phase 5 — only after the corpus above is healthy
 
