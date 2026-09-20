@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral fixtures; no firmware or external uACPI fixture content.
+use aml::model::Outcome;
+use aml::model::Read;
+use aml::model::Envelope;
+use aml::model::Span;
+use aml::model::Path;
+use aml::model::PathResult;
+use aml::model::Value;
+use aml::model::Object;
+use aml::model::Namespace;
+use aml::model::NamespaceResult;
+use aml::model::Lookup;
+use aml::model::LevelKind;
+use aml::model::ValueState;
+use aml::model::LoadState;
+use aml::model::ReferenceState;
+use aml::bytes::read_le;
+use aml::bytes::pkg_length;
+use aml::bytes::envelope;
+use aml::bytes::opcode;
+
+machine test()->u64 {
+let mut input:[u8;1024];
+input[0]=65;
+input[1]=4;
+input[2]=113;
+input[3]=4;
+input[4]=128;
+input[5]=0;
+input[6]=1;
+let length:Read=pkg_length(&input,7,0);let reserved:Read=pkg_length(&input,7,2);let larger:Read=pkg_length(&input,7,4);let crossing:Envelope=envelope(&input,7,0);
+ transition length.value==65 && length.next==2 && reserved.outcome==Outcome::BadEncoding && larger.value==4096 && crossing.outcome==Outcome::BadEncoding {true -> (0) _ -> (1)}
+}
+const TEST_RESULT:u64=test();
+machine require_ok(result:u64) requires result==0; {}
+data Main {}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

@@ -1,0 +1,4 @@
+machine build(builder: &mut Build) {
+ builder.application("cathedral-acpi-aml-tests"); builder.freestanding=true;
+ builder.depend_as("aml", Source::Path {location:"../../../../source/libraries/acpi/aml"});
+}

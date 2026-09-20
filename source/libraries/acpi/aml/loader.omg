@@ -1,0 +1,381 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// AML translation from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Original upstream copyright 2018 Isaac Woods; bounded Omega adaptation 2026.
+// See PORT.md and licenses/rust-osdev/acpi for provenance and changes.
+module loader;
+use model::Outcome;
+use model::Read;
+use model::Envelope;
+use model::Span;
+use model::Path;
+use model::PathResult;
+use model::Value;
+use model::ValueState;
+use model::Namespace;
+use model::NamespaceResult;
+use model::LevelKind;
+use model::ScopeFrame;
+use model::External;
+use model::LoadState;
+use bytes::read_le;
+use bytes::opcode;
+use bytes::envelope;
+use names::namestring;
+use names::resolve;
+use names::root;
+use namespace::bind;
+use namespace::insert;
+use namespace::alias;
+use namespace::add_level;
+use values::integer;
+use values::parse_value;
+machine fail(value:&mut LoadState,outcome:Outcome,offset:u64)->Outcome {value.outcome=outcome;value.offset=offset;value.done=true;outcome}
+// Input is an AML TermList, after independently verified definition-block headers.
+// On error, the original namespace is returned. Retain immutable input for spans.
+
+
+
+machine load_step(input:&[u8;1024],value:&mut LoadState)->Outcome {
+ transition value.done {true -> (value.outcome) _ -> active(input,value)}
+ state active(input:&[u8;1024],value:&mut LoadState)->Outcome {
+  transition value.at==value.end {true -> leave(value) _ -> token(input,value)}
+ }
+ state leave(value:&mut LoadState)->Outcome {
+  transition value.depth>0 && value.depth<=8 {true -> pop(value) _ -> complete(value)}
+ }
+ state pop(value:&mut LoadState)->Outcome {
+  let index:u64=value.depth-1;let frame:ScopeFrame=scope_frame(value,index);value.depth=index;value.scope=frame.scope;value.end=frame.end;Outcome::Success
+ }
+ state complete(value:&mut LoadState)->Outcome {value.done=true;Outcome::Success}
+ state token(input:&[u8;1024],value:&mut LoadState)->Outcome {
+  let op:Read=opcode(input,value.end,value.at);
+  transition op.outcome==Outcome::Success {true -> dispatch(input,value,op) _ -> call_fail_0(value,op.outcome,op.offset)}
+ }
+ state dispatch(input:&[u8;1024],value:&mut LoadState,op:Read)->Outcome {
+  transition op.value {
+   0x06 -> call_alias_declaration_1(input,value,op.next)
+   0x08 -> call_name_declaration_2(input,value,op.next)
+   0x10 -> call_scoped_3(input,value,op,LevelKind::Scope)
+   0x14 -> call_method_4(input,value,op.next)
+   0x15 -> call_external_5(input,value,op.next)
+   0x5b01 -> call_mutex_6(input,value,op.next)
+   0x5b02 -> call_event_7(input,value,op.next)
+   0x5b80 -> call_region_8(input,value,op.next)
+   0x5b82 -> call_scoped_9(input,value,op,LevelKind::Device)
+   0x5b83 -> call_scoped_10(input,value,op,LevelKind::Processor)
+   0x5b84 -> call_scoped_11(input,value,op,LevelKind::PowerResource)
+   0x5b85 -> call_scoped_12(input,value,op,LevelKind::ThermalZone)
+   0xa3 -> call_advance_13(value,op.next)
+   _ -> call_fail_14(value,Outcome::UnsupportedSyntax,value.at)
+  }
+ }
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_alias_declaration_1(input:&[u8;1024],value:&mut LoadState,at:u64) -> Outcome {let result:Outcome=alias_declaration(input,value,at);result}
+
+ state call_name_declaration_2(input:&[u8;1024],value:&mut LoadState,at:u64) -> Outcome {let result:Outcome=name_declaration(input,value,at);result}
+
+ state call_scoped_3(input:&[u8;1024],value:&mut LoadState,op:Read,kind:LevelKind) -> Outcome {let result:Outcome=scoped(input,value,op,kind);result}
+
+ state call_method_4(input:&[u8;1024],value:&mut LoadState,at:u64) -> Outcome {let result:Outcome=method(input,value,at);result}
+
+ state call_external_5(input:&[u8;1024],value:&mut LoadState,at:u64) -> Outcome {let result:Outcome=external(input,value,at);result}
+
+ state call_mutex_6(input:&[u8;1024],value:&mut LoadState,at:u64) -> Outcome {let result:Outcome=mutex(input,value,at);result}
+
+ state call_event_7(input:&[u8;1024],value:&mut LoadState,at:u64) -> Outcome {let result:Outcome=event(input,value,at);result}
+
+ state call_region_8(input:&[u8;1024],value:&mut LoadState,at:u64) -> Outcome {let result:Outcome=region(input,value,at);result}
+
+ state call_scoped_9(input:&[u8;1024],value:&mut LoadState,op:Read,kind:LevelKind) -> Outcome {let result:Outcome=scoped(input,value,op,kind);result}
+
+ state call_scoped_10(input:&[u8;1024],value:&mut LoadState,op:Read,kind:LevelKind) -> Outcome {let result:Outcome=scoped(input,value,op,kind);result}
+
+ state call_scoped_11(input:&[u8;1024],value:&mut LoadState,op:Read,kind:LevelKind) -> Outcome {let result:Outcome=scoped(input,value,op,kind);result}
+
+ state call_scoped_12(input:&[u8;1024],value:&mut LoadState,op:Read,kind:LevelKind) -> Outcome {let result:Outcome=scoped(input,value,op,kind);result}
+
+ state call_advance_13(value:&mut LoadState,at:u64) -> Outcome {let result:Outcome=advance(value,at);result}
+
+ state call_fail_14(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+machine scope_frame(value:&mut LoadState,index:u64)->ScopeFrame {transition index<8 {true -> (value.frames[index]) _ -> (ScopeFrame {})}}
+machine advance(value:&mut LoadState,at:u64)->Outcome {value.at=at;Outcome::Success}
+machine declared_name(input:&[u8;1024],end:u64,at:u64,scope:Path)->PathResult {
+ let raw:PathResult=namestring(input,end,at);
+ transition raw.outcome==Outcome::Success {true -> full(raw,scope) _ -> (raw)}
+ state full(raw:PathResult,scope:Path)->PathResult {
+  let resolved:PathResult=resolve(raw.value,scope);let mut out:PathResult=resolved;out.next=raw.next;
+  transition raw.value.count>0 && resolved.value.count>0 {true -> (out) _ -> (PathResult {outcome:Outcome::InvalidName,offset:raw.next})}
+ }
+}
+machine name_declaration(input:&[u8;1024],value:&mut LoadState,at:u64)->Outcome {
+ let name:PathResult=declared_name(input,value.end,at,value.scope);
+ transition name.outcome==Outcome::Success {true -> data(input,value,name) _ -> call_fail_0(value,name.outcome,name.offset)}
+ state data(input:&[u8;1024],value:&mut LoadState,name:PathResult)->Outcome {
+  let parsed:ValueState=parse_value(input,value.end,name.next,value.unit,value.scope,value.space,false,value.value_budget);
+  transition parsed.outcome==Outcome::Success {true -> put(value,name,parsed) _ -> call_fail_1(value,parsed.outcome,parsed.offset)}
+ }
+ state put(value:&mut LoadState,name:PathResult,parsed:ValueState)->Outcome {
+  let inserted:NamespaceResult=bind(parsed.space,name.value,parsed.object);let result:Outcome=namespace_result(value,inserted,parsed.at);result
+ }
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_1(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+machine namespace_result(value:&mut LoadState,result:NamespaceResult,next:u64)->Outcome {
+ transition result.outcome==Outcome::Success {true -> commit(value,result,next) _ -> call_fail_0(value,result.outcome,value.at)}
+ state commit(value:&mut LoadState,result:NamespaceResult,next:u64)->Outcome {value.space=result.space;value.at=next;Outcome::Success}
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+machine alias_declaration(input:&[u8;1024],value:&mut LoadState,at:u64)->Outcome {
+ let source:PathResult=declared_name(input,value.end,at,value.scope);
+ transition source.outcome==Outcome::Success {true -> target(input,value,source) _ -> call_fail_0(value,source.outcome,source.offset)}
+ state target(input:&[u8;1024],value:&mut LoadState,source:PathResult)->Outcome {
+  let target:PathResult=declared_name(input,value.end,source.next,value.scope);
+  transition target.outcome==Outcome::Success {true -> put(value,source,target) _ -> call_fail_1(value,target.outcome,target.offset)}
+ }
+ state put(value:&mut LoadState,source:PathResult,target:PathResult)->Outcome {
+  let aliased:NamespaceResult=alias(value.space,source.value,target.value);let result:Outcome=namespace_result(value,aliased,target.next);result
+ }
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_1(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+machine method(input:&[u8;1024],value:&mut LoadState,at:u64)->Outcome {
+ let package:Envelope=envelope(input,value.end,at);
+ transition package.outcome==Outcome::Success {true -> name(input,value,package) _ -> call_fail_0(value,package.outcome,package.offset)}
+ state name(input:&[u8;1024],value:&mut LoadState,package:Envelope)->Outcome {
+  let name:PathResult=declared_name(input,package.end,package.body,value.scope);
+  transition name.outcome==Outcome::Success {true -> flags(input,value,package,name) _ -> call_fail_1(value,name.outcome,name.offset)}
+ }
+ state flags(input:&[u8;1024],value:&mut LoadState,package:Envelope,name:PathResult)->Outcome {
+  let flags:Read=read_le(input,package.end,name.next,1);
+  transition flags.outcome==Outcome::Success {true -> put(value,package,name,flags) _ -> call_fail_2(value,flags.outcome,flags.offset)}
+ }
+ state put(value:&mut LoadState,package:Envelope,name:PathResult,flags:Read)->Outcome {
+  let object:Value=Value::Method {flags:(flags.value&255) as u8,body:Span {unit:value.unit,start:flags.next,end:package.end}};
+  let inserted:NamespaceResult=insert(value.space,name.value,object);let result:Outcome=namespace_result(value,inserted,package.end);result
+ }
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_1(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_2(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+machine event(input:&[u8;1024],value:&mut LoadState,at:u64)->Outcome {
+ let name:PathResult=declared_name(input,value.end,at,value.scope);
+ transition name.outcome==Outcome::Success {true -> put(value,name) _ -> call_fail_0(value,name.outcome,name.offset)}
+ state put(value:&mut LoadState,name:PathResult)->Outcome {let object:Value=Value::Event;let inserted:NamespaceResult=insert(value.space,name.value,object);let result:Outcome=namespace_result(value,inserted,name.next);result}
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+machine mutex(input:&[u8;1024],value:&mut LoadState,at:u64)->Outcome {
+ let name:PathResult=declared_name(input,value.end,at,value.scope);
+ transition name.outcome==Outcome::Success {true -> sync(input,value,name) _ -> call_fail_0(value,name.outcome,name.offset)}
+ state sync(input:&[u8;1024],value:&mut LoadState,name:PathResult)->Outcome {
+  let flags:Read=read_le(input,value.end,name.next,1);
+  transition flags.outcome==Outcome::Success {true -> flags_valid(value,name,flags) _ -> call_fail_1(value,flags.outcome,flags.offset)}
+ }
+ state flags_valid(value:&mut LoadState,name:PathResult,flags:Read)->Outcome {
+  transition flags.value<=15 {true -> put(value,name,flags) _ -> call_fail_2(value,Outcome::BadEncoding,name.next)}
+ }
+ state put(value:&mut LoadState,name:PathResult,flags:Read)->Outcome {
+  let object:Value=Value::Mutex {sync_level:(flags.value&15) as u8};let inserted:NamespaceResult=insert(value.space,name.value,object);let result:Outcome=namespace_result(value,inserted,flags.next);result
+ }
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_1(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_2(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+machine external(input:&[u8;1024],value:&mut LoadState,at:u64)->Outcome {
+ let name:PathResult=declared_name(input,value.end,at,value.scope);
+ transition name.outcome==Outcome::Success {true -> metadata(input,value,name) _ -> call_fail_0(value,name.outcome,name.offset)}
+ state metadata(input:&[u8;1024],value:&mut LoadState,name:PathResult)->Outcome {
+  let fields:Read=read_le(input,value.end,name.next,2);
+  transition fields.outcome==Outcome::Success {true -> valid(value,name,fields) _ -> call_fail_1(value,fields.outcome,fields.offset)}
+ }
+ state valid(value:&mut LoadState,name:PathResult,fields:Read)->Outcome {
+  let object_type:u64=fields.value&255;let arguments:u64=(fields.value>>8)&255;
+  transition object_type<=16 && arguments<=7 {true -> room(value,name,fields) _ -> call_fail_2(value,Outcome::BadEncoding,name.next)}
+ }
+ state room(value:&mut LoadState,name:PathResult,fields:Read)->Outcome {
+  transition value.external_count<32 {true -> put(value,name,fields) _ -> call_fail_3(value,Outcome::Capacity,value.at)}
+ }
+ state put(value:&mut LoadState,name:PathResult,fields:Read)->Outcome {
+  let declaration:External=External {path:name.value,object_type:(fields.value&255) as u8,argument_count:((fields.value>>8)&7) as u8,offset:value.at};
+  let result:Outcome=external_set(value,declaration,fields.next);result
+ }
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_1(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_2(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_3(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+machine external_set(value:&mut LoadState,declaration:External,next:u64)->Outcome {
+ let index:u64=value.external_count;
+ transition index<32 {true -> put(value,declaration,next,index) _ -> call_fail_0(value,Outcome::Capacity,value.at)}
+ state put(value:&mut LoadState,declaration:External,next:u64,index:u64)->Outcome {
+  value.externals[index]=declaration;value.external_count=index+1;value.at=next;Outcome::Success
+ }
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+machine region(input:&[u8;1024],value:&mut LoadState,at:u64)->Outcome {
+ let name:PathResult=declared_name(input,value.end,at,value.scope);
+ transition name.outcome==Outcome::Success {true -> space(input,value,name) _ -> call_fail_0(value,name.outcome,name.offset)}
+ state space(input:&[u8;1024],value:&mut LoadState,name:PathResult)->Outcome {
+  let space:Read=read_le(input,value.end,name.next,1);
+  transition space.outcome==Outcome::Success {true -> base(input,value,name,space) _ -> call_fail_1(value,space.outcome,space.offset)}
+ }
+ state base(input:&[u8;1024],value:&mut LoadState,name:PathResult,space:Read)->Outcome {
+  let base:Read=integer(input,value.end,space.next);
+  transition base.outcome==Outcome::Success {true -> length(input,value,name,space,base) _ -> call_fail_2(value,base.outcome,base.offset)}
+ }
+ state length(input:&[u8;1024],value:&mut LoadState,name:PathResult,space:Read,base:Read)->Outcome {
+  let length:Read=integer(input,value.end,base.next);
+  transition length.outcome==Outcome::Success {true -> put(value,name,space,base,length) _ -> call_fail_3(value,length.outcome,length.offset)}
+ }
+ state put(value:&mut LoadState,name:PathResult,space:Read,base:Read,length:Read)->Outcome {
+  let object:Value=Value::OperationRegion {space:(space.value&255) as u8,base:base.value,length:length.value,scope:value.scope};
+  let inserted:NamespaceResult=insert(value.space,name.value,object);let result:Outcome=namespace_result(value,inserted,length.next);result
+ }
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_1(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_2(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_3(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+machine scoped(input:&[u8;1024],value:&mut LoadState,op:Read,kind:LevelKind)->Outcome {
+ let package:Envelope=envelope(input,value.end,op.next);
+ transition package.outcome==Outcome::Success {true -> name(input,value,package,kind) _ -> call_fail_0(value,package.outcome,package.offset)}
+ state name(input:&[u8;1024],value:&mut LoadState,package:Envelope,kind:LevelKind)->Outcome {
+  let name:PathResult=scoped_name(input,package.end,package.body,value.scope,kind);
+  transition name.outcome==Outcome::Success {true -> kind(input,value,package,name,kind) _ -> call_fail_1(value,name.outcome,name.offset)}
+ }
+ state kind(input:&[u8;1024],value:&mut LoadState,package:Envelope,name:PathResult,kind:LevelKind)->Outcome {
+  transition kind {
+   LevelKind::Processor -> processor(input,value,package,name,kind)
+   LevelKind::PowerResource -> power(input,value,package,name,kind)
+   LevelKind::Device -> call_create_2(value,package,name,kind,Value::Device,name.next,true)
+   LevelKind::ThermalZone -> call_create_3(value,package,name,kind,Value::ThermalZone,name.next,true)
+   _ -> call_create_4(value,package,name,kind,Value::Uninitialized,name.next,false)
+  }
+ }
+ state processor(input:&[u8;1024],value:&mut LoadState,package:Envelope,name:PathResult,kind:LevelKind)->Outcome {
+  let fields:Read=read_le(input,package.end,name.next,6);
+  transition fields.outcome==Outcome::Success {true -> processor_value(value,package,name,kind,fields) _ -> call_fail_5(value,fields.outcome,fields.offset)}
+ }
+ state processor_value(value:&mut LoadState,package:Envelope,name:PathResult,kind:LevelKind,fields:Read)->Outcome {
+  let object:Value=Value::Processor {id:(fields.value&255) as u8,address:((fields.value>>8)&0xffffffff) as u32,length:((fields.value>>40)&255) as u8};
+  let result:Outcome=create(value,package,name,kind,object,fields.next,true);result
+ }
+ state power(input:&[u8;1024],value:&mut LoadState,package:Envelope,name:PathResult,kind:LevelKind)->Outcome {
+  let fields:Read=read_le(input,package.end,name.next,3);
+  transition fields.outcome==Outcome::Success {true -> power_value(value,package,name,kind,fields) _ -> call_fail_6(value,fields.outcome,fields.offset)}
+ }
+ state power_value(value:&mut LoadState,package:Envelope,name:PathResult,kind:LevelKind,fields:Read)->Outcome {
+  let object:Value=Value::PowerResource {system_level:(fields.value&255) as u8,order:((fields.value>>8)&65535) as u16};
+  let result:Outcome=create(value,package,name,kind,object,fields.next,true);result
+ }
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_1(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_create_2(value:&mut LoadState,package:Envelope,name:PathResult,kind:LevelKind,object:Value,next:u64,with_object:bool) -> Outcome {let result:Outcome=create(value,package,name,kind,object,next,with_object);result}
+
+ state call_create_3(value:&mut LoadState,package:Envelope,name:PathResult,kind:LevelKind,object:Value,next:u64,with_object:bool) -> Outcome {let result:Outcome=create(value,package,name,kind,object,next,with_object);result}
+
+ state call_create_4(value:&mut LoadState,package:Envelope,name:PathResult,kind:LevelKind,object:Value,next:u64,with_object:bool) -> Outcome {let result:Outcome=create(value,package,name,kind,object,next,with_object);result}
+
+ state call_fail_5(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_6(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+machine create(value:&mut LoadState,package:Envelope,name:PathResult,kind:LevelKind,object:Value,next:u64,with_object:bool)->Outcome {
+ transition value.depth<8 {true -> level(value,package,name,kind,object,next,with_object) _ -> call_fail_0(value,Outcome::Depth,value.at)}
+ state level(value:&mut LoadState,package:Envelope,name:PathResult,kind:LevelKind,object:Value,next:u64,with_object:bool)->Outcome {
+  let added:NamespaceResult=add_level(value.space,name.value,kind);
+  transition added.outcome==Outcome::Success {true -> object(value,package,name,object,next,with_object,added.space) _ -> call_fail_1(value,added.outcome,value.at)}
+ }
+ state object(value:&mut LoadState,package:Envelope,name:PathResult,object:Value,next:u64,with_object:bool,space:Namespace)->Outcome {
+  transition with_object {true -> insert_object(value,package,name,object,next,space) _ -> call_push_2(value,package,name.value,next,space)}
+ }
+ state insert_object(value:&mut LoadState,package:Envelope,name:PathResult,object:Value,next:u64,space:Namespace)->Outcome {
+  let inserted:NamespaceResult=insert(space,name.value,object);
+  transition inserted.outcome==Outcome::Success {true -> call_push_3(value,package,name.value,next,inserted.space) _ -> call_fail_4(value,inserted.outcome,value.at)}
+ }
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_fail_1(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+
+ state call_push_2(value:&mut LoadState,package:Envelope,scope:Path,next:u64,space:Namespace) -> Outcome {let result:Outcome=push(value,package,scope,next,space);result}
+
+ state call_push_3(value:&mut LoadState,package:Envelope,scope:Path,next:u64,space:Namespace) -> Outcome {let result:Outcome=push(value,package,scope,next,space);result}
+
+ state call_fail_4(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+machine push(value:&mut LoadState,package:Envelope,scope:Path,next:u64,space:Namespace)->Outcome {
+ let index:u64=value.depth;
+ transition index<8 {true -> commit(value,package,scope,next,space,index) _ -> call_fail_0(value,Outcome::Depth,value.at)}
+ state commit(value:&mut LoadState,package:Envelope,scope:Path,next:u64,space:Namespace,index:u64)->Outcome {
+  let frame:ScopeFrame=ScopeFrame {scope:value.scope,end:value.end};
+  value.frames[index]=frame;value.depth=index+1;value.scope=scope;value.at=next;value.end=package.end;value.space=space;Outcome::Success
+ }
+
+ state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+
+machine scoped_name(input:&[u8;1024],end:u64,at:u64,scope:Path,kind:LevelKind)->PathResult {
+ let raw:PathResult=namestring(input,end,at);
+ transition raw.outcome==Outcome::Success {true -> full(raw,scope,kind) _ -> (raw)}
+ state full(raw:PathResult,scope:Path,kind:LevelKind)->PathResult {
+  let result:PathResult=resolve(raw.value,scope);let mut out:PathResult=result;out.next=raw.next;
+  transition kind {LevelKind::Scope -> (out) _ -> nonempty(raw,out)}
+ }
+ state nonempty(raw:PathResult,out:PathResult)->PathResult {transition raw.value.count>0 {true -> (out) _ -> (PathResult {outcome:Outcome::InvalidName,offset:raw.next})}
+ }
+}
+
+pub machine load(input:&[u8;1024],length:u64,unit:u64,space:Namespace,term_budget:u64,value_budget:u64)->LoadState {
+ transition length<=1024 && term_budget<=1024 && value_budget<=1024 {
+  true -> run(input,length,unit,space,term_budget,value_budget) _ -> (LoadState {outcome:Outcome::Capacity,space:space,done:true})
+ }
+ state run(input:&[u8;1024],length:u64,unit:u64,space:Namespace,term_budget:u64,value_budget:u64)->LoadState {
+  let scope:Path=root();let mut current:LoadState=LoadState {space:space,end:length,unit:unit,scope:scope,value_budget:value_budget};
+  let outcome:Outcome=load_loop(input,&mut current,0,term_budget);
+  transition current.done {true -> result(space,current) _ -> exhausted(space,current)}
+ }
+ state result(original:Namespace,current:LoadState)->LoadState {
+  transition current.outcome==Outcome::Success {true -> (current) _ -> rollback(original,current)}
+ }
+ state exhausted(original:Namespace,current:LoadState)->LoadState {
+  let mut out:LoadState=current;out.space=original;out.outcome=Outcome::WorkLimit;out.offset=current.at;out.done=true;out.external_count=0;out
+ }
+ state rollback(original:Namespace,current:LoadState)->LoadState {let mut out:LoadState=current;out.space=original;out.external_count=0;out}
+}
+machine load_loop(input:&[u8;1024],value:&mut LoadState,index:u64,count:u64)
+terminates by (index,count) -> Nat::BoundedDistance;
+-> Outcome {
+ let next:Outcome=load_tick(input,value,index,count);
+ transition index<count {true -> load_loop(input,value,index+1,count) _ -> (value.outcome)}
+}
+machine load_tick(input:&[u8;1024],value:&mut LoadState,index:u64,count:u64)->Outcome {
+ transition index<count {true -> tick(input,value) _ -> (value.outcome)}
+ state tick(input:&[u8;1024],value:&mut LoadState)->Outcome {let result:Outcome=load_step(input,value);result}
+}

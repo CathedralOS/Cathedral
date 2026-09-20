@@ -1,0 +1,706 @@
+{
+  "meaning": "Supplementary term-level staged map. Does not mark whole interpreter do_execute_method or Opcode enum translated.",
+  "tokens": {
+    "Acquire": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23331
+    },
+    "Add": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 114
+    },
+    "Alias": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine alias_declaration(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 6
+    },
+    "And": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 123
+    },
+    "ArgFirst": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 104
+    },
+    "ArgLast": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 110
+    },
+    "BankField": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23431
+    },
+    "Break": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 165
+    },
+    "Breakpoint": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 204
+    },
+    "Buffer": {
+      "reason": "ASCII source span or literal-size buffer description; dynamic buffer-size expressions are unsupported.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "pub machine atom(",
+        "path": "source/libraries/acpi/aml/values.omg"
+      },
+      "wire": 17
+    },
+    "BytePrefix": {
+      "reason": "Literal integer initializer. Operator execution and width-policy semantics remain separate.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "pub machine integer(",
+        "path": "source/libraries/acpi/aml/values.omg"
+      },
+      "wire": 10
+    },
+    "Concat": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 115
+    },
+    "ConcatRes": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 132
+    },
+    "CondRefOf": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23314
+    },
+    "Continue": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 159
+    },
+    "CopyObject": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 157
+    },
+    "CreateBitField": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 141
+    },
+    "CreateByteField": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 140
+    },
+    "CreateDWordField": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 138
+    },
+    "CreateField": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23315
+    },
+    "CreateQWordField": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 143
+    },
+    "CreateWordField": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 139
+    },
+    "DWordPrefix": {
+      "reason": "Literal integer initializer. Operator execution and width-policy semantics remain separate.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "pub machine integer(",
+        "path": "source/libraries/acpi/aml/values.omg"
+      },
+      "wire": 12
+    },
+    "DataRegion": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23432
+    },
+    "Debug": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23345
+    },
+    "Decrement": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 118
+    },
+    "DerefOf": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 131
+    },
+    "Device": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine scoped(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 23426
+    },
+    "DigitFirst": {
+      "reason": "NameString/NameSeg grammar only. Executable NameString method/field/value resolution remains pending.",
+      "status": "name-encoding",
+      "target": {
+        "anchor": "pub machine namestring(",
+        "path": "source/libraries/acpi/aml/names.omg"
+      },
+      "wire": 48
+    },
+    "DigitLast": {
+      "reason": "NameString/NameSeg grammar only. Executable NameString method/field/value resolution remains pending.",
+      "status": "name-encoding",
+      "target": {
+        "anchor": "pub machine namestring(",
+        "path": "source/libraries/acpi/aml/names.omg"
+      },
+      "wire": 57
+    },
+    "Divide": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 120
+    },
+    "DualNamePrefix": {
+      "reason": "NameString/NameSeg grammar only. Executable NameString method/field/value resolution remains pending.",
+      "status": "name-encoding",
+      "target": {
+        "anchor": "pub machine namestring(",
+        "path": "source/libraries/acpi/aml/names.omg"
+      },
+      "wire": 46
+    },
+    "Else": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 161
+    },
+    "Event": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine event(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 23298
+    },
+    "External": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine external(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 21
+    },
+    "Fatal": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23346
+    },
+    "Field": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23425
+    },
+    "FindSetLeftBit": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 129
+    },
+    "FindSetRightBit": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 130
+    },
+    "FromBCD": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23336
+    },
+    "If": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 160
+    },
+    "Increment": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 117
+    },
+    "Index": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 136
+    },
+    "IndexField": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23430
+    },
+    "LAnd": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 144
+    },
+    "LEqual": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 147
+    },
+    "LGreater": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 148
+    },
+    "LGreaterEqual": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 37525
+    },
+    "LLess": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 149
+    },
+    "LLessEqual": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 37524
+    },
+    "LNot": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 146
+    },
+    "LNotEqual": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 37523
+    },
+    "LOr": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 145
+    },
+    "Load": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23328
+    },
+    "LoadTable": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23327
+    },
+    "LocalFirst": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 96
+    },
+    "LocalLast": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 103
+    },
+    "Match": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 137
+    },
+    "Method": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine method(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 20
+    },
+    "Mid": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 158
+    },
+    "Mod": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 133
+    },
+    "MultiNamePrefix": {
+      "reason": "NameString/NameSeg grammar only. Executable NameString method/field/value resolution remains pending.",
+      "status": "name-encoding",
+      "target": {
+        "anchor": "pub machine namestring(",
+        "path": "source/libraries/acpi/aml/names.omg"
+      },
+      "wire": 47
+    },
+    "Multiply": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 119
+    },
+    "Mutex": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine mutex(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 23297
+    },
+    "Name": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine name_declaration(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 8
+    },
+    "NameCharFirst": {
+      "reason": "NameString/NameSeg grammar only. Executable NameString method/field/value resolution remains pending.",
+      "status": "name-encoding",
+      "target": {
+        "anchor": "pub machine namestring(",
+        "path": "source/libraries/acpi/aml/names.omg"
+      },
+      "wire": 65
+    },
+    "NameCharLast": {
+      "reason": "NameString/NameSeg grammar only. Executable NameString method/field/value resolution remains pending.",
+      "status": "name-encoding",
+      "target": {
+        "anchor": "pub machine namestring(",
+        "path": "source/libraries/acpi/aml/names.omg"
+      },
+      "wire": 90
+    },
+    "NameCharUnderscore": {
+      "reason": "NameString/NameSeg grammar only. Executable NameString method/field/value resolution remains pending.",
+      "status": "name-encoding",
+      "target": {
+        "anchor": "pub machine namestring(",
+        "path": "source/libraries/acpi/aml/names.omg"
+      },
+      "wire": 95
+    },
+    "Nand": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 124
+    },
+    "Noop": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine advance(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 163
+    },
+    "Nor": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 126
+    },
+    "Not": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 128
+    },
+    "Notify": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 134
+    },
+    "ObjectType": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 142
+    },
+    "One": {
+      "reason": "Literal integer initializer. Operator execution and width-policy semantics remain separate.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "pub machine integer(",
+        "path": "source/libraries/acpi/aml/values.omg"
+      },
+      "wire": 1
+    },
+    "Ones": {
+      "reason": "Literal integer initializer. Operator execution and width-policy semantics remain separate.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "pub machine integer(",
+        "path": "source/libraries/acpi/aml/values.omg"
+      },
+      "wire": 255
+    },
+    "OpRegion": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine region(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 23424
+    },
+    "Or": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 125
+    },
+    "Package": {
+      "reason": "Bounded package construction; VarPackage count restricted to integer literals. Elements may contain deferred NameReferences.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "pub machine parse_value(",
+        "path": "source/libraries/acpi/aml/values.omg"
+      },
+      "wire": 18
+    },
+    "ParentPrefixChar": {
+      "reason": "NameString/NameSeg grammar only. Executable NameString method/field/value resolution remains pending.",
+      "status": "name-encoding",
+      "target": {
+        "anchor": "pub machine namestring(",
+        "path": "source/libraries/acpi/aml/names.omg"
+      },
+      "wire": 94
+    },
+    "PowerRes": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine scoped(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 23428
+    },
+    "Processor": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine scoped(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 23427
+    },
+    "QWordPrefix": {
+      "reason": "Literal integer initializer. Operator execution and width-policy semantics remain separate.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "pub machine integer(",
+        "path": "source/libraries/acpi/aml/values.omg"
+      },
+      "wire": 14
+    },
+    "RefOf": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 113
+    },
+    "Release": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23335
+    },
+    "Reset": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23334
+    },
+    "Return": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 164
+    },
+    "Revision": {
+      "reason": "Literal integer initializer. Operator execution and width-policy semantics remain separate.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "pub machine integer(",
+        "path": "source/libraries/acpi/aml/values.omg"
+      },
+      "wire": 23344
+    },
+    "RootChar": {
+      "reason": "NameString/NameSeg grammar only. Executable NameString method/field/value resolution remains pending.",
+      "status": "name-encoding",
+      "target": {
+        "anchor": "pub machine namestring(",
+        "path": "source/libraries/acpi/aml/names.omg"
+      },
+      "wire": 92
+    },
+    "Scope": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine scoped(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 16
+    },
+    "ShiftLeft": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 121
+    },
+    "ShiftRight": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 122
+    },
+    "Signal": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23332
+    },
+    "SizeOf": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 135
+    },
+    "Sleep": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23330
+    },
+    "Stall": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23329
+    },
+    "Store": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 112
+    },
+    "StringPrefix": {
+      "reason": "ASCII source span or literal-size buffer description; dynamic buffer-size expressions are unsupported.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "pub machine atom(",
+        "path": "source/libraries/acpi/aml/values.omg"
+      },
+      "wire": 13
+    },
+    "Subtract": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 116
+    },
+    "ThermalZone": {
+      "reason": "Static declaration only; see PORT.md for inert objects, literal TermArgs and deferred method body semantics.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine scoped(",
+        "path": "source/libraries/acpi/aml/loader.omg"
+      },
+      "wire": 23429
+    },
+    "Timer": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23347
+    },
+    "ToBCD": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23337
+    },
+    "ToBuffer": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 150
+    },
+    "ToDecimalString": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 151
+    },
+    "ToHexString": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 152
+    },
+    "ToInteger": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 153
+    },
+    "ToString": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 156
+    },
+    "VarPackage": {
+      "reason": "Bounded package construction; VarPackage count restricted to integer literals. Elements may contain deferred NameReferences.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "pub machine parse_value(",
+        "path": "source/libraries/acpi/aml/values.omg"
+      },
+      "wire": 19
+    },
+    "Wait": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 23333
+    },
+    "While": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 162
+    },
+    "WordPrefix": {
+      "reason": "Literal integer initializer. Operator execution and width-policy semantics remain separate.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "pub machine integer(",
+        "path": "source/libraries/acpi/aml/values.omg"
+      },
+      "wire": 11
+    },
+    "Xor": {
+      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
+      "status": "pending",
+      "wire": 127
+    },
+    "Zero": {
+      "reason": "Literal integer initializer. Operator execution and width-policy semantics remain separate.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "pub machine integer(",
+        "path": "source/libraries/acpi/aml/values.omg"
+      },
+      "wire": 0
+    }
+  }
+}

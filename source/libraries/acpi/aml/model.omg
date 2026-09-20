@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// AML translation from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Original upstream copyright 2018 Isaac Woods; bounded Omega adaptation 2026.
+// See PORT.md and licenses/rust-osdev/acpi for provenance and changes.
+module model;
+pub data Outcome [copy] {
+ case Success; case Truncated; case BadEncoding; case UnsupportedSyntax;
+ case Capacity; case Depth; case WorkLimit; case InvalidName; case AboveRoot;
+ case NotAbsolute; case MissingLevel; case MissingObject; case NameCollision;
+ case InvalidState; case ReferenceCycle;
+}
+// Wire NameStrings contain a root OR leading parent prefixes, then segments.
+// Each segment is four ASCII bytes, packed least-significant byte first.
+pub data Path [copy] { absolute: bool; parents: u64; count: u64; segments: [u32; 16]; }
+pub data PathResult [copy] { outcome: Outcome; value: Path; next: u64; offset: u64; }
+pub data Read [copy] { outcome: Outcome; value: u64; next: u64; offset: u64; }
+pub data Envelope [copy] { outcome: Outcome; body: u64; end: u64; offset: u64; }
+pub data Span [copy] { unit: u64; start: u64; end: u64; }
+pub data LevelKind [copy] { case Scope; case Device; case Processor; case PowerResource; case ThermalZone; case MethodLocals; }
+pub data Value [copy] {
+ case Uninitialized;
+ case Integer(number: u64);
+ case String(bytes: Span);
+ case Buffer(size: u64, initializer: Span);
+ case Package(first: u64, count: u64);
+ case NameReference(name: Path, scope: Path);
+ case Method(flags: u8, body: Span);
+ case Device;
+ case Processor(id: u8, address: u32, length: u8);
+ case PowerResource(system_level: u8, order: u16);
+ case ThermalZone;
+ case Mutex(sync_level: u8);
+ case Event;
+ case OperationRegion(space: u8, base: u64, length: u64, scope: Path);
+}
+pub data Object [copy] { value: Value; has_next: bool; next: u64; }
+pub data Entry [copy] { path: Path; has_level: bool; level: LevelKind; has_object: bool; object: u64; alias: bool; }
+pub data Namespace [copy] { count: u64; object_count: u64; entries: [Entry; 32]; objects: [Object; 64]; }
+pub data NamespaceResult [copy] { outcome: Outcome; space: Namespace; index: u64; object: u64; }
+pub data Lookup [copy] { outcome: Outcome; path: Path; index: u64; object: u64; }
+pub data ValueRead [copy] { outcome: Outcome; value: Value; next: u64; offset: u64; }
+
+pub data PackageFrame [copy] { object: u64; end: u64; remaining: u64; first: bool; last: u64; }
+pub data ValueState [copy] { outcome: Outcome; offset: u64; space: Namespace; at: u64; end: u64; unit: u64; scope: Path; depth: u64; frames: [PackageFrame; 8]; done: bool; object: u64; allow_reference: bool; }
+
+pub data ScopeFrame [copy] { scope: Path; end: u64; }
+pub data External [copy] { path: Path; object_type: u8; argument_count: u8; offset: u64; }
+pub data LoadState [copy] { outcome: Outcome; offset: u64; space: Namespace; at: u64; end: u64; unit: u64; scope: Path; depth: u64; frames: [ScopeFrame; 8]; done: bool; value_budget: u64; external_count: u64; externals: [External; 32]; }
+
+pub data ReferenceState [copy] { outcome: Outcome; object: u64; visited: u64; done: bool; }

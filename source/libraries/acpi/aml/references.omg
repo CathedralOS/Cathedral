@@ -1,0 +1,60 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// AML translation from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Original upstream copyright 2018 Isaac Woods; bounded Omega adaptation 2026.
+// See PORT.md and licenses/rust-osdev/acpi for provenance and changes.
+module references;
+use model::Outcome;
+use model::Path;
+use model::Value;
+use model::Object;
+use model::Namespace;
+use model::Lookup;
+use model::ReferenceState;
+use namespace::object_at;
+use namespace::search;
+pub machine resolve_reference(space:Namespace,object:u64,budget:u64)->ReferenceState {
+ transition object<space.object_count && space.object_count<=64 && budget<=64 {
+  true -> run(space,object,budget) _ -> (ReferenceState {outcome:Outcome::InvalidState,done:true})
+ }
+ state run(space:Namespace,object:u64,budget:u64)->ReferenceState {
+  let initial:ReferenceState=ReferenceState {object:object};let result:ReferenceState=reference_scan(space,initial,0,budget);
+  transition result.done {true -> (result) _ -> (ReferenceState {outcome:Outcome::WorkLimit,object:result.object,visited:result.visited,done:true})}
+ }
+}
+machine reference_scan(space:Namespace,value:ReferenceState,index:u64,count:u64)
+terminates by (index,count) -> Nat::BoundedDistance;
+-> ReferenceState {
+ let next:ReferenceState=reference_step(space,value);
+ transition index<count {true -> reference_scan(space,next,index+1,count) _ -> (value)}
+}
+machine reference_step(space:Namespace,value:ReferenceState)->ReferenceState {
+ transition value.done {true -> (value) _ -> bounds(space,value)}
+ state bounds(space:Namespace,value:ReferenceState)->ReferenceState {
+  transition value.object<space.object_count && value.object<64 {true -> seen(space,value) _ -> (ReferenceState {outcome:Outcome::InvalidState,done:true})}
+ }
+ state seen(space:Namespace,value:ReferenceState)->ReferenceState {
+  let mask:u64=(1 as u64)<<value.object;
+  transition value.visited&mask==0 {true -> inspect(space,value,mask) _ -> (ReferenceState {outcome:Outcome::ReferenceCycle,object:value.object,visited:value.visited,done:true})}
+ }
+ state inspect(space:Namespace,value:ReferenceState,mask:u64)->ReferenceState {
+  let object:Object=object_at(space,value.object);let referred_value:Value=object.value;
+  let target:ReferenceTarget=reference_target(referred_value);
+  transition target.has_name {
+   true -> lookup(space,value,mask,target.name,target.scope)
+   _ -> (ReferenceState {object:value.object,visited:value.visited|mask,done:true})
+  }
+ }
+ state lookup(space:Namespace,value:ReferenceState,mask:u64,name:Path,scope:Path)->ReferenceState {
+  let found:Lookup=search(space,name,scope);
+  transition found.outcome==Outcome::Success {
+   true -> (ReferenceState {object:found.object,visited:value.visited|mask})
+   _ -> (ReferenceState {outcome:found.outcome,object:value.object,visited:value.visited|mask,done:true})
+  }
+ }
+}
+
+data ReferenceTarget [copy] {has_name:bool;name:Path;scope:Path;}
+machine reference_target(value:Value)->ReferenceTarget {
+ transition value {Value::NameReference {name,scope} -> named(name,scope) _ -> (ReferenceTarget {})}
+ state named(name:Path,scope:Path)->ReferenceTarget {ReferenceTarget {has_name:true,name:name,scope:scope}}
+}

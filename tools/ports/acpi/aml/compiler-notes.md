@@ -1,0 +1,11 @@
+# Checked source forms
+
+These notes concern the recorded fresh compiler `eaa7993a23623cd8fabf45350340479c5c9c7879`, SHA-256 `2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4`. They do not classify ordinary unfinished port work as an Omega design gap.
+
+- Bounded scans use the established `terminates by (index, count) -> Nat::BoundedDistance` form and a bare `index < count` recursive guard. Byte/array admission checks live in ordinary step helpers. A compound recursive guard did not establish the ranking in the first implementation.
+- Cross-machine calls are bound to typed locals in explicit states. A direct external-machine transition target was rejected during semantic evaluation as absent from the current machine. Internal transitions retain state identity; recursive machine calls retain their checked ranking.
+- External metadata validation binds masked/shifted values to scalar locals before comparing them. The earlier compound field expression typechecked but its full closure was rejected by semantic admission for lack of an exact binary-operator selection. The current full loader fixture passes that admission boundary.
+- `references.omg` deliberately names its private entries `reference_scan` and `reference_step`. Reverting only these spellings to `scan` and `step` in an isolated copy produces `no field absolute on ReferenceState` in the reference-cycle fixture. `reproduce-private-helper.py` preserves that witnessed full-composition reproduction. A smaller lookalike did not reproduce it, so this is evidence of a source-composition issue, not a claimed complete compiler diagnosis. The original case succeeds with the current names.
+- Deep whole-aggregate return composition imposed minutes of reference-origin and mutation-summary analysis. The loader and namespace insertion kernels now update exact caller-owned fields with `&mut`; public transactional results still return ordinary copied data. Namespace alias tests became substantially faster. Full loader checks still take minutes. No Omega source or proof rule was modified.
+
+Every accepted behavior fixture has a body-mutating control that must compute 1 and fail its zero-result contract. None of these source-form adjustments substitutes hand-written expected vectors for actual checked evaluation.

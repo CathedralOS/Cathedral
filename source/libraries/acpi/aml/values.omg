@@ -1,0 +1,260 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// AML translation from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Original upstream copyright 2018 Isaac Woods; bounded Omega adaptation 2026.
+// See PORT.md and licenses/rust-osdev/acpi for provenance and changes.
+module values;
+use model::Outcome;
+use model::Read;
+use model::Envelope;
+use model::Span;
+use model::Path;
+use model::PathResult;
+use model::Value;
+use model::ValueRead;
+use model::Object;
+use model::Namespace;
+use model::NamespaceResult;
+use model::PackageFrame;
+use model::ValueState;
+use bytes::read_le;
+use bytes::envelope;
+use bytes::opcode;
+use names::namestring;
+use names::lead_char;
+use namespace::allocate;
+use namespace::object_at;
+use namespace::object_set;
+pub machine integer(input:&[u8;1024],end:u64,at:u64)->Read {
+ let token:Read=opcode(input,end,at);
+ transition token.outcome==Outcome::Success {true -> choose(input,end,at,token) _ -> (token)}
+ state choose(input:&[u8;1024],end:u64,at:u64,token:Read)->Read {
+  transition token.value {
+   0 -> (Read {next:token.next}) 1 -> (Read {value:1,next:token.next})
+   255 -> (Read {value:0xffffffffffffffff,next:token.next})
+   0x5b30 -> (Read {value:2,next:token.next})
+   10 -> call_read_le_0(input,end,token.next,1) 11 -> call_read_le_1(input,end,token.next,2)
+   12 -> call_read_le_2(input,end,token.next,4) 14 -> call_read_le_3(input,end,token.next,8)
+   _ -> (Read {outcome:Outcome::UnsupportedSyntax,offset:at})
+  }
+ }
+
+ state call_read_le_0(input: &[u8; 1024], end: u64, at: u64, width: u64) -> Read {let result:Read=read_le(input,end,at,width);result}
+
+ state call_read_le_1(input: &[u8; 1024], end: u64, at: u64, width: u64) -> Read {let result:Read=read_le(input,end,at,width);result}
+
+ state call_read_le_2(input: &[u8; 1024], end: u64, at: u64, width: u64) -> Read {let result:Read=read_le(input,end,at,width);result}
+
+ state call_read_le_3(input: &[u8; 1024], end: u64, at: u64, width: u64) -> Read {let result:Read=read_le(input,end,at,width);result}
+}
+pub machine atom(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:Path,allow_reference:bool)->ValueRead {
+ let literal:Read=integer(input,end,at);
+ transition literal.outcome==Outcome::Success {
+  true -> (ValueRead {value:Value::Integer {number:literal.value},next:literal.next})
+  _ -> other(input,end,at,unit,scope,allow_reference,literal)
+ }
+ state other(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:Path,allow_reference:bool,literal:Read)->ValueRead {
+  let token:Read=read_le(input,end,at,1);
+  transition token.outcome==Outcome::Success {true -> choose(input,end,at,unit,scope,allow_reference,token) _ -> (ValueRead {outcome:token.outcome,offset:token.offset})}
+ }
+ state choose(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:Path,allow_reference:bool,token:Read)->ValueRead {
+  transition token.value {13 -> string(input,end,token.next,unit) 17 -> buffer(input,end,token.next,unit) _ -> reference(input,end,at,scope,allow_reference)}
+ }
+ state reference(input:&[u8;1024],end:u64,at:u64,scope:Path,allow_reference:bool)->ValueRead {
+  transition allow_reference {true -> parse_reference(input,end,at,scope) _ -> (ValueRead {outcome:Outcome::UnsupportedSyntax,offset:at})}
+ }
+ state parse_reference(input:&[u8;1024],end:u64,at:u64,scope:Path)->ValueRead {
+  let parsed:PathResult=namestring(input,end,at);
+  transition parsed.outcome==Outcome::Success && parsed.value.count>0 {
+   true -> (ValueRead {value:Value::NameReference {name:parsed.value,scope:scope},next:parsed.next})
+   _ -> reference_failure(parsed)
+  }
+ }
+ state reference_failure(parsed:PathResult)->ValueRead {transition parsed.outcome==Outcome::Success {true -> (ValueRead {outcome:Outcome::InvalidName,offset:parsed.next}) _ -> (ValueRead {outcome:parsed.outcome,offset:parsed.offset})}}
+ state string(input:&[u8;1024],end:u64,at:u64,unit:u64)->ValueRead {
+  let initial:Read=Read {next:at};let parsed:Read=string_loop(input,end,at,initial);
+  transition parsed.outcome==Outcome::Success && parsed.value==1 {
+   true -> string_value(at,unit,parsed) _ -> string_failure(parsed)
+  }
+ }
+ state string_failure(parsed:Read)->ValueRead {transition parsed.outcome==Outcome::Success {true -> (ValueRead {outcome:Outcome::Truncated,offset:parsed.next}) _ -> (ValueRead {outcome:parsed.outcome,offset:parsed.next})}}
+ state string_value(at:u64,unit:u64,parsed:Read)->ValueRead {
+  transition parsed.next>0 {true -> (ValueRead {value:Value::String {bytes:Span {unit:unit,start:at,end:parsed.next-1}},next:parsed.next}) _ -> (ValueRead {outcome:Outcome::BadEncoding,offset:at})}
+ }
+ state buffer(input:&[u8;1024],end:u64,at:u64,unit:u64)->ValueRead {
+  let package:Envelope=envelope(input,end,at);
+  transition package.outcome==Outcome::Success {true -> buffer_size(input,package,unit) _ -> (ValueRead {outcome:package.outcome,offset:package.offset})}
+ }
+ state buffer_size(input:&[u8;1024],package:Envelope,unit:u64)->ValueRead {
+  let size:Read=integer(input,package.end,package.body);
+  transition size.outcome==Outcome::Success {
+   true -> (ValueRead {value:Value::Buffer {size:size.value,initializer:Span {unit:unit,start:size.next,end:package.end}},next:package.end})
+   _ -> (ValueRead {outcome:size.outcome,offset:size.offset})
+  }
+ }
+}
+machine string_loop(input:&[u8;1024],end:u64,index:u64,value:Read)
+terminates by (index,end) -> Nat::BoundedDistance;
+-> Read {
+ let next:Read=string_step(input,end,index,value);
+ transition index<end {true -> string_loop(input,end,index+1,next) _ -> (value)}
+}
+machine string_step(input:&[u8;1024],end:u64,index:u64,value:Read)->Read {
+ let byte:Read=read_le(input,end,index,1);
+ transition value.value==0 && value.outcome==Outcome::Success && byte.outcome==Outcome::Success {
+  true -> classify(byte) _ -> (value)
+ }
+ state classify(byte:Read)->Read {
+  transition byte.value {0 -> (Read {value:1,next:byte.next}) _ -> ascii(byte)}
+ }
+ state ascii(byte:Read)->Read {
+  transition byte.value<=127 {true -> (Read {next:byte.next}) _ -> (Read {outcome:Outcome::BadEncoding,next:byte.next})}
+ }
+}
+machine frame_at(value:ValueState,index:u64)->PackageFrame {transition index<8 {true -> (value.frames[index]) _ -> (PackageFrame {})}}
+machine frame_set(value:ValueState,index:u64,frame:PackageFrame)->ValueState {
+ transition index<8 {true -> set(value,index,frame) _ -> (value)}
+ state set(value:ValueState,index:u64,frame:PackageFrame)->ValueState {let mut out:ValueState=value;out.frames[index]=frame;out}
+}
+machine fail(value:ValueState,outcome:Outcome,offset:u64)->ValueState {let mut out:ValueState=value;out.outcome=outcome;out.offset=offset;out.done=true;out}
+pub machine parse_value(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:Path,space:Namespace,allow_reference:bool,budget:u64)->ValueState {
+ let initial:ValueState=ValueState {space:space,at:at,end:end,unit:unit,scope:scope,allow_reference:allow_reference};
+ transition end<=1024 && at<=end && budget<=1024 {
+  true -> run(input,initial,budget) _ -> (ValueState {outcome:Outcome::InvalidState,space:space,offset:at,done:true})
+ }
+ state run(input:&[u8;1024],initial:ValueState,budget:u64)->ValueState {
+  let result:ValueState=value_loop(input,initial,0,budget);
+  transition result.done {true -> (result) _ -> exhausted(result)}
+ }
+ state exhausted(value:ValueState)->ValueState {let result:ValueState=fail(value,Outcome::WorkLimit,value.at);result}
+}
+machine value_loop(input:&[u8;1024],value:ValueState,index:u64,count:u64)
+terminates by (index,count) -> Nat::BoundedDistance;
+-> ValueState {
+ let next:ValueState=value_step(input,value);
+ transition index<count {true -> value_loop(input,next,index+1,count) _ -> (value)}
+}
+machine value_step(input:&[u8;1024],value:ValueState)->ValueState {
+ transition value.done {true -> (value) _ -> active(input,value)}
+ state active(input:&[u8;1024],value:ValueState)->ValueState {
+  transition value.depth>0 && value.depth<=8 {true -> package(input,value) _ -> item(input,value,value.end)}
+ }
+ state package(input:&[u8;1024],value:ValueState)->ValueState {
+  let frame:PackageFrame=frame_at(value,value.depth-1);
+  transition frame.remaining==0 {true -> close(value,frame) _ -> remaining(input,value,frame)}
+ }
+ state close(value:ValueState,frame:PackageFrame)->ValueState {
+  transition value.at==frame.end {true -> pop(value,frame) _ -> call_fail_0(value,Outcome::BadEncoding,value.at)}
+ }
+ state pop(value:ValueState,frame:PackageFrame)->ValueState {
+  let mut out:ValueState=value;out.depth=value.depth-1;let result:ValueState=attach(out,frame.object);result
+ }
+ state remaining(input:&[u8;1024],value:ValueState,frame:PackageFrame)->ValueState {
+  transition value.at==frame.end {true -> missing(value) _ -> item(input,value,frame.end)}
+ }
+ state missing(value:ValueState)->ValueState {let empty:Value=Value::Uninitialized;let result:ValueState=store(value,empty,value.at);result}
+ state item(input:&[u8;1024],value:ValueState,end:u64)->ValueState {
+  let token:Read=read_le(input,end,value.at,1);
+  transition token.outcome==Outcome::Success {true -> classify(input,value,end,token) _ -> call_fail_1(value,token.outcome,token.offset)}
+ }
+ state classify(input:&[u8;1024],value:ValueState,end:u64,token:Read)->ValueState {
+  transition token.value {18 -> open(input,value,end,token,false) 19 -> open(input,value,end,token,true) _ -> literal(input,value,end)}
+ }
+ state literal(input:&[u8;1024],value:ValueState,end:u64)->ValueState {
+  let parsed:ValueRead=atom(input,end,value.at,value.unit,value.scope,value.allow_reference||value.depth>0);
+  transition parsed.outcome==Outcome::Success {true -> call_store_2(value,parsed.value,parsed.next) _ -> call_fail_3(value,parsed.outcome,parsed.offset)}
+ }
+ state open(input:&[u8;1024],value:ValueState,end:u64,token:Read,variable:bool)->ValueState {
+  let package:Envelope=envelope(input,end,token.next);
+  transition package.outcome==Outcome::Success {true -> count(input,value,package,variable) _ -> call_fail_4(value,package.outcome,package.offset)}
+ }
+ state count(input:&[u8;1024],value:ValueState,package:Envelope,variable:bool)->ValueState {
+  transition variable {true -> variable_count(input,value,package) _ -> fixed_count(input,value,package)}
+ }
+ state fixed_count(input:&[u8;1024],value:ValueState,package:Envelope)->ValueState {
+  let count:Read=read_le(input,package.end,package.body,1);let result:ValueState=open_package(value,package,count);result
+ }
+ state variable_count(input:&[u8;1024],value:ValueState,package:Envelope)->ValueState {
+  let count:Read=integer(input,package.end,package.body);let result:ValueState=open_package(value,package,count);result
+ }
+
+ state call_fail_0(value:ValueState,outcome:Outcome,offset:u64) -> ValueState {let result:ValueState=fail(value,outcome,offset);result}
+
+ state call_fail_1(value:ValueState,outcome:Outcome,offset:u64) -> ValueState {let result:ValueState=fail(value,outcome,offset);result}
+
+ state call_store_2(value:ValueState,object:Value,next:u64) -> ValueState {let result:ValueState=store(value,object,next);result}
+
+ state call_fail_3(value:ValueState,outcome:Outcome,offset:u64) -> ValueState {let result:ValueState=fail(value,outcome,offset);result}
+
+ state call_fail_4(value:ValueState,outcome:Outcome,offset:u64) -> ValueState {let result:ValueState=fail(value,outcome,offset);result}
+}
+machine open_package(value:ValueState,package:Envelope,count:Read)->ValueState {
+ transition count.outcome==Outcome::Success {true -> depth(value,package,count) _ -> call_fail_0(value,count.outcome,count.offset)}
+ state depth(value:ValueState,package:Envelope,count:Read)->ValueState {
+  transition value.depth<8 {true -> capacity(value,package,count) _ -> call_fail_1(value,Outcome::Depth,value.at)}
+ }
+ state capacity(value:ValueState,package:Envelope,count:Read)->ValueState {
+  transition count.value<64 {true -> allocate_package(value,package,count) _ -> call_fail_2(value,Outcome::Capacity,value.at)}
+ }
+ state allocate_package(value:ValueState,package:Envelope,count:Read)->ValueState {
+  let object:Value=Value::Package {count:count.value};let allocated:NamespaceResult=allocate(value.space,object);
+  transition allocated.outcome==Outcome::Success {true -> push(value,package,count,allocated) _ -> call_fail_3(value,allocated.outcome,value.at)}
+ }
+ state push(value:ValueState,package:Envelope,count:Read,allocated:NamespaceResult)->ValueState {
+  let frame:PackageFrame=PackageFrame {object:allocated.object,end:package.end,remaining:count.value,first:true};
+  let mut out:ValueState=frame_set(value,value.depth,frame);out.space=allocated.space;out.depth=increment_depth(value.depth);out.at=count.next;out
+ }
+
+ state call_fail_0(value:ValueState,outcome:Outcome,offset:u64) -> ValueState {let result:ValueState=fail(value,outcome,offset);result}
+
+ state call_fail_1(value:ValueState,outcome:Outcome,offset:u64) -> ValueState {let result:ValueState=fail(value,outcome,offset);result}
+
+ state call_fail_2(value:ValueState,outcome:Outcome,offset:u64) -> ValueState {let result:ValueState=fail(value,outcome,offset);result}
+
+ state call_fail_3(value:ValueState,outcome:Outcome,offset:u64) -> ValueState {let result:ValueState=fail(value,outcome,offset);result}
+}
+machine increment_depth(value:u64)->u64 {transition value<8 {true -> (value+1) _ -> (value)}}
+machine store(value:ValueState,object:Value,next:u64)->ValueState {
+ let allocated:NamespaceResult=allocate(value.space,object);
+ transition allocated.outcome==Outcome::Success {true -> ready(value,next,allocated) _ -> call_fail_0(value,allocated.outcome,value.at)}
+ state ready(value:ValueState,next:u64,allocated:NamespaceResult)->ValueState {
+  let mut out:ValueState=value;out.space=allocated.space;out.at=next;let result:ValueState=attach(out,allocated.object);result
+ }
+
+ state call_fail_0(value:ValueState,outcome:Outcome,offset:u64) -> ValueState {let result:ValueState=fail(value,outcome,offset);result}
+}
+machine attach(value:ValueState,object:u64)->ValueState {
+ transition value.depth>0 && value.depth<=8 {true -> package(value,object) _ -> done(value,object)}
+ state done(value:ValueState,object:u64)->ValueState {let mut out:ValueState=value;out.done=true;out.object=object;out}
+ state package(value:ValueState,object:u64)->ValueState {
+  let frame:PackageFrame=frame_at(value,value.depth-1);
+  transition frame.remaining>0 {true -> link(value,object,frame) _ -> call_fail_0(value,Outcome::BadEncoding,value.at)}
+ }
+ state link(value:ValueState,object:u64,frame:PackageFrame)->ValueState {
+  transition frame.first {true -> first(value,object,frame) _ -> next(value,object,frame)}
+ }
+ state first(value:ValueState,object:u64,frame:PackageFrame)->ValueState {
+  let package:Object=object_at(value.space,frame.object);
+  transition package.value {Value::Package {first,count} -> first_update(value,object,frame,count) _ -> call_fail_1(value,Outcome::InvalidState,value.at)}
+ }
+ state first_update(value:ValueState,object:u64,frame:PackageFrame,count:u64)->ValueState {
+  let mut out:ValueState=value;let package:Object=Object {value:Value::Package {first:object,count:count}};
+  out.space=object_set(value.space,frame.object,package);let result:ValueState=advance_frame(out,object,frame);result
+ }
+ state next(value:ValueState,object:u64,frame:PackageFrame)->ValueState {
+  let mut prior:Object=object_at(value.space,frame.last);prior.has_next=true;prior.next=object;
+  let mut out:ValueState=value;out.space=object_set(value.space,frame.last,prior);let result:ValueState=advance_frame(out,object,frame);result
+ }
+
+ state call_fail_0(value:ValueState,outcome:Outcome,offset:u64) -> ValueState {let result:ValueState=fail(value,outcome,offset);result}
+
+ state call_fail_1(value:ValueState,outcome:Outcome,offset:u64) -> ValueState {let result:ValueState=fail(value,outcome,offset);result}
+}
+machine advance_frame(value:ValueState,object:u64,frame:PackageFrame)->ValueState {
+ transition frame.remaining>0 && value.depth>0 {true -> commit(value,object,frame) _ -> call_fail_0(value,Outcome::InvalidState,value.at)}
+ state commit(value:ValueState,object:u64,frame:PackageFrame)->ValueState {
+  let mut next:PackageFrame=frame;next.remaining=frame.remaining-1;next.first=false;next.last=object;
+  let result:ValueState=frame_set(value,value.depth-1,next);result
+ }
+
+ state call_fail_0(value:ValueState,outcome:Outcome,offset:u64) -> ValueState {let result:ValueState=fail(value,outcome,offset);result}
+}

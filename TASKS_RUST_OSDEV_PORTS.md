@@ -357,6 +357,13 @@ upstream object-test scenarios. Width-aware arithmetic, BCD, bit copying and
 bounded conversions preserve explicit primary-spec corrections. Method/context,
 namespace/target and generic object operations remain pending; the checkbox stays open.
 
+ACPI-004 partial evidence: [static AML syntax and namespace](source/libraries/acpi/aml/PORT.md)
+passes 27 Omega scenarios with 27 body mutations and an 18-file source check.
+It covers NameString/package framing, literal/package values, static declarations,
+retained method bodies, stable aliases, scoped lazy references and transactional
+loader errors under explicit capacities/budgets. Field syntax, executable terms
+and full interpreter behavior remain pending; ACPI-004/006 stay open.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

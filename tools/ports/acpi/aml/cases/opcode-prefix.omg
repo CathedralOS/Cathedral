@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral fixtures; no firmware or external uACPI fixture content.
+use aml::model::Outcome;
+use aml::model::Read;
+use aml::model::Envelope;
+use aml::model::Span;
+use aml::model::Path;
+use aml::model::PathResult;
+use aml::model::Value;
+use aml::model::Object;
+use aml::model::Namespace;
+use aml::model::NamespaceResult;
+use aml::model::Lookup;
+use aml::model::LevelKind;
+use aml::model::ValueState;
+use aml::model::LoadState;
+use aml::model::ReferenceState;
+use aml::bytes::read_le;
+use aml::bytes::pkg_length;
+use aml::bytes::envelope;
+use aml::bytes::opcode;
+
+machine test()->u64 {
+let mut input:[u8;1024];
+input[0]=146;
+input[1]=147;
+input[2]=146;
+input[3]=17;
+input[4]=91;
+input[5]=130;
+input[6]=146;
+let a:Read=opcode(&input,7,0);let b:Read=opcode(&input,7,2);let c:Read=opcode(&input,7,4);let d:Read=opcode(&input,7,6);let e:Read=opcode(&input,5,4);
+ transition a.value==0x9293 && a.next==2 && b.value==0x92 && b.next==3 && c.value==0x5b82 && d.value==0x92 && d.next==7 && e.outcome==Outcome::Truncated {true -> (0) _ -> (1)}
+}
+const TEST_RESULT:u64=test();
+machine require_ok(result:u64) requires result==0; {}
+data Main {}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

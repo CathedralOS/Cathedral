@@ -1,0 +1,10 @@
+use aml::model::Outcome;
+use aml::model::LoadState;
+use aml::model::Namespace;
+use aml::loader::load;
+use aml::namespace::empty;
+machine test()->u64 {let mut input:[u8;1024];input[0]=0xa3;let start:Namespace=empty();let result:LoadState=load(&input,1,1,start,2,1);transition result.outcome==Outcome::Success && result.at==1 {true -> (0) _ -> (1)}}
+const RESULT:u64=test();
+machine ok(x:u64) requires x==0; {}
+data Main {}
+machine Main::main(&mut self){ok(RESULT);}

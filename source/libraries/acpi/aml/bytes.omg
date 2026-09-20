@@ -1,0 +1,82 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// AML translation from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Original upstream copyright 2018 Isaac Woods; bounded Omega adaptation 2026.
+// See PORT.md and licenses/rust-osdev/acpi for provenance and changes.
+module bytes;
+use model::Outcome;
+use model::Read;
+use model::Envelope;
+pub machine read_le(input: &[u8; 1024], end: u64, at: u64, width: u64) -> Read {
+ transition end <= 1024 && at <= end && width <= 8 {
+  true -> room(input,end,at,width) _ -> (Read { outcome: Outcome::InvalidState, offset: at })
+ }
+ state room(input: &[u8; 1024],end:u64,at:u64,width:u64) -> Read {
+  let result:Read=read_le_scan(input,end,at,width,0,0);
+  transition width <= end-at { true -> (result) _ -> (Read {outcome:Outcome::Truncated,offset:at}) }
+ }
+}
+
+machine read_le_scan(input:&[u8;1024],end:u64,at:u64,width:u64,index:u64,value:u64)
+terminates by (index,width) -> Nat::BoundedDistance;
+-> Read {
+ let next:u64=read_le_step(input,at,index,value);
+ let cursor:u64=advance_byte(at);
+ transition index<width {
+  true -> read_le_scan(input,end,cursor,width,index+1,next)
+  _ -> (Read {value:value,next:at})
+ }
+}
+machine read_le_step(input:&[u8;1024],at:u64,index:u64,value:u64) -> u64 {
+ transition at<1024 && index<8 { true -> (value|((input[at] as u64)<<(index*8))) _ -> (value) }
+}
+
+pub machine pkg_length(input:&[u8;1024],end:u64,at:u64) -> Read {
+ let lead:Read=read_le(input,end,at,1);
+ transition lead.outcome == Outcome::Success { true -> following(input,end,at,lead) _ -> (lead) }
+ state following(input:&[u8;1024],end:u64,at:u64,lead:Read) -> Read {
+  let count:u64=lead.value>>6;
+  transition count { 0 -> (Read {value:lead.value&63,next:lead.next}) _ -> extended(input,end,at,lead,count) }
+ }
+ state extended(input:&[u8;1024],end:u64,at:u64,lead:Read,count:u64) -> Read {
+  let tail:Read=read_le(input,end,lead.next,count);
+  transition lead.value&48 == 0 {
+   true -> finish(at,lead,tail) _ -> (Read {outcome:Outcome::BadEncoding,offset:at})
+  }
+ }
+ state finish(at:u64,lead:Read,tail:Read) -> Read {
+  transition tail.outcome == Outcome::Success {
+   true -> (Read {value:(lead.value&15)|(tail.value<<4),next:tail.next}) _ -> (tail)
+  }
+ }
+}
+pub machine envelope(input:&[u8;1024],end:u64,at:u64) -> Envelope {
+ let length:Read=pkg_length(input,end,at);
+ transition length.outcome == Outcome::Success && at <= end && length.next >= at {
+  true -> bounds(end,at,length) _ -> (Envelope {outcome:length.outcome,offset:length.offset})
+ }
+ state bounds(end:u64,at:u64,length:Read) -> Envelope {
+  transition length.value >= length.next-at && length.value <= end-at {
+   true -> (Envelope {body:length.next,end:at+length.value}) _ -> (Envelope {outcome:Outcome::BadEncoding,offset:at})
+  }
+ }
+}
+// Opcode tokenization is separate from supported load-time term semantics.
+pub machine opcode(input:&[u8;1024],end:u64,at:u64) -> Read {
+ let lead:Read=read_le(input,end,at,1);
+ transition lead.outcome == Outcome::Success {true -> choose(input,end,lead) _ -> (lead)}
+ state choose(input:&[u8;1024],end:u64,lead:Read) -> Read {
+  transition lead.value { 0x5b -> extended(input,end,lead) 0x92 -> logical(input,end,lead) _ -> (lead) }
+ }
+ state extended(input:&[u8;1024],end:u64,lead:Read) -> Read {
+  let tail:Read=read_le(input,end,lead.next,1);
+  transition tail.outcome == Outcome::Success { true -> (Read {value:0x5b00|tail.value,next:tail.next}) _ -> (tail) }
+ }
+ state logical(input:&[u8;1024],end:u64,lead:Read) -> Read {
+  let tail:Read=read_le(input,end,lead.next,1);
+  transition tail.outcome == Outcome::Success && tail.value >= 0x93 && tail.value <= 0x95 {
+   true -> (Read {value:0x9200|tail.value,next:tail.next}) _ -> (lead)
+  }
+ }
+}
+
+machine advance_byte(at:u64)->u64 {transition at<1024 {true -> (at+1) _ -> (at)}}

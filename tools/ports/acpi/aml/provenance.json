@@ -1,0 +1,178 @@
+{
+  "fixture_origin": "Original Cathedral byte fixtures and expected results; source semantics and primary ACPI grammar reviewed, no firmware or external uACPI copied.",
+  "license": "MIT OR Apache-2.0",
+  "license_and_manifest_sha256": {
+    "Cargo.toml": "437a679d0f958db2171af775e0a1368ac35edd4cc0a48ec8b449233750db61cf",
+    "LICENCE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "LICENCE-MIT": "d7ed579f795c55b1b9f734f3f1ac6410ba84fef011acf3aaff95d0c9fe6cdd77"
+  },
+  "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "test_assets": {
+    "tests/README.md": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "e20c78e4a1e20d237867b7fe492cd0ef9f2124565143f700931c0e2d8ef79816"
+    },
+    "tests/bank_fields.rs": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "e3510c597486599419c80a74fbcaf816ab6fdd365e7d9c5a507f7e885f5ef79e"
+    },
+    "tests/buffer_fields.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "ad4eb4a79abac8a1b10fedda89f1ddb8946a03df4497a1c54719daf8cf5bafe9"
+    },
+    "tests/buffer_logic.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "c826ad027af39a49c71d034831ac3078544e007fdd81a4eefb4a4796d60c6db6"
+    },
+    "tests/complex_package.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "e30b9402966711cbe669482beb8edc31d850305da7f6b48dc406ec312e5a7787"
+    },
+    "tests/concatenate_res_template.rs": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "579f89af76f50a1f12bf6bd1426a2742f5c1af6a877f0eb462b84e7c73481b77"
+    },
+    "tests/de_ref_of.rs": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "e0d33f1c0675dfb79d7223f4724008e5d312e4ebce0c599935dcdba5030c4765"
+    },
+    "tests/fields.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "1305a1383943ea54d265e4f62464b327105dfceec0da9952e516b0a049cd93f4"
+    },
+    "tests/global_lock.rs": {
+      "disposition": "metadata-only",
+      "reason": "External-origin/uACPI or disassembled-firmware content excluded; no copying or translation in this milestone.",
+      "sha256": "da2454b7bdea5913ef3c86367128427c52aa1903b6537efba3c05abb1c93151e"
+    },
+    "tests/incdec.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "4632b732ab5aad1a6e19ea565ddd528c6f93f5ad08ccaecb4201347cf13dab78"
+    },
+    "tests/index_fields.rs": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "ad7a6a334f3e2df13289166a7a208229a33a8b7302757f12ac66319b9c282e15"
+    },
+    "tests/logical_not.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "66dbf7fb31b8e5454ce7e1ee30e12a22adf79d27453bd670f087703beba5dd31"
+    },
+    "tests/method.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "b3cea0e5708fca22236c11f7204ec27dd77e04f3cfeae210296a7d6030d310a5"
+    },
+    "tests/multi_table.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "9a7ec0587c101a5dad708ee37b0d7d784c1e9d239f990073b9db3a716efd549f"
+    },
+    "tests/name_search.rs": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "425e5c16ec0e48569190a96a0aed82ba62ab25fd88cafed76463e7b785f50299"
+    },
+    "tests/namespace_paths.rs": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "c68aa54d9ecd8e1033a4a3c292beee5294dae25710507215c487ff9c013cc98f"
+    },
+    "tests/normal_fields.rs": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "b920dfafac62febb8763ae4c6e882078ab3c7d555339dc652e21ec347fb64894"
+    },
+    "tests/object_type.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "4b0dec1bdc06ab564c320797432f4af1a7653e623d58a0238d6c70a4051f2d9b"
+    },
+    "tests/operation_region.rs": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "a48ccc307ef92d09007e9a6d9317c468dcade98fc8c55df8cc8f88f62b1f7855"
+    },
+    "tests/package.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "fa19d8294eb81387aba7d6abce2bb06ddfd957d2fb6a931c994a1b2a49ffe67e"
+    },
+    "tests/package_name_references.rs": {
+      "disposition": "metadata-only",
+      "reason": "Contains a firmware-derived example: metadata only; new Cathedral forward-reference cases are independently authored.",
+      "sha256": "67c3774fe844caae6c7967290e99dbf8edda88b7ceb9b3c242b7a16fbd0a2273"
+    },
+    "tests/package_sizeof.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "4d78a6efc868ca9ac74316dfe0b45ece28c582187b16f5e791b11d97b8acf5a6"
+    },
+    "tests/pc-bios_acpi-dsdt.asl": {
+      "disposition": "metadata-only",
+      "reason": "External-origin/uACPI or disassembled-firmware content excluded; no copying or translation in this milestone.",
+      "sha256": "bed82652616a6e95ca571afa9480f3c4374c845f8f7e89bea18d01cb3c5f953c"
+    },
+    "tests/power_res.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "335ac5720775ef039610ae3a34f80181838779360ff987194f5d2bfc2b1dedc2"
+    },
+    "tests/scopes.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "25a443f673777a6f1e16e9620204a86a2555ff4d4f8c82108c48cad803d123d3"
+    },
+    "tests/stray_opcodes_test.rs": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "4360f703e94e3397098f9d3c75b06f43e7f62002219bcd1ab872c0a23953a639"
+    },
+    "tests/string_logic.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "debf9aa8a22c4c713e4a38545f377c5421ee626517ef9fa020ebdd5e8515004b"
+    },
+    "tests/test_infra/mod.rs": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "312cde6bb408fa081998e520bc067770f44f3796cdd9490829e2d4993b67da5e"
+    },
+    "tests/thermal_zone.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "5f1c1bfd9d6cecc2a474c9e2de3b9cad4f032a06f407a80dd634ec72457b0d93"
+    },
+    "tests/to_integer.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "42eb8ec99aa0bf501e6c398dac3ecd7e31b7c6a6463e22200960f434119b992e"
+    },
+    "tests/to_x.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "54f439899e61ce8bd917c4854884928e24dbd31804991856483fc4986f39a42f"
+    },
+    "tests/uacpi_examples.rs": {
+      "disposition": "metadata-only",
+      "reason": "External-origin/uACPI or disassembled-firmware content excluded; no copying or translation in this milestone.",
+      "sha256": "34ff91667472c3e9022beffd56d3c73217a108a3e1b8934369fd333868c27a97"
+    },
+    "tests/while.asl": {
+      "disposition": "metadata-only",
+      "reason": "Pinned test scenario reviewed/inventoried; Cathedral fixtures are independently authored and do not import this content.",
+      "sha256": "8f413edf837d021fafe8d9eee8d482f79f0d417f6d2926ae0e23e93ba6a6c253"
+    }
+  },
+  "upstream_url": "https://github.com/rust-osdev/acpi"
+}

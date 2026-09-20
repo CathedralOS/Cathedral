@@ -9,7 +9,7 @@ invocation, namespace writes, argument/local slots, control-flow execution,
 package operations, shared object references, or operation-region access.
 ACPI-005 remains incomplete. No production build imports the package.
 
-The neighboring AML syntax package (`../aml/`) owns parsing and namespace
+The neighboring [AML syntax package](../aml/PORT.md) owns parsing and namespace
 construction. This package currently has no dependency on it. Its scalar and
 fixed-array parameters must not be mistaken for a complete `Object` translation.
 Integration with its retained source spans/object arena remains pending.

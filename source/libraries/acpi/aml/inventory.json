@@ -1,0 +1,1822 @@
+{
+  "files": {
+    "src/aml/mod.rs": {
+      "disposition": "pending",
+      "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006.",
+      "sha256": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+      "symbols": {
+        "104:BaseInterpreter": {
+          "anchor": "pub struct BaseInterpreter<H, R>",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "110:namespace": {
+          "anchor": "pub namespace: Spinlock<Namespace>,",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "111:object_token": {
+          "anchor": "pub object_token: Spinlock<ObjectToken>,",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "1161:DEF_ELSE_OP": {
+          "anchor": "const DEF_ELSE_OP: u8 = 0xa1;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "128:NoSendInterpreter": {
+          "anchor": "pub type NoSendInterpreter<H> = BaseInterpreter<H, dyn RegionHandler>;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "131:Interpreter": {
+          "anchor": "pub type Interpreter<H> = BaseInterpreter<H, dyn RegionHandler + Send + Sync>;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "138:INTERPRETER_REVISION": {
+          "anchor": "const INTERPRETER_REVISION: u64 = 1;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "143:MAX_NAME_PATH_INDIRECTIONS": {
+          "anchor": "const MAX_NAME_PATH_INDIRECTIONS: usize = 8;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "1482:in": {
+          "anchor": "warn!(\"Wrong data field type in IndexField: {:?}\", data);",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "153:new": {
+          "anchor": "pub fn new(",
+          "disposition": "pending",
+          "reason": "Full AML interpreter API remains pending. loader.omg load implements a transactional static TermList subset with inert methods/regions, not this whole operation."
+        },
+        "177:new_from_platform": {
+          "anchor": "pub fn new_from_platform(platform: &AcpiPlatform<H>) -> Result<BaseInterpreter<H, R>, AcpiError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "178:load_table": {
+          "anchor": "fn load_table<H, R>(interpreter: &BaseInterpreter<H, R>, table: AmlTable) -> Result<(), AcpiError>",
+          "disposition": "pending",
+          "reason": "Full AML interpreter API remains pending. loader.omg load implements a transactional static TermList subset with inert methods/regions, not this whole operation."
+        },
+        "1831:parse_field_list": {
+          "anchor": "fn parse_field_list(",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "1839:RESERVED_FIELD": {
+          "anchor": "const RESERVED_FIELD: u8 = 0x00;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "1840:ACCESS_FIELD": {
+          "anchor": "const ACCESS_FIELD: u8 = 0x01;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "1841:CONNECT_FIELD": {
+          "anchor": "const CONNECT_FIELD: u8 = 0x02;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "1842:EXTENDED_ACCESS_FIELD": {
+          "anchor": "const EXTENDED_ACCESS_FIELD: u8 = 0x03;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "1896:do_binary_maths": {
+          "anchor": "fn do_binary_maths(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "1931:do_unary_maths": {
+          "anchor": "fn do_unary_maths(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "1972:do_logical_op": {
+          "anchor": "fn do_logical_op(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "19:namespace": {
+          "anchor": "pub mod namespace;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2024:do_to_buffer": {
+          "anchor": "fn do_to_buffer(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2057:do_to_integer": {
+          "anchor": "fn do_to_integer(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2068:do_to_string": {
+          "anchor": "fn do_to_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2096:do_to_dec_hex_string": {
+          "anchor": "fn do_to_dec_hex_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "20:object": {
+          "anchor": "pub mod object;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2137:do_mid": {
+          "anchor": "fn do_mid(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2171:do_concat": {
+          "anchor": "fn do_concat(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2176:resolve_as_string": {
+          "anchor": "fn resolve_as_string(obj: &Object) -> String {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "21:op_region": {
+          "anchor": "pub mod op_region;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2233:do_from_bcd": {
+          "anchor": "fn do_from_bcd(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2250:do_to_bcd": {
+          "anchor": "fn do_to_bcd(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2267:do_size_of": {
+          "anchor": "fn do_size_of(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2283:do_index": {
+          "anchor": "fn do_index(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "228:load_table": {
+          "anchor": "pub fn load_table(&self, stream: &[u8]) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Full AML interpreter API remains pending. loader.omg load implements a transactional static TermList subset with inert methods/regions, not this whole operation."
+        },
+        "22:pci_routing": {
+          "anchor": "pub mod pci_routing;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2336:resolve_name_path": {
+          "anchor": "fn resolve_name_path(&self, object: WrappedObject) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2355:object_type": {
+          "anchor": "fn object_type(&self, object: WrappedObject) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "236:evaluate": {
+          "anchor": "pub fn evaluate(&self, path: AmlName, args: Vec<WrappedObject>) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2383:do_deref_of": {
+          "anchor": "fn do_deref_of(&self, object: WrappedObject, current_scope: &AmlName) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "23:resource": {
+          "anchor": "pub mod resource;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2406:do_store": {
+          "anchor": "fn do_store(&self, target: WrappedObject, object: WrappedObject) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2488:do_copy_object": {
+          "anchor": "fn do_copy_object(&self, target: WrappedObject, object: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2519:do_field_read": {
+          "anchor": "fn do_field_read(&self, field: &FieldUnit) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "251:evaluate_if_present": {
+          "anchor": "pub fn evaluate_if_present(",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2527:Output": {
+          "anchor": "enum Output {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2612:do_field_write": {
+          "anchor": "fn do_field_write(&self, field: &FieldUnit, value: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "269:install_region_handler": {
+          "anchor": "pub fn install_region_handler(&self, space: RegionSpace, handler: Box<R>) {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2714:do_native_region_read": {
+          "anchor": "fn do_native_region_read(&self, region: &OpRegion, offset: usize, length: usize) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2770:do_native_region_write": {
+          "anchor": "fn do_native_region_write(",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "278:initialize_namespace": {
+          "anchor": "pub fn initialize_namespace(&self) {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2835:pci_address_for_device": {
+          "anchor": "fn pci_address_for_device(&self, path: &AmlName) -> Result<PciAddress, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2862:MethodContext": {
+          "anchor": "struct MethodContext {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2873:Block": {
+          "anchor": "struct Block {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2880:stream": {
+          "anchor": "fn stream(&self) -> &[u8] {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2886:BlockKind": {
+          "anchor": "pub enum BlockKind {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2907:ResolveBehaviour": {
+          "anchor": "enum ResolveBehaviour {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2937:OpInFlight": {
+          "anchor": "struct OpInFlight {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2945:Argument": {
+          "anchor": "enum Argument {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2957:new": {
+          "anchor": "pub fn new(op: Opcode, resolve_behaviour: &'static [ResolveBehaviour]) -> OpInFlight {",
+          "disposition": "pending",
+          "reason": "Full AML interpreter API remains pending. loader.omg load implements a transactional static TermList subset with inert methods/regions, not this whole operation."
+        },
+        "2964:new_dynamic": {
+          "anchor": "pub fn new_dynamic(",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2974:new_with_dynamic": {
+          "anchor": "pub fn new_with_dynamic(",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2987:new_with": {
+          "anchor": "pub fn new_with(",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "2996:resolve_behaviour": {
+          "anchor": "fn resolve_behaviour(&self) -> ResolveBehaviour {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3008:new_from_table": {
+          "anchor": "unsafe fn new_from_table(stream: &[u8]) -> MethodContext {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3021:new_from_method": {
+          "anchor": "fn new_from_method(",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3053:contribute_arg": {
+          "anchor": "fn contribute_arg(&mut self, arg: Argument) {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3062:start": {
+          "anchor": "fn start(&mut self, op: OpInFlight) {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3073:retire_op": {
+          "anchor": "fn retire_op(&mut self, op: OpInFlight) {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3077:start_new_block": {
+          "anchor": "fn start_new_block(&mut self, kind: BlockKind, length: usize) {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3087:opcode": {
+          "anchor": "fn opcode(&mut self) -> Result<Opcode, AmlError> {",
+          "disposition": "pending",
+          "reason": "Raw tokenization and every pinned opcode wire value are covered by bytes.omg/opcodes.omg; semantic Opcode dispatch for dynamic execution remains pending. This entry is not declared fully translated merely by listing tokens."
+        },
+        "3227:pkglength": {
+          "anchor": "fn pkglength(&mut self) -> Result<usize, AmlError> {",
+          "disposition": "translated",
+          "note": "Decoded wire length plus strict reserved-bit validation; envelope validates inclusion and bounds.",
+          "targets": [
+            {
+              "anchor": "pub machine pkg_length",
+              "path": "source/libraries/acpi/aml/bytes.omg"
+            }
+          ]
+        },
+        "3243:namestring": {
+          "anchor": "fn namestring(&mut self) -> Result<AmlName, AmlError> {",
+          "disposition": "translated",
+          "note": "All encoded NameString forms through16 segments/parents; zero MultiName count rejected per grammar.",
+          "targets": [
+            {
+              "anchor": "pub machine namestring",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
+          ]
+        },
+        "3255:NULL_NAME": {
+          "anchor": "const NULL_NAME: u8 = 0x00;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3256:DUAL_NAME_PREFIX": {
+          "anchor": "const DUAL_NAME_PREFIX: u8 = 0x2e;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3257:MULTI_NAME_PREFIX": {
+          "anchor": "const MULTI_NAME_PREFIX: u8 = 0x2f;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3305:next": {
+          "anchor": "fn next(&mut self) -> Result<u8, AmlError> {",
+          "disposition": "translated",
+          "note": "Bounds checked indexed read; cursor only returned on complete read.",
+          "targets": [
+            {
+              "anchor": "pub machine read_le",
+              "path": "source/libraries/acpi/aml/bytes.omg"
+            }
+          ]
+        },
+        "3316:next_u16": {
+          "anchor": "fn next_u16(&mut self) -> Result<u16, AmlError> {",
+          "disposition": "translated",
+          "note": "Explicit initialized little-endian read width2.",
+          "targets": [
+            {
+              "anchor": "pub machine read_le",
+              "path": "source/libraries/acpi/aml/bytes.omg"
+            }
+          ]
+        },
+        "3320:next_u32": {
+          "anchor": "fn next_u32(&mut self) -> Result<u32, AmlError> {",
+          "disposition": "translated",
+          "note": "Explicit initialized little-endian read width4.",
+          "targets": [
+            {
+              "anchor": "pub machine read_le",
+              "path": "source/libraries/acpi/aml/bytes.omg"
+            }
+          ]
+        },
+        "3324:next_u64": {
+          "anchor": "fn next_u64(&mut self) -> Result<u64, AmlError> {",
+          "disposition": "translated",
+          "note": "Explicit initialized little-endian read width8.",
+          "targets": [
+            {
+              "anchor": "pub machine read_le",
+              "path": "source/libraries/acpi/aml/bytes.omg"
+            }
+          ]
+        },
+        "3337:peek": {
+          "anchor": "fn peek(&self) -> Result<u8, AmlError> {",
+          "disposition": "translated",
+          "note": "Read result carries candidate next offset; input cursor is not mutated.",
+          "targets": [
+            {
+              "anchor": "pub machine read_le",
+              "path": "source/libraries/acpi/aml/bytes.omg"
+            }
+          ]
+        },
+        "3347:Opcode": {
+          "anchor": "enum Opcode {",
+          "disposition": "pending",
+          "reason": "Raw tokenization and every pinned opcode wire value are covered by bytes.omg/opcodes.omg; semantic Opcode dispatch for dynamic execution remains pending. This entry is not declared fully translated merely by listing tokens."
+        },
+        "3465:Operation": {
+          "anchor": "pub enum Operation {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3492:AmlError": {
+          "anchor": "pub enum AmlError {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "354:acquire_global_lock": {
+          "anchor": "pub fn acquire_global_lock(&self, timeout: u16) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3568:IntegerSize": {
+          "anchor": "pub enum IntegerSize {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3569:FourBytes": {
+          "anchor": "FourBytes = 4,",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3570:EightBytes": {
+          "anchor": "EightBytes = 8,",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "3574:from_revision": {
+          "anchor": "pub fn from_revision(revision: u8) -> IntegerSize {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "389:try_do_acquire_firmware_lock": {
+          "anchor": "fn try_do_acquire_firmware_lock(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "415:release_global_lock": {
+          "anchor": "pub fn release_global_lock(&self) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "438:do_release_firmware_lock": {
+          "anchor": "fn do_release_firmware_lock(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "457:do_execute_method": {
+          "anchor": "fn do_execute_method(&self, mut context: MethodContext) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "551:strip_end_tag": {
+          "anchor": "fn strip_end_tag(buf: &[u8]) -> &[u8] {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "749:produced": {
+          "anchor": "\"Invalid argument type produced for package element\".to_string(),",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "781:produced": {
+          "anchor": "\"Invalid argument type produced for package element\".to_string(),",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        },
+        "816:DEF_ELSE_OP": {
+          "anchor": "const DEF_ELSE_OP: u8 = 0xa1;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+        }
+      }
+    },
+    "src/aml/namespace.rs": {
+      "disposition": "pending",
+      "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending.",
+      "sha256": "311f3d9b5fbcb08395dcde0b5dce5455e932ad4a8fb6c273580d80c507b2f347",
+      "symbols": {
+        "139:add_level": {
+          "anchor": "pub fn add_level(&mut self, path: AmlName, kind: NamespaceLevelKind) -> Result<(), AmlError> {",
+          "disposition": "translated",
+          "note": "Creates/reopens level; retains existing level kind. Root is a no-op, matching pin.",
+          "targets": [
+            {
+              "anchor": "pub machine add_level",
+              "path": "source/libraries/acpi/aml/namespace.omg"
+            }
+          ]
+        },
+        "156:remove_level": {
+          "anchor": "pub fn remove_level(&mut self, path: AmlName) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "169:insert": {
+          "anchor": "pub fn insert(&mut self, path: AmlName, object: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "translated",
+          "note": "Fresh stable object ID, replacement clears alias flag; preserves existing aliases to old object.",
+          "targets": [
+            {
+              "anchor": "pub machine insert",
+              "path": "source/libraries/acpi/aml/namespace.omg"
+            }
+          ]
+        },
+        "186:create_alias": {
+          "anchor": "pub fn create_alias(&mut self, path: AmlName, object: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "translated",
+          "note": "Retains source object ID; collision is deliberately transactional instead of pinned mutation-before-error.",
+          "targets": [
+            {
+              "anchor": "pub machine alias",
+              "path": "source/libraries/acpi/aml/namespace.omg"
+            }
+          ]
+        },
+        "196:get": {
+          "anchor": "pub fn get(&mut self, path: AmlName) -> Result<WrappedObject, AmlError> {",
+          "disposition": "translated",
+          "note": "Exact absolute lookup; recoverable missing root object replaces upstream root assertion.",
+          "targets": [
+            {
+              "anchor": "pub machine get",
+              "path": "source/libraries/acpi/aml/namespace.omg"
+            }
+          ]
+        },
+        "209:search": {
+          "anchor": "pub fn search(&self, path: &AmlName, starting_scope: &AmlName) -> Result<(AmlName, WrappedObject), AmlError> {",
+          "disposition": "translated",
+          "note": "Single unqualified segment ancestor lookup; all other paths resolve exactly. Starting scope validated.",
+          "targets": [
+            {
+              "anchor": "pub machine search",
+              "path": "source/libraries/acpi/aml/namespace.omg"
+            }
+          ]
+        },
+        "20:Namespace": {
+          "anchor": "pub struct Namespace {",
+          "disposition": "translated",
+          "note": "Fixed entry/object arenas are resource policy; entry paths separate level and object slots.",
+          "targets": [
+            {
+              "anchor": "pub data Namespace",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
+          ]
+        },
+        "252:search_for_level": {
+          "anchor": "pub fn search_for_level(&self, level_name: &AmlName, starting_scope: &AmlName) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "26:new": {
+          "anchor": "pub fn new(global_lock_mutex: Handle) -> Namespace {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "280:get_level_for_path": {
+          "anchor": "fn get_level_for_path(&self, path: &AmlName) -> Result<(&NamespaceLevel, NameSeg), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "307:get_level_for_path_mut": {
+          "anchor": "fn get_level_for_path_mut(&mut self, path: &AmlName) -> Result<(&mut NamespaceLevel, NameSeg), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "339:traverse": {
+          "anchor": "pub fn traverse<F>(&mut self, mut f: F) -> Result<(), AmlError>",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "343:traverse_level": {
+          "anchor": "fn traverse_level<F>(level: &NamespaceLevel, scope: &AmlName, f: &mut F) -> Result<(), AmlError>",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "367:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "368:STEM": {
+          "anchor": "const STEM: &str = \"\u2502   \";",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "369:BRANCH": {
+          "anchor": "const BRANCH: &str = \"\u251c\u2500\u2500 \";",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "370:END": {
+          "anchor": "const END: &str = \"\u2514\u2500\u2500 \";",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "372:print_level": {
+          "anchor": "fn print_level(f: &mut fmt::Formatter<'_>, level: &NamespaceLevel, indent_stack: String) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "413:NamespaceLevelKind": {
+          "anchor": "pub enum NamespaceLevelKind {",
+          "disposition": "translated",
+          "note": "All level kind cases preserved, including inert MethodLocals; method-local lifetime/removal behavior remains pending.",
+          "targets": [
+            {
+              "anchor": "pub data LevelKind",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
+          ]
+        },
+        "423:NamespaceLevel": {
+          "anchor": "pub struct NamespaceLevel {",
+          "disposition": "translated",
+          "note": "Separate level and object slots represented in flat path table.",
+          "targets": [
+            {
+              "anchor": "pub data Entry",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
+          ]
+        },
+        "424:kind": {
+          "anchor": "pub kind: NamespaceLevelKind,",
+          "disposition": "translated",
+          "note": "Semantic level kind.",
+          "targets": [
+            {
+              "anchor": "level: LevelKind;",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
+          ]
+        },
+        "425:values": {
+          "anchor": "pub values: BTreeMap<NameSeg, (ObjectFlags, WrappedObject)>,",
+          "disposition": "translated",
+          "note": "Flat object binding plus stable object arena.",
+          "targets": [
+            {
+              "anchor": "has_object: bool;",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
+          ]
+        },
+        "426:children": {
+          "anchor": "pub children: BTreeMap<NameSeg, NamespaceLevel>,",
+          "disposition": "translated",
+          "note": "Full absolute paths represent level hierarchy.",
+          "targets": [
+            {
+              "anchor": "has_level: bool;",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
+          ]
+        },
+        "430:ObjectFlags": {
+          "anchor": "pub struct ObjectFlags(u8);",
+          "disposition": "translated",
+          "note": "Internal semantic flag, not a raw ABI bitfield.",
+          "targets": [
+            {
+              "anchor": "alias: bool;",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
+          ]
+        },
+        "433:new": {
+          "anchor": "pub fn new(is_alias: bool) -> ObjectFlags {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "439:is_alias": {
+          "anchor": "pub fn is_alias(&self) -> bool {",
+          "disposition": "translated",
+          "note": "Inspectable per-binding alias identity flag.",
+          "targets": [
+            {
+              "anchor": "alias: bool;",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
+          ]
+        },
+        "445:new": {
+          "anchor": "pub fn new(kind: NamespaceLevelKind) -> NamespaceLevel {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "451:AmlName": {
+          "anchor": "pub struct AmlName(Vec<NameComponent>);",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "454:NameComponent": {
+          "anchor": "pub enum NameComponent {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "461:root": {
+          "anchor": "pub fn root() -> AmlName {",
+          "disposition": "translated",
+          "note": "Absolute empty path.",
+          "targets": [
+            {
+              "anchor": "pub machine root",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
+          ]
+        },
+        "465:from_name_seg": {
+          "anchor": "pub fn from_name_seg(seg: NameSeg) -> AmlName {",
+          "disposition": "pending",
+          "reason": "Relative single-segment convenience constructor not yet exposed; child(scope,segment) resolves against an absolute scope and is not a drop-in semantic equivalent. Encoded single segments are covered by namestring."
+        },
+        "469:from_components": {
+          "anchor": "pub fn from_components(components: Vec<NameComponent>) -> AmlName {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "473:as_string": {
+          "anchor": "pub fn as_string(&self) -> String {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "487:is_normal": {
+          "anchor": "pub fn is_normal(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "491:is_absolute": {
+          "anchor": "pub fn is_absolute(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "497:search_rules_apply": {
+          "anchor": "pub fn search_rules_apply(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "507:normalize": {
+          "anchor": "pub fn normalize(self) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "540:parent": {
+          "anchor": "pub fn parent(&self) -> Result<AmlName, AmlError> {",
+          "disposition": "translated",
+          "note": "Absolute normalized path parent; above root recoverable.",
+          "targets": [
+            {
+              "anchor": "pub machine parent",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
+          ]
+        },
+        "557:require_absolute": {
+          "anchor": "pub fn require_absolute(&self) -> Result<(), AmlError> {",
+          "disposition": "translated",
+          "note": "Scope absolute precondition is checked even for an absolute requested name.",
+          "targets": [
+            {
+              "anchor": "pub machine resolve",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
+          ]
+        },
+        "563:normalize_absolute": {
+          "anchor": "pub fn normalize_absolute(self) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "570:resolve": {
+          "anchor": "pub fn resolve(&self, scope: &AmlName) -> Result<AmlName, AmlError> {",
+          "disposition": "translated",
+          "note": "Encoded NameString path resolution with leading parents; arbitrary interior component-prefix AST remains pending.",
+          "targets": [
+            {
+              "anchor": "pub machine resolve",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
+          ]
+        },
+        "584:Err": {
+          "anchor": "type Err = AmlError;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "586:from_str": {
+          "anchor": "fn from_str(mut string: &str) -> Result<Self, Self::Err> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "617:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "623:NameSeg": {
+          "anchor": "pub struct NameSeg(pub(crate) [u8; 4]);",
+          "disposition": "translated",
+          "note": "Four little-endian packed ASCII bytes, internal semantic identifier.",
+          "targets": [
+            {
+              "anchor": "pub machine segment_valid",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
+          ]
+        },
+        "626:from_bytes": {
+          "anchor": "pub fn from_bytes(bytes: [u8; 4]) -> Result<NameSeg, AmlError> {",
+          "disposition": "translated",
+          "note": "Exact lead/name character checks.",
+          "targets": [
+            {
+              "anchor": "pub machine segment_valid",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
+          ]
+        },
+        "642:as_str": {
+          "anchor": "pub fn as_str(&self) -> &str {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "649:Err": {
+          "anchor": "type Err = AmlError;",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "651:from_str": {
+          "anchor": "fn from_str(s: &str) -> Result<Self, Self::Err> {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        },
+        "679:is_lead_name_char": {
+          "anchor": "pub fn is_lead_name_char(c: u8) -> bool {",
+          "disposition": "translated",
+          "note": "ASCII uppercase or underscore.",
+          "targets": [
+            {
+              "anchor": "pub machine lead_char",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
+          ]
+        },
+        "683:is_name_char": {
+          "anchor": "pub fn is_name_char(c: u8) -> bool {",
+          "disposition": "translated",
+          "note": "Lead character or ASCII digit.",
+          "targets": [
+            {
+              "anchor": "pub machine name_char",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
+          ]
+        },
+        "688:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "ACPI-004 staged: bounded load-time namespace operations implemented; arbitrary NameComponent normalization/string formatting, traversal/removal and method-local lifetime rules remain pending."
+        }
+      }
+    },
+    "src/aml/object.rs": {
+      "disposition": "pending",
+      "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer.",
+      "sha256": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+      "symbols": {
+        "102:create_interpreter_token": {
+          "anchor": "pub(super) unsafe fn create_interpreter_token() -> ObjectToken {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "108:WrappedObject": {
+          "anchor": "pub struct WrappedObject(Arc<UnsafeCell<Object>>);",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "111:new": {
+          "anchor": "pub fn new(object: Object) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "11:NativeMethod": {
+          "anchor": "type NativeMethod = dyn Fn(&[WrappedObject]) -> Result<WrappedObject, AmlError>;",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "124:gain_mut": {
+          "anchor": "pub unsafe fn gain_mut<'r, 'a, 't>(&'a self, _token: &'t ObjectToken) -> &'r mut Object",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "132:unwrap_reference": {
+          "anchor": "pub fn unwrap_reference(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "145:unwrap_transparent_reference": {
+          "anchor": "pub fn unwrap_transparent_reference(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "14:Object": {
+          "anchor": "pub enum Object {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "160:Target": {
+          "anchor": "type Target = Object;",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "162:deref": {
+          "anchor": "fn deref(&self) -> &Self::Target {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "174:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "180:wrap": {
+          "anchor": "pub fn wrap(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "187:as_integer": {
+          "anchor": "pub fn as_integer(&self) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "195:as_string": {
+          "anchor": "pub fn as_string(&self) -> Result<Cow<'_, str>, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "203:as_buffer": {
+          "anchor": "pub fn as_buffer(&self) -> Result<&[u8], AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "214:to_integer": {
+          "anchor": "pub fn to_integer(&self, integer_size: IntegerSize) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "252:to_buffer": {
+          "anchor": "pub fn to_buffer(&self, integer_size: IntegerSize) -> Result<Vec<u8>, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "264:read_buffer_field": {
+          "anchor": "pub fn read_buffer_field(&self, integer_size: IntegerSize) -> Result<Object, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "291:write_buffer_field": {
+          "anchor": "pub fn write_buffer_field(&mut self, value: &[u8], token: &ObjectToken) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "317:replace_with_implicit_casting": {
+          "anchor": "pub fn replace_with_implicit_casting(&mut self, new: Object) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "346:typ": {
+          "anchor": "pub fn typ(&self) -> ObjectType {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "377:aml_cmp": {
+          "anchor": "pub fn aml_cmp(&self, other: &Object) -> Result<Ordering, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "38:native_method": {
+          "anchor": "pub fn native_method<F>(num_args: u8, f: F) -> Object",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "394:FieldUnit": {
+          "anchor": "pub struct FieldUnit {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "395:kind": {
+          "anchor": "pub kind: FieldUnitKind,",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "396:flags": {
+          "anchor": "pub flags: FieldFlags,",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "397:bit_index": {
+          "anchor": "pub bit_index: usize,",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "398:bit_length": {
+          "anchor": "pub bit_length: usize,",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "402:FieldUnitKind": {
+          "anchor": "pub enum FieldUnitKind {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "409:FieldFlags": {
+          "anchor": "pub struct FieldFlags(pub u8);",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "412:FieldAccessType": {
+          "anchor": "pub enum FieldAccessType {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "422:FieldUpdateRule": {
+          "anchor": "pub enum FieldUpdateRule {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "429:access_type": {
+          "anchor": "pub fn access_type(&self) -> Result<FieldAccessType, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "441:access_type_bytes": {
+          "anchor": "pub fn access_type_bytes(&self) -> Result<usize, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "455:lock_rule": {
+          "anchor": "pub fn lock_rule(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "459:update_rule": {
+          "anchor": "pub fn update_rule(&self) -> FieldUpdateRule {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "470:MethodFlags": {
+          "anchor": "pub struct MethodFlags(pub u8);",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "473:arg_count": {
+          "anchor": "pub fn arg_count(&self) -> usize {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "477:serialize": {
+          "anchor": "pub fn serialize(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "481:sync_level": {
+          "anchor": "pub fn sync_level(&self) -> u8 {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "487:ReferenceKind": {
+          "anchor": "pub enum ReferenceKind {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "497:ObjectType": {
+          "anchor": "pub enum ObjectType {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "49:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "519:DeviceStatus": {
+          "anchor": "pub struct DeviceStatus(pub u64);",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "522:present": {
+          "anchor": "pub fn present(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "526:enabled": {
+          "anchor": "pub fn enabled(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "530:show_in_ui": {
+          "anchor": "pub fn show_in_ui(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "534:functioning": {
+          "anchor": "pub fn functioning(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "540:battery_present": {
+          "anchor": "pub fn battery_present(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "548:copy_bits": {
+          "anchor": "pub(crate) fn copy_bits(",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "588:align_down": {
+          "anchor": "pub(crate) fn align_down(value: usize, align: usize) -> usize {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "608:tests": {
+          "anchor": "mod tests {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "612:test_copy_bits": {
+          "anchor": "fn test_copy_bits() {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "621:buffer_to_integer": {
+          "anchor": "fn buffer_to_integer() {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "626:buffer_field_to_integer": {
+          "anchor": "fn buffer_field_to_integer() {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "627:BUFFER": {
+          "anchor": "const BUFFER: [u8; 5] = [0xffu8; 5];",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "635:buffer_field_to_4_byte_integer": {
+          "anchor": "fn buffer_field_to_4_byte_integer() {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "637:BUFFER": {
+          "anchor": "const BUFFER: [u8; 5] = [0x0f, 0x00, 0x00, 0x00, 0xf0];",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "649:buffer_field_to_8_byte_integer": {
+          "anchor": "fn buffer_field_to_8_byte_integer() {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "650:BUFFER": {
+          "anchor": "const BUFFER: [u8; 6] = [0x0f, 0x00, 0x00, 0x00, 0xf0, 0xff];",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        },
+        "95:ObjectToken": {
+          "anchor": "pub struct ObjectToken {",
+          "disposition": "pending",
+          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+        }
+      }
+    },
+    "src/aml/op_region.rs": {
+      "disposition": "pending",
+      "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax.",
+      "sha256": "43f7430d7aa41625f944bf66ffccc7f9bed7d403ff1979a9a2c09dedba7bf69b",
+      "symbols": {
+        "11:RegionHandler": {
+          "anchor": "pub trait RegionHandler {",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "12:read_u8": {
+          "anchor": "fn read_u8(&self, region: &OpRegion) -> Result<u8, AmlError>;",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "13:read_u16": {
+          "anchor": "fn read_u16(&self, region: &OpRegion) -> Result<u16, AmlError>;",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "14:read_u32": {
+          "anchor": "fn read_u32(&self, region: &OpRegion) -> Result<u32, AmlError>;",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "15:read_u64": {
+          "anchor": "fn read_u64(&self, region: &OpRegion) -> Result<u64, AmlError>;",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "17:write_u8": {
+          "anchor": "fn write_u8(&self, region: &OpRegion, value: u8) -> Result<(), AmlError>;",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "18:write_u16": {
+          "anchor": "fn write_u16(&self, region: &OpRegion, value: u16) -> Result<(), AmlError>;",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "19:write_u32": {
+          "anchor": "fn write_u32(&self, region: &OpRegion, value: u32) -> Result<(), AmlError>;",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "20:write_u64": {
+          "anchor": "fn write_u64(&self, region: &OpRegion, value: u64) -> Result<(), AmlError>;",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "24:RegionSpace": {
+          "anchor": "pub enum RegionSpace {",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "40:from": {
+          "anchor": "fn from(value: u8) -> Self {",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "4:OpRegion": {
+          "anchor": "pub struct OpRegion {",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "5:space": {
+          "anchor": "pub space: RegionSpace,",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "6:base": {
+          "anchor": "pub base: u64,",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "7:length": {
+          "anchor": "pub length: u64,",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        },
+        "8:parent_device_path": {
+          "anchor": "pub parent_device_path: AmlName,",
+          "disposition": "pending",
+          "reason": "ACPI-006 pending: handler effects and FieldUnit access policy are not inferred from inert OperationRegion syntax."
+        }
+      }
+    },
+    "src/aml/pci_routing.rs": {
+      "disposition": "pending",
+      "reason": "ACPI PCI routing evaluation remains pending; no method evaluation or PCI configuration capability is created here.",
+      "sha256": "4c2371d38c0a67cab28ab686c8ad6374577e012cd02f561d4730e2f7895dcc39",
+      "symbols": {
+        "14:crate::aml::resource::IrqDescriptor;": {
+          "anchor": "pub use crate::aml::resource::IrqDescriptor;",
+          "disposition": "pending",
+          "reason": "ACPI PCI routing evaluation remains pending; no method evaluation or PCI configuration capability is created here."
+        },
+        "170:route": {
+          "anchor": "pub fn route(",
+          "disposition": "pending",
+          "reason": "ACPI PCI routing evaluation remains pending; no method evaluation or PCI configuration capability is created here."
+        },
+        "17:Pin": {
+          "anchor": "pub enum Pin {",
+          "disposition": "pending",
+          "reason": "ACPI PCI routing evaluation remains pending; no method evaluation or PCI configuration capability is created here."
+        },
+        "25:PciRouteType": {
+          "anchor": "pub enum PciRouteType {",
+          "disposition": "pending",
+          "reason": "ACPI PCI routing evaluation remains pending; no method evaluation or PCI configuration capability is created here."
+        },
+        "40:PciRoute": {
+          "anchor": "pub struct PciRoute {",
+          "disposition": "pending",
+          "reason": "ACPI PCI routing evaluation remains pending; no method evaluation or PCI configuration capability is created here."
+        },
+        "52:PciRoutingTable": {
+          "anchor": "pub struct PciRoutingTable {",
+          "disposition": "pending",
+          "reason": "ACPI PCI routing evaluation remains pending; no method evaluation or PCI configuration capability is created here."
+        },
+        "61:from_prt_path": {
+          "anchor": "pub fn from_prt_path(",
+          "disposition": "pending",
+          "reason": "ACPI PCI routing evaluation remains pending; no method evaluation or PCI configuration capability is created here."
+        }
+      }
+    },
+    "src/aml/resource.rs": {
+      "disposition": "pending",
+      "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans.",
+      "sha256": "abca9e6c8c60e40730cc11b2304acf37e2171942097f8871f5f8a8c7911fae09",
+      "symbols": {
+        "1038:skips_unsupported_large_resource_descriptors": {
+          "anchor": "fn skips_unsupported_large_resource_descriptors() {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "1061:skips_unsupported_small_resource_descriptors": {
+          "anchor": "fn skips_unsupported_small_resource_descriptors() {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "1084:test_fdc_crs": {
+          "anchor": "fn test_fdc_crs() {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "10:Resource": {
+          "anchor": "pub enum Resource {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "182:InterruptTrigger": {
+          "anchor": "pub enum InterruptTrigger {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "188:InterruptPolarity": {
+          "anchor": "pub enum InterruptPolarity {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "194:AddressSpaceResourceType": {
+          "anchor": "pub enum AddressSpaceResourceType {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "201:AddressSpaceDecodeType": {
+          "anchor": "pub enum AddressSpaceDecodeType {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "207:AddressSpaceDescriptor": {
+          "anchor": "pub struct AddressSpaceDescriptor {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "208:resource_type": {
+          "anchor": "pub resource_type: AddressSpaceResourceType,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "209:is_maximum_address_fixed": {
+          "anchor": "pub is_maximum_address_fixed: bool,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "20:UNSUPPORTED_LARGE_RESOURCE_DESCRIPTORS": {
+          "anchor": "const UNSUPPORTED_LARGE_RESOURCE_DESCRIPTORS: &[(u8, &str)] = &[",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "210:is_minimum_address_fixed": {
+          "anchor": "pub is_minimum_address_fixed: bool,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "211:decode_type": {
+          "anchor": "pub decode_type: AddressSpaceDecodeType,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "213:granularity": {
+          "anchor": "pub granularity: u64,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "214:address_range": {
+          "anchor": "pub address_range: (u64, u64),",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "215:translation_offset": {
+          "anchor": "pub translation_offset: u64,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "216:length": {
+          "anchor": "pub length: u64,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "220:MemoryRangeDescriptor": {
+          "anchor": "pub enum MemoryRangeDescriptor {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "224:fixed_memory_descriptor": {
+          "anchor": "fn fixed_memory_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "258:address_space_descriptor": {
+          "anchor": "fn address_space_descriptor<T>(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "345:Irqs": {
+          "anchor": "pub type Irqs = smallvec::SmallVec<[u32; 1]>;",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "348:IrqDescriptor": {
+          "anchor": "pub struct IrqDescriptor {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "349:is_consumer": {
+          "anchor": "pub is_consumer: bool,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "34:UNSUPPORTED_SMALL_RESOURCE_DESCRIPTORS": {
+          "anchor": "const UNSUPPORTED_SMALL_RESOURCE_DESCRIPTORS: &[(u8, &str)] = &[",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "350:trigger": {
+          "anchor": "pub trigger: InterruptTrigger,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "351:polarity": {
+          "anchor": "pub polarity: InterruptPolarity,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "352:is_shared": {
+          "anchor": "pub is_shared: bool,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "353:is_wake_capable": {
+          "anchor": "pub is_wake_capable: bool,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "354:irqs": {
+          "anchor": "pub irqs: Irqs,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "357:irq_format_descriptor": {
+          "anchor": "fn irq_format_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "390:irqs_from_bit_mask": {
+          "anchor": "fn irqs_from_bit_mask(bit_mask: u16) -> Irqs {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "43:resource_descriptor_list": {
+          "anchor": "pub fn resource_descriptor_list(descriptor: WrappedObject) -> Result<Vec<Resource>, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "447:DMASupportedSpeed": {
+          "anchor": "pub enum DMASupportedSpeed {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "455:DMATransferTypePreference": {
+          "anchor": "pub enum DMATransferTypePreference {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "462:DMADescriptor": {
+          "anchor": "pub struct DMADescriptor {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "463:channel_mask": {
+          "anchor": "pub channel_mask: u8,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "464:supported_speeds": {
+          "anchor": "pub supported_speeds: DMASupportedSpeed,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "465:is_bus_master": {
+          "anchor": "pub is_bus_master: bool,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "466:transfer_type_preference": {
+          "anchor": "pub transfer_type_preference: DMATransferTypePreference,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "469:dma_format_descriptor": {
+          "anchor": "pub fn dma_format_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "510:preference": {
+          "anchor": "3 => unimplemented!(\"Reserved DMA transfer type preference\"),",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "518:IOPortDescriptor": {
+          "anchor": "pub struct IOPortDescriptor {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "519:decodes_full_address": {
+          "anchor": "pub decodes_full_address: bool,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "520:memory_range": {
+          "anchor": "pub memory_range: (u16, u16),",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "521:base_alignment": {
+          "anchor": "pub base_alignment: u8,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "522:range_length": {
+          "anchor": "pub range_length: u8,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "525:io_port_descriptor": {
+          "anchor": "fn io_port_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "559:extended_interrupt_descriptor": {
+          "anchor": "fn extended_interrupt_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "612:ShareType": {
+          "anchor": "pub enum ShareType {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "618:ResourceUsage": {
+          "anchor": "pub enum ResourceUsage {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "624:SlaveMode": {
+          "anchor": "pub enum SlaveMode {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "630:AddressingMode": {
+          "anchor": "pub enum AddressingMode {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "636:SerialBusDescriptor": {
+          "anchor": "pub struct SerialBusDescriptor {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "637:sharing": {
+          "anchor": "pub sharing: ShareType,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "638:usage": {
+          "anchor": "pub usage: ResourceUsage,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "639:slave_mode": {
+          "anchor": "pub slave_mode: SlaveMode,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "63:unsupported_resource_descriptor_name": {
+          "anchor": "fn unsupported_resource_descriptor_name(",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "640:source": {
+          "anchor": "pub source: alloc::string::String,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "641:source_index": {
+          "anchor": "pub source_index: u8,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "642:vendor_data": {
+          "anchor": "pub vendor_data: Vec<u8>,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "643:bus": {
+          "anchor": "pub bus: SerialBus,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "647:SerialBus": {
+          "anchor": "pub enum SerialBus {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "651:i2c_bus_descriptor": {
+          "anchor": "fn i2c_bus_descriptor(bytes: &[u8]) -> Result<(SerialBus, (usize, usize)), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "679:serial_bus_descriptor": {
+          "anchor": "fn serial_bus_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "707:GPIOInterruptPolarity": {
+          "anchor": "pub enum GPIOInterruptPolarity {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "70:skip_unsupported_resource": {
+          "anchor": "fn skip_unsupported_resource<'a>(",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "714:WakeCapability": {
+          "anchor": "pub enum WakeCapability {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "720:IORestriction": {
+          "anchor": "pub enum IORestriction {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "728:PinConfiguration": {
+          "anchor": "pub enum PinConfiguration {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "736:GPIOConnectionDescriptor": {
+          "anchor": "pub struct GPIOConnectionDescriptor {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "737:usage": {
+          "anchor": "pub usage: ResourceUsage,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "738:sharing": {
+          "anchor": "pub sharing: ShareType,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "739:pin_configuration": {
+          "anchor": "pub pin_configuration: PinConfiguration,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "740:output_drive_strength": {
+          "anchor": "pub output_drive_strength: u16,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "741:debounce_timeout": {
+          "anchor": "pub debounce_timeout: u16,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "742:pins": {
+          "anchor": "pub pins: Vec<u16>,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "743:source": {
+          "anchor": "pub source: alloc::string::String,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "744:vendor_data": {
+          "anchor": "pub vendor_data: Vec<u8>,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "745:connection": {
+          "anchor": "pub connection: GPIOConnection,",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "749:GPIOConnection": {
+          "anchor": "pub enum GPIOConnection {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "754:gpio_connection_descriptor": {
+          "anchor": "fn gpio_connection_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "7:smallvec;": {
+          "anchor": "pub use smallvec;",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "80:resource_descriptor": {
+          "anchor": "fn resource_descriptor(bytes: &[u8]) -> Result<(Option<Resource>, &[u8]), AmlError> {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "826:tests": {
+          "anchor": "mod tests {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "830:test_parses_keyboard_crs": {
+          "anchor": "fn test_parses_keyboard_crs() {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        },
+        "892:test_pci_crs": {
+          "anchor": "fn test_pci_crs() {",
+          "disposition": "pending",
+          "reason": "ACPI resource-template decoding remains pending; byte buffers here are inert source spans."
+        }
+      }
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+    "roots": [
+      "src/aml"
+    ],
+    "url": "https://github.com/rust-osdev/acpi"
+  }
+}

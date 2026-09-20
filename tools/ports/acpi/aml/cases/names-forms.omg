@@ -1,0 +1,59 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral fixtures; no firmware or external uACPI fixture content.
+use aml::model::Outcome;
+use aml::model::Read;
+use aml::model::Envelope;
+use aml::model::Span;
+use aml::model::Path;
+use aml::model::PathResult;
+use aml::model::Value;
+use aml::model::Object;
+use aml::model::Namespace;
+use aml::model::NamespaceResult;
+use aml::model::Lookup;
+use aml::model::LevelKind;
+use aml::model::ValueState;
+use aml::model::LoadState;
+use aml::model::ReferenceState;
+use aml::bytes::read_le;
+use aml::bytes::pkg_length;
+use aml::bytes::envelope;
+use aml::bytes::opcode;
+use aml::names::namestring;
+use aml::names::resolve;
+use aml::names::root;
+use aml::names::segment_at;
+use aml::names::path_equal;
+use aml::names::parent;
+
+machine test()->u64 {
+let mut input:[u8;1024];
+input[0]=92;
+input[1]=46;
+input[2]=68;
+input[3]=69;
+input[4]=86;
+input[5]=48;
+input[6]=79;
+input[7]=66;
+input[8]=74;
+input[9]=48;
+input[10]=94;
+input[11]=94;
+input[12]=47;
+input[13]=2;
+input[14]=65;
+input[15]=65;
+input[16]=65;
+input[17]=65;
+input[18]=66;
+input[19]=66;
+input[20]=66;
+input[21]=66;
+let a:PathResult=namestring(&input,22,0);let b:PathResult=namestring(&input,22,10);let r:Path=root();let invalid:PathResult=resolve(b.value,r);
+ transition a.outcome==Outcome::Success && a.value.absolute && a.value.count==2 && a.next==10 && b.outcome==Outcome::Success && b.value.parents==2 && b.value.count==2 && invalid.outcome==Outcome::AboveRoot {true -> (0) _ -> (1)}
+}
+const TEST_RESULT:u64=test();
+machine require_ok(result:u64) requires result==0; {}
+data Main {}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

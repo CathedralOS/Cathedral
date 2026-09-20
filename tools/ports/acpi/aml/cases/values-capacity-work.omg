@@ -1,0 +1,79 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral fixtures; no firmware or external uACPI fixture content.
+use aml::model::Outcome;
+use aml::model::Read;
+use aml::model::Envelope;
+use aml::model::Span;
+use aml::model::Path;
+use aml::model::PathResult;
+use aml::model::Value;
+use aml::model::Object;
+use aml::model::Namespace;
+use aml::model::NamespaceResult;
+use aml::model::Lookup;
+use aml::model::LevelKind;
+use aml::model::ValueState;
+use aml::model::LoadState;
+use aml::model::ReferenceState;
+use aml::bytes::read_le;
+use aml::bytes::pkg_length;
+use aml::bytes::envelope;
+use aml::bytes::opcode;
+use aml::names::namestring;
+use aml::names::resolve;
+use aml::names::root;
+use aml::names::segment_at;
+use aml::names::path_equal;
+use aml::names::parent;
+use aml::namespace::empty;
+use aml::namespace::child;
+use aml::namespace::insert;
+use aml::namespace::alias;
+use aml::namespace::get;
+use aml::namespace::search;
+use aml::namespace::add_level;
+use aml::namespace::object_at;
+use aml::namespace::allocate;
+use aml::namespace::entry_at;
+use aml::values::parse_value;
+use aml::values::integer;
+use aml::values::atom;
+
+machine single(segment:u32,absolute:bool)->Path {let mut out:Path=Path {absolute:absolute,count:1};out.segments[0]=segment;out}
+machine integer_is(space:Namespace,id:u64,expected:u64)->bool {
+ let object:Object=object_at(space,id);
+ transition object.value {Value::Integer {number} -> compare(number,expected) _ -> (false)}
+ state compare(number:u64,expected:u64)->bool {number==expected}
+}
+machine package_first(space:Namespace,id:u64)->u64 {
+ let object:Object=object_at(space,id);
+ transition object.value {Value::Package {first,count} -> (first) _ -> (64)}
+}
+machine package_is(space:Namespace,id:u64,expected:u64)->bool {
+ let object:Object=object_at(space,id);
+ transition object.value {Value::Package {first,count} -> compare(count,expected) _ -> (false)}
+ state compare(count:u64,expected:u64)->bool {count==expected}
+}
+machine reference_is(space:Namespace,id:u64,scope:Path)->bool {
+ let object:Object=object_at(space,id);
+ transition object.value {Value::NameReference {name,scope} -> compare(scope) _ -> (false)}
+ state compare(scope:Path)->bool {scope.absolute && scope.count==1 && scope.segments[0]==0x30564544}
+}
+machine method_is(space:Namespace,id:u64,unit:u64,start:u64,end:u64)->bool {
+ let object:Object=object_at(space,id);
+ transition object.value {Value::Method {flags,body} -> compare(flags,body,unit,start,end) _ -> (false)}
+ state compare(flags:u8,body:Span,unit:u64,start:u64,end:u64)->bool {flags==0x39 && body.unit==unit && body.start==start && body.end==end}
+}
+
+machine test()->u64 {
+let mut input:[u8;1024];
+input[0]=18;
+input[1]=2;
+input[2]=64;
+let r:Path=root();let start:Namespace=empty();let full:ValueState=parse_value(&input,3,0,1,r,start,false,2);let budget:ValueState=parse_value(&input,3,0,1,r,start,false,0);
+ transition full.outcome==Outcome::Capacity && full.space.object_count==0 && budget.outcome==Outcome::WorkLimit {true -> (0) _ -> (1)}
+}
+const TEST_RESULT:u64=test();
+machine require_ok(result:u64) requires result==0; {}
+data Main {}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

@@ -1468,24 +1468,34 @@
         },
         "3227:pkglength": {
           "anchor": "fn pkglength(&mut self) -> Result<usize, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace"
           ],
           "queue_tasks": [
             "ACPI-004"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine pkg_length",
+              "path": "source/libraries/acpi/aml/bytes.omg"
+            }
           ]
         },
         "3243:namestring": {
           "anchor": "fn namestring(&mut self) -> Result<AmlName, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace"
           ],
           "queue_tasks": [
             "ACPI-004"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine namestring",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
           ]
         },
         "3255:NULL_NAME": {
@@ -1535,57 +1545,82 @@
         },
         "3305:next": {
           "anchor": "fn next(&mut self) -> Result<u8, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace"
           ],
           "queue_tasks": [
             "ACPI-004"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine read_le",
+              "path": "source/libraries/acpi/aml/bytes.omg"
+            }
           ]
         },
         "3316:next_u16": {
           "anchor": "fn next_u16(&mut self) -> Result<u16, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace"
           ],
           "queue_tasks": [
             "ACPI-004"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine read_le",
+              "path": "source/libraries/acpi/aml/bytes.omg"
+            }
           ]
         },
         "3320:next_u32": {
           "anchor": "fn next_u32(&mut self) -> Result<u32, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace"
           ],
           "queue_tasks": [
             "ACPI-004"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine read_le",
+              "path": "source/libraries/acpi/aml/bytes.omg"
+            }
           ]
         },
         "3324:next_u64": {
           "anchor": "fn next_u64(&mut self) -> Result<u64, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace"
           ],
           "queue_tasks": [
             "ACPI-004"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine read_le",
+              "path": "source/libraries/acpi/aml/bytes.omg"
+            }
           ]
         },
         "3337:peek": {
           "anchor": "fn peek(&self) -> Result<u8, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace"
           ],
           "queue_tasks": [
             "ACPI-004"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine read_le",
+              "path": "source/libraries/acpi/aml/bytes.omg"
+            }
           ]
         },
         "3347:Opcode": {
@@ -1851,8 +1886,7 @@
       "symbols": {
         "139:add_level": {
           "anchor": "pub fn add_level(&mut self, path: AmlName, kind: NamespaceLevelKind) -> Result<(), AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -1860,6 +1894,12 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine add_level",
+              "path": "source/libraries/acpi/aml/namespace.omg"
+            }
           ]
         },
         "156:remove_level": {
@@ -1877,8 +1917,7 @@
         },
         "169:insert": {
           "anchor": "pub fn insert(&mut self, path: AmlName, object: WrappedObject) -> Result<(), AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -1886,12 +1925,17 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine insert",
+              "path": "source/libraries/acpi/aml/namespace.omg"
+            }
           ]
         },
         "186:create_alias": {
           "anchor": "pub fn create_alias(&mut self, path: AmlName, object: WrappedObject) -> Result<(), AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -1899,12 +1943,17 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine alias",
+              "path": "source/libraries/acpi/aml/namespace.omg"
+            }
           ]
         },
         "196:get": {
           "anchor": "pub fn get(&mut self, path: AmlName) -> Result<WrappedObject, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -1912,12 +1961,17 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine get",
+              "path": "source/libraries/acpi/aml/namespace.omg"
+            }
           ]
         },
         "209:search": {
           "anchor": "pub fn search(&self, path: &AmlName, starting_scope: &AmlName) -> Result<(AmlName, WrappedObject), AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -1925,12 +1979,17 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine search",
+              "path": "source/libraries/acpi/aml/namespace.omg"
+            }
           ]
         },
         "20:Namespace": {
           "anchor": "pub struct Namespace {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -1938,6 +1997,12 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub data Namespace",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
           ]
         },
         "252:search_for_level": {
@@ -2087,8 +2152,7 @@
         },
         "413:NamespaceLevelKind": {
           "anchor": "pub enum NamespaceLevelKind {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2096,12 +2160,17 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub data LevelKind",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
           ]
         },
         "423:NamespaceLevel": {
           "anchor": "pub struct NamespaceLevel {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2109,12 +2178,17 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub data Entry",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
           ]
         },
         "424:kind": {
           "anchor": "pub kind: NamespaceLevelKind,",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2122,12 +2196,17 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "level: LevelKind;",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
           ]
         },
         "425:values": {
           "anchor": "pub values: BTreeMap<NameSeg, (ObjectFlags, WrappedObject)>,",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2135,12 +2214,17 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "has_object: bool;",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
           ]
         },
         "426:children": {
           "anchor": "pub children: BTreeMap<NameSeg, NamespaceLevel>,",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2148,12 +2232,17 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "has_level: bool;",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
           ]
         },
         "430:ObjectFlags": {
           "anchor": "pub struct ObjectFlags(u8);",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2161,6 +2250,12 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "alias: bool;",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
           ]
         },
         "433:new": {
@@ -2178,8 +2273,7 @@
         },
         "439:is_alias": {
           "anchor": "pub fn is_alias(&self) -> bool {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2187,6 +2281,12 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "alias: bool;",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
           ]
         },
         "445:new": {
@@ -2230,8 +2330,7 @@
         },
         "461:root": {
           "anchor": "pub fn root() -> AmlName {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2239,6 +2338,12 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine root",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
           ]
         },
         "465:from_name_seg": {
@@ -2334,8 +2439,7 @@
         },
         "540:parent": {
           "anchor": "pub fn parent(&self) -> Result<AmlName, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2343,12 +2447,17 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine parent",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
           ]
         },
         "557:require_absolute": {
           "anchor": "pub fn require_absolute(&self) -> Result<(), AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2356,6 +2465,12 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine resolve",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
           ]
         },
         "563:normalize_absolute": {
@@ -2373,8 +2488,7 @@
         },
         "570:resolve": {
           "anchor": "pub fn resolve(&self, scope: &AmlName) -> Result<AmlName, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2382,6 +2496,12 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine resolve",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
           ]
         },
         "584:Err": {
@@ -2425,8 +2545,7 @@
         },
         "623:NameSeg": {
           "anchor": "pub struct NameSeg(pub(crate) [u8; 4]);",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2434,12 +2553,17 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine segment_valid",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
           ]
         },
         "626:from_bytes": {
           "anchor": "pub fn from_bytes(bytes: [u8; 4]) -> Result<NameSeg, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2447,6 +2571,12 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine segment_valid",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
           ]
         },
         "642:as_str": {
@@ -2490,8 +2620,7 @@
         },
         "679:is_lead_name_char": {
           "anchor": "pub fn is_lead_name_char(c: u8) -> bool {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2499,12 +2628,17 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine lead_char",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
           ]
         },
         "683:is_name_char": {
           "anchor": "pub fn is_name_char(c: u8) -> bool {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2512,6 +2646,12 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine name_char",
+              "path": "source/libraries/acpi/aml/names.omg"
+            }
           ]
         },
         "688:fmt": {

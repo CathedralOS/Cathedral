@@ -1,0 +1,341 @@
+{
+  "bytes-endian": {
+    "description": "Little-endian initialized input, exact end, and truncated width",
+    "groups": [
+      "bytes"
+    ],
+    "mutation": [
+      "one.value==0x78563412",
+      "one.value==0x78563413"
+    ]
+  },
+  "integer-widths": {
+    "description": "Ones and high-bit QWord retain full64 bits; Revision is2; short QWord is truncated",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values"
+    ],
+    "mutation": [
+      "qword.next==10",
+      "qword.next==9"
+    ]
+  },
+  "load-alias": {
+    "description": "Load Name/Alias/rebinding from real AML byte stream",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values",
+      "loader"
+    ],
+    "mutation": [
+      "parsed.at==23",
+      "parsed.at==22"
+    ]
+  },
+  "load-capacity-work": {
+    "description": "Object arena capacity and whole-loader work budget are distinct and preserve supplied namespace",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values",
+      "loader"
+    ],
+    "mutation": [
+      "full.space.object_count==64",
+      "full.space.object_count==63"
+    ]
+  },
+  "load-depth": {
+    "description": "Scope nesting limit is a recoverable resource result and namespace transaction rolls back",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values",
+      "loader"
+    ],
+    "mutation": [
+      "parsed.depth==8",
+      "parsed.depth==7"
+    ]
+  },
+  "load-forward-reference": {
+    "description": "Package forward reference resolves after load from declaration Device scope, shadowing root object",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values",
+      "loader",
+      "references"
+    ],
+    "mutation": [
+      "parsed.space.count==5",
+      "parsed.space.count==4"
+    ]
+  },
+  "load-inert-objects": {
+    "description": "External retained only as metadata; Mutex/Event/literal OpRegion have inert objects and no handlers",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values",
+      "loader"
+    ],
+    "mutation": [
+      "parsed.space.object_count==3",
+      "parsed.space.object_count==4"
+    ]
+  },
+  "load-method": {
+    "description": "Unknown executable byte inside Method is retained, never executed at namespace load",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values",
+      "loader"
+    ],
+    "mutation": [
+      "parsed.space.object_count==2",
+      "parsed.space.object_count==1"
+    ]
+  },
+  "load-rollback": {
+    "description": "Unsupported executable Add rejects whole load and restores original namespace",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values",
+      "loader"
+    ],
+    "mutation": [
+      "parsed.offset==6",
+      "parsed.offset==7"
+    ]
+  },
+  "load-root-scope": {
+    "description": "Scope of root NullName works and restores outer scope",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values",
+      "loader"
+    ],
+    "mutation": [
+      "parsed.space.count==2",
+      "parsed.space.count==3"
+    ]
+  },
+  "load-scoped-records": {
+    "description": "Processor/Pblk fields, PowerResource and ThermalZone scopes create both level and object slots",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values",
+      "loader"
+    ],
+    "mutation": [
+      "parsed.space.count==4",
+      "parsed.space.count==3"
+    ]
+  },
+  "name-capacity": {
+    "description": "Sixteen segments fit; seventeenth parent prefix or MultiName count returns Capacity",
+    "groups": [
+      "bytes",
+      "names"
+    ],
+    "mutation": [
+      "at_limit.next==66",
+      "at_limit.next==65"
+    ]
+  },
+  "names-forms": {
+    "description": "Absolute dual and parent-prefixed multi names; above-root resolution rejected",
+    "groups": [
+      "bytes",
+      "names"
+    ],
+    "mutation": [
+      "a.next==10",
+      "a.next==9"
+    ]
+  },
+  "names-invalid": {
+    "description": "Invalid lead, zero multi-count and incomplete NameSeg are explicit errors",
+    "groups": [
+      "bytes",
+      "names"
+    ],
+    "mutation": [
+      "invalid.offset==0",
+      "invalid.offset==1"
+    ]
+  },
+  "namespace-alias": {
+    "description": "Alias retains original object identity across source rebinding; collision is transactional",
+    "groups": [
+      "names",
+      "namespace"
+    ],
+    "mutation": [
+      "second.space.object_count==2",
+      "second.space.object_count==3"
+    ]
+  },
+  "namespace-errors": {
+    "description": "Relative namespace paths and starting scopes rejected; root has no parent; failed insertion rolls back allocation",
+    "groups": [
+      "names",
+      "namespace"
+    ],
+    "mutation": [
+      "insert_bad.space.object_count==0",
+      "insert_bad.space.object_count==1"
+    ]
+  },
+  "namespace-shadow": {
+    "description": "Nearest single-segment shadow, explicit root lookup, ancestor fallback",
+    "groups": [
+      "names",
+      "namespace"
+    ],
+    "mutation": [
+      "shadow.path.count==2",
+      "shadow.path.count==1"
+    ]
+  },
+  "opcode-prefix": {
+    "description": "LNot composite lookahead, standalone final LNot and truncated extended opcode",
+    "groups": [
+      "bytes"
+    ],
+    "mutation": [
+      "a.value==0x9293",
+      "a.value==0x9294"
+    ]
+  },
+  "package-length": {
+    "description": "Following-byte nibble encoding, reserved bits, three-byte length, enclosing bounds",
+    "groups": [
+      "bytes"
+    ],
+    "mutation": [
+      "length.value==65",
+      "length.value==64"
+    ]
+  },
+  "reference-cycle": {
+    "description": "Missing forward references, exact identity-cycle detection, and caller work budget remain distinct",
+    "groups": [
+      "names",
+      "namespace",
+      "references"
+    ],
+    "mutation": [
+      "cycle.object==0",
+      "cycle.object==1"
+    ]
+  },
+  "string-validation": {
+    "description": "ASCII span without terminator, unterminated input and non-ASCII bytes have distinct outcomes",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values"
+    ],
+    "mutation": [
+      "good.at==3",
+      "good.at==2"
+    ]
+  },
+  "values-buffer": {
+    "description": "Buffer retains declared length and initializer span without copy_from_slice panic",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values"
+    ],
+    "mutation": [
+      "parsed.at==8",
+      "parsed.at==7"
+    ]
+  },
+  "values-capacity-work": {
+    "description": "Declared package count cannot exceed object arena; zero work returns WorkLimit",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values"
+    ],
+    "mutation": [
+      "full.space.object_count==0",
+      "full.space.object_count==1"
+    ]
+  },
+  "values-depth": {
+    "description": "Ninth nested package exceeds explicit eight-frame resource profile",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values"
+    ],
+    "mutation": [
+      "parsed.depth==8",
+      "parsed.depth==7"
+    ]
+  },
+  "values-extra": {
+    "description": "Extra fixed-package elements yield error instead of pinned assertion panic",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values"
+    ],
+    "mutation": [
+      "parsed.offset==4",
+      "parsed.offset==3"
+    ]
+  },
+  "values-nested": {
+    "description": "Nested packages, uninitialized padding, sibling links and exact envelope end",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values"
+    ],
+    "mutation": [
+      "parsed.space.object_count==5",
+      "parsed.space.object_count==4"
+    ]
+  },
+  "variable-package": {
+    "description": "Literal-count VarPackage pads each missing element as a distinct uninitialized object",
+    "groups": [
+      "bytes",
+      "names",
+      "namespace",
+      "values"
+    ],
+    "mutation": [
+      "parsed.space.object_count==4",
+      "parsed.space.object_count==3"
+    ]
+  }
+}

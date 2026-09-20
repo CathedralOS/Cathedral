@@ -1,0 +1,43 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral fixtures; no firmware or external uACPI fixture content.
+use aml::model::Outcome;
+use aml::model::Read;
+use aml::model::Envelope;
+use aml::model::Span;
+use aml::model::Path;
+use aml::model::PathResult;
+use aml::model::Value;
+use aml::model::Object;
+use aml::model::Namespace;
+use aml::model::NamespaceResult;
+use aml::model::Lookup;
+use aml::model::LevelKind;
+use aml::model::ValueState;
+use aml::model::LoadState;
+use aml::model::ReferenceState;
+use aml::bytes::read_le;
+use aml::bytes::pkg_length;
+use aml::bytes::envelope;
+use aml::bytes::opcode;
+use aml::names::namestring;
+use aml::names::resolve;
+use aml::names::root;
+use aml::names::segment_at;
+use aml::names::path_equal;
+use aml::names::parent;
+
+machine test()->u64 {
+let mut input:[u8;1024];
+input[0]=49;
+input[1]=66;
+input[2]=65;
+input[3]=68;
+input[4]=47;
+input[5]=0;
+let invalid:PathResult=namestring(&input,6,0);let zero:PathResult=namestring(&input,6,4);let short:PathResult=namestring(&input,3,0);
+ transition invalid.outcome==Outcome::InvalidName && invalid.offset==0 && zero.outcome==Outcome::BadEncoding && short.outcome==Outcome::Truncated {true -> (0) _ -> (1)}
+}
+const TEST_RESULT:u64=test();
+machine require_ok(result:u64) requires result==0; {}
+data Main {}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

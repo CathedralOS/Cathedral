@@ -1,0 +1,211 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// AML translation from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Original upstream copyright 2018 Isaac Woods; bounded Omega adaptation 2026.
+// See PORT.md and licenses/rust-osdev/acpi for provenance and changes.
+module namespace;
+use model::Outcome;
+use model::Read;
+use model::Path;
+use model::PathResult;
+use model::LevelKind;
+use model::Value;
+use model::Object;
+use model::Entry;
+use model::Namespace;
+use model::NamespaceResult;
+use model::Lookup;
+use names::root;
+use names::path_valid;
+use names::path_equal;
+use names::parent;
+use names::resolve;
+use names::segment_set;
+pub machine empty() -> Namespace {
+ let mut out:Namespace;let path:Path=root();
+ out.entries[0]=Entry {path:path,has_level:true};out.count=1;out
+}
+pub machine entry_at(space:Namespace,index:u64)->Entry {transition index<32 {true -> (space.entries[index]) _ -> (Entry {})}}
+pub machine object_at(space:Namespace,index:u64)->Object {transition index<64 {true -> (space.objects[index]) _ -> (Object {})}}
+machine entry_set(space:Namespace,index:u64,entry:Entry)->Namespace {
+ transition index<32 {true -> set(space,index,entry) _ -> (space)}
+ state set(space:Namespace,index:u64,entry:Entry)->Namespace {let mut out:Namespace=space;out.entries[index]=entry;out}
+}
+pub machine object_set(space:Namespace,index:u64,object:Object)->Namespace {
+ transition index<64 {true -> set(space,index,object) _ -> (space)}
+ state set(space:Namespace,index:u64,object:Object)->Namespace {let mut out:Namespace=space;out.objects[index]=object;out}
+}
+pub machine locate(space:Namespace,path:Path)->Lookup {
+ transition space.count<=32 && space.object_count<=64 && path.absolute && path.parents==0 && path_valid(path) {
+  true -> scan(space,path) _ -> (Lookup {outcome:Outcome::InvalidState})
+ }
+ state scan(space:Namespace,path:Path)->Lookup {
+  let initial:Lookup=Lookup {outcome:Outcome::MissingLevel,path:path};
+  let result:Lookup=locate_loop(space,path,0,space.count,initial);result
+ }
+}
+machine locate_loop(space:Namespace,path:Path,index:u64,count:u64,result:Lookup)
+terminates by (index,count) -> Nat::BoundedDistance;
+-> Lookup {
+ let next:Lookup=locate_step(space,path,index,result);
+ transition index<count {true -> locate_loop(space,path,index+1,count,next) _ -> (result)}
+}
+machine locate_step(space:Namespace,path:Path,index:u64,result:Lookup)->Lookup {
+ let entry:Entry=entry_at(space,index);let same:bool=path_equal(entry.path,path);
+ transition index<space.count && same {true -> (Lookup {path:path,index:index,object:entry.object}) _ -> (result)}
+}
+machine get_absolute(space:Namespace,path:Path)->Lookup {
+ let found:Lookup=locate(space,path);let entry:Entry=entry_at(space,found.index);
+ transition found.outcome==Outcome::Success && entry.has_object && entry.object<space.object_count {
+  true -> (found) _ -> (Lookup {outcome:Outcome::MissingObject,path:path})
+ }
+}
+machine level_absolute(space:Namespace,path:Path)->Lookup {
+ let found:Lookup=locate(space,path);let entry:Entry=entry_at(space,found.index);
+ transition found.outcome==Outcome::Success && entry.has_level {true -> (found) _ -> (Lookup {outcome:Outcome::MissingLevel,path:path})}
+}
+pub machine search(space:Namespace,name:Path,scope:Path)->Lookup {
+ let full:PathResult=resolve(name,scope);
+ transition full.outcome==Outcome::Success {
+  true -> choose(space,name,scope,full.value) _ -> (Lookup {outcome:full.outcome})
+ }
+ state choose(space:Namespace,name:Path,scope:Path,full:Path)->Lookup {
+  transition !name.absolute && name.parents==0 && name.count==1 {
+   true -> valid_start(space,name,scope) _ -> exact(space,full)
+  }
+ }
+ state valid_start(space:Namespace,name:Path,scope:Path)->Lookup {let start:Lookup=level(space,scope);transition start.outcome==Outcome::Success {true -> upward(space,name,scope) _ -> (start)}}
+ state upward(space:Namespace,name:Path,scope:Path)->Lookup {let initial:Lookup=Lookup {outcome:Outcome::MissingObject};let result:Lookup=search_loop(space,name,scope,initial,0,17);result}
+ state exact(space:Namespace,full:Path)->Lookup {let result:Lookup=get(space,full);result}
+}
+machine search_loop(space:Namespace,name:Path,scope:Path,result:Lookup,index:u64,count:u64)
+terminates by (index,count) -> Nat::BoundedDistance;
+-> Lookup {
+ let full:PathResult=resolve(name,scope);let found:Lookup=get(space,full.value);
+ let next:Lookup=first_lookup(result,found);let upper:PathResult=parent(scope);
+ let parent_scope:Path=parent_or_root(scope,upper);
+ transition index<count {true -> search_loop(space,name,parent_scope,next,index+1,count) _ -> (result)}
+}
+machine parent_or_root(scope:Path,upper:PathResult)->Path {transition upper.outcome==Outcome::Success {true -> (upper.value) _ -> (scope)}}
+machine first_lookup(first:Lookup,next:Lookup)->Lookup {transition first.outcome==Outcome::Success {true -> (first) _ -> (next)}}
+// Both namespace slots coexist at a path. Reopening a level preserves its kind.
+
+machine merge_entry(old:Entry,candidate:Entry)->Entry {
+ let levelled:Entry=merge_level(old,candidate);
+ transition candidate.has_object {true -> object(levelled,candidate) _ -> (levelled)}
+ state object(old:Entry,candidate:Entry)->Entry {let mut out:Entry=old;out.has_object=true;out.object=candidate.object;out.alias=candidate.alias;out}
+}
+machine merge_level(old:Entry,candidate:Entry)->Entry {
+ transition !old.has_level && candidate.has_level {true -> level(old,candidate) _ -> (old)}
+ state level(old:Entry,candidate:Entry)->Entry {let mut out:Entry=old;out.has_level=true;out.level=candidate.level;out}
+}
+machine add_level_absolute(space:Namespace,path:Path,kind:LevelKind)->NamespaceResult {
+ transition path_valid(path) {true -> valid(space,path,kind) _ -> (NamespaceResult {outcome:Outcome::InvalidName,space:space})}
+ state valid(space:Namespace,path:Path,kind:LevelKind)->NamespaceResult {transition path.count==0 {true -> (NamespaceResult {space:space}) _ -> put(space,path,kind)}
+ }
+ state put(space:Namespace,path:Path,kind:LevelKind)->NamespaceResult {
+  let mut out:Namespace=space;let candidate:Entry=Entry {path:path,has_level:true,level:kind};let outcome:Outcome=bind_mut(&mut out,candidate,false);
+  NamespaceResult {outcome:outcome,space:out}
+ }
+}
+pub machine allocate(space:Namespace,value:Value)->NamespaceResult {
+ let mut out:Namespace=space;let result:Read=allocate_mut(&mut out,value);
+ NamespaceResult {outcome:result.outcome,space:out,object:result.value}
+}
+machine bind_absolute(space:Namespace,path:Path,object:u64)->NamespaceResult {
+ let mut out:Namespace=space;let candidate:Entry=Entry {path:path,has_object:true,object:object};
+ let outcome:Outcome=bind_mut(&mut out,candidate,false);
+ NamespaceResult {outcome:outcome,space:out,object:object}
+}
+pub machine insert(space:Namespace,path:Path,value:Value)->NamespaceResult {
+ let mut out:Namespace=space;let allocated:Read=allocate_mut(&mut out,value);
+ transition allocated.outcome==Outcome::Success {true -> put(space,out,path,allocated) _ -> (NamespaceResult {outcome:allocated.outcome,space:space})}
+ state put(original:Namespace,out:Namespace,path:Path,allocated:Read)->NamespaceResult {
+  let mut current:Namespace=out;let candidate:Entry=Entry {path:path,has_object:true,object:allocated.value};let outcome:Outcome=bind_mut(&mut current,candidate,false);
+  transition outcome==Outcome::Success {true -> (NamespaceResult {space:current,object:allocated.value}) _ -> (NamespaceResult {outcome:outcome,space:original})}
+ }
+}
+pub machine alias(space:Namespace,source:Path,target:Path)->NamespaceResult {
+ let found:Lookup=get(space,source);
+ transition found.outcome==Outcome::Success {true -> put(space,target,found.object) _ -> (NamespaceResult {outcome:found.outcome,space:space})}
+ state put(space:Namespace,target:Path,object:u64)->NamespaceResult {
+  let mut out:Namespace=space;let candidate:Entry=Entry {path:target,has_object:true,object:object,alias:true};let outcome:Outcome=bind_mut(&mut out,candidate,true);
+  NamespaceResult {outcome:outcome,space:out,object:object}
+ }
+}
+pub machine child(scope:Path,segment:u32)->PathResult {
+ let mut name:Path=Path {count:1};name.segments[0]=segment;let result:PathResult=resolve(name,scope);result
+}
+// Standard scopes only; OS identity, global mutex, and native methods require host policy.
+pub machine predefined_scopes()->NamespaceResult {
+ let start:Namespace=empty();let r:Path=root();
+ let gpe:PathResult=child(r,0x4550475f);let sb:PathResult=child(r,0x5f42535f);let si:PathResult=child(r,0x5f49535f);let pr:PathResult=child(r,0x5f52505f);let tz:PathResult=child(r,0x5f5a545f);
+ let a:NamespaceResult=add_level(start,gpe.value,LevelKind::Scope);
+ let b:NamespaceResult=add_level(a.space,sb.value,LevelKind::Scope);
+ let c:NamespaceResult=add_level(b.space,si.value,LevelKind::Scope);
+ let d:NamespaceResult=add_level(c.space,pr.value,LevelKind::Scope);
+ let e:NamespaceResult=add_level(d.space,tz.value,LevelKind::Scope);e
+}
+
+machine bump(value:u64)->u64 {transition value<64 {true -> (value+1) _ -> (value)}}
+
+pub machine get(space:Namespace,path:Path)->Lookup {
+ transition path.absolute {true -> checked(space,path) _ -> (Lookup {outcome:Outcome::NotAbsolute})}
+ state checked(space:Namespace,path:Path)->Lookup {let result:Lookup=get_absolute(space,path);result}
+}
+
+pub machine level(space:Namespace,path:Path)->Lookup {
+ transition path.absolute {true -> checked(space,path) _ -> (Lookup {outcome:Outcome::NotAbsolute})}
+ state checked(space:Namespace,path:Path)->Lookup {let result:Lookup=level_absolute(space,path);result}
+}
+
+pub machine add_level(space:Namespace,path:Path,kind:LevelKind)->NamespaceResult {
+ transition path.absolute {true -> checked(space,path,kind) _ -> (NamespaceResult {outcome:Outcome::NotAbsolute,space:space})}
+ state checked(space:Namespace,path:Path,kind:LevelKind)->NamespaceResult {let result:NamespaceResult=add_level_absolute(space,path,kind);result}
+}
+
+pub machine bind(space:Namespace,path:Path,object:u64)->NamespaceResult {
+ transition path.absolute {true -> checked(space,path,object) _ -> (NamespaceResult {outcome:Outcome::NotAbsolute,space:space})}
+ state checked(space:Namespace,path:Path,object:u64)->NamespaceResult {let result:NamespaceResult=bind_absolute(space,path,object);result}
+}
+
+// These kernels mutate only supplied ordinary initialized storage. There is no
+// firmware, pointer dereference, device access, or allocator authority here.
+pub machine allocate_mut(space:&mut Namespace,value:Value)->Read {
+ transition space.count<=32 && space.object_count<64 {true -> append(space,value) _ -> (Read {outcome:Outcome::Capacity})}
+ state append(space:&mut Namespace,value:Value)->Read {
+  let index:u64=space.object_count;
+  transition index<64 {true -> commit(space,value,index) _ -> (Read {outcome:Outcome::Capacity})}
+ }
+ state commit(space:&mut Namespace,value:Value,index:u64)->Read {
+  space.objects[index]=Object {value:value};space.object_count=index+1;Read {value:index}
+ }
+}
+pub machine bind_mut(space:&mut Namespace,candidate:Entry,collision:bool)->Outcome {
+ transition candidate.path.absolute {true -> valid(space,candidate,collision) _ -> (Outcome::NotAbsolute)}
+ state valid(space:&mut Namespace,candidate:Entry,collision:bool)->Outcome {
+  transition path_valid(candidate.path) && candidate.path.count>0 && space.count<=32 && space.object_count<=64 && (!candidate.has_object || candidate.object<space.object_count) {
+   true -> parent_level(space,candidate,collision) _ -> (Outcome::InvalidState)
+  }
+ }
+ state parent_level(space:&mut Namespace,candidate:Entry,collision:bool)->Outcome {
+  let copied:Namespace=Namespace {count:space.count,object_count:space.object_count,entries:space.entries,objects:space.objects};let up:PathResult=parent(candidate.path);let parent_level:Lookup=level(copied,up.value);
+  transition up.outcome==Outcome::Success && parent_level.outcome==Outcome::Success {true -> existing(space,candidate,collision) _ -> (Outcome::MissingLevel)}
+ }
+ state existing(space:&mut Namespace,candidate:Entry,collision:bool)->Outcome {
+  let copied:Namespace=Namespace {count:space.count,object_count:space.object_count,entries:space.entries,objects:space.objects};let found:Lookup=locate(copied,candidate.path);let old:Entry=entry_at(copied,found.index);
+  transition found.outcome==Outcome::Success {true -> replace(space,candidate,collision,found.index,old) _ -> room(space,candidate)}
+ }
+ state replace(space:&mut Namespace,candidate:Entry,collision:bool,index:u64,old:Entry)->Outcome {
+  transition collision && old.has_object {true -> (Outcome::NameCollision) _ -> merge(space,candidate,index,old)}
+ }
+ state merge(space:&mut Namespace,candidate:Entry,index:u64,old:Entry)->Outcome {
+  let merged:Entry=merge_entry(old,candidate);
+  transition index<32 {true -> commit(space,index,merged) _ -> (Outcome::InvalidState)}
+ }
+ state commit(space:&mut Namespace,index:u64,merged:Entry)->Outcome {space.entries[index]=merged;Outcome::Success}
+ state room(space:&mut Namespace,candidate:Entry)->Outcome {
+  let index:u64=space.count;
+  transition index<32 {true -> append(space,candidate,index) _ -> (Outcome::Capacity)}
+ }
+ state append(space:&mut Namespace,candidate:Entry,index:u64)->Outcome {space.entries[index]=candidate;space.count=index+1;Outcome::Success}
+}

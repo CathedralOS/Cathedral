@@ -1,0 +1,182 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// AML translation from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Original upstream copyright 2018 Isaac Woods; bounded Omega adaptation 2026.
+// See PORT.md and licenses/rust-osdev/acpi for provenance and changes.
+module names;
+use model::Outcome;
+use model::Path;
+use model::PathResult;
+use model::Read;
+use bytes::read_le;
+pub machine lead_char(value:u64) -> bool { (value >= 65 && value <= 90) || value == 95 }
+pub machine name_char(value:u64) -> bool { lead_char(value) || (value >= 48 && value <= 57) }
+pub machine segment_valid(value:u32) -> bool {
+ lead_char((value&255) as u64) && name_char(((value>>8)&255) as u64) && name_char(((value>>16)&255) as u64) && name_char((value>>24) as u64)
+}
+pub machine segment_at(value:Path,index:u64) -> u32 { transition index<16 {true -> (value.segments[index]) _ -> (0)} }
+pub machine segment_set(value:Path,index:u64,segment:u32) -> Path {
+ transition index<16 {true -> set(value,index,segment) _ -> (value)}
+ state set(value:Path,index:u64,segment:u32) -> Path { let mut out:Path=value; out.segments[index]=segment; out }
+}
+pub machine root() -> Path { Path {absolute:true} }
+pub machine path_equal(left:Path,right:Path) -> bool {
+ transition left.absolute == right.absolute && left.parents == right.parents && left.count == right.count && left.count <= 16 {
+  true -> call_path_equal_scan_0(left,right,0) _ -> (false)
+ }
+
+ state call_path_equal_scan_0(left:Path,right:Path,index:u64) -> bool {let result:bool=path_equal_scan(left,right,index);result}
+}
+
+machine path_equal_scan(left:Path,right:Path,index:u64) -> bool {
+ let result:bool=equal_loop(left,right,index,left.count,true);result
+}
+machine equal_loop(left:Path,right:Path,index:u64,count:u64,equal:bool)
+terminates by (index,count) -> Nat::BoundedDistance;
+-> bool {
+ let same:bool=segment_at(left,index)==segment_at(right,index);
+ transition index<count {true -> equal_loop(left,right,index+1,count,equal&&same) _ -> (equal)}
+}
+
+pub machine path_valid(value:Path) -> bool {
+ transition value.count<=16 && value.parents<=16 && (!value.absolute || value.parents==0) {
+  true -> call_path_valid_scan_0(value,0) _ -> (false)
+ }
+
+ state call_path_valid_scan_0(value:Path,index:u64) -> bool {let result:bool=path_valid_scan(value,index);result}
+}
+
+machine path_valid_scan(value:Path,index:u64)->bool {let result:bool=valid_loop(value,index,value.count,true);result}
+machine valid_loop(value:Path,index:u64,count:u64,valid:bool)
+terminates by (index,count) -> Nat::BoundedDistance;
+-> bool {
+ let segment:u32=segment_at(value,index);let good:bool=segment_valid(segment);
+ transition index<count {true -> valid_loop(value,index+1,count,valid&&good) _ -> (valid)}
+}
+
+pub machine parent(value:Path) -> PathResult {
+ transition path_valid(value) && value.absolute {true -> count(value) _ -> (PathResult {outcome:Outcome::NotAbsolute})}
+ state count(value:Path) -> PathResult {transition value.count>0 {true -> trim(value) _ -> (PathResult {outcome:Outcome::AboveRoot})}}
+ state trim(value:Path) -> PathResult {let mut out:Path=value;out.count=value.count-1; PathResult {value:out}}
+}
+pub machine resolve(value:Path,scope:Path) -> PathResult {
+ transition scope.absolute {true -> valid_scope(value,scope) _ -> (PathResult {outcome:Outcome::NotAbsolute})}
+ state valid_scope(value:Path,scope:Path)->PathResult {
+ transition path_valid(value) && path_valid(scope) {true -> absolute(value,scope) _ -> (PathResult {outcome:Outcome::InvalidName})}
+ }
+ state absolute(value:Path,scope:Path) -> PathResult {
+  transition value.absolute {true -> (PathResult {value:value}) _ -> prefixes(value,scope)}
+ }
+ state prefixes(value:Path,scope:Path) -> PathResult {
+  transition value.parents <= scope.count {true -> base(value,scope) _ -> (PathResult {outcome:Outcome::AboveRoot})}
+ }
+ state base(value:Path,scope:Path) -> PathResult {
+  let mut out:Path=scope;out.count=scope.count-value.parents;
+  transition value.count <= 16-out.count {true -> call_resolve_append_0(value,out,0) _ -> (PathResult {outcome:Outcome::Capacity})}
+ }
+
+ state call_resolve_append_0(value:Path,out:Path,index:u64) -> PathResult {let result:PathResult=resolve_append(value,out,index);result}
+}
+
+machine resolve_append(value:Path,out:Path,index:u64) -> PathResult {
+ let result:PathResult=append_loop(value,out,index,value.count);result
+}
+machine append_loop(value:Path,out:Path,index:u64,count:u64)
+terminates by (index,count) -> Nat::BoundedDistance;
+-> PathResult {
+ let segment:u32=segment_at(value,index);let next:Path=append_one(out,segment);
+ transition index<count {true -> append_loop(value,next,index+1,count) _ -> (PathResult {value:out})}
+}
+machine append_one(value:Path,segment:u32) -> Path {
+ transition value.count<16 {true -> put(value,segment) _ -> (value)}
+ state put(value:Path,segment:u32) -> Path {let mut out:Path=segment_set(value,value.count,segment);out.count=value.count+1;out}
+}
+
+pub machine namestring(input:&[u8;1024],end:u64,at:u64) -> PathResult {
+ let first:Read=read_le(input,end,at,1); let empty:Path=Path {};
+ transition first.outcome == Outcome::Success {true -> prefix(input,end,at,first,empty) _ -> (PathResult {outcome:first.outcome,offset:first.offset})}
+ state prefix(input:&[u8;1024],end:u64,at:u64,first:Read,value:Path) -> PathResult {
+  transition first.value { 0x5c -> rooted(input,end,first.next) _ -> call_namestring_parents_0(input,end,at,value,0) }
+ }
+ state rooted(input:&[u8;1024],end:u64,at:u64) -> PathResult {let value:Path=Path {absolute:true}; namestring_body(input,end,at,value)}
+
+ state call_namestring_parents_0(input:&[u8;1024],end:u64,at:u64,value:Path,index:u64) -> PathResult {let result:PathResult=namestring_parents(input,end,at,value,index);result}
+}
+
+machine namestring_parents(input:&[u8;1024],end:u64,at:u64,value:Path,index:u64)->PathResult {
+ let initial:PathResult=PathResult {value:value,next:at};
+ let parsed:PathResult=prefix_loop(input,end,initial,0,17);
+ let body:PathResult=namestring_body(input,end,parsed.next,parsed.value);
+ transition parsed.outcome==Outcome::Success {true -> (body) _ -> (parsed)}
+}
+machine prefix_loop(input:&[u8;1024],end:u64,value:PathResult,index:u64,count:u64)
+terminates by (index,count) -> Nat::BoundedDistance;
+-> PathResult {
+ let next:PathResult=prefix_step(input,end,value);
+ transition index<count {true -> prefix_loop(input,end,next,index+1,count) _ -> (value)}
+}
+machine prefix_step(input:&[u8;1024],end:u64,value:PathResult)->PathResult {
+ let byte:Read=read_le(input,end,value.next,1);
+ transition value.outcome==Outcome::Success && byte.outcome==Outcome::Success && byte.value==0x5e {
+  true -> capacity(value,byte) _ -> (value)
+ }
+ state capacity(value:PathResult,byte:Read)->PathResult {
+  transition value.value.parents<16 {true -> add(value,byte) _ -> (PathResult {outcome:Outcome::Capacity,offset:value.next})}
+ }
+ state add(value:PathResult,byte:Read)->PathResult {
+  let mut out:Path=value.value;out.parents=value.value.parents+1;PathResult {value:out,next:byte.next}
+ }
+}
+machine add_parent(value:Path,index:u64) -> Path {
+ transition index<16 {true -> add(value,index) _ -> (value)}
+ state add(value:Path,index:u64) -> Path {let mut out:Path=value;out.parents=index+1;out}
+}
+
+machine namestring_body(input:&[u8;1024],end:u64,at:u64,value:Path) -> PathResult {
+  let next:Read=read_le(input,end,at,1);
+  transition next.outcome==Outcome::Success {true -> form(input,end,at,value,next) _ -> (PathResult {outcome:next.outcome,offset:next.offset})}
+ 
+ state form(input:&[u8;1024],end:u64,at:u64,value:Path,next:Read) -> PathResult {
+  transition next.value {0 -> (PathResult {value:value,next:next.next}) 0x2e -> call_namestring_segments_0(input,end,next.next,value,2,0) 0x2f -> multi(input,end,next.next,value) _ -> call_namestring_segments_1(input,end,at,value,1,0)}
+ }
+ state multi(input:&[u8;1024],end:u64,at:u64,value:Path) -> PathResult {
+  let count:Read=read_le(input,end,at,1);
+  transition count.outcome==Outcome::Success {true -> multi_count(input,end,value,count) _ -> (PathResult {outcome:count.outcome,offset:count.offset})}
+ }
+ state multi_count(input:&[u8;1024],end:u64,value:Path,count:Read) -> PathResult {
+  transition count.value {0 -> (PathResult {outcome:Outcome::BadEncoding,offset:count.next}) _ -> capacity(input,end,value,count)}
+ }
+ state capacity(input:&[u8;1024],end:u64,value:Path,count:Read) -> PathResult {
+  transition count.value<=16 {true -> call_namestring_segments_2(input,end,count.next,value,count.value,0) _ -> (PathResult {outcome:Outcome::Capacity,offset:count.next})}
+ }
+
+ state call_namestring_segments_0(input:&[u8;1024],end:u64,at:u64,value:Path,count:u64,index:u64) -> PathResult {let result:PathResult=namestring_segments(input,end,at,value,count,index);result}
+
+ state call_namestring_segments_1(input:&[u8;1024],end:u64,at:u64,value:Path,count:u64,index:u64) -> PathResult {let result:PathResult=namestring_segments(input,end,at,value,count,index);result}
+
+ state call_namestring_segments_2(input:&[u8;1024],end:u64,at:u64,value:Path,count:u64,index:u64) -> PathResult {let result:PathResult=namestring_segments(input,end,at,value,count,index);result}
+}
+
+machine namestring_segments(input:&[u8;1024],end:u64,at:u64,value:Path,count:u64,index:u64)->PathResult {
+ let initial:PathResult=PathResult {value:value,next:at};let result:PathResult=segments_loop(input,end,initial,count,index);result
+}
+machine segments_loop(input:&[u8;1024],end:u64,value:PathResult,count:u64,index:u64)
+terminates by (index,count) -> Nat::BoundedDistance;
+-> PathResult {
+ let next:PathResult=segments_step(input,end,value);
+ transition index<count {true -> segments_loop(input,end,next,count,index+1) _ -> (value)}
+}
+machine segments_step(input:&[u8;1024],end:u64,value:PathResult)->PathResult {
+ let result:PathResult=read_segment(input,end,value.next,value.value);
+ transition value.outcome==Outcome::Success {true -> (result) _ -> (value)}
+}
+machine read_segment(input:&[u8;1024],end:u64,at:u64,value:Path) -> PathResult {
+ let raw:Read=read_le(input,end,at,4);let segment:u32=(raw.value&0xffffffff) as u32;
+ let out:Path=append_one(value,segment);
+ transition raw.outcome==Outcome::Success {
+  true -> valid(at,raw,segment,out) _ -> (PathResult {outcome:raw.outcome,offset:raw.offset})
+ }
+ state valid(at:u64,raw:Read,segment:u32,out:Path) -> PathResult {
+  transition segment_valid(segment) {true -> (PathResult {value:out,next:raw.next}) _ -> (PathResult {outcome:Outcome::InvalidName,offset:at})}
+ }
+}
+
