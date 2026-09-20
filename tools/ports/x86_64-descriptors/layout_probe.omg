@@ -1,0 +1,9 @@
+use facts::x86_descriptors;
+use facts::x86_descriptor_layouts;
+data Main {
+    pointer: x86_descriptor_layouts::DescriptorTablePointerLayout<x86_descriptors::DescriptorTablePointer>;
+    tss: x86_descriptor_layouts::TaskStateSegmentLayout<x86_descriptors::TaskStateSegment>;
+    entry: x86_descriptor_layouts::GdtEntryLayout<x86_descriptors::GdtEntry>;
+    tss_words: x86_descriptor_layouts::TssDescriptorWordsLayout<x86_descriptors::TssDescriptorWords>;
+}
+machine Main::main(&mut self) {}

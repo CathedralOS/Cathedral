@@ -209,8 +209,11 @@ X86-001/002 partial evidence: [address arithmetic](source/libraries/x86_64/addre
 passes 110 Omega numeric cases, 102 actual pinned Rust witnesses, finite stepping
 relations and three body-mutating controls. The [register slice](source/drivers/facts/x86_registers.PORT.md)
 adds 177 observed constants and 31 tested helpers, including checked STAR
-underflow handling. Page/frame/descriptor/table work
-remains; the full task checkboxes stay open.
+underflow handling. The [descriptor slice](source/drivers/facts/x86_descriptors.PORT.md)
+adds semantic descriptor cases, complete byte codecs, GDT append and bitmap
+plans, four Rust tests and four body mutations; native imported-layout limits
+are recorded. Page/frame and detached table work remains; the full task
+checkboxes stay open.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

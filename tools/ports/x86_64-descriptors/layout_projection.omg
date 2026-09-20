@@ -1,0 +1,7 @@
+use facts::x86_descriptors::DescriptorTablePointer;
+use facts::x86_descriptor_layouts::DescriptorTablePointerLayout;
+data Main { pointer: DescriptorTablePointerLayout<DescriptorTablePointer>; }
+machine Main::main(&mut self) -> i32 {
+    self.pointer.limit = 7;
+    transition self.pointer.limit == 7 { true -> (0) _ -> (1) }
+}

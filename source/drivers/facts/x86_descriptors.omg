@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified fixed x86_64 descriptor facts at cc35c876d3badb57df54a66e22f7768a52be95f2.
+// See x86_descriptors.PORT.md. Addresses are numeric and convey no backing.
+// Copyright 2017 Philipp Oppermann. See the README.md (upstream idt.rs).
+module x86_descriptors;
+
+pub data DescriptorTablePointer [copy] { limit: u16; base: u64; }
+pub data TaskStateSegment [copy] { reserved_1: u32; privilege_stack_table: [u64; 3]; reserved_2: u64; interrupt_stack_table: [u64; 7]; reserved_3: u64; reserved_4: u16; iomap_base: u16; }
+pub data GdtEntry [copy] { raw: u64; }
+pub data TssDescriptorWords [copy] { low: u64; high: u64; }
+pub data DescriptorFlags [copy] { raw: u64; }
+pub data Descriptor [copy] { case UserSegment(low: u64); case SystemSegment(low: u64, high: u64); }
+pub data SelectorErrorCode [copy] { raw: u64; }
+
+pub const DESCRIPTOR_ACCESSED: DescriptorFlags = DescriptorFlags { raw: 1099511627776 };
+pub const DESCRIPTOR_WRITABLE: DescriptorFlags = DescriptorFlags { raw: 2199023255552 };
+pub const DESCRIPTOR_CONFORMING: DescriptorFlags = DescriptorFlags { raw: 4398046511104 };
+pub const DESCRIPTOR_EXECUTABLE: DescriptorFlags = DescriptorFlags { raw: 8796093022208 };
+pub const DESCRIPTOR_USER_SEGMENT: DescriptorFlags = DescriptorFlags { raw: 17592186044416 };
+pub const DESCRIPTOR_DPL_RING_3: DescriptorFlags = DescriptorFlags { raw: 105553116266496 };
+pub const DESCRIPTOR_PRESENT: DescriptorFlags = DescriptorFlags { raw: 140737488355328 };
+pub const DESCRIPTOR_AVAILABLE: DescriptorFlags = DescriptorFlags { raw: 4503599627370496 };
+pub const DESCRIPTOR_LONG_MODE: DescriptorFlags = DescriptorFlags { raw: 9007199254740992 };
+pub const DESCRIPTOR_DEFAULT_SIZE: DescriptorFlags = DescriptorFlags { raw: 18014398509481984 };
+pub const DESCRIPTOR_GRANULARITY: DescriptorFlags = DescriptorFlags { raw: 36028797018963968 };
+pub const DESCRIPTOR_LIMIT_0_15: DescriptorFlags = DescriptorFlags { raw: 65535 };
+pub const DESCRIPTOR_LIMIT_16_19: DescriptorFlags = DescriptorFlags { raw: 4222124650659840 };
+pub const DESCRIPTOR_BASE_0_23: DescriptorFlags = DescriptorFlags { raw: 1099511562240 };
+const LARGE_DESCRIPTOR_BASE_24_31: u64 = (4278190080 as u64) << 32 | 0;
+pub const DESCRIPTOR_BASE_24_31: DescriptorFlags = DescriptorFlags { raw: LARGE_DESCRIPTOR_BASE_24_31 };
+pub const DESCRIPTOR_COMMON: DescriptorFlags = DescriptorFlags { raw: 40412549878972415 };
+pub const DESCRIPTOR_KERNEL_DATA: DescriptorFlags = DescriptorFlags { raw: 58426948388454399 };
+pub const DESCRIPTOR_KERNEL_CODE32: DescriptorFlags = DescriptorFlags { raw: 58435744481476607 };
+pub const DESCRIPTOR_KERNEL_CODE64: DescriptorFlags = DescriptorFlags { raw: 49428545226735615 };
+pub const DESCRIPTOR_USER_DATA: DescriptorFlags = DescriptorFlags { raw: 58532501504720895 };
+pub const DESCRIPTOR_USER_CODE32: DescriptorFlags = DescriptorFlags { raw: 58541297597743103 };
+pub const DESCRIPTOR_USER_CODE64: DescriptorFlags = DescriptorFlags { raw: 49534098343002111 };
+pub const DESCRIPTOR_TABLE_GDT: u8 = 0;
+pub const DESCRIPTOR_TABLE_IDT: u8 = 1;
+pub const DESCRIPTOR_TABLE_LDT: u8 = 2;
+pub const TSS_SIZE: u16 = 104;
+pub const TSS_MIN_LIMIT: u16 = 103;
+pub const IO_MAP_MAX_DISTANCE: u16 = 57343;
+pub const IO_MAP_MAX_LENGTH: u16 = 8193;
+pub const IO_MAP_OK: u8 = 0;
+pub const IO_MAP_BEFORE_TSS: u8 = 1;
+pub const IO_MAP_TOO_FAR: u8 = 2;
+pub const IO_MAP_BAD_TERMINATOR: u8 = 3;
+pub const IO_MAP_TOO_LONG: u8 = 4;
+pub const IO_MAP_INVALID_BASE: u8 = 5;

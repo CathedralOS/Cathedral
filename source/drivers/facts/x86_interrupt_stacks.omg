@@ -8,7 +8,7 @@
 // `ist_index`. Authoring them independently would let the checker provision one
 // stack while the gate bytes selected another.
 
-pub data X86IstStackClass {
+pub data X86IstStackClass [copy] {
     stack_class: i64 [1..=7];
     ist_index: u8 [1..=7];
 }

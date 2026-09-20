@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Requested hardware geometry; not an observation or authority grant.
+module x86_descriptor_layouts;
+use omega::language::core::layout;
+
+pub data DescriptorTablePointerLayout {}
+pub DescriptorTablePointerPolicy: DescriptorTablePointerLayout satisfies Layout;
+pub machine DescriptorTablePointerLayout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::Bits { container: 2, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 } };
+    entries[2] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::Bits { container: 4, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 32, width: 16 } };
+    entries[4] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::Bits { container: 8, container_width: 16, destination_lsb: 0, source_lsb: 48, width: 16 } };
+    Plan { entries: entries, entry_count: 5, size_fixed: 10, size_is_dynamic: false, align: 2 }
+}
+
+pub data TaskStateSegmentLayout {}
+pub TaskStateSegmentPolicy: TaskStateSegmentLayout satisfies Layout;
+pub machine TaskStateSegmentLayout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::Bits { container: 28, container_width: 32, destination_lsb: 0, source_lsb: 0, width: 32 } };
+    entries[3] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::Bits { container: 32, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 } };
+    entries[4] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 36 } };
+    entries[5] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::Bits { container: 92, container_width: 32, destination_lsb: 0, source_lsb: 0, width: 32 } };
+    entries[6] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::Bits { container: 96, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 } };
+    entries[7] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 100 } };
+    entries[8] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 102 } };
+    Plan { entries: entries, entry_count: 9, size_fixed: 104, size_is_dynamic: false, align: 4 }
+}
+
+pub data GdtEntryLayout {}
+pub GdtEntryPolicy: GdtEntryLayout satisfies Layout;
+pub machine GdtEntryLayout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 8, size_is_dynamic: false, align: 8 }
+}
+
+pub data TssDescriptorWordsLayout {}
+pub TssDescriptorWordsPolicy: TssDescriptorWordsLayout satisfies Layout;
+pub machine TssDescriptorWordsLayout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 16, size_is_dynamic: false, align: 8 }
+}

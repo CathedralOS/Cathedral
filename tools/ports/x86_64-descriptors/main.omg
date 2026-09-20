@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86_values::descriptors;
+use x86_values::descriptor_bytes;
+use facts::x86_descriptors;
+use facts::x86_descriptors::Descriptor;
+use facts::x86_descriptors::TaskStateSegment;
+use facts::x86_descriptors::DescriptorTablePointer;
+use facts::x86_descriptors::TssDescriptorWords;
+use facts::x86_descriptors::GdtEntry;
+use facts::x86_descriptors::SelectorErrorCode;
+use facts::x86_interrupt_stacks;
+use cases;
+
+machine user_low_equals(value: Descriptor, expected: u64) -> bool {
+    transition value { Descriptor::UserSegment { low } -> (low == expected) _ -> (false) }
+}
+machine system_high_equals(value: Descriptor, expected: u64) -> bool {
+    transition value { Descriptor::SystemSegment { low, high } -> (high == expected) _ -> (false) }
+}
+machine table_cases() -> bool {
+    let code: Descriptor = descriptors::kernel_code_segment();
+    let data: Descriptor = descriptors::kernel_data_segment();
+    let user: Descriptor = descriptors::user_code_segment();
+    let user_data: Descriptor = descriptors::user_data_segment();
+    let system: Descriptor = descriptors::system_segment(0x890000000067, 0x123456789abcdef0);
+    let good: descriptors::GdtAppendPlan = descriptors::gdt_append_plan(6, 8, system);
+    let ring3: descriptors::GdtAppendPlan = descriptors::gdt_append_plan(8191, 8192, user);
+    descriptors::descriptor_dpl(code) == 0 && descriptors::descriptor_dpl(data) == 0 &&
+    descriptors::descriptor_dpl(user) == 3 && descriptors::descriptor_dpl(user_data) == 3 &&
+    descriptors::descriptor_word_count(system) == 2 && descriptors::descriptor_word_count(code) == 1 &&
+    system_high_equals(system, 0x123456789abcdef0) && user_low_equals(code, 0x00af9b000000ffff) &&
+    !system_high_equals(code, 0) && !user_low_equals(system, 0x890000000067) &&
+    descriptors::gdt_capacity_valid(1) && descriptors::gdt_capacity_valid(8192) &&
+    !descriptors::gdt_capacity_valid(0) && !descriptors::gdt_capacity_valid(8193) &&
+    descriptors::gdt_raw_metadata_valid(3, 3, 0) && !descriptors::gdt_raw_metadata_valid(0, 3, 0) &&
+    !descriptors::gdt_raw_metadata_valid(3, 2, 0) && !descriptors::gdt_raw_metadata_valid(3, 3, 1) &&
+    descriptors::gdt_limit(1) == 7 && descriptors::gdt_limit(8192) == 65535 &&
+    good.error == 0 && good.index == 6 && good.next_length == 8 && good.selector.raw == 48 &&
+    ring3.error == 0 && ring3.next_length == 8192 && ring3.selector.raw == 65531 &&
+    descriptors::gdt_append_plan(8, 8, code).error == 2 &&
+    descriptors::gdt_append_plan(7, 8, system).error == 2 &&
+    descriptors::gdt_append_plan(0, 8, code).error == 1 &&
+    descriptors::gdt_append_plan(1, 8193, code).error == 1 &&
+    descriptors::descriptor_low(descriptors::user_segment(0xffffffffffffffff)) == 0xffffffffffffffff
+}
+machine iomap_cases() -> bool {
+    let mut input: [u8; 8193];
+    input[0] = 255;
+    input[8192] = 255;
+    let accepted: descriptors::IoMapResult = descriptors::iomap_validate(&input, 4096, 4200, 1, 104);
+    let maximum: descriptors::IoMapResult = descriptors::iomap_validate(&input, 0, 57343, 8193, 57343);
+    let wrong: descriptors::IoMapResult = descriptors::iomap_validate(&input, 0, 104, 2, 104);
+    accepted.error == 0 && accepted.limit == 104 && maximum.error == 0 && maximum.limit == 65535 &&
+    wrong.error == 3 && wrong.detail == 0 &&
+    descriptors::iomap_validate(&input, 0, 104, 0, 104).error == 0 &&
+    descriptors::iomap_validate(&input, 0, 104, 8194, 104).error == 4 &&
+    descriptors::iomap_validate_observed(2, 1, 8194, 0, 0).error == 4 &&
+    descriptors::iomap_validate_observed(2, 1, 1, 0, 0).error == 1 &&
+    descriptors::iomap_validate_observed(0, 57344, 1, 0, 0).error == 2 &&
+    descriptors::iomap_validate_observed(0, 104, 1, 0, 0).error == 3 &&
+    descriptors::iomap_validate_observed(0, 104, 1, 255, 0).error == 5 &&
+    descriptors::iomap_validate_observed(0, 104, 1, 255, 0).expected_base == 104 &&
+    descriptors::iomap_validate_observed(0, 0, 0, 0, 0).limit == 103 &&
+    descriptors::iomap_validate_observed(0, 1, 1, 255, 1).error == 0
+}
+machine reused_ist_cases() -> bool {
+    let double_fault: X86IstStackClass = X86IstStackClass { stack_class: 1, ist_index: 1 };
+    let nmi: X86IstStackClass = X86IstStackClass { stack_class: 2, ist_index: 2 };
+    let machine_check: X86IstStackClass = X86IstStackClass { stack_class: 3, ist_index: 3 };
+    let maskable: X86IstStackClass = X86IstStackClass { stack_class: 4, ist_index: 4 };
+    descriptors::ist_slot(&double_fault) == 0 && double_fault.stack_class == 1 &&
+    descriptors::ist_slot(&nmi) == 1 && nmi.stack_class == 2 &&
+    descriptors::ist_slot(&machine_check) == 2 && machine_check.stack_class == 3 &&
+    descriptors::ist_slot(&maskable) == 3 && maskable.stack_class == 4
+}
+machine test_result() -> i32 {
+    transition cases::constants_match() && cases::byte_cases() && cases::descriptor_cases() && cases::error_cases() &&
+        table_cases() && iomap_cases() && reused_ist_cases() {
+        true -> (0)
+        _ -> (1)
+    }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

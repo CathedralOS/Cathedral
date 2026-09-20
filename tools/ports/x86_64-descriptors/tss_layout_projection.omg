@@ -1,0 +1,7 @@
+use facts::x86_descriptors::TaskStateSegment;
+use facts::x86_descriptor_layouts::TaskStateSegmentLayout;
+data Main { tss: TaskStateSegmentLayout<TaskStateSegment>; }
+machine Main::main(&mut self) -> i32 {
+    self.tss.iomap_base = 104;
+    transition self.tss.iomap_base == 104 { true -> (0) _ -> (1) }
+}

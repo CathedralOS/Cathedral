@@ -1,0 +1,24 @@
+// Local equivalent schemas exercise real layout normalization and field access.
+// Imported actual types still hit the separate generated-field visibility probe.
+use facts::x86_descriptor_layouts::DescriptorTablePointerLayout;
+use facts::x86_descriptor_layouts::GdtEntryLayout;
+use facts::x86_descriptor_layouts::TssDescriptorWordsLayout;
+data LocalPointer { limit: u16; base: u64; }
+data LocalEntry { raw: u64; }
+data LocalWords { low: u64; high: u64; }
+data Main {
+    pointer: DescriptorTablePointerLayout<LocalPointer>;
+    entry: GdtEntryLayout<LocalEntry>;
+    words: TssDescriptorWordsLayout<LocalWords>;
+}
+machine Main::main(&mut self) -> i32 {
+    self.pointer.limit = 7;
+    self.pointer.base = 0x1122334455667788;
+    self.entry.raw = 0x00af9b000000ffff;
+    self.words.low = 0x890000000067;
+    self.words.high = 0x11223344;
+    transition self.pointer.limit == 7 && self.pointer.base == 0x1122334455667788 &&
+        self.entry.raw == 0x00af9b000000ffff && self.words.low == 0x890000000067 && self.words.high == 0x11223344 {
+        true -> (0) _ -> (1)
+    }
+}

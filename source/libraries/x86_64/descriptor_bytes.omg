@@ -1,0 +1,186 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Literal little-endian codecs; no casts to pointers or inferred native ABI.
+module descriptor_bytes;
+use facts::x86_descriptors;
+
+pub machine encode_DescriptorTablePointer(value: &x86_descriptors::DescriptorTablePointer) -> [u8; 10] {
+    let mut output: [u8; 10];
+    output[0] = ((value.limit >> 0) & 255) as u8;
+    output[1] = ((value.limit >> 8) & 255) as u8;
+    output[2] = ((value.base >> 0) & 255) as u8;
+    output[3] = ((value.base >> 8) & 255) as u8;
+    output[4] = ((value.base >> 16) & 255) as u8;
+    output[5] = ((value.base >> 24) & 255) as u8;
+    output[6] = ((value.base >> 32) & 255) as u8;
+    output[7] = ((value.base >> 40) & 255) as u8;
+    output[8] = ((value.base >> 48) & 255) as u8;
+    output[9] = ((value.base >> 56) & 255) as u8;
+    output
+}
+pub machine decode_DescriptorTablePointer(input: &[u8; 10]) -> x86_descriptors::DescriptorTablePointer {
+    let limit: u16 = ((input[0] as u16) << 0) | ((input[1] as u16) << 8);
+    let base: u64 = ((input[2] as u64) << 0) | ((input[3] as u64) << 8) | ((input[4] as u64) << 16) | ((input[5] as u64) << 24) | ((input[6] as u64) << 32) | ((input[7] as u64) << 40) | ((input[8] as u64) << 48) | ((input[9] as u64) << 56);
+    x86_descriptors::DescriptorTablePointer { limit: limit, base: base }
+}
+
+pub machine encode_TaskStateSegment(value: &x86_descriptors::TaskStateSegment) -> [u8; 104] {
+    let mut output: [u8; 104];
+    output[0] = ((value.reserved_1 >> 0) & 255) as u8;
+    output[1] = ((value.reserved_1 >> 8) & 255) as u8;
+    output[2] = ((value.reserved_1 >> 16) & 255) as u8;
+    output[3] = ((value.reserved_1 >> 24) & 255) as u8;
+    output[4] = ((value.privilege_stack_table[0] >> 0) & 255) as u8;
+    output[5] = ((value.privilege_stack_table[0] >> 8) & 255) as u8;
+    output[6] = ((value.privilege_stack_table[0] >> 16) & 255) as u8;
+    output[7] = ((value.privilege_stack_table[0] >> 24) & 255) as u8;
+    output[8] = ((value.privilege_stack_table[0] >> 32) & 255) as u8;
+    output[9] = ((value.privilege_stack_table[0] >> 40) & 255) as u8;
+    output[10] = ((value.privilege_stack_table[0] >> 48) & 255) as u8;
+    output[11] = ((value.privilege_stack_table[0] >> 56) & 255) as u8;
+    output[12] = ((value.privilege_stack_table[1] >> 0) & 255) as u8;
+    output[13] = ((value.privilege_stack_table[1] >> 8) & 255) as u8;
+    output[14] = ((value.privilege_stack_table[1] >> 16) & 255) as u8;
+    output[15] = ((value.privilege_stack_table[1] >> 24) & 255) as u8;
+    output[16] = ((value.privilege_stack_table[1] >> 32) & 255) as u8;
+    output[17] = ((value.privilege_stack_table[1] >> 40) & 255) as u8;
+    output[18] = ((value.privilege_stack_table[1] >> 48) & 255) as u8;
+    output[19] = ((value.privilege_stack_table[1] >> 56) & 255) as u8;
+    output[20] = ((value.privilege_stack_table[2] >> 0) & 255) as u8;
+    output[21] = ((value.privilege_stack_table[2] >> 8) & 255) as u8;
+    output[22] = ((value.privilege_stack_table[2] >> 16) & 255) as u8;
+    output[23] = ((value.privilege_stack_table[2] >> 24) & 255) as u8;
+    output[24] = ((value.privilege_stack_table[2] >> 32) & 255) as u8;
+    output[25] = ((value.privilege_stack_table[2] >> 40) & 255) as u8;
+    output[26] = ((value.privilege_stack_table[2] >> 48) & 255) as u8;
+    output[27] = ((value.privilege_stack_table[2] >> 56) & 255) as u8;
+    output[28] = ((value.reserved_2 >> 0) & 255) as u8;
+    output[29] = ((value.reserved_2 >> 8) & 255) as u8;
+    output[30] = ((value.reserved_2 >> 16) & 255) as u8;
+    output[31] = ((value.reserved_2 >> 24) & 255) as u8;
+    output[32] = ((value.reserved_2 >> 32) & 255) as u8;
+    output[33] = ((value.reserved_2 >> 40) & 255) as u8;
+    output[34] = ((value.reserved_2 >> 48) & 255) as u8;
+    output[35] = ((value.reserved_2 >> 56) & 255) as u8;
+    output[36] = ((value.interrupt_stack_table[0] >> 0) & 255) as u8;
+    output[37] = ((value.interrupt_stack_table[0] >> 8) & 255) as u8;
+    output[38] = ((value.interrupt_stack_table[0] >> 16) & 255) as u8;
+    output[39] = ((value.interrupt_stack_table[0] >> 24) & 255) as u8;
+    output[40] = ((value.interrupt_stack_table[0] >> 32) & 255) as u8;
+    output[41] = ((value.interrupt_stack_table[0] >> 40) & 255) as u8;
+    output[42] = ((value.interrupt_stack_table[0] >> 48) & 255) as u8;
+    output[43] = ((value.interrupt_stack_table[0] >> 56) & 255) as u8;
+    output[44] = ((value.interrupt_stack_table[1] >> 0) & 255) as u8;
+    output[45] = ((value.interrupt_stack_table[1] >> 8) & 255) as u8;
+    output[46] = ((value.interrupt_stack_table[1] >> 16) & 255) as u8;
+    output[47] = ((value.interrupt_stack_table[1] >> 24) & 255) as u8;
+    output[48] = ((value.interrupt_stack_table[1] >> 32) & 255) as u8;
+    output[49] = ((value.interrupt_stack_table[1] >> 40) & 255) as u8;
+    output[50] = ((value.interrupt_stack_table[1] >> 48) & 255) as u8;
+    output[51] = ((value.interrupt_stack_table[1] >> 56) & 255) as u8;
+    output[52] = ((value.interrupt_stack_table[2] >> 0) & 255) as u8;
+    output[53] = ((value.interrupt_stack_table[2] >> 8) & 255) as u8;
+    output[54] = ((value.interrupt_stack_table[2] >> 16) & 255) as u8;
+    output[55] = ((value.interrupt_stack_table[2] >> 24) & 255) as u8;
+    output[56] = ((value.interrupt_stack_table[2] >> 32) & 255) as u8;
+    output[57] = ((value.interrupt_stack_table[2] >> 40) & 255) as u8;
+    output[58] = ((value.interrupt_stack_table[2] >> 48) & 255) as u8;
+    output[59] = ((value.interrupt_stack_table[2] >> 56) & 255) as u8;
+    output[60] = ((value.interrupt_stack_table[3] >> 0) & 255) as u8;
+    output[61] = ((value.interrupt_stack_table[3] >> 8) & 255) as u8;
+    output[62] = ((value.interrupt_stack_table[3] >> 16) & 255) as u8;
+    output[63] = ((value.interrupt_stack_table[3] >> 24) & 255) as u8;
+    output[64] = ((value.interrupt_stack_table[3] >> 32) & 255) as u8;
+    output[65] = ((value.interrupt_stack_table[3] >> 40) & 255) as u8;
+    output[66] = ((value.interrupt_stack_table[3] >> 48) & 255) as u8;
+    output[67] = ((value.interrupt_stack_table[3] >> 56) & 255) as u8;
+    output[68] = ((value.interrupt_stack_table[4] >> 0) & 255) as u8;
+    output[69] = ((value.interrupt_stack_table[4] >> 8) & 255) as u8;
+    output[70] = ((value.interrupt_stack_table[4] >> 16) & 255) as u8;
+    output[71] = ((value.interrupt_stack_table[4] >> 24) & 255) as u8;
+    output[72] = ((value.interrupt_stack_table[4] >> 32) & 255) as u8;
+    output[73] = ((value.interrupt_stack_table[4] >> 40) & 255) as u8;
+    output[74] = ((value.interrupt_stack_table[4] >> 48) & 255) as u8;
+    output[75] = ((value.interrupt_stack_table[4] >> 56) & 255) as u8;
+    output[76] = ((value.interrupt_stack_table[5] >> 0) & 255) as u8;
+    output[77] = ((value.interrupt_stack_table[5] >> 8) & 255) as u8;
+    output[78] = ((value.interrupt_stack_table[5] >> 16) & 255) as u8;
+    output[79] = ((value.interrupt_stack_table[5] >> 24) & 255) as u8;
+    output[80] = ((value.interrupt_stack_table[5] >> 32) & 255) as u8;
+    output[81] = ((value.interrupt_stack_table[5] >> 40) & 255) as u8;
+    output[82] = ((value.interrupt_stack_table[5] >> 48) & 255) as u8;
+    output[83] = ((value.interrupt_stack_table[5] >> 56) & 255) as u8;
+    output[84] = ((value.interrupt_stack_table[6] >> 0) & 255) as u8;
+    output[85] = ((value.interrupt_stack_table[6] >> 8) & 255) as u8;
+    output[86] = ((value.interrupt_stack_table[6] >> 16) & 255) as u8;
+    output[87] = ((value.interrupt_stack_table[6] >> 24) & 255) as u8;
+    output[88] = ((value.interrupt_stack_table[6] >> 32) & 255) as u8;
+    output[89] = ((value.interrupt_stack_table[6] >> 40) & 255) as u8;
+    output[90] = ((value.interrupt_stack_table[6] >> 48) & 255) as u8;
+    output[91] = ((value.interrupt_stack_table[6] >> 56) & 255) as u8;
+    output[92] = ((value.reserved_3 >> 0) & 255) as u8;
+    output[93] = ((value.reserved_3 >> 8) & 255) as u8;
+    output[94] = ((value.reserved_3 >> 16) & 255) as u8;
+    output[95] = ((value.reserved_3 >> 24) & 255) as u8;
+    output[96] = ((value.reserved_3 >> 32) & 255) as u8;
+    output[97] = ((value.reserved_3 >> 40) & 255) as u8;
+    output[98] = ((value.reserved_3 >> 48) & 255) as u8;
+    output[99] = ((value.reserved_3 >> 56) & 255) as u8;
+    output[100] = ((value.reserved_4 >> 0) & 255) as u8;
+    output[101] = ((value.reserved_4 >> 8) & 255) as u8;
+    output[102] = ((value.iomap_base >> 0) & 255) as u8;
+    output[103] = ((value.iomap_base >> 8) & 255) as u8;
+    output
+}
+pub machine decode_TaskStateSegment(input: &[u8; 104]) -> x86_descriptors::TaskStateSegment {
+    let reserved_1: u32 = ((input[0] as u32) << 0) | ((input[1] as u32) << 8) | ((input[2] as u32) << 16) | ((input[3] as u32) << 24);
+    let privilege_stack_table: [u64; 3] = [((input[4] as u64) << 0) | ((input[5] as u64) << 8) | ((input[6] as u64) << 16) | ((input[7] as u64) << 24) | ((input[8] as u64) << 32) | ((input[9] as u64) << 40) | ((input[10] as u64) << 48) | ((input[11] as u64) << 56), ((input[12] as u64) << 0) | ((input[13] as u64) << 8) | ((input[14] as u64) << 16) | ((input[15] as u64) << 24) | ((input[16] as u64) << 32) | ((input[17] as u64) << 40) | ((input[18] as u64) << 48) | ((input[19] as u64) << 56), ((input[20] as u64) << 0) | ((input[21] as u64) << 8) | ((input[22] as u64) << 16) | ((input[23] as u64) << 24) | ((input[24] as u64) << 32) | ((input[25] as u64) << 40) | ((input[26] as u64) << 48) | ((input[27] as u64) << 56)];
+    let reserved_2: u64 = ((input[28] as u64) << 0) | ((input[29] as u64) << 8) | ((input[30] as u64) << 16) | ((input[31] as u64) << 24) | ((input[32] as u64) << 32) | ((input[33] as u64) << 40) | ((input[34] as u64) << 48) | ((input[35] as u64) << 56);
+    let interrupt_stack_table: [u64; 7] = [((input[36] as u64) << 0) | ((input[37] as u64) << 8) | ((input[38] as u64) << 16) | ((input[39] as u64) << 24) | ((input[40] as u64) << 32) | ((input[41] as u64) << 40) | ((input[42] as u64) << 48) | ((input[43] as u64) << 56), ((input[44] as u64) << 0) | ((input[45] as u64) << 8) | ((input[46] as u64) << 16) | ((input[47] as u64) << 24) | ((input[48] as u64) << 32) | ((input[49] as u64) << 40) | ((input[50] as u64) << 48) | ((input[51] as u64) << 56), ((input[52] as u64) << 0) | ((input[53] as u64) << 8) | ((input[54] as u64) << 16) | ((input[55] as u64) << 24) | ((input[56] as u64) << 32) | ((input[57] as u64) << 40) | ((input[58] as u64) << 48) | ((input[59] as u64) << 56), ((input[60] as u64) << 0) | ((input[61] as u64) << 8) | ((input[62] as u64) << 16) | ((input[63] as u64) << 24) | ((input[64] as u64) << 32) | ((input[65] as u64) << 40) | ((input[66] as u64) << 48) | ((input[67] as u64) << 56), ((input[68] as u64) << 0) | ((input[69] as u64) << 8) | ((input[70] as u64) << 16) | ((input[71] as u64) << 24) | ((input[72] as u64) << 32) | ((input[73] as u64) << 40) | ((input[74] as u64) << 48) | ((input[75] as u64) << 56), ((input[76] as u64) << 0) | ((input[77] as u64) << 8) | ((input[78] as u64) << 16) | ((input[79] as u64) << 24) | ((input[80] as u64) << 32) | ((input[81] as u64) << 40) | ((input[82] as u64) << 48) | ((input[83] as u64) << 56), ((input[84] as u64) << 0) | ((input[85] as u64) << 8) | ((input[86] as u64) << 16) | ((input[87] as u64) << 24) | ((input[88] as u64) << 32) | ((input[89] as u64) << 40) | ((input[90] as u64) << 48) | ((input[91] as u64) << 56)];
+    let reserved_3: u64 = ((input[92] as u64) << 0) | ((input[93] as u64) << 8) | ((input[94] as u64) << 16) | ((input[95] as u64) << 24) | ((input[96] as u64) << 32) | ((input[97] as u64) << 40) | ((input[98] as u64) << 48) | ((input[99] as u64) << 56);
+    let reserved_4: u16 = ((input[100] as u16) << 0) | ((input[101] as u16) << 8);
+    let iomap_base: u16 = ((input[102] as u16) << 0) | ((input[103] as u16) << 8);
+    x86_descriptors::TaskStateSegment { reserved_1: reserved_1, privilege_stack_table: privilege_stack_table, reserved_2: reserved_2, interrupt_stack_table: interrupt_stack_table, reserved_3: reserved_3, reserved_4: reserved_4, iomap_base: iomap_base }
+}
+
+pub machine encode_GdtEntry(value: &x86_descriptors::GdtEntry) -> [u8; 8] {
+    let mut output: [u8; 8];
+    output[0] = ((value.raw >> 0) & 255) as u8;
+    output[1] = ((value.raw >> 8) & 255) as u8;
+    output[2] = ((value.raw >> 16) & 255) as u8;
+    output[3] = ((value.raw >> 24) & 255) as u8;
+    output[4] = ((value.raw >> 32) & 255) as u8;
+    output[5] = ((value.raw >> 40) & 255) as u8;
+    output[6] = ((value.raw >> 48) & 255) as u8;
+    output[7] = ((value.raw >> 56) & 255) as u8;
+    output
+}
+pub machine decode_GdtEntry(input: &[u8; 8]) -> x86_descriptors::GdtEntry {
+    let raw: u64 = ((input[0] as u64) << 0) | ((input[1] as u64) << 8) | ((input[2] as u64) << 16) | ((input[3] as u64) << 24) | ((input[4] as u64) << 32) | ((input[5] as u64) << 40) | ((input[6] as u64) << 48) | ((input[7] as u64) << 56);
+    x86_descriptors::GdtEntry { raw: raw }
+}
+
+pub machine encode_TssDescriptorWords(value: &x86_descriptors::TssDescriptorWords) -> [u8; 16] {
+    let mut output: [u8; 16];
+    output[0] = ((value.low >> 0) & 255) as u8;
+    output[1] = ((value.low >> 8) & 255) as u8;
+    output[2] = ((value.low >> 16) & 255) as u8;
+    output[3] = ((value.low >> 24) & 255) as u8;
+    output[4] = ((value.low >> 32) & 255) as u8;
+    output[5] = ((value.low >> 40) & 255) as u8;
+    output[6] = ((value.low >> 48) & 255) as u8;
+    output[7] = ((value.low >> 56) & 255) as u8;
+    output[8] = ((value.high >> 0) & 255) as u8;
+    output[9] = ((value.high >> 8) & 255) as u8;
+    output[10] = ((value.high >> 16) & 255) as u8;
+    output[11] = ((value.high >> 24) & 255) as u8;
+    output[12] = ((value.high >> 32) & 255) as u8;
+    output[13] = ((value.high >> 40) & 255) as u8;
+    output[14] = ((value.high >> 48) & 255) as u8;
+    output[15] = ((value.high >> 56) & 255) as u8;
+    output
+}
+pub machine decode_TssDescriptorWords(input: &[u8; 16]) -> x86_descriptors::TssDescriptorWords {
+    let low: u64 = ((input[0] as u64) << 0) | ((input[1] as u64) << 8) | ((input[2] as u64) << 16) | ((input[3] as u64) << 24) | ((input[4] as u64) << 32) | ((input[5] as u64) << 40) | ((input[6] as u64) << 48) | ((input[7] as u64) << 56);
+    let high: u64 = ((input[8] as u64) << 0) | ((input[9] as u64) << 8) | ((input[10] as u64) << 16) | ((input[11] as u64) << 24) | ((input[12] as u64) << 32) | ((input[13] as u64) << 40) | ((input[14] as u64) << 48) | ((input[15] as u64) << 56);
+    x86_descriptors::TssDescriptorWords { low: low, high: high }
+}

@@ -1,0 +1,229 @@
+{
+  "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+  "files": [
+    "src/structures/mod.rs",
+    "src/structures/tss.rs",
+    "src/structures/gdt.rs",
+    "src/structures/idt.rs"
+  ],
+  "constants": [
+    {
+      "name": "ACCESSED",
+      "value": 1099511627776,
+      "line": 297,
+      "public": true
+    },
+    {
+      "name": "WRITABLE",
+      "value": 2199023255552,
+      "line": 300,
+      "public": true
+    },
+    {
+      "name": "CONFORMING",
+      "value": 4398046511104,
+      "line": 304,
+      "public": true
+    },
+    {
+      "name": "EXECUTABLE",
+      "value": 8796093022208,
+      "line": 306,
+      "public": true
+    },
+    {
+      "name": "USER_SEGMENT",
+      "value": 17592186044416,
+      "line": 308,
+      "public": true
+    },
+    {
+      "name": "DPL_RING_3",
+      "value": 105553116266496,
+      "line": 311,
+      "public": true
+    },
+    {
+      "name": "PRESENT",
+      "value": 140737488355328,
+      "line": 313,
+      "public": true
+    },
+    {
+      "name": "AVAILABLE",
+      "value": 4503599627370496,
+      "line": 315,
+      "public": true
+    },
+    {
+      "name": "LONG_MODE",
+      "value": 9007199254740992,
+      "line": 317,
+      "public": true
+    },
+    {
+      "name": "DEFAULT_SIZE",
+      "value": 18014398509481984,
+      "line": 320,
+      "public": true
+    },
+    {
+      "name": "GRANULARITY",
+      "value": 36028797018963968,
+      "line": 322,
+      "public": true
+    },
+    {
+      "name": "LIMIT_0_15",
+      "value": 65535,
+      "line": 325,
+      "public": true
+    },
+    {
+      "name": "LIMIT_16_19",
+      "value": 4222124650659840,
+      "line": 327,
+      "public": true
+    },
+    {
+      "name": "BASE_0_23",
+      "value": 1099511562240,
+      "line": 329,
+      "public": true
+    },
+    {
+      "name": "BASE_24_31",
+      "value": 18374686479671623680,
+      "line": 331,
+      "public": true
+    },
+    {
+      "name": "COMMON",
+      "value": 40412549878972415,
+      "line": 346,
+      "public": false
+    },
+    {
+      "name": "KERNEL_DATA",
+      "value": 58426948388454399,
+      "line": 356,
+      "public": true
+    },
+    {
+      "name": "KERNEL_CODE32",
+      "value": 58435744481476607,
+      "line": 359,
+      "public": true
+    },
+    {
+      "name": "KERNEL_CODE64",
+      "value": 49428545226735615,
+      "line": 363,
+      "public": true
+    },
+    {
+      "name": "USER_DATA",
+      "value": 58532501504720895,
+      "line": 367,
+      "public": true
+    },
+    {
+      "name": "USER_CODE32",
+      "value": 58541297597743103,
+      "line": 370,
+      "public": true
+    },
+    {
+      "name": "USER_CODE64",
+      "value": 49534098343002111,
+      "line": 373,
+      "public": true
+    }
+  ],
+  "records": {
+    "DescriptorTablePointer": {
+      "size": 10,
+      "align": 2,
+      "fields": [
+        [
+          "limit",
+          "u16",
+          0
+        ],
+        [
+          "base",
+          "u64",
+          2
+        ]
+      ]
+    },
+    "TaskStateSegment": {
+      "size": 104,
+      "align": 4,
+      "fields": [
+        [
+          "reserved_1",
+          "u32",
+          0
+        ],
+        [
+          "privilege_stack_table",
+          "[u64; 3]",
+          4
+        ],
+        [
+          "reserved_2",
+          "u64",
+          28
+        ],
+        [
+          "interrupt_stack_table",
+          "[u64; 7]",
+          36
+        ],
+        [
+          "reserved_3",
+          "u64",
+          92
+        ],
+        [
+          "reserved_4",
+          "u16",
+          100
+        ],
+        [
+          "iomap_base",
+          "u16",
+          102
+        ]
+      ]
+    },
+    "GdtEntry": {
+      "size": 8,
+      "align": 8,
+      "fields": [
+        [
+          "raw",
+          "u64",
+          0
+        ]
+      ]
+    },
+    "TssDescriptorWords": {
+      "size": 16,
+      "align": 8,
+      "fields": [
+        [
+          "low",
+          "u64",
+          0
+        ],
+        [
+          "high",
+          "u64",
+          8
+        ]
+      ]
+    }
+  }
+}
