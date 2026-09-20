@@ -220,7 +220,7 @@ all fourteen fields through the existing bit policy; native ABI is not measured.
 The [detached table slice](source/libraries/x86_64/tables.PORT.md) adds full-array
 operations and captured translation: 42 actual Rust mapper calls, 43 Omega
 translation scenarios, six table/address fixtures and six body mutations pass.
-Map/unmap/update/cleanup and live ownership/invalidation integration remain open.
+Map/unmap/update and live ownership/invalidation integration remain open.
 The [page/frame slice](source/libraries/x86_64/pages.PORT.md) passes 267 numeric
 scenarios, 253 actual Rust witnesses, 15 upstream Rust tests, range/overflow
 extras and three body mutations. Checked canonical-gap range deviations are explicit.
@@ -238,6 +238,9 @@ The [TLB operand slice](source/libraries/x86_64/tlb-operands.PORT.md) passes
 Rust tests and Omega semantic checks with four body mutations. Pinned and
 AMD-defined range-count recipes are separate; no TLB instruction or invalidation
 settlement is claimed.
+The [CPUID predicates](source/libraries/x86_64/instruction-observations.PORT.md)
+complete the remaining RDRAND/SMAP observation helpers: 68 Rust/Omega bit cases
+and two body mutations pass. These functions consume supplied register values.
 The [cleanup branch slice](source/libraries/x86_64/cleanup-branch.PORT.md) passes
 112 actual Rust/Omega singleton-range scenarios, five additional fixtures and
 three body mutations. It retains non-present nonzero entries, checks all 512

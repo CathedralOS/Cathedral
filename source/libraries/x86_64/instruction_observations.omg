@@ -1,0 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Pure predicates extracted from pinned instructions/{random,smap}.rs.
+// Supplied register values are observations, not a CPU feature/provider grant.
+module instruction_observations;
+pub machine rdrand_bit(leaf01_ecx: u32) -> bool { (leaf01_ecx & 1073741824) != 0 }
+pub machine smap_bit(leaf07_ebx: u32) -> bool { (leaf07_ebx & 1048576) != 0 }

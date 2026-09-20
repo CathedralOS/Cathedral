@@ -1,0 +1,75 @@
+use x86_values::instruction_observations;
+machine test_result() -> i32 {
+transition instruction_observations::rdrand_bit(1) == false &&
+instruction_observations::rdrand_bit(2) == false &&
+instruction_observations::rdrand_bit(4) == false &&
+instruction_observations::rdrand_bit(8) == false &&
+instruction_observations::rdrand_bit(16) == false &&
+instruction_observations::rdrand_bit(32) == false &&
+instruction_observations::rdrand_bit(64) == false &&
+instruction_observations::rdrand_bit(128) == false &&
+instruction_observations::rdrand_bit(256) == false &&
+instruction_observations::rdrand_bit(512) == false &&
+instruction_observations::rdrand_bit(1024) == false &&
+instruction_observations::rdrand_bit(2048) == false &&
+instruction_observations::rdrand_bit(4096) == false &&
+instruction_observations::rdrand_bit(8192) == false &&
+instruction_observations::rdrand_bit(16384) == false &&
+instruction_observations::rdrand_bit(32768) == false &&
+instruction_observations::rdrand_bit(65536) == false &&
+instruction_observations::rdrand_bit(131072) == false &&
+instruction_observations::rdrand_bit(262144) == false &&
+instruction_observations::rdrand_bit(524288) == false &&
+instruction_observations::rdrand_bit(1048576) == false &&
+instruction_observations::rdrand_bit(2097152) == false &&
+instruction_observations::rdrand_bit(4194304) == false &&
+instruction_observations::rdrand_bit(8388608) == false &&
+instruction_observations::rdrand_bit(16777216) == false &&
+instruction_observations::rdrand_bit(33554432) == false &&
+instruction_observations::rdrand_bit(67108864) == false &&
+instruction_observations::rdrand_bit(134217728) == false &&
+instruction_observations::rdrand_bit(268435456) == false &&
+instruction_observations::rdrand_bit(536870912) == false &&
+instruction_observations::rdrand_bit(1073741824) == true &&
+instruction_observations::rdrand_bit(2147483648) == false &&
+!instruction_observations::rdrand_bit(0) &&
+instruction_observations::rdrand_bit(4294967295) &&
+instruction_observations::smap_bit(1) == false &&
+instruction_observations::smap_bit(2) == false &&
+instruction_observations::smap_bit(4) == false &&
+instruction_observations::smap_bit(8) == false &&
+instruction_observations::smap_bit(16) == false &&
+instruction_observations::smap_bit(32) == false &&
+instruction_observations::smap_bit(64) == false &&
+instruction_observations::smap_bit(128) == false &&
+instruction_observations::smap_bit(256) == false &&
+instruction_observations::smap_bit(512) == false &&
+instruction_observations::smap_bit(1024) == false &&
+instruction_observations::smap_bit(2048) == false &&
+instruction_observations::smap_bit(4096) == false &&
+instruction_observations::smap_bit(8192) == false &&
+instruction_observations::smap_bit(16384) == false &&
+instruction_observations::smap_bit(32768) == false &&
+instruction_observations::smap_bit(65536) == false &&
+instruction_observations::smap_bit(131072) == false &&
+instruction_observations::smap_bit(262144) == false &&
+instruction_observations::smap_bit(524288) == false &&
+instruction_observations::smap_bit(1048576) == true &&
+instruction_observations::smap_bit(2097152) == false &&
+instruction_observations::smap_bit(4194304) == false &&
+instruction_observations::smap_bit(8388608) == false &&
+instruction_observations::smap_bit(16777216) == false &&
+instruction_observations::smap_bit(33554432) == false &&
+instruction_observations::smap_bit(67108864) == false &&
+instruction_observations::smap_bit(134217728) == false &&
+instruction_observations::smap_bit(268435456) == false &&
+instruction_observations::smap_bit(536870912) == false &&
+instruction_observations::smap_bit(1073741824) == false &&
+instruction_observations::smap_bit(2147483648) == false &&
+!instruction_observations::smap_bit(0) &&
+instruction_observations::smap_bit(4294967295) { true -> (0) _ -> (1) }
+}
+const RESULT:i32=test_result();
+machine require_success(value:i32) requires value==0; {}
+data Main{}
+machine Main::main(&mut self){require_success(RESULT);}

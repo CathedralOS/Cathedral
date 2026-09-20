@@ -60,8 +60,9 @@ No native Omega execution, layout measurement or production integration is
 claimed. Existing canonical facts are unchanged.
 
 The [source inventory](cleanup-branch-inventory.json) keeps full range cleanup
-pending and links this tested component explicitly. It does not mark the entire
-Rust method translated merely because a singleton range is supported.
+outside this narrow slice and links its component explicitly. The subsequent
+[range cursor](cleanup-ranges.PORT.md) supplies complete bounded pure range
+orchestration under a separate inventory and verification record.
 
 Compiler: Omega `eaa7993a23623cd8fabf45350340479c5c9c7879`; binary SHA-256
 `2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4`.

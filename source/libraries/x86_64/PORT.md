@@ -17,8 +17,9 @@ Completed slices: [tested numeric address algorithms](addresses.PORT.md),
 [child/leaf mapping decisions](mapping-plans.PORT.md),
 [interrupt values and table codecs](../../drivers/facts/x86_interrupts.PORT.md),
 [TLB operand recipes](tlb-operands.PORT.md),
-[single-page cleanup branches](cleanup-branch.PORT.md), and
-[bounded cleanup ranges](cleanup-ranges.PORT.md).
+[single-page cleanup branches](cleanup-branch.PORT.md),
+[bounded cleanup ranges](cleanup-ranges.PORT.md), and
+[CPUID observation predicates](instruction-observations.PORT.md).
 Baseline reviewed 2026-09-20 against
 Cathedral `77544518fc947973a5607f28b278aca2e2ffa462` and
 Omega `eaa7993a23623cd8fabf45350340479c5c9c7879`. X86-001/002 are implementation work,

@@ -1,0 +1,121 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/x86_64",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/instructions/random.rs",
+      "src/instructions/smap.rs"
+    ]
+  },
+  "files": {
+    "src/instructions/random.rs": {
+      "sha256": "a454ca21b303bcf6ece284ddfecb33e5cd1d4898a9adaddfb20520599f4688d1",
+      "disposition": "translated",
+      "reason": "Only the detached CPUID register predicate is translated; live feature/probe/provider operations remain explicit boundaries.",
+      "symbols": {
+        "5:RdRand": {
+          "anchor": "pub struct RdRand(());",
+          "disposition": "omitted",
+          "reason": "RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed."
+        },
+        "10:new": {
+          "anchor": "pub fn new() -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Exact pure predicate extracted; CPUID execution and feature-authorized marker construction deliberately excluded.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/instruction_observations.omg",
+              "anchor": "pub machine rdrand_bit"
+            }
+          ]
+        },
+        "25:get_u64": {
+          "anchor": "pub fn get_u64(self) -> Option<u64> {",
+          "disposition": "omitted",
+          "reason": "RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed."
+        },
+        "40:get_u32": {
+          "anchor": "pub fn get_u32(self) -> Option<u32> {",
+          "disposition": "omitted",
+          "reason": "RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed."
+        },
+        "55:get_u16": {
+          "anchor": "pub fn get_u16(self) -> Option<u16> {",
+          "disposition": "omitted",
+          "reason": "RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed."
+        },
+        "70:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed."
+        },
+        "74:test_rdrand": {
+          "anchor": "pub fn test_rdrand() {",
+          "disposition": "omitted",
+          "reason": "RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/instruction_observations.omg",
+          "anchor": "module instruction_observations;"
+        }
+      ]
+    },
+    "src/instructions/smap.rs": {
+      "sha256": "b5a6a5ae9bfb9051ca8fd2325f4fa50d73c2d7386726ea74155e101f8cfd2e20",
+      "disposition": "translated",
+      "reason": "Only the detached CPUID register predicate is translated; live feature/probe/provider operations remain explicit boundaries.",
+      "symbols": {
+        "26:Smap": {
+          "anchor": "pub struct Smap(());",
+          "disposition": "omitted",
+          "reason": "RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed."
+        },
+        "36:new": {
+          "anchor": "pub fn new() -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Exact pure predicate extracted; CPUID execution and feature-authorized marker construction deliberately excluded.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/instruction_observations.omg",
+              "anchor": "pub machine smap_bit"
+            }
+          ]
+        },
+        "53:new_unchecked": {
+          "anchor": "pub const unsafe fn new_unchecked() -> Self {",
+          "disposition": "omitted",
+          "reason": "RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed."
+        },
+        "64:is_enabled": {
+          "anchor": "pub fn is_enabled(self) -> bool {",
+          "disposition": "omitted",
+          "reason": "RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed."
+        },
+        "74:disable": {
+          "anchor": "pub fn disable(self) {",
+          "disposition": "omitted",
+          "reason": "RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed."
+        },
+        "88:enable": {
+          "anchor": "pub fn enable(self) {",
+          "disposition": "omitted",
+          "reason": "RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed."
+        },
+        "100:without_smap": {
+          "anchor": "pub fn without_smap<F, R>(self, f: F) -> R",
+          "disposition": "omitted",
+          "reason": "RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/instruction_observations.omg",
+          "anchor": "module instruction_observations;"
+        }
+      ]
+    }
+  }
+}
