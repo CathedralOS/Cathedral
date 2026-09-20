@@ -47,7 +47,9 @@ physical and virtual geometry and a valid standard/OEM/OS-loader memory type,
 permits only revision-1 standard/ISA attribute bits, requires
 ISA-specific bits to carry their validity flag, and requires every other
 physical range to be disjoint from the selected span. The exact
-validated length then flows into the admitted grant. The
-generated target-entry bridge,
-physical-space/right/backing facts, and actual handoff into the proved core
-remain outstanding.
+validated length then flows into the admitted grant. The generated target-entry
+bridge, physical-entry-to-semantic adapter, occurrence-scoped
+external-custody receipt, physical-space/right/backing facts, and actual
+handoff into the proved core remain outstanding. The current
+`ExtentRootProvider::grant` over checked geometry is a transitional
+qualification milestone, not the final UEFI ownership-transfer contract.

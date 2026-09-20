@@ -14,6 +14,11 @@ firmware-supplied EFI System Table through `GetMemoryMap` and
 `ExitBootServices`. It defines when the boot path may stop treating firmware as
 live and become eligible to establish the [initial root extent](../resources/root_extent.md).
 
+The preceding [physical-entry and semantic-handoff
+contract](uefi_entry_handoff.md) owns how the incoming table occurrence and
+resource evidence reach this transition. This page does not treat a table
+pointer or successful firmware call as an ambient authority grant.
+
 It does not yet define the generated target-entry bridge, program-storage root
 binding, a handoff into a running kernel, UEFI Runtime Services, or recovery
 after Cathedral has left firmware.
@@ -120,6 +125,17 @@ produced the selected and audited span.
 The successful path does not return to firmware. The failure park owns no root
 extent; the post-success owned park retains the established root across every
 wake.
+
+Successful exit establishes a lifecycle event, not arbitrary memory authority.
+The exact final snapshot, exit occurrence, selected policy, and retained or
+excluded ranges must remain joined to any later post-exit inventory or qualified
+extent. Reconstructing the selected base and length without that evidence cannot
+repeat the grant.
+
+The current implementation forwards one selected geometry to an admitted
+`ExtentRootProvider`. That route is transitional evidence for the implemented
+milestone; the final handoff must replace its naked-geometry premise with the
+occurrence-scoped correspondence defined by the entry-handoff contract.
 
 ## Conformance evidence
 

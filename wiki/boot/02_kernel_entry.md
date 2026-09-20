@@ -6,13 +6,15 @@
 
 The kernel starts in the CPU's most privileged mode (ring 0 on x86, exception level 1, "EL1", on ARM). On x86-64 the firmware has already enabled paging with a flat **identity map**: a trivial page table where each virtual address equals its physical address. So the kernel is not running without virtual memory, it is running on the firmware's throwaway page tables and needs its own. Firmware's temporary services, including its disk-read driver, are still available for now.
 
-The UEFI contract declares `UefiApplication: ProgramStorageEntry`, inheriting
-the stable core image and initial-storage requirement. Those semantic roots are
-not extra arguments supplied by firmware. The generated target stub must bind
-the final emitted image/storage geometry to the inherited positions, then
-forward the real UEFI `ImageHandle` and `SystemTable` invocation. Cathedral's
-current `Main::run(handle, table)` remains the directly booted transitional
-callable until Build entry selection and that stub bridge are connected.
+The standard UEFI entry supplies an image handle and System Table reference; it
+does not supply Omega-qualified extents. Cathedral's separate semantic entry
+may accept image and initial-storage authority. A generated ABI shell and
+source-authored target adapter must obtain their runtime carriers through
+standard UEFI mechanisms and join them to exact checked or admitted custody
+evidence before crossing that semantic entry. Cathedral's current
+`Main::run(handle, table)` remains the directly booted transitional callable
+until this bridge is connected. See the [entry-handoff
+specification](../spec/boot/uefi_entry_handoff.md).
 
 One term to fix, since the rest of the phase leans on it: virtual memory works through **page tables**, the in-memory structures the CPU's memory management unit (MMU) walks to translate a virtual address to a physical one. Owning your page tables means owning the address space.
 
@@ -31,7 +33,14 @@ One term to fix, since the rest of the phase leans on it: virtual memory works t
 
 ## ExitBootServices: the point of no return
 
-`ExitBootServices()` is the UEFI call after which firmware's temporary drivers and services are gone for good and the kernel owns the hardware. Anything still needed from firmware, the final memory map above all, must be captured before this call. Afterward the kernel brings up its own driver for whatever disk controller is present (NVMe or AHCI on real machines, the virtio interface under virtualization), good enough to read the store in [phase 4](04_mounting_the_store.md).
+`ExitBootServices()` is the UEFI call after which UEFI Boot Services and their
+temporary drivers are no longer available. It is a lifecycle and custody
+succession point, not a blanket proof that Cathedral owns every device and
+address. Runtime firmware regions and services, reserved ranges, devices, and
+active bootstrap resources retain their separate contracts. Anything still
+needed from Boot Services, the final memory map above all, must be captured
+before the successful call. Cathedral must afterward use its own admitted
+driver path for storage access needed by [phase 4](04_mounting_the_store.md).
 
 The map and its `MapKey` form one transaction. Cathedral's current boot source
 first gates the EFI System Table and Boot Services table on their standard
@@ -59,7 +68,9 @@ one page, begin on a 4-KiB boundary, convert from pages to bytes without
 overflow, and have a representable one-past end. Runtime-marked, removable, and
 specific-purpose descriptors remain ineligible. The exact checked length
 crosses successful `ExitBootServices` with its map-derived start and is the
-geometry presented to the admitted root provider. Before exit, a
+geometry presented to the current transitional root provider. That
+naked-geometry grant demonstrates qualification flow but is not yet the final
+external-custody contract. Before exit, a
 second stride-bounded pass validates every descriptor's physical and virtual
 alignment, range end, and standard/OEM/OS-loader memory-type range, then
 rejects both attribute bits outside the revision-1 standard and ISA-specific
@@ -68,7 +79,9 @@ other physical range to lie strictly before or after the selected span. Invalid
 type `16..0x6fffffff`, reserved attributes, misalignment,
 overflow, or overlap parks without a grant. These checks reject malformed
 firmware data; they do not themselves establish physical-space, rights, backing,
-or ownership.
+or ownership. The final design must join the same geometry to the exact
+physical-entry and successful-exit receipt before establishing a post-exit
+inventory or qualified extent.
 
 The IDT should normally be materialized and validated after Cathedral's final
 image and virtual placements are known but before `ExitBootServices`, while

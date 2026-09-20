@@ -27,7 +27,12 @@ Optionally the whole operating system boots inside a Trusted Execution Environme
 
 ## The honest residue
 
-The one stage Cathedral does not write is the pre-kernel firmware ([phase 1](01_firmware.md)), so it stays in the trusted base and is the hardest layer to attest, because it runs beneath anything Cathedral ships.
+When Cathedral runs under external firmware, that firmware remains an admitted
+part of the trusted base and is difficult to inspect because it executes below
+the OS. An Omega-authored UEFI can make the selected reference path auditable
+and can prove the language is sufficient for it, but it does not remove the
+silicon, reset-state, platform-initialization, or independently deployed
+firmware roots beneath other installations ([phase 1](01_firmware.md)).
 
 ## Next
 

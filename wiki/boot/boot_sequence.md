@@ -7,11 +7,21 @@
 > Services, obtains one qualified root extent, reports through the 16550 UART,
 > and parks while retaining that root. The later kernel, store, service, and
 > login phases remain intended mechanism. Normative rules for the implemented
-> transition begin at the [UEFI boot-services specification](../spec/boot/uefi_boot_services.md).
+> transition begin at the [UEFI entry-handoff
+> specification](../spec/boot/uefi_entry_handoff.md) and [UEFI boot-services
+> specification](../spec/boot/uefi_boot_services.md).
 
 ## The arc
 
-Power on, and firmware you do not control loads your kernel. The kernel takes over the bare machine, builds real virtual memory, and brings up its own core (scheduling, messaging, capability enforcement). Only then can it mount the content-addressed object store and reach the top of the authority tree. From the store it starts the OS's own components and drivers, declaratively and with no ambient authority, until the system is running but unattended. A human logs in, which authenticates them, unseals their realm, and mints a session that owns the user's world. Running through all of it is a trust chain anchored in hardware, and behind all of it is a recovery path for when any phase fails.
+Power on, and a conforming firmware implementation loads the Cathedral image.
+Production may use an external UEFI; the reference path may use an
+Omega-authored implementation. Cathedral ends firmware Boot Services, takes
+custody only of the resources the exact handoff transfers, builds its own
+virtual-memory and core services, and then mounts the content-addressed object
+store. From the store it starts components and drivers with declared authority
+until the system is running but unattended. A human login authenticates the
+user, unseals their realm, and mints the session that owns their world. A trust
+chain runs through every stage, with a recovery path for each failure.
 
 The recurring shape is **bootstrap**: each layer is unreadable or unrunnable until the layer below hands it the one thing it needs. Firmware needs a standard filesystem to find the kernel; the kernel needs a fixed superblock to enter the content-addressed world; the user needs a credential to unseal their realm. Boot is the chain of those hand-offs.
 

@@ -27,6 +27,7 @@ subject. A current specification is allowed to precede implementation.
 
 | Subject | Specification | Specification coverage | Implementation coverage |
 | --- | --- | --- | --- |
+| UEFI physical entry and Cathedral semantic handoff | [UEFI physical entry and Cathedral semantic handoff](boot/uefi_entry_handoff.md) | Partial | Partial |
 | UEFI boot-services ownership transition | [UEFI boot-services ownership transition](boot/uefi_boot_services.md) | Partial | Partial |
 | Initial root extent | [Initial root extent](resources/root_extent.md) | Partial | Partial |
 

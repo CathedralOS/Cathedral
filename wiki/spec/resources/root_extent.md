@@ -28,6 +28,13 @@ admitted route and its receipt rather than from a runtime tag or mutation of the
 fields. Calling a same-shaped implementation outside that admitted occurrence
 does not establish the qualification.
 
+This route is a transitional implementation milestone, not the settled
+physical-memory handoff. Its admission must not be read as a reusable promise
+that arbitrary caller-constructed geometry has backing or ownership. The final
+route must retain the exact physical-entry, UEFI operation, successful
+firmware-exit, classification, and custody correspondence required by the
+[UEFI entry-handoff contract](../boot/uefi_entry_handoff.md).
+
 ## Root-establishment rules
 
 For the current UEFI bootstrap:
@@ -44,6 +51,11 @@ For the current UEFI bootstrap:
 No failed table admission, map acquisition, descriptor audit, or firmware-exit
 route establishes a root. Reaching a failure park therefore carries no
 `Granted` extent.
+
+An implementation may establish the exact carrier as a result of an authorized
+adapter or directly on an installed semantic-entry parameter occurrence. If a
+single-consumer adapter is fused or inlined, its logical establishment identity
+and evidence remain; the consumer does not become a general-purpose minter.
 
 ## Claims not yet established
 
