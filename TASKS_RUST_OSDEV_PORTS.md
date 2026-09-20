@@ -250,7 +250,7 @@ check independently; wrap/event predicates confer no DMA or ordering authority.
 - [x] **ACPI-000 — Inventory and partition `acpi`.** Separate byte/table facts,
   pure table discovery/parsing, platform-topology results, AML parsing, AML
   execution, handler callbacks, and allocator/concurrency assumptions.
-- [ ] **ACPI-001 — Port table headers and checksums.** RSDP, RSDT/XSDT, SDT
+- [x] **ACPI-001 — Port table headers and checksums.** RSDP, RSDT/XSDT, SDT
   headers, signatures, lengths, revisions, checksums, and strict bounded-input
   validation.
 - [ ] **ACPI-002 — Port fixed table parsers.** At minimum FADT, MADT, MCFG, HPET,
@@ -277,6 +277,12 @@ classifies 52 Rust files, 1,581 anchors, 66 Rust tests and 19 ASL/AML assets.
 External fixture provenance remains explicit; no firmware dumps or externally
 derived test bodies were copied. Parsing and interpretation remain implementation
 work, separate from this completed inventory.
+
+ACPI-001 evidence: [bounded header parser](source/libraries/acpi/headers.PORT.md)
+checks RSDP revisions 0/2 and SDT/root entries in a 4096-byte input profile,
+with strict lengths and checksums and raw OEM bytes. All 65 semantic scenarios
+and three body-mutating controls pass; 88 wire vectors and 65 pinned signatures
+are audited. Larger inputs, native layouts and firmware mapping are outside this slice.
 
 ## Phase 5 — only after the corpus above is healthy
 

@@ -1,0 +1,2510 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Generated original fixtures by header_fixtures.py; do not edit.
+use acpi::headers::RsdpResult;
+use acpi::headers::SdtResult;
+use acpi::headers::RootResult;
+use acpi::headers::EntryResult;
+use acpi::headers::ChecksumResult;
+use acpi::headers::RootPointer;
+use acpi::headers::SIGNATURE_RSDT;
+use acpi::parser::parse_rsdp;
+use acpi::parser::parse_sdt;
+use acpi::parser::parse_root;
+use acpi::parser::root_entry;
+use acpi::parser::select_root;
+use acpi::bytes::checksum;
+machine test_rsdp_legacy() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 247;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    let result: RsdpResult = parse_rsdp(&input, 20);
+    result.error == 0 &&
+    result.value.rsdt_address == 2166572391 &&
+    result.value.length == 20 &&
+    result.value.revision == 0
+ }
+machine test_rsdp_extended() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 164;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let preferred: RootPointer = select_root(result, false);
+    let fallback: RootPointer = select_root(result, true);
+    result.error == 0 &&
+    result.value.rsdt_address == 2166572391 &&
+    result.value.length == 36 &&
+    result.value.revision == 2 &&
+    result.value.xsdt_address == 18364758544493064720 &&
+    preferred.available &&
+    preferred.address == 0xfedcba9876543210 &&
+    preferred.entry_size == 8 &&
+    fallback.available &&
+    fallback.address == 0x81234567 &&
+    fallback.entry_size == 4
+ }
+machine test_rsdp_trailing_ignored() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 247;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 110;
+    input[21] = 111;
+    input[22] = 116;
+    input[23] = 32;
+    input[24] = 112;
+    input[25] = 97;
+    input[26] = 114;
+    input[27] = 116;
+    input[28] = 32;
+    input[29] = 111;
+    input[30] = 102;
+    input[31] = 32;
+    input[32] = 108;
+    input[33] = 101;
+    input[34] = 103;
+    input[35] = 97;
+    input[36] = 99;
+    input[37] = 121;
+    let result: RsdpResult = parse_rsdp(&input, 38);
+    result.error == 0 &&
+    result.value.length == 20
+ }
+machine test_rsdp_empty() -> bool {
+    let mut input: [u8; 4096];
+    let result: RsdpResult = parse_rsdp(&input, 0);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 2 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_short() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 247;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    let result: RsdpResult = parse_rsdp(&input, 19);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 2 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_capacity() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 164;
+    let result: RsdpResult = parse_rsdp(&input, 4097);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 1 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_short_extended() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 164;
+    let result: RsdpResult = parse_rsdp(&input, 35);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 2 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_signature() -> bool {
+    let mut input: [u8; 4096];
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 164;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 3 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_revision_1() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 246;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 1;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 164;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 4 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_revision_3() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 244;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 3;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 164;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 4 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_revision_255() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 248;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 255;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 164;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 4 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_oem_bytes() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 184;
+    input[9] = 128;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 164;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    result.error == 0 &&
+    result.value.oem_id[0] == 128
+ }
+machine test_rsdp_legacy_checksum() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 246;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 164;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 6 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_compensated_legacy_checksum() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 246;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 163;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 6 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_extended_checksum() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 165;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 6 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_declared_0() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 200;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 5 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_declared_20() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 20;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 180;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 5 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_declared_35() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 35;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 165;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 5 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_declared_truncated() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 37;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 163;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 2 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_declared_max() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 255;
+    input[21] = 255;
+    input[22] = 255;
+    input[23] = 255;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 204;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 2 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_extension() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 40;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 246;
+    input[36] = 116;
+    input[37] = 97;
+    input[38] = 105;
+    input[39] = 108;
+    let result: RsdpResult = parse_rsdp(&input, 40);
+    result.error == 0 &&
+    result.value.length == 40
+ }
+machine test_rsdp_extension_checksum() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 40;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 246;
+    input[36] = 116;
+    input[37] = 97;
+    input[38] = 105;
+    input[39] = 109;
+    let result: RsdpResult = parse_rsdp(&input, 40);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 6 &&
+    !selected.available &&
+    selected.address == 0
+ }
+machine test_rsdp_reserved_33() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 163;
+    input[33] = 1;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    result.error == 0 &&
+    result.value.reserved[0] == 1
+ }
+machine test_rsdp_reserved_34() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 163;
+    input[34] = 1;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    result.error == 0 &&
+    result.value.reserved[1] == 1
+ }
+machine test_rsdp_reserved_35() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 163;
+    input[35] = 1;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    result.error == 0 &&
+    result.value.reserved[2] == 1
+ }
+machine test_rsdp_capacity_exact() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[21] = 16;
+    input[24] = 16;
+    input[25] = 50;
+    input[26] = 84;
+    input[27] = 118;
+    input[28] = 152;
+    input[29] = 186;
+    input[30] = 220;
+    input[31] = 254;
+    input[32] = 185;
+    input[4095] = 255;
+    let result: RsdpResult = parse_rsdp(&input, 4096);
+    result.error == 0 &&
+    result.value.length == 4096
+ }
+machine test_rsdp_zero_xsdt() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 245;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[16] = 103;
+    input[17] = 69;
+    input[18] = 35;
+    input[19] = 129;
+    input[20] = 36;
+    input[32] = 220;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 0 &&
+    result.value.xsdt_address == 0 &&
+    selected.address == 2166572391 &&
+    selected.available == true &&
+    selected.entry_size == 4
+ }
+machine test_rsdp_no_root() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 32;
+    input[4] = 80;
+    input[5] = 84;
+    input[6] = 82;
+    input[7] = 32;
+    input[8] = 69;
+    input[9] = 67;
+    input[10] = 65;
+    input[11] = 84;
+    input[12] = 79;
+    input[13] = 83;
+    input[14] = 32;
+    input[15] = 2;
+    input[20] = 36;
+    input[32] = 220;
+    let result: RsdpResult = parse_rsdp(&input, 36);
+    let selected: RootPointer = select_root(result, false);
+    result.error == 0 &&
+    result.value.xsdt_address == 0 &&
+    selected.address == 0 &&
+    selected.available == false &&
+    selected.entry_size == 4
+ }
+machine test_sdt_header() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 1;
+    input[9] = 39;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    result.error == 0 &&
+    result.value.length == 36 &&
+    result.value.oem_revision == 0x12345678 &&
+    result.value.creator_id == 0x4c544143 &&
+    result.value.creator_revision == 0x87654321
+ }
+machine test_sdt_trailing_ignored() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 1;
+    input[9] = 39;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    input[36] = 101;
+    input[37] = 120;
+    input[38] = 116;
+    input[39] = 114;
+    input[40] = 97;
+    let result: SdtResult = parse_sdt(&input, 41, SIGNATURE_RSDT);
+    result.error == 0 &&
+    result.value.length == 36 &&
+    result.value.oem_revision == 0x12345678 &&
+    result.value.creator_id == 0x4c544143 &&
+    result.value.creator_revision == 0x87654321
+ }
+machine test_sdt_empty() -> bool {
+    let mut input: [u8; 4096];
+    let result: SdtResult = parse_sdt(&input, 0, SIGNATURE_RSDT);
+    result.error == 2
+ }
+machine test_sdt_short() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 1;
+    input[9] = 39;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: SdtResult = parse_sdt(&input, 35, SIGNATURE_RSDT);
+    result.error == 2
+ }
+machine test_sdt_capacity() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 1;
+    input[9] = 39;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: SdtResult = parse_sdt(&input, 4097, SIGNATURE_RSDT);
+    result.error == 1
+ }
+machine test_sdt_wrong_signature() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 88;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 1;
+    input[9] = 33;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    result.error == 3
+ }
+machine test_sdt_declared_0() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[8] = 1;
+    input[9] = 75;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    result.error == 5
+ }
+machine test_sdt_declared_35() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 35;
+    input[8] = 1;
+    input[9] = 40;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    result.error == 5
+ }
+machine test_sdt_declared_37() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 37;
+    input[8] = 1;
+    input[9] = 38;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    result.error == 2
+ }
+machine test_sdt_declared_4294967295() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 255;
+    input[5] = 255;
+    input[6] = 255;
+    input[7] = 255;
+    input[8] = 1;
+    input[9] = 79;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    result.error == 2
+ }
+machine test_sdt_oem_bytes_10() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 1;
+    input[9] = 234;
+    input[10] = 128;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    result.error == 0 &&
+    result.value.oem_id[0] == 128 &&
+    result.value.oem_revision == 0x12345678 &&
+    result.value.creator_id == 0x4c544143 &&
+    result.value.creator_revision == 0x87654321
+ }
+machine test_sdt_oem_bytes_16() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 1;
+    input[9] = 246;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 128;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    result.error == 0 &&
+    result.value.oem_table_id[0] == 128 &&
+    result.value.oem_revision == 0x12345678 &&
+    result.value.creator_id == 0x4c544143 &&
+    result.value.creator_revision == 0x87654321
+ }
+machine test_sdt_checksum() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 1;
+    input[9] = 40;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    result.error == 6
+ }
+machine test_sdt_revision_preserved() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 255;
+    input[9] = 41;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    result.error == 0 &&
+    result.value.length == 36 &&
+    result.value.revision == 255 &&
+    result.value.oem_revision == 0x12345678 &&
+    result.value.creator_id == 0x4c544143 &&
+    result.value.creator_revision == 0x87654321
+ }
+machine test_rsdt_entries() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 44;
+    input[8] = 1;
+    input[9] = 211;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    input[36] = 103;
+    input[37] = 69;
+    input[38] = 35;
+    input[39] = 129;
+    input[40] = 255;
+    input[41] = 255;
+    input[42] = 255;
+    input[43] = 255;
+    let result: RootResult = parse_root(&input, 44, false);
+    let entry0: EntryResult = root_entry(&input, 44, false, 0);
+    let entry1: EntryResult = root_entry(&input, 44, false, 1);
+    let end: EntryResult = root_entry(&input, 44, false, 2);
+    let huge: EntryResult = root_entry(&input, 44, false, 18446744073709551615);
+    result.error == 0 &&
+    result.entry_count == 2 &&
+    result.entry_size == 4 &&
+    entry0.error == 0 &&
+    entry0.address == 2166572391 &&
+    entry1.error == 0 &&
+    entry1.address == 4294967295 &&
+    end.error == 10 &&
+    huge.error == 10
+ }
+machine test_rsdt_empty() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 1;
+    input[9] = 39;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: RootResult = parse_root(&input, 36, false);
+    let end: EntryResult = root_entry(&input, 36, false, 0);
+    let huge: EntryResult = root_entry(&input, 36, false, 18446744073709551615);
+    result.error == 0 &&
+    result.entry_count == 0 &&
+    result.entry_size == 4 &&
+    end.error == 10 &&
+    huge.error == 10
+ }
+machine test_rsdt_partial() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 37;
+    input[8] = 1;
+    input[9] = 38;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: RootResult = parse_root(&input, 37, false);
+    result.error == 9
+ }
+machine test_rsdt_revision() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 2;
+    input[9] = 38;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: RootResult = parse_root(&input, 36, false);
+    result.error == 4
+ }
+machine test_rsdt_checksum() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 44;
+    input[8] = 1;
+    input[9] = 211;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    input[36] = 103;
+    input[37] = 69;
+    input[38] = 35;
+    input[39] = 129;
+    input[40] = 255;
+    input[41] = 255;
+    input[42] = 255;
+    input[43] = 254;
+    let result: RootResult = parse_root(&input, 44, false);
+    result.error == 6
+ }
+machine test_xsdt_entries() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 88;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 52;
+    input[8] = 1;
+    input[9] = 137;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    input[36] = 103;
+    input[37] = 69;
+    input[38] = 35;
+    input[39] = 129;
+    input[44] = 16;
+    input[45] = 50;
+    input[46] = 84;
+    input[47] = 118;
+    input[48] = 152;
+    input[49] = 186;
+    input[50] = 220;
+    input[51] = 254;
+    let result: RootResult = parse_root(&input, 52, true);
+    let entry0: EntryResult = root_entry(&input, 52, true, 0);
+    let entry1: EntryResult = root_entry(&input, 52, true, 1);
+    let end: EntryResult = root_entry(&input, 52, true, 2);
+    let huge: EntryResult = root_entry(&input, 52, true, 18446744073709551615);
+    result.error == 0 &&
+    result.entry_count == 2 &&
+    result.entry_size == 8 &&
+    entry0.error == 0 &&
+    entry0.address == 2166572391 &&
+    entry1.error == 0 &&
+    entry1.address == 18364758544493064720 &&
+    end.error == 10 &&
+    huge.error == 10
+ }
+machine test_xsdt_empty() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 88;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 1;
+    input[9] = 33;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: RootResult = parse_root(&input, 36, true);
+    let end: EntryResult = root_entry(&input, 36, true, 0);
+    let huge: EntryResult = root_entry(&input, 36, true, 18446744073709551615);
+    result.error == 0 &&
+    result.entry_count == 0 &&
+    result.entry_size == 8 &&
+    end.error == 10 &&
+    huge.error == 10
+ }
+machine test_xsdt_partial() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 88;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 37;
+    input[8] = 1;
+    input[9] = 32;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: RootResult = parse_root(&input, 37, true);
+    result.error == 9
+ }
+machine test_xsdt_revision() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 88;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 36;
+    input[8] = 2;
+    input[9] = 32;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    let result: RootResult = parse_root(&input, 36, true);
+    result.error == 4
+ }
+machine test_xsdt_checksum() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 88;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 52;
+    input[8] = 1;
+    input[9] = 137;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    input[36] = 103;
+    input[37] = 69;
+    input[38] = 35;
+    input[39] = 129;
+    input[44] = 16;
+    input[45] = 50;
+    input[46] = 84;
+    input[47] = 118;
+    input[48] = 152;
+    input[49] = 186;
+    input[50] = 220;
+    input[51] = 255;
+    let result: RootResult = parse_root(&input, 52, true);
+    result.error == 6
+ }
+machine test_root_last_4() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 82;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[5] = 16;
+    input[8] = 1;
+    input[9] = 63;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    input[4092] = 255;
+    input[4093] = 255;
+    input[4094] = 255;
+    input[4095] = 255;
+    let result: EntryResult = root_entry(&input, 4096, false, 1014);
+    result.error == 0 &&
+    result.address == 4294967295
+ }
+machine test_root_last_8() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 88;
+    input[1] = 83;
+    input[2] = 68;
+    input[3] = 84;
+    input[4] = 252;
+    input[5] = 15;
+    input[8] = 1;
+    input[9] = 2;
+    input[10] = 67;
+    input[11] = 65;
+    input[12] = 84;
+    input[13] = 79;
+    input[14] = 83;
+    input[15] = 32;
+    input[16] = 79;
+    input[17] = 82;
+    input[18] = 73;
+    input[19] = 71;
+    input[20] = 73;
+    input[21] = 78;
+    input[22] = 65;
+    input[23] = 76;
+    input[24] = 120;
+    input[25] = 86;
+    input[26] = 52;
+    input[27] = 18;
+    input[28] = 67;
+    input[29] = 65;
+    input[30] = 84;
+    input[31] = 76;
+    input[32] = 33;
+    input[33] = 67;
+    input[34] = 101;
+    input[35] = 135;
+    input[4084] = 16;
+    input[4085] = 50;
+    input[4086] = 84;
+    input[4087] = 118;
+    input[4088] = 152;
+    input[4089] = 186;
+    input[4090] = 220;
+    input[4091] = 254;
+    let result: EntryResult = root_entry(&input, 4092, true, 506);
+    result.error == 0 &&
+    result.address == 18364758544493064720
+ }
+machine test_checksum_tail_1() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 1;
+    input[1] = 2;
+    input[2] = 3;
+    input[3] = 4;
+    input[4] = 5;
+    input[5] = 6;
+    input[6] = 7;
+    input[7] = 8;
+    input[8] = 9;
+    let result: ChecksumResult = checksum(&input, 9);
+    result.error == 0 &&
+    result.sum == 45
+ }
+machine test_checksum_tail_2() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 1;
+    input[1] = 2;
+    input[2] = 3;
+    input[3] = 4;
+    input[4] = 5;
+    input[5] = 6;
+    input[6] = 7;
+    input[7] = 8;
+    input[8] = 9;
+    input[9] = 10;
+    let result: ChecksumResult = checksum(&input, 10);
+    result.error == 0 &&
+    result.sum == 55
+ }
+machine test_checksum_tail_3() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 1;
+    input[1] = 2;
+    input[2] = 3;
+    input[3] = 4;
+    input[4] = 5;
+    input[5] = 6;
+    input[6] = 7;
+    input[7] = 8;
+    input[8] = 9;
+    input[9] = 10;
+    input[10] = 11;
+    let result: ChecksumResult = checksum(&input, 11);
+    result.error == 0 &&
+    result.sum == 66
+ }
+machine test_checksum_tail_4() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 1;
+    input[1] = 2;
+    input[2] = 3;
+    input[3] = 4;
+    input[4] = 5;
+    input[5] = 6;
+    input[6] = 7;
+    input[7] = 8;
+    input[8] = 9;
+    input[9] = 10;
+    input[10] = 11;
+    input[11] = 12;
+    let result: ChecksumResult = checksum(&input, 12);
+    result.error == 0 &&
+    result.sum == 78
+ }
+machine test_checksum_tail_5() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 1;
+    input[1] = 2;
+    input[2] = 3;
+    input[3] = 4;
+    input[4] = 5;
+    input[5] = 6;
+    input[6] = 7;
+    input[7] = 8;
+    input[8] = 9;
+    input[9] = 10;
+    input[10] = 11;
+    input[11] = 12;
+    input[12] = 13;
+    let result: ChecksumResult = checksum(&input, 13);
+    result.error == 0 &&
+    result.sum == 91
+ }
+machine test_checksum_tail_6() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 1;
+    input[1] = 2;
+    input[2] = 3;
+    input[3] = 4;
+    input[4] = 5;
+    input[5] = 6;
+    input[6] = 7;
+    input[7] = 8;
+    input[8] = 9;
+    input[9] = 10;
+    input[10] = 11;
+    input[11] = 12;
+    input[12] = 13;
+    input[13] = 14;
+    let result: ChecksumResult = checksum(&input, 14);
+    result.error == 0 &&
+    result.sum == 105
+ }
+machine test_checksum_tail_7() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 1;
+    input[1] = 2;
+    input[2] = 3;
+    input[3] = 4;
+    input[4] = 5;
+    input[5] = 6;
+    input[6] = 7;
+    input[7] = 8;
+    input[8] = 9;
+    input[9] = 10;
+    input[10] = 11;
+    input[11] = 12;
+    input[12] = 13;
+    input[13] = 14;
+    input[14] = 15;
+    let result: ChecksumResult = checksum(&input, 15);
+    result.error == 0 &&
+    result.sum == 120
+ }
+machine test_checksum_wrap() -> bool {
+    let mut input: [u8; 4096];
+    input[0] = 255;
+    input[1] = 255;
+    input[2] = 255;
+    input[3] = 255;
+    input[4] = 255;
+    input[5] = 255;
+    input[6] = 255;
+    input[7] = 255;
+    input[8] = 255;
+    input[9] = 255;
+    input[10] = 255;
+    input[11] = 255;
+    input[12] = 255;
+    input[13] = 255;
+    input[14] = 255;
+    input[15] = 255;
+    input[16] = 255;
+    input[17] = 255;
+    input[18] = 255;
+    input[19] = 255;
+    input[20] = 255;
+    input[21] = 255;
+    input[22] = 255;
+    input[23] = 255;
+    input[24] = 255;
+    input[25] = 255;
+    input[26] = 255;
+    input[27] = 255;
+    input[28] = 255;
+    input[29] = 255;
+    input[30] = 255;
+    input[31] = 255;
+    input[32] = 255;
+    input[33] = 255;
+    input[34] = 255;
+    input[35] = 255;
+    input[36] = 255;
+    input[37] = 255;
+    input[38] = 255;
+    input[39] = 255;
+    input[40] = 255;
+    input[41] = 255;
+    input[42] = 255;
+    input[43] = 255;
+    input[44] = 255;
+    input[45] = 255;
+    input[46] = 255;
+    input[47] = 255;
+    input[48] = 255;
+    input[49] = 255;
+    input[50] = 255;
+    input[51] = 255;
+    input[52] = 255;
+    input[53] = 255;
+    input[54] = 255;
+    input[55] = 255;
+    input[56] = 255;
+    input[57] = 255;
+    input[58] = 255;
+    input[59] = 255;
+    input[60] = 255;
+    input[61] = 255;
+    input[62] = 255;
+    input[63] = 255;
+    input[64] = 255;
+    input[65] = 255;
+    input[66] = 255;
+    input[67] = 255;
+    input[68] = 255;
+    input[69] = 255;
+    input[70] = 255;
+    input[71] = 255;
+    input[72] = 255;
+    input[73] = 255;
+    input[74] = 255;
+    input[75] = 255;
+    input[76] = 255;
+    input[77] = 255;
+    input[78] = 255;
+    input[79] = 255;
+    input[80] = 255;
+    input[81] = 255;
+    input[82] = 255;
+    input[83] = 255;
+    input[84] = 255;
+    input[85] = 255;
+    input[86] = 255;
+    input[87] = 255;
+    input[88] = 255;
+    input[89] = 255;
+    input[90] = 255;
+    input[91] = 255;
+    input[92] = 255;
+    input[93] = 255;
+    input[94] = 255;
+    input[95] = 255;
+    input[96] = 255;
+    input[97] = 255;
+    input[98] = 255;
+    input[99] = 255;
+    input[100] = 255;
+    input[101] = 255;
+    input[102] = 255;
+    input[103] = 255;
+    input[104] = 255;
+    input[105] = 255;
+    input[106] = 255;
+    input[107] = 255;
+    input[108] = 255;
+    input[109] = 255;
+    input[110] = 255;
+    input[111] = 255;
+    input[112] = 255;
+    input[113] = 255;
+    input[114] = 255;
+    input[115] = 255;
+    input[116] = 255;
+    input[117] = 255;
+    input[118] = 255;
+    input[119] = 255;
+    input[120] = 255;
+    input[121] = 255;
+    input[122] = 255;
+    input[123] = 255;
+    input[124] = 255;
+    input[125] = 255;
+    input[126] = 255;
+    input[127] = 255;
+    input[128] = 255;
+    input[129] = 255;
+    input[130] = 255;
+    input[131] = 255;
+    input[132] = 255;
+    input[133] = 255;
+    input[134] = 255;
+    input[135] = 255;
+    input[136] = 255;
+    input[137] = 255;
+    input[138] = 255;
+    input[139] = 255;
+    input[140] = 255;
+    input[141] = 255;
+    input[142] = 255;
+    input[143] = 255;
+    input[144] = 255;
+    input[145] = 255;
+    input[146] = 255;
+    input[147] = 255;
+    input[148] = 255;
+    input[149] = 255;
+    input[150] = 255;
+    input[151] = 255;
+    input[152] = 255;
+    input[153] = 255;
+    input[154] = 255;
+    input[155] = 255;
+    input[156] = 255;
+    input[157] = 255;
+    input[158] = 255;
+    input[159] = 255;
+    input[160] = 255;
+    input[161] = 255;
+    input[162] = 255;
+    input[163] = 255;
+    input[164] = 255;
+    input[165] = 255;
+    input[166] = 255;
+    input[167] = 255;
+    input[168] = 255;
+    input[169] = 255;
+    input[170] = 255;
+    input[171] = 255;
+    input[172] = 255;
+    input[173] = 255;
+    input[174] = 255;
+    input[175] = 255;
+    input[176] = 255;
+    input[177] = 255;
+    input[178] = 255;
+    input[179] = 255;
+    input[180] = 255;
+    input[181] = 255;
+    input[182] = 255;
+    input[183] = 255;
+    input[184] = 255;
+    input[185] = 255;
+    input[186] = 255;
+    input[187] = 255;
+    input[188] = 255;
+    input[189] = 255;
+    input[190] = 255;
+    input[191] = 255;
+    input[192] = 255;
+    input[193] = 255;
+    input[194] = 255;
+    input[195] = 255;
+    input[196] = 255;
+    input[197] = 255;
+    input[198] = 255;
+    input[199] = 255;
+    input[200] = 255;
+    input[201] = 255;
+    input[202] = 255;
+    input[203] = 255;
+    input[204] = 255;
+    input[205] = 255;
+    input[206] = 255;
+    input[207] = 255;
+    input[208] = 255;
+    input[209] = 255;
+    input[210] = 255;
+    input[211] = 255;
+    input[212] = 255;
+    input[213] = 255;
+    input[214] = 255;
+    input[215] = 255;
+    input[216] = 255;
+    input[217] = 255;
+    input[218] = 255;
+    input[219] = 255;
+    input[220] = 255;
+    input[221] = 255;
+    input[222] = 255;
+    input[223] = 255;
+    input[224] = 255;
+    input[225] = 255;
+    input[226] = 255;
+    input[227] = 255;
+    input[228] = 255;
+    input[229] = 255;
+    input[230] = 255;
+    input[231] = 255;
+    input[232] = 255;
+    input[233] = 255;
+    input[234] = 255;
+    input[235] = 255;
+    input[236] = 255;
+    input[237] = 255;
+    input[238] = 255;
+    input[239] = 255;
+    input[240] = 255;
+    input[241] = 255;
+    input[242] = 255;
+    input[243] = 255;
+    input[244] = 255;
+    input[245] = 255;
+    input[246] = 255;
+    input[247] = 255;
+    input[248] = 255;
+    input[249] = 255;
+    input[250] = 255;
+    input[251] = 255;
+    input[252] = 255;
+    input[253] = 255;
+    input[254] = 255;
+    input[255] = 255;
+    input[256] = 255;
+    let result: ChecksumResult = checksum(&input, 257);
+    result.error == 0 &&
+    result.sum == 255
+ }
+machine test_checksum_empty() -> bool {
+    let mut input: [u8; 4096];
+    let result: ChecksumResult = checksum(&input, 0);
+    result.error == 0 &&
+    result.sum == 0
+ }
+machine test_checksum_capacity() -> bool {
+    let mut input: [u8; 4096];
+    let result: ChecksumResult = checksum(&input, 4097);
+    result.error == 1
+ }
+machine test_checksum_capacity_exact() -> bool {
+    let mut input: [u8; 4096];
+    input[4095] = 255;
+    let result: ChecksumResult = checksum(&input, 4096);
+    result.error == 0 &&
+    result.sum == 255
+ }
+// Source-check every authored fixture; check.py evaluates bounded groups separately.
+data Main {}
+machine Main::main(&mut self) {}

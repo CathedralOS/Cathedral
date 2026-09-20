@@ -1,0 +1,90 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original bounded initialized-byte helpers; strict parsing uses no reference casts.
+module bytes;
+use headers::ChecksumResult;
+pub machine le32(input: &[u8; 4096], offset: u64) -> u32 requires offset <= 4092; {
+    let o1: u64 = offset + 1;
+    let o2: u64 = offset + 2;
+    let o3: u64 = offset + 3;
+    transition o1 < 4096 && o2 < 4096 && o3 < 4096 {
+        true -> read(input, offset, o1, o2, o3) _ -> (0)
+    }
+    state read(input: &[u8; 4096], offset: u64, o1: u64, o2: u64, o3: u64) -> u32 {
+        (input[offset] as u32) | ((input[o1] as u32) << 8) | ((input[o2] as u32) << 16) | ((input[o3] as u32) << 24)
+    }
+}
+pub machine le64(input: &[u8; 4096], offset: u64) -> u64 requires offset <= 4088; {
+    let o1: u64 = offset + 1;
+    let o2: u64 = offset + 2;
+    let o3: u64 = offset + 3;
+    let o4: u64 = offset + 4;
+    let o5: u64 = offset + 5;
+    let o6: u64 = offset + 6;
+    let o7: u64 = offset + 7;
+    transition o1 < 4096 && o2 < 4096 && o3 < 4096 && o4 < 4096 && o5 < 4096 && o6 < 4096 && o7 < 4096 {
+        true -> read(input, offset, o1, o2, o3, o4, o5, o6, o7) _ -> (0)
+    }
+    state read(input: &[u8; 4096], offset: u64, o1: u64, o2: u64, o3: u64, o4: u64, o5: u64, o6: u64, o7: u64) -> u64 {
+        (input[offset] as u64) | ((input[o1] as u64) << 8) | ((input[o2] as u64) << 16) | ((input[o3] as u64) << 24) | ((input[o4] as u64) << 32) | ((input[o5] as u64) << 40) | ((input[o6] as u64) << 48) | ((input[o7] as u64) << 56)
+    }
+}
+pub machine checksum(input: &[u8; 4096], length: u64) -> ChecksumResult {
+    transition length <= 4096 { true -> bounded(input, length) _ -> (ChecksumResult { error: 1 }) }
+    state bounded(input: &[u8; 4096], length: u64) -> ChecksumResult {
+        let blocks: u64 = length / 8;
+        transition blocks <= 512 { true -> chunks(input, length, blocks) _ -> (ChecksumResult { error: 1 }) }
+    }
+    state chunks(input: &[u8; 4096], length: u64, blocks: u64) -> ChecksumResult {
+        let start: u64 = blocks * 8;
+        let sum: u16 = checksum_blocks(input, blocks, 0, 0);
+        let result: ChecksumResult = checksum_scan(input, length, start, sum);
+        result
+    }
+}
+// Eight-byte blocks keep the ordinary semantic evaluator within its fixed
+// work budget for a full-capacity input. The final scan handles at most 7 bytes.
+machine checksum_blocks(input: &[u8; 4096], blocks: u64, index: u64, sum: u16)
+terminates by (index, blocks) -> Nat::BoundedDistance;
+-> u16 {
+    let next: u16 = checksum_block(input, blocks, index, sum);
+    transition index < blocks {
+        true -> checksum_blocks(input, blocks, index + 1, next)
+        _ -> (sum)
+    }
+}
+machine checksum_block(input: &[u8; 4096], blocks: u64, index: u64, sum: u16) -> u16 {
+    transition index < blocks && index < 512 {
+        true -> offsets(input, index, sum) _ -> (sum)
+    }
+    state offsets(input: &[u8; 4096], index: u64, sum: u16) -> u16 {
+        let o0: u64 = index * 8 + 0;
+        let o1: u64 = index * 8 + 1;
+        let o2: u64 = index * 8 + 2;
+        let o3: u64 = index * 8 + 3;
+        let o4: u64 = index * 8 + 4;
+        let o5: u64 = index * 8 + 5;
+        let o6: u64 = index * 8 + 6;
+        let o7: u64 = index * 8 + 7;
+        transition o0 < 4096 && o1 < 4096 && o2 < 4096 && o3 < 4096 && o4 < 4096 && o5 < 4096 && o6 < 4096 && o7 < 4096 {
+            true -> add(input, sum, o0, o1, o2, o3, o4, o5, o6, o7) _ -> (sum)
+        }
+    }
+    state add(input: &[u8; 4096], sum: u16, o0: u64, o1: u64, o2: u64, o3: u64, o4: u64, o5: u64, o6: u64, o7: u64) -> u16 {
+        ((sum & 255) + (input[o0] as u16) + (input[o1] as u16) + (input[o2] as u16) + (input[o3] as u16) + (input[o4] as u16) + (input[o5] as u16) + (input[o6] as u16) + (input[o7] as u16)) & 255
+    }
+}
+machine checksum_scan(input: &[u8; 4096], length: u64, index: u64, sum: u16)
+terminates by (index, length) -> Nat::BoundedDistance;
+-> ChecksumResult {
+    let next: u16 = checksum_step(input, length, index, sum);
+    transition index < length {
+        true -> checksum_scan(input, length, index + 1, next)
+        _ -> (ChecksumResult { sum: (sum & 255) as u8 })
+    }
+}
+machine checksum_step(input: &[u8; 4096], length: u64, index: u64, sum: u16) -> u16 {
+    transition index < length && index < 4096 {
+        true -> (((sum & 255) + (input[index] as u16)) & 255)
+        _ -> (sum)
+    }
+}

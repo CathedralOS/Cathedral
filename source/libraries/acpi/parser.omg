@@ -1,0 +1,153 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified acpi validation/discovery logic; primary ACPI6.6 length/checksum checks
+// replace unchecked casts and the pin's lenient checksum policy. See headers.PORT.md.
+module parser;
+use headers::Signature;
+use headers::Rsdp;
+use headers::SdtHeader;
+use headers::RsdpResult;
+use headers::SdtResult;
+use headers::RootResult;
+use headers::EntryResult;
+use headers::ChecksumResult;
+use headers::RootPointer;
+use headers::SIGNATURE_RSDT;
+use headers::SIGNATURE_XSDT;
+use bytes::le32;
+use bytes::le64;
+use bytes::checksum;
+
+pub machine parse_rsdp(input: &[u8; 4096], length: u64) -> RsdpResult {
+    transition { length > 4096 -> (RsdpResult { error: 1 })
+        length < 20 -> (RsdpResult { error: 2 }) _ -> signature(input, length) }
+    state signature(input: &[u8; 4096], length: u64) -> RsdpResult {
+        transition input[0] == 82 && input[1] == 83 && input[2] == 68 && input[3] == 32 &&
+                   input[4] == 80 && input[5] == 84 && input[6] == 82 && input[7] == 32 {
+            true -> common(input, length) _ -> (RsdpResult { error: 3 })
+        }
+    }
+    state common(input: &[u8; 4096], length: u64) -> RsdpResult {
+        let base: Rsdp = Rsdp { signature: [82, 83, 68, 32, 80, 84, 82, 32], checksum: input[8],
+            oem_id: [input[9], input[10], input[11], input[12], input[13], input[14]],
+            revision: input[15], rsdt_address: le32(input, 16), length: 20 };
+        let check: ChecksumResult = checksum(input, 20);
+        transition { check.error != 0 || check.sum != 0 -> (RsdpResult { error: 6 })
+            _ -> version(input, length, base) }
+    }
+    state version(input: &[u8; 4096], length: u64, base: Rsdp) -> RsdpResult {
+        transition base.revision {
+            0 -> (RsdpResult { value: base })
+            2 -> extended(input, length, base)
+            _ -> (RsdpResult { error: 4 })
+        }
+    }
+    state extended(input: &[u8; 4096], length: u64, base: Rsdp) -> RsdpResult {
+        transition length >= 36 { true -> extent(input, length, base) _ -> (RsdpResult { error: 2 }) }
+    }
+    state extent(input: &[u8; 4096], length: u64, base: Rsdp) -> RsdpResult {
+        let declared: u32 = le32(input, 20);
+        let exceeds: bool = (declared as u64) > length;
+        transition { declared < 36 -> (RsdpResult { error: 5 })
+            exceeds -> (RsdpResult { error: 2 })
+            _ -> validate_extended(input, declared, base) }
+    }
+    state validate_extended(input: &[u8; 4096], declared: u32, base: Rsdp) -> RsdpResult {
+        let check: ChecksumResult = checksum(input, declared as u64);
+        let xsdt_address: u64 = le64(input, 24);
+        transition { check.error != 0 || check.sum != 0 -> (RsdpResult { error: 6 })
+            _ -> (RsdpResult { value: Rsdp { signature: base.signature, checksum: base.checksum,
+                oem_id: base.oem_id, revision: base.revision, rsdt_address: base.rsdt_address,
+                length: declared, xsdt_address: xsdt_address, ext_checksum: input[32],
+                reserved: [input[33], input[34], input[35]] } }) }
+    }
+}
+
+pub machine parse_sdt(input: &[u8; 4096], length: u64, expected: Signature) -> SdtResult {
+    transition { length > 4096 -> (SdtResult { error: 1 })
+        length < 36 -> (SdtResult { error: 2 }) _ -> decode(input, length, expected) }
+    state decode(input: &[u8; 4096], length: u64, expected: Signature) -> SdtResult {
+        let value: SdtHeader = SdtHeader { signature: Signature { raw: le32(input, 0) },
+            length: le32(input, 4), revision: input[8], checksum: input[9],
+            oem_id: [input[10], input[11], input[12], input[13], input[14], input[15]],
+            oem_table_id: [input[16], input[17], input[18], input[19], input[20], input[21], input[22], input[23]],
+            oem_revision: le32(input, 24), creator_id: le32(input, 28), creator_revision: le32(input, 32) };
+        transition { value.signature.raw != expected.raw -> (SdtResult { error: 3 })
+            value.length < 36 -> (SdtResult { error: 5 }) _ -> bounds(input, length, value) }
+    }
+    state bounds(input: &[u8; 4096], length: u64, value: SdtHeader) -> SdtResult {
+        transition (value.length as u64) <= length { true -> validate(input, value) _ -> (SdtResult { error: 2 }) }
+    }
+    state validate(input: &[u8; 4096], value: SdtHeader) -> SdtResult {
+        let check: ChecksumResult = checksum(input, value.length as u64);
+        transition { check.error != 0 || check.sum != 0 -> (SdtResult { error: 6 }) _ -> (SdtResult { value: value }) }
+    }
+}
+pub machine root_signature(xsdt: bool) -> Signature {
+    transition xsdt { true -> (SIGNATURE_XSDT) _ -> (SIGNATURE_RSDT) }
+}
+pub machine parse_root(input: &[u8; 4096], length: u64, xsdt: bool) -> RootResult {
+    let expected: Signature = root_signature(xsdt);
+    let parsed: SdtResult = parse_sdt(input, length, expected);
+    transition parsed.error == 0 { true -> shape(parsed.value, xsdt) _ -> (RootResult { error: parsed.error }) }
+    state shape(header: SdtHeader, xsdt: bool) -> RootResult {
+        transition { header.revision != 1 -> (RootResult { error: 4 })
+            header.length < 36 -> (RootResult { error: 5 }) _ -> entries(header, xsdt) }
+    }
+    state entries(header: SdtHeader, xsdt: bool) -> RootResult {
+        let payload: u32 = header.length - 36;
+        transition xsdt { true -> xsdt_entries(header, payload) _ -> rsdt_entries(header, payload) }
+    }
+    state xsdt_entries(header: SdtHeader, payload: u32) -> RootResult {
+        transition (payload % 8) == 0 {
+            true -> (RootResult { header: header, entry_size: 8, entry_count: (payload / 8) as u64 })
+            _ -> (RootResult { error: 9 }) }
+    }
+    state rsdt_entries(header: SdtHeader, payload: u32) -> RootResult {
+        transition (payload % 4) == 0 {
+            true -> (RootResult { header: header, entry_size: 4, entry_count: (payload / 4) as u64 })
+            _ -> (RootResult { error: 9 }) }
+    }
+}
+// This accessor validates the source again. A caller-constructed result record
+// cannot authorize out-of-range reads; decoded physical addresses remain numbers.
+pub machine root_entry(input: &[u8; 4096], length: u64, xsdt: bool, index: u64) -> EntryResult {
+    let parsed: RootResult = parse_root(input, length, xsdt);
+    transition parsed.error == 0 { true -> bounds(input, parsed, xsdt, index) _ -> (EntryResult { error: parsed.error }) }
+    state bounds(input: &[u8; 4096], parsed: RootResult, xsdt: bool, index: u64) -> EntryResult {
+        transition index < parsed.entry_count { true -> width(input, xsdt, index) _ -> (EntryResult { error: 10 }) }
+    }
+    state width(input: &[u8; 4096], xsdt: bool, index: u64) -> EntryResult {
+        transition xsdt { true -> wide(input, index) _ -> narrow(input, index) }
+    }
+    state wide(input: &[u8; 4096], index: u64) -> EntryResult {
+        transition index <= 506 { true -> read_wide(input, index) _ -> (EntryResult { error: 10 }) }
+    }
+    state read_wide(input: &[u8; 4096], index: u64) -> EntryResult {
+        let offset: u64 = 36 + index * 8;
+        transition offset <= 4088 { true -> finish_wide(input, offset) _ -> (EntryResult { error: 10 }) }
+    }
+    state finish_wide(input: &[u8; 4096], offset: u64) -> EntryResult {
+        let address: u64 = le64(input, offset);
+        EntryResult { address: address }
+    }
+    state narrow(input: &[u8; 4096], index: u64) -> EntryResult {
+        transition index <= 1014 { true -> read_narrow(input, index) _ -> (EntryResult { error: 10 }) }
+    }
+    state read_narrow(input: &[u8; 4096], index: u64) -> EntryResult {
+        let offset: u64 = 36 + index * 4;
+        transition offset <= 4092 { true -> finish_narrow(input, offset) _ -> (EntryResult { error: 10 }) }
+    }
+    state finish_narrow(input: &[u8; 4096], offset: u64) -> EntryResult {
+        let address: u32 = le32(input, offset);
+        EntryResult { address: address as u64 }
+    }
+}
+pub machine select_root(parsed: RsdpResult, ignore_xsdt: bool) -> RootPointer {
+    transition parsed.error == 0 { true -> choose(parsed.value, ignore_xsdt) _ -> (RootPointer {}) }
+    state choose(value: Rsdp, ignore_xsdt: bool) -> RootPointer {
+        transition value.revision == 2 && value.xsdt_address != 0 && !ignore_xsdt {
+            true -> (RootPointer { available: true, address: value.xsdt_address, entry_size: 8 })
+            _ -> (RootPointer { available: value.rsdt_address != 0, address: value.rsdt_address as u64, entry_size: 4 })
+        }
+    }
+}

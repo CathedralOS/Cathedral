@@ -1,0 +1,371 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "measurements": {
+    "RSDP.checksum": {
+      "kind": "offset",
+      "value": 8
+    },
+    "RSDP.ext_checksum": {
+      "kind": "offset",
+      "value": 32
+    },
+    "RSDP.extended_minimum_length": {
+      "kind": "size",
+      "value": 36
+    },
+    "RSDP.legacy_length": {
+      "kind": "size",
+      "value": 20
+    },
+    "RSDP.length": {
+      "kind": "offset",
+      "value": 20
+    },
+    "RSDP.oem_id": {
+      "kind": "offset",
+      "value": 9
+    },
+    "RSDP.reserved": {
+      "kind": "offset",
+      "value": 33
+    },
+    "RSDP.revision": {
+      "kind": "offset",
+      "value": 15
+    },
+    "RSDP.rsdt_address": {
+      "kind": "offset",
+      "value": 16
+    },
+    "RSDP.signature": {
+      "kind": "offset",
+      "value": 0
+    },
+    "RSDP.xsdt_address": {
+      "kind": "offset",
+      "value": 24
+    },
+    "RSDT.entry_width": {
+      "kind": "size",
+      "value": 4
+    },
+    "SDT.checksum": {
+      "kind": "offset",
+      "value": 9
+    },
+    "SDT.creator_id": {
+      "kind": "offset",
+      "value": 28
+    },
+    "SDT.creator_revision": {
+      "kind": "offset",
+      "value": 32
+    },
+    "SDT.header_length": {
+      "kind": "size",
+      "value": 36
+    },
+    "SDT.length": {
+      "kind": "offset",
+      "value": 4
+    },
+    "SDT.oem_id": {
+      "kind": "offset",
+      "value": 10
+    },
+    "SDT.oem_revision": {
+      "kind": "offset",
+      "value": 24
+    },
+    "SDT.oem_table_id": {
+      "kind": "offset",
+      "value": 16
+    },
+    "SDT.revision": {
+      "kind": "offset",
+      "value": 8
+    },
+    "SDT.signature": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Signature.AEST": {
+      "kind": "value",
+      "value": 1414743361
+    },
+    "Signature.BDAT": {
+      "kind": "value",
+      "value": 1413563458
+    },
+    "Signature.BERT": {
+      "kind": "value",
+      "value": 1414677826
+    },
+    "Signature.BGRT": {
+      "kind": "value",
+      "value": 1414678338
+    },
+    "Signature.CDIT": {
+      "kind": "value",
+      "value": 1414087747
+    },
+    "Signature.CEDT": {
+      "kind": "value",
+      "value": 1413760323
+    },
+    "Signature.CPEP": {
+      "kind": "value",
+      "value": 1346719811
+    },
+    "Signature.CRAT": {
+      "kind": "value",
+      "value": 1413567043
+    },
+    "Signature.CSRT": {
+      "kind": "value",
+      "value": 1414681411
+    },
+    "Signature.DBG2": {
+      "kind": "value",
+      "value": 843530820
+    },
+    "Signature.DBGP": {
+      "kind": "value",
+      "value": 1346847300
+    },
+    "Signature.DMAR": {
+      "kind": "value",
+      "value": 1380011332
+    },
+    "Signature.DRTM": {
+      "kind": "value",
+      "value": 1297371716
+    },
+    "Signature.DSDT": {
+      "kind": "value",
+      "value": 1413763908
+    },
+    "Signature.ECDT": {
+      "kind": "value",
+      "value": 1413759813
+    },
+    "Signature.EINJ": {
+      "kind": "value",
+      "value": 1246644549
+    },
+    "Signature.ERST": {
+      "kind": "value",
+      "value": 1414746693
+    },
+    "Signature.ETDT": {
+      "kind": "value",
+      "value": 1413764165
+    },
+    "Signature.FACS": {
+      "kind": "value",
+      "value": 1396916550
+    },
+    "Signature.FADT": {
+      "kind": "value",
+      "value": 1346584902
+    },
+    "Signature.FPDT": {
+      "kind": "value",
+      "value": 1413763142
+    },
+    "Signature.GTDT": {
+      "kind": "value",
+      "value": 1413764167
+    },
+    "Signature.HEST": {
+      "kind": "value",
+      "value": 1414743368
+    },
+    "Signature.HPET": {
+      "kind": "value",
+      "value": 1413828680
+    },
+    "Signature.IBFT": {
+      "kind": "value",
+      "value": 1413890633
+    },
+    "Signature.IORT": {
+      "kind": "value",
+      "value": 1414680393
+    },
+    "Signature.IVRS": {
+      "kind": "value",
+      "value": 1397904969
+    },
+    "Signature.LPIT": {
+      "kind": "value",
+      "value": 1414090828
+    },
+    "Signature.MADT": {
+      "kind": "value",
+      "value": 1128878145
+    },
+    "Signature.MCFG": {
+      "kind": "value",
+      "value": 1195787085
+    },
+    "Signature.MCHI": {
+      "kind": "value",
+      "value": 1229472589
+    },
+    "Signature.MPAM": {
+      "kind": "value",
+      "value": 1296126029
+    },
+    "Signature.MPST": {
+      "kind": "value",
+      "value": 1414746189
+    },
+    "Signature.MSCT": {
+      "kind": "value",
+      "value": 1413698381
+    },
+    "Signature.MSDM": {
+      "kind": "value",
+      "value": 1296323405
+    },
+    "Signature.NFIT": {
+      "kind": "value",
+      "value": 1414088270
+    },
+    "Signature.PCCT": {
+      "kind": "value",
+      "value": 1413694288
+    },
+    "Signature.PHAT": {
+      "kind": "value",
+      "value": 1413564496
+    },
+    "Signature.PMTT": {
+      "kind": "value",
+      "value": 1414810960
+    },
+    "Signature.PRMT": {
+      "kind": "value",
+      "value": 1414353488
+    },
+    "Signature.PSDT": {
+      "kind": "value",
+      "value": 1413763920
+    },
+    "Signature.RASF": {
+      "kind": "value",
+      "value": 1179861330
+    },
+    "Signature.RGRT": {
+      "kind": "value",
+      "value": 1414678354
+    },
+    "Signature.RSDT": {
+      "kind": "value",
+      "value": 1413763922
+    },
+    "Signature.SBST": {
+      "kind": "value",
+      "value": 1414742611
+    },
+    "Signature.SDEI": {
+      "kind": "value",
+      "value": 1229276243
+    },
+    "Signature.SDEV": {
+      "kind": "value",
+      "value": 1447380051
+    },
+    "Signature.SLIC": {
+      "kind": "value",
+      "value": 1128877139
+    },
+    "Signature.SLIT": {
+      "kind": "value",
+      "value": 1414089811
+    },
+    "Signature.SPCR": {
+      "kind": "value",
+      "value": 1380143187
+    },
+    "Signature.SPMI": {
+      "kind": "value",
+      "value": 1229803603
+    },
+    "Signature.SRAT": {
+      "kind": "value",
+      "value": 1413567059
+    },
+    "Signature.SSDT": {
+      "kind": "value",
+      "value": 1413763923
+    },
+    "Signature.STAO": {
+      "kind": "value",
+      "value": 1329681491
+    },
+    "Signature.SVKL": {
+      "kind": "value",
+      "value": 1280005715
+    },
+    "Signature.TCPA": {
+      "kind": "value",
+      "value": 1095779156
+    },
+    "Signature.TPM2": {
+      "kind": "value",
+      "value": 843927636
+    },
+    "Signature.UEFI": {
+      "kind": "value",
+      "value": 1229342037
+    },
+    "Signature.WAET": {
+      "kind": "value",
+      "value": 1413824855
+    },
+    "Signature.WDAT": {
+      "kind": "value",
+      "value": 1413563479
+    },
+    "Signature.WDRT": {
+      "kind": "value",
+      "value": 1414677591
+    },
+    "Signature.WPBT": {
+      "kind": "value",
+      "value": 1413632087
+    },
+    "Signature.WSMT": {
+      "kind": "value",
+      "value": 1414353751
+    },
+    "Signature.XENV": {
+      "kind": "value",
+      "value": 1447970136
+    },
+    "Signature.XSDT": {
+      "kind": "value",
+      "value": 1413763928
+    },
+    "XSDT.entry_width": {
+      "kind": "size",
+      "value": 8
+    }
+  },
+  "provenance": {
+    "description": "ACPI6.6 sections5.2.5.3 and5.2.6-5.2.8 wire offsets/lengths plus exact pinned Signature byte literals. Host-checked expectations, not measured Omega ABI.",
+    "kind": "specification",
+    "sources": [
+      "https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html",
+      "https://github.com/rust-osdev/acpi/blob/257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5/src/sdt/mod.rs",
+      "https://github.com/rust-osdev/acpi/blob/257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5/src/rsdp.rs"
+    ]
+  },
+  "target": {
+    "abi": "ACPI6.6 serialized bytes; decoded Omega records are not ABI overlays",
+    "endian": "little",
+    "pointer_bits": 64
+  }
+}

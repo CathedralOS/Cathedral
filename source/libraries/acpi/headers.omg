@@ -1,0 +1,100 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified representation of acpi src/rsdp.rs and src/sdt/mod.rs at
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. See headers.PORT.md.
+// Numeric physical addresses are inert data. These are decoded values, not ABI overlays.
+module headers;
+pub const RSDP_V1_LENGTH: u64 = 20;
+pub const RSDP_EXT_LENGTH: u64 = 36;
+pub const SDT_HEADER_LENGTH: u64 = 36;
+pub const INPUT_CAPACITY: u64 = 4096;
+pub data Signature [copy] { raw: u32; }
+pub data Rsdp [copy] {
+    signature: [u8; 8]; checksum: u8; oem_id: [u8; 6]; revision: u8;
+    rsdt_address: u32; length: u32; xsdt_address: u64; ext_checksum: u8; reserved: [u8; 3];
+}
+pub data SdtHeader [copy] {
+    signature: Signature; length: u32; revision: u8; checksum: u8;
+    oem_id: [u8; 6]; oem_table_id: [u8; 8]; oem_revision: u32;
+    creator_id: u32; creator_revision: u32;
+}
+pub data RsdpResult [copy] { error: u8; value: Rsdp; }
+pub data SdtResult [copy] { error: u8; value: SdtHeader; }
+pub data RootResult [copy] { error: u8; header: SdtHeader; entry_size: u8; entry_count: u64; }
+pub data EntryResult [copy] { error: u8; address: u64; }
+pub data ChecksumResult [copy] { error: u8; sum: u8; }
+pub data RootPointer [copy] { available: bool; address: u64; entry_size: u8; }
+// All parsers return initialized records. error0 alone means success.
+pub const ERROR_OK: u8 = 0;
+pub const ERROR_INPUT_CAPACITY: u8 = 1;
+pub const ERROR_TRUNCATED: u8 = 2;
+pub const ERROR_SIGNATURE: u8 = 3;
+pub const ERROR_REVISION: u8 = 4;
+pub const ERROR_LENGTH: u8 = 5;
+pub const ERROR_CHECKSUM: u8 = 6;
+pub const ERROR_ENTRY_REMAINDER: u8 = 9;
+pub const ERROR_ENTRY_INDEX: u8 = 10;
+pub const SIGNATURE_RSDT: Signature = Signature { raw: 0x54445352 };
+pub const SIGNATURE_XSDT: Signature = Signature { raw: 0x54445358 };
+pub const SIGNATURE_FADT: Signature = Signature { raw: 0x50434146 };
+pub const SIGNATURE_HPET: Signature = Signature { raw: 0x54455048 };
+pub const SIGNATURE_MADT: Signature = Signature { raw: 0x43495041 };
+pub const SIGNATURE_MCFG: Signature = Signature { raw: 0x4746434d };
+pub const SIGNATURE_SSDT: Signature = Signature { raw: 0x54445353 };
+pub const SIGNATURE_BERT: Signature = Signature { raw: 0x54524542 };
+pub const SIGNATURE_BGRT: Signature = Signature { raw: 0x54524742 };
+pub const SIGNATURE_CPEP: Signature = Signature { raw: 0x50455043 };
+pub const SIGNATURE_DSDT: Signature = Signature { raw: 0x54445344 };
+pub const SIGNATURE_ECDT: Signature = Signature { raw: 0x54444345 };
+pub const SIGNATURE_EINJ: Signature = Signature { raw: 0x4a4e4945 };
+pub const SIGNATURE_ERST: Signature = Signature { raw: 0x54535245 };
+pub const SIGNATURE_FACS: Signature = Signature { raw: 0x53434146 };
+pub const SIGNATURE_FPDT: Signature = Signature { raw: 0x54445046 };
+pub const SIGNATURE_GTDT: Signature = Signature { raw: 0x54445447 };
+pub const SIGNATURE_HEST: Signature = Signature { raw: 0x54534548 };
+pub const SIGNATURE_MSCT: Signature = Signature { raw: 0x5443534d };
+pub const SIGNATURE_MPST: Signature = Signature { raw: 0x5453504d };
+pub const SIGNATURE_NFIT: Signature = Signature { raw: 0x5449464e };
+pub const SIGNATURE_PCCT: Signature = Signature { raw: 0x54434350 };
+pub const SIGNATURE_PHAT: Signature = Signature { raw: 0x54414850 };
+pub const SIGNATURE_PMTT: Signature = Signature { raw: 0x54544d50 };
+pub const SIGNATURE_PSDT: Signature = Signature { raw: 0x54445350 };
+pub const SIGNATURE_RASF: Signature = Signature { raw: 0x46534152 };
+pub const SIGNATURE_SBST: Signature = Signature { raw: 0x54534253 };
+pub const SIGNATURE_SDEV: Signature = Signature { raw: 0x56454453 };
+pub const SIGNATURE_SLIT: Signature = Signature { raw: 0x54494c53 };
+pub const SIGNATURE_SRAT: Signature = Signature { raw: 0x54415253 };
+pub const SIGNATURE_AEST: Signature = Signature { raw: 0x54534541 };
+pub const SIGNATURE_BDAT: Signature = Signature { raw: 0x54414442 };
+pub const SIGNATURE_CDIT: Signature = Signature { raw: 0x54494443 };
+pub const SIGNATURE_CEDT: Signature = Signature { raw: 0x54444543 };
+pub const SIGNATURE_CRAT: Signature = Signature { raw: 0x54415243 };
+pub const SIGNATURE_CSRT: Signature = Signature { raw: 0x54525343 };
+pub const SIGNATURE_DBGP: Signature = Signature { raw: 0x50474244 };
+pub const SIGNATURE_DBG2: Signature = Signature { raw: 0x32474244 };
+pub const SIGNATURE_DMAR: Signature = Signature { raw: 0x52414d44 };
+pub const SIGNATURE_DRTM: Signature = Signature { raw: 0x4d545244 };
+pub const SIGNATURE_ETDT: Signature = Signature { raw: 0x54445445 };
+pub const SIGNATURE_IBFT: Signature = Signature { raw: 0x54464249 };
+pub const SIGNATURE_IORT: Signature = Signature { raw: 0x54524f49 };
+pub const SIGNATURE_IVRS: Signature = Signature { raw: 0x53525649 };
+pub const SIGNATURE_LPIT: Signature = Signature { raw: 0x5449504c };
+pub const SIGNATURE_MCHI: Signature = Signature { raw: 0x4948434d };
+pub const SIGNATURE_MPAM: Signature = Signature { raw: 0x4d41504d };
+pub const SIGNATURE_MSDM: Signature = Signature { raw: 0x4d44534d };
+pub const SIGNATURE_PRMT: Signature = Signature { raw: 0x544d5250 };
+pub const SIGNATURE_RGRT: Signature = Signature { raw: 0x54524752 };
+pub const SIGNATURE_SDEI: Signature = Signature { raw: 0x49454453 };
+pub const SIGNATURE_SLIC: Signature = Signature { raw: 0x43494c53 };
+pub const SIGNATURE_SPCR: Signature = Signature { raw: 0x52435053 };
+pub const SIGNATURE_SPMI: Signature = Signature { raw: 0x494d5053 };
+pub const SIGNATURE_STAO: Signature = Signature { raw: 0x4f415453 };
+pub const SIGNATURE_SVKL: Signature = Signature { raw: 0x4c4b5653 };
+pub const SIGNATURE_TCPA: Signature = Signature { raw: 0x41504354 };
+pub const SIGNATURE_TPM2: Signature = Signature { raw: 0x324d5054 };
+pub const SIGNATURE_UEFI: Signature = Signature { raw: 0x49464555 };
+pub const SIGNATURE_WAET: Signature = Signature { raw: 0x54454157 };
+pub const SIGNATURE_WDAT: Signature = Signature { raw: 0x54414457 };
+pub const SIGNATURE_WDRT: Signature = Signature { raw: 0x54524457 };
+pub const SIGNATURE_WPBT: Signature = Signature { raw: 0x54425057 };
+pub const SIGNATURE_WSMT: Signature = Signature { raw: 0x544d5357 };
+pub const SIGNATURE_XENV: Signature = Signature { raw: 0x564e4558 };

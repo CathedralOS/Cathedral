@@ -1,0 +1,1846 @@
+{
+  "files": {
+    "src/lib.rs": {
+      "disposition": "translated",
+      "note": "Partial slice; every source anchor below independently classified.",
+      "sha256": "09fcc41658affdc55f6d8c0cb2b29b642d908879a07ed735014b70c7935335c7",
+      "symbols": {
+        "106:from_rsdp_with_quirks": {
+          "anchor": "pub unsafe fn from_rsdp_with_quirks(",
+          "disposition": "omitted",
+          "reason": "Whole mapped-table API is outside this slice. Its pure root preference/header/entry suboperations are represented by parse_rsdp/parse_root/select_root; physical mapping and lenient firmware acceptance are intentionally absent."
+        },
+        "153:from_rsdt": {
+          "anchor": "pub unsafe fn from_rsdt(",
+          "disposition": "omitted",
+          "reason": "Whole mapped-table API is outside this slice. Its pure root preference/header/entry suboperations are represented by parse_rsdp/parse_root/select_root; physical mapping and lenient firmware acceptance are intentionally absent."
+        },
+        "166:from_rsdt_with_quirks": {
+          "anchor": "pub unsafe fn from_rsdt_with_quirks(",
+          "disposition": "omitted",
+          "reason": "Whole mapped-table API is outside this slice. Its pure root preference/header/entry suboperations are represented by parse_rsdp/parse_root/select_root; physical mapping and lenient firmware acceptance are intentionally absent."
+        },
+        "183:table_entries": {
+          "anchor": "pub fn table_entries(&self) -> impl Iterator<Item = usize> {",
+          "disposition": "translated",
+          "note": "Explicit checked indexed byte decoding replaces unsafe iterator; rejects partial entry payloads.",
+          "targets": [
+            {
+              "anchor": "pub machine root_entry",
+              "path": "source/libraries/acpi/parser.omg"
+            }
+          ]
+        },
+        "210:table_headers": {
+          "anchor": "pub fn table_headers(&self) -> impl Iterator<Item = (usize, SdtHeader)> {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "224:find_tables": {
+          "anchor": "pub fn find_tables<T>(&self) -> impl Iterator<Item = PhysicalMapping<H, T>>",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "250:find_table": {
+          "anchor": "pub fn find_table<T>(&self) -> Option<PhysicalMapping<H, T>>",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "257:dsdt": {
+          "anchor": "pub fn dsdt(&self) -> Result<AmlTable, AcpiError> {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "268:ssdts": {
+          "anchor": "pub fn ssdts(&self) -> impl Iterator<Item = AmlTable> {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "280:AmlTable": {
+          "anchor": "pub struct AmlTable {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "283:phys_address": {
+          "anchor": "pub phys_address: usize,",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "285:length": {
+          "anchor": "pub length: u32,",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "286:revision": {
+          "anchor": "pub revision: u8,",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "297:AcpiTable": {
+          "anchor": "pub unsafe trait AcpiTable {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "298:SIGNATURE": {
+          "anchor": "const SIGNATURE: Signature;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "300:header": {
+          "anchor": "fn header(&self) -> &SdtHeader;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "302:validate": {
+          "anchor": "fn validate(&self) -> Result<(), AcpiError> {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "309:AcpiError": {
+          "anchor": "pub enum AcpiError {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "343:AcpiQuirks": {
+          "anchor": "pub struct AcpiQuirks {",
+          "disposition": "omitted",
+          "reason": "Whole mapped-table API is outside this slice. Its pure root preference/header/entry suboperations are represented by parse_rsdp/parse_root/select_root; physical mapping and lenient firmware acceptance are intentionally absent."
+        },
+        "347:ignore_xsdt": {
+          "anchor": "pub ignore_xsdt: bool,",
+          "disposition": "translated",
+          "note": "Explicit inert selection argument; no authority or physical mapping.",
+          "targets": [
+            {
+              "anchor": "pub machine select_root",
+              "path": "source/libraries/acpi/parser.omg"
+            }
+          ]
+        },
+        "354:RawPhysicalMapping": {
+          "anchor": "pub struct RawPhysicalMapping<T: ?Sized> {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "357:physical_start": {
+          "anchor": "pub physical_start: usize,",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "361:virtual_start": {
+          "anchor": "pub virtual_start: NonNull<T>,",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "364:region_length": {
+          "anchor": "pub region_length: usize,",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "367:mapped_length": {
+          "anchor": "pub mapped_length: usize,",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "371:clone": {
+          "anchor": "fn clone(&self) -> Self {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "381:PhysicalMapping": {
+          "anchor": "pub struct PhysicalMapping<H, T>",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "385:raw": {
+          "anchor": "pub raw: RawPhysicalMapping<T>,",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "388:handler": {
+          "anchor": "pub handler: H,",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "401:new": {
+          "anchor": "pub unsafe fn new(physical_address: usize, size: usize, handler: H) -> PhysicalMapping<H, T> {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "408:get": {
+          "anchor": "pub fn get(&self) -> Pin<&T> {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "417:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "435:Target": {
+          "anchor": "type Target = T;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "437:deref": {
+          "anchor": "fn deref(&self) -> &T {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "447:deref_mut": {
+          "anchor": "fn deref_mut(&mut self) -> &mut T {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "456:drop": {
+          "anchor": "fn drop(&mut self) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "470:Handle": {
+          "anchor": "pub struct Handle(pub u32);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "484:Handler": {
+          "anchor": "pub trait Handler: Clone {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "495:map_physical_region": {
+          "anchor": "unsafe fn map_physical_region<T>(&self, physical_address: usize, size: usize) -> RawPhysicalMapping<T>;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "504:unmap_physical_region": {
+          "anchor": "unsafe fn unmap_physical_region<T>(&self, region: RawPhysicalMapping<T>);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "508:read_u8": {
+          "anchor": "fn read_u8(&self, address: usize) -> u8;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "509:read_u16": {
+          "anchor": "fn read_u16(&self, address: usize) -> u16;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "510:read_u32": {
+          "anchor": "fn read_u32(&self, address: usize) -> u32;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "511:read_u64": {
+          "anchor": "fn read_u64(&self, address: usize) -> u64;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "513:write_u8": {
+          "anchor": "fn write_u8(&self, address: usize, value: u8);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "514:write_u16": {
+          "anchor": "fn write_u16(&self, address: usize, value: u16);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "515:write_u32": {
+          "anchor": "fn write_u32(&self, address: usize, value: u32);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "516:write_u64": {
+          "anchor": "fn write_u64(&self, address: usize, value: u64);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "519:read_io_u8": {
+          "anchor": "fn read_io_u8(&self, port: u16) -> u8;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "520:read_io_u16": {
+          "anchor": "fn read_io_u16(&self, port: u16) -> u16;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "521:read_io_u32": {
+          "anchor": "fn read_io_u32(&self, port: u16) -> u32;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "523:write_io_u8": {
+          "anchor": "fn write_io_u8(&self, port: u16, value: u8);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "524:write_io_u16": {
+          "anchor": "fn write_io_u16(&self, port: u16, value: u16);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "525:write_io_u32": {
+          "anchor": "fn write_io_u32(&self, port: u16, value: u32);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "527:read_pci_u8": {
+          "anchor": "fn read_pci_u8(&self, address: PciAddress, offset: u16) -> u8;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "528:read_pci_u16": {
+          "anchor": "fn read_pci_u16(&self, address: PciAddress, offset: u16) -> u16;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "529:read_pci_u32": {
+          "anchor": "fn read_pci_u32(&self, address: PciAddress, offset: u16) -> u32;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "531:write_pci_u8": {
+          "anchor": "fn write_pci_u8(&self, address: PciAddress, offset: u16, value: u8);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "532:write_pci_u16": {
+          "anchor": "fn write_pci_u16(&self, address: PciAddress, offset: u16, value: u16);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "533:write_pci_u32": {
+          "anchor": "fn write_pci_u32(&self, address: PciAddress, offset: u16, value: u32);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "536:nanos_since_boot": {
+          "anchor": "fn nanos_since_boot(&self) -> u64;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "541:stall": {
+          "anchor": "fn stall(&self, microseconds: u64);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "545:sleep": {
+          "anchor": "fn sleep(&self, milliseconds: u64);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "548:create_mutex": {
+          "anchor": "fn create_mutex(&self) -> Handle;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "55:address": {
+          "anchor": "pub mod address;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "564:acquire": {
+          "anchor": "fn acquire(&self, mutex: Handle, timeout: u16) -> Result<(), aml::AmlError>;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "577:release": {
+          "anchor": "fn release(&self, mutex: Handle);",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "57:aml": {
+          "anchor": "pub mod aml;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "580:breakpoint": {
+          "anchor": "fn breakpoint(&self) {}",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "583:handle_debug": {
+          "anchor": "fn handle_debug(&self, _object: &aml::object::Object) {}",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "586:handle_fatal_error": {
+          "anchor": "fn handle_fatal_error(&self, fatal_type: u8, fatal_code: u32, fatal_arg: u64) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "598:map_physical_region": {
+          "anchor": "unsafe fn map_physical_region<T>(&self, physical_address: usize, size: usize) -> RawPhysicalMapping<T> {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "59:platform": {
+          "anchor": "pub mod platform;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "603:unmap_physical_region": {
+          "anchor": "unsafe fn unmap_physical_region<T>(&self, region: RawPhysicalMapping<T>) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "608:read_u8": {
+          "anchor": "fn read_u8(&self, address: usize) -> u8 {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "60:registers": {
+          "anchor": "pub mod registers;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "613:read_u16": {
+          "anchor": "fn read_u16(&self, address: usize) -> u16 {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "618:read_u32": {
+          "anchor": "fn read_u32(&self, address: usize) -> u32 {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "61:rsdp": {
+          "anchor": "pub mod rsdp;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "623:read_u64": {
+          "anchor": "fn read_u64(&self, address: usize) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "628:write_u8": {
+          "anchor": "fn write_u8(&self, address: usize, value: u8) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "62:sdt": {
+          "anchor": "pub mod sdt;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "633:write_u16": {
+          "anchor": "fn write_u16(&self, address: usize, value: u16) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "638:write_u32": {
+          "anchor": "fn write_u32(&self, address: usize, value: u32) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "643:write_u64": {
+          "anchor": "fn write_u64(&self, address: usize, value: u64) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "648:read_io_u8": {
+          "anchor": "fn read_io_u8(&self, port: u16) -> u8 {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "64:pci_types::PciAddress;": {
+          "anchor": "pub use pci_types::PciAddress;",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "653:read_io_u16": {
+          "anchor": "fn read_io_u16(&self, port: u16) -> u16 {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "658:read_io_u32": {
+          "anchor": "fn read_io_u32(&self, port: u16) -> u32 {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "65:sdt::{fadt::PowerProfile, hpet::HpetInfo, madt::MadtError};": {
+          "anchor": "pub use sdt::{fadt::PowerProfile, hpet::HpetInfo, madt::MadtError};",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "663:write_io_u8": {
+          "anchor": "fn write_io_u8(&self, port: u16, value: u8) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "668:write_io_u16": {
+          "anchor": "fn write_io_u16(&self, port: u16, value: u16) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "673:write_io_u32": {
+          "anchor": "fn write_io_u32(&self, port: u16, value: u32) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "678:read_pci_u8": {
+          "anchor": "fn read_pci_u8(&self, address: PciAddress, offset: u16) -> u8 {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "683:read_pci_u16": {
+          "anchor": "fn read_pci_u16(&self, address: PciAddress, offset: u16) -> u16 {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "688:read_pci_u32": {
+          "anchor": "fn read_pci_u32(&self, address: PciAddress, offset: u16) -> u32 {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "693:write_pci_u8": {
+          "anchor": "fn write_pci_u8(&self, address: PciAddress, offset: u16, value: u8) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "698:write_pci_u16": {
+          "anchor": "fn write_pci_u16(&self, address: PciAddress, offset: u16, value: u16) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "703:write_pci_u32": {
+          "anchor": "fn write_pci_u32(&self, address: PciAddress, offset: u16, value: u32) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "708:nanos_since_boot": {
+          "anchor": "fn nanos_since_boot(&self) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "713:stall": {
+          "anchor": "fn stall(&self, microseconds: u64) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "718:sleep": {
+          "anchor": "fn sleep(&self, milliseconds: u64) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "724:create_mutex": {
+          "anchor": "fn create_mutex(&self) -> Handle {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "730:acquire": {
+          "anchor": "fn acquire(&self, mutex: Handle, timeout: u16) -> Result<(), aml::AmlError> {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "736:release": {
+          "anchor": "fn release(&self, mutex: Handle) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "742:breakpoint": {
+          "anchor": "fn breakpoint(&self) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "748:handle_debug": {
+          "anchor": "fn handle_debug(&self, object: &aml::object::Object) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "754:handle_fatal_error": {
+          "anchor": "fn handle_fatal_error(&self, fatal_type: u8, fatal_code: u32, fatal_arg: u64) {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "760:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "765:test_physical_mapping_send_sync": {
+          "anchor": "fn test_physical_mapping_send_sync() {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "766:test_send_sync": {
+          "anchor": "fn test_send_sync<T: Send>() {}",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "767:caller": {
+          "anchor": "fn caller<H: Handler + Send, T: Send>() {",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "80:AcpiTables": {
+          "anchor": "pub struct AcpiTables<H: Handler> {",
+          "disposition": "omitted",
+          "reason": "Whole mapped-table API is outside this slice. Its pure root preference/header/entry suboperations are represented by parse_rsdp/parse_root/select_root; physical mapping and lenient firmware acceptance are intentionally absent."
+        },
+        "84:quirks": {
+          "anchor": "pub quirks: AcpiQuirks,",
+          "disposition": "omitted",
+          "reason": "Outside first ACPI-001 header slice: firmware handlers/mapping, fixed tables, AML, policy, formatting and Rust adapter tests are separately inventoried by ACPI-000."
+        },
+        "98:from_rsdp": {
+          "anchor": "pub unsafe fn from_rsdp(handler: H, rsdp_address: usize) -> Result<AcpiTables<H>, AcpiError> {",
+          "disposition": "omitted",
+          "reason": "Whole mapped-table API is outside this slice. Its pure root preference/header/entry suboperations are represented by parse_rsdp/parse_root/select_root; physical mapping and lenient firmware acceptance are intentionally absent."
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source map",
+          "path": "source/libraries/acpi/headers.PORT.md"
+        }
+      ]
+    },
+    "src/rsdp.rs": {
+      "disposition": "translated",
+      "note": "Partial slice; every source anchor below independently classified.",
+      "sha256": "ca2389abeffce9de4e1e28a87b9097c195a737f4dfa0beca5d2ccb23067f824c",
+      "symbols": {
+        "105:validate": {
+          "anchor": "pub fn validate(&self) -> Result<(), AcpiError> {",
+          "disposition": "translated",
+          "note": "Strict bounded revision0/2 validation; explicit deviations in headers.PORT.md.",
+          "targets": [
+            {
+              "anchor": "pub machine parse_rsdp",
+              "path": "source/libraries/acpi/parser.omg"
+            }
+          ]
+        },
+        "135:signature": {
+          "anchor": "pub fn signature(&self) -> [u8; 8] {",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "signature:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "139:checksum": {
+          "anchor": "pub fn checksum(&self) -> u8 {",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "checksum:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "143:oem_id": {
+          "anchor": "pub fn oem_id(&self) -> Result<&str, AcpiError> {",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "oem_id:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "147:revision": {
+          "anchor": "pub fn revision(&self) -> u8 {",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "revision:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "151:rsdt_address": {
+          "anchor": "pub fn rsdt_address(&self) -> u32 {",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "rsdt_address:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "155:length": {
+          "anchor": "pub fn length(&self) -> u32 {",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "length:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "160:xsdt_address": {
+          "anchor": "pub fn xsdt_address(&self) -> u64 {",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "xsdt_address:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "165:ext_checksum": {
+          "anchor": "pub fn ext_checksum(&self) -> u8 {",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "ext_checksum:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "172:find_search_areas": {
+          "anchor": "fn find_search_areas<H>(handler: H) -> [Range<usize>; 2]",
+          "disposition": "omitted",
+          "reason": "BIOS physical mapping/search constants and operations are outside initialized-byte parsing; requires separately authorized firmware mapping adapter."
+        },
+        "203:EBDA_START_SEGMENT_PTR": {
+          "anchor": "const EBDA_START_SEGMENT_PTR: usize = 0x40e;",
+          "disposition": "omitted",
+          "reason": "BIOS physical mapping/search constants and operations are outside initialized-byte parsing; requires separately authorized firmware mapping adapter."
+        },
+        "205:EBDA_EARLIEST_START": {
+          "anchor": "const EBDA_EARLIEST_START: usize = 0x80000;",
+          "disposition": "omitted",
+          "reason": "BIOS physical mapping/search constants and operations are outside initialized-byte parsing; requires separately authorized firmware mapping adapter."
+        },
+        "207:EBDA_END": {
+          "anchor": "const EBDA_END: usize = 0x9ffff;",
+          "disposition": "omitted",
+          "reason": "BIOS physical mapping/search constants and operations are outside initialized-byte parsing; requires separately authorized firmware mapping adapter."
+        },
+        "209:RSDP_BIOS_AREA_START": {
+          "anchor": "const RSDP_BIOS_AREA_START: usize = 0xe0000;",
+          "disposition": "omitted",
+          "reason": "BIOS physical mapping/search constants and operations are outside initialized-byte parsing; requires separately authorized firmware mapping adapter."
+        },
+        "211:RSDP_BIOS_AREA_END": {
+          "anchor": "const RSDP_BIOS_AREA_END: usize = 0xfffff;",
+          "disposition": "omitted",
+          "reason": "BIOS physical mapping/search constants and operations are outside initialized-byte parsing; requires separately authorized firmware mapping adapter."
+        },
+        "213:RSDP_SIGNATURE": {
+          "anchor": "const RSDP_SIGNATURE: [u8; 8] = *b\"RSD PTR \";",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "input[0] == 82",
+              "path": "source/libraries/acpi/parser.omg"
+            }
+          ]
+        },
+        "24:Rsdp": {
+          "anchor": "pub struct Rsdp {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "Rsdp",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "25:signature": {
+          "anchor": "pub signature: [u8; 8],",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "signature:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "26:checksum": {
+          "anchor": "pub checksum: u8,",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "checksum:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "27:oem_id": {
+          "anchor": "pub oem_id: [u8; 6],",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "oem_id:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "28:revision": {
+          "anchor": "pub revision: u8,",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "revision:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "29:rsdt_address": {
+          "anchor": "pub rsdt_address: u32,",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "rsdt_address:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "34:length": {
+          "anchor": "pub length: u32,",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "length:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "35:xsdt_address": {
+          "anchor": "pub xsdt_address: u64,",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "xsdt_address:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "36:ext_checksum": {
+          "anchor": "pub ext_checksum: u8,",
+          "disposition": "translated",
+          "note": "Decoded owned field; OEM bytes retained without a text gate; no borrowed UTF-8 accessor. Legacy unavailable extension fields are zero except synthesized length20.",
+          "targets": [
+            {
+              "anchor": "ext_checksum:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "55:search_for_on_bios": {
+          "anchor": "pub unsafe fn search_for_on_bios<H>(handler: H) -> Result<PhysicalMapping<H, Rsdp>, AcpiError>",
+          "disposition": "omitted",
+          "reason": "BIOS physical mapping/search constants and operations are outside initialized-byte parsing; requires separately authorized firmware mapping adapter."
+        },
+        "5:RSDP_V1_LENGTH": {
+          "anchor": "const RSDP_V1_LENGTH: usize = 20;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "RSDP_V1_LENGTH",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "7:RSDP_EXT_LENGTH": {
+          "anchor": "const RSDP_EXT_LENGTH: usize = 36;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "RSDP_EXT_LENGTH",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source map",
+          "path": "source/libraries/acpi/headers.PORT.md"
+        }
+      ]
+    },
+    "src/sdt/mod.rs": {
+      "disposition": "translated",
+      "note": "Partial slice; every source anchor below independently classified.",
+      "sha256": "136cb4b65a02f8e0bb3949543ff4f55fdaa540117010540cc4fe770e400a7052",
+      "symbols": {
+        "106:SdtHeader": {
+          "anchor": "pub struct SdtHeader {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data SdtHeader",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "107:signature": {
+          "anchor": "pub signature: Signature,",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "signature:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "109:length": {
+          "anchor": "pub length: u32,",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "length:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "110:revision": {
+          "anchor": "pub revision: u8,",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "revision:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "111:checksum": {
+          "anchor": "pub checksum: u8,",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "checksum:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "112:oem_id": {
+          "anchor": "pub oem_id: [u8; 6],",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "oem_id:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "113:oem_table_id": {
+          "anchor": "pub oem_table_id: [u8; 8],",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "oem_table_id:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "114:oem_revision": {
+          "anchor": "pub oem_revision: u32,",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "oem_revision:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "115:creator_id": {
+          "anchor": "pub creator_id: [u8; 4],",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "creator_id:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "116:creator_revision": {
+          "anchor": "pub creator_revision: u32,",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "creator_revision:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "127:validate": {
+          "anchor": "pub unsafe fn validate(&self, signature: Signature) -> Result<(), AcpiError> {",
+          "disposition": "translated",
+          "note": "Bounded exact expected-signature, length and checksum; raw OEM fields. No unsafe overlay or unchecked UTF-8 conversion.",
+          "targets": [
+            {
+              "anchor": "pub machine parse_sdt",
+              "path": "source/libraries/acpi/parser.omg"
+            }
+          ]
+        },
+        "155:length": {
+          "anchor": "pub fn length(&self) -> u32 {",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "length:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "160:revision": {
+          "anchor": "pub fn revision(&self) -> u8 {",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "revision:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "165:checksum": {
+          "anchor": "pub fn checksum(&self) -> u8 {",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "checksum:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "169:oem_id": {
+          "anchor": "pub fn oem_id(&self) -> Result<&str, AcpiError> {",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "oem_id:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "173:oem_table_id": {
+          "anchor": "pub fn oem_table_id(&self) -> Result<&str, AcpiError> {",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "oem_table_id:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "178:oem_revision": {
+          "anchor": "pub fn oem_revision(&self) -> u32 {",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "oem_revision:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "183:creator_id": {
+          "anchor": "pub fn creator_id(&self) -> Result<&str, AcpiError> {",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "creator_id:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "188:creator_revision": {
+          "anchor": "pub fn creator_revision(&self) -> u32 {",
+          "disposition": "translated",
+          "note": "Decoded owned data; creator ID is canonical little-endian u32, preserving four bytes without string conversion.",
+          "targets": [
+            {
+              "anchor": "creator_revision:",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "18:ExtendedField": {
+          "anchor": "pub struct ExtendedField<T: Copy, const MIN_REVISION: u8>(MaybeUninit<T>);",
+          "disposition": "omitted",
+          "reason": "Generic revision-gated MaybeUninit field mechanism is not used by the header slice. Fixed-table parsers must decode bounded initialized bytes in ACPI-002."
+        },
+        "195:Signature": {
+          "anchor": "pub struct Signature([u8; 4]);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data Signature",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "198:RSDT": {
+          "anchor": "pub const RSDT: Signature = Signature(*b\"RSDT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_RSDT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "199:XSDT": {
+          "anchor": "pub const XSDT: Signature = Signature(*b\"XSDT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_XSDT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "1:bgrt": {
+          "anchor": "pub mod bgrt;",
+          "disposition": "omitted",
+          "reason": "Fixed-table module declaration outside first header slice; full ACPI source inventory retains later work."
+        },
+        "200:FADT": {
+          "anchor": "pub const FADT: Signature = Signature(*b\"FACP\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_FADT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "201:HPET": {
+          "anchor": "pub const HPET: Signature = Signature(*b\"HPET\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_HPET",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "202:MADT": {
+          "anchor": "pub const MADT: Signature = Signature(*b\"APIC\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_MADT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "203:MCFG": {
+          "anchor": "pub const MCFG: Signature = Signature(*b\"MCFG\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_MCFG",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "204:SSDT": {
+          "anchor": "pub const SSDT: Signature = Signature(*b\"SSDT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_SSDT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "205:BERT": {
+          "anchor": "pub const BERT: Signature = Signature(*b\"BERT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_BERT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "206:BGRT": {
+          "anchor": "pub const BGRT: Signature = Signature(*b\"BGRT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_BGRT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "207:CPEP": {
+          "anchor": "pub const CPEP: Signature = Signature(*b\"CPEP\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_CPEP",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "208:DSDT": {
+          "anchor": "pub const DSDT: Signature = Signature(*b\"DSDT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_DSDT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "209:ECDT": {
+          "anchor": "pub const ECDT: Signature = Signature(*b\"ECDT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_ECDT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "20:MIN_REVISION": {
+          "anchor": "impl<T: Copy, const MIN_REVISION: u8> ExtendedField<T, MIN_REVISION> {",
+          "disposition": "omitted",
+          "reason": "Generic revision-gated MaybeUninit field mechanism is not used by the header slice. Fixed-table parsers must decode bounded initialized bytes in ACPI-002."
+        },
+        "210:EINJ": {
+          "anchor": "pub const EINJ: Signature = Signature(*b\"EINJ\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_EINJ",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "211:ERST": {
+          "anchor": "pub const ERST: Signature = Signature(*b\"ERST\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_ERST",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "212:FACS": {
+          "anchor": "pub const FACS: Signature = Signature(*b\"FACS\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_FACS",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "213:FPDT": {
+          "anchor": "pub const FPDT: Signature = Signature(*b\"FPDT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_FPDT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "214:GTDT": {
+          "anchor": "pub const GTDT: Signature = Signature(*b\"GTDT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_GTDT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "215:HEST": {
+          "anchor": "pub const HEST: Signature = Signature(*b\"HEST\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_HEST",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "216:MSCT": {
+          "anchor": "pub const MSCT: Signature = Signature(*b\"MSCT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_MSCT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "217:MPST": {
+          "anchor": "pub const MPST: Signature = Signature(*b\"MPST\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_MPST",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "218:NFIT": {
+          "anchor": "pub const NFIT: Signature = Signature(*b\"NFIT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_NFIT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "219:PCCT": {
+          "anchor": "pub const PCCT: Signature = Signature(*b\"PCCT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_PCCT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "220:PHAT": {
+          "anchor": "pub const PHAT: Signature = Signature(*b\"PHAT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_PHAT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "221:PMTT": {
+          "anchor": "pub const PMTT: Signature = Signature(*b\"PMTT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_PMTT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "222:PSDT": {
+          "anchor": "pub const PSDT: Signature = Signature(*b\"PSDT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_PSDT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "223:RASF": {
+          "anchor": "pub const RASF: Signature = Signature(*b\"RASF\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_RASF",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "224:SBST": {
+          "anchor": "pub const SBST: Signature = Signature(*b\"SBST\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_SBST",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "225:SDEV": {
+          "anchor": "pub const SDEV: Signature = Signature(*b\"SDEV\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_SDEV",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "226:SLIT": {
+          "anchor": "pub const SLIT: Signature = Signature(*b\"SLIT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_SLIT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "227:SRAT": {
+          "anchor": "pub const SRAT: Signature = Signature(*b\"SRAT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_SRAT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "228:AEST": {
+          "anchor": "pub const AEST: Signature = Signature(*b\"AEST\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_AEST",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "229:BDAT": {
+          "anchor": "pub const BDAT: Signature = Signature(*b\"BDAT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_BDAT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "230:CDIT": {
+          "anchor": "pub const CDIT: Signature = Signature(*b\"CDIT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_CDIT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "231:CEDT": {
+          "anchor": "pub const CEDT: Signature = Signature(*b\"CEDT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_CEDT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "232:CRAT": {
+          "anchor": "pub const CRAT: Signature = Signature(*b\"CRAT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_CRAT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "233:CSRT": {
+          "anchor": "pub const CSRT: Signature = Signature(*b\"CSRT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_CSRT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "234:DBGP": {
+          "anchor": "pub const DBGP: Signature = Signature(*b\"DBGP\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_DBGP",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "235:DBG2": {
+          "anchor": "pub const DBG2: Signature = Signature(*b\"DBG2\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_DBG2",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "236:DMAR": {
+          "anchor": "pub const DMAR: Signature = Signature(*b\"DMAR\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_DMAR",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "237:DRTM": {
+          "anchor": "pub const DRTM: Signature = Signature(*b\"DRTM\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_DRTM",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "238:ETDT": {
+          "anchor": "pub const ETDT: Signature = Signature(*b\"ETDT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_ETDT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "239:IBFT": {
+          "anchor": "pub const IBFT: Signature = Signature(*b\"IBFT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_IBFT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "240:IORT": {
+          "anchor": "pub const IORT: Signature = Signature(*b\"IORT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_IORT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "241:IVRS": {
+          "anchor": "pub const IVRS: Signature = Signature(*b\"IVRS\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_IVRS",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "242:LPIT": {
+          "anchor": "pub const LPIT: Signature = Signature(*b\"LPIT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_LPIT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "243:MCHI": {
+          "anchor": "pub const MCHI: Signature = Signature(*b\"MCHI\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_MCHI",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "244:MPAM": {
+          "anchor": "pub const MPAM: Signature = Signature(*b\"MPAM\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_MPAM",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "245:MSDM": {
+          "anchor": "pub const MSDM: Signature = Signature(*b\"MSDM\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_MSDM",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "246:PRMT": {
+          "anchor": "pub const PRMT: Signature = Signature(*b\"PRMT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_PRMT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "247:RGRT": {
+          "anchor": "pub const RGRT: Signature = Signature(*b\"RGRT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_RGRT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "248:SDEI": {
+          "anchor": "pub const SDEI: Signature = Signature(*b\"SDEI\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_SDEI",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "249:SLIC": {
+          "anchor": "pub const SLIC: Signature = Signature(*b\"SLIC\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_SLIC",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "250:SPCR": {
+          "anchor": "pub const SPCR: Signature = Signature(*b\"SPCR\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_SPCR",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "251:SPMI": {
+          "anchor": "pub const SPMI: Signature = Signature(*b\"SPMI\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_SPMI",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "252:STAO": {
+          "anchor": "pub const STAO: Signature = Signature(*b\"STAO\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_STAO",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "253:SVKL": {
+          "anchor": "pub const SVKL: Signature = Signature(*b\"SVKL\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_SVKL",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "254:TCPA": {
+          "anchor": "pub const TCPA: Signature = Signature(*b\"TCPA\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_TCPA",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "255:TPM2": {
+          "anchor": "pub const TPM2: Signature = Signature(*b\"TPM2\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_TPM2",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "256:UEFI": {
+          "anchor": "pub const UEFI: Signature = Signature(*b\"UEFI\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_UEFI",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "257:WAET": {
+          "anchor": "pub const WAET: Signature = Signature(*b\"WAET\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_WAET",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "258:WDAT": {
+          "anchor": "pub const WDAT: Signature = Signature(*b\"WDAT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_WDAT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "259:WDRT": {
+          "anchor": "pub const WDRT: Signature = Signature(*b\"WDRT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_WDRT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "25:access": {
+          "anchor": "pub unsafe fn access(&self, revision: u8) -> Option<T> {",
+          "disposition": "omitted",
+          "reason": "Generic revision-gated MaybeUninit field mechanism is not used by the header slice. Fixed-table parsers must decode bounded initialized bytes in ACPI-002."
+        },
+        "260:WPBT": {
+          "anchor": "pub const WPBT: Signature = Signature(*b\"WPBT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_WPBT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "261:WSMT": {
+          "anchor": "pub const WSMT: Signature = Signature(*b\"WSMT\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_WSMT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "262:XENV": {
+          "anchor": "pub const XENV: Signature = Signature(*b\"XENV\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_XENV",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "264:as_str": {
+          "anchor": "pub fn as_str(&self) -> &str {",
+          "disposition": "omitted",
+          "reason": "Rust formatting and borrowed string convenience are absent; signatures and OEM/creator data remain exact decoded carriers."
+        },
+        "270:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting and borrowed string convenience are absent; signatures and OEM/creator data remain exact decoded carriers."
+        },
+        "276:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting and borrowed string convenience are absent; signatures and OEM/creator data remain exact decoded carriers."
+        },
+        "2:facs": {
+          "anchor": "pub mod facs;",
+          "disposition": "omitted",
+          "reason": "Fixed-table module declaration outside first header slice; full ACPI source inventory retains later work."
+        },
+        "3:fadt": {
+          "anchor": "pub mod fadt;",
+          "disposition": "omitted",
+          "reason": "Fixed-table module declaration outside first header slice; full ACPI source inventory retains later work."
+        },
+        "4:hpet": {
+          "anchor": "pub mod hpet;",
+          "disposition": "omitted",
+          "reason": "Fixed-table module declaration outside first header slice; full ACPI source inventory retains later work."
+        },
+        "5:madt": {
+          "anchor": "pub mod madt;",
+          "disposition": "omitted",
+          "reason": "Fixed-table module declaration outside first header slice; full ACPI source inventory retains later work."
+        },
+        "6:mcfg": {
+          "anchor": "pub mod mcfg;",
+          "disposition": "omitted",
+          "reason": "Fixed-table module declaration outside first header slice; full ACPI source inventory retains later work."
+        },
+        "7:slit": {
+          "anchor": "pub mod slit;",
+          "disposition": "omitted",
+          "reason": "Fixed-table module declaration outside first header slice; full ACPI source inventory retains later work."
+        },
+        "8:spcr": {
+          "anchor": "pub mod spcr;",
+          "disposition": "omitted",
+          "reason": "Fixed-table module declaration outside first header slice; full ACPI source inventory retains later work."
+        },
+        "9:srat": {
+          "anchor": "pub mod srat;",
+          "disposition": "omitted",
+          "reason": "Fixed-table module declaration outside first header slice; full ACPI source inventory retains later work."
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source map",
+          "path": "source/libraries/acpi/headers.PORT.md"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "scope": "First bounded initialized-byte header/root slice only. Omissions apply to this slice, not the complete ACPI queue. See headers.PORT.md.",
+  "upstream": {
+    "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+    "roots": [
+      "src/rsdp.rs",
+      "src/sdt/mod.rs",
+      "src/lib.rs"
+    ],
+    "url": "https://github.com/rust-osdev/acpi"
+  }
+}
