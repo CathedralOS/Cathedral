@@ -1,0 +1,1368 @@
+{
+  "files": {
+    "src/structures/paging/mapper/mapped_page_table.rs": {
+      "disposition": "pending",
+      "reason": "Bounded numeric source overlay; remaining mapper interfaces and operations explicitly pending.",
+      "sha256": "e250c729f0588d1ce129c1c68ab43337f2f44328d2b38fe896cbeeacc1bc4ff2",
+      "symbols": {
+        "108:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "126:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "143:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "151:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "159:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "15:MappedPageTable": {
+          "anchor": "pub struct MappedPageTable<'a, P: PageTableFrameMapping> {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "176:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "207:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "236:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "258:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "275:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "295:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "303:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "31:new": {
+          "anchor": "pub unsafe fn new(level_4_table: &'a mut PageTable, page_table_frame_mapping: P) -> Self {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "321:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "357:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "383:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "39:level_4_table": {
+          "anchor": "pub fn level_4_table(&self) -> &PageTable {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "408:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "425:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "445:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "44:level_4_table_mut": {
+          "anchor": "pub fn level_4_table_mut(&mut self) -> &mut PageTable {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "468:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "487:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult {",
+          "disposition": "translated",
+          "reason": "Pure numeric branching retained from actual mapper translate; borrowed captured-array wrapper checks selected coordinates and supplied link identities. Physical dereferences become explicit initialized snapshots. Root huge-page panic becomes a semantic error case.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/translation.omg",
+              "anchor": "pub machine translate_words("
+            }
+          ]
+        },
+        "49:page_table_frame_mapping": {
+          "anchor": "pub fn page_table_frame_mapping(&self) -> &P {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "551:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "566:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "56:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "573:clean_up": {
+          "anchor": "unsafe fn clean_up<P: PageTableFrameMapping>(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "644:PageTableWalker": {
+          "anchor": "struct PageTableWalker<P: PageTableFrameMapping> {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "650:new": {
+          "anchor": "pub unsafe fn new(page_table_frame_mapping: P) -> Self {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "662:next_table": {
+          "anchor": "fn next_table<'b>(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "680:next_table_mut": {
+          "anchor": "fn next_table_mut<'b>(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "701:create_next_table": {
+          "anchor": "fn create_next_table<'b, A>(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "742:PageTableWalkError": {
+          "anchor": "enum PageTableWalkError {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "748:PageTableCreateError": {
+          "anchor": "enum PageTableCreateError {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "755:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "765:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "775:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "785:from": {
+          "anchor": "fn from(err: FrameError) -> Self {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "795:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "805:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "815:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "82:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "832:PageTableFrameMapping": {
+          "anchor": "pub unsafe trait PageTableFrameMapping {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "834:frame_to_pointer": {
+          "anchor": "fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable;",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "839:frame_to_pointer": {
+          "anchor": "fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/translation.omg",
+          "anchor": "module translation;"
+        }
+      ]
+    },
+    "src/structures/paging/mapper/mod.rs": {
+      "disposition": "pending",
+      "reason": "Bounded numeric source overlay; remaining mapper interfaces and operations explicitly pending.",
+      "sha256": "9b33e4f767f0eb77560cc7daf0826feadd176d0ced292ada00329a0695f67b6e",
+      "symbols": {
+        "100:size": {
+          "anchor": "pub const fn size(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure translation result/operation retained as explicit semantic cases and numeric fields. Leaf flags preserve upstream behavior and are not effective hardware permissions.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/translation.omg",
+              "anchor": "pub data Translation {"
+            }
+          ]
+        },
+        "110:Mapper": {
+          "anchor": "pub trait Mapper<S: PageSize> {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "179:map_to": {
+          "anchor": "unsafe fn map_to<A>(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "17:mapped_page_table": {
+          "anchor": "mod mapped_page_table;",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "18:offset_page_table": {
+          "anchor": "mod offset_page_table;",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "20:recursive_page_table": {
+          "anchor": "mod recursive_page_table;",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "23:MapperAllSizes": {
+          "anchor": "pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB> {}",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "270:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "285:unmap": {
+          "anchor": "fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "28:Translate": {
+          "anchor": "pub trait Translate {",
+          "disposition": "translated",
+          "reason": "Pure translation result/operation retained as explicit semantic cases and numeric fields. Leaf flags preserve upstream behavior and are not effective hardware permissions.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/translation.omg",
+              "anchor": "pub machine translate_words("
+            }
+          ]
+        },
+        "298:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "313:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "328:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "343:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "353:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "362:identity_map": {
+          "anchor": "unsafe fn identity_map<A>(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "36:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult;",
+          "disposition": "translated",
+          "reason": "Pure translation result/operation retained as explicit semantic cases and numeric fields. Leaf flags preserve upstream behavior and are not effective hardware permissions.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/translation.omg",
+              "anchor": "pub machine translate_words("
+            }
+          ]
+        },
+        "390:MapperFlush": {
+          "anchor": "pub struct MapperFlush<S: PageSize>(Page<S>);",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "398:new": {
+          "anchor": "pub fn new(page: Page<S>) -> Self {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "3:self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};": {
+          "anchor": "pub use self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "405:flush": {
+          "anchor": "pub fn flush(self) {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "411:ignore": {
+          "anchor": "pub fn ignore(self) {}",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "415:page": {
+          "anchor": "pub fn page(&self) -> Page<S> {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "427:MapperFlushAll": {
+          "anchor": "pub struct MapperFlushAll(());",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "435:new": {
+          "anchor": "pub fn new() -> Self {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "442:flush_all": {
+          "anchor": "pub fn flush_all(self) {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "448:ignore": {
+          "anchor": "pub fn ignore(self) {}",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "453:MapToError": {
+          "anchor": "pub enum MapToError<S: PageSize> {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "45:translate_addr": {
+          "anchor": "fn translate_addr(&self, addr: VirtAddr) -> Option<PhysAddr> {",
+          "disposition": "translated",
+          "reason": "Pure translation result/operation retained as explicit semantic cases and numeric fields. Leaf flags preserve upstream behavior and are not effective hardware permissions.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/translation.omg",
+              "anchor": "pub machine translated_address("
+            }
+          ]
+        },
+        "466:UnmapError": {
+          "anchor": "pub enum UnmapError {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "478:FlagUpdateError": {
+          "anchor": "pub enum FlagUpdateError {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "488:TranslateError": {
+          "anchor": "pub enum TranslateError {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "498:_ASSERT_OBJECT_SAFE": {
+          "anchor": "static _ASSERT_OBJECT_SAFE: Option<&(dyn Translate + Sync)> = None;",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "501:CleanUp": {
+          "anchor": "pub trait CleanUp {",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "509:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "534:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "58:TranslateResult": {
+          "anchor": "pub enum TranslateResult {",
+          "disposition": "translated",
+          "reason": "Pure translation result/operation retained as explicit semantic cases and numeric fields. Leaf flags preserve upstream behavior and are not effective hardware permissions.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/translation.omg",
+              "anchor": "pub data Translation {"
+            }
+          ]
+        },
+        "5:self::offset_page_table::OffsetPageTable;": {
+          "anchor": "pub use self::offset_page_table::OffsetPageTable;",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "7:self::recursive_page_table::{InvalidPageTable, RecursivePageTable};": {
+          "anchor": "pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};",
+          "disposition": "pending",
+          "reason": "Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim."
+        },
+        "80:MappedFrame": {
+          "anchor": "pub enum MappedFrame {",
+          "disposition": "translated",
+          "reason": "Pure translation result/operation retained as explicit semantic cases and numeric fields. Leaf flags preserve upstream behavior and are not effective hardware permissions.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/translation.omg",
+              "anchor": "pub data Translation {"
+            }
+          ]
+        },
+        "91:start_address": {
+          "anchor": "pub const fn start_address(&self) -> PhysAddr {",
+          "disposition": "translated",
+          "reason": "Pure translation result/operation retained as explicit semantic cases and numeric fields. Leaf flags preserve upstream behavior and are not effective hardware permissions.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/translation.omg",
+              "anchor": "pub data Translation {"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/translation.omg",
+          "anchor": "module translation;"
+        }
+      ]
+    },
+    "src/structures/paging/page_table.rs": {
+      "disposition": "translated",
+      "reason": "Bounded numeric source overlay; remaining mapper interfaces and operations explicitly pending.",
+      "sha256": "c22af38b260fc7d51d7a1c156f3d8788b0e539563bbbd72ea7d417e513c89f42",
+      "symbols": {
+        "103:set_flags": {
+          "anchor": "pub fn set_flags(&mut self, flags: PageTableFlags) {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine set_flags("
+            }
+          ]
+        },
+        "109:physical_address_mask": {
+          "anchor": "const fn physical_address_mask() -> u64 {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub const ADDRESS_MASK:"
+            }
+          ]
+        },
+        "115:physical_address_mask": {
+          "anchor": "fn physical_address_mask() -> u64 {",
+          "disposition": "omitted",
+          "reason": "Ambient atomic memory-encryption configuration is outside this explicit default-mask slice; addresses.omg separately supports explicit mask inputs."
+        },
+        "122:default": {
+          "anchor": "fn default() -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust nominal/formatting/conversion scaffolding omitted; raw numeric results and explicit constructors preserve the retained operations."
+        },
+        "128:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust nominal/formatting/conversion scaffolding omitted; raw numeric results and explicit constructors preserve the retained operations."
+        },
+        "139:PageTableFlags": {
+          "anchor": "pub struct PageTableFlags: u64 {",
+          "disposition": "translated",
+          "reason": "Reuses canonical field schema, including software/protection-key fields; no duplicate wrapper or bitflags type.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_page_table_entry.omg",
+              "anchor": "pub data X86PageTableEntry {"
+            }
+          ]
+        },
+        "141:PRESENT": {
+          "anchor": "const PRESENT =         1;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "147:WRITABLE": {
+          "anchor": "const WRITABLE =        1 << 1;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "149:USER_ACCESSIBLE": {
+          "anchor": "const USER_ACCESSIBLE = 1 << 2;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "152:WRITE_THROUGH": {
+          "anchor": "const WRITE_THROUGH =   1 << 3;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "154:NO_CACHE": {
+          "anchor": "const NO_CACHE =        1 << 4;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "156:ACCESSED": {
+          "anchor": "const ACCESSED =        1 << 5;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "158:DIRTY": {
+          "anchor": "const DIRTY =           1 << 6;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "161:HUGE_PAGE": {
+          "anchor": "const HUGE_PAGE =       1 << 7;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "164:GLOBAL": {
+          "anchor": "const GLOBAL =          1 << 8;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "166:BIT_9": {
+          "anchor": "const BIT_9 =           1 << 9;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "168:BIT_10": {
+          "anchor": "const BIT_10 =          1 << 10;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "170:BIT_11": {
+          "anchor": "const BIT_11 =          1 << 11;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "172:BIT_52": {
+          "anchor": "const BIT_52 =          1 << 52;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "174:BIT_53": {
+          "anchor": "const BIT_53 =          1 << 53;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "176:BIT_54": {
+          "anchor": "const BIT_54 =          1 << 54;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "178:BIT_55": {
+          "anchor": "const BIT_55 =          1 << 55;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "180:BIT_56": {
+          "anchor": "const BIT_56 =          1 << 56;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "182:BIT_57": {
+          "anchor": "const BIT_57 =          1 << 57;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "184:BIT_58": {
+          "anchor": "const BIT_58 =          1 << 58;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "186:BIT_59": {
+          "anchor": "const BIT_59 =          1 << 59;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "188:BIT_60": {
+          "anchor": "const BIT_60 =          1 << 60;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "18:FrameError": {
+          "anchor": "pub enum FrameError {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub data FrameResult {"
+            }
+          ]
+        },
+        "190:BIT_61": {
+          "anchor": "const BIT_61 =          1 << 61;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "192:BIT_62": {
+          "anchor": "const BIT_62 =          1 << 62;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "197:NO_EXECUTE": {
+          "anchor": "const NO_EXECUTE =      1 << 63;",
+          "disposition": "translated",
+          "reason": "Pinned flag bit is represented in the existing canonical field(s), decoded and encoded without loss; no redundant flag wrapper. Single-bit fixtures cover every position.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "202:ENTRY_COUNT": {
+          "anchor": "const ENTRY_COUNT: usize = 512;",
+          "disposition": "translated",
+          "reason": "Fixed512entry geometry retained.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_tables.omg",
+              "anchor": "pub const ENTRY_COUNT:"
+            }
+          ]
+        },
+        "216:PageTable": {
+          "anchor": "pub struct PageTable {",
+          "disposition": "translated",
+          "reason": "Canonical core candidate retained; pure helpers borrow its initialized array shape without creating a competing table carrier.",
+          "targets": [
+            {
+              "path": "source/core/x86_page_table.omg",
+              "anchor": "pub data X86PageTablePageCandidate {"
+            }
+          ]
+        },
+        "223:new": {
+          "anchor": "pub const fn new() -> Self {",
+          "disposition": "translated",
+          "reason": "Initialized array operation retained; bounded caller-owned indices replace unsafe pointer iteration and trait indexing. No physical reference is fabricated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_tables.omg",
+              "anchor": "pub machine new_table("
+            }
+          ]
+        },
+        "224:EMPTY": {
+          "anchor": "const EMPTY: PageTableEntry = PageTableEntry::new();",
+          "disposition": "translated",
+          "reason": "Initialized array operation retained; bounded caller-owned indices replace unsafe pointer iteration and trait indexing. No physical reference is fabricated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_tables.omg",
+              "anchor": "pub machine new_table("
+            }
+          ]
+        },
+        "232:zero": {
+          "anchor": "pub fn zero(&mut self) {",
+          "disposition": "translated",
+          "reason": "Initialized array operation retained; bounded caller-owned indices replace unsafe pointer iteration and trait indexing. No physical reference is fabricated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_tables.omg",
+              "anchor": "pub machine zero("
+            }
+          ]
+        },
+        "240:iter": {
+          "anchor": "pub fn iter(&self) -> impl Iterator<Item = &PageTableEntry> {",
+          "disposition": "translated",
+          "reason": "Initialized array operation retained; bounded caller-owned indices replace unsafe pointer iteration and trait indexing. No physical reference is fabricated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_tables.omg",
+              "anchor": "pub machine read_word("
+            }
+          ]
+        },
+        "246:iter_mut": {
+          "anchor": "pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut PageTableEntry> {",
+          "disposition": "translated",
+          "reason": "Initialized array operation retained; bounded caller-owned indices replace unsafe pointer iteration and trait indexing. No physical reference is fabricated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_tables.omg",
+              "anchor": "pub machine write_word("
+            }
+          ]
+        },
+        "267:is_empty": {
+          "anchor": "pub fn is_empty(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Initialized array operation retained; bounded caller-owned indices replace unsafe pointer iteration and trait indexing. No physical reference is fabricated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_tables.omg",
+              "anchor": "pub machine is_empty("
+            }
+          ]
+        },
+        "273:Output": {
+          "anchor": "type Output = PageTableEntry;",
+          "disposition": "omitted",
+          "reason": "Rust presentation/index-trait/default scaffolding replaced by explicit array operations and new_table."
+        },
+        "276:index": {
+          "anchor": "fn index(&self, index: usize) -> &Self::Output {",
+          "disposition": "translated",
+          "reason": "Initialized array operation retained; bounded caller-owned indices replace unsafe pointer iteration and trait indexing. No physical reference is fabricated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_tables.omg",
+              "anchor": "pub machine read_word("
+            }
+          ]
+        },
+        "283:index_mut": {
+          "anchor": "fn index_mut(&mut self, index: usize) -> &mut Self::Output {",
+          "disposition": "translated",
+          "reason": "Initialized array operation retained; bounded caller-owned indices replace unsafe pointer iteration and trait indexing. No physical reference is fabricated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_tables.omg",
+              "anchor": "pub machine write_word("
+            }
+          ]
+        },
+        "289:Output": {
+          "anchor": "type Output = PageTableEntry;",
+          "disposition": "omitted",
+          "reason": "Rust presentation/index-trait/default scaffolding replaced by explicit array operations and new_table."
+        },
+        "28:PHYSICAL_ADDRESS_MASK": {
+          "anchor": "pub(crate) static PHYSICAL_ADDRESS_MASK: AtomicU64 = AtomicU64::new(0x000f_ffff_ffff_f000u64);",
+          "disposition": "omitted",
+          "reason": "Ambient atomic memory-encryption configuration is outside this explicit default-mask slice; addresses.omg separately supports explicit mask inputs."
+        },
+        "292:index": {
+          "anchor": "fn index(&self, index: PageTableIndex) -> &Self::Output {",
+          "disposition": "translated",
+          "reason": "Initialized array operation retained; bounded caller-owned indices replace unsafe pointer iteration and trait indexing. No physical reference is fabricated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_tables.omg",
+              "anchor": "pub machine read_word("
+            }
+          ]
+        },
+        "299:index_mut": {
+          "anchor": "fn index_mut(&mut self, index: PageTableIndex) -> &mut Self::Output {",
+          "disposition": "translated",
+          "reason": "Initialized array operation retained; bounded caller-owned indices replace unsafe pointer iteration and trait indexing. No physical reference is fabricated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_tables.omg",
+              "anchor": "pub machine write_word("
+            }
+          ]
+        },
+        "305:default": {
+          "anchor": "fn default() -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust presentation/index-trait/default scaffolding replaced by explicit array operations and new_table."
+        },
+        "312:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust presentation/index-trait/default scaffolding replaced by explicit array operations and new_table."
+        },
+        "323:PageTableIndex": {
+          "anchor": "pub struct PageTableIndex(u16);",
+          "disposition": "translated",
+          "reason": "Nominal wrapper/level becomes checked explicit numeric input; no unchecked foreign integer establishes semantic membership.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine index_checked("
+            }
+          ]
+        },
+        "328:new": {
+          "anchor": "pub const fn new(index: u16) -> Self {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine index_checked("
+            }
+          ]
+        },
+        "335:new_truncate": {
+          "anchor": "pub const fn new_truncate(index: u16) -> Self {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine index_truncate("
+            }
+          ]
+        },
+        "33:PageTableEntry": {
+          "anchor": "pub struct PageTableEntry {",
+          "disposition": "translated",
+          "reason": "Reuses canonical field schema, including software/protection-key fields; no duplicate wrapper or bitflags type.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_page_table_entry.omg",
+              "anchor": "pub data X86PageTableEntry {"
+            }
+          ]
+        },
+        "340:into_u64": {
+          "anchor": "pub(crate) const fn into_u64(self) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Rust nominal/formatting/conversion scaffolding omitted; raw numeric results and explicit constructors preserve the retained operations."
+        },
+        "347:from": {
+          "anchor": "fn from(index: PageTableIndex) -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust nominal/formatting/conversion scaffolding omitted; raw numeric results and explicit constructors preserve the retained operations."
+        },
+        "354:from": {
+          "anchor": "fn from(index: PageTableIndex) -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust nominal/formatting/conversion scaffolding omitted; raw numeric results and explicit constructors preserve the retained operations."
+        },
+        "361:from": {
+          "anchor": "fn from(index: PageTableIndex) -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust nominal/formatting/conversion scaffolding omitted; raw numeric results and explicit constructors preserve the retained operations."
+        },
+        "368:from": {
+          "anchor": "fn from(index: PageTableIndex) -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust nominal/formatting/conversion scaffolding omitted; raw numeric results and explicit constructors preserve the retained operations."
+        },
+        "376:steps_between": {
+          "anchor": "fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine index_distance("
+            }
+          ]
+        },
+        "381:forward_checked": {
+          "anchor": "fn forward_checked(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine index_step("
+            }
+          ]
+        },
+        "387:backward_checked": {
+          "anchor": "fn backward_checked(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine index_step("
+            }
+          ]
+        },
+        "393:forward_overflowing": {
+          "anchor": "fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine index_overflowing("
+            }
+          ]
+        },
+        "401:backward_overflowing": {
+          "anchor": "fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine index_overflowing("
+            }
+          ]
+        },
+        "40:new": {
+          "anchor": "pub const fn new() -> Self {",
+          "disposition": "translated",
+          "reason": "Zero construction/reset represented by decode(0) and ordinary owned-value replacement; no interior mutable alias.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "415:PageOffset": {
+          "anchor": "pub struct PageOffset(u16);",
+          "disposition": "translated",
+          "reason": "Nominal wrapper/level becomes checked explicit numeric input; no unchecked foreign integer establishes semantic membership.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine offset_checked("
+            }
+          ]
+        },
+        "420:new": {
+          "anchor": "pub fn new(offset: u16) -> Self {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine offset_checked("
+            }
+          ]
+        },
+        "427:new_truncate": {
+          "anchor": "pub const fn new_truncate(offset: u16) -> Self {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine offset_truncate("
+            }
+          ]
+        },
+        "434:from": {
+          "anchor": "fn from(offset: PageOffset) -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust nominal/formatting/conversion scaffolding omitted; raw numeric results and explicit constructors preserve the retained operations."
+        },
+        "441:from": {
+          "anchor": "fn from(offset: PageOffset) -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust nominal/formatting/conversion scaffolding omitted; raw numeric results and explicit constructors preserve the retained operations."
+        },
+        "448:from": {
+          "anchor": "fn from(offset: PageOffset) -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust nominal/formatting/conversion scaffolding omitted; raw numeric results and explicit constructors preserve the retained operations."
+        },
+        "455:from": {
+          "anchor": "fn from(offset: PageOffset) -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust nominal/formatting/conversion scaffolding omitted; raw numeric results and explicit constructors preserve the retained operations."
+        },
+        "462:PageTableLevel": {
+          "anchor": "pub enum PageTableLevel {",
+          "disposition": "translated",
+          "reason": "Nominal wrapper/level becomes checked explicit numeric input; no unchecked foreign integer establishes semantic membership.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine next_level("
+            }
+          ]
+        },
+        "464:One": {
+          "anchor": "One = 1,",
+          "disposition": "translated",
+          "reason": "Nominal wrapper/level becomes checked explicit numeric input; no unchecked foreign integer establishes semantic membership.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine next_level("
+            }
+          ]
+        },
+        "46:is_unused": {
+          "anchor": "pub const fn is_unused(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine is_unused("
+            }
+          ]
+        },
+        "475:next_lower_level": {
+          "anchor": "pub const fn next_lower_level(self) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine next_level("
+            }
+          ]
+        },
+        "485:next_higher_level": {
+          "anchor": "pub const fn next_higher_level(self) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine next_level("
+            }
+          ]
+        },
+        "495:table_address_space_alignment": {
+          "anchor": "pub const fn table_address_space_alignment(self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine level_alignment("
+            }
+          ]
+        },
+        "500:entry_address_space_alignment": {
+          "anchor": "pub const fn entry_address_space_alignment(self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine level_alignment("
+            }
+          ]
+        },
+        "506:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Rust nominal/formatting/conversion scaffolding omitted; raw numeric results and explicit constructors preserve the retained operations."
+        },
+        "511:page_table_index_step_overflowing": {
+          "anchor": "fn page_table_index_step_overflowing() {",
+          "disposition": "translated",
+          "reason": "All four pinned overflowing-step assertions execute against actual Rust and translated Omega bodies, plus extreme-count cases.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-page-entries/generate.py",
+              "anchor": "index_overflowing("
+            }
+          ]
+        },
+        "52:set_unused": {
+          "anchor": "pub fn set_unused(&mut self) {",
+          "disposition": "translated",
+          "reason": "Zero construction/reset represented by decode(0) and ordinary owned-value replacement; no interior mutable alias.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine decode("
+            }
+          ]
+        },
+        "59:flags": {
+          "anchor": "pub const fn flags(&self) -> PageTableFlags {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine flags("
+            }
+          ]
+        },
+        "65:addr": {
+          "anchor": "pub fn addr(&self) -> PhysAddr {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine address("
+            }
+          ]
+        },
+        "77:frame": {
+          "anchor": "pub fn frame(&self) -> Result<PhysFrame, FrameError> {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine frame("
+            }
+          ]
+        },
+        "89:set_addr": {
+          "anchor": "pub fn set_addr(&mut self, addr: PhysAddr, flags: PageTableFlags) {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine set_address("
+            }
+          ]
+        },
+        "96:set_frame": {
+          "anchor": "pub fn set_frame(&mut self, frame: PhysFrame, flags: PageTableFlags) {",
+          "disposition": "translated",
+          "reason": "Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/page_entries.omg",
+              "anchor": "pub machine set_frame("
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/page_tables.omg",
+          "anchor": "module page_tables;"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/paging/page_table.rs",
+      "src/structures/paging/mapper/mod.rs",
+      "src/structures/paging/mapper/mapped_page_table.rs"
+    ],
+    "url": "https://github.com/rust-osdev/x86_64"
+  }
+}

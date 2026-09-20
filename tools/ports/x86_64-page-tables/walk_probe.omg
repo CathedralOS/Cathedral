@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::translation;
+use x86::translation::Translation;
+use x86::translation::CapturedWalk;
+use x86::page_tables;
+use facts::x86_page_table_entry;
+machine check(value: CapturedWalk) -> bool {
+    transition value {
+        CapturedWalk::Result { value } -> translated(value)
+        _ -> (false)
+    }
+    state translated(value: Translation) -> bool {
+        transition value {
+            Translation::Mapped { frame, size, offset, flags } -> check_fields(frame, size, offset, flags)
+            _ -> (false)
+        }
+    }
+    state check_fields(frame:u64,size:u64,offset:u64,flags:u64)->bool {
+        frame == 0x12345000 && size == 4096 && offset == 2748 && flags == 3
+    }
+}
+machine mismatched(value: CapturedWalk) -> bool {
+    transition value {
+        CapturedWalk::MismatchedTable { level, expected_address, supplied_address } -> check_fields(level, expected_address, supplied_address)
+        _ -> (false)
+    }
+    state check_fields(level:u8,expected:u64,supplied:u64)->bool {
+        level == 2 && expected == 8192 && supplied == 4096
+    }
+}
+machine table_result() -> i32 {
+    let mut p4:[X86PageTableEntry;512];
+    let mut p3:[X86PageTableEntry;512];
+    let mut p2:[X86PageTableEntry;512];
+    let mut p1:[X86PageTableEntry;512];
+    let a:bool=page_tables::write_word(&mut p4,292,4097);
+    let b:bool=page_tables::write_word(&mut p3,209,8193);
+    let c:bool=page_tables::write_word(&mut p2,179,12289);
+    let d:bool=page_tables::write_word(&mut p1,393,0x12345003);
+    let result:CapturedWalk=translation::walk_captured(0xffff923456789abc,&p4,&p3,&p2,&p1,4096,8192,12288);
+    let good:bool=check(result);
+    let wrong:CapturedWalk=translation::walk_captured(0xffff923456789abc,&p4,&p3,&p2,&p1,4096,4096,12288);
+    let rejected:bool=mismatched(wrong);
+    transition a && b && c && d && good && rejected { true -> (0) _ -> (1) }
+}
+const RESULT:i32=table_result();
+machine require_success(value:i32) requires value == 0; {}
+data Main{}
+machine Main::main(&mut self){require_success(RESULT);}

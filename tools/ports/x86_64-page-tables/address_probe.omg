@@ -1,0 +1,24 @@
+use x86::translation;
+use x86::translation::Translation;
+use x86::addresses::NumberResult;
+machine equal(result:NumberResult,expected:u64)->bool {
+    transition result { NumberResult::Value { value } -> (value == expected) _ -> (false) }
+}
+machine table_result()->i32 {
+    let mapped:Translation=translation::translate_words(0xdeadbeef,4097,8193,12289,0xcafe0003);
+    let address:NumberResult=translation::translated_address(mapped);
+    let good:bool=equal(address,0xcafe0eef);
+    let absent:NumberResult=translation::translated_address(Translation::NotMapped);
+    let bad_size:NumberResult=translation::translated_address(Translation::Mapped { frame:0,size:0,offset:0,flags:0 });
+    let bad_offset:NumberResult=translation::translated_address(Translation::Mapped { frame:0,size:4096,offset:4096,flags:0 });
+    let bad_frame:NumberResult=translation::translated_address(Translation::Mapped { frame:1,size:4096,offset:0,flags:0 });
+    let too_high:NumberResult=translation::translated_address(Translation::Mapped { frame:4503599627370496,size:4096,offset:0,flags:0 });
+    transition good && absent in NumberResult::Rejected && bad_size in NumberResult::Rejected &&
+        bad_offset in NumberResult::Rejected && bad_frame in NumberResult::Rejected && too_high in NumberResult::Rejected {
+        true -> (0) _ -> (1)
+    }
+}
+const RESULT:i32=table_result();
+machine require_success(value:i32) requires value == 0; {}
+data Main{}
+machine Main::main(&mut self){require_success(RESULT);}

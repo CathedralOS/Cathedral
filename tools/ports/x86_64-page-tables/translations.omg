@@ -1,0 +1,112 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::translation;
+use x86::translation::Translation;
+machine translation_case_0() -> i32 { let result: Translation = translation::translate_words(0, 0, 0, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_1() -> i32 { let result: Translation = translation::translate_words(0, 128, 0, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_2() -> i32 { let result: Translation = translation::translate_words(0, 4225, 0, 0, 0);
+transition result in Translation::InvalidRootHugePage { true -> (0) _ -> (1) } }
+machine translation_case_3() -> i32 { let result: Translation = translation::translate_words(0, 4097, 0, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_4() -> i32 { let result: Translation = translation::translate_words(0, 4097, 128, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_5() -> i32 { let result: Translation = translation::translate_words(0, 4097, 8193, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_6() -> i32 { let result: Translation = translation::translate_words(0, 4097, 8193, 12289, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_7() -> i32 { let result: Translation = translation::translate_words(0, 4097, 8193, 12289, 512);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 0 && size == 4096 && offset == 0 && flags == 512 { true -> (0) _ -> (1) } } }
+machine translation_case_8() -> i32 { let result: Translation = translation::translate_words(0, 4097, 8193, 12289, 3405643779);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 3405643776 && size == 4096 && offset == 0 && flags == 3 { true -> (0) _ -> (1) } } }
+machine translation_case_9() -> i32 { let result: Translation = translation::translate_words(0, 4097, 8193, 12289, 3405643905);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 3405643776 && size == 4096 && offset == 0 && flags == 129 { true -> (0) _ -> (1) } } }
+machine translation_case_10() -> i32 { let result: Translation = translation::translate_words(0, 4097, 1073746049, 0, 0);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 1073741824 && size == 1073741824 && offset == 0 && flags == 129 { true -> (0) _ -> (1) } } }
+machine translation_case_11() -> i32 { let result: Translation = translation::translate_words(0, 4097, 8193, 1075843201, 0);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 1075838976 && size == 2097152 && offset == 0 && flags == 129 { true -> (0) _ -> (1) } } }
+machine translation_case_12() -> i32 { let result: Translation = translation::translate_words(0, 4097, 18446744073709551615, 0, 0);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 4503598553628672 && size == 1073741824 && offset == 0 && flags == 18442240474082185215 { true -> (0) _ -> (1) } } }
+machine translation_case_13() -> i32 { let result: Translation = translation::translate_words(0, 4097, 8193, 18446744073709551615, 0);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 4503599625273344 && size == 2097152 && offset == 0 && flags == 18442240474082185215 { true -> (0) _ -> (1) } } }
+machine translation_case_14() -> i32 { let result: Translation = translation::translate_words(3735928559, 0, 0, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_15() -> i32 { let result: Translation = translation::translate_words(3735928559, 128, 0, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_16() -> i32 { let result: Translation = translation::translate_words(3735928559, 4225, 0, 0, 0);
+transition result in Translation::InvalidRootHugePage { true -> (0) _ -> (1) } }
+machine translation_case_17() -> i32 { let result: Translation = translation::translate_words(3735928559, 4097, 0, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_18() -> i32 { let result: Translation = translation::translate_words(3735928559, 4097, 128, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_19() -> i32 { let result: Translation = translation::translate_words(3735928559, 4097, 8193, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_20() -> i32 { let result: Translation = translation::translate_words(3735928559, 4097, 8193, 12289, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_21() -> i32 { let result: Translation = translation::translate_words(3735928559, 4097, 8193, 12289, 512);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 0 && size == 4096 && offset == 3823 && flags == 512 { true -> (0) _ -> (1) } } }
+machine translation_case_22() -> i32 { let result: Translation = translation::translate_words(3735928559, 4097, 8193, 12289, 3405643779);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 3405643776 && size == 4096 && offset == 3823 && flags == 3 { true -> (0) _ -> (1) } } }
+machine translation_case_23() -> i32 { let result: Translation = translation::translate_words(3735928559, 4097, 8193, 12289, 3405643905);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 3405643776 && size == 4096 && offset == 3823 && flags == 129 { true -> (0) _ -> (1) } } }
+machine translation_case_24() -> i32 { let result: Translation = translation::translate_words(3735928559, 4097, 1073746049, 0, 0);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 1073741824 && size == 1073741824 && offset == 514703087 && flags == 129 { true -> (0) _ -> (1) } } }
+machine translation_case_25() -> i32 { let result: Translation = translation::translate_words(3735928559, 4097, 8193, 1075843201, 0);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 1075838976 && size == 2097152 && offset == 900847 && flags == 129 { true -> (0) _ -> (1) } } }
+machine translation_case_26() -> i32 { let result: Translation = translation::translate_words(3735928559, 4097, 18446744073709551615, 0, 0);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 4503598553628672 && size == 1073741824 && offset == 514703087 && flags == 18442240474082185215 { true -> (0) _ -> (1) } } }
+machine translation_case_27() -> i32 { let result: Translation = translation::translate_words(3735928559, 4097, 8193, 18446744073709551615, 0);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 4503599625273344 && size == 2097152 && offset == 900847 && flags == 18442240474082185215 { true -> (0) _ -> (1) } } }
+machine translation_case_28() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 0, 0, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_29() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 128, 0, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_30() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 4225, 0, 0, 0);
+transition result in Translation::InvalidRootHugePage { true -> (0) _ -> (1) } }
+machine translation_case_31() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 4097, 0, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_32() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 4097, 128, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_33() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 4097, 8193, 0, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_34() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 4097, 8193, 12289, 0);
+transition result in Translation::NotMapped { true -> (0) _ -> (1) } }
+machine translation_case_35() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 4097, 8193, 12289, 512);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 0 && size == 4096 && offset == 2748 && flags == 512 { true -> (0) _ -> (1) } } }
+machine translation_case_36() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 4097, 8193, 12289, 3405643779);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 3405643776 && size == 4096 && offset == 2748 && flags == 3 { true -> (0) _ -> (1) } } }
+machine translation_case_37() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 4097, 8193, 12289, 3405643905);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 3405643776 && size == 4096 && offset == 2748 && flags == 129 { true -> (0) _ -> (1) } } }
+machine translation_case_38() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 4097, 1073746049, 0, 0);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 1073741824 && size == 1073741824 && offset == 377002684 && flags == 129 { true -> (0) _ -> (1) } } }
+machine translation_case_39() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 4097, 8193, 1075843201, 0);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 1075838976 && size == 2097152 && offset == 1612476 && flags == 129 { true -> (0) _ -> (1) } } }
+machine translation_case_40() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 4097, 18446744073709551615, 0, 0);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 4503598553628672 && size == 1073741824 && offset == 377002684 && flags == 18442240474082185215 { true -> (0) _ -> (1) } } }
+machine translation_case_41() -> i32 { let result: Translation = translation::translate_words(18446623352219540156, 4097, 8193, 18446744073709551615, 0);
+transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }
+state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition frame == 4503599625273344 && size == 2097152 && offset == 1612476 && flags == 18442240474082185215 { true -> (0) _ -> (1) } } }
+machine translation_case_42() -> i32 { let result: Translation = translation::translate_words(140737488355328, 4097, 8193, 12289, 1);
+transition result in Translation::InvalidVirtual { true -> (0) _ -> (1) } }
+data Main{}
+machine Main::main(&mut self){}

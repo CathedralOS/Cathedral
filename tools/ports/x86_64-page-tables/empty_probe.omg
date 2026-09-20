@@ -1,0 +1,7 @@
+use x86::page_tables;
+use facts::x86_page_table_entry;
+machine table_result() -> i32 { let table: [X86PageTableEntry;512]=page_tables::new_table(); let empty: bool=page_tables::is_empty(&table); transition empty { true -> (0) _ -> (1) } }
+const RESULT:i32=table_result();
+machine require_success(value:i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self){require_success(RESULT);}

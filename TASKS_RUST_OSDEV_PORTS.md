@@ -217,6 +217,10 @@ checkboxes stay open. The [PTE codec slice](source/libraries/x86_64/page-entries
 reuses the canonical entry schema: 151 Omega scenarios, 143 actual Rust
 witnesses and three body mutations pass. The modernized layout canary demands
 all fourteen fields through the existing bit policy; native ABI is not measured.
+The [detached table slice](source/libraries/x86_64/tables.PORT.md) adds full-array
+operations and captured translation: 42 actual Rust mapper calls, 43 Omega
+translation scenarios, six table/address fixtures and six body mutations pass.
+Map/unmap/update/cleanup and live ownership/invalidation integration remain open.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::page_tables;
+use x86::addresses::NumberResult;
+use facts::x86_page_table_entry;
+machine equal(result: NumberResult, expected: u64) -> bool {
+    transition result { NumberResult::Value { value } -> (value == expected) _ -> (false) }
+}
+machine table_result() -> i32 {
+    let mut table: [X86PageTableEntry;512];
+    let written: bool=page_tables::write_word(&mut table,511,0x8000000000000000);
+    let empty: bool=page_tables::is_empty(&table);
+    transition written && !empty { true -> (0) _ -> (1) }
+}
+const RESULT: i32 = table_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(RESULT); }

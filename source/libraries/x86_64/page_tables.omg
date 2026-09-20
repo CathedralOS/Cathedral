@@ -1,0 +1,65 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified detached PageTable operations from x86_64 cc35c876d3badb57df54a66e22f7768a52be95f2.
+// Borrowed initialized arrays reuse the existing semantic PTE schema. No table
+// placement, frame ownership, mapping, alias permission or invalidation grant.
+module page_tables;
+use facts::x86_page_table_entry;
+use page_entries;
+use addresses::NumberResult;
+
+pub const ENTRY_COUNT: u64 = 512;
+pub machine new_table() -> [X86PageTableEntry; 512] {
+    let table: [X86PageTableEntry; 512];
+    table
+}
+
+pub machine read_word(table: &[X86PageTableEntry; 512], index: u64) -> NumberResult {
+    transition index < 512 { true -> read(table, index) _ -> (NumberResult::Rejected) }
+    state read(table: &[X86PageTableEntry; 512], index: u64) -> NumberResult {
+        let word: u64 = page_entries::encode(&table[index]);
+        NumberResult::Value { value: word }
+    }
+}
+pub machine write_word(table: &mut [X86PageTableEntry; 512], index: u64, word: u64) -> bool {
+    transition index < 512 { true -> write(table, index, word) _ -> (false) }
+    state write(table: &mut [X86PageTableEntry; 512], index: u64, word: u64) -> bool {
+        table[index] = page_entries::decode(word);
+        true
+    }
+}
+pub machine is_empty(table: &[X86PageTableEntry; 512]) -> bool {
+    scan(table, 0, 512)
+}
+machine scan(table: &[X86PageTableEntry; 512], index: u64, end: u64)
+terminates by (index, end) -> Nat::BoundedDistance;
+-> bool {
+    let empty: bool = slot_empty(table, index);
+    transition {
+        !empty -> (false)
+        index < end -> scan(table, index + 1, end)
+        _ -> (true)
+    }
+}
+machine slot_empty(table: &[X86PageTableEntry; 512], index: u64) -> bool {
+    transition index < 512 {
+        true -> inspect(table, index)
+        _ -> (true)
+    }
+    state inspect(table: &[X86PageTableEntry; 512], index: u64) -> bool {
+        let empty: bool = page_entries::is_unused(&table[index]);
+        empty
+    }
+}
+pub machine zero(table: &mut [X86PageTableEntry; 512]) {
+    clear(table, 0, 512);
+}
+machine clear(table: &mut [X86PageTableEntry; 512], index: u64, end: u64)
+terminates by (index, end) -> Nat::BoundedDistance;
+{
+    let changed: bool = write_word(table, index, 0);
+    transition index < end {
+        true -> clear(table, index + 1, end)
+        _ -> done()
+    }
+    state done() {}
+}
