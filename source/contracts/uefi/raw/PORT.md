@@ -11,6 +11,7 @@ source inventory, vectors, verification commands, and deviations.
 | Scalars and pure scalar helpers | [Tested by Omega semantic evaluation](scalars.PORT.md) |
 | Complete boot/runtime/system table declarations | [Typechecked; semantic fixture tested; full plan reflection blocked](tables.PORT.md) |
 | Console, image loading, and device paths | [Semantic helpers tested; fixed policies typechecked; dynamic tails blocked](console.PORT.md) |
+| Display, PCI/USB, and machine protocols | [Typechecked; 325 upstream representation vectors verified](machine.PORT.md) |
 | TCG v1/v2 measured-boot representations | [Typechecked; upstream ABI vectors verified](tcg.PORT.md) |
 
 Stages apply to individual slices, not the entire upstream crate. The package

@@ -1,0 +1,3067 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/uefi-rs",
+    "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a",
+    "roots": [
+      "uefi-raw/src/protocol/pci/mod.rs",
+      "uefi-raw/src/protocol/pci/root_bridge.rs",
+      "uefi-raw/src/protocol/usb/mod.rs",
+      "uefi-raw/src/protocol/usb/io.rs",
+      "uefi-raw/src/protocol/usb/host_controller.rs",
+      "uefi-raw/src/protocol/iommu.rs",
+      "uefi-raw/src/protocol/rng.rs",
+      "uefi-raw/src/protocol/acpi.rs",
+      "uefi-raw/src/protocol/memory_protection.rs",
+      "uefi-raw/src/protocol/misc.rs",
+      "uefi-raw/src/protocol/driver.rs",
+      "uefi-raw/src/protocol/string.rs"
+    ]
+  },
+  "files": {
+    "uefi-raw/src/protocol/acpi.rs": {
+      "sha256": "151e06ede7b2d59364b71686ebbbc5855958ceadc778a7eca2503a2e9b2584f8",
+      "disposition": "translated",
+      "symbols": {
+        "8:AcpiTableProtocol": {
+          "anchor": "pub struct AcpiTableProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data AcpiTableProtocol "
+            }
+          ]
+        },
+        "9:install_acpi_table": {
+          "anchor": "pub install_acpi_table: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "install_acpi_table:"
+            }
+          ]
+        },
+        "15:uninstall_acpi_table": {
+          "anchor": "pub uninstall_acpi_table:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "uninstall_acpi_table:"
+            }
+          ]
+        },
+        "20:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"ffe06bdd-6107-46a6-7bb2-5a9c7ec5275c\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const ACPI_TABLE_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/machine_protocols.omg",
+          "anchor": "module machine_protocols;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/driver.rs": {
+      "sha256": "3482958cbc7960c79916b9ae02249c56c58e1d4031814086c748ee2d4e72d03d",
+      "disposition": "translated",
+      "symbols": {
+        "8:DriverBindingProtocol": {
+          "anchor": "pub struct DriverBindingProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data DriverBindingProtocol "
+            }
+          ]
+        },
+        "9:supported": {
+          "anchor": "pub supported: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "supported:"
+            }
+          ]
+        },
+        "14:start": {
+          "anchor": "pub start: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "start:"
+            }
+          ]
+        },
+        "19:stop": {
+          "anchor": "pub stop: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "stop:"
+            }
+          ]
+        },
+        "25:version": {
+          "anchor": "pub version: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "version:"
+            }
+          ]
+        },
+        "26:image_handle": {
+          "anchor": "pub image_handle: Handle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "image_handle:"
+            }
+          ]
+        },
+        "27:driver_binding_handle": {
+          "anchor": "pub driver_binding_handle: Handle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "driver_binding_handle:"
+            }
+          ]
+        },
+        "31:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"18a031ab-b443-4d1a-a5c0-0c09261e9f71\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const DRIVER_BINDING_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "36:ComponentName2Protocol": {
+          "anchor": "pub struct ComponentName2Protocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data ComponentName2Protocol "
+            }
+          ]
+        },
+        "37:get_driver_name": {
+          "anchor": "pub get_driver_name: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_driver_name:"
+            }
+          ]
+        },
+        "42:get_controller_name": {
+          "anchor": "pub get_controller_name: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_controller_name:"
+            }
+          ]
+        },
+        "49:supported_languages": {
+          "anchor": "pub supported_languages: *const u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "supported_languages:"
+            }
+          ]
+        },
+        "53:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"6a7a5cff-e8d9-4f70-bada-75ab3025ce14\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const COMPONENT_NAME2_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "60:DEPRECATED_COMPONENT_NAME_GUID": {
+          "anchor": "pub const DEPRECATED_COMPONENT_NAME_GUID: Guid = guid!(\"107a772c-d5e1-11d4-9a46-0090273fc14d\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const COMPONENT_NAME2_PROTOCOL_DEPRECATED_COMPONENT_NAME_GUID:"
+            }
+          ]
+        },
+        "65:ServiceBindingProtocol": {
+          "anchor": "pub struct ServiceBindingProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data ServiceBindingProtocol "
+            }
+          ]
+        },
+        "66:create_child": {
+          "anchor": "pub create_child:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "create_child:"
+            }
+          ]
+        },
+        "68:destroy_child": {
+          "anchor": "pub destroy_child: unsafe extern \"efiapi\" fn(this: *mut Self, child_handle: Handle) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "destroy_child:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/machine_protocols.omg",
+          "anchor": "module machine_protocols;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/iommu.rs": {
+      "sha256": "26a9b198163112a96911cfdd2338b94b3a27985bb8cd32eb1d5a89802beddaba",
+      "disposition": "translated",
+      "symbols": {
+        "12:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"4e939de9-d948-4b0f-88ed-e6e1ce517c1e\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "17:EdkiiIommuProtocol": {
+          "anchor": "pub struct EdkiiIommuProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data EdkiiIommuProtocol "
+            }
+          ]
+        },
+        "18:revision": {
+          "anchor": "pub revision: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "revision:"
+            }
+          ]
+        },
+        "19:set_attribute": {
+          "anchor": "pub set_attribute: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "set_attribute:"
+            }
+          ]
+        },
+        "25:map": {
+          "anchor": "pub map: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "map:"
+            }
+          ]
+        },
+        "33:unmap": {
+          "anchor": "pub unmap: unsafe extern \"efiapi\" fn(this: *const Self, mapping: *const c_void) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "unmap:"
+            }
+          ]
+        },
+        "34:allocate_buffer": {
+          "anchor": "pub allocate_buffer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "allocate_buffer:"
+            }
+          ]
+        },
+        "42:free_buffer": {
+          "anchor": "pub free_buffer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "free_buffer:"
+            }
+          ]
+        },
+        "51:EdkiiIommuOperation": {
+          "anchor": "pub enum EdkiiIommuOperation: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data EdkiiIommuOperation "
+            }
+          ]
+        },
+        "53:BUS_MASTER_READ": {
+          "anchor": "BUS_MASTER_READ = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_OPERATION_BUS_MASTER_READ:"
+            }
+          ]
+        },
+        "55:BUS_MASTER_WRITE": {
+          "anchor": "BUS_MASTER_WRITE = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_OPERATION_BUS_MASTER_WRITE:"
+            }
+          ]
+        },
+        "57:BUS_MASTER_COMMON_BUFFER": {
+          "anchor": "BUS_MASTER_COMMON_BUFFER = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_OPERATION_BUS_MASTER_COMMON_BUFFER:"
+            }
+          ]
+        },
+        "59:BUS_MASTER_READ64": {
+          "anchor": "BUS_MASTER_READ64 = 3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_OPERATION_BUS_MASTER_READ64:"
+            }
+          ]
+        },
+        "61:BUS_MASTER_WRITE64": {
+          "anchor": "BUS_MASTER_WRITE64 = 4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_OPERATION_BUS_MASTER_WRITE64:"
+            }
+          ]
+        },
+        "63:BUS_MASTER_COMMON_BUFFER64": {
+          "anchor": "BUS_MASTER_COMMON_BUFFER64 = 5,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_OPERATION_BUS_MASTER_COMMON_BUFFER64:"
+            }
+          ]
+        },
+        "65:MAXIMUM": {
+          "anchor": "MAXIMUM = 6,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_OPERATION_MAXIMUM:"
+            }
+          ]
+        },
+        "70:EDKII_IOMMU_PROTOCOL_REVISION": {
+          "anchor": "pub const EDKII_IOMMU_PROTOCOL_REVISION: u64 = 0x0001_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_PROTOCOL_REVISION:"
+            }
+          ]
+        },
+        "76:EdkiiIommuAttribute": {
+          "anchor": "pub struct EdkiiIommuAttribute: u64 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data EdkiiIommuAttribute "
+            }
+          ]
+        },
+        "78:MEMORY_WRITE_COMBINE": {
+          "anchor": "const MEMORY_WRITE_COMBINE   = 0x0080;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_ATTRIBUTE_MEMORY_WRITE_COMBINE:"
+            }
+          ]
+        },
+        "80:MEMORY_CACHED": {
+          "anchor": "const MEMORY_CACHED          = 0x0800;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_ATTRIBUTE_MEMORY_CACHED:"
+            }
+          ]
+        },
+        "82:DUAL_ADDRESS_CYCLE": {
+          "anchor": "const DUAL_ADDRESS_CYCLE     = 0x8000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_ATTRIBUTE_DUAL_ADDRESS_CYCLE:"
+            }
+          ]
+        },
+        "88:VALID_FOR_ALLOCATE_BUFFER": {
+          "anchor": "pub const VALID_FOR_ALLOCATE_BUFFER: Self = Self::from_bits_truncate(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_ATTRIBUTE_VALID_FOR_ALLOCATE_BUFFER:"
+            }
+          ]
+        },
+        "95:INVALID_FOR_ALLOCATE_BUFFER": {
+          "anchor": "pub const INVALID_FOR_ALLOCATE_BUFFER: Self =",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_ATTRIBUTE_INVALID_FOR_ALLOCATE_BUFFER:"
+            }
+          ]
+        },
+        "103:EdkiiIommuAccess": {
+          "anchor": "pub struct EdkiiIommuAccess: u64 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data EdkiiIommuAccess "
+            }
+          ]
+        },
+        "105:READ": {
+          "anchor": "const READ  = 0x1;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_ACCESS_READ:"
+            }
+          ]
+        },
+        "107:WRITE": {
+          "anchor": "const WRITE = 0x2;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const EDKII_IOMMU_ACCESS_WRITE:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/machine_protocols.omg",
+          "anchor": "module machine_protocols;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/memory_protection.rs": {
+      "sha256": "fc34714da247c998d49ae6583fd288894001ef2729fda2a1e1d738c01f98967f",
+      "disposition": "translated",
+      "symbols": {
+        "8:MemoryAttributeProtocol": {
+          "anchor": "pub struct MemoryAttributeProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data MemoryAttributeProtocol "
+            }
+          ]
+        },
+        "9:get_memory_attributes": {
+          "anchor": "pub get_memory_attributes: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_memory_attributes:"
+            }
+          ]
+        },
+        "16:set_memory_attributes": {
+          "anchor": "pub set_memory_attributes: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "set_memory_attributes:"
+            }
+          ]
+        },
+        "23:clear_memory_attributes": {
+          "anchor": "pub clear_memory_attributes: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "clear_memory_attributes:"
+            }
+          ]
+        },
+        "32:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"f4560cf6-40ec-4b4a-a192-bf1d57d0b189\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/machine_protocols.omg",
+          "anchor": "module machine_protocols;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/misc.rs": {
+      "sha256": "0988a70511e5b1a0278ed5dff646d05f874f2ff4b4cf8a644de2da5117d25825",
+      "disposition": "translated",
+      "symbols": {
+        "8:TimestampProtocol": {
+          "anchor": "pub struct TimestampProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data TimestampProtocol "
+            }
+          ]
+        },
+        "9:get_timestamp": {
+          "anchor": "pub get_timestamp: unsafe extern \"efiapi\" fn() -> u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_timestamp:"
+            }
+          ]
+        },
+        "10:get_properties": {
+          "anchor": "pub get_properties: unsafe extern \"efiapi\" fn(*mut TimestampProperties) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_properties:"
+            }
+          ]
+        },
+        "14:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"afbfde41-2e6e-4262-ba65-62b9236e5495\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const TIMESTAMP_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "20:TimestampProperties": {
+          "anchor": "pub struct TimestampProperties {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data TimestampProperties "
+            }
+          ]
+        },
+        "22:frequency": {
+          "anchor": "pub frequency: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "frequency:"
+            }
+          ]
+        },
+        "26:end_value": {
+          "anchor": "pub end_value: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "end_value:"
+            }
+          ]
+        },
+        "32:ResetNotificationProtocol": {
+          "anchor": "pub struct ResetNotificationProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data ResetNotificationProtocol "
+            }
+          ]
+        },
+        "33:register_reset_notify": {
+          "anchor": "pub register_reset_notify:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "register_reset_notify:"
+            }
+          ]
+        },
+        "35:unregister_reset_notify": {
+          "anchor": "pub unregister_reset_notify:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "unregister_reset_notify:"
+            }
+          ]
+        },
+        "40:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"9da34ae0-eaf9-4bbf-8ec3-fd60226c44be\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RESET_NOTIFICATION_PROTOCOL_GUID:"
+            }
+          ]
+        },
+        "44:ResetSystemFn": {
+          "anchor": "pub type ResetSystemFn = unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data ResetSystemFn "
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/machine_protocols.omg",
+          "anchor": "module machine_protocols;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/pci/mod.rs": {
+      "sha256": "fbffc428043fabad36fcdad58000adc4aee2fc6af18aa8c94d182d91c943980d",
+      "disposition": "translated",
+      "symbols": {
+        "3:root_bridge": {
+          "anchor": "pub mod root_bridge;",
+          "disposition": "omitted",
+          "reason": "Rust module organization flattened into machine_protocols."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/machine_protocols.omg",
+          "anchor": "module machine_protocols;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/pci/root_bridge.rs": {
+      "sha256": "c36fdfaf791cba3e31fd5029d792c96ac58bd45668962037d8662a9bce7bf394",
+      "disposition": "translated",
+      "symbols": {
+        "11:PciRootBridgeIoProtocolWidth": {
+          "anchor": "pub enum PciRootBridgeIoProtocolWidth: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data PciRootBridgeIoProtocolWidth "
+            }
+          ]
+        },
+        "12:UINT8": {
+          "anchor": "UINT8 = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_UINT8:"
+            }
+          ]
+        },
+        "13:UINT16": {
+          "anchor": "UINT16 = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_UINT16:"
+            }
+          ]
+        },
+        "14:UINT32": {
+          "anchor": "UINT32 = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_UINT32:"
+            }
+          ]
+        },
+        "15:UINT64": {
+          "anchor": "UINT64 = 3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_UINT64:"
+            }
+          ]
+        },
+        "16:FIFO_UINT8": {
+          "anchor": "FIFO_UINT8 = 4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FIFO_UINT8:"
+            }
+          ]
+        },
+        "17:FIFO_UINT16": {
+          "anchor": "FIFO_UINT16 = 5,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FIFO_UINT16:"
+            }
+          ]
+        },
+        "18:FIFO_UINT32": {
+          "anchor": "FIFO_UINT32 = 6,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FIFO_UINT32:"
+            }
+          ]
+        },
+        "19:FIFO_UINT64": {
+          "anchor": "FIFO_UINT64 = 7,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FIFO_UINT64:"
+            }
+          ]
+        },
+        "20:FILL_UINT8": {
+          "anchor": "FILL_UINT8 = 8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FILL_UINT8:"
+            }
+          ]
+        },
+        "21:FILL_UINT16": {
+          "anchor": "FILL_UINT16 = 9,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FILL_UINT16:"
+            }
+          ]
+        },
+        "22:FILL_UINT32": {
+          "anchor": "FILL_UINT32 = 10,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FILL_UINT32:"
+            }
+          ]
+        },
+        "23:FILL_UINT64": {
+          "anchor": "FILL_UINT64 = 11,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FILL_UINT64:"
+            }
+          ]
+        },
+        "24:MAXIMUM": {
+          "anchor": "MAXIMUM = 12,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_MAXIMUM:"
+            }
+          ]
+        },
+        "30:PciRootBridgeIoProtocolOperation": {
+          "anchor": "pub enum PciRootBridgeIoProtocolOperation: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data PciRootBridgeIoProtocolOperation "
+            }
+          ]
+        },
+        "31:BUS_MASTER_READ": {
+          "anchor": "BUS_MASTER_READ = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_BUS_MASTER_READ:"
+            }
+          ]
+        },
+        "32:BUS_MASTER_WRITE": {
+          "anchor": "BUS_MASTER_WRITE = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_BUS_MASTER_WRITE:"
+            }
+          ]
+        },
+        "33:BUS_MASTER_COMMON_BUFFER": {
+          "anchor": "BUS_MASTER_COMMON_BUFFER = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_BUS_MASTER_COMMON_BUFFER:"
+            }
+          ]
+        },
+        "34:BUS_MASTER_READ64": {
+          "anchor": "BUS_MASTER_READ64 = 3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_BUS_MASTER_READ64:"
+            }
+          ]
+        },
+        "35:BUS_MASTER_WRITE64": {
+          "anchor": "BUS_MASTER_WRITE64 = 4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_BUS_MASTER_WRITE64:"
+            }
+          ]
+        },
+        "36:BUS_MASTER_COMMON_BUFFER64": {
+          "anchor": "BUS_MASTER_COMMON_BUFFER64 = 5,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_BUS_MASTER_COMMON_BUFFER64:"
+            }
+          ]
+        },
+        "37:MAXIMUM": {
+          "anchor": "MAXIMUM = 6,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_MAXIMUM:"
+            }
+          ]
+        },
+        "45:PciRootBridgeIoProtocolAttributes": {
+          "anchor": "pub struct PciRootBridgeIoProtocolAttributes: u64 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data PciRootBridgeIoProtocolAttributes "
+            }
+          ]
+        },
+        "46:EFI_PCI_ATTRIBUTE_ISA_MOTHERBOARD_IO": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_ISA_MOTHERBOARD_IO = 0x0001;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_ISA_MOTHERBOARD_IO:"
+            }
+          ]
+        },
+        "47:EFI_PCI_ATTRIBUTE_ISA_IO": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_ISA_IO = 0x0002;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_ISA_IO:"
+            }
+          ]
+        },
+        "48:EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO = 0x0004;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO:"
+            }
+          ]
+        },
+        "49:EFI_PCI_ATTRIBUTE_VGA_MEMORY": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_VGA_MEMORY = 0x0008;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_VGA_MEMORY:"
+            }
+          ]
+        },
+        "50:EFI_PCI_ATTRIBUTE_VGA_IO": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_VGA_IO = 0x0010;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_VGA_IO:"
+            }
+          ]
+        },
+        "51:EFI_PCI_ATTRIBUTE_IDE_PRIMARY_IO": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_IDE_PRIMARY_IO = 0x0020;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_IDE_PRIMARY_IO:"
+            }
+          ]
+        },
+        "52:EFI_PCI_ATTRIBUTE_IDE_SECONDARY_IO": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_IDE_SECONDARY_IO = 0x0040;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_IDE_SECONDARY_IO:"
+            }
+          ]
+        },
+        "53:EFI_PCI_ATTRIBUTE_MEMORY_WRITE_COMBINE": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_MEMORY_WRITE_COMBINE = 0x0080;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_MEMORY_WRITE_COMBINE:"
+            }
+          ]
+        },
+        "54:EFI_PCI_ATTRIBUTE_MEMORY_CACHED": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_MEMORY_CACHED = 0x0800;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_MEMORY_CACHED:"
+            }
+          ]
+        },
+        "55:EFI_PCI_ATTRIBUTE_MEMORY_DISABLE": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_MEMORY_DISABLE = 0x1000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_MEMORY_DISABLE:"
+            }
+          ]
+        },
+        "56:EFI_PCI_ATTRIBUTE_DUAL_ADDRESS_CYCLE": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_DUAL_ADDRESS_CYCLE = 0x8000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_DUAL_ADDRESS_CYCLE:"
+            }
+          ]
+        },
+        "57:EFI_PCI_ATTRIBUTE_ISA_IO_16": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_ISA_IO_16 = 0x10000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_ISA_IO_16:"
+            }
+          ]
+        },
+        "58:EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO_16": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO_16 = 0x20000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO_16:"
+            }
+          ]
+        },
+        "59:EFI_PCI_ATTRIBUTE_VGA_IO_16": {
+          "anchor": "const EFI_PCI_ATTRIBUTE_VGA_IO_16 = 0x40000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_VGA_IO_16:"
+            }
+          ]
+        },
+        "65:PciRootBridgeIoAccess": {
+          "anchor": "pub struct PciRootBridgeIoAccess {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data PciRootBridgeIoAccess "
+            }
+          ]
+        },
+        "66:read": {
+          "anchor": "pub read: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "read:"
+            }
+          ]
+        },
+        "73:write": {
+          "anchor": "pub write: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "write:"
+            }
+          ]
+        },
+        "84:PciRootBridgeIoProtocol": {
+          "anchor": "pub struct PciRootBridgeIoProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data PciRootBridgeIoProtocol "
+            }
+          ]
+        },
+        "85:parent_handle": {
+          "anchor": "pub parent_handle: Handle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "parent_handle:"
+            }
+          ]
+        },
+        "86:poll_mem": {
+          "anchor": "pub poll_mem: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "poll_mem:"
+            }
+          ]
+        },
+        "95:poll_io": {
+          "anchor": "pub poll_io: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "poll_io:"
+            }
+          ]
+        },
+        "104:mem": {
+          "anchor": "pub mem: PciRootBridgeIoAccess,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "mem:"
+            }
+          ]
+        },
+        "105:io": {
+          "anchor": "pub io: PciRootBridgeIoAccess,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "io:"
+            }
+          ]
+        },
+        "106:pci": {
+          "anchor": "pub pci: PciRootBridgeIoAccess,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pci:"
+            }
+          ]
+        },
+        "107:copy_mem": {
+          "anchor": "pub copy_mem: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "copy_mem:"
+            }
+          ]
+        },
+        "114:map": {
+          "anchor": "pub map: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "map:"
+            }
+          ]
+        },
+        "122:unmap": {
+          "anchor": "pub unmap: unsafe extern \"efiapi\" fn(this: *const Self, mapping: *const c_void) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "unmap:"
+            }
+          ]
+        },
+        "123:allocate_buffer": {
+          "anchor": "pub allocate_buffer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "allocate_buffer:"
+            }
+          ]
+        },
+        "131:free_buffer": {
+          "anchor": "pub free_buffer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "free_buffer:"
+            }
+          ]
+        },
+        "136:flush": {
+          "anchor": "pub flush: unsafe extern \"efiapi\" fn(this: *mut Self) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "flush:"
+            }
+          ]
+        },
+        "137:get_attributes": {
+          "anchor": "pub get_attributes: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_attributes:"
+            }
+          ]
+        },
+        "142:set_attributes": {
+          "anchor": "pub set_attributes: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "set_attributes:"
+            }
+          ]
+        },
+        "148:configuration": {
+          "anchor": "pub configuration:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "configuration:"
+            }
+          ]
+        },
+        "150:segment_number": {
+          "anchor": "pub segment_number: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "segment_number:"
+            }
+          ]
+        },
+        "154:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"2f707ebb-4a1a-11d4-9a38-0090273fc14d\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/machine_protocols.omg",
+          "anchor": "module machine_protocols;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/rng.rs": {
+      "sha256": "045b790e1af2c94f064c055098684019b123440264051d19a4da67853c075f86",
+      "disposition": "translated",
+      "symbols": {
+        "10:RngAlgorithmType": {
+          "anchor": "pub enum RngAlgorithmType: Guid => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data RngAlgorithmType "
+            }
+          ]
+        },
+        "13:EMPTY_ALGORITHM": {
+          "anchor": "EMPTY_ALGORITHM = guid!(\"00000000-0000-0000-0000-000000000000\"),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RNG_ALGORITHM_TYPE_EMPTY_ALGORITHM:"
+            }
+          ]
+        },
+        "18:ALGORITHM_RAW": {
+          "anchor": "ALGORITHM_RAW = guid!(\"e43176d7-b6e8-4827-b784-7ffdc4b68561\"),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RNG_ALGORITHM_TYPE_ALGORITHM_RAW:"
+            }
+          ]
+        },
+        "21:ALGORITHM_SP800_90_HASH_256": {
+          "anchor": "ALGORITHM_SP800_90_HASH_256 = guid!(\"a7af67cb-603b-4d42-ba21-70bfb6293f96\"),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RNG_ALGORITHM_TYPE_ALGORITHM_SP800_90_HASH_256:"
+            }
+          ]
+        },
+        "24:ALGORITHM_SP800_90_HMAC_256": {
+          "anchor": "ALGORITHM_SP800_90_HMAC_256 = guid!(\"c5149b43-ae85-4f53-9982-b94335d3a9e7\"),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RNG_ALGORITHM_TYPE_ALGORITHM_SP800_90_HMAC_256:"
+            }
+          ]
+        },
+        "27:ALGORITHM_SP800_90_CTR_256": {
+          "anchor": "ALGORITHM_SP800_90_CTR_256 = guid!(\"44f0de6e-4d8c-4045-a8c7-4dd168856b9e\"),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RNG_ALGORITHM_TYPE_ALGORITHM_SP800_90_CTR_256:"
+            }
+          ]
+        },
+        "30:ALGORITHM_X9_31_3DES": {
+          "anchor": "ALGORITHM_X9_31_3DES = guid!(\"63c4785a-ca34-4012-a3c8-0b6a324f5546\"),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RNG_ALGORITHM_TYPE_ALGORITHM_X9_31_3DES:"
+            }
+          ]
+        },
+        "33:ALGORITHM_X9_31_AES": {
+          "anchor": "ALGORITHM_X9_31_AES = guid!(\"acd03321-777e-4d3d-b1c8-20cfd88820c9\"),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RNG_ALGORITHM_TYPE_ALGORITHM_X9_31_AES:"
+            }
+          ]
+        },
+        "40:RngProtocol": {
+          "anchor": "pub struct RngProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data RngProtocol "
+            }
+          ]
+        },
+        "41:get_info": {
+          "anchor": "pub get_info: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_info:"
+            }
+          ]
+        },
+        "47:get_rng": {
+          "anchor": "pub get_rng: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_rng:"
+            }
+          ]
+        },
+        "56:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"3152bca5-eade-433d-862e-c01cdc291f44\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RNG_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/machine_protocols.omg",
+          "anchor": "module machine_protocols;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/string.rs": {
+      "sha256": "7bc8f117619f6b7d9db974da6ce90efa37eb4271a677ca7e38043b56fffecedf",
+      "disposition": "translated",
+      "symbols": {
+        "7:UnicodeCollationProtocol": {
+          "anchor": "pub struct UnicodeCollationProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data UnicodeCollationProtocol "
+            }
+          ]
+        },
+        "8:stri_coll": {
+          "anchor": "pub stri_coll:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "stri_coll:"
+            }
+          ]
+        },
+        "10:metai_match": {
+          "anchor": "pub metai_match: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "metai_match:"
+            }
+          ]
+        },
+        "15:str_lwr": {
+          "anchor": "pub str_lwr: unsafe extern \"efiapi\" fn(this: *const Self, s: *mut Char16),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "str_lwr:"
+            }
+          ]
+        },
+        "16:str_upr": {
+          "anchor": "pub str_upr: unsafe extern \"efiapi\" fn(this: *const Self, s: *mut Char16),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "str_upr:"
+            }
+          ]
+        },
+        "17:fat_to_str": {
+          "anchor": "pub fat_to_str: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "fat_to_str:"
+            }
+          ]
+        },
+        "23:str_to_fat": {
+          "anchor": "pub str_to_fat: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "str_to_fat:"
+            }
+          ]
+        },
+        "29:supported_languages": {
+          "anchor": "pub supported_languages: *const Char8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "supported_languages:"
+            }
+          ]
+        },
+        "33:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"a4c751fc-23ae-4c3e-92e9-4964cf63f349\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const UNICODE_COLLATION_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/machine_protocols.omg",
+          "anchor": "module machine_protocols;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/usb/host_controller.rs": {
+      "sha256": "e7ae9b0037406ea9deeb828b04b9b2c677ae305542d95cb48809e6e0f3e191b1",
+      "disposition": "translated",
+      "symbols": {
+        "12:Speed": {
+          "anchor": "pub enum Speed: u8 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data Speed "
+            }
+          ]
+        },
+        "13:FULL": {
+          "anchor": "FULL = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const SPEED_FULL:"
+            }
+          ]
+        },
+        "14:LOW": {
+          "anchor": "LOW = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const SPEED_LOW:"
+            }
+          ]
+        },
+        "15:HIGH": {
+          "anchor": "HIGH = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const SPEED_HIGH:"
+            }
+          ]
+        },
+        "16:SUPER": {
+          "anchor": "SUPER = 3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const SPEED_SUPER:"
+            }
+          ]
+        },
+        "23:ResetAttributes": {
+          "anchor": "pub struct ResetAttributes: u16 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data ResetAttributes "
+            }
+          ]
+        },
+        "25:RESET_GLOBAL": {
+          "anchor": "const RESET_GLOBAL = 0x0001;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RESET_ATTRIBUTES_RESET_GLOBAL:"
+            }
+          ]
+        },
+        "29:RESET_HOST": {
+          "anchor": "const RESET_HOST = 0x0002;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RESET_ATTRIBUTES_RESET_HOST:"
+            }
+          ]
+        },
+        "33:RESET_GLOBAL_WITH_DEBUG": {
+          "anchor": "const RESET_GLOBAL_WITH_DEBUG = 0x0004;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RESET_ATTRIBUTES_RESET_GLOBAL_WITH_DEBUG:"
+            }
+          ]
+        },
+        "37:RESET_HOST_WITH_DEBUG": {
+          "anchor": "const RESET_HOST_WITH_DEBUG = 0x0008;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const RESET_ATTRIBUTES_RESET_HOST_WITH_DEBUG:"
+            }
+          ]
+        },
+        "42:HostControllerState": {
+          "anchor": "pub enum HostControllerState: i32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data HostControllerState "
+            }
+          ]
+        },
+        "43:HALT": {
+          "anchor": "HALT = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const HOST_CONTROLLER_STATE_HALT:"
+            }
+          ]
+        },
+        "44:OPERATIONAL": {
+          "anchor": "OPERATIONAL = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const HOST_CONTROLLER_STATE_OPERATIONAL:"
+            }
+          ]
+        },
+        "45:SUSPEND": {
+          "anchor": "SUSPEND = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const HOST_CONTROLLER_STATE_SUSPEND:"
+            }
+          ]
+        },
+        "51:TransactionTranslator": {
+          "anchor": "pub struct TransactionTranslator {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data TransactionTranslator "
+            }
+          ]
+        },
+        "52:hub_address": {
+          "anchor": "pub hub_address: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "hub_address:"
+            }
+          ]
+        },
+        "53:port_number": {
+          "anchor": "pub port_number: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "port_number:"
+            }
+          ]
+        },
+        "58:UsbPortStatus": {
+          "anchor": "pub struct UsbPortStatus {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data UsbPortStatus "
+            }
+          ]
+        },
+        "59:port_status": {
+          "anchor": "pub port_status: PortStatus,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "port_status:"
+            }
+          ]
+        },
+        "60:port_change_status": {
+          "anchor": "pub port_change_status: PortChangeStatus,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "port_change_status:"
+            }
+          ]
+        },
+        "66:PortStatus": {
+          "anchor": "pub struct PortStatus: u16 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data PortStatus "
+            }
+          ]
+        },
+        "67:CONNECTION": {
+          "anchor": "const CONNECTION = 0x0001;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_STATUS_CONNECTION:"
+            }
+          ]
+        },
+        "68:ENABLE": {
+          "anchor": "const ENABLE = 0x0002;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_STATUS_ENABLE:"
+            }
+          ]
+        },
+        "69:SUSPEND": {
+          "anchor": "const SUSPEND = 0x0004;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_STATUS_SUSPEND:"
+            }
+          ]
+        },
+        "70:OVER_CURRENT": {
+          "anchor": "const OVER_CURRENT = 0x0008;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_STATUS_OVER_CURRENT:"
+            }
+          ]
+        },
+        "71:RESET": {
+          "anchor": "const RESET = 0x0010;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_STATUS_RESET:"
+            }
+          ]
+        },
+        "72:POWER": {
+          "anchor": "const POWER = 0x0100;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_STATUS_POWER:"
+            }
+          ]
+        },
+        "73:LOW_SPEED": {
+          "anchor": "const LOW_SPEED = 0x0200;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_STATUS_LOW_SPEED:"
+            }
+          ]
+        },
+        "74:HIGH_SPEED": {
+          "anchor": "const HIGH_SPEED = 0x0400;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_STATUS_HIGH_SPEED:"
+            }
+          ]
+        },
+        "75:SUPER_SPEED": {
+          "anchor": "const SUPER_SPEED = 0x0800;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_STATUS_SUPER_SPEED:"
+            }
+          ]
+        },
+        "76:OWNER": {
+          "anchor": "const OWNER = 0x2000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_STATUS_OWNER:"
+            }
+          ]
+        },
+        "83:PortChangeStatus": {
+          "anchor": "pub struct PortChangeStatus: u16 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data PortChangeStatus "
+            }
+          ]
+        },
+        "84:CONNECTION": {
+          "anchor": "const CONNECTION = 0x0001;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_CHANGE_STATUS_CONNECTION:"
+            }
+          ]
+        },
+        "85:ENABLE": {
+          "anchor": "const ENABLE = 0x0002;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_CHANGE_STATUS_ENABLE:"
+            }
+          ]
+        },
+        "86:SUSPEND": {
+          "anchor": "const SUSPEND = 0x0004;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_CHANGE_STATUS_SUSPEND:"
+            }
+          ]
+        },
+        "87:OVER_CURRENT": {
+          "anchor": "const OVER_CURRENT = 0x0008;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_CHANGE_STATUS_OVER_CURRENT:"
+            }
+          ]
+        },
+        "88:RESET": {
+          "anchor": "const RESET = 0x0010;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_CHANGE_STATUS_RESET:"
+            }
+          ]
+        },
+        "93:PortFeature": {
+          "anchor": "pub enum PortFeature: i32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data PortFeature "
+            }
+          ]
+        },
+        "94:ENABLE": {
+          "anchor": "ENABLE = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_FEATURE_ENABLE:"
+            }
+          ]
+        },
+        "95:SUSPEND": {
+          "anchor": "SUSPEND = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_FEATURE_SUSPEND:"
+            }
+          ]
+        },
+        "96:RESET": {
+          "anchor": "RESET = 4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_FEATURE_RESET:"
+            }
+          ]
+        },
+        "97:POWER": {
+          "anchor": "POWER = 8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_FEATURE_POWER:"
+            }
+          ]
+        },
+        "98:OWNER": {
+          "anchor": "OWNER = 13,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_FEATURE_OWNER:"
+            }
+          ]
+        },
+        "99:CONNECT_CHANGE": {
+          "anchor": "CONNECT_CHANGE = 16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_FEATURE_CONNECT_CHANGE:"
+            }
+          ]
+        },
+        "100:ENABLE_CHANGE": {
+          "anchor": "ENABLE_CHANGE = 17,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_FEATURE_ENABLE_CHANGE:"
+            }
+          ]
+        },
+        "101:SUSPEND_CHANGE": {
+          "anchor": "SUSPEND_CHANGE = 18,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_FEATURE_SUSPEND_CHANGE:"
+            }
+          ]
+        },
+        "102:OVER_CURRENT_CHARGE": {
+          "anchor": "OVER_CURRENT_CHARGE = 19,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_FEATURE_OVER_CURRENT_CHARGE:"
+            }
+          ]
+        },
+        "103:RESET_CHANGE": {
+          "anchor": "RESET_CHANGE = 20,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const PORT_FEATURE_RESET_CHANGE:"
+            }
+          ]
+        },
+        "109:Usb2HostControllerProtocol": {
+          "anchor": "pub struct Usb2HostControllerProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data Usb2HostControllerProtocol "
+            }
+          ]
+        },
+        "110:get_capability": {
+          "anchor": "pub get_capability: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_capability:"
+            }
+          ]
+        },
+        "121:reset": {
+          "anchor": "pub reset: unsafe extern \"efiapi\" fn(this: *mut Self, attributes: ResetAttributes) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "reset:"
+            }
+          ]
+        },
+        "122:get_state": {
+          "anchor": "pub get_state:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_state:"
+            }
+          ]
+        },
+        "124:set_state": {
+          "anchor": "pub set_state: unsafe extern \"efiapi\" fn(this: *mut Self, state: HostControllerState) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "set_state:"
+            }
+          ]
+        },
+        "125:control_transfer": {
+          "anchor": "pub control_transfer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "control_transfer:"
+            }
+          ]
+        },
+        "138:bulk_transfer": {
+          "anchor": "pub bulk_transfer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "bulk_transfer:"
+            }
+          ]
+        },
+        "152:async_interrupt_transfer": {
+          "anchor": "pub async_interrupt_transfer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "async_interrupt_transfer:"
+            }
+          ]
+        },
+        "166:sync_interrupt_transfer": {
+          "anchor": "pub sync_interrupt_transfer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "sync_interrupt_transfer:"
+            }
+          ]
+        },
+        "179:isochronous_transfer": {
+          "anchor": "pub isochronous_transfer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "isochronous_transfer:"
+            }
+          ]
+        },
+        "191:async_isochronous_transfer": {
+          "anchor": "pub async_isochronous_transfer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "async_isochronous_transfer:"
+            }
+          ]
+        },
+        "204:get_root_hub_port_status": {
+          "anchor": "pub get_root_hub_port_status: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_root_hub_port_status:"
+            }
+          ]
+        },
+        "209:set_root_hub_port_feature": {
+          "anchor": "pub set_root_hub_port_feature: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "set_root_hub_port_feature:"
+            }
+          ]
+        },
+        "214:clear_root_hub_port_feature": {
+          "anchor": "pub clear_root_hub_port_feature:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "clear_root_hub_port_feature:"
+            }
+          ]
+        },
+        "217:major_revision": {
+          "anchor": "pub major_revision: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "major_revision:"
+            }
+          ]
+        },
+        "218:minor_revision": {
+          "anchor": "pub minor_revision: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "minor_revision:"
+            }
+          ]
+        },
+        "222:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"3e745226-9818-45b6-a2ac-d7cd0e8ba2bc\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const USB2_HOST_CONTROLLER_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/machine_protocols.omg",
+          "anchor": "module machine_protocols;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/usb/io.rs": {
+      "sha256": "6f1a26ae33ed580d66777788567194680115f366d0efc2b0b30b4a7562a67aa2",
+      "disposition": "translated",
+      "symbols": {
+        "14:UsbIoProtocol": {
+          "anchor": "pub struct UsbIoProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data UsbIoProtocol "
+            }
+          ]
+        },
+        "15:control_transfer": {
+          "anchor": "pub control_transfer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "control_transfer:"
+            }
+          ]
+        },
+        "24:bulk_transfer": {
+          "anchor": "pub bulk_transfer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "bulk_transfer:"
+            }
+          ]
+        },
+        "32:async_interrupt_transfer": {
+          "anchor": "pub async_interrupt_transfer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "async_interrupt_transfer:"
+            }
+          ]
+        },
+        "41:sync_interrupt_transfer": {
+          "anchor": "pub sync_interrupt_transfer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "sync_interrupt_transfer:"
+            }
+          ]
+        },
+        "49:isochronous_transfer": {
+          "anchor": "pub isochronous_transfer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "isochronous_transfer:"
+            }
+          ]
+        },
+        "56:async_isochronous_transfer": {
+          "anchor": "pub async_isochronous_transfer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "async_isochronous_transfer:"
+            }
+          ]
+        },
+        "64:get_device_descriptor": {
+          "anchor": "pub get_device_descriptor: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_device_descriptor:"
+            }
+          ]
+        },
+        "68:get_config_descriptor": {
+          "anchor": "pub get_config_descriptor: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_config_descriptor:"
+            }
+          ]
+        },
+        "72:get_interface_descriptor": {
+          "anchor": "pub get_interface_descriptor: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_interface_descriptor:"
+            }
+          ]
+        },
+        "76:get_endpoint_descriptor": {
+          "anchor": "pub get_endpoint_descriptor: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_endpoint_descriptor:"
+            }
+          ]
+        },
+        "81:get_string_descriptor": {
+          "anchor": "pub get_string_descriptor: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_string_descriptor:"
+            }
+          ]
+        },
+        "87:get_supported_languages": {
+          "anchor": "pub get_supported_languages: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "get_supported_languages:"
+            }
+          ]
+        },
+        "92:port_reset": {
+          "anchor": "pub port_reset: unsafe extern \"efiapi\" fn(this: *mut Self) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "port_reset:"
+            }
+          ]
+        },
+        "96:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"2b2f68d6-0cd2-44cf-8e8b-bba20b1b5b75\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const USB_IO_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/machine_protocols.omg",
+          "anchor": "module machine_protocols;"
+        }
+      ]
+    },
+    "uefi-raw/src/protocol/usb/mod.rs": {
+      "sha256": "65ea5e06b609513925a15fc205cce8b1351b7c6309d390818e7c14d1c575cf6b",
+      "disposition": "translated",
+      "symbols": {
+        "9:host_controller": {
+          "anchor": "pub mod host_controller;",
+          "disposition": "omitted",
+          "reason": "Rust module organization flattened into machine_protocols."
+        },
+        "10:io": {
+          "anchor": "pub mod io;",
+          "disposition": "omitted",
+          "reason": "Rust module organization flattened into machine_protocols."
+        },
+        "13:DataDirection": {
+          "anchor": "pub enum DataDirection: i32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data DataDirection "
+            }
+          ]
+        },
+        "14:DATA_IN": {
+          "anchor": "DATA_IN = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const DATA_DIRECTION_DATA_IN:"
+            }
+          ]
+        },
+        "15:DATA_OUT": {
+          "anchor": "DATA_OUT = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const DATA_DIRECTION_DATA_OUT:"
+            }
+          ]
+        },
+        "16:NO_DATA": {
+          "anchor": "NO_DATA = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const DATA_DIRECTION_NO_DATA:"
+            }
+          ]
+        },
+        "22:DeviceRequest": {
+          "anchor": "pub struct DeviceRequest {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data DeviceRequest "
+            }
+          ]
+        },
+        "23:request_type": {
+          "anchor": "pub request_type: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "request_type:"
+            }
+          ]
+        },
+        "24:request": {
+          "anchor": "pub request: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "request:"
+            }
+          ]
+        },
+        "25:value": {
+          "anchor": "pub value: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "value:"
+            }
+          ]
+        },
+        "26:index": {
+          "anchor": "pub index: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "index:"
+            }
+          ]
+        },
+        "27:length": {
+          "anchor": "pub length: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "length:"
+            }
+          ]
+        },
+        "31:_": {
+          "anchor": "const _: () = {",
+          "disposition": "omitted",
+          "reason": "Rust compile-time size assertion covered by cross-target measured vectors."
+        },
+        "38:UsbTransferStatus": {
+          "anchor": "pub struct UsbTransferStatus: u32 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data UsbTransferStatus "
+            }
+          ]
+        },
+        "39:NOT_EXECUTE": {
+          "anchor": "const NOT_EXECUTE = 0x0001;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const USB_TRANSFER_STATUS_NOT_EXECUTE:"
+            }
+          ]
+        },
+        "40:STALL": {
+          "anchor": "const STALL = 0x0002;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const USB_TRANSFER_STATUS_STALL:"
+            }
+          ]
+        },
+        "41:BUFFER": {
+          "anchor": "const BUFFER = 0x0004;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const USB_TRANSFER_STATUS_BUFFER:"
+            }
+          ]
+        },
+        "42:BABBLE": {
+          "anchor": "const BABBLE = 0x0008;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const USB_TRANSFER_STATUS_BABBLE:"
+            }
+          ]
+        },
+        "43:NAK": {
+          "anchor": "const NAK = 0x0010;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const USB_TRANSFER_STATUS_NAK:"
+            }
+          ]
+        },
+        "44:CRC": {
+          "anchor": "const CRC = 0x0020;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const USB_TRANSFER_STATUS_CRC:"
+            }
+          ]
+        },
+        "45:TIMEOUT": {
+          "anchor": "const TIMEOUT = 0x0040;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const USB_TRANSFER_STATUS_TIMEOUT:"
+            }
+          ]
+        },
+        "46:BIT_STUFF": {
+          "anchor": "const BIT_STUFF = 0x0080;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const USB_TRANSFER_STATUS_BIT_STUFF:"
+            }
+          ]
+        },
+        "47:SYSTEM": {
+          "anchor": "const SYSTEM = 0x0100;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const USB_TRANSFER_STATUS_SYSTEM:"
+            }
+          ]
+        },
+        "52:SUCCESS": {
+          "anchor": "pub const SUCCESS: Self = Self::empty();",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub const USB_TRANSFER_STATUS_SUCCESS:"
+            }
+          ]
+        },
+        "55:AsyncUsbTransferCallback": {
+          "anchor": "pub type AsyncUsbTransferCallback = unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data AsyncUsbTransferCallback "
+            }
+          ]
+        },
+        "64:DeviceDescriptor": {
+          "anchor": "pub struct DeviceDescriptor {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data DeviceDescriptor "
+            }
+          ]
+        },
+        "65:length": {
+          "anchor": "pub length: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "length:"
+            }
+          ]
+        },
+        "66:descriptor_type": {
+          "anchor": "pub descriptor_type: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "descriptor_type:"
+            }
+          ]
+        },
+        "67:bcd_usb": {
+          "anchor": "pub bcd_usb: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "bcd_usb:"
+            }
+          ]
+        },
+        "68:device_class": {
+          "anchor": "pub device_class: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "device_class:"
+            }
+          ]
+        },
+        "69:device_subclass": {
+          "anchor": "pub device_subclass: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "device_subclass:"
+            }
+          ]
+        },
+        "70:device_protocol": {
+          "anchor": "pub device_protocol: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "device_protocol:"
+            }
+          ]
+        },
+        "71:max_packet_size": {
+          "anchor": "pub max_packet_size: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "max_packet_size:"
+            }
+          ]
+        },
+        "72:id_vendor": {
+          "anchor": "pub id_vendor: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "id_vendor:"
+            }
+          ]
+        },
+        "73:id_product": {
+          "anchor": "pub id_product: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "id_product:"
+            }
+          ]
+        },
+        "74:bcd_device": {
+          "anchor": "pub bcd_device: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "bcd_device:"
+            }
+          ]
+        },
+        "75:str_manufacturer": {
+          "anchor": "pub str_manufacturer: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "str_manufacturer:"
+            }
+          ]
+        },
+        "76:str_product": {
+          "anchor": "pub str_product: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "str_product:"
+            }
+          ]
+        },
+        "77:str_serial_number": {
+          "anchor": "pub str_serial_number: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "str_serial_number:"
+            }
+          ]
+        },
+        "78:num_configurations": {
+          "anchor": "pub num_configurations: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "num_configurations:"
+            }
+          ]
+        },
+        "82:_": {
+          "anchor": "const _: () = {",
+          "disposition": "omitted",
+          "reason": "Rust compile-time size assertion covered by cross-target measured vectors."
+        },
+        "88:ConfigDescriptor": {
+          "anchor": "pub struct ConfigDescriptor {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data ConfigDescriptor "
+            }
+          ]
+        },
+        "89:length": {
+          "anchor": "pub length: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "length:"
+            }
+          ]
+        },
+        "90:descriptor_type": {
+          "anchor": "pub descriptor_type: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "descriptor_type:"
+            }
+          ]
+        },
+        "91:total_length": {
+          "anchor": "pub total_length: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "total_length:"
+            }
+          ]
+        },
+        "92:num_interfaces": {
+          "anchor": "pub num_interfaces: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "num_interfaces:"
+            }
+          ]
+        },
+        "93:configuration_value": {
+          "anchor": "pub configuration_value: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "configuration_value:"
+            }
+          ]
+        },
+        "94:configuration": {
+          "anchor": "pub configuration: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "configuration:"
+            }
+          ]
+        },
+        "95:attributes": {
+          "anchor": "pub attributes: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "attributes:"
+            }
+          ]
+        },
+        "96:max_power": {
+          "anchor": "pub max_power: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "max_power:"
+            }
+          ]
+        },
+        "100:_": {
+          "anchor": "const _: () = {",
+          "disposition": "omitted",
+          "reason": "Rust compile-time size assertion covered by cross-target measured vectors."
+        },
+        "106:InterfaceDescriptor": {
+          "anchor": "pub struct InterfaceDescriptor {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data InterfaceDescriptor "
+            }
+          ]
+        },
+        "107:length": {
+          "anchor": "pub length: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "length:"
+            }
+          ]
+        },
+        "108:descriptor_type": {
+          "anchor": "pub descriptor_type: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "descriptor_type:"
+            }
+          ]
+        },
+        "109:interface_number": {
+          "anchor": "pub interface_number: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "interface_number:"
+            }
+          ]
+        },
+        "110:alternate_setting": {
+          "anchor": "pub alternate_setting: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "alternate_setting:"
+            }
+          ]
+        },
+        "111:num_endpoints": {
+          "anchor": "pub num_endpoints: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "num_endpoints:"
+            }
+          ]
+        },
+        "112:interface_class": {
+          "anchor": "pub interface_class: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "interface_class:"
+            }
+          ]
+        },
+        "113:interface_subclass": {
+          "anchor": "pub interface_subclass: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "interface_subclass:"
+            }
+          ]
+        },
+        "114:interface_protocol": {
+          "anchor": "pub interface_protocol: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "interface_protocol:"
+            }
+          ]
+        },
+        "115:interface": {
+          "anchor": "pub interface: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "interface:"
+            }
+          ]
+        },
+        "119:_": {
+          "anchor": "const _: () = {",
+          "disposition": "omitted",
+          "reason": "Rust compile-time size assertion covered by cross-target measured vectors."
+        },
+        "125:EndpointDescriptor": {
+          "anchor": "pub struct EndpointDescriptor {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "pub data EndpointDescriptor "
+            }
+          ]
+        },
+        "126:length": {
+          "anchor": "pub length: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "length:"
+            }
+          ]
+        },
+        "127:descriptor_type": {
+          "anchor": "pub descriptor_type: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "descriptor_type:"
+            }
+          ]
+        },
+        "128:endpoint_address": {
+          "anchor": "pub endpoint_address: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "endpoint_address:"
+            }
+          ]
+        },
+        "129:attributes": {
+          "anchor": "pub attributes: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "attributes:"
+            }
+          ]
+        },
+        "130:max_packet_size": {
+          "anchor": "pub max_packet_size: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "max_packet_size:"
+            }
+          ]
+        },
+        "131:interval": {
+          "anchor": "pub interval: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/machine_protocols.omg",
+              "anchor": "interval:"
+            }
+          ]
+        },
+        "135:_": {
+          "anchor": "const _: () = {",
+          "disposition": "omitted",
+          "reason": "Rust compile-time size assertion covered by cross-target measured vectors."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/machine_protocols.omg",
+          "anchor": "module machine_protocols;"
+        }
+      ]
+    }
+  }
+}

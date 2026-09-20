@@ -138,7 +138,7 @@ Cathedral's authority-bearing boot policy do not belong in this phase.
 - [ ] **UEFI-004 — Port storage protocols.** Simple file system, file, block I/O,
   disk I/O, ATA, SCSI, NVMe, firmware volume/storage, and firmware-management
   raw representations.
-- [ ] **UEFI-005 — Port display, bus, and machine protocols.** Graphics output,
+- [x] **UEFI-005 — Port display, bus, and machine protocols.** Graphics output,
   PCI/root bridge, USB, IOMMU, RNG, ACPI, memory-protection, and miscellaneous
   protocol shapes and GUIDs.
 - [ ] **UEFI-006 — Port network protocols.** SNP, PXE, DHCPv4, IPv4/config,

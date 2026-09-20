@@ -1,0 +1,1329 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "abi": "UEFI x86-64",
+    "pointer_bits": 64,
+    "endian": "little"
+  },
+  "provenance": {
+    "kind": "upstream",
+    "description": "Pinned actual Rust declarations cross-compiled for x86_64-unknown-uefi; not Omega observations.",
+    "sources": [
+      "uefi-raw/src/protocol/pci/mod.rs",
+      "uefi-raw/src/protocol/pci/root_bridge.rs",
+      "uefi-raw/src/protocol/usb/mod.rs",
+      "uefi-raw/src/protocol/usb/io.rs",
+      "uefi-raw/src/protocol/usb/host_controller.rs",
+      "uefi-raw/src/protocol/iommu.rs",
+      "uefi-raw/src/protocol/rng.rs",
+      "uefi-raw/src/protocol/acpi.rs",
+      "uefi-raw/src/protocol/memory_protection.rs",
+      "uefi-raw/src/protocol/misc.rs",
+      "uefi-raw/src/protocol/driver.rs",
+      "uefi-raw/src/protocol/string.rs"
+    ],
+    "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a"
+  },
+  "measurements": {
+    "PciRootBridgeIoProtocolWidth.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "PciRootBridgeIoProtocolWidth.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PciRootBridgeIoProtocolOperation.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "PciRootBridgeIoProtocolOperation.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PciRootBridgeIoProtocolAttributes.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "PciRootBridgeIoProtocolAttributes.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "PciRootBridgeIoAccess.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "PciRootBridgeIoAccess.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "PciRootBridgeIoAccess.read.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PciRootBridgeIoAccess.write.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "PciRootBridgeIoProtocol.size": {
+      "kind": "size",
+      "value": 152
+    },
+    "PciRootBridgeIoProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "PciRootBridgeIoProtocol.parent_handle.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PciRootBridgeIoProtocol.poll_mem.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "PciRootBridgeIoProtocol.poll_io.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "PciRootBridgeIoProtocol.mem.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "PciRootBridgeIoProtocol.io.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "PciRootBridgeIoProtocol.pci.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "PciRootBridgeIoProtocol.copy_mem.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "PciRootBridgeIoProtocol.map.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "PciRootBridgeIoProtocol.unmap.offset": {
+      "kind": "offset",
+      "value": 88
+    },
+    "PciRootBridgeIoProtocol.allocate_buffer.offset": {
+      "kind": "offset",
+      "value": 96
+    },
+    "PciRootBridgeIoProtocol.free_buffer.offset": {
+      "kind": "offset",
+      "value": 104
+    },
+    "PciRootBridgeIoProtocol.flush.offset": {
+      "kind": "offset",
+      "value": 112
+    },
+    "PciRootBridgeIoProtocol.get_attributes.offset": {
+      "kind": "offset",
+      "value": 120
+    },
+    "PciRootBridgeIoProtocol.set_attributes.offset": {
+      "kind": "offset",
+      "value": 128
+    },
+    "PciRootBridgeIoProtocol.configuration.offset": {
+      "kind": "offset",
+      "value": 136
+    },
+    "PciRootBridgeIoProtocol.segment_number.offset": {
+      "kind": "offset",
+      "value": 144
+    },
+    "DataDirection.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "DataDirection.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "DeviceRequest.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "DeviceRequest.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "DeviceRequest.request_type.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "DeviceRequest.request.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "DeviceRequest.value.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "DeviceRequest.index.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "DeviceRequest.length.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "UsbTransferStatus.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "UsbTransferStatus.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "DeviceDescriptor.size": {
+      "kind": "size",
+      "value": 18
+    },
+    "DeviceDescriptor.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "DeviceDescriptor.length.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "DeviceDescriptor.descriptor_type.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "DeviceDescriptor.bcd_usb.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "DeviceDescriptor.device_class.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "DeviceDescriptor.device_subclass.offset": {
+      "kind": "offset",
+      "value": 5
+    },
+    "DeviceDescriptor.device_protocol.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "DeviceDescriptor.max_packet_size.offset": {
+      "kind": "offset",
+      "value": 7
+    },
+    "DeviceDescriptor.id_vendor.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "DeviceDescriptor.id_product.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "DeviceDescriptor.bcd_device.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "DeviceDescriptor.str_manufacturer.offset": {
+      "kind": "offset",
+      "value": 14
+    },
+    "DeviceDescriptor.str_product.offset": {
+      "kind": "offset",
+      "value": 15
+    },
+    "DeviceDescriptor.str_serial_number.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "DeviceDescriptor.num_configurations.offset": {
+      "kind": "offset",
+      "value": 17
+    },
+    "ConfigDescriptor.size": {
+      "kind": "size",
+      "value": 9
+    },
+    "ConfigDescriptor.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "ConfigDescriptor.length.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "ConfigDescriptor.descriptor_type.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "ConfigDescriptor.total_length.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "ConfigDescriptor.num_interfaces.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "ConfigDescriptor.configuration_value.offset": {
+      "kind": "offset",
+      "value": 5
+    },
+    "ConfigDescriptor.configuration.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "ConfigDescriptor.attributes.offset": {
+      "kind": "offset",
+      "value": 7
+    },
+    "ConfigDescriptor.max_power.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "InterfaceDescriptor.size": {
+      "kind": "size",
+      "value": 9
+    },
+    "InterfaceDescriptor.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "InterfaceDescriptor.length.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "InterfaceDescriptor.descriptor_type.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "InterfaceDescriptor.interface_number.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "InterfaceDescriptor.alternate_setting.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "InterfaceDescriptor.num_endpoints.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "InterfaceDescriptor.interface_class.offset": {
+      "kind": "offset",
+      "value": 5
+    },
+    "InterfaceDescriptor.interface_subclass.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "InterfaceDescriptor.interface_protocol.offset": {
+      "kind": "offset",
+      "value": 7
+    },
+    "InterfaceDescriptor.interface.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "EndpointDescriptor.size": {
+      "kind": "size",
+      "value": 7
+    },
+    "EndpointDescriptor.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "EndpointDescriptor.length.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "EndpointDescriptor.descriptor_type.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "EndpointDescriptor.endpoint_address.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "EndpointDescriptor.attributes.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "EndpointDescriptor.max_packet_size.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "EndpointDescriptor.interval.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "AsyncUsbTransferCallback.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "AsyncUsbTransferCallback.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "UsbIoProtocol.size": {
+      "kind": "size",
+      "value": 104
+    },
+    "UsbIoProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "UsbIoProtocol.control_transfer.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "UsbIoProtocol.bulk_transfer.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "UsbIoProtocol.async_interrupt_transfer.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "UsbIoProtocol.sync_interrupt_transfer.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "UsbIoProtocol.isochronous_transfer.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "UsbIoProtocol.async_isochronous_transfer.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "UsbIoProtocol.get_device_descriptor.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "UsbIoProtocol.get_config_descriptor.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "UsbIoProtocol.get_interface_descriptor.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "UsbIoProtocol.get_endpoint_descriptor.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "UsbIoProtocol.get_string_descriptor.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "UsbIoProtocol.get_supported_languages.offset": {
+      "kind": "offset",
+      "value": 88
+    },
+    "UsbIoProtocol.port_reset.offset": {
+      "kind": "offset",
+      "value": 96
+    },
+    "Speed.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "Speed.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "ResetAttributes.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "ResetAttributes.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "HostControllerState.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "HostControllerState.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "TransactionTranslator.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "TransactionTranslator.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "TransactionTranslator.hub_address.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "TransactionTranslator.port_number.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "UsbPortStatus.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "UsbPortStatus.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "UsbPortStatus.port_status.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "UsbPortStatus.port_change_status.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "PortStatus.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "PortStatus.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "PortChangeStatus.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "PortChangeStatus.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "PortFeature.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "PortFeature.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "Usb2HostControllerProtocol.size": {
+      "kind": "size",
+      "value": 112
+    },
+    "Usb2HostControllerProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "Usb2HostControllerProtocol.get_capability.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Usb2HostControllerProtocol.reset.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Usb2HostControllerProtocol.get_state.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Usb2HostControllerProtocol.set_state.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "Usb2HostControllerProtocol.control_transfer.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "Usb2HostControllerProtocol.bulk_transfer.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "Usb2HostControllerProtocol.async_interrupt_transfer.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "Usb2HostControllerProtocol.sync_interrupt_transfer.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "Usb2HostControllerProtocol.isochronous_transfer.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "Usb2HostControllerProtocol.async_isochronous_transfer.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "Usb2HostControllerProtocol.get_root_hub_port_status.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "Usb2HostControllerProtocol.set_root_hub_port_feature.offset": {
+      "kind": "offset",
+      "value": 88
+    },
+    "Usb2HostControllerProtocol.clear_root_hub_port_feature.offset": {
+      "kind": "offset",
+      "value": 96
+    },
+    "Usb2HostControllerProtocol.major_revision.offset": {
+      "kind": "offset",
+      "value": 104
+    },
+    "Usb2HostControllerProtocol.minor_revision.offset": {
+      "kind": "offset",
+      "value": 106
+    },
+    "EdkiiIommuProtocol.size": {
+      "kind": "size",
+      "value": 48
+    },
+    "EdkiiIommuProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "EdkiiIommuProtocol.revision.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "EdkiiIommuProtocol.set_attribute.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "EdkiiIommuProtocol.map.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "EdkiiIommuProtocol.unmap.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "EdkiiIommuProtocol.allocate_buffer.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "EdkiiIommuProtocol.free_buffer.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "EdkiiIommuOperation.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "EdkiiIommuOperation.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "EdkiiIommuAttribute.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "EdkiiIommuAttribute.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "EdkiiIommuAccess.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "EdkiiIommuAccess.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "RngAlgorithmType.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "RngAlgorithmType.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "RngProtocol.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "RngProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "RngProtocol.get_info.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "RngProtocol.get_rng.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "AcpiTableProtocol.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "AcpiTableProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "AcpiTableProtocol.install_acpi_table.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "AcpiTableProtocol.uninstall_acpi_table.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "MemoryAttributeProtocol.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "MemoryAttributeProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "MemoryAttributeProtocol.get_memory_attributes.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "MemoryAttributeProtocol.set_memory_attributes.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "MemoryAttributeProtocol.clear_memory_attributes.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "TimestampProtocol.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "TimestampProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "TimestampProtocol.get_timestamp.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "TimestampProtocol.get_properties.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "TimestampProperties.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "TimestampProperties.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "TimestampProperties.frequency.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "TimestampProperties.end_value.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "ResetNotificationProtocol.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "ResetNotificationProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "ResetNotificationProtocol.register_reset_notify.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "ResetNotificationProtocol.unregister_reset_notify.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "ResetSystemFn.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "ResetSystemFn.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "DriverBindingProtocol.size": {
+      "kind": "size",
+      "value": 48
+    },
+    "DriverBindingProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "DriverBindingProtocol.supported.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "DriverBindingProtocol.start.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "DriverBindingProtocol.stop.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "DriverBindingProtocol.version.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "DriverBindingProtocol.image_handle.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "DriverBindingProtocol.driver_binding_handle.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "ComponentName2Protocol.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "ComponentName2Protocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "ComponentName2Protocol.get_driver_name.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "ComponentName2Protocol.get_controller_name.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "ComponentName2Protocol.supported_languages.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "ServiceBindingProtocol.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "ServiceBindingProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "ServiceBindingProtocol.create_child.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "ServiceBindingProtocol.destroy_child.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "UnicodeCollationProtocol.size": {
+      "kind": "size",
+      "value": 56
+    },
+    "UnicodeCollationProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "UnicodeCollationProtocol.stri_coll.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "UnicodeCollationProtocol.metai_match.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "UnicodeCollationProtocol.str_lwr.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "UnicodeCollationProtocol.str_upr.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "UnicodeCollationProtocol.fat_to_str.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "UnicodeCollationProtocol.str_to_fat.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "UnicodeCollationProtocol.supported_languages.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_UINT8": {
+      "kind": "value",
+      "value": 0
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_UINT16": {
+      "kind": "value",
+      "value": 1
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_UINT32": {
+      "kind": "value",
+      "value": 2
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_UINT64": {
+      "kind": "value",
+      "value": 3
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FIFO_UINT8": {
+      "kind": "value",
+      "value": 4
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FIFO_UINT16": {
+      "kind": "value",
+      "value": 5
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FIFO_UINT32": {
+      "kind": "value",
+      "value": 6
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FIFO_UINT64": {
+      "kind": "value",
+      "value": 7
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FILL_UINT8": {
+      "kind": "value",
+      "value": 8
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FILL_UINT16": {
+      "kind": "value",
+      "value": 9
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FILL_UINT32": {
+      "kind": "value",
+      "value": 10
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_FILL_UINT64": {
+      "kind": "value",
+      "value": 11
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_WIDTH_MAXIMUM": {
+      "kind": "value",
+      "value": 12
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_BUS_MASTER_READ": {
+      "kind": "value",
+      "value": 0
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_BUS_MASTER_WRITE": {
+      "kind": "value",
+      "value": 1
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_BUS_MASTER_COMMON_BUFFER": {
+      "kind": "value",
+      "value": 2
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_BUS_MASTER_READ64": {
+      "kind": "value",
+      "value": 3
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_BUS_MASTER_WRITE64": {
+      "kind": "value",
+      "value": 4
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_BUS_MASTER_COMMON_BUFFER64": {
+      "kind": "value",
+      "value": 5
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_OPERATION_MAXIMUM": {
+      "kind": "value",
+      "value": 6
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_ISA_MOTHERBOARD_IO": {
+      "kind": "value",
+      "value": 1
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_ISA_IO": {
+      "kind": "value",
+      "value": 2
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO": {
+      "kind": "value",
+      "value": 4
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_VGA_MEMORY": {
+      "kind": "value",
+      "value": 8
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_VGA_IO": {
+      "kind": "value",
+      "value": 16
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_IDE_PRIMARY_IO": {
+      "kind": "value",
+      "value": 32
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_IDE_SECONDARY_IO": {
+      "kind": "value",
+      "value": 64
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_MEMORY_WRITE_COMBINE": {
+      "kind": "value",
+      "value": 128
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_MEMORY_CACHED": {
+      "kind": "value",
+      "value": 2048
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_MEMORY_DISABLE": {
+      "kind": "value",
+      "value": 4096
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_DUAL_ADDRESS_CYCLE": {
+      "kind": "value",
+      "value": 32768
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_ISA_IO_16": {
+      "kind": "value",
+      "value": 65536
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO_16": {
+      "kind": "value",
+      "value": 131072
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_VGA_IO_16": {
+      "kind": "value",
+      "value": 262144
+    },
+    "DATA_DIRECTION_DATA_IN": {
+      "kind": "value",
+      "value": 0
+    },
+    "DATA_DIRECTION_DATA_OUT": {
+      "kind": "value",
+      "value": 1
+    },
+    "DATA_DIRECTION_NO_DATA": {
+      "kind": "value",
+      "value": 2
+    },
+    "USB_TRANSFER_STATUS_NOT_EXECUTE": {
+      "kind": "value",
+      "value": 1
+    },
+    "USB_TRANSFER_STATUS_STALL": {
+      "kind": "value",
+      "value": 2
+    },
+    "USB_TRANSFER_STATUS_BUFFER": {
+      "kind": "value",
+      "value": 4
+    },
+    "USB_TRANSFER_STATUS_BABBLE": {
+      "kind": "value",
+      "value": 8
+    },
+    "USB_TRANSFER_STATUS_NAK": {
+      "kind": "value",
+      "value": 16
+    },
+    "USB_TRANSFER_STATUS_CRC": {
+      "kind": "value",
+      "value": 32
+    },
+    "USB_TRANSFER_STATUS_TIMEOUT": {
+      "kind": "value",
+      "value": 64
+    },
+    "USB_TRANSFER_STATUS_BIT_STUFF": {
+      "kind": "value",
+      "value": 128
+    },
+    "USB_TRANSFER_STATUS_SYSTEM": {
+      "kind": "value",
+      "value": 256
+    },
+    "USB_TRANSFER_STATUS_SUCCESS": {
+      "kind": "value",
+      "value": 0
+    },
+    "SPEED_FULL": {
+      "kind": "value",
+      "value": 0
+    },
+    "SPEED_LOW": {
+      "kind": "value",
+      "value": 1
+    },
+    "SPEED_HIGH": {
+      "kind": "value",
+      "value": 2
+    },
+    "SPEED_SUPER": {
+      "kind": "value",
+      "value": 3
+    },
+    "RESET_ATTRIBUTES_RESET_GLOBAL": {
+      "kind": "value",
+      "value": 1
+    },
+    "RESET_ATTRIBUTES_RESET_HOST": {
+      "kind": "value",
+      "value": 2
+    },
+    "RESET_ATTRIBUTES_RESET_GLOBAL_WITH_DEBUG": {
+      "kind": "value",
+      "value": 4
+    },
+    "RESET_ATTRIBUTES_RESET_HOST_WITH_DEBUG": {
+      "kind": "value",
+      "value": 8
+    },
+    "HOST_CONTROLLER_STATE_HALT": {
+      "kind": "value",
+      "value": 0
+    },
+    "HOST_CONTROLLER_STATE_OPERATIONAL": {
+      "kind": "value",
+      "value": 1
+    },
+    "HOST_CONTROLLER_STATE_SUSPEND": {
+      "kind": "value",
+      "value": 2
+    },
+    "PORT_STATUS_CONNECTION": {
+      "kind": "value",
+      "value": 1
+    },
+    "PORT_STATUS_ENABLE": {
+      "kind": "value",
+      "value": 2
+    },
+    "PORT_STATUS_SUSPEND": {
+      "kind": "value",
+      "value": 4
+    },
+    "PORT_STATUS_OVER_CURRENT": {
+      "kind": "value",
+      "value": 8
+    },
+    "PORT_STATUS_RESET": {
+      "kind": "value",
+      "value": 16
+    },
+    "PORT_STATUS_POWER": {
+      "kind": "value",
+      "value": 256
+    },
+    "PORT_STATUS_LOW_SPEED": {
+      "kind": "value",
+      "value": 512
+    },
+    "PORT_STATUS_HIGH_SPEED": {
+      "kind": "value",
+      "value": 1024
+    },
+    "PORT_STATUS_SUPER_SPEED": {
+      "kind": "value",
+      "value": 2048
+    },
+    "PORT_STATUS_OWNER": {
+      "kind": "value",
+      "value": 8192
+    },
+    "PORT_CHANGE_STATUS_CONNECTION": {
+      "kind": "value",
+      "value": 1
+    },
+    "PORT_CHANGE_STATUS_ENABLE": {
+      "kind": "value",
+      "value": 2
+    },
+    "PORT_CHANGE_STATUS_SUSPEND": {
+      "kind": "value",
+      "value": 4
+    },
+    "PORT_CHANGE_STATUS_OVER_CURRENT": {
+      "kind": "value",
+      "value": 8
+    },
+    "PORT_CHANGE_STATUS_RESET": {
+      "kind": "value",
+      "value": 16
+    },
+    "PORT_FEATURE_ENABLE": {
+      "kind": "value",
+      "value": 1
+    },
+    "PORT_FEATURE_SUSPEND": {
+      "kind": "value",
+      "value": 2
+    },
+    "PORT_FEATURE_RESET": {
+      "kind": "value",
+      "value": 4
+    },
+    "PORT_FEATURE_POWER": {
+      "kind": "value",
+      "value": 8
+    },
+    "PORT_FEATURE_OWNER": {
+      "kind": "value",
+      "value": 13
+    },
+    "PORT_FEATURE_CONNECT_CHANGE": {
+      "kind": "value",
+      "value": 16
+    },
+    "PORT_FEATURE_ENABLE_CHANGE": {
+      "kind": "value",
+      "value": 17
+    },
+    "PORT_FEATURE_SUSPEND_CHANGE": {
+      "kind": "value",
+      "value": 18
+    },
+    "PORT_FEATURE_OVER_CURRENT_CHARGE": {
+      "kind": "value",
+      "value": 19
+    },
+    "PORT_FEATURE_RESET_CHANGE": {
+      "kind": "value",
+      "value": 20
+    },
+    "EDKII_IOMMU_OPERATION_BUS_MASTER_READ": {
+      "kind": "value",
+      "value": 0
+    },
+    "EDKII_IOMMU_OPERATION_BUS_MASTER_WRITE": {
+      "kind": "value",
+      "value": 1
+    },
+    "EDKII_IOMMU_OPERATION_BUS_MASTER_COMMON_BUFFER": {
+      "kind": "value",
+      "value": 2
+    },
+    "EDKII_IOMMU_OPERATION_BUS_MASTER_READ64": {
+      "kind": "value",
+      "value": 3
+    },
+    "EDKII_IOMMU_OPERATION_BUS_MASTER_WRITE64": {
+      "kind": "value",
+      "value": 4
+    },
+    "EDKII_IOMMU_OPERATION_BUS_MASTER_COMMON_BUFFER64": {
+      "kind": "value",
+      "value": 5
+    },
+    "EDKII_IOMMU_OPERATION_MAXIMUM": {
+      "kind": "value",
+      "value": 6
+    },
+    "EDKII_IOMMU_ATTRIBUTE_MEMORY_WRITE_COMBINE": {
+      "kind": "value",
+      "value": 128
+    },
+    "EDKII_IOMMU_ATTRIBUTE_MEMORY_CACHED": {
+      "kind": "value",
+      "value": 2048
+    },
+    "EDKII_IOMMU_ATTRIBUTE_DUAL_ADDRESS_CYCLE": {
+      "kind": "value",
+      "value": 32768
+    },
+    "EDKII_IOMMU_ACCESS_READ": {
+      "kind": "value",
+      "value": 1
+    },
+    "EDKII_IOMMU_ACCESS_WRITE": {
+      "kind": "value",
+      "value": 2
+    },
+    "EDKII_IOMMU_PROTOCOL_REVISION": {
+      "kind": "value",
+      "value": 65536
+    },
+    "EDKII_IOMMU_ATTRIBUTE_VALID_FOR_ALLOCATE_BUFFER": {
+      "kind": "value",
+      "value": 34944
+    },
+    "EDKII_IOMMU_ATTRIBUTE_INVALID_FOR_ALLOCATE_BUFFER": {
+      "kind": "value",
+      "value": 18446744073709516671
+    },
+    "PCI_ROOT_BRIDGE_IO_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "bb7e702f1a4ad4119a380090273fc14d"
+    },
+    "USB_IO_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "d6682f2bd20ccf448e8bbba20b1b5b75"
+    },
+    "USB2_HOST_CONTROLLER_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "2652743e1898b645a2acd7cd0e8ba2bc"
+    },
+    "EDKII_IOMMU_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "e99d934e48d90f4b88ede6e1ce517c1e"
+    },
+    "RNG_ALGORITHM_TYPE_EMPTY_ALGORITHM": {
+      "kind": "bytes",
+      "value": "00000000000000000000000000000000"
+    },
+    "RNG_ALGORITHM_TYPE_ALGORITHM_RAW": {
+      "kind": "bytes",
+      "value": "d77631e4e8b62748b7847ffdc4b68561"
+    },
+    "RNG_ALGORITHM_TYPE_ALGORITHM_SP800_90_HASH_256": {
+      "kind": "bytes",
+      "value": "cb67afa73b60424dba2170bfb6293f96"
+    },
+    "RNG_ALGORITHM_TYPE_ALGORITHM_SP800_90_HMAC_256": {
+      "kind": "bytes",
+      "value": "439b14c585ae534f9982b94335d3a9e7"
+    },
+    "RNG_ALGORITHM_TYPE_ALGORITHM_SP800_90_CTR_256": {
+      "kind": "bytes",
+      "value": "6edef0448c4d4540a8c74dd168856b9e"
+    },
+    "RNG_ALGORITHM_TYPE_ALGORITHM_X9_31_3DES": {
+      "kind": "bytes",
+      "value": "5a78c46334ca1240a3c80b6a324f5546"
+    },
+    "RNG_ALGORITHM_TYPE_ALGORITHM_X9_31_AES": {
+      "kind": "bytes",
+      "value": "2133d0ac7e773d4db1c820cfd88820c9"
+    },
+    "RNG_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "a5bc5231deea3d43862ec01cdc291f44"
+    },
+    "ACPI_TABLE_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "dd6be0ff0761a6467bb25a9c7ec5275c"
+    },
+    "MEMORY_ATTRIBUTE_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "f60c56f4ec404a4ba192bf1d57d0b189"
+    },
+    "TIMESTAMP_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "41debfaf6e2e6242ba6562b9236e5495"
+    },
+    "RESET_NOTIFICATION_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "e04aa39df9eabf4b8ec3fd60226c44be"
+    },
+    "DRIVER_BINDING_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "ab31a01843b41a4da5c00c09261e9f71"
+    },
+    "COMPONENT_NAME2_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "ff5c7a6ad9e8704fbada75ab3025ce14"
+    },
+    "COMPONENT_NAME2_PROTOCOL_DEPRECATED_COMPONENT_NAME_GUID": {
+      "kind": "bytes",
+      "value": "2c777a10e1d5d4119a460090273fc14d"
+    },
+    "UNICODE_COLLATION_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "fc51c7a4ae233e4c92e94964cf63f349"
+    }
+  }
+}
