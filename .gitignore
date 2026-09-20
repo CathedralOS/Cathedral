@@ -12,10 +12,13 @@ Thumbs.db
 !.vscode/settings.json
 
 # Studied prior art — forked reference codebases (rust-osdev crates, other OSes)
-# read as fact-sources and quirk-references, never linked or shipped.
+# read as fact-sources, quirk-references, and licensed-translation inputs; never shipped.
 # See wiki/architecture/prior_art_and_hardware_facts.md.
 reference_code/
 
 # Scratch
 scratch/
 *.local.md
+
+# Host Python caches
+__pycache__/

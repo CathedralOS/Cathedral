@@ -32,7 +32,7 @@ Two scans, two questions. **Root** tells you what the *repository* is;
 | What must I trust for the system's invariants to hold? | `source/core/` + `source/contracts/`, plus the trust-critical services named in [`tcb.md`](tcb.md). Nothing else. |
 | What talks to hardware? | `source/drivers/` (device programs) and `source/boot/` (firmware seam). `source/drivers/facts/` is pure hardware data with zero authority. |
 | What's the frozen ABI everything targets? | `source/contracts/`. |
-| What runs on my dev machine vs on the target OS? | `tools/` is host-side and never ships. Everything in `source/` ships. |
+| What runs on my dev machine vs on the target OS? | `tools/` is host-side and never ships. `source/` owns target code, including ports awaiting integration. |
 
 If a future change makes any of these answers require opening a file, the
 change is wrong.
@@ -57,7 +57,7 @@ Cathedral/
 │                  the hostile simulator, CI gate runners, image assembly, the migration tester.
 │                  If it runs on the developer's machine, not the target, it is here.
 │
-└── source/        THE OS — everything that ships or runs on the target machine.
+└── source/        THE OS — target code, including translated units awaiting integration.
     │
     ├── contracts/     THE FROZEN ABI everyone targets (governance tier 1). The capability-type
     │                  vocabulary, the kernel/syscall surface, IPC wire schemas, the boot handoff,
@@ -360,20 +360,22 @@ Current reality (2026-07-28):
 
 ## Deliberate omissions (negative space is part of the plan)
 
-- **No generic OS-independent crates, no `crates.io`-style external dependency
-  model.** Cathedral is all in-house, single-language (Omega). The rust-osdev
-  model (generic `x86_64`/`uefi`/`bootloader` crates) is refused: it churns
-  third-party unsafe code inside the TCB, its ambient-authority idioms
-  (`Port::new(0x60)`) contradict the capability model, and it hands the boot
-  contract to outsiders. Hardware *facts* are transcribed as data in
-  `source/drivers/facts/`; hardware *drivers* are ours. Prior art is *studied*,
-  not linked — cloned into a gitignored root `reference_code/` (Dolrus-style),
-  read as a fact-source and quirk-reference; the method and the per-crate work
-  breakdown are in [`prior_art_and_hardware_facts.md`](prior_art_and_hardware_facts.md).
-- **No third-party quarantine directory — because there is no third-party code.**
-  If that ever changes, it enters through one named, policy-governed location,
-  and the all-in-house invariant becomes a browsable boundary rather than a
-  matter of vigilance. Until then, its absence is the claim.
+- **Single-language target code, no Rust crate dependency model.** Cathedral
+  maintains its Omega implementation in this monorepo. Properly licensed
+  derivative translations of useful representations, algorithms, and tests are
+  permitted; Rust vendor trees and ambient-authority APIs are not imported.
+  Primary-source facts, licensed translations, and Cathedral integration have
+  distinct provenance and verification claims. See
+  [`prior_art_and_hardware_facts.md`](prior_art_and_hardware_facts.md).
+- **Ports live with their eventual owner, not in a parallel vendor hierarchy.**
+  Studied source stays in gitignored `reference_code/`. Committed translations
+  live under the existing `source/` ownership layers with `PORT.md`, retained
+  notices, explicit source/symbol mappings, tests, and blockers. Root
+  `THIRD_PARTY_NOTICES.md` indexes the upstream pins and licenses. A translated
+  package may land before Omega supports it, but an untypeable package must
+  remain outside production build roots. Presence under `source/` alone does
+  not mean code is compiled, tested, shipped, or integrated. The layer law,
+  charters, and separately reviewed authority/lifecycle integration still apply.
 - **No `session_logs/` or agent-runbook machinery.** Cathedral is human-driven;
   the autonomous-loop scaffolding that suits Dolrus would be the exact clutter
   this layout exists to avoid.

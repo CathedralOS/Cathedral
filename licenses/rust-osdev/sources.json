@@ -1,0 +1,253 @@
+{
+  "format_version": 1,
+  "projects": [
+    {
+      "project": "uefi-rs",
+      "upstream_url": "https://github.com/rust-osdev/uefi-rs",
+      "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a",
+      "preserved_license": "MIT OR Apache-2.0",
+      "evidence": [
+        {
+          "upstream_path": "Cargo.toml",
+          "sha256": "76acbe78de8d97d473a31c1db47675d42cc2ca05e4b46e429745ddefd8c9d447"
+        },
+        {
+          "upstream_path": "README.md",
+          "sha256": "502c8b53c05dd6f541ebc119959d761d77c59f76cfad9651afc06430b8d45b80"
+        },
+        {
+          "upstream_path": "uefi-raw/Cargo.toml",
+          "sha256": "a002af680ea0dfeb3d4109d8df31385456f780a754a184dec0f0e9962aab6b5a"
+        }
+      ],
+      "copied_files": [
+        {
+          "upstream_path": "LICENSE-APACHE",
+          "local_path": "licenses/rust-osdev/uefi-rs/LICENSE-APACHE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "upstream_path": "LICENSE-MIT",
+          "local_path": "licenses/rust-osdev/uefi-rs/LICENSE-MIT",
+          "sha256": "b4bffc4405a1f9c005b7083e309b8d9cabdab21964320350e7c5d24426533aba"
+        },
+        {
+          "upstream_path": "uefi-macros/LICENSE-APACHE",
+          "local_path": "licenses/rust-osdev/uefi-rs/uefi-macros/LICENSE-APACHE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "upstream_path": "uefi-macros/LICENSE-MIT",
+          "local_path": "licenses/rust-osdev/uefi-rs/uefi-macros/LICENSE-MIT",
+          "sha256": "b4bffc4405a1f9c005b7083e309b8d9cabdab21964320350e7c5d24426533aba"
+        },
+        {
+          "upstream_path": "uefi-raw/LICENSE-APACHE",
+          "local_path": "licenses/rust-osdev/uefi-rs/uefi-raw/LICENSE-APACHE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "upstream_path": "uefi-raw/LICENSE-MIT",
+          "local_path": "licenses/rust-osdev/uefi-rs/uefi-raw/LICENSE-MIT",
+          "sha256": "b4bffc4405a1f9c005b7083e309b8d9cabdab21964320350e7c5d24426533aba"
+        },
+        {
+          "upstream_path": "uefi/LICENSE-APACHE",
+          "local_path": "licenses/rust-osdev/uefi-rs/uefi/LICENSE-APACHE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "upstream_path": "uefi/LICENSE-MIT",
+          "local_path": "licenses/rust-osdev/uefi-rs/uefi/LICENSE-MIT",
+          "sha256": "b4bffc4405a1f9c005b7083e309b8d9cabdab21964320350e7c5d24426533aba"
+        }
+      ]
+    },
+    {
+      "project": "x86_64",
+      "upstream_url": "https://github.com/rust-osdev/x86_64",
+      "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+      "preserved_license": "MIT OR Apache-2.0",
+      "evidence": [
+        {
+          "upstream_path": "Cargo.toml",
+          "sha256": "6bcb2827c4ebe83dff41b22819c1550cb5102e6aabf7a4580e0d867029034856"
+        },
+        {
+          "upstream_path": "README.md",
+          "sha256": "8ea9f26e468c78b60c0a02f9bb08b5f8f7da3c8ecc4fd0ecad2b885583dbd6e3"
+        },
+        {
+          "upstream_path": "src/structures/idt.rs",
+          "sha256": "e6fd82e5e76243c2e10bb1af8f476ed79c8905d1fa5aedaa070a99b4e01c02ce"
+        }
+      ],
+      "copied_files": [
+        {
+          "upstream_path": "AUTHORS",
+          "local_path": "licenses/rust-osdev/x86_64/AUTHORS",
+          "sha256": "37a29990731a77b7474f9b98e4dcf711c552eff4f79bda1ebcea0165adef8511"
+        },
+        {
+          "upstream_path": "LICENSE-APACHE",
+          "local_path": "licenses/rust-osdev/x86_64/LICENSE-APACHE",
+          "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+        },
+        {
+          "upstream_path": "LICENSE-MIT",
+          "local_path": "licenses/rust-osdev/x86_64/LICENSE-MIT",
+          "sha256": "fc51e923890d2a82fd792cfd5d21bc63f7548aa7e20753fb8e7b18c4742f5f5a"
+        }
+      ]
+    },
+    {
+      "project": "acpi",
+      "upstream_url": "https://github.com/rust-osdev/acpi",
+      "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+      "preserved_license": "MIT OR Apache-2.0",
+      "evidence": [
+        {
+          "upstream_path": "Cargo.toml",
+          "sha256": "437a679d0f958db2171af775e0a1368ac35edd4cc0a48ec8b449233750db61cf"
+        },
+        {
+          "upstream_path": "README.md",
+          "sha256": "be4bd015007b3dd0b6f6f69d233bbaa6fdb8ca71c33f020cc2bd8073cfed546c"
+        },
+        {
+          "upstream_path": "tests/pc-bios_acpi-dsdt.asl",
+          "sha256": "bed82652616a6e95ca571afa9480f3c4374c845f8f7e89bea18d01cb3c5f953c"
+        }
+      ],
+      "copied_files": [
+        {
+          "upstream_path": "LICENCE-APACHE",
+          "local_path": "licenses/rust-osdev/acpi/LICENCE-APACHE",
+          "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+        },
+        {
+          "upstream_path": "LICENCE-MIT",
+          "local_path": "licenses/rust-osdev/acpi/LICENCE-MIT",
+          "sha256": "d7ed579f795c55b1b9f734f3f1ac6410ba84fef011acf3aaff95d0c9fe6cdd77"
+        }
+      ]
+    },
+    {
+      "project": "pci_types",
+      "upstream_url": "https://github.com/rust-osdev/pci_types",
+      "revision": "eff856b6bab81adbe1bda0ab750009f3786cb8d3",
+      "preserved_license": "MIT OR Apache-2.0",
+      "evidence": [
+        {
+          "upstream_path": "Cargo.toml",
+          "sha256": "5fd43ed697c90462ce201070f48dd70df1ef573ec43478855815a63d118c8049"
+        },
+        {
+          "upstream_path": "README.md",
+          "sha256": "4496301c210462d2ab9bf8e5775a70dab1951cd640f37f9da4f2700ca28c176f"
+        }
+      ],
+      "copied_files": [
+        {
+          "upstream_path": "LICENSE-APACHE",
+          "local_path": "licenses/rust-osdev/pci_types/LICENSE-APACHE",
+          "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+        },
+        {
+          "upstream_path": "LICENSE-MIT",
+          "local_path": "licenses/rust-osdev/pci_types/LICENSE-MIT",
+          "sha256": "d7ed579f795c55b1b9f734f3f1ac6410ba84fef011acf3aaff95d0c9fe6cdd77"
+        }
+      ]
+    },
+    {
+      "project": "virtio-spec-rs",
+      "upstream_url": "https://github.com/rust-osdev/virtio-spec-rs",
+      "revision": "ad565bd701e93fa47bc288d45701e1ae53ac3c12",
+      "preserved_license": "MIT OR Apache-2.0",
+      "evidence": [
+        {
+          "upstream_path": "Cargo.toml",
+          "sha256": "0f47f84e6a38c7a7994088c7f489ca61dbb6a7cde0f61c0960c6e6bd07434365"
+        },
+        {
+          "upstream_path": "README.md",
+          "sha256": "bd54e0c07aefc9fb07c2bd8ae6ce56c8d8ed8b5d05195898fd559d955a83c413"
+        }
+      ],
+      "copied_files": [
+        {
+          "upstream_path": "LICENSE-APACHE",
+          "local_path": "licenses/rust-osdev/virtio-spec-rs/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "upstream_path": "LICENSE-MIT",
+          "local_path": "licenses/rust-osdev/virtio-spec-rs/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "project": "uart_16550",
+      "upstream_url": "https://github.com/rust-osdev/uart_16550",
+      "revision": "653455f17e92c67a67e44b4c4b6eaba22411e57b",
+      "preserved_license": "MIT OR Apache-2.0",
+      "evidence": [
+        {
+          "upstream_path": "Cargo.toml",
+          "sha256": "f1c42a0f8e831e2178dea37f9e78cf428bed245cac59b6c12f345630fe07b435"
+        },
+        {
+          "upstream_path": "README.md",
+          "sha256": "a613836a6b2161e6fb52ef0316eaa5911391666163b9ffb7b5ca96af38524103"
+        }
+      ],
+      "copied_files": [
+        {
+          "upstream_path": "LICENSE-APACHE",
+          "local_path": "licenses/rust-osdev/uart_16550/LICENSE-APACHE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "upstream_path": "LICENSE-MIT",
+          "local_path": "licenses/rust-osdev/uart_16550/LICENSE-MIT",
+          "sha256": "2e91d6b356d7a4c51033e61b10a2d7b2a31e96177c852667d53e0632222ff014"
+        }
+      ]
+    },
+    {
+      "project": "pic8259",
+      "upstream_url": "https://github.com/rust-osdev/pic8259",
+      "revision": "136052bcbf081b9382fc3d72ba04b83b30f664b4",
+      "preserved_license": "MIT OR Apache-2.0",
+      "evidence": [
+        {
+          "upstream_path": "Cargo.toml",
+          "sha256": "644d847c765e11a7b3526b1805f54266bae9d405ca4ce99b89b66a91dc32c475"
+        },
+        {
+          "upstream_path": "README.md",
+          "sha256": "a1ae7c971139d5a638d1580455e0a5636fecd09703fe8f4018497f5007517d44"
+        }
+      ],
+      "copied_files": [],
+      "supplied_files": [
+        {
+          "local_path": "licenses/rust-osdev/pic8259/LICENSE-MIT",
+          "source_project": "virtio-spec-rs",
+          "source_revision": "ad565bd701e93fa47bc288d45701e1ae53ac3c12",
+          "upstream_path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "local_path": "licenses/rust-osdev/pic8259/LICENSE-APACHE",
+          "source_project": "virtio-spec-rs",
+          "source_revision": "ad565bd701e93fa47bc288d45701e1ae53ac3c12",
+          "upstream_path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        }
+      ]
+    }
+  ]
+}

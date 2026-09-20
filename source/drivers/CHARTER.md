@@ -5,8 +5,10 @@ programs that hold device capabilities. Organized by class.
 
 `drivers/facts/` is different in kind: **pure hardware description data**
 (register maps, descriptor layouts, quirk tables) holding **zero capabilities** —
-transcribed from primary specs, reviewable without trust, and testable without
-hardware. A driver turns those facts into a stated MMIO/port layout plan with
+transcribed from primary specs or licensed upstream representations, reviewable
+without hardware authority, and testable without hardware. Licensed derivatives
+retain source mapping and notices in `PORT.md` under the
+[porting policy](../../wiki/architecture/prior_art_and_hardware_facts.md). A driver turns those facts into a stated MMIO/port layout plan with
 access classes; the facts themselves reach nothing.
 
 **Depends on.** `contracts/`, `foundation/`, `libraries/`, and `drivers/facts/`.

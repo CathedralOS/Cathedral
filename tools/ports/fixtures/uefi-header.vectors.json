@@ -1,0 +1,46 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "measurements": {
+    "EfiTableHeader.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "EfiTableHeader.crc32.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "EfiTableHeader.header_size.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "EfiTableHeader.reserved.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "EfiTableHeader.revision.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "EfiTableHeader.signature.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "EfiTableHeader.size": {
+      "kind": "size",
+      "value": 24
+    }
+  },
+  "provenance": {
+    "description": "Expected x64 C layout reviewed from pinned uefi-raw Header and transparent u32 Revision; not an Omega observation. UEFI 2.11 section 4.2 defines the fields.",
+    "kind": "upstream",
+    "sources": [
+      "https://github.com/rust-osdev/uefi-rs/blob/c0facddf9ba42b74906a37fca2869e6cdbc8da6a/uefi-raw/src/table/header.rs",
+      "https://github.com/rust-osdev/uefi-rs/blob/c0facddf9ba42b74906a37fca2869e6cdbc8da6a/uefi-raw/src/table/revision.rs"
+    ]
+  },
+  "target": {
+    "abi": "uefi-x64",
+    "endian": "little",
+    "pointer_bits": 64
+  }
+}

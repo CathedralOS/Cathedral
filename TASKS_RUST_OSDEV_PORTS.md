@@ -89,26 +89,32 @@ this table is not a substitute for the license files.
 
 ## Phase 0 — establish the licensed-port lane
 
-- [ ] **PORT-000 — Align the repository policy.** Update
+- [x] **PORT-000 — Align the repository policy.** Update
   `wiki/architecture/prior_art_and_hardware_facts.md`,
   `wiki/architecture/repository_layout.md`, and ADR 0001 where they currently
   say committed third-party-derived ports do not exist.  Preserve the useful
   split between primary-source facts, licensed derivative translations, and
   clean Cathedral integration code.
-- [ ] **PORT-001 — Add licensing records.** Add `THIRD_PARTY_NOTICES.md` and the
+- [x] **PORT-001 — Add licensing records.** Add `THIRD_PARTY_NOTICES.md` and the
   necessary MIT and Apache-2.0 license texts.  List every pinned project and its
   chosen/preserved licensing.  Document how a later pin update is audited.
-- [ ] **PORT-002 — Add the `PORT.md` template.** It must contain upstream pin,
+- [x] **PORT-002 — Add the `PORT.md` template.** It must contain upstream pin,
   license, source map, status, translated tests, Omega blockers, deliberate
   deviations, integration status, and verification commands.
-- [ ] **PORT-003 — Add an inventory checker.** Provide host-side tooling that
+- [x] **PORT-003 — Add an inventory checker.** Provide host-side tooling that
   compares a checked-in symbol/source manifest with the claimed upstream slice.
   It may inspect `reference_code/`, but must fail clearly when that optional
   checkout is absent rather than silently passing.
-- [ ] **PORT-004 — Add layout-vector plumbing.** Define a checked-in,
+- [x] **PORT-004 — Add layout-vector plumbing.** Define a checked-in,
   deterministic format for upstream size/alignment/offset/value vectors and a
   way to compare those vectors with Omega inspection output once supported.
   Landing vectors before their Omega consumer is acceptable; label that state.
+
+Phase 0 evidence: [port tooling and commands](tools/ports/README.md),
+[retained licenses](THIRD_PARTY_NOTICES.md), and the checked header source/vector
+fixtures. Host inventory and comparator tests pass; expected-vector validation
+is not Omega ABI comparison. The current Omega observation adapter remains
+unimplemented as explicitly permitted by PORT-004.
 
 ## Phase 1 — complete the raw UEFI contract
 

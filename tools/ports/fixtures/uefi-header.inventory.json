@@ -1,0 +1,91 @@
+{
+  "files": {
+    "uefi-raw/src/table/header.rs": {
+      "disposition": "translated",
+      "reason": "Existing Cathedral header shape; review only, no ABI conformance claim.",
+      "sha256": "1eb16456b68e08f68938d0bc81abea3985d065bd4ad1dbf04bde4326e5776c5f",
+      "symbols": {
+        "10:signature": {
+          "anchor": "pub signature: u64,",
+          "disposition": "translated",
+          "reason": "Existing declaration; Revision is represented by its u32 carrier and size/crc use Cathedral names.",
+          "targets": [
+            {
+              "anchor": "signature:   u64;",
+              "path": "source/contracts/uefi/uefi.omg"
+            }
+          ]
+        },
+        "12:revision": {
+          "anchor": "pub revision: Revision,",
+          "disposition": "translated",
+          "reason": "Existing declaration; Revision is represented by its u32 carrier and size/crc use Cathedral names.",
+          "targets": [
+            {
+              "anchor": "revision:    u32;",
+              "path": "source/contracts/uefi/uefi.omg"
+            }
+          ]
+        },
+        "14:size": {
+          "anchor": "pub size: u32,",
+          "disposition": "translated",
+          "reason": "Existing declaration; Revision is represented by its u32 carrier and size/crc use Cathedral names.",
+          "targets": [
+            {
+              "anchor": "header_size: u32;",
+              "path": "source/contracts/uefi/uefi.omg"
+            }
+          ]
+        },
+        "17:crc": {
+          "anchor": "pub crc: u32,",
+          "disposition": "translated",
+          "reason": "Existing declaration; Revision is represented by its u32 carrier and size/crc use Cathedral names.",
+          "targets": [
+            {
+              "anchor": "crc32:       u32;",
+              "path": "source/contracts/uefi/uefi.omg"
+            }
+          ]
+        },
+        "19:reserved": {
+          "anchor": "pub reserved: u32,",
+          "disposition": "translated",
+          "reason": "Existing declaration; Revision is represented by its u32 carrier and size/crc use Cathedral names.",
+          "targets": [
+            {
+              "anchor": "reserved:    u32;",
+              "path": "source/contracts/uefi/uefi.omg"
+            }
+          ]
+        },
+        "8:Header": {
+          "anchor": "pub struct Header {",
+          "disposition": "translated",
+          "reason": "Existing declaration; Revision is represented by its u32 carrier and size/crc use Cathedral names.",
+          "targets": [
+            {
+              "anchor": "pub data EfiTableHeader {",
+              "path": "source/contracts/uefi/uefi.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "pub data EfiTableHeader {",
+          "path": "source/contracts/uefi/uefi.omg"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a",
+    "roots": [
+      "uefi-raw/src/table/header.rs"
+    ],
+    "url": "https://github.com/rust-osdev/uefi-rs"
+  }
+}

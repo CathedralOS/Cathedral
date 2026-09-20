@@ -4,8 +4,10 @@
 kernel/syscall surface, IPC wire schemas, the boot handoff, the component +
 manifest format, the checker's admission contract. Foreign ABIs Cathedral must
 match at a boundary (the UEFI hand-off, later PCI/ACPI shapes) also live here —
-transcribed from their primary specs as plain `data` given byte layout by a
-layout policy at the use site.
+transcribed from primary specs or licensed upstream representations as plain
+`data` given byte layout by a layout policy at the use site. Licensed translations
+retain a `PORT.md` source map and notices under the
+[porting policy](../../wiki/architecture/prior_art_and_hardware_facts.md).
 
 **Depends on.** Nothing. `contracts/` is a root of the reach graph — everything
 depends on it; it depends on nothing.

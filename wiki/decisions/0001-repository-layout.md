@@ -1,6 +1,7 @@
 # 0001 — Repository Layout
 
-Status: **accepted** (2026-07-02).
+Status: **accepted** (2026-07-02); licensed-port policy clarified 2026-09-20
+by `PORT-000` in [`TASKS_RUST_OSDEV_PORTS.md`](../../TASKS_RUST_OSDEV_PORTS.md).
 
 ## Context
 
@@ -73,12 +74,22 @@ This ADR records the decisions that are now locked.
    its package, a "world" is a runtime Matrix (not a source concept), and only
    the tier-1 contracts earn a shared home in `contracts/`.
 
-8. **All in-house, single-language, monorepo.** No generic OS-independent crates,
-   no external dependency model (the rust-osdev approach is refused: it churns
-   third-party unsafe code inside the TCB and contradicts the capability model).
-   Everything is one repository, so a change to `core/` and its proofs is one
-   atomic commit — the structural advantage over seL4's and Redox's split repos,
-   which the layout exists to spend.
+8. **Single-language target implementation, monorepo ownership.** Cathedral
+   maintains Omega target code in one repository without importing Rust crates
+   or their ambient-authority APIs. Properly licensed derivative translations
+   may preserve useful representations, algorithms, and tests. Primary-source
+   facts, licensed derivatives, and clean Cathedral integration remain distinct
+   provenance categories under the
+   [porting policy](../architecture/prior_art_and_hardware_facts.md).
+   Translations live in their eventual ownership layer, with co-located
+   `PORT.md` and tests, upstream mapping, and retained notices indexed in
+   `THIRD_PARTY_NOTICES.md`. Studied source checkouts remain gitignored in
+   `reference_code/`; no Rust vendor tree is committed. Untypeable translations
+   stay out of production build roots, and integration remains a separate
+   authority/lifecycle review. A source translation is not proof of ABI or
+   hardware behavior. Everything is one repository, so a change to `core/` and
+   its proofs is one atomic commit — the structural advantage over seL4's and
+   Redox's split repos, which the layout exists to spend.
 
 ## Consequences
 
