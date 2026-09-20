@@ -1,0 +1,4 @@
+machine build(builder: &mut Build) {
+    builder.application("cathedral-x86-catalog-probes");
+    builder.freestanding = true;
+}

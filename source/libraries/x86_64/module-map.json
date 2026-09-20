@@ -1,0 +1,773 @@
+{
+  "format": "cathedral-x86-module-map-v1",
+  "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+  "stage": "inventoried",
+  "categories": [
+    "cathedral-policy",
+    "deliberate-rejection",
+    "existing-representation",
+    "instruction-boundary",
+    "pure-algorithm",
+    "pure-fact-layout",
+    "test-fixture"
+  ],
+  "modules": {
+    "src/addr.rs": {
+      "sha256": "8370e442e48677438615f9f0ac4a7e2fbf1a9aadec875348cc68a9e916031721",
+      "line_count": 1174,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "existing-representation",
+        "cathedral-policy",
+        "test-fixture"
+      ],
+      "review": "48-bit canonical virtual and52-bit physical values, alignment, checked stepping and arithmetic. Existing core has bootstrap-only validation/decomposition; extract/reuse numeric behavior without duplicating a core policy or turning numeric pointers into access.",
+      "comparison_targets": [
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_decompose_bootstrap_virtual_address"
+        },
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_validate_bootstrap_physical_frame_geometry"
+        }
+      ],
+      "anchor_count": 106,
+      "supplemental_anchor_count": 0
+    },
+    "src/instructions/interrupts.rs": {
+      "sha256": "2021860d3a7bfdf57789821cf917f44f84dd551ec417552c96f28c00e5630419",
+      "line_count": 157,
+      "categories": [
+        "instruction-boundary",
+        "cathedral-policy",
+        "deliberate-rejection"
+      ],
+      "review": "IF observation, cli/sti, interrupt-disabled closures, sti+hlt, int3/software interrupt require admitted execution and exact save/restore lifecycle, not arbitrary safe closures.",
+      "comparison_targets": [
+        {
+          "path": "source/core/legacy_timer_root.omg",
+          "anchor": "InterruptAcknowledgement"
+        },
+        {
+          "path": "source/core/x86_interrupt_profile.omg",
+          "anchor": "pub machine"
+        }
+      ],
+      "anchor_count": 7,
+      "supplemental_anchor_count": 0
+    },
+    "src/instructions/mod.rs": {
+      "sha256": "d4fd3d08cef922e12dd94c6e08430319385d5b5c0115729b0e1edcec7f5da471",
+      "line_count": 57,
+      "categories": [
+        "instruction-boundary",
+        "deliberate-rejection"
+      ],
+      "review": "hlt/nop/read_rip/debug breakpoint are instruction catalog or target-debug operations. Module exports are packaging; no ambient instruction wrapper API.",
+      "comparison_targets": [
+        {
+          "path": "source/core/x2apic_timer.omg",
+          "anchor": "reaches MachineControl"
+        }
+      ],
+      "anchor_count": 11,
+      "supplemental_anchor_count": 0
+    },
+    "src/instructions/port.rs": {
+      "sha256": "e548b3ddc13b738876fe932a15682aace0dfd8fbcccd5761782dc6742d505b53",
+      "line_count": 205,
+      "categories": [
+        "instruction-boundary",
+        "deliberate-rejection"
+      ],
+      "review": "in/out8/16/32 require PortIo. Rust Port access marker/ownership wrappers and clone do not establish Cathedral authority; retain numeric port facts separately.",
+      "comparison_targets": [
+        {
+          "path": "source/core/pic_8259.omg",
+          "anchor": "reaches PortIo"
+        }
+      ],
+      "anchor_count": 27,
+      "supplemental_anchor_count": 0
+    },
+    "src/instructions/random.rs": {
+      "sha256": "a454ca21b303bcf6ece284ddfecb33e5cd1d4898a9adaddfb20520599f4688d1",
+      "line_count": 85,
+      "categories": [
+        "instruction-boundary",
+        "test-fixture"
+      ],
+      "review": "CPUID feature discovery and RDRAND are effectful instruction boundaries; returned random values are not pure deterministic helpers. Feature-dependent unit test is hardware-only.",
+      "comparison_targets": [],
+      "anchor_count": 7,
+      "supplemental_anchor_count": 0
+    },
+    "src/instructions/segmentation.rs": {
+      "sha256": "37e3d831a3d46d16a45397cd2b185d084ba70c4f48373a46653dac7fecc6b18d",
+      "line_count": 111,
+      "categories": [
+        "instruction-boundary",
+        "cathedral-policy"
+      ],
+      "review": "Segment get/set, far CS transfer, FS/GS base and swapgs require current CPU/segment state and lifetime ownership; selector encoding is in registers/segmentation.",
+      "comparison_targets": [],
+      "anchor_count": 8,
+      "supplemental_anchor_count": 3
+    },
+    "src/instructions/smap.rs": {
+      "sha256": "b5a6a5ae9bfb9051ca8fd2325f4fa50d73c2d7386726ea74155e101f8cfd2e20",
+      "line_count": 116,
+      "categories": [
+        "instruction-boundary",
+        "cathedral-policy",
+        "deliberate-rejection"
+      ],
+      "review": "CPUID/CR4/AC observations and stac/clac guards require checked nested restoration; freely constructed Smap token is not an authority. Boolean CPU feature observations may feed pure plans.",
+      "comparison_targets": [],
+      "anchor_count": 7,
+      "supplemental_anchor_count": 0
+    },
+    "src/instructions/tables.rs": {
+      "sha256": "34ed3b42c79d72cb74cef8a2581dffa798b66ea77b793887910e38377d975bed",
+      "line_count": 92,
+      "categories": [
+        "instruction-boundary",
+        "cathedral-policy"
+      ],
+      "review": "lgdt/lidt/sgdt/sidt/ltr need admitted descriptor backing, stable lifetime and CPU installation; DescriptorTablePointer bytes are separate pure representation.",
+      "comparison_targets": [
+        {
+          "path": "source/drivers/facts/x86_idt_gate.omg",
+          "anchor": "pub data X86IdtGate"
+        },
+        {
+          "path": "source/drivers/facts/x86_interrupt_stacks.omg",
+          "anchor": "pub data X86IstStackClass"
+        }
+      ],
+      "anchor_count": 6,
+      "supplemental_anchor_count": 0
+    },
+    "src/instructions/tlb.rs": {
+      "sha256": "c4c47e0718be84a5e3812b20a4129e48d0ebc203e395476b117b540bc50dae88",
+      "line_count": 437,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "instruction-boundary",
+        "cathedral-policy"
+      ],
+      "review": "PCID bounds, INVPCID descriptor/command and broadcast batch arithmetic are pure work; CPUID, invlpg/invpcid/invlpgb/tlbsync and CR3 reload are instruction boundaries with mapping-era/processor scope.",
+      "comparison_targets": [
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+        }
+      ],
+      "anchor_count": 31,
+      "supplemental_anchor_count": 4
+    },
+    "src/lib.rs": {
+      "sha256": "938e757fca881c483f4a886371019c30cfadf2d4fb5d53eb0fb94adc140a31f3",
+      "line_count": 73,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "deliberate-rejection"
+      ],
+      "review": "PrivilegeLevel and numeric conversion missing; root exports/sealed Rust trait are packaging only.",
+      "comparison_targets": [],
+      "anchor_count": 13,
+      "supplemental_anchor_count": 4
+    },
+    "src/registers/control.rs": {
+      "sha256": "805cb1e92e674510c61fc4f910b2ef16f769b5bbbc4f1264b455967d72a8b311",
+      "line_count": 612,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "instruction-boundary",
+        "cathedral-policy"
+      ],
+      "review": "CR0/CR3/CR4 flags and CR8 priority encodings missing; read/write/update including PCID/no-flush paths need MachineControl and reserved-bit/CPU-feature/mapping policy.",
+      "comparison_targets": [
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_decompose_bootstrap_virtual_address"
+        },
+        {
+          "path": "source/core/x2apic_timer.omg",
+          "anchor": "reaches MachineControl"
+        }
+      ],
+      "anchor_count": 78,
+      "supplemental_anchor_count": 15
+    },
+    "src/registers/debug.rs": {
+      "sha256": "97d1da872447748fa46e2c3d47e9f59a04b930e453f1f120baf84a83ef9316d5",
+      "line_count": 516,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "instruction-boundary"
+      ],
+      "review": "DR6/DR7 flags, register index, breakpoint size/condition codecs and Dr7Value manipulation are pure missing work; debug register read/write/update remain boundaries.",
+      "comparison_targets": [],
+      "anchor_count": 77,
+      "supplemental_anchor_count": 13
+    },
+    "src/registers/mod.rs": {
+      "sha256": "5d1dd2815b7898e2a9d88b883c8fcec4ffe7f69938ab8878da81544038975645",
+      "line_count": 12,
+      "categories": [
+        "deliberate-rejection"
+      ],
+      "review": "Module/reexport packaging only; per-register facts and instruction methods classified below.",
+      "comparison_targets": [],
+      "anchor_count": 8,
+      "supplemental_anchor_count": 0
+    },
+    "src/registers/model_specific.rs": {
+      "sha256": "8315473c0eabb3178350f24ff284c3f6947f210cc341279c1b22bff6a599c29b",
+      "line_count": 731,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "existing-representation",
+        "instruction-boundary",
+        "cathedral-policy"
+      ],
+      "review": "MSR identifiers, EFER/CET flags, STAR selector checks/encoding are pure missing work. IA32_APIC_BASE identifier/bits already in facts; all register I/O remains admitted instruction work.",
+      "comparison_targets": [
+        {
+          "path": "source/drivers/facts/local_apic.omg",
+          "anchor": "pub const IA32_APIC_BASE_MSR"
+        },
+        {
+          "path": "source/core/x2apic_timer.omg",
+          "anchor": "reaches MachineControl"
+        }
+      ],
+      "anchor_count": 83,
+      "supplemental_anchor_count": 4
+    },
+    "src/registers/mxcsr.rs": {
+      "sha256": "fad54d431a4ce3c9e4c88147559e9a1b137d7ab831b25bb89d5970b6f812f645",
+      "line_count": 120,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "instruction-boundary",
+        "test-fixture"
+      ],
+      "review": "MXCSR flags/default bits are pure missing facts; SSE control-state read/write/update and related tests are CPU state operations.",
+      "comparison_targets": [],
+      "anchor_count": 28,
+      "supplemental_anchor_count": 0
+    },
+    "src/registers/rflags.rs": {
+      "sha256": "4facddd9d181ec9e5e5e9a77898bc2c761a37b092e4f7e7b5f2fed221966c9b0",
+      "line_count": 158,
+      "categories": [
+        "pure-fact-layout",
+        "instruction-boundary",
+        "test-fixture"
+      ],
+      "review": "RFLAGS bits are pure facts. pushfq/popfq state observation/mutation and update closures require instruction contracts; read test is hardware-dependent.",
+      "comparison_targets": [
+        {
+          "path": "source/core/legacy_timer_root.omg",
+          "anchor": "InterruptAcknowledgement"
+        }
+      ],
+      "anchor_count": 28,
+      "supplemental_anchor_count": 0
+    },
+    "src/registers/segmentation.rs": {
+      "sha256": "2798e7398d1ee6cd57926e9d0e83049444a1032940f6774fe0882e8795bbaff6",
+      "line_count": 170,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "instruction-boundary"
+      ],
+      "review": "SegmentSelector index/RPL/NULL encoding and privilege conversion are missing pure work. Segment/Segment64 methods require admitted CPU operations; zero-sized CS/DS/etc are Rust names, not capabilities.",
+      "comparison_targets": [],
+      "anchor_count": 20,
+      "supplemental_anchor_count": 0
+    },
+    "src/registers/xcontrol.rs": {
+      "sha256": "1c055cbf5b535bcf71738427109ec0a44bec97f2cf80bac12874946fb7eaba53",
+      "line_count": 170,
+      "categories": [
+        "pure-fact-layout",
+        "instruction-boundary",
+        "cathedral-policy"
+      ],
+      "review": "XCR0 flags are pure data; xgetbv/xsetbv/update requires OSXSAVE/feature consistency and live extended-state ownership.",
+      "comparison_targets": [],
+      "anchor_count": 18,
+      "supplemental_anchor_count": 0
+    },
+    "src/structures/gdt.rs": {
+      "sha256": "a4232a94ccc9ce30c90d172360e1de316cbf46b10c4543307d2e3e34548aa865",
+      "line_count": 624,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "instruction-boundary",
+        "cathedral-policy",
+        "test-fixture"
+      ],
+      "review": "GDT words, descriptor flags/default encodings, selector/DPL and TSS descriptor composition are pure missing work; TSS-pointer lifetime/bitmap memory observation and lgdt are boundaries; selecting entries remains OS policy.",
+      "comparison_targets": [
+        {
+          "path": "source/drivers/facts/x86_interrupt_stacks.omg",
+          "anchor": "pub data X86IstStackClass"
+        }
+      ],
+      "anchor_count": 64,
+      "supplemental_anchor_count": 2
+    },
+    "src/structures/idt.rs": {
+      "sha256": "e6fd82e5e76243c2e10bb1af8f476ed79c8905d1fa5aedaa070a99b4e01c02ce",
+      "line_count": 1762,
+      "categories": [
+        "existing-representation",
+        "pure-fact-layout",
+        "pure-algorithm",
+        "instruction-boundary",
+        "cathedral-policy",
+        "deliberate-rejection",
+        "test-fixture"
+      ],
+      "review": "Reuse X86IdtGate and exception vectors, extend pure options/error-code codecs and detached stack-frame facts. Rust x86-interrupt handler types/macros, live frame volatile mutation and iretq do not replace admitted roots.",
+      "comparison_targets": [
+        {
+          "path": "source/drivers/facts/x86_idt_gate.omg",
+          "anchor": "pub data X86IdtGate"
+        },
+        {
+          "path": "source/drivers/facts/x86_exception_vectors.omg",
+          "anchor": "pub const X86_EXCEPTION_VECTOR_COUNT"
+        },
+        {
+          "path": "source/drivers/facts/x86_interrupt_stacks.omg",
+          "anchor": "pub data X86IstStackClass"
+        },
+        {
+          "path": "source/core/x86_interrupt_profile.omg",
+          "anchor": "pub machine"
+        },
+        {
+          "path": "source/core/legacy_timer_root.omg",
+          "anchor": "InterruptAcknowledgement"
+        }
+      ],
+      "anchor_count": 158,
+      "supplemental_anchor_count": 31
+    },
+    "src/structures/mem_encrypt.rs": {
+      "sha256": "fb97af17b5d33745593bc21b5e7235ae57262895122bd8ff86cea781c3a6e4cb",
+      "line_count": 87,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "cathedral-policy",
+        "deliberate-rejection"
+      ],
+      "review": "EncryptedBit/SharedBit configuration and mask transforms can become explicit pure inputs. Reject global mutable address-mask configuration as library authority; CPU profile and re-admission of existing mappings belong to Cathedral.",
+      "comparison_targets": [
+        {
+          "path": "source/drivers/facts/x86_page_table_entry.omg",
+          "anchor": "pub data X86PageTableEntry"
+        },
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+        }
+      ],
+      "anchor_count": 7,
+      "supplemental_anchor_count": 2
+    },
+    "src/structures/mod.rs": {
+      "sha256": "f128249744c430272b564aefae864b7ea39cb8a93df6e0ff1ed20d5723c7fde6",
+      "line_count": 42,
+      "categories": [
+        "pure-fact-layout",
+        "deliberate-rejection",
+        "test-fixture"
+      ],
+      "review": "Packed DescriptorTablePointer(limit,base) missing; base is inert address. Submodule exports packaging. Size test is a target representation vector candidate.",
+      "comparison_targets": [],
+      "anchor_count": 11,
+      "supplemental_anchor_count": 0
+    },
+    "src/structures/paging/frame.rs": {
+      "sha256": "ef176a88a1b52eb33a2843f98286ac79946d77c5b4afa5959c5dc750af876880",
+      "line_count": 724,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "existing-representation",
+        "test-fixture"
+      ],
+      "review": "PhysFrame size/PFN/range arithmetic are inert numeric work with no allocation claim. Existing bootstrap4KiB/52-bit PFN validator covers a narrow subset; larger frames/range tests remain missing.",
+      "comparison_targets": [
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_validate_bootstrap_physical_frame_geometry"
+        }
+      ],
+      "anchor_count": 66,
+      "supplemental_anchor_count": 0
+    },
+    "src/structures/paging/frame_alloc.rs": {
+      "sha256": "3e5911d6b6950f32316a7e7552218335345c4f4fd13354fa27bb2afc72396719",
+      "line_count": 25,
+      "categories": [
+        "cathedral-policy",
+        "deliberate-rejection"
+      ],
+      "review": "Unique unused frame ownership and safe deallocation belong to qualified Extent allocator contracts, not a copied unsafe trait returning freely forgeable numeric frames.",
+      "comparison_targets": [
+        {
+          "path": "source/core/extent.omg",
+          "anchor": "ExtentRootProvider"
+        }
+      ],
+      "anchor_count": 4,
+      "supplemental_anchor_count": 0
+    },
+    "src/structures/paging/mapper/mapped_page_table.rs": {
+      "sha256": "e250c729f0588d1ce129c1c68ab43337f2f44328d2b38fe896cbeeacc1bc4ff2",
+      "line_count": 842,
+      "categories": [
+        "pure-algorithm",
+        "cathedral-policy",
+        "deliberate-rejection"
+      ],
+      "review": "Map/unmap/flag/translation/cleanup algorithms may become detached plans over admitted table views. Reject arbitrary PhysFrame-to-*mut PageTable conversion as access; live walker must prove backing, alias/lifetime and hierarchy roles.",
+      "comparison_targets": [
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+        },
+        {
+          "path": "source/core/extent.omg",
+          "anchor": "ExtentRootProvider"
+        }
+      ],
+      "anchor_count": 47,
+      "supplemental_anchor_count": 4
+    },
+    "src/structures/paging/mapper/mod.rs": {
+      "sha256": "9b33e4f767f0eb77560cc7daf0826feadd176d0ced292ada00329a0695f67b6e",
+      "line_count": 540,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "cathedral-policy",
+        "instruction-boundary",
+        "deliberate-rejection"
+      ],
+      "review": "Numeric TranslateResult/errors and detached walk recipes can port. Live Mapper/CleanUp and physical backing depend on Extent/placement/TLB policy. Reject must_use-only flush debts and unrestricted ignore() as acknowledgement authority.",
+      "comparison_targets": [
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+        },
+        {
+          "path": "source/core/extent.omg",
+          "anchor": "ExtentRootProvider"
+        }
+      ],
+      "anchor_count": 41,
+      "supplemental_anchor_count": 20
+    },
+    "src/structures/paging/mapper/offset_page_table.rs": {
+      "sha256": "e5812f82d6b5076d73546c843f0ea921979b54499e71479d23b103838bbb32d0",
+      "line_count": 301,
+      "categories": [
+        "pure-algorithm",
+        "cathedral-policy",
+        "deliberate-rejection"
+      ],
+      "review": "Direct-map offset arithmetic is pure candidate work. Choosing global physical offset and casting resulting addresses into references is Cathedral mapping policy, not a numeric conversion grant.",
+      "comparison_targets": [
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+        },
+        {
+          "path": "source/core/extent.omg",
+          "anchor": "ExtentRootProvider"
+        }
+      ],
+      "anchor_count": 31,
+      "supplemental_anchor_count": 0
+    },
+    "src/structures/paging/mapper/recursive_page_table.rs": {
+      "sha256": "e6a796d07b191d4857c931c7b4daf156a707c51fba675af6d9f1cee62c970e6f",
+      "line_count": 958,
+      "categories": [
+        "pure-algorithm",
+        "cathedral-policy",
+        "instruction-boundary",
+        "deliberate-rejection"
+      ],
+      "review": "Recursive-coordinate arithmetic can port independently. Active-CR3 checks, recursive mapping choice and PRESENT|WRITABLE insertion are policy; raw table pointer traversal needs authority. Upstream warns index511 pointer-end unsoundness.",
+      "comparison_targets": [
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+        },
+        {
+          "path": "source/core/extent.omg",
+          "anchor": "ExtentRootProvider"
+        }
+      ],
+      "anchor_count": 40,
+      "supplemental_anchor_count": 2
+    },
+    "src/structures/paging/mod.rs": {
+      "sha256": "4ca202221fe00ea6a1b9c2fd356fe6e93326c00e2a4c9b5005e49c3cb0003960",
+      "line_count": 23,
+      "categories": [
+        "deliberate-rejection"
+      ],
+      "review": "Reexport-only module; preserve visibility map without a parallel paging authority package.",
+      "comparison_targets": [
+        {
+          "path": "source/drivers/facts/x86_page_table_entry.omg",
+          "anchor": "pub data X86PageTableEntry"
+        },
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+        }
+      ],
+      "anchor_count": 13,
+      "supplemental_anchor_count": 0
+    },
+    "src/structures/paging/page.rs": {
+      "sha256": "3314b425ea669e883900bfbcb2357e3ea7b03517734d674596e613ff3664d630",
+      "line_count": 1308,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "existing-representation",
+        "test-fixture"
+      ],
+      "review": "4KiB/2MiB/1GiB page facts, index composition and canonical-gap range stepping are missing general pure work; existing core four-level4KiB decomposition remains policy.",
+      "comparison_targets": [
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_decompose_bootstrap_virtual_address"
+        }
+      ],
+      "anchor_count": 118,
+      "supplemental_anchor_count": 0
+    },
+    "src/structures/paging/page_table.rs": {
+      "sha256": "c22af38b260fc7d51d7a1c156f3d8788b0e539563bbbd72ea7d417e513c89f42",
+      "line_count": 525,
+      "categories": [
+        "existing-representation",
+        "pure-fact-layout",
+        "pure-algorithm",
+        "cathedral-policy",
+        "test-fixture"
+      ],
+      "review": "Reuse complete14-field X86PageTableEntry/8byte layout and512-entry candidate. Flags/word codecs, PageTableIndex/PageOffset/level helpers and detached table operations are missing. Bit7 leaf PAT vs upper huge-page meaning and bits59..62 key interpretation are role-dependent.",
+      "comparison_targets": [
+        {
+          "path": "source/drivers/facts/x86_page_table_entry.omg",
+          "anchor": "pub data X86PageTableEntry"
+        },
+        {
+          "path": "source/core/x86_page_table.omg",
+          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+        }
+      ],
+      "anchor_count": 85,
+      "supplemental_anchor_count": 6
+    },
+    "src/structures/port.rs": {
+      "sha256": "53fb98f83601ff411769984500c6b3ce06473273ef20ea06266188162d8df301",
+      "line_count": 29,
+      "categories": [
+        "instruction-boundary",
+        "deliberate-rejection"
+      ],
+      "review": "PortRead/PortWrite unsafe primitive traits are subsumed by checked instruction contracts and PortIo service; no trait copied as an authority grant.",
+      "comparison_targets": [
+        {
+          "path": "source/core/pic_8259.omg",
+          "anchor": "reaches PortIo"
+        }
+      ],
+      "anchor_count": 4,
+      "supplemental_anchor_count": 0
+    },
+    "src/structures/tss.rs": {
+      "sha256": "1a59b9b9b5270deb6be06b15e03a6fa738a89abd7d5224a250704b3037821233",
+      "line_count": 127,
+      "categories": [
+        "pure-fact-layout",
+        "pure-algorithm",
+        "cathedral-policy",
+        "test-fixture"
+      ],
+      "review": "104byte TSS fixed record, default and I/O bitmap validation errors missing. Existing stack/IST role assignments must be reused; live backing/bitmap lifetime/loading remain authority policy.",
+      "comparison_targets": [
+        {
+          "path": "source/drivers/facts/x86_interrupt_stacks.omg",
+          "anchor": "pub data X86IstStackClass"
+        },
+        {
+          "path": "source/core/x86_interrupt_profile.omg",
+          "anchor": "pub machine"
+        }
+      ],
+      "anchor_count": 11,
+      "supplemental_anchor_count": 10
+    },
+    "testing/src/gdt.rs": {
+      "sha256": "f23091cce7eded18057c3d94ea1d5296b8fc28446f53ec7f7e6864801dc7b2cf",
+      "line_count": 59,
+      "categories": [
+        "test-fixture",
+        "cathedral-policy",
+        "deliberate-rejection"
+      ],
+      "review": "Test-specific lazy static GDT/TSS/stack and segment loading: retain intent, replace allocation/root lifecycle with Cathedral harness.",
+      "comparison_targets": [],
+      "anchor_count": 7,
+      "supplemental_anchor_count": 0
+    },
+    "testing/src/lib.rs": {
+      "sha256": "ffff39aeffeb9bb0f316d1731765a8ef0b20e318a278f8c0e35857fa400db263",
+      "line_count": 56,
+      "categories": [
+        "test-fixture",
+        "cathedral-policy",
+        "deliberate-rejection"
+      ],
+      "review": "bootloader0.9 _start, panic handler, serial runner and QEMU debug exit are Rust test harness, not target library API.",
+      "comparison_targets": [],
+      "anchor_count": 11,
+      "supplemental_anchor_count": 2
+    },
+    "testing/src/serial.rs": {
+      "sha256": "37e8689af8f5c8cf3bcc7b9105146ec7508cfb3ba7a6c4645e3f74e72aa21b34",
+      "line_count": 35,
+      "categories": [
+        "test-fixture",
+        "cathedral-policy",
+        "deliberate-rejection"
+      ],
+      "review": "spin/lazy_static UART helper is test harness with PortIo; reuse Cathedral serial facts/provider instead of duplicate ambient port.",
+      "comparison_targets": [],
+      "anchor_count": 2,
+      "supplemental_anchor_count": 2
+    },
+    "testing/src/tests.rs": {
+      "sha256": "d3b01bda8ef07ecfc215fde0f79ce2298c7969d33b1e1d550386234e589e85f5",
+      "line_count": 6,
+      "categories": [
+        "test-fixture",
+        "cathedral-policy",
+        "deliberate-rejection"
+      ],
+      "review": "Example 1==1 test validates Rust harness only, no hardware algorithm to translate.",
+      "comparison_targets": [],
+      "anchor_count": 1,
+      "supplemental_anchor_count": 0
+    },
+    "testing/tests/basic_boot.rs": {
+      "sha256": "910e18f6c132731672fa18318753e53024002fad9c5bfb112643dbbc109ac1ad",
+      "line_count": 27,
+      "categories": [
+        "test-fixture",
+        "instruction-boundary",
+        "cathedral-policy"
+      ],
+      "review": "Rust boot entry/println smoke intent; Cathedral production boot smoke owns actual entry.",
+      "comparison_targets": [
+        {
+          "path": "source/core/pic_8259.omg",
+          "anchor": "reaches PortIo"
+        }
+      ],
+      "anchor_count": 3,
+      "supplemental_anchor_count": 0
+    },
+    "testing/tests/double_fault_stack_overflow.rs": {
+      "sha256": "ac93873afed26d6bd84b5b32fa41fbbbf560b52976b0b6b11fc7f952cebeb756",
+      "line_count": 61,
+      "categories": [
+        "test-fixture",
+        "instruction-boundary",
+        "cathedral-policy"
+      ],
+      "review": "Deliberate recursive stack overflow and alternate double-fault stack test needs admitted fault roots/IST backing; cannot run as a pure host test.",
+      "comparison_targets": [
+        {
+          "path": "source/core/legacy_timer_root.omg",
+          "anchor": "InterruptAcknowledgement"
+        }
+      ],
+      "anchor_count": 6,
+      "supplemental_anchor_count": 0
+    },
+    "testing/tests/interrupt_handling.rs": {
+      "sha256": "d92df5c185a4e9586d6a8226d74f0a950aab0eb8811f15e4c335b7975cdf9603",
+      "line_count": 91,
+      "categories": [
+        "test-fixture",
+        "instruction-boundary",
+        "cathedral-policy"
+      ],
+      "review": "Breakpoint/software-interrupt handlers and atomics test actual x86 interrupt ABI; retain scenarios against Cathedral roots, never arbitrary function-pointer installation.",
+      "comparison_targets": [
+        {
+          "path": "source/core/legacy_timer_root.omg",
+          "anchor": "InterruptAcknowledgement"
+        }
+      ],
+      "anchor_count": 8,
+      "supplemental_anchor_count": 0
+    },
+    "testing/tests/port_read_write.rs": {
+      "sha256": "ebad3d9d7d561e5dd23326412ebe342f02219da3846a8357fb75be968876f1aa",
+      "line_count": 68,
+      "categories": [
+        "test-fixture",
+        "instruction-boundary",
+        "cathedral-policy"
+      ],
+      "review": "CRT index/data hardware roundtrip is PortIo test, not pure fact validation; preserve exact restoration/authorization scenario.",
+      "comparison_targets": [
+        {
+          "path": "source/core/pic_8259.omg",
+          "anchor": "reaches PortIo"
+        }
+      ],
+      "anchor_count": 6,
+      "supplemental_anchor_count": 0
+    }
+  },
+  "lexical_anchor_classifications": {
+    "cathedral-policy": 149,
+    "deliberate-rejection": 201,
+    "existing-representation": 4,
+    "instruction-boundary": 149,
+    "pure-algorithm": 274,
+    "pure-fact-layout": 391,
+    "test-fixture": 139
+  },
+  "limitations": "All41 Rust files are classified. Lexical anchors plus enum/macro supplements are source-bound review indexes, not Rust semantic expansion or a compilation claim. Pending means classified implementation work, not an unreviewed module. Related Cathedral targets indicate overlap/subset only."
+}

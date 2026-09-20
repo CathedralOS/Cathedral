@@ -1,0 +1,6 @@
+use omega::language::core::assembly;
+data Main {}
+machine Main::main(&mut self) reaches PortIo {
+    let mut value: u8 = 0;
+    asm { in value, 0x20 }
+}

@@ -1,0 +1,632 @@
+{
+  "format": "cathedral-x86-test-index-v1",
+  "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+  "execution": "not run; retained source scenarios only",
+  "tests": [
+    {
+      "path": "src/addr.rs",
+      "line": 782,
+      "name": "add_overflow_virtaddr",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 788,
+      "name": "add_overflow_physaddr",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 794,
+      "name": "sub_underflow_virtaddr",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 800,
+      "name": "sub_overflow_physaddr",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 805,
+      "name": "virtaddr_new_truncate",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 814,
+      "name": "virtaddr_step_forward",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 858,
+      "name": "virtaddr_step_backward",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 894,
+      "name": "virtaddr_steps_between",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 958,
+      "name": "virtaddr_step_overflowing",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 977,
+      "name": "test_align_up",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 994,
+      "name": "test_virt_addr_align_up",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 1003,
+      "name": "test_virt_addr_align_down",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 1013,
+      "name": "test_virt_addr_align_up_overflow",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 1019,
+      "name": "test_phys_addr_align_up_overflow",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 1025,
+      "name": "test_from_ptr_array",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 1045,
+      "name": "forward_base_case",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 1080,
+      "name": "forward_induction_step",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 1107,
+      "name": "forward_implies_backward",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 1124,
+      "name": "backward_implies_forward",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 1146,
+      "name": "forward_implies_steps_between",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/addr.rs",
+      "line": 1162,
+      "name": "steps_between_implies_forward",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/instructions/random.rs",
+      "line": 74,
+      "name": "test_rdrand",
+      "kind": "hardware-integration",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/registers/mxcsr.rs",
+      "line": 102,
+      "name": "mxcsr_default",
+      "kind": "hardware-integration",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/registers/mxcsr.rs",
+      "line": 108,
+      "name": "mxcsr_read",
+      "kind": "hardware-integration",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/registers/mxcsr.rs",
+      "line": 114,
+      "name": "mxcsr_write",
+      "kind": "hardware-integration",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/registers/rflags.rs",
+      "line": 153,
+      "name": "rflags_read",
+      "kind": "hardware-integration",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/gdt.rs",
+      "line": 543,
+      "name": "linux_kernel_defaults",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/gdt.rs",
+      "line": 576,
+      "name": "push_max_segments",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/gdt.rs",
+      "line": 589,
+      "name": "panic_user_segment",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/gdt.rs",
+      "line": 596,
+      "name": "panic_system_segment",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/gdt.rs",
+      "line": 604,
+      "name": "from_entries",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/gdt.rs",
+      "line": 612,
+      "name": "descriptor_dpl",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/idt.rs",
+      "line": 1666,
+      "name": "size_test",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/idt.rs",
+      "line": 1683,
+      "name": "default_handlers",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/idt.rs",
+      "line": 1728,
+      "name": "idt_fmt_debug",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/idt.rs",
+      "line": 1733,
+      "name": "entry_derive_test",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/idt.rs",
+      "line": 1747,
+      "name": "isr_frame_manipulation",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/mod.rs",
+      "line": 32,
+      "name": "check_descriptor_pointer_size",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 520,
+      "name": "test_frame_range_len",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 538,
+      "name": "phys_frame_range_next",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 555,
+      "name": "phys_frame_range_inclusive_next",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 572,
+      "name": "phys_frame_range_next_back",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 589,
+      "name": "phys_frame_range_inclusive_next_back",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 607,
+      "name": "phys_frame_range_nth_0",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 620,
+      "name": "phys_frame_range_nth",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 637,
+      "name": "phys_frame_range_inclusive_nth_0",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 650,
+      "name": "phys_frame_range_inclusive_nth",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 667,
+      "name": "phys_frame_range_nth_back_0",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 680,
+      "name": "phys_frame_range_nth_back",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 697,
+      "name": "phys_frame_range_inclusive_nth_back_0",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/frame.rs",
+      "line": 710,
+      "name": "phys_frame_range_inclusive_nth_back",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 684,
+      "name": "test_page_is_hash",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 691,
+      "name": "test_page_ranges",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 719,
+      "name": "test_page_range_inclusive_overflow",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 739,
+      "name": "test_page_range_next_jumping_gap_panics",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 752,
+      "name": "test_page_range_next_back_jumping_gap_panics",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 764,
+      "name": "test_page_range_inclusive_next_not_jumping_gap_panics",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 776,
+      "name": "test_page_range_inclusive_next_back_not_jumping_gap_panics",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 789,
+      "name": "test_page_range_inclusive_next_jumping_gap_panics",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 802,
+      "name": "test_page_range_inclusive_next_back_jumping_gap_panics",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 814,
+      "name": "test_page_range_len",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 828,
+      "name": "page_step_forward",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 860,
+      "name": "page_step_backwards",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 889,
+      "name": "page_steps_between",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 934,
+      "name": "page_step_overflowing",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 983,
+      "name": "page_range_next",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 989,
+      "name": "page_range_next_panic",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1021,
+      "name": "page_range_next_back",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1027,
+      "name": "page_range_next_back_panic",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1059,
+      "name": "page_range_inclusive_next",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1065,
+      "name": "page_range_inclusive_next_panic",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1097,
+      "name": "page_range_inclusive_next_back",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1103,
+      "name": "page_range_inclusive_next_back_panic",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1143,
+      "name": "page_range_nth",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1150,
+      "name": "page_range_nth_panic",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1197,
+      "name": "page_range_nth_back",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1204,
+      "name": "page_range_nth_back_panic",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1244,
+      "name": "page_range_inclusive_nth",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1251,
+      "name": "page_range_inclusive_nth_panic",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1298,
+      "name": "page_range_inclusive_nth_back",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page.rs",
+      "line": 1305,
+      "name": "page_range_inclusive_nth_back_panic",
+      "kind": "kani-proof",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/paging/page_table.rs",
+      "line": 511,
+      "name": "page_table_index_step_overflowing",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "src/structures/tss.rs",
+      "line": 122,
+      "name": "check_tss_size",
+      "kind": "pure-or-detached-fixture",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "testing/src/tests.rs",
+      "line": 2,
+      "name": "example_test",
+      "kind": "hardware-integration",
+      "status": "not translated/executed in X86-000"
+    },
+    {
+      "path": "testing/tests/basic_boot.rs",
+      "line": 23,
+      "name": "basic_boot",
+      "kind": "hardware-integration",
+      "status": "not translated/executed in X86-000"
+    }
+  ],
+  "integration_roots": [
+    {
+      "path": "testing/tests/basic_boot.rs",
+      "line": 11,
+      "name": "_start",
+      "kind": "hardware-integration-root",
+      "status": "Rust boot harness deliberately not ported; retain scenario against Cathedral admitted roots"
+    },
+    {
+      "path": "testing/tests/double_fault_stack_overflow.rs",
+      "line": 11,
+      "name": "_start",
+      "kind": "hardware-integration-root",
+      "status": "Rust boot harness deliberately not ported; retain scenario against Cathedral admitted roots"
+    },
+    {
+      "path": "testing/tests/interrupt_handling.rs",
+      "line": 16,
+      "name": "_start",
+      "kind": "hardware-integration-root",
+      "status": "Rust boot harness deliberately not ported; retain scenario against Cathedral admitted roots"
+    },
+    {
+      "path": "testing/tests/port_read_write.rs",
+      "line": 24,
+      "name": "_start",
+      "kind": "hardware-integration-root",
+      "status": "Rust boot harness deliberately not ported; retain scenario against Cathedral admitted roots"
+    }
+  ]
+}

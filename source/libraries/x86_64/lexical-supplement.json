@@ -1,0 +1,806 @@
+{
+  "format": "cathedral-x86-lexical-supplement-v1",
+  "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+  "files": {
+    "src/addr.rs": {
+      "sha256": "8370e442e48677438615f9f0ac4a7e2fbf1a9aadec875348cc68a9e916031721",
+      "symbols": {}
+    },
+    "src/instructions/interrupts.rs": {
+      "sha256": "2021860d3a7bfdf57789821cf917f44f84dd551ec417552c96f28c00e5630419",
+      "symbols": {}
+    },
+    "src/instructions/mod.rs": {
+      "sha256": "d4fd3d08cef922e12dd94c6e08430319385d5b5c0115729b0e1edcec7f5da471",
+      "symbols": {}
+    },
+    "src/instructions/port.rs": {
+      "sha256": "e548b3ddc13b738876fe932a15682aace0dfd8fbcccd5761782dc6742d505b53",
+      "symbols": {}
+    },
+    "src/instructions/random.rs": {
+      "sha256": "a454ca21b303bcf6ece284ddfecb33e5cd1d4898a9adaddfb20520599f4688d1",
+      "symbols": {}
+    },
+    "src/instructions/segmentation.rs": {
+      "sha256": "37e3d831a3d46d16a45397cd2b185d084ba70c4f48373a46653dac7fecc6b18d",
+      "symbols": {
+        "11:macro::get_reg_impl": {
+          "anchor": "macro_rules! get_reg_impl {",
+          "classification": "deliberate-rejection",
+          "reason": "Source-defined Rust macro retained as review input; expansion is not a public Omega API."
+        },
+        "24:macro::segment_impl": {
+          "anchor": "macro_rules! segment_impl {",
+          "classification": "deliberate-rejection",
+          "reason": "Source-defined Rust macro retained as review input; expansion is not a public Omega API."
+        },
+        "39:macro::segment64_impl": {
+          "anchor": "macro_rules! segment64_impl {",
+          "classification": "deliberate-rejection",
+          "reason": "Source-defined Rust macro retained as review input; expansion is not a public Omega API."
+        }
+      }
+    },
+    "src/instructions/smap.rs": {
+      "sha256": "b5a6a5ae9bfb9051ca8fd2325f4fa50d73c2d7386726ea74155e101f8cfd2e20",
+      "symbols": {}
+    },
+    "src/instructions/tables.rs": {
+      "sha256": "34ed3b42c79d72cb74cef8a2581dffa798b66ea77b793887910e38377d975bed",
+      "symbols": {}
+    },
+    "src/instructions/tlb.rs": {
+      "sha256": "c4c47e0718be84a5e3812b20a4129e48d0ebc203e395476b117b540bc50dae88",
+      "symbols": {
+        "35:variant::InvPcidCommand::Address": {
+          "anchor": "Address(VirtAddr, Pcid),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "38:variant::InvPcidCommand::Single": {
+          "anchor": "Single(Pcid),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "41:variant::InvPcidCommand::All": {
+          "anchor": "All,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "44:variant::InvPcidCommand::AllExceptGlobal": {
+          "anchor": "AllExceptGlobal,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "src/lib.rs": {
+      "sha256": "938e757fca881c483f4a886371019c30cfadf2d4fb5d53eb0fb94adc140a31f3",
+      "symbols": {
+        "32:variant::PrivilegeLevel::Ring0": {
+          "anchor": "Ring0 = 0,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "39:variant::PrivilegeLevel::Ring1": {
+          "anchor": "Ring1 = 1,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "45:variant::PrivilegeLevel::Ring2": {
+          "anchor": "Ring2 = 2,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "52:variant::PrivilegeLevel::Ring3": {
+          "anchor": "Ring3 = 3,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "src/registers/control.rs": {
+      "sha256": "805cb1e92e674510c61fc4f910b2ef16f769b5bbbc4f1264b455967d72a8b311",
+      "symbols": {
+        "174:variant::PriorityClass::PriorityClass1": {
+          "anchor": "PriorityClass1 = 1,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "176:variant::PriorityClass::PriorityClass2": {
+          "anchor": "PriorityClass2,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "178:variant::PriorityClass::PriorityClass3": {
+          "anchor": "PriorityClass3,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "180:variant::PriorityClass::PriorityClass4": {
+          "anchor": "PriorityClass4,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "182:variant::PriorityClass::PriorityClass5": {
+          "anchor": "PriorityClass5,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "184:variant::PriorityClass::PriorityClass6": {
+          "anchor": "PriorityClass6,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "186:variant::PriorityClass::PriorityClass7": {
+          "anchor": "PriorityClass7,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "188:variant::PriorityClass::PriorityClass8": {
+          "anchor": "PriorityClass8,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "190:variant::PriorityClass::PriorityClass9": {
+          "anchor": "PriorityClass9,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "192:variant::PriorityClass::PriorityClass10": {
+          "anchor": "PriorityClass10,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "194:variant::PriorityClass::PriorityClass11": {
+          "anchor": "PriorityClass11,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "196:variant::PriorityClass::PriorityClass12": {
+          "anchor": "PriorityClass12,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "198:variant::PriorityClass::PriorityClass13": {
+          "anchor": "PriorityClass13,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "200:variant::PriorityClass::PriorityClass14": {
+          "anchor": "PriorityClass14,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "202:variant::PriorityClass::PriorityClass15": {
+          "anchor": "PriorityClass15,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "src/registers/debug.rs": {
+      "sha256": "97d1da872447748fa46e2c3d47e9f59a04b930e453f1f120baf84a83ef9316d5",
+      "symbols": {
+        "26:macro::debug_address_register": {
+          "anchor": "macro_rules! debug_address_register {",
+          "classification": "deliberate-rejection",
+          "reason": "Source-defined Rust macro retained as review input; expansion is not a public Omega API."
+        },
+        "69:variant::DebugAddressRegisterNumber::Dr0": {
+          "anchor": "Dr0,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "72:variant::DebugAddressRegisterNumber::Dr1": {
+          "anchor": "Dr1,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "75:variant::DebugAddressRegisterNumber::Dr2": {
+          "anchor": "Dr2,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "78:variant::DebugAddressRegisterNumber::Dr3": {
+          "anchor": "Dr3,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "243:variant::BreakpointCondition::InstructionExecution": {
+          "anchor": "InstructionExecution = 0b00,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "246:variant::BreakpointCondition::DataWrites": {
+          "anchor": "DataWrites = 0b01,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "249:variant::BreakpointCondition::IoReadsWrites": {
+          "anchor": "IoReadsWrites = 0b10,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "252:variant::BreakpointCondition::DataReadsWrites": {
+          "anchor": "DataReadsWrites = 0b11,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "278:variant::BreakpointSize::Length1B": {
+          "anchor": "Length1B = 0b00,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "281:variant::BreakpointSize::Length2B": {
+          "anchor": "Length2B = 0b01,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "284:variant::BreakpointSize::Length8B": {
+          "anchor": "Length8B = 0b10,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "287:variant::BreakpointSize::Length4B": {
+          "anchor": "Length4B = 0b11,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "src/registers/mod.rs": {
+      "sha256": "5d1dd2815b7898e2a9d88b883c8fcec4ffe7f69938ab8878da81544038975645",
+      "symbols": {}
+    },
+    "src/registers/model_specific.rs": {
+      "sha256": "8315473c0eabb3178350f24ff284c3f6947f210cc341279c1b22bff6a599c29b",
+      "symbols": {
+        "504:variant::InvalidStarSegmentSelectors::SysretOffset": {
+          "anchor": "SysretOffset,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "505:variant::InvalidStarSegmentSelectors::SyscallOffset": {
+          "anchor": "SyscallOffset,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "506:variant::InvalidStarSegmentSelectors::SysretPrivilegeLevel": {
+          "anchor": "SysretPrivilegeLevel,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "507:variant::InvalidStarSegmentSelectors::SyscallPrivilegeLevel": {
+          "anchor": "SyscallPrivilegeLevel,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "src/registers/mxcsr.rs": {
+      "sha256": "fad54d431a4ce3c9e4c88147559e9a1b137d7ab831b25bb89d5970b6f812f645",
+      "symbols": {}
+    },
+    "src/registers/rflags.rs": {
+      "sha256": "4facddd9d181ec9e5e5e9a77898bc2c761a37b092e4f7e7b5f2fed221966c9b0",
+      "symbols": {}
+    },
+    "src/registers/segmentation.rs": {
+      "sha256": "2798e7398d1ee6cd57926e9d0e83049444a1032940f6774fe0882e8795bbaff6",
+      "symbols": {}
+    },
+    "src/registers/xcontrol.rs": {
+      "sha256": "1c055cbf5b535bcf71738427109ec0a44bec97f2cf80bac12874946fb7eaba53",
+      "symbols": {}
+    },
+    "src/structures/gdt.rs": {
+      "sha256": "a4232a94ccc9ce30c90d172360e1de316cbf46b10c4543307d2e3e34548aa865",
+      "symbols": {
+        "286:variant::Descriptor::UserSegment": {
+          "anchor": "UserSegment(u64),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "288:variant::Descriptor::SystemSegment": {
+          "anchor": "SystemSegment(u64, u64),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "src/structures/idt.rs": {
+      "sha256": "e6fd82e5e76243c2e10bb1af8f476ed79c8905d1fa5aedaa070a99b4e01c02ce",
+      "symbols": {
+        "638:macro::impl_index_for_idt": {
+          "anchor": "macro_rules! impl_index_for_idt {",
+          "classification": "deliberate-rejection",
+          "reason": "Source-defined Rust macro retained as review input; expansion is not a public Omega API."
+        },
+        "885:macro::impl_handler_func_type": {
+          "anchor": "macro_rules! impl_handler_func_type {",
+          "classification": "deliberate-rejection",
+          "reason": "Source-defined Rust macro retained as review input; expansion is not a public Omega API."
+        },
+        "1283:variant::DescriptorTable::Gdt": {
+          "anchor": "Gdt,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1285:variant::DescriptorTable::Idt": {
+          "anchor": "Idt,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1287:variant::DescriptorTable::Ldt": {
+          "anchor": "Ldt,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1300:variant::ExceptionVector::Division": {
+          "anchor": "Division = 0x00,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1303:variant::ExceptionVector::Debug": {
+          "anchor": "Debug = 0x01,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1306:variant::ExceptionVector::NonMaskableInterrupt": {
+          "anchor": "NonMaskableInterrupt = 0x02,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1309:variant::ExceptionVector::Breakpoint": {
+          "anchor": "Breakpoint = 0x03,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1312:variant::ExceptionVector::Overflow": {
+          "anchor": "Overflow = 0x04,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1315:variant::ExceptionVector::BoundRange": {
+          "anchor": "BoundRange = 0x05,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1318:variant::ExceptionVector::InvalidOpcode": {
+          "anchor": "InvalidOpcode = 0x06,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1321:variant::ExceptionVector::DeviceNotAvailable": {
+          "anchor": "DeviceNotAvailable = 0x07,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1324:variant::ExceptionVector::Double": {
+          "anchor": "Double = 0x08,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1327:variant::ExceptionVector::InvalidTss": {
+          "anchor": "InvalidTss = 0x0A,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1330:variant::ExceptionVector::SegmentNotPresent": {
+          "anchor": "SegmentNotPresent = 0x0B,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1333:variant::ExceptionVector::Stack": {
+          "anchor": "Stack = 0x0C,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1336:variant::ExceptionVector::GeneralProtection": {
+          "anchor": "GeneralProtection = 0x0D,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1339:variant::ExceptionVector::Page": {
+          "anchor": "Page = 0x0E,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1342:variant::ExceptionVector::X87FloatingPoint": {
+          "anchor": "X87FloatingPoint = 0x10,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1345:variant::ExceptionVector::AlignmentCheck": {
+          "anchor": "AlignmentCheck = 0x11,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1348:variant::ExceptionVector::MachineCheck": {
+          "anchor": "MachineCheck = 0x12,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1351:variant::ExceptionVector::SimdFloatingPoint": {
+          "anchor": "SimdFloatingPoint = 0x13,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1354:variant::ExceptionVector::Virtualization": {
+          "anchor": "Virtualization = 0x14,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1357:variant::ExceptionVector::ControlProtection": {
+          "anchor": "ControlProtection = 0x15,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1360:variant::ExceptionVector::HypervisorInjection": {
+          "anchor": "HypervisorInjection = 0x1C,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1363:variant::ExceptionVector::VmmCommunication": {
+          "anchor": "VmmCommunication = 0x1D,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1366:variant::ExceptionVector::Security": {
+          "anchor": "Security = 0x1E,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "1454:macro::set_general_handler": {
+          "anchor": "macro_rules! set_general_handler {",
+          "classification": "deliberate-rejection",
+          "reason": "Source-defined Rust macro retained as review input; expansion is not a public Omega API."
+        },
+        "1490:macro::set_general_handler_recursive_bits": {
+          "anchor": "macro_rules! set_general_handler_recursive_bits {",
+          "classification": "deliberate-rejection",
+          "reason": "Source-defined Rust macro retained as review input; expansion is not a public Omega API."
+        },
+        "1514:macro::set_general_handler_entry": {
+          "anchor": "macro_rules! set_general_handler_entry {",
+          "classification": "deliberate-rejection",
+          "reason": "Source-defined Rust macro retained as review input; expansion is not a public Omega API."
+        }
+      }
+    },
+    "src/structures/mem_encrypt.rs": {
+      "sha256": "fb97af17b5d33745593bc21b5e7235ae57262895122bd8ff86cea781c3a6e4cb",
+      "symbols": {
+        "27:variant::MemoryEncryptionConfiguration::EncryptedBit": {
+          "anchor": "EncryptedBit(u8),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "33:variant::MemoryEncryptionConfiguration::SharedBit": {
+          "anchor": "SharedBit(u8),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "src/structures/mod.rs": {
+      "sha256": "f128249744c430272b564aefae864b7ea39cb8a93df6e0ff1ed20d5723c7fde6",
+      "symbols": {}
+    },
+    "src/structures/paging/frame.rs": {
+      "sha256": "ef176a88a1b52eb33a2843f98286ac79946d77c5b4afa5959c5dc750af876880",
+      "symbols": {}
+    },
+    "src/structures/paging/frame_alloc.rs": {
+      "sha256": "3e5911d6b6950f32316a7e7552218335345c4f4fd13354fa27bb2afc72396719",
+      "symbols": {}
+    },
+    "src/structures/paging/mapper/mapped_page_table.rs": {
+      "sha256": "e250c729f0588d1ce129c1c68ab43337f2f44328d2b38fe896cbeeacc1bc4ff2",
+      "symbols": {
+        "743:variant::PageTableWalkError::NotMapped": {
+          "anchor": "NotMapped,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "744:variant::PageTableWalkError::MappedToHugePage": {
+          "anchor": "MappedToHugePage,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "749:variant::PageTableCreateError::MappedToHugePage": {
+          "anchor": "MappedToHugePage,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "750:variant::PageTableCreateError::FrameAllocationFailed": {
+          "anchor": "FrameAllocationFailed,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "src/structures/paging/mapper/mod.rs": {
+      "sha256": "9b33e4f767f0eb77560cc7daf0826feadd176d0ced292ada00329a0695f67b6e",
+      "symbols": {
+        "60:variant::TranslateResult::Mapped": {
+          "anchor": "Mapped {",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "62:variant-field::TranslateResult::Mapped::frame": {
+          "anchor": "frame: MappedFrame,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "64:variant-field::TranslateResult::Mapped::offset": {
+          "anchor": "offset: u64,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "70:variant-field::TranslateResult::Mapped::flags": {
+          "anchor": "flags: PageTableFlags,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "73:variant::TranslateResult::NotMapped": {
+          "anchor": "NotMapped,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "75:variant::TranslateResult::InvalidFrameAddress": {
+          "anchor": "InvalidFrameAddress(PhysAddr),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "82:variant::MappedFrame::Size4KiB": {
+          "anchor": "Size4KiB(PhysFrame<Size4KiB>),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "84:variant::MappedFrame::Size2MiB": {
+          "anchor": "Size2MiB(PhysFrame<Size2MiB>),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "86:variant::MappedFrame::Size1GiB": {
+          "anchor": "Size1GiB(PhysFrame<Size1GiB>),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "456:variant::MapToError::FrameAllocationFailed": {
+          "anchor": "FrameAllocationFailed,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "459:variant::MapToError::ParentEntryHugePage": {
+          "anchor": "ParentEntryHugePage,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "461:variant::MapToError::PageAlreadyMapped": {
+          "anchor": "PageAlreadyMapped(PhysFrame<S>),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "469:variant::UnmapError::ParentEntryHugePage": {
+          "anchor": "ParentEntryHugePage,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "471:variant::UnmapError::PageNotMapped": {
+          "anchor": "PageNotMapped,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "473:variant::UnmapError::InvalidFrameAddress": {
+          "anchor": "InvalidFrameAddress(PhysAddr),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "480:variant::FlagUpdateError::PageNotMapped": {
+          "anchor": "PageNotMapped,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "483:variant::FlagUpdateError::ParentEntryHugePage": {
+          "anchor": "ParentEntryHugePage,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "490:variant::TranslateError::PageNotMapped": {
+          "anchor": "PageNotMapped,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "493:variant::TranslateError::ParentEntryHugePage": {
+          "anchor": "ParentEntryHugePage,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "495:variant::TranslateError::InvalidFrameAddress": {
+          "anchor": "InvalidFrameAddress(PhysAddr),",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "src/structures/paging/mapper/offset_page_table.rs": {
+      "sha256": "e5812f82d6b5076d73546c843f0ea921979b54499e71479d23b103838bbb32d0",
+      "symbols": {}
+    },
+    "src/structures/paging/mapper/recursive_page_table.rs": {
+      "sha256": "e6a796d07b191d4857c931c7b4daf156a707c51fba675af6d9f1cee62c970e6f",
+      "symbols": {
+        "895:variant::InvalidPageTable::NotRecursive": {
+          "anchor": "NotRecursive,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "901:variant::InvalidPageTable::NotActive": {
+          "anchor": "NotActive,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "src/structures/paging/mod.rs": {
+      "sha256": "4ca202221fe00ea6a1b9c2fd356fe6e93326c00e2a4c9b5005e49c3cb0003960",
+      "symbols": {}
+    },
+    "src/structures/paging/page.rs": {
+      "sha256": "3314b425ea669e883900bfbcb2357e3ea7b03517734d674596e613ff3664d630",
+      "symbols": {}
+    },
+    "src/structures/paging/page_table.rs": {
+      "sha256": "c22af38b260fc7d51d7a1c156f3d8788b0e539563bbbd72ea7d417e513c89f42",
+      "symbols": {
+        "20:variant::FrameError::FrameNotPresent": {
+          "anchor": "FrameNotPresent,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "23:variant::FrameError::HugeFrame": {
+          "anchor": "HugeFrame,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "464:variant::PageTableLevel::One": {
+          "anchor": "One = 1,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "466:variant::PageTableLevel::Two": {
+          "anchor": "Two,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "468:variant::PageTableLevel::Three": {
+          "anchor": "Three,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "470:variant::PageTableLevel::Four": {
+          "anchor": "Four,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "src/structures/port.rs": {
+      "sha256": "53fb98f83601ff411769984500c6b3ce06473273ef20ea06266188162d8df301",
+      "symbols": {}
+    },
+    "src/structures/tss.rs": {
+      "sha256": "1a59b9b9b5270deb6be06b15e03a6fa738a89abd7d5224a250704b3037821233",
+      "symbols": {
+        "62:variant::InvalidIoMap::IoMapBeforeTss": {
+          "anchor": "IoMapBeforeTss,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "66:variant::InvalidIoMap::TooFarFromTss": {
+          "anchor": "TooFarFromTss {",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "68:variant-field::InvalidIoMap::TooFarFromTss::distance": {
+          "anchor": "distance: usize,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "71:variant::InvalidIoMap::InvalidTerminatingByte": {
+          "anchor": "InvalidTerminatingByte {",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "73:variant-field::InvalidIoMap::InvalidTerminatingByte::byte": {
+          "anchor": "byte: u8,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "76:variant::InvalidIoMap::TooLong": {
+          "anchor": "TooLong {",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "78:variant-field::InvalidIoMap::TooLong::len": {
+          "anchor": "len: usize,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "81:variant::InvalidIoMap::InvalidBase": {
+          "anchor": "InvalidBase {",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "83:variant-field::InvalidIoMap::InvalidBase::expected": {
+          "anchor": "expected: u16,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "85:variant-field::InvalidIoMap::InvalidBase::got": {
+          "anchor": "got: u16,",
+          "classification": "pure-fact-layout",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "testing/src/gdt.rs": {
+      "sha256": "f23091cce7eded18057c3d94ea1d5296b8fc28446f53ec7f7e6864801dc7b2cf",
+      "symbols": {}
+    },
+    "testing/src/lib.rs": {
+      "sha256": "ffff39aeffeb9bb0f316d1731765a8ef0b20e318a278f8c0e35857fa400db263",
+      "symbols": {
+        "17:variant::QemuExitCode::Success": {
+          "anchor": "Success = 0x10,",
+          "classification": "test-fixture",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        },
+        "18:variant::QemuExitCode::Failed": {
+          "anchor": "Failed = 0x11,",
+          "classification": "test-fixture",
+          "reason": "Explicit named enum variant, including implicit discriminant; parent enum/module classification controls future translation."
+        }
+      }
+    },
+    "testing/src/serial.rs": {
+      "sha256": "37e8689af8f5c8cf3bcc7b9105146ec7508cfb3ba7a6c4645e3f74e72aa21b34",
+      "symbols": {
+        "23:macro::serial_print": {
+          "anchor": "macro_rules! serial_print {",
+          "classification": "test-fixture",
+          "reason": "Source-defined Rust macro retained as review input; expansion is not a public Omega API."
+        },
+        "31:macro::serial_println": {
+          "anchor": "macro_rules! serial_println {",
+          "classification": "test-fixture",
+          "reason": "Source-defined Rust macro retained as review input; expansion is not a public Omega API."
+        }
+      }
+    },
+    "testing/src/tests.rs": {
+      "sha256": "d3b01bda8ef07ecfc215fde0f79ce2298c7969d33b1e1d550386234e589e85f5",
+      "symbols": {}
+    },
+    "testing/tests/basic_boot.rs": {
+      "sha256": "910e18f6c132731672fa18318753e53024002fad9c5bfb112643dbbc109ac1ad",
+      "symbols": {}
+    },
+    "testing/tests/double_fault_stack_overflow.rs": {
+      "sha256": "ac93873afed26d6bd84b5b32fa41fbbbf560b52976b0b6b11fc7f952cebeb756",
+      "symbols": {}
+    },
+    "testing/tests/interrupt_handling.rs": {
+      "sha256": "d92df5c185a4e9586d6a8226d74f0a950aab0eb8811f15e4c335b7975cdf9603",
+      "symbols": {}
+    },
+    "testing/tests/port_read_write.rs": {
+      "sha256": "ebad3d9d7d561e5dd23326412ebe342f02219da3846a8357fb75be968876f1aa",
+      "symbols": {}
+    }
+  }
+}

@@ -1,0 +1,7 @@
+// PORT-BLOCKED[omega:x86-port-widths]: checked in/out contracts need u16/u32 payloads.
+use omega::language::core::assembly;
+data Main {}
+machine Main::main(&mut self) reaches PortIo {
+    let mut value: u16 = 0;
+    asm { in value, 0x20 }
+}
