@@ -12082,10 +12082,10 @@
     },
     {
       "family": "msr-composition",
-      "stage": "partially-tested",
-      "completed": "STAR/CET/APIC observations and composition",
-      "remaining": "Raw MSR u64/two-u32 transport arithmetic",
-      "evidence": "source/libraries/x86_64/register-operands.PORT.md"
+      "stage": "tested",
+      "completed": "STAR/CET/APIC observations and composition plus raw MSR word splitting",
+      "evidence": "source/libraries/x86_64/register-operands.PORT.md",
+      "additional_evidence": "source/libraries/x86_64/msr-words.PORT.md"
     }
   ]
 }

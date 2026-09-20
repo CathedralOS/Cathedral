@@ -1,0 +1,7 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Numeric portions of Msr::{read,write}, x86_64 cc35c876d3badb57df54a66e22f7768a52be95f2,
+// src/registers/model_specific.rs. Caller-supplied words only; no MSR instruction.
+module msr_words;
+pub machine combine(low: u32, high: u32) -> u64 { ((high as u64) << 32) | (low as u64) }
+pub machine low_word(value: u64) -> u32 { (value & 4294967295) as u32 }
+pub machine high_word(value: u64) -> u32 { ((value >> 32) & 4294967295) as u32 }

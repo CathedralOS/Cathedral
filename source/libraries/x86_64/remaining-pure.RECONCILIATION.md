@@ -19,7 +19,8 @@ Subsequent completion: `gdt-storage` is now implemented and tested in
 the original audit findings; subsequent completions supersede those rows.
 [Register recipes](register-operands.PORT.md) also complete `register-merge`,
 `cr3-cr8-operands`, `xcr0-validation` and STAR/CET/APIC parts of `msr-composition`;
-the latter still has its small raw MSR word-splitting component pending.
+the remaining raw MSR word-splitting component is completed by
+[MSR word transport](msr-words.PORT.md).
 
 ## Work that already has a reusable implementation
 

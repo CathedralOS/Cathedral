@@ -260,15 +260,17 @@ mutations, including partial edits, allocation failures and capture mismatches.
 actual trait-default witnesses, three Omega fixtures and four body mutations.
 The [remaining pure-work audit](source/libraries/x86_64/remaining-pure.RECONCILIATION.md)
 identifies unfinished recursive mapper algorithms and explicit encryption;
-these are implementation work. Remaining small register transport arithmetic
-is recorded with the later register slice.
+these are implementation work. The later register slices complete the
+remaining operand recipes and raw word transport.
 [Owned GDT storage](source/libraries/x86_64/gdt-storage.PORT.md) now passes 16
 actual Rust/Omega scenarios, malformed-input/reset checks and four body mutations,
 including full 8192-word import and failed system appends without partial writes.
 [Register operand recipes](source/libraries/x86_64/register-operands.PORT.md) add
 1,323 exact pure-body Rust observations, 14 Omega batches, four rejection cases
 and seven body mutations, covering reserved bits, XCR0 validation, CR3/CR8 and
-STAR/CET/APIC composition. No live register methods or instructions execute.
+STAR/CET/APIC composition. [MSR word transport](source/libraries/x86_64/msr-words.PORT.md)
+adds 136 Rust-derived observations, 130 Omega round trips and two body mutations.
+No live register methods or instructions execute.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

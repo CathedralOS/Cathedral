@@ -5,7 +5,7 @@ four additional rejection cases and seven body mutations pass. This bounded
 X86-001/002 slice closes the pure components identified as `register-merge`,
 `cr3-cr8-operands` and `xcr0-validation`, plus STAR/CET/APIC composition from
 `msr-composition` in the remaining-pure audit. Raw MSR two-u32 transport arithmetic
-remains a separate small pending component. It changes no existing source or production root.
+is completed by the subsequent [word transport slice](msr-words.PORT.md). It changes no existing source or production root.
 
 Modified logic comes from x86_64
 `cc35c876d3badb57df54a66e22f7768a52be95f2`,
