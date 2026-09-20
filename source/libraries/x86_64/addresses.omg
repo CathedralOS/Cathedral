@@ -1,0 +1,272 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pure algorithms from x86_64 cc35c876d3badb57df54a66e22f7768a52be95f2 src/addr.rs.
+// Numeric results carry no mapping, frame, pointer, or memory-access authority.
+module addresses;
+
+pub const VIRTUAL_LOW_MAX: u64 = 0x00007fffffffffff;
+pub const VIRTUAL_HIGH_MIN: u64 = 0xffff800000000000;
+pub const VIRTUAL_DENSE_MAX: u64 = 0x0000ffffffffffff;
+pub const PHYSICAL_MAX: u64 = 0x000fffffffffffff;
+pub const INTEGER_MAX: u64 = 0xffffffffffffffff;
+
+// An operation result, not a competing bootstrap-address or physical-frame type.
+pub data NumberResult [copy] { case Rejected; case Value(value: u64); }
+pub data OverflowingStep [copy] { value: u64; overflow: bool; }
+
+pub machine virtual_valid(value: u64) -> bool {
+    value <= VIRTUAL_LOW_MAX || value >= VIRTUAL_HIGH_MIN
+}
+pub machine virtual_truncate(value: u64) -> u64 {
+    let low: u64 = value & VIRTUAL_DENSE_MAX;
+    transition (low & 0x0000800000000000) != 0 {
+        true -> (low | 0xffff000000000000)
+        _ -> (low)
+    }
+}
+pub machine virtual_check(value: u64) -> NumberResult {
+    transition virtual_valid(value) {
+        true -> (NumberResult::Value { value: value })
+        _ -> (NumberResult::Rejected)
+    }
+}
+pub machine power_of_two(value: u64) -> bool {
+    transition value > 0 { true -> ((value & (value - 1)) == 0) _ -> (false) }
+}
+// Encryption configuration is explicit. Zero means disabled; otherwise one
+// bit inside the pinned 52-bit envelope. No global atomic state or CPUID claim.
+pub machine encryption_mask_valid(mask: u64) -> bool {
+    mask == 0 || (mask <= PHYSICAL_MAX && power_of_two(mask))
+}
+pub machine physical_valid(value: u64, encryption_mask: u64) -> bool {
+    encryption_mask_valid(encryption_mask) && value <= PHYSICAL_MAX && (value & encryption_mask) == 0
+}
+pub machine physical_check(value: u64, encryption_mask: u64) -> NumberResult {
+    transition physical_valid(value, encryption_mask) {
+        true -> (NumberResult::Value { value: value })
+        _ -> (NumberResult::Rejected)
+    }
+}
+pub machine physical_truncate(value: u64, encryption_mask: u64) -> NumberResult {
+    transition encryption_mask_valid(encryption_mask) {
+        true -> (NumberResult::Value { value: (value & PHYSICAL_MAX) & ~encryption_mask })
+        _ -> (NumberResult::Rejected)
+    }
+}
+pub machine checked_add(value: u64, amount: u64) -> NumberResult {
+    transition amount <= INTEGER_MAX - value {
+        true -> (NumberResult::Value { value: value + amount })
+        _ -> (NumberResult::Rejected)
+    }
+}
+pub machine checked_sub(value: u64, amount: u64) -> NumberResult {
+    transition amount <= value {
+        true -> (NumberResult::Value { value: value - amount })
+        _ -> (NumberResult::Rejected)
+    }
+}
+pub machine virtual_add(value: u64, amount: u64) -> NumberResult {
+    let arithmetic: NumberResult = checked_add(value, amount);
+    transition virtual_valid(value) {
+        true -> sum(arithmetic)
+        _ -> (NumberResult::Rejected)
+    }
+    state sum(result: NumberResult) -> NumberResult {
+        transition result {
+            NumberResult::Value { value } -> validate(value)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state validate(value: u64) -> NumberResult {
+        let result: NumberResult = virtual_check(value);
+        result
+    }
+}
+pub machine virtual_sub(value: u64, amount: u64) -> NumberResult {
+    let arithmetic: NumberResult = checked_sub(value, amount);
+    transition virtual_valid(value) {
+        true -> difference(arithmetic)
+        _ -> (NumberResult::Rejected)
+    }
+    state difference(result: NumberResult) -> NumberResult {
+        transition result {
+            NumberResult::Value { value } -> validate(value)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state validate(value: u64) -> NumberResult {
+        let result: NumberResult = virtual_check(value);
+        result
+    }
+}
+pub machine physical_add(value: u64, amount: u64, mask: u64) -> NumberResult {
+    let arithmetic: NumberResult = checked_add(value, amount);
+    transition physical_valid(value, mask) {
+        true -> sum(arithmetic, mask)
+        _ -> (NumberResult::Rejected)
+    }
+    state sum(result: NumberResult, mask: u64) -> NumberResult {
+        transition result {
+            NumberResult::Value { value } -> validate(value, mask)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state validate(value: u64, mask: u64) -> NumberResult {
+        let result: NumberResult = physical_check(value, mask);
+        result
+    }
+}
+pub machine physical_sub(value: u64, amount: u64, mask: u64) -> NumberResult {
+    let arithmetic: NumberResult = checked_sub(value, amount);
+    transition physical_valid(value, mask) {
+        true -> difference(arithmetic, mask)
+        _ -> (NumberResult::Rejected)
+    }
+    state difference(result: NumberResult, mask: u64) -> NumberResult {
+        transition result {
+            NumberResult::Value { value } -> validate(value, mask)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state validate(value: u64, mask: u64) -> NumberResult {
+        let result: NumberResult = physical_check(value, mask);
+        result
+    }
+}
+pub machine align_down(value: u64, alignment: u64) -> NumberResult {
+    transition alignment > 0 && power_of_two(alignment) {
+        true -> (NumberResult::Value { value: value & ~(alignment - 1) })
+        _ -> (NumberResult::Rejected)
+    }
+}
+pub machine align_up(value: u64, alignment: u64) -> NumberResult {
+    transition alignment > 0 && power_of_two(alignment) {
+        true -> aligned(value, alignment - 1)
+        _ -> (NumberResult::Rejected)
+    }
+    state aligned(value: u64, mask: u64) -> NumberResult {
+        let rounded: NumberResult = checked_add(value | mask, 1);
+        transition (value & mask) == 0 {
+            true -> (NumberResult::Value { value: value })
+            _ -> (rounded)
+        }
+    }
+}
+pub machine virtual_align(value: u64, alignment: u64, upwards: bool) -> NumberResult {
+    transition virtual_valid(value) {
+        true -> choose(value, alignment, upwards)
+        _ -> (NumberResult::Rejected)
+    }
+    state choose(value: u64, alignment: u64, upwards: bool) -> NumberResult {
+        let up: NumberResult = align_up(value, alignment);
+        let down: NumberResult = align_down(value, alignment);
+        transition upwards {
+            true -> finish(up)
+            _ -> finish(down)
+        }
+    }
+    state finish(result: NumberResult) -> NumberResult {
+        transition result {
+            NumberResult::Value { value } -> (NumberResult::Value { value: virtual_truncate(value) })
+            _ -> (NumberResult::Rejected)
+        }
+    }
+}
+pub machine physical_align(value: u64, alignment: u64, upwards: bool, mask: u64) -> NumberResult {
+    transition physical_valid(value, mask) {
+        true -> choose(value, alignment, upwards, mask)
+        _ -> (NumberResult::Rejected)
+    }
+    state choose(value: u64, alignment: u64, upwards: bool, mask: u64) -> NumberResult {
+        let up: NumberResult = align_up(value, alignment);
+        let down: NumberResult = align_down(value, alignment);
+        transition upwards {
+            true -> finish(up, mask)
+            _ -> finish(down, mask)
+        }
+    }
+    state finish(result: NumberResult, mask: u64) -> NumberResult {
+        transition result {
+            NumberResult::Value { value } -> validate(value, mask)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state validate(value: u64, mask: u64) -> NumberResult {
+        let result: NumberResult = physical_check(value, mask);
+        result
+    }
+}
+pub machine virtual_is_aligned(original: u64, alignment: u64) -> bool {
+    let result: NumberResult = virtual_align(original, alignment, false);
+    transition result {
+        NumberResult::Value { value } -> (value == original)
+        _ -> (false)
+    }
+}
+pub machine physical_is_aligned(original: u64, alignment: u64, mask: u64) -> bool {
+    let result: NumberResult = physical_align(original, alignment, false, mask);
+    transition result {
+        NumberResult::Value { value } -> (value == original)
+        _ -> (false)
+    }
+}
+// Step counts traverse only canonical addresses. Arithmetic above rejects a
+// result in the hole; stepping below skips the hole using its dense ordinal.
+pub machine virtual_step(value: u64, count: u64, backwards: bool) -> NumberResult {
+    let ordinal: u64 = value & VIRTUAL_DENSE_MAX;
+    transition virtual_valid(value) {
+        true -> choose(ordinal, count, backwards)
+        _ -> (NumberResult::Rejected)
+    }
+    state choose(ordinal: u64, count: u64, backwards: bool) -> NumberResult {
+        transition backwards {
+            true -> back(ordinal, count)
+            _ -> forward(ordinal, count)
+        }
+    }
+    state back(ordinal: u64, count: u64) -> NumberResult {
+        transition count <= ordinal {
+            true -> (NumberResult::Value { value: virtual_truncate(ordinal - count) })
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state forward(ordinal: u64, count: u64) -> NumberResult {
+        transition ordinal <= VIRTUAL_DENSE_MAX && count <= VIRTUAL_DENSE_MAX - ordinal {
+            true -> (NumberResult::Value { value: virtual_truncate(ordinal + count) })
+            _ -> (NumberResult::Rejected)
+        }
+    }
+}
+pub machine virtual_steps_between(start: u64, end: u64) -> NumberResult {
+    transition virtual_valid(start) && virtual_valid(end) && end >= start {
+        true -> (checked_sub(end & VIRTUAL_DENSE_MAX, start & VIRTUAL_DENSE_MAX))
+        _ -> (NumberResult::Rejected)
+    }
+}
+pub machine virtual_step_overflowing(original: u64, count: u64, backwards: bool) -> OverflowingStep {
+    let result: NumberResult = virtual_step(original, count, backwards);
+    transition result {
+        NumberResult::Value { value } -> (OverflowingStep { value: value, overflow: false })
+        _ -> (OverflowingStep { value: original, overflow: true })
+    }
+}
+pub machine page_index(value: u64, level: u8) -> NumberResult {
+    transition virtual_valid(value) {
+        true -> index(value, level)
+        _ -> (NumberResult::Rejected)
+    }
+    state index(value: u64, level: u8) -> NumberResult {
+        transition level {
+            1 -> (NumberResult::Value { value: (value >> 12) & 511 })
+            2 -> (NumberResult::Value { value: (value >> 21) & 511 })
+            3 -> (NumberResult::Value { value: (value >> 30) & 511 })
+            4 -> (NumberResult::Value { value: (value >> 39) & 511 })
+            _ -> (NumberResult::Rejected)
+        }
+    }
+}
+pub machine page_offset(value: u64) -> NumberResult {
+    transition virtual_valid(value) {
+        true -> (NumberResult::Value { value: value & 4095 })
+        _ -> (NumberResult::Rejected)
+    }
+}

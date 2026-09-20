@@ -1,0 +1,975 @@
+{
+  "files": {
+    "src/addr.rs": {
+      "disposition": "translated",
+      "reason": "Complete reviewed numeric addr.rs slice; Rust wrapper/formatting/unsafe pointer/proof infrastructure omissions are explicit per symbol.",
+      "sha256": "8370e442e48677438615f9f0ac4a7e2fbf1a9aadec875348cc68a9e916031721",
+      "symbols": {
+        "1003:test_virt_addr_align_down": {
+          "anchor": "fn test_virt_addr_align_down() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "1013:test_virt_addr_align_up_overflow": {
+          "anchor": "fn test_virt_addr_align_up_overflow() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "1019:test_phys_addr_align_up_overflow": {
+          "anchor": "fn test_phys_addr_align_up_overflow() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "1025:test_from_ptr_array": {
+          "anchor": "fn test_from_ptr_array() {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "1036:proofs": {
+          "anchor": "mod proofs {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "1045:forward_base_case": {
+          "anchor": "fn forward_base_case() {",
+          "disposition": "omitted",
+          "reason": "Kani universal proof machinery is not translated or claimed. Its six semantic relations have finite Omega boundary instances in extras.omg; these are tests, not replacement proofs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/extras.omg",
+              "anchor": "machine relations("
+            }
+          ]
+        },
+        "107:new_truncate": {
+          "anchor": "pub const fn new_truncate(addr: u64) -> VirtAddr {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_truncate("
+            }
+          ]
+        },
+        "1080:forward_induction_step": {
+          "anchor": "fn forward_induction_step() {",
+          "disposition": "omitted",
+          "reason": "Kani universal proof machinery is not translated or claimed. Its six semantic relations have finite Omega boundary instances in extras.omg; these are tests, not replacement proofs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/extras.omg",
+              "anchor": "machine relations("
+            }
+          ]
+        },
+        "1107:forward_implies_backward": {
+          "anchor": "fn forward_implies_backward() {",
+          "disposition": "omitted",
+          "reason": "Kani universal proof machinery is not translated or claimed. Its six semantic relations have finite Omega boundary instances in extras.omg; these are tests, not replacement proofs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/extras.omg",
+              "anchor": "machine relations("
+            }
+          ]
+        },
+        "1124:backward_implies_forward": {
+          "anchor": "fn backward_implies_forward() {",
+          "disposition": "omitted",
+          "reason": "Kani universal proof machinery is not translated or claimed. Its six semantic relations have finite Omega boundary instances in extras.omg; these are tests, not replacement proofs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/extras.omg",
+              "anchor": "machine relations("
+            }
+          ]
+        },
+        "1146:forward_implies_steps_between": {
+          "anchor": "fn forward_implies_steps_between() {",
+          "disposition": "omitted",
+          "reason": "Kani universal proof machinery is not translated or claimed. Its six semantic relations have finite Omega boundary instances in extras.omg; these are tests, not replacement proofs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/extras.omg",
+              "anchor": "machine relations("
+            }
+          ]
+        },
+        "1162:steps_between_implies_forward": {
+          "anchor": "fn steps_between_implies_forward() {",
+          "disposition": "omitted",
+          "reason": "Kani universal proof machinery is not translated or claimed. Its six semantic relations have finite Omega boundary instances in extras.omg; these are tests, not replacement proofs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/extras.omg",
+              "anchor": "machine relations("
+            }
+          ]
+        },
+        "119:new_unsafe": {
+          "anchor": "pub const unsafe fn new_unsafe(addr: u64) -> VirtAddr {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "125:zero": {
+          "anchor": "pub const fn zero() -> VirtAddr {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "131:as_u64": {
+          "anchor": "pub const fn as_u64(self) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "138:from_ptr": {
+          "anchor": "pub fn from_ptr<T: ?Sized>(ptr: *const T) -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "145:as_ptr": {
+          "anchor": "pub const fn as_ptr<T>(self) -> *const T {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "152:as_mut_ptr": {
+          "anchor": "pub const fn as_mut_ptr<T>(self) -> *mut T {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "158:is_null": {
+          "anchor": "pub const fn is_null(self) -> bool {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "171:align_up": {
+          "anchor": "pub fn align_up<U>(self, align: U) -> Self",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_align("
+            }
+          ]
+        },
+        "182:align_down": {
+          "anchor": "pub fn align_down<U>(self, align: U) -> Self",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_align("
+            }
+          ]
+        },
+        "193:align_down_u64": {
+          "anchor": "pub(crate) const fn align_down_u64(self, align: u64) -> Self {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_align("
+            }
+          ]
+        },
+        "199:is_aligned": {
+          "anchor": "pub fn is_aligned<U>(self, align: U) -> bool",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_is_aligned("
+            }
+          ]
+        },
+        "19:ADDRESS_SPACE_SIZE": {
+          "anchor": "const ADDRESS_SPACE_SIZE: u64 = 0x1_0000_0000_0000;",
+          "disposition": "translated",
+          "reason": "Dense canonical ordinal maximum is one less than upstream ADDRESS_SPACE_SIZE; step bounds preserve the same 48-bit envelope.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "pub const VIRTUAL_DENSE_MAX:"
+            }
+          ]
+        },
+        "208:is_aligned_u64": {
+          "anchor": "pub(crate) const fn is_aligned_u64(self, align: u64) -> bool {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_is_aligned("
+            }
+          ]
+        },
+        "214:page_offset": {
+          "anchor": "pub const fn page_offset(self) -> PageOffset {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine page_offset("
+            }
+          ]
+        },
+        "220:p1_index": {
+          "anchor": "pub const fn p1_index(self) -> PageTableIndex {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine page_index("
+            }
+          ]
+        },
+        "226:p2_index": {
+          "anchor": "pub const fn p2_index(self) -> PageTableIndex {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine page_index("
+            }
+          ]
+        },
+        "232:p3_index": {
+          "anchor": "pub const fn p3_index(self) -> PageTableIndex {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine page_index("
+            }
+          ]
+        },
+        "238:p4_index": {
+          "anchor": "pub const fn p4_index(self) -> PageTableIndex {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine page_index("
+            }
+          ]
+        },
+        "244:page_table_index": {
+          "anchor": "pub const fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine page_index("
+            }
+          ]
+        },
+        "250:steps_between_impl": {
+          "anchor": "pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> (usize, Option<usize>) {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_steps_between("
+            }
+          ]
+        },
+        "262:steps_between_u64": {
+          "anchor": "pub(crate) fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_steps_between("
+            }
+          ]
+        },
+        "273:forward_checked_impl": {
+          "anchor": "pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_step("
+            }
+          ]
+        },
+        "279:forward_checked_u64": {
+          "anchor": "pub(crate) fn forward_checked_u64(start: Self, count: u64) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_step("
+            }
+          ]
+        },
+        "304:backward_checked_u64": {
+          "anchor": "pub(crate) fn backward_checked_u64(start: Self, count: u64) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_step("
+            }
+          ]
+        },
+        "328:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "337:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "33:VirtAddr": {
+          "anchor": "pub struct VirtAddr(u64);",
+          "disposition": "translated",
+          "reason": "Explicit u64 numeric inputs and case-bearing results replace Rust nominal address wrappers; every address-specific helper validates inputs. Rejection leaves the original input with its caller instead of duplicating it in an error wrapper.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "pub data NumberResult"
+            }
+          ]
+        },
+        "344:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "351:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "358:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "365:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "371:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "385:add": {
+          "anchor": "fn add(self, rhs: u64) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_add("
+            }
+          ]
+        },
+        "408:add_assign": {
+          "anchor": "fn add_assign(&mut self, rhs: u64) {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_add("
+            }
+          ]
+        },
+        "414:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "428:sub": {
+          "anchor": "fn sub(self, rhs: u64) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_sub("
+            }
+          ]
+        },
+        "451:sub_assign": {
+          "anchor": "fn sub_assign(&mut self, rhs: u64) {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_sub("
+            }
+          ]
+        },
+        "457:Output": {
+          "anchor": "type Output = u64;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "465:sub": {
+          "anchor": "fn sub(self, rhs: VirtAddr) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine checked_sub("
+            }
+          ]
+        },
+        "46:PhysAddr": {
+          "anchor": "pub struct PhysAddr(u64);",
+          "disposition": "translated",
+          "reason": "Explicit u64 numeric inputs and case-bearing results replace Rust nominal address wrappers; every address-specific helper validates inputs. Rejection leaves the original input with its caller instead of duplicating it in an error wrapper.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "pub data NumberResult"
+            }
+          ]
+        },
+        "475:steps_between": {
+          "anchor": "fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_steps_between("
+            }
+          ]
+        },
+        "480:forward_checked": {
+          "anchor": "fn forward_checked(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_step("
+            }
+          ]
+        },
+        "485:backward_checked": {
+          "anchor": "fn backward_checked(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_step("
+            }
+          ]
+        },
+        "490:forward_overflowing": {
+          "anchor": "fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_step_overflowing("
+            }
+          ]
+        },
+        "498:backward_overflowing": {
+          "anchor": "fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_step_overflowing("
+            }
+          ]
+        },
+        "508:any": {
+          "anchor": "fn any() -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "518:PhysAddrNotValid": {
+          "anchor": "pub struct PhysAddrNotValid(pub u64);",
+          "disposition": "translated",
+          "reason": "Explicit u64 numeric inputs and case-bearing results replace Rust nominal address wrappers; every address-specific helper validates inputs. Rejection leaves the original input with its caller instead of duplicating it in an error wrapper.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "pub data NumberResult"
+            }
+          ]
+        },
+        "521:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "539:new": {
+          "anchor": "pub const fn new(addr: u64) -> Self {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_check("
+            }
+          ]
+        },
+        "550:new_truncate": {
+          "anchor": "pub const fn new_truncate(addr: u64) -> PhysAddr {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_truncate("
+            }
+          ]
+        },
+        "557:new_truncate": {
+          "anchor": "pub fn new_truncate(addr: u64) -> PhysAddr {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_truncate("
+            }
+          ]
+        },
+        "567:new_unsafe": {
+          "anchor": "pub const unsafe fn new_unsafe(addr: u64) -> PhysAddr {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "56:VirtAddrNotValid": {
+          "anchor": "pub struct VirtAddrNotValid(pub u64);",
+          "disposition": "translated",
+          "reason": "Explicit u64 numeric inputs and case-bearing results replace Rust nominal address wrappers; every address-specific helper validates inputs. Rejection leaves the original input with its caller instead of duplicating it in an error wrapper.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "pub data NumberResult"
+            }
+          ]
+        },
+        "578:try_new": {
+          "anchor": "pub const fn try_new(addr: u64) -> Result<Self, PhysAddrNotValid> {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_check("
+            }
+          ]
+        },
+        "589:zero": {
+          "anchor": "pub const fn zero() -> PhysAddr {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "595:as_u64": {
+          "anchor": "pub const fn as_u64(self) -> u64 {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "59:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "601:is_null": {
+          "anchor": "pub const fn is_null(self) -> bool {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "614:align_up": {
+          "anchor": "pub fn align_up<U>(self, align: U) -> Self",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_align("
+            }
+          ]
+        },
+        "625:align_down": {
+          "anchor": "pub fn align_down<U>(self, align: U) -> Self",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_align("
+            }
+          ]
+        },
+        "636:align_down_u64": {
+          "anchor": "pub(crate) const fn align_down_u64(self, align: u64) -> Self {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_align("
+            }
+          ]
+        },
+        "642:is_aligned": {
+          "anchor": "pub fn is_aligned<U>(self, align: U) -> bool",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_is_aligned("
+            }
+          ]
+        },
+        "651:is_aligned_u64": {
+          "anchor": "pub(crate) const fn is_aligned_u64(self, align: u64) -> bool {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_is_aligned("
+            }
+          ]
+        },
+        "657:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "666:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "673:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "680:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "687:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "694:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "700:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "702:add": {
+          "anchor": "fn add(self, rhs: u64) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_add("
+            }
+          ]
+        },
+        "709:add_assign": {
+          "anchor": "fn add_assign(&mut self, rhs: u64) {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_add("
+            }
+          ]
+        },
+        "715:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "717:sub": {
+          "anchor": "fn sub(self, rhs: u64) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_sub("
+            }
+          ]
+        },
+        "724:sub_assign": {
+          "anchor": "fn sub_assign(&mut self, rhs: u64) {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine physical_sub("
+            }
+          ]
+        },
+        "730:Output": {
+          "anchor": "type Output = u64;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "732:sub": {
+          "anchor": "fn sub(self, rhs: PhysAddr) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine checked_sub("
+            }
+          ]
+        },
+        "739:any": {
+          "anchor": "fn any() -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "750:align_down": {
+          "anchor": "pub const fn align_down(addr: u64, align: u64) -> u64 {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine align_down("
+            }
+          ]
+        },
+        "761:align_up": {
+          "anchor": "pub const fn align_up(addr: u64, align: u64) -> u64 {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine align_up("
+            }
+          ]
+        },
+        "777:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/proof-runner plumbing is not reproduced; numeric identity/zero/null are ordinary u64 values. Pointer conversions and unchecked construction are deliberately absent."
+        },
+        "77:new": {
+          "anchor": "pub const fn new(addr: u64) -> VirtAddr {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_check("
+            }
+          ]
+        },
+        "782:add_overflow_virtaddr": {
+          "anchor": "pub fn add_overflow_virtaddr() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "788:add_overflow_physaddr": {
+          "anchor": "pub fn add_overflow_physaddr() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "794:sub_underflow_virtaddr": {
+          "anchor": "pub fn sub_underflow_virtaddr() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "800:sub_overflow_physaddr": {
+          "anchor": "pub fn sub_overflow_physaddr() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "805:virtaddr_new_truncate": {
+          "anchor": "pub fn virtaddr_new_truncate() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "814:virtaddr_step_forward": {
+          "anchor": "fn virtaddr_step_forward() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "858:virtaddr_step_backward": {
+          "anchor": "fn virtaddr_step_backward() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "894:virtaddr_steps_between": {
+          "anchor": "fn virtaddr_steps_between() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "92:try_new": {
+          "anchor": "pub const fn try_new(addr: u64) -> Result<VirtAddr, VirtAddrNotValid> {",
+          "disposition": "translated",
+          "reason": "Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine virtual_check("
+            }
+          ]
+        },
+        "958:virtaddr_step_overflowing": {
+          "anchor": "fn virtaddr_step_overflowing() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/extras.omg",
+              "anchor": "pub machine run("
+            }
+          ]
+        },
+        "977:test_align_up": {
+          "anchor": "pub fn test_align_up() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "994:test_virt_addr_align_up": {
+          "anchor": "fn test_virt_addr_align_up() {",
+          "disposition": "translated",
+          "reason": "Pinned test expectations translated to deterministic Omega body checks; panic cases become Rejected. See generated vectors for the individual inputs and outputs.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-addresses/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/addresses.omg",
+          "anchor": "module addresses;"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/addr.rs"
+    ],
+    "url": "https://github.com/rust-osdev/x86_64"
+  }
+}

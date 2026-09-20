@@ -1,0 +1,47 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Additional boundary checks and finite instances of the six pinned Kani properties.
+module extras;
+use x86::addresses;
+use x86::addresses::NumberResult;
+machine equal(result: NumberResult, expected: u64) -> bool {
+    transition result { NumberResult::Value { value } -> (value == expected) _ -> (false) }
+}
+machine relations(start: u64, first: u64, second: u64, middle: u64, end: u64) -> bool {
+    let zero: NumberResult = addresses::virtual_step(start, 0, false);
+    let a: NumberResult = addresses::virtual_step(start, first, false);
+    let b: NumberResult = addresses::virtual_step(middle, second, false);
+    let total: NumberResult = addresses::checked_add(first, second);
+    transition total {
+        NumberResult::Value { value } -> finish(start, first, middle, end, value, zero, a, b)
+        _ -> (false)
+    }
+    state finish(start: u64, first: u64, middle: u64, end: u64, total: u64, zero: NumberResult, a: NumberResult, b: NumberResult) -> bool {
+        let combined: NumberResult = addresses::virtual_step(start, total, false);
+        let reverse: NumberResult = addresses::virtual_step(end, total, true);
+        let reverse_first: NumberResult = addresses::virtual_step(middle, first, true);
+        let distance: NumberResult = addresses::virtual_steps_between(start, end);
+        equal(zero, start) && equal(a, middle) && equal(b, end) && equal(combined, end) &&
+            equal(reverse, start) && equal(reverse_first, start) && equal(distance, total)
+    }
+}
+pub machine run() -> bool {
+    let forward: addresses::OverflowingStep = addresses::virtual_step_overflowing(0x7fffffffffff, 1, false);
+    let backward: addresses::OverflowingStep = addresses::virtual_step_overflowing(0xffff800000000000, 1, true);
+    let same: addresses::OverflowingStep = addresses::virtual_step_overflowing(0, 0, false);
+    let overflow: addresses::OverflowingStep = addresses::virtual_step_overflowing(0xffffffffffffffff, 1, false);
+    let underflow: addresses::OverflowingStep = addresses::virtual_step_overflowing(0, 1, true);
+    let normal: bool = relations(0, 1, 2, 1, 3);
+    let gap: bool = relations(0x7ffffffffffa, 4, 8, 0x7ffffffffffe, 0xffff800000000006);
+    let high: bool = relations(0xffff800000000000, 10, 20, 0xffff80000000000a, 0xffff80000000001e);
+    let last: bool = relations(0xfffffffffffffffa, 2, 3, 0xfffffffffffffffc, 0xffffffffffffffff);
+    forward.value == 0xffff800000000000 && !forward.overflow &&
+        backward.value == 0x7fffffffffff && !backward.overflow &&
+        same.value == 0 && !same.overflow &&
+        overflow.value == 0xffffffffffffffff && overflow.overflow &&
+        underflow.value == 0 && underflow.overflow &&
+        addresses::virtual_is_aligned(4096, 4096) && !addresses::virtual_is_aligned(4097, 4096) &&
+        !addresses::virtual_is_aligned(0xffff800000000000, 0x1000000000000) &&
+        addresses::physical_is_aligned(4096, 4096, 0) && !addresses::physical_is_aligned(4097, 4096, 0) &&
+        !addresses::physical_is_aligned(4096, 4096, 4096) &&
+        normal && gap && high && last
+}

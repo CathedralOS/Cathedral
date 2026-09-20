@@ -1,0 +1,4 @@
+machine build(builder: &mut Build) {
+    builder.package("cathedral-x86-values");
+    builder.depend_as("facts", Source::Path { location: "../../drivers/facts" });
+}

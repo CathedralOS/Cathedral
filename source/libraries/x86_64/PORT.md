@@ -3,9 +3,12 @@
 ## Scope and status
 
 X86-000 inventories every Rust module in pinned `src/` and the separate
-`testing/` package. Stage: **inventoried**. This directory initially contains
-provenance and classification only; no translated type, native ABI, compilation,
-execution or production-integration claim. Reviewed 2026-09-20 against
+`testing/` package. Its baseline stage is **inventoried**. The baseline artifacts
+record initial source triage; subsequent implementation and execution evidence
+belong to separately audited slices. No baseline count is a native ABI or
+production-integration claim.
+
+Completed slices: [tested numeric address algorithms](addresses.PORT.md). Reviewed 2026-09-20 against
 Cathedral `77544518fc947973a5607f28b278aca2e2ffa462` and
 Omega `eaa7993a23623cd8fabf45350340479c5c9c7879`. X86-001/002 are implementation work,
 not language blockers merely because their code has not yet been authored.
@@ -34,10 +37,10 @@ One format-string false anchor is explicitly identified as non-code.
 
 Classifications distinguish existing representation, pure facts/layouts, pure
 algorithms, instruction boundaries, Cathedral policy, deliberate rejection and
-test fixtures. Shared inventory dispositions are0 translated,205 omitted
+test fixtures. Baseline inventory dispositions are0 translated,205 omitted
 (including reuse/scaffolding),5 confirmed compiler-blocked and1,097 pending
-implementation. **Pending means reviewed future work, not an unclassified
-module.** Every row has a classification and reason. The checker reproduces
+implementation. **At baseline, pending means reviewed future work, not an unclassified
+module. Subsequent slice inventories supersede those implementation statuses.** Every row has a classification and reason. The checker reproduces
 all artifacts and validates comparison anchors; a missing file/row fails.
 
 [RECONCILIATION.md](RECONCILIATION.md) maps collisions, unsafe invariants and

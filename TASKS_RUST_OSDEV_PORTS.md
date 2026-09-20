@@ -205,6 +205,11 @@ existing facts, 168 pinned values/ordinals, 45 Rust tests, translated Omega
 behavior and body-mutating controls. The existing fact canary passes; live
 port-I/O/MMIO and polling remain explicit owner boundaries.
 
+X86-001/002 partial evidence: [address arithmetic](source/libraries/x86_64/addresses.PORT.md)
+passes 110 Omega numeric cases, 102 actual pinned Rust witnesses, finite stepping
+relations and three body-mutating controls. Page/frame/descriptor/table work
+remains; the full task checkboxes stay open.
+
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors
 and 85 test/proof scenarios. Pending rows are reviewed implementation work;
