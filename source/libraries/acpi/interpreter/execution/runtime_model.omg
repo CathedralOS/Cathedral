@@ -1,0 +1,10 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+module runtime_model;
+use execution_model::ExecutionOutcome;
+use execution_model::Frame;
+use execution_model::Slot;
+pub data Runtime [copy] {
+    outcome: ExecutionOutcome; frames: [Frame; 4]; count: u64;
+    unit: u64; length: u64; steps: u64; finished: bool; result: Slot;
+    fault_offset: u64;
+}

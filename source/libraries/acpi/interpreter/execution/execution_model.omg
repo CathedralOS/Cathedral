@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Bounded adaptation of acpi MethodContext/Block/OpInFlight at
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. No live services.
+module execution_model;
+use aml::model::Path;
+use aml::model::Span;
+use integer_helpers::integers::IntegerSize;
+pub data ExecutionOutcome [copy] {
+    case Success; case Truncated; case BadEncoding; case UnsupportedValue;
+    case UnsupportedOpcode; case UnresolvedRegion; case UnresolvedService;
+    case UnresolvedSynchronization; case InvalidState; case Uninitialized;
+    case ArgumentCount; case Capacity; case WorkLimit; case Depth;
+    case MissingObject; case InvalidTarget; case DivideByZero; case SourceUnit;
+    case ControlOutsideLoop; case MethodDefinition;
+}
+pub data Slot [copy] { initialized: bool; number: u64; }
+pub data Target [copy] {
+    case Null; case Local(local_index: u64); case Argument(argument_index: u64);
+    case Named(object_id: u64); case Debug;
+}
+pub data SlotResult [copy] { outcome: ExecutionOutcome; slot: Slot; }
+pub data TargetResult [copy] { outcome: ExecutionOutcome; target: Target; next: u64; }
+pub data Block [copy] { looping: bool; parent_end: u64; after: u64; predicate: u64; end: u64; }
+pub data Operation [copy] {
+    opcode: u64; count: u64; value_arity: u64; target_arity: u64; operands: [u64; 7]; first_target: Target; second_target: Target;
+    body_end: u64; predicate: u64; parent_end: u64; method_id: u64; method_body: Span; method_flags: u8;
+}
+pub data NameCache [copy] { at: u64; next: u64; object_id: u64; entry_index: u64; }
+pub data Frame [copy] {
+    scope: Path; body: Span; size: IntegerSize; pc: u64; end: u64;
+    arguments: [Slot; 7]; locals: [Slot; 8];
+    block_count: u64; blocks: [Block; 8];
+    operation_count: u64; operations: [Operation; 16];
+    cache_count: u64; lookup_cache: [NameCache; 16];
+    returned: bool; return_value: Slot;
+}
+pub data FrameResult [copy] { outcome: ExecutionOutcome; frame: Frame; }
+
+// Caller-retained definition observation, indexed by stable object ID.
+// Captured at declaration time; current name/alias bindings do not prove scope.
+pub data MethodDefinition [copy] { present: bool; object_id: u64; scope: Path; flags: u8; body: Span; }

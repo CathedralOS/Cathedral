@@ -1,0 +1,161 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Bounded single-unit integer AML execution. Every turn consumes caller fuel;
+// nested calls and loops share it. No synchronization or external handler exists.
+module engine;
+use aml::model::Value;
+use aml::model::Path;
+use aml::model::Namespace;
+use aml::model::Lookup;
+use aml::model::Outcome;
+use execution_model::ExecutionOutcome;
+use execution_model::Frame;
+use execution_model::FrameResult;
+use execution_model::Slot;
+use execution_model::Operation;
+use runtime_model::Runtime;
+use frames::observed_frame;
+use execution_model::MethodDefinition;
+use execution_names::execution_lookup;
+use decode_execution::decode_term;
+use decode_execution::decode_target;
+use operands::current_operation;
+use operands::pop_operation;
+use operands::contribute_integer;
+use retire::retire_operation;
+use control::finish_block;
+use integer_helpers::integers::IntegerSize;
+pub data ExecutionResult [copy] { outcome: ExecutionOutcome; value: Slot; steps: u64; fault_offset: u64; }
+pub machine run_method(input: &[u8; 1024], length: u64, unit: u64, space: &mut Namespace, definitions: &[MethodDefinition; 64],
+    method_path: Path, arguments: &[Value; 7], count: u64, size: IntegerSize, budget: u64) -> ExecutionResult {
+    transition budget <= 1024 && length <= 1024 && space.count <= 32 && space.object_count <= 64 {
+        true -> lookup(input, length, unit, space, definitions, method_path, arguments, count, size, budget)
+        _ -> (ExecutionResult { outcome: ExecutionOutcome::Capacity })
+    }
+    state lookup(input: &[u8; 1024], length: u64, unit: u64, space: &mut Namespace, definitions: &[MethodDefinition; 64],
+        method_path: Path, arguments: &[Value; 7], count: u64, size: IntegerSize, budget: u64) -> ExecutionResult {
+        let found: Lookup = execution_lookup(space, method_path, Path { absolute: true });
+        let index: u64 = found.object;
+        transition found.outcome == Outcome::Success && index < space.object_count && index < 64 {
+            true -> frame(input, length, unit, space, definitions, index, arguments, count, size, budget)
+            _ -> (ExecutionResult { outcome: ExecutionOutcome::MissingObject })
+        }
+    }
+    state frame(input: &[u8; 1024], length: u64, unit: u64, space: &mut Namespace, definitions: &[MethodDefinition; 64],
+        index: u64, arguments: &[Value; 7], count: u64, size: IntegerSize, budget: u64) -> ExecutionResult {
+        let started: FrameResult = observed_frame(space.objects[index].value, index, definitions, arguments, count, size, unit, length);
+        transition started.outcome == ExecutionOutcome::Success {
+            true -> execute(input, length, unit, space, definitions, started.frame, budget)
+            _ -> (ExecutionResult { outcome: started.outcome })
+        }
+    }
+    state execute(input: &[u8; 1024], length: u64, unit: u64, space: &mut Namespace, definitions: &[MethodDefinition; 64], frame: Frame, budget: u64) -> ExecutionResult {
+        let mut runtime: Runtime = Runtime { count: 1, unit: unit, length: length };
+        runtime.frames[0] = frame;
+        let result: ExecutionOutcome = execution_run_scan(input, space, definitions, &mut runtime, 0, budget);
+        transition !runtime.finished && runtime.outcome == ExecutionOutcome::Success {
+            true -> (ExecutionResult { outcome: ExecutionOutcome::WorkLimit, steps: runtime.steps, fault_offset: runtime.fault_offset })
+            _ -> (ExecutionResult { outcome: runtime.outcome, value: runtime.result, steps: runtime.steps, fault_offset: runtime.fault_offset })
+        }
+    }
+}
+machine execution_run_scan(input: &[u8; 1024], space: &mut Namespace, definitions: &[MethodDefinition; 64], runtime: &mut Runtime, index: u64, limit: u64)
+terminates by (index, limit) -> Nat::BoundedDistance;
+-> ExecutionOutcome {
+    let result: ExecutionOutcome = execution_run_turn(input, space, definitions, runtime, index, limit);
+    transition { runtime.finished || runtime.outcome != ExecutionOutcome::Success -> (runtime.outcome)
+        index < limit -> execution_run_scan(input, space, definitions, runtime, index + 1, limit) _ -> (runtime.outcome) }
+}
+machine execution_run_turn(input: &[u8; 1024], space: &mut Namespace, definitions: &[MethodDefinition; 64], runtime: &mut Runtime, index: u64, limit: u64) -> ExecutionOutcome {
+    transition index < limit && !runtime.finished && runtime.outcome == ExecutionOutcome::Success && runtime.steps < 1024 {
+        true -> active(input, space, definitions, runtime) _ -> (runtime.outcome)
+    }
+    state active(input: &[u8; 1024], space: &mut Namespace, definitions: &[MethodDefinition; 64], runtime: &mut Runtime) -> ExecutionOutcome {
+        runtime.steps = runtime.steps + 1;
+        let result: ExecutionOutcome = execution_turn(input, space, definitions, runtime);
+        runtime.outcome = result; result
+    }
+}
+machine execution_turn(input: &[u8; 1024], space: &mut Namespace, definitions: &[MethodDefinition; 64], runtime: &mut Runtime) -> ExecutionOutcome {
+    transition runtime.count > 0 && runtime.count <= 4 {
+        true -> index(input, space, definitions, runtime, runtime.count - 1) _ -> (ExecutionOutcome::InvalidState)
+    }
+    state index(input: &[u8; 1024], space: &mut Namespace, definitions: &[MethodDefinition; 64], runtime: &mut Runtime, index: u64) -> ExecutionOutcome {
+        transition index < 4 { true -> frame(input, space, definitions, runtime, index) _ -> (ExecutionOutcome::InvalidState) }
+    }
+    state frame(input: &[u8; 1024], space: &mut Namespace, definitions: &[MethodDefinition; 64], runtime: &mut Runtime, index: u64) -> ExecutionOutcome {
+        runtime.fault_offset = runtime.frames[index].pc;
+        let operation: Operation = current_operation(&runtime.frames[index]);
+        transition operation.value_arity <= 7 && operation.target_arity <= 2 && runtime.frames[index].operation_count <= 16 {
+            true -> dispatch(input, space, definitions, runtime, index, operation) _ -> (ExecutionOutcome::InvalidState)
+        }
+    }
+    state dispatch(input: &[u8; 1024], space: &mut Namespace, definitions: &[MethodDefinition; 64], runtime: &mut Runtime, index: u64, operation: Operation) -> ExecutionOutcome {
+        let total: u64 = operation.value_arity + operation.target_arity;
+        transition {
+            runtime.frames[index].returned -> complete(runtime, index)
+            runtime.frames[index].operation_count != 0 && operation.count == total -> retire(input, space, definitions, runtime, index, operation)
+            runtime.frames[index].pc == runtime.frames[index].end -> block(runtime, index)
+            runtime.frames[index].pc > runtime.frames[index].end -> (ExecutionOutcome::Truncated)
+            runtime.frames[index].operation_count != 0 && operation.count >= operation.value_arity -> target(input, space, definitions, runtime, index)
+            _ -> term(input, space, definitions, runtime, index)
+        }
+    }
+    state complete(runtime: &mut Runtime, index: u64) -> ExecutionOutcome { let result: ExecutionOutcome = complete_frame(runtime, index); result }
+    state block(runtime: &mut Runtime, index: u64) -> ExecutionOutcome {
+        let result: ExecutionOutcome = finish_block(&mut runtime.frames[index]); result
+    }
+    state target(input: &[u8; 1024], space: &mut Namespace, definitions: &[MethodDefinition; 64], runtime: &mut Runtime, index: u64) -> ExecutionOutcome {
+        let result: ExecutionOutcome = decode_target(input, space, &mut runtime.frames[index]); result
+    }
+    state term(input: &[u8; 1024], space: &mut Namespace, definitions: &[MethodDefinition; 64], runtime: &mut Runtime, index: u64) -> ExecutionOutcome {
+        let result: ExecutionOutcome = decode_term(input, space, &mut runtime.frames[index]); result
+    }
+    state retire(input: &[u8; 1024], space: &mut Namespace, definitions: &[MethodDefinition; 64], runtime: &mut Runtime, index: u64, operation: Operation) -> ExecutionOutcome {
+        let popped: ExecutionOutcome = pop_operation(&mut runtime.frames[index]);
+        transition operation.opcode == 0x10000 { true -> call(runtime, definitions, index, operation) _ -> ordinary(input, space, definitions, runtime, index, operation) }
+    }
+    state call(runtime: &mut Runtime, definitions: &[MethodDefinition; 64], index: u64, operation: Operation) -> ExecutionOutcome { let result: ExecutionOutcome = invoke_frame(runtime, definitions, index, operation); result }
+    state ordinary(input: &[u8; 1024], space: &mut Namespace, definitions: &[MethodDefinition; 64], runtime: &mut Runtime, index: u64, operation: Operation) -> ExecutionOutcome {
+        let result: ExecutionOutcome = retire_operation(input, space, &mut runtime.frames[index], operation); result
+    }
+}
+machine invoke_frame(runtime: &mut Runtime, definitions: &[MethodDefinition; 64], caller: u64, operation: Operation) -> ExecutionOutcome {
+    transition runtime.count < 4 && caller < 4 { true -> arguments(runtime, definitions, caller, operation) _ -> (ExecutionOutcome::Depth) }
+    state arguments(runtime: &mut Runtime, definitions: &[MethodDefinition; 64], caller: u64, operation: Operation) -> ExecutionOutcome {
+        let mut arguments: [Value; 7];
+        arguments[0] = Value::Integer { number: operation.operands[0] };
+        arguments[1] = Value::Integer { number: operation.operands[1] };
+        arguments[2] = Value::Integer { number: operation.operands[2] };
+        arguments[3] = Value::Integer { number: operation.operands[3] };
+        arguments[4] = Value::Integer { number: operation.operands[4] };
+        arguments[5] = Value::Integer { number: operation.operands[5] };
+        arguments[6] = Value::Integer { number: operation.operands[6] };
+        let method: Value = Value::Method { flags: operation.method_flags, body: operation.method_body };
+        let started: FrameResult = observed_frame(method, operation.method_id, definitions, &arguments, operation.value_arity, runtime.frames[caller].size, runtime.unit, runtime.length);
+        let index: u64 = runtime.count;
+        transition started.outcome == ExecutionOutcome::Success && index < 4 { true -> push(runtime, index, started.frame) _ -> (started.outcome) }
+    }
+    state push(runtime: &mut Runtime, index: u64, frame: Frame) -> ExecutionOutcome {
+        runtime.frames[index] = frame; runtime.count = index + 1; ExecutionOutcome::Success
+    }
+}
+machine complete_frame(runtime: &mut Runtime, index: u64) -> ExecutionOutcome {
+    transition index < 4 { true -> pop(runtime, index) _ -> (ExecutionOutcome::InvalidState) }
+    state pop(runtime: &mut Runtime, index: u64) -> ExecutionOutcome {
+        let value: Slot = runtime.frames[index].return_value;
+        runtime.count = index;
+        transition index == 0 { true -> terminal(runtime, value) _ -> caller(runtime, index - 1, value) }
+    }
+    state terminal(runtime: &mut Runtime, value: Slot) -> ExecutionOutcome { runtime.finished = true; runtime.result = value; ExecutionOutcome::Success }
+    state caller(runtime: &mut Runtime, index: u64, value: Slot) -> ExecutionOutcome {
+        transition index < 4 { true -> value(runtime, index, value) _ -> (ExecutionOutcome::InvalidState) }
+    }
+    state value(runtime: &mut Runtime, index: u64, value: Slot) -> ExecutionOutcome {
+        transition { value.initialized -> contribute(runtime, index, value.number)
+            runtime.frames[index].operation_count == 0 -> (ExecutionOutcome::Success)
+            _ -> (ExecutionOutcome::Uninitialized) }
+    }
+    state contribute(runtime: &mut Runtime, index: u64, number: u64) -> ExecutionOutcome {
+        let result: ExecutionOutcome = contribute_integer(&mut runtime.frames[index], number); result
+    }
+}

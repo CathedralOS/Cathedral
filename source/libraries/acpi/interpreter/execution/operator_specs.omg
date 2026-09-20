@@ -1,0 +1,83 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// AML operand shapes and scalar retirement semantics. Syntax facts follow ACPI
+// 6.6 chapter20; pure operation adaptations use the pinned acpi interpreter.
+module operator_specs;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::integers::Binary;
+use integer_helpers::integers::Logical;
+use integer_helpers::integers::binary;
+use integer_helpers::integers::logical;
+use integer_helpers::integers::logical_not;
+use integer_helpers::integers::bitwise_not;
+use integer_helpers::integers::find_set_left;
+use integer_helpers::integers::find_set_right;
+use integer_helpers::bcd::from_bcd;
+use integer_helpers::bcd::to_bcd;
+// 255 denotes unsupported; counts are not inferred from an opcode's byte size.
+pub machine value_count(opcode: u64) -> u64 {
+    transition opcode {
+        0x70 -> (1) 0x72 -> (2) 0x74 -> (2) 0x75 -> (0) 0x76 -> (0)
+        0x77 -> (2) 0x78 -> (2) 0x79 -> (2) 0x7a -> (2)
+        0x7b -> (2) 0x7c -> (2) 0x7d -> (2) 0x7e -> (2) 0x7f -> (2)
+        0x80 -> (1) 0x81 -> (1) 0x82 -> (1) 0x85 -> (2)
+        0x90 -> (2) 0x91 -> (2) 0x92 -> (1) 0x93 -> (2) 0x94 -> (2) 0x95 -> (2)
+        0x9293 -> (2) 0x9294 -> (2) 0x9295 -> (2)
+        0x9d -> (1) 0xa0 -> (1) 0xa2 -> (1) 0xa4 -> (1)
+        0x5b28 -> (1) 0x5b29 -> (1)
+        _ -> (255)
+    }
+}
+pub machine target_count(opcode: u64) -> u64 {
+    transition opcode {
+        0x70 -> (1) 0x72 -> (1) 0x74 -> (1) 0x75 -> (1) 0x76 -> (1)
+        0x77 -> (1) 0x78 -> (2) 0x79 -> (1) 0x7a -> (1)
+        0x7b -> (1) 0x7c -> (1) 0x7d -> (1) 0x7e -> (1) 0x7f -> (1)
+        0x80 -> (1) 0x81 -> (1) 0x82 -> (1) 0x85 -> (1)
+        0x9d -> (1) 0x5b28 -> (1) 0x5b29 -> (1)
+        _ -> (0)
+    }
+}
+pub machine compute_integer(size: IntegerSize, opcode: u64, a: u64, b: u64) -> IntegerResult {
+    transition opcode {
+        0x72 -> binary_op(size, Binary::Add, a, b)
+        0x74 -> binary_op(size, Binary::Subtract, a, b)
+        0x75 -> binary_op(size, Binary::Add, a, 1)
+        0x76 -> binary_op(size, Binary::Subtract, a, 1)
+        0x77 -> binary_op(size, Binary::Multiply, a, b)
+        0x78 -> binary_op(size, Binary::Divide, a, b)
+        0x79 -> binary_op(size, Binary::ShiftLeft, a, b)
+        0x7a -> binary_op(size, Binary::ShiftRight, a, b)
+        0x7b -> binary_op(size, Binary::And, a, b)
+        0x7c -> binary_op(size, Binary::Nand, a, b)
+        0x7d -> binary_op(size, Binary::Or, a, b)
+        0x7e -> binary_op(size, Binary::Nor, a, b)
+        0x7f -> binary_op(size, Binary::Xor, a, b)
+        0x85 -> binary_op(size, Binary::Mod, a, b)
+        0x90 -> logical_op(size, Logical::And, a, b)
+        0x91 -> logical_op(size, Logical::Or, a, b)
+        0x93 -> logical_op(size, Logical::Equal, a, b)
+        0x94 -> logical_op(size, Logical::Greater, a, b)
+        0x95 -> logical_op(size, Logical::Less, a, b)
+        0x9293 -> logical_op(size, Logical::NotEqual, a, b)
+        0x9294 -> logical_op(size, Logical::LessEqual, a, b)
+        0x9295 -> logical_op(size, Logical::GreaterEqual, a, b)
+        0x80 -> not_op(size, a)
+        0x81 -> left_op(size, a)
+        0x82 -> right_op(size, a)
+        0x92 -> logical_not_op(size, a)
+        0x5b28 -> from_bcd_op(size, a)
+        0x5b29 -> to_bcd_op(size, a)
+        0x70 -> (IntegerResult { value: a })
+        0x9d -> (IntegerResult { value: a })
+        _ -> (IntegerResult { error: 255 })
+    }
+    state binary_op(size: IntegerSize, op: Binary, a: u64, b: u64) -> IntegerResult { let result: IntegerResult = binary(size, op, a, b); result }
+    state logical_op(size: IntegerSize, op: Logical, a: u64, b: u64) -> IntegerResult { let result: u64 = logical(size, op, a, b); IntegerResult { value: result } }
+    state not_op(size: IntegerSize, a: u64) -> IntegerResult { let result: u64 = bitwise_not(size, a); IntegerResult { value: result } }
+    state left_op(size: IntegerSize, a: u64) -> IntegerResult { let result: u64 = find_set_left(size, a); IntegerResult { value: result } }
+    state right_op(size: IntegerSize, a: u64) -> IntegerResult { let result: u64 = find_set_right(size, a); IntegerResult { value: result } }
+    state logical_not_op(size: IntegerSize, a: u64) -> IntegerResult { let result: u64 = logical_not(size, a); IntegerResult { value: result } }
+    state from_bcd_op(size: IntegerSize, a: u64) -> IntegerResult { let result: IntegerResult = from_bcd(size, a); result }
+    state to_bcd_op(size: IntegerSize, a: u64) -> IntegerResult { let result: IntegerResult = to_bcd(size, a); result }
+}

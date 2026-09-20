@@ -385,7 +385,17 @@ ACPI-005 partial evidence: [integer/byte helpers](source/libraries/acpi/interpre
 pass 150 Omega scenarios and three body controls, including five translated
 upstream object-test scenarios. Width-aware arithmetic, BCD, bit copying and
 bounded conversions preserve explicit primary-spec corrections. Method/context,
-namespace/target and generic object operations remain pending; the checkbox stays open.
+namespace/target and generic object operations were outside that helper slice.
+The [integer method executor](source/libraries/acpi/interpreter/execution/PORT.md)
+now passes 79 actual Omega checked-interpreter cases and 79 changed-body controls.
+It executes integer method bytes, nested calls, existing named/alias targets and
+bounded If/Else/While/Break/Continue with shared fuel. Current frame-admission
+constant proof and its mutation control also pass; full bytecode evidence is the
+distinct checked-interpreter stage. Definition observations preserve original
+scope across aliases/rebinding. Automatic loader capture, generic values, fields,
+packages, dynamic declarations and multi-unit source management remain pending.
+Unresolved region/synchronization/service results grant no live access. ACPI-005/006
+stay open.
 
 ACPI-004 partial evidence: [static AML syntax and namespace](source/libraries/acpi/aml/PORT.md)
 passes 27 Omega scenarios with 27 body mutations and an 18-file source check.
@@ -395,8 +405,9 @@ loader errors under explicit capacities/budgets.
 [Field declaration metadata](source/libraries/acpi/aml/fields/PORT.md) adds 18
 semantic cases, 18 body mutations and a 19-file source check for Field, IndexField,
 BankField and all five FieldList forms. Dynamic BankValue/BufferSize bodies remain
-explicitly unparsed or opaque; namespace installation, executable terms and full
-interpreter behavior remain pending. ACPI-004/006 stay open.
+explicitly unparsed or opaque; field namespace installation and full interpreter
+behavior remain pending. The separate integer executor does not complete these
+syntax/resource-limit milestones. ACPI-004/006 stay open.
 
 ## Phase 5 — only after the corpus above is healthy
 

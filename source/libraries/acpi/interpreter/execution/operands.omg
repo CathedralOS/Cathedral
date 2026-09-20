@@ -1,0 +1,71 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Fixed pending-operation stack replaces MethodContext.in_flight Vec.
+module operands;
+use execution_model::ExecutionOutcome;
+use execution_model::Frame;
+use execution_model::Operation;
+use execution_model::Target;
+use integer_helpers::integers::normalize;
+pub machine push_operation(frame: &mut Frame, operation: Operation) -> ExecutionOutcome {
+    let index: u64 = frame.operation_count;
+    transition index < 16 && operation.value_arity <= 7 && operation.target_arity <= 2 && operation.count == 0 {
+        true -> push(frame, index, operation) _ -> (ExecutionOutcome::Depth)
+    }
+    state push(frame: &mut Frame, index: u64, operation: Operation) -> ExecutionOutcome {
+        frame.operations[index] = operation; frame.operation_count = index + 1; ExecutionOutcome::Success
+    }
+}
+pub machine current_operation(frame: &Frame) -> Operation {
+    transition frame.operation_count > 0 && frame.operation_count <= 16 { true -> at(frame, frame.operation_count - 1) _ -> (Operation {}) }
+    state at(frame: &Frame, index: u64) -> Operation { transition index < 16 { true -> (frame.operations[index]) _ -> (Operation {}) } }
+}
+pub machine pop_operation(frame: &mut Frame) -> ExecutionOutcome {
+    transition frame.operation_count > 0 && frame.operation_count <= 16 {
+        true -> pop(frame) _ -> (ExecutionOutcome::InvalidState)
+    }
+    state pop(frame: &mut Frame) -> ExecutionOutcome { frame.operation_count = frame.operation_count - 1; ExecutionOutcome::Success }
+}
+pub machine contribute_integer(frame: &mut Frame, number: u64) -> ExecutionOutcome {
+    let value: u64 = normalize(frame.size, number);
+    transition { frame.operation_count == 0 -> (ExecutionOutcome::Success)
+        frame.operation_count <= 16 -> at(frame, frame.operation_count - 1, value)
+        _ -> (ExecutionOutcome::InvalidState) }
+    state at(frame: &mut Frame, index: u64, value: u64) -> ExecutionOutcome {
+        transition index < 16 { true -> role(frame, index, value) _ -> (ExecutionOutcome::InvalidState) }
+    }
+    state role(frame: &mut Frame, index: u64, value: u64) -> ExecutionOutcome {
+        let count: u64 = frame.operations[index].count;
+        let expected: u64 = frame.operations[index].value_arity;
+        transition count < expected && count < 7 { true -> put(frame, index, count, value) _ -> (ExecutionOutcome::InvalidState) }
+    }
+    state put(frame: &mut Frame, index: u64, count: u64, value: u64) -> ExecutionOutcome {
+        frame.operations[index].operands[count] = value;
+        frame.operations[index].count = count + 1; ExecutionOutcome::Success
+    }
+}
+pub machine contribute_target(frame: &mut Frame, target: Target) -> ExecutionOutcome {
+    transition frame.operation_count > 0 && frame.operation_count <= 16 {
+        true -> at(frame, frame.operation_count - 1, target) _ -> (ExecutionOutcome::InvalidState)
+    }
+    state at(frame: &mut Frame, index: u64, target: Target) -> ExecutionOutcome {
+        transition index < 16 { true -> role(frame, index, target) _ -> (ExecutionOutcome::InvalidState) }
+    }
+    state role(frame: &mut Frame, index: u64, target: Target) -> ExecutionOutcome {
+        let operation: Operation = frame.operations[index];
+        transition operation.value_arity <= 7 && operation.target_arity <= 2 {
+            true -> count(frame, index, target, operation) _ -> (ExecutionOutcome::InvalidState)
+        }
+    }
+    state count(frame: &mut Frame, index: u64, target: Target, operation: Operation) -> ExecutionOutcome {
+        let total: u64 = operation.value_arity + operation.target_arity;
+        transition operation.count >= operation.value_arity && operation.count < total && operation.count < 9 {
+            true -> put(frame, index, target, operation) _ -> (ExecutionOutcome::InvalidState)
+        }
+    }
+    state put(frame: &mut Frame, index: u64, target: Target, operation: Operation) -> ExecutionOutcome {
+        frame.operations[index].count = operation.count + 1;
+        transition operation.count == operation.value_arity { true -> first(frame, index, target) _ -> second(frame, index, target) }
+    }
+    state first(frame: &mut Frame, index: u64, target: Target) -> ExecutionOutcome { frame.operations[index].first_target = target; ExecutionOutcome::Success }
+    state second(frame: &mut Frame, index: u64, target: Target) -> ExecutionOutcome { frame.operations[index].second_target = target; ExecutionOutcome::Success }
+}

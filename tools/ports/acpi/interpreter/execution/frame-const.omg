@@ -1,0 +1,29 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Current frame admission and u64 maximum-offset regression, executed as a const.
+use aml::model::Value;
+use aml::model::Path;
+use aml::model::Span;
+use execution::execution_model::MethodDefinition;
+use execution::execution_model::FrameResult;
+use execution::execution_model::ExecutionOutcome;
+use execution::frames::observed_frame;
+use integer_helpers::integers::IntegerSize;
+machine test_frame_admission() -> i32 {
+    let mut path: Path = Path { absolute: true, count: 1 };
+    path.segments[0] = 0x4e49414d;
+    let valid_body: Span = Span { unit: 7, start: 0, end: 1 };
+    let invalid_body: Span = Span { unit: 7, start: 0xffffffffffffffff, end: 1 };
+    let mut definitions: [MethodDefinition; 64];
+    let arguments: [Value; 7];
+    definitions[0] = MethodDefinition { present: true, scope: path, body: valid_body };
+    let valid: FrameResult = observed_frame(Value::Method { body: valid_body }, 0, &definitions, &arguments, 0, IntegerSize::FourBytes, 7, 1);
+    definitions[0].body = invalid_body;
+    let invalid: FrameResult = observed_frame(Value::Method { body: invalid_body }, 0, &definitions, &arguments, 0, IntegerSize::FourBytes, 7, 1);
+    transition valid.outcome == ExecutionOutcome::Success && invalid.outcome == ExecutionOutcome::Truncated {
+        true -> (0) _ -> (1)
+    }
+}
+const TEST_RESULT: i32 = test_frame_admission();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

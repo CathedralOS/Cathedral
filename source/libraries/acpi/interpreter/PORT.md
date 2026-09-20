@@ -2,17 +2,23 @@
 
 ## Scope and status
 
-This is a separately staged **pure helper slice**, not an AML interpreter.
+This package is the separately staged **pure helper slice**. The child
+[integer method executor](execution/PORT.md) now supplies bounded bytecode
+execution using these helpers and the static AML namespace.
 The package `cathedral-acpi-interpreter` implements integer operations and bounded
 initialized byte operations. It has no opcode decoder/execution loop, method
 invocation, namespace writes, argument/local slots, control-flow execution,
 package operations, shared object references, or operation-region access.
-ACPI-005 remains incomplete. No production build imports the package.
+Those statements describe this helper package; the child executor adds integer
+methods, targets and control flow. ACPI-005 remains incomplete. No production
+build imports either package.
 
 The neighboring [AML syntax package](../aml/PORT.md) owns parsing and namespace
 construction. This package currently has no dependency on it. Its scalar and
 fixed-array parameters must not be mistaken for a complete `Object` translation.
-Integration with its retained source spans/object arena remains pending.
+The child executor integrates its retained source spans and object arena with
+caller-supplied method-definition observations. Automatic observation capture
+through the loader remains pending.
 
 ## Pin and licensing
 
@@ -130,17 +136,22 @@ and commands; do not infer those later stages from semantic checking.
 
 ## Remaining interpreter and service boundary
 
-Complete ACPI-005 still needs values and conversions, object/reference identity,
-methods/arguments/locals, control flow, packages, fields and target stores,
-namespace binding, comprehensive upstream semantic scenarios, and explicit
-limits across execution. Current loops are bounded but do not establish the
+The child executor passes 79 checked-interpreter cases and 79 changed-body
+controls for integer methods, arguments/locals, existing named targets, aliases
+and bounded control flow. Its current frame-admission constant proof also passes
+a changed-body control; the complete final bytecode suite uses the distinct
+checked-interpreter stage. See its PORT for exact hashes and evidence.
+
+Complete ACPI-005 still needs generic values/conversions and references, packages,
+fields, dynamic namespace binding, loader definition capture, multi-unit source
+management and comprehensive upstream semantic scenarios. Current loops are bounded but do not establish the
 whole ACPI-006 resource-limit milestone. Large cases may also exceed the
 compiler evaluator's own work budget; that is separate from a runtime profile.
 
 An OperationRegion declaration remains inert AML metadata in the syntax
 package. This helper package exposes no read/write callback, ambient handler,
 physical mapping, I/O primitive, mutex/event/timer service, or successful stub.
-A future evaluator must stop on an unresolved external operation and return an
-explicit unsupported/unresolved service outcome; implementing that evaluator
-boundary is pending. The [adapter specification](../ADAPTER.md) separately
+The child evaluator returns explicit unresolved region, synchronization and
+service outcomes; it installs no live handlers. Broader object/service dispatch
+remains pending. The [adapter specification](../ADAPTER.md) separately
 requires named grants, bounds, lifetimes and cleanup before live access.

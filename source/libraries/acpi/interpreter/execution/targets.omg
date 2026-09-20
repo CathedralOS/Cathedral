@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Integer-only adaptation of pinned do_store/do_copy_object. Mutates stable
+// object slots; aliases retain identity. No rebind, allocation or hardware access.
+module targets;
+use aml::model::Namespace;
+use aml::model::Value;
+use execution_model::ExecutionOutcome;
+use execution_model::Slot;
+use execution_model::SlotResult;
+use execution_model::Target;
+use execution_model::Frame;
+use frames::scalar_slot;
+use frames::read_local;
+use frames::read_argument;
+use integer_helpers::integers::normalize;
+pub machine read_target(space: &Namespace, frame: &Frame, target: Target) -> SlotResult {
+    transition target {
+        Target::Local { local_index } -> local(frame, local_index)
+        Target::Argument { argument_index } -> argument(frame, argument_index)
+        Target::Named { object_id } -> named(space, frame, object_id)
+        Target::Debug -> (SlotResult { outcome: ExecutionOutcome::UnresolvedService })
+        Target::Null -> (SlotResult { outcome: ExecutionOutcome::InvalidTarget })
+    }
+    state local(frame: &Frame, index: u64) -> SlotResult { let result: SlotResult = read_local(frame, index); result }
+    state argument(frame: &Frame, index: u64) -> SlotResult { let result: SlotResult = read_argument(frame, index); result }
+    state named(space: &Namespace, frame: &Frame, index: u64) -> SlotResult {
+        transition space.object_count <= 64 && index < space.object_count && index < 64 {
+            true -> object(space, frame, index) _ -> (SlotResult { outcome: ExecutionOutcome::MissingObject })
+        }
+    }
+    state object(space: &Namespace, frame: &Frame, index: u64) -> SlotResult {
+        let result: SlotResult = scalar_slot(frame.size, space.objects[index].value); result
+    }
+}
+pub machine store_target(space: &mut Namespace, frame: &mut Frame, target: Target, number: u64) -> ExecutionOutcome {
+    let value: u64 = normalize(frame.size, number);
+    transition target {
+        Target::Null -> (ExecutionOutcome::Success)
+        Target::Debug -> (ExecutionOutcome::UnresolvedService)
+        Target::Local { local_index } -> local(frame, local_index, value)
+        Target::Argument { argument_index } -> argument(frame, argument_index, value)
+        Target::Named { object_id } -> named(space, object_id, value)
+    }
+    state local(frame: &mut Frame, index: u64, value: u64) -> ExecutionOutcome {
+        transition index < 8 { true -> put_local(frame, index, value) _ -> (ExecutionOutcome::InvalidTarget) }
+    }
+    state put_local(frame: &mut Frame, index: u64, value: u64) -> ExecutionOutcome {
+        frame.locals[index] = Slot { initialized: true, number: value }; ExecutionOutcome::Success
+    }
+    state argument(frame: &mut Frame, index: u64, value: u64) -> ExecutionOutcome {
+        transition index < 7 { true -> put_argument(frame, index, value) _ -> (ExecutionOutcome::InvalidTarget) }
+    }
+    state put_argument(frame: &mut Frame, index: u64, value: u64) -> ExecutionOutcome {
+        frame.arguments[index] = Slot { initialized: true, number: value }; ExecutionOutcome::Success
+    }
+    state named(space: &mut Namespace, index: u64, value: u64) -> ExecutionOutcome {
+        transition space.object_count <= 64 && index < space.object_count && index < 64 {
+            true -> kind(space, index, value, space.objects[index].value)
+            _ -> (ExecutionOutcome::MissingObject)
+        }
+    }
+    state kind(space: &mut Namespace, index: u64, value: u64, old: Value) -> ExecutionOutcome {
+        transition old {
+            Value::Integer { number } -> put_object(space, index, value)
+            Value::Uninitialized -> put_object(space, index, value)
+            Value::OperationRegion { space, base, length, scope } -> (ExecutionOutcome::UnresolvedRegion)
+            _ -> (ExecutionOutcome::UnsupportedValue)
+        }
+    }
+    state put_object(space: &mut Namespace, index: u64, value: u64) -> ExecutionOutcome {
+        space.objects[index].value = Value::Integer { number: value };
+        ExecutionOutcome::Success
+    }
+}
+// The scalar subset has no references. CopyObject's distinct source-object type
+// replacement cannot be inferred from Store outside Integer/Uninitialized slots.
+pub machine copy_integer_target(space: &mut Namespace, frame: &mut Frame, target: Target, number: u64) -> ExecutionOutcome {
+    transition target {
+        Target::Null -> (ExecutionOutcome::InvalidTarget)
+        Target::Debug -> (ExecutionOutcome::InvalidTarget)
+        _ -> copy(space, frame, target, number)
+    }
+    state copy(space: &mut Namespace, frame: &mut Frame, target: Target, number: u64) -> ExecutionOutcome {
+        let result: ExecutionOutcome = store_target(space, frame, target, number); result
+    }
+}

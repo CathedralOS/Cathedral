@@ -1,0 +1,114 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Retire a completed scalar/control operation. Divide writes remainder then
+// quotient in AML grammar order. Namespace side effects are not rolled back.
+module retire;
+use aml::model::Namespace;
+use aml::model::Read;
+use aml::model::Envelope;
+use aml::bytes::read_le;
+use aml::bytes::envelope;
+use execution_model::ExecutionOutcome;
+use execution_model::Frame;
+use execution_model::Operation;
+use execution_model::SlotResult;
+use execution_names::decode_outcome;
+use operands::contribute_integer;
+use targets::read_target;
+use targets::store_target;
+use targets::copy_integer_target;
+use control::return_integer;
+use control::enter_block;
+use operator_specs::compute_integer;
+use integer_helpers::integers::IntegerResult;
+pub machine retire_operation(input: &[u8; 1024], space: &mut Namespace, frame: &mut Frame, operation: Operation) -> ExecutionOutcome {
+    transition operation.opcode {
+        0xa4 -> returned(frame, operation.operands[0])
+        0xa0 -> branch(input, frame, operation)
+        0xa2 -> branch(input, frame, operation)
+        0x75 -> increment(space, frame, operation)
+        0x76 -> increment(space, frame, operation)
+        _ -> compute(space, frame, operation, operation.operands[0], operation.operands[1])
+    }
+    state returned(frame: &mut Frame, number: u64) -> ExecutionOutcome { let result: ExecutionOutcome = return_integer(frame, number); result }
+    state branch(input: &[u8; 1024], frame: &mut Frame, operation: Operation) -> ExecutionOutcome {
+        let result: ExecutionOutcome = retire_branch(input, frame, operation); result
+    }
+    state increment(space: &mut Namespace, frame: &mut Frame, operation: Operation) -> ExecutionOutcome {
+        let value: SlotResult = read_target(space, frame, operation.first_target);
+        transition value.outcome == ExecutionOutcome::Success { true -> compute(space, frame, operation, value.slot.number, 1) _ -> (value.outcome) }
+    }
+    state compute(space: &mut Namespace, frame: &mut Frame, operation: Operation, a: u64, b: u64) -> ExecutionOutcome {
+        let result: IntegerResult = compute_integer(frame.size, operation.opcode, a, b);
+        transition { result.error == 1 -> (ExecutionOutcome::DivideByZero)
+            result.error != 0 -> (ExecutionOutcome::BadEncoding)
+            _ -> store(space, frame, operation, result) }
+    }
+    state store(space: &mut Namespace, frame: &mut Frame, operation: Operation, result: IntegerResult) -> ExecutionOutcome {
+        let outcome: ExecutionOutcome = operation_stores(space, frame, operation, result);
+        transition outcome == ExecutionOutcome::Success { true -> contribute(frame, result.value) _ -> (outcome) }
+    }
+    state contribute(frame: &mut Frame, number: u64) -> ExecutionOutcome { let result: ExecutionOutcome = contribute_integer(frame, number); result }
+}
+machine operation_stores(space: &mut Namespace, frame: &mut Frame, operation: Operation, result: IntegerResult) -> ExecutionOutcome {
+    transition { operation.target_arity == 0 -> (ExecutionOutcome::Success)
+        operation.opcode == 0x9d -> copy(space, frame, operation, result.value)
+        operation.opcode == 0x78 -> divide(space, frame, operation, result)
+        _ -> first(space, frame, operation, result.value) }
+    state copy(space: &mut Namespace, frame: &mut Frame, operation: Operation, number: u64) -> ExecutionOutcome {
+        let result: ExecutionOutcome = copy_integer_target(space, frame, operation.first_target, number); result
+    }
+    state first(space: &mut Namespace, frame: &mut Frame, operation: Operation, number: u64) -> ExecutionOutcome {
+        let result: ExecutionOutcome = store_target(space, frame, operation.first_target, number); result
+    }
+    state divide(space: &mut Namespace, frame: &mut Frame, operation: Operation, result: IntegerResult) -> ExecutionOutcome {
+        let first: ExecutionOutcome = store_target(space, frame, operation.first_target, result.remainder);
+        transition first == ExecutionOutcome::Success { true -> quotient(space, frame, operation, result.value) _ -> (first) }
+    }
+    state quotient(space: &mut Namespace, frame: &mut Frame, operation: Operation, number: u64) -> ExecutionOutcome {
+        let result: ExecutionOutcome = store_target(space, frame, operation.second_target, number); result
+    }
+}
+pub data ElseBranch [copy] { outcome: ExecutionOutcome; present: bool; start: u64; end: u64; }
+machine else_branch(input: &[u8; 1024], at: u64, end: u64) -> ElseBranch {
+    transition at < end && end <= 1024 { true -> peek(input, at, end) _ -> (ElseBranch { end: at }) }
+    state peek(input: &[u8; 1024], at: u64, end: u64) -> ElseBranch {
+        let byte: Read = read_le(input, end, at, 1);
+        transition byte.value == 0xa1 && at < 1024 { true -> package(input, at + 1, end) _ -> (ElseBranch { end: at }) }
+    }
+    state package(input: &[u8; 1024], at: u64, end: u64) -> ElseBranch {
+        let body: Envelope = envelope(input, end, at);
+        let outcome: ExecutionOutcome = decode_outcome(body.outcome);
+        ElseBranch { outcome: outcome, present: true, start: body.body, end: body.end }
+    }
+}
+machine retire_branch(input: &[u8; 1024], frame: &mut Frame, operation: Operation) -> ExecutionOutcome {
+    transition frame.pc <= operation.body_end && operation.body_end <= operation.parent_end && operation.parent_end <= frame.body.end && frame.body.end <= 1024 {
+        true -> restore(input, frame, operation) _ -> (ExecutionOutcome::BadEncoding)
+    }
+    state restore(input: &[u8; 1024], frame: &mut Frame, operation: Operation) -> ExecutionOutcome {
+        frame.end = operation.parent_end;
+        transition operation.opcode == 0xa2 { true -> while_branch(frame, operation) _ -> if_branch(input, frame, operation) }
+    }
+    state while_branch(frame: &mut Frame, operation: Operation) -> ExecutionOutcome {
+        transition operation.operands[0] != 0 { true -> enter_while(frame, operation) _ -> skip(frame, operation.body_end) }
+    }
+    state enter_while(frame: &mut Frame, operation: Operation) -> ExecutionOutcome {
+        let result: ExecutionOutcome = enter_block(frame, frame.pc, operation.body_end, operation.body_end, true, operation.predicate); result
+    }
+    state if_branch(input: &[u8; 1024], frame: &mut Frame, operation: Operation) -> ExecutionOutcome {
+        let otherwise: ElseBranch = else_branch(input, operation.body_end, operation.parent_end);
+        transition otherwise.outcome == ExecutionOutcome::Success { true -> choose(frame, operation, otherwise) _ -> (otherwise.outcome) }
+    }
+    state choose(frame: &mut Frame, operation: Operation, otherwise: ElseBranch) -> ExecutionOutcome {
+        transition { operation.operands[0] != 0 -> then(frame, operation, otherwise)
+            otherwise.present -> otherwise(frame, otherwise)
+            _ -> skip(frame, operation.body_end) }
+    }
+    state then(frame: &mut Frame, operation: Operation, otherwise: ElseBranch) -> ExecutionOutcome {
+        let result: ExecutionOutcome = enter_block(frame, frame.pc, operation.body_end, otherwise.end, false, 0); result
+    }
+    state otherwise(frame: &mut Frame, otherwise: ElseBranch) -> ExecutionOutcome {
+        let result: ExecutionOutcome = enter_block(frame, otherwise.start, otherwise.end, otherwise.end, false, 0); result
+    }
+    state skip(frame: &mut Frame, next: u64) -> ExecutionOutcome { frame.pc = next; ExecutionOutcome::Success }
+}

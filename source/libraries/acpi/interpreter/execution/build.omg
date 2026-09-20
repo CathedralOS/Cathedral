@@ -1,0 +1,5 @@
+machine build(builder: &mut Build) {
+    builder.package("cathedral-acpi-execution");
+    builder.depend_as("aml", Source::Path { location: "../../aml" });
+    builder.depend_as("integer_helpers", Source::Path { location: ".." });
+}

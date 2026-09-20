@@ -1,0 +1,1500 @@
+{
+  "format": "cathedral-acpi-execution-cases-v1",
+  "cases": [
+    {
+      "name": "return_add",
+      "main": "a4720a280a0200",
+      "expected": 42,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 16,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "return_literal",
+      "main": "a40a2a",
+      "expected": 42,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 8,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "empty_method",
+      "main": "",
+      "expected": null,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 4,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "logical_not",
+      "main": "a49201",
+      "expected": 0,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "tests/logical_not.asl::MAIN complete method body",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "local_store",
+      "main": "700a1160a460",
+      "expected": 17,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "argument_store",
+      "main": "700a1168a468",
+      "expected": 17,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 1,
+      "args": [
+        9
+      ],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "argument_copy",
+      "main": "9d0a1f6ea46e",
+      "expected": 31,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 7,
+      "args": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "named_store",
+      "main": "700a2a585f5f5fa4585f5f5f",
+      "expected": 42,
+      "error": "Success",
+      "globals": {
+        "X": 5
+      },
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {
+        "X": 42
+      },
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "named_alias_store",
+      "main": "700a2a414c4953a4585f5f5f",
+      "expected": 42,
+      "error": "Success",
+      "globals": {
+        "X": 5
+      },
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {
+        "X": 42
+      },
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {
+        "ALIS": "X"
+      }
+    },
+    {
+      "name": "incdec",
+      "main": "75585f5f5f75585f5f5f75585f5f5f70585f5f5f595f5f5f76585f5f5fa4585f5f5f",
+      "expected": 2,
+      "error": "Success",
+      "globals": {
+        "X": 0,
+        "Y": 0
+      },
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {
+        "X": 2,
+        "Y": 3
+      },
+      "budget": 128,
+      "origin": "tests/incdec.asl statement body wrapped in synthetic MAIN; Name declarations seeded in namespace",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "if_else_0",
+      "main": "a00500a40a0ba104a40a16a40a21",
+      "expected": 22,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "if_no_else_0",
+      "main": "a00500a40a0ba40a21",
+      "expected": 33,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "if_else_1",
+      "main": "a00501a40a0ba104a40a16a40a21",
+      "expected": 11,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "if_no_else_1",
+      "main": "a00501a40a0ba40a21",
+      "expected": 11,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "method_0",
+      "main": "70464f4f5f595f5f5fa4595f5f5f",
+      "expected": 85,
+      "error": "Success",
+      "globals": {
+        "X": 0,
+        "Y": 0
+      },
+      "methods": {
+        "FOO": {
+          "flags": 0,
+          "bytes": "a00894585f5f5f01a3a104a40a55a40a3f"
+        }
+      },
+      "flags": 0,
+      "args": [],
+      "after": {
+        "Y": 85
+      },
+      "budget": 128,
+      "origin": "tests/method.asl complete FOO body and invocation/store, wrapped top-level tail; x=0 is additional else coverage",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "method_5",
+      "main": "70464f4f5f595f5f5fa4595f5f5f",
+      "expected": 63,
+      "error": "Success",
+      "globals": {
+        "X": 5,
+        "Y": 0
+      },
+      "methods": {
+        "FOO": {
+          "flags": 0,
+          "bytes": "a00894585f5f5f01a3a104a40a55a40a3f"
+        }
+      },
+      "flags": 0,
+      "args": [],
+      "after": {
+        "Y": 63
+      },
+      "budget": 128,
+      "origin": "tests/method.asl complete FOO body and invocation/store, wrapped top-level tail; x=0 is additional else coverage",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "call_argument",
+      "main": "a4464f4f5f0a29",
+      "expected": 42,
+      "error": "Success",
+      "globals": {},
+      "methods": {
+        "FOO": {
+          "flags": 1,
+          "bytes": "a472680100"
+        }
+      },
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "call_no_return_statement",
+      "main": "464f4f5fa40a2a",
+      "expected": 42,
+      "error": "Success",
+      "globals": {},
+      "methods": {
+        "FOO": {
+          "flags": 0,
+          "bytes": "a3"
+        }
+      },
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "call_no_return_operand",
+      "main": "a4464f4f5f",
+      "expected": null,
+      "error": "Uninitialized",
+      "globals": {},
+      "methods": {
+        "FOO": {
+          "flags": 0,
+          "bytes": "a3"
+        }
+      },
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "while_increment",
+      "main": "a20d95585f5f5f0a0575585f5f5fa4585f5f5f",
+      "expected": 5,
+      "error": "Success",
+      "globals": {
+        "X": 0
+      },
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {
+        "X": 5
+      },
+      "budget": 128,
+      "origin": "tests/while.asl first While body; declarations seeded and final read explicit",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "while_break",
+      "main": "a21895595f5f5f0a0aa00a9295595f5f5f0a05a575595f5f5fa4595f5f5f",
+      "expected": 5,
+      "error": "Success",
+      "globals": {
+        "Y": 0
+      },
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {
+        "Y": 5
+      },
+      "budget": 256,
+      "origin": "tests/while.asl DefBreak scenario",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "while_continue",
+      "main": "a21395434e545f0a0575434e545f9f755a5f5f5fa45a5f5f5f",
+      "expected": 0,
+      "error": "Success",
+      "globals": {
+        "CNT": 0,
+        "Z": 0
+      },
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {
+        "CNT": 5,
+        "Z": 0
+      },
+      "budget": 192,
+      "origin": "tests/while.asl DefContinue scenario",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "while_decrement_predicate",
+      "main": "700a0560a20476609fa460",
+      "expected": 0,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "tests/while.asl decrement-in-predicate scenario",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "divide_targets",
+      "main": "780a170a056061a47277600a0a006100",
+      "expected": 34,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "unary_not",
+      "main": "a4800a8000",
+      "expected": 4294967167,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "unary_highest",
+      "main": "a4810a8000",
+      "expected": 8,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "unary_lowest",
+      "main": "a4820a8000",
+      "expected": 8,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "zero_division",
+      "main": "a47801000000",
+      "expected": null,
+      "error": "DivideByZero",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "uninitialized_local",
+      "main": "a460",
+      "expected": null,
+      "error": "Uninitialized",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "uninitialized_argument",
+      "main": "a468",
+      "expected": null,
+      "error": "Uninitialized",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "argument_count",
+      "main": "a401",
+      "expected": null,
+      "error": "ArgumentCount",
+      "globals": {},
+      "methods": {},
+      "flags": 1,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "serialized",
+      "main": "a401",
+      "expected": null,
+      "error": "UnresolvedSynchronization",
+      "globals": {},
+      "methods": {},
+      "flags": 8,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "unresolved_timer",
+      "main": "5b33",
+      "expected": null,
+      "error": "UnresolvedService",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "unresolved_sleep",
+      "main": "5b22",
+      "expected": null,
+      "error": "UnresolvedService",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "unresolved_breakpoint",
+      "main": "cc",
+      "expected": null,
+      "error": "UnresolvedService",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "debug_store",
+      "main": "70015b31",
+      "expected": null,
+      "error": "UnresolvedService",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "copy_null",
+      "main": "9d0100",
+      "expected": null,
+      "error": "InvalidTarget",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "store_null",
+      "main": "700100",
+      "expected": null,
+      "error": "InvalidTarget",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "break_outside",
+      "main": "a5",
+      "expected": null,
+      "error": "ControlOutsideLoop",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "continue_outside",
+      "main": "9f",
+      "expected": null,
+      "error": "ControlOutsideLoop",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "orphan_else",
+      "main": "a102a3",
+      "expected": null,
+      "error": "BadEncoding",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "truncated_constant",
+      "main": "a40c12",
+      "expected": null,
+      "error": "Truncated",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "truncated_expression",
+      "main": "a47201",
+      "expected": null,
+      "error": "Truncated",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "malformed_package",
+      "main": "a03f01",
+      "expected": null,
+      "error": "BadEncoding",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "unsupported_buffer",
+      "main": "a411030100",
+      "expected": null,
+      "error": "UnsupportedOpcode",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "region_read",
+      "main": "a45245474e",
+      "expected": null,
+      "error": "UnresolvedRegion",
+      "globals": {
+        "REGN": {
+          "kind": "region"
+        }
+      },
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "missing_name",
+      "main": "a44d495353",
+      "expected": null,
+      "error": "MissingObject",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "noop_operand",
+      "main": "a4a3",
+      "expected": null,
+      "error": "BadEncoding",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "over_budget",
+      "main": "a401",
+      "expected": null,
+      "error": "Capacity",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 1025,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "block_depth",
+      "main": "a01d01a01a01a01701a01401a01101a00e01a00b01a00801a00501a40a2a",
+      "expected": null,
+      "error": "Depth",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "wrap64",
+      "main": "a472ff0100",
+      "expected": 0,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 64,
+      "aliases": {}
+    },
+    {
+      "name": "zero_budget",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "WorkLimit",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 0,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "loop_budget",
+      "main": "a20301a3",
+      "expected": null,
+      "error": "WorkLimit",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 16,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "recursive_depth",
+      "main": "a44d41494e",
+      "expected": null,
+      "error": "Depth",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 64,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "expression_depth",
+      "main": "a4929292929292929292929292929292929201",
+      "expected": null,
+      "error": "Depth",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "qword_literal",
+      "main": "a40e0000000001000000",
+      "expected": 4294967296,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 64,
+      "aliases": {}
+    },
+    {
+      "name": "from_bcd",
+      "main": "a45b280b341200",
+      "expected": 1234,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "to_bcd",
+      "main": "a45b290bd20400",
+      "expected": 4660,
+      "error": "Success",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "invalid_bcd",
+      "main": "a45b280a0a00",
+      "expected": null,
+      "error": "BadEncoding",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "region_store",
+      "main": "70015245474e",
+      "expected": null,
+      "error": "UnresolvedRegion",
+      "globals": {
+        "REGN": {
+          "kind": "region"
+        }
+      },
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "store_then_limit",
+      "main": "700a2a585f5f5fa20301a3",
+      "expected": null,
+      "error": "WorkLimit",
+      "globals": {
+        "X": 0
+      },
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {
+        "X": 42
+      },
+      "budget": 16,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {}
+    },
+    {
+      "name": "source_unit",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "SourceUnit",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {},
+      "profile_patch": {
+        "span_unit": 8
+      }
+    },
+    {
+      "name": "source_max_start",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "Truncated",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {},
+      "profile_patch": {
+        "span_start": 18446744073709551615
+      }
+    },
+    {
+      "name": "source_max_end",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "Truncated",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {},
+      "profile_patch": {
+        "span_end": 18446744073709551615
+      }
+    },
+    {
+      "name": "source_length",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "Truncated",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {},
+      "profile_patch": {
+        "length": 1
+      }
+    },
+    {
+      "name": "source_inverted",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "Truncated",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {},
+      "profile_patch": {
+        "span_start": 2,
+        "span_end": 1
+      }
+    },
+    {
+      "name": "source_capacity",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "Capacity",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {},
+      "profile_patch": {
+        "length": 1025
+      }
+    },
+    {
+      "name": "namespace_capacity",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "Capacity",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {},
+      "profile_patch": {
+        "entry_count": 33
+      }
+    },
+    {
+      "name": "object_capacity",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "Capacity",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {},
+      "profile_patch": {
+        "object_count": 65
+      }
+    },
+    {
+      "name": "method_alias_scope",
+      "main": "a45c2e44315f5f414c4953",
+      "expected": 11,
+      "error": "Success",
+      "globals": {
+        "X": 11,
+        "Y": 22
+      },
+      "methods": {
+        "FOO": {
+          "flags": 0,
+          "bytes": "a4585f5f5f"
+        }
+      },
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {
+        "ALIS": "FOO"
+      },
+      "omega_setup": [
+        "let mut d0: Path = Path { absolute: true, count: 1 };",
+        "d0.segments[0] = 1600073796;",
+        "let mut d1: Path = Path { absolute: true, count: 1 };",
+        "d1.segments[0] = 1600074052;",
+        "let mut original: Path = d0; original.count = 2;",
+        "original.segments[1] = 1599033158;",
+        "space.entries[2].path = original; definitions[1].scope = original;",
+        "let mut x0: Path = d0; x0.count = 2;",
+        "x0.segments[1] = 1600085848;",
+        "space.entries[3].path = x0;",
+        "let mut x1: Path = d1; x1.count = 2;",
+        "x1.segments[1] = 1600085848;",
+        "space.entries[4].path = x1;",
+        "let mut alias: Path = d1; alias.count = 2;",
+        "alias.segments[1] = 1397312577;",
+        "space.entries[5].path = alias;",
+        "space.entries[6] = Entry { path: d0, has_level: true };",
+        "space.entries[7] = Entry { path: d1, has_level: true }; space.count = 8;"
+      ]
+    },
+    {
+      "name": "method_alias_rebound",
+      "main": "a45c2e44315f5f414c4953",
+      "expected": 11,
+      "error": "Success",
+      "globals": {
+        "X": 11,
+        "Y": 22
+      },
+      "methods": {
+        "FOO": {
+          "flags": 0,
+          "bytes": "a4585f5f5f"
+        }
+      },
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {
+        "ALIS": "FOO"
+      },
+      "omega_setup": [
+        "let mut d0: Path = Path { absolute: true, count: 1 };",
+        "d0.segments[0] = 1600073796;",
+        "let mut d1: Path = Path { absolute: true, count: 1 };",
+        "d1.segments[0] = 1600074052;",
+        "let mut original: Path = d0; original.count = 2;",
+        "original.segments[1] = 1599033158;",
+        "space.entries[2].path = original; definitions[1].scope = original;",
+        "let mut x0: Path = d0; x0.count = 2;",
+        "x0.segments[1] = 1600085848;",
+        "space.entries[3].path = x0;",
+        "let mut x1: Path = d1; x1.count = 2;",
+        "x1.segments[1] = 1600085848;",
+        "space.entries[4].path = x1;",
+        "let mut alias: Path = d1; alias.count = 2;",
+        "alias.segments[1] = 1397312577;",
+        "space.entries[5].path = alias;",
+        "space.entries[6] = Entry { path: d0, has_level: true };",
+        "space.entries[7] = Entry { path: d1, has_level: true }; space.count = 8;",
+        "space.objects[4] = Object { value: Value::Integer { number: 99 } };",
+        "space.object_count = 5; space.entries[2].object = 4;"
+      ]
+    },
+    {
+      "name": "method_alias_removed",
+      "main": "a45c2e44315f5f414c4953",
+      "expected": 11,
+      "error": "Success",
+      "globals": {
+        "X": 11,
+        "Y": 22
+      },
+      "methods": {
+        "FOO": {
+          "flags": 0,
+          "bytes": "a4585f5f5f"
+        }
+      },
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {
+        "ALIS": "FOO"
+      },
+      "omega_setup": [
+        "let mut d0: Path = Path { absolute: true, count: 1 };",
+        "d0.segments[0] = 1600073796;",
+        "let mut d1: Path = Path { absolute: true, count: 1 };",
+        "d1.segments[0] = 1600074052;",
+        "let mut original: Path = d0; original.count = 2;",
+        "original.segments[1] = 1599033158;",
+        "space.entries[2].path = original; definitions[1].scope = original;",
+        "let mut x0: Path = d0; x0.count = 2;",
+        "x0.segments[1] = 1600085848;",
+        "space.entries[3].path = x0;",
+        "let mut x1: Path = d1; x1.count = 2;",
+        "x1.segments[1] = 1600085848;",
+        "space.entries[4].path = x1;",
+        "let mut alias: Path = d1; alias.count = 2;",
+        "alias.segments[1] = 1397312577;",
+        "space.entries[5].path = alias;",
+        "space.entries[6] = Entry { path: d0, has_level: true };",
+        "space.entries[7] = Entry { path: d1, has_level: true }; space.count = 8;",
+        "space.entries[2].has_object = false;"
+      ]
+    },
+    {
+      "name": "method_bound_removed",
+      "main": "a45c2e44315f5f414c4953",
+      "expected": 11,
+      "error": "Success",
+      "globals": {
+        "X": 11,
+        "Y": 22
+      },
+      "methods": {
+        "FOO": {
+          "flags": 0,
+          "bytes": "a4585f5f5f"
+        }
+      },
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {
+        "ALIS": "FOO"
+      },
+      "omega_setup": [
+        "let mut d0: Path = Path { absolute: true, count: 1 };",
+        "d0.segments[0] = 1600073796;",
+        "let mut d1: Path = Path { absolute: true, count: 1 };",
+        "d1.segments[0] = 1600074052;",
+        "let mut original: Path = d0; original.count = 2;",
+        "original.segments[1] = 1599033158;",
+        "space.entries[2].path = original; definitions[1].scope = original;",
+        "let mut x0: Path = d0; x0.count = 2;",
+        "x0.segments[1] = 1600085848;",
+        "space.entries[3].path = x0;",
+        "let mut x1: Path = d1; x1.count = 2;",
+        "x1.segments[1] = 1600085848;",
+        "space.entries[4].path = x1;",
+        "let mut alias: Path = d1; alias.count = 2;",
+        "alias.segments[1] = 1397312577;",
+        "space.entries[5].path = alias;",
+        "space.entries[6] = Entry { path: d0, has_level: true };",
+        "space.entries[7] = Entry { path: d1, has_level: true }; space.count = 8;",
+        "space.entries[2].has_object = false; space.entries[5].alias = false;"
+      ]
+    },
+    {
+      "name": "method_alias_unobserved",
+      "main": "a45c2e44315f5f414c4953",
+      "expected": null,
+      "error": "MethodDefinition",
+      "globals": {
+        "X": 11,
+        "Y": 22
+      },
+      "methods": {
+        "FOO": {
+          "flags": 0,
+          "bytes": "a4585f5f5f"
+        }
+      },
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {
+        "ALIS": "FOO"
+      },
+      "omega_setup": [
+        "let mut d0: Path = Path { absolute: true, count: 1 };",
+        "d0.segments[0] = 1600073796;",
+        "let mut d1: Path = Path { absolute: true, count: 1 };",
+        "d1.segments[0] = 1600074052;",
+        "let mut original: Path = d0; original.count = 2;",
+        "original.segments[1] = 1599033158;",
+        "space.entries[2].path = original; definitions[1].scope = original;",
+        "let mut x0: Path = d0; x0.count = 2;",
+        "x0.segments[1] = 1600085848;",
+        "space.entries[3].path = x0;",
+        "let mut x1: Path = d1; x1.count = 2;",
+        "x1.segments[1] = 1600085848;",
+        "space.entries[4].path = x1;",
+        "let mut alias: Path = d1; alias.count = 2;",
+        "alias.segments[1] = 1397312577;",
+        "space.entries[5].path = alias;",
+        "space.entries[6] = Entry { path: d0, has_level: true };",
+        "space.entries[7] = Entry { path: d1, has_level: true }; space.count = 8;",
+        "definitions[1].present = false;"
+      ]
+    },
+    {
+      "name": "method_bound_unobserved",
+      "main": "a45c2e44315f5f414c4953",
+      "expected": null,
+      "error": "MethodDefinition",
+      "globals": {
+        "X": 11,
+        "Y": 22
+      },
+      "methods": {
+        "FOO": {
+          "flags": 0,
+          "bytes": "a4585f5f5f"
+        }
+      },
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {
+        "ALIS": "FOO"
+      },
+      "omega_setup": [
+        "let mut d0: Path = Path { absolute: true, count: 1 };",
+        "d0.segments[0] = 1600073796;",
+        "let mut d1: Path = Path { absolute: true, count: 1 };",
+        "d1.segments[0] = 1600074052;",
+        "let mut original: Path = d0; original.count = 2;",
+        "original.segments[1] = 1599033158;",
+        "space.entries[2].path = original; definitions[1].scope = original;",
+        "let mut x0: Path = d0; x0.count = 2;",
+        "x0.segments[1] = 1600085848;",
+        "space.entries[3].path = x0;",
+        "let mut x1: Path = d1; x1.count = 2;",
+        "x1.segments[1] = 1600085848;",
+        "space.entries[4].path = x1;",
+        "let mut alias: Path = d1; alias.count = 2;",
+        "alias.segments[1] = 1397312577;",
+        "space.entries[5].path = alias;",
+        "space.entries[6] = Entry { path: d0, has_level: true };",
+        "space.entries[7] = Entry { path: d1, has_level: true }; space.count = 8;",
+        "space.entries[2].has_object = false; space.entries[5].alias = false; definitions[1].present = false;"
+      ]
+    },
+    {
+      "name": "definition_missing",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "MethodDefinition",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {},
+      "omega_setup": [
+        "definitions[0].present = false;"
+      ]
+    },
+    {
+      "name": "definition_identity",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "MethodDefinition",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {},
+      "omega_setup": [
+        "definitions[0].object_id = 1;"
+      ]
+    },
+    {
+      "name": "definition_span",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "MethodDefinition",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {},
+      "omega_setup": [
+        "definitions[0].body.end = 0;"
+      ]
+    },
+    {
+      "name": "definition_flags",
+      "main": "a40a2a",
+      "expected": null,
+      "error": "MethodDefinition",
+      "globals": {},
+      "methods": {},
+      "flags": 0,
+      "args": [],
+      "after": {},
+      "budget": 128,
+      "origin": "Original synthetic AML; primary ACPI6.6 chapters19/20",
+      "bits": 32,
+      "aliases": {},
+      "omega_setup": [
+        "definitions[0].flags = 1;"
+      ]
+    }
+  ]
+}

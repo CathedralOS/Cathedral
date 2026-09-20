@@ -1,0 +1,156 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// One bounded execution token. Reuses AML token/NameString/envelope parsing;
+// it does not duplicate the static loader or grant access to any service.
+module decode_execution;
+use aml::model::Namespace;
+use aml::model::Value;
+use aml::model::Read;
+use aml::model::Envelope;
+use aml::bytes::opcode;
+use aml::bytes::read_le;
+use aml::bytes::envelope;
+use aml::names::lead_char;
+use execution_model::ExecutionOutcome;
+use execution_model::Frame;
+use execution_model::Operation;
+use execution_model::SlotResult;
+use execution_model::Target;
+use execution_model::TargetResult;
+use execution_names::NamedResult;
+use execution_names::cached_named;
+use execution_names::decode_outcome;
+use execution_names::parse_target;
+use operands::contribute_integer;
+use operands::contribute_target;
+use operands::push_operation;
+use operands::current_operation;
+use operator_specs::value_count;
+use operator_specs::target_count;
+use targets::read_target;
+use control::leave_loop;
+use integer_helpers::integers::integer_mask;
+pub machine decode_target(input: &[u8; 1024], space: &Namespace, frame: &mut Frame) -> ExecutionOutcome {
+    let parsed: TargetResult = parse_target(input, space, frame);
+    let operation: Operation = current_operation(frame);
+    let allowed: bool = target_allowed(operation.opcode, parsed.target);
+    transition { parsed.outcome != ExecutionOutcome::Success -> (parsed.outcome)
+        !allowed -> (ExecutionOutcome::InvalidTarget)
+        parsed.next <= frame.pc || parsed.next > frame.end -> (ExecutionOutcome::Truncated)
+        _ -> contribute(frame, parsed) }
+    state contribute(frame: &mut Frame, parsed: TargetResult) -> ExecutionOutcome {
+        frame.pc = parsed.next;
+        let result: ExecutionOutcome = contribute_target(frame, parsed.target); result
+    }
+}
+machine target_allowed(opcode: u64, target: Target) -> bool {
+    transition target { Target::Null -> (opcode != 0x70 && opcode != 0x9d && opcode != 0x75 && opcode != 0x76)
+        Target::Debug -> (opcode != 0x9d) _ -> (true) }
+}
+pub machine decode_term(input: &[u8; 1024], space: &Namespace, frame: &mut Frame) -> ExecutionOutcome {
+    let token: Read = opcode(input, frame.end, frame.pc);
+    let outcome: ExecutionOutcome = decode_outcome(token.outcome);
+    transition outcome == ExecutionOutcome::Success { true -> token(input, space, frame, token) _ -> (outcome) }
+    state token(input: &[u8; 1024], space: &Namespace, frame: &mut Frame, token: Read) -> ExecutionOutcome {
+        let named: bool = lead_char(token.value) || token.value == 0x5c || token.value == 0x5e || token.value == 0x2e || token.value == 0x2f;
+        transition {
+            named -> named(input, space, frame)
+            token.value == 0 -> constant(frame, token.next, 0)
+            token.value == 1 -> constant(frame, token.next, 1)
+            token.value == 0xff -> ones(frame, token.next)
+            token.value == 0x0a -> literal(input, frame, token.next, 1)
+            token.value == 0x0b -> literal(input, frame, token.next, 2)
+            token.value == 0x0c -> literal(input, frame, token.next, 4)
+            token.value == 0x0e -> literal(input, frame, token.next, 8)
+            token.value >= 0x60 && token.value <= 0x67 -> local(space, frame, token.next, token.value - 0x60)
+            token.value >= 0x68 && token.value <= 0x6e -> argument(space, frame, token.next, token.value - 0x68)
+            token.value == 0xa0 || token.value == 0xa2 -> branch(input, frame, token)
+            token.value == 0xa3 -> noop(frame, token.next)
+            token.value == 0xa5 || token.value == 0x9f -> loop_control(frame, token)
+            token.value == 0xa1 -> (ExecutionOutcome::BadEncoding)
+            token.value == 0xcc || token.value == 0x86 || token.value == 0x5b21 || token.value == 0x5b22 || token.value == 0x5b23 || token.value == 0x5b24 || token.value == 0x5b25 || token.value == 0x5b26 || token.value == 0x5b27 || token.value == 0x5b31 || token.value == 0x5b32 || token.value == 0x5b33 -> (ExecutionOutcome::UnresolvedService)
+            _ -> operation(frame, token)
+        }
+    }
+    state constant(frame: &mut Frame, next: u64, number: u64) -> ExecutionOutcome {
+        frame.pc = next; let result: ExecutionOutcome = contribute_integer(frame, number); result
+    }
+    state ones(frame: &mut Frame, next: u64) -> ExecutionOutcome {
+        let number: u64 = integer_mask(frame.size);
+        frame.pc = next; let result: ExecutionOutcome = contribute_integer(frame, number); result
+    }
+    state literal(input: &[u8; 1024], frame: &mut Frame, at: u64, width: u64) -> ExecutionOutcome {
+        let number: Read = read_le(input, frame.end, at, width);
+        let outcome: ExecutionOutcome = decode_outcome(number.outcome);
+        transition outcome == ExecutionOutcome::Success { true -> constant(frame, number.next, number.value) _ -> (outcome) }
+    }
+    state local(space: &Namespace, frame: &mut Frame, next: u64, index: u64) -> ExecutionOutcome {
+        let value: SlotResult = read_target(space, frame, Target::Local { local_index: index });
+        transition value.outcome == ExecutionOutcome::Success { true -> constant(frame, next, value.slot.number) _ -> (value.outcome) }
+    }
+    state argument(space: &Namespace, frame: &mut Frame, next: u64, index: u64) -> ExecutionOutcome {
+        let value: SlotResult = read_target(space, frame, Target::Argument { argument_index: index });
+        transition value.outcome == ExecutionOutcome::Success { true -> constant(frame, next, value.slot.number) _ -> (value.outcome) }
+    }
+    state operation(frame: &mut Frame, token: Read) -> ExecutionOutcome {
+        let values: u64 = value_count(token.value);
+        let targets: u64 = target_count(token.value);
+        transition { values == 255 -> (ExecutionOutcome::UnsupportedOpcode)
+            token.value == 0xa4 && frame.operation_count != 0 -> (ExecutionOutcome::BadEncoding)
+            _ -> push(frame, token, values, targets) }
+    }
+    state push(frame: &mut Frame, token: Read, values: u64, targets: u64) -> ExecutionOutcome {
+        let result: ExecutionOutcome = push_operation(frame, Operation { opcode: token.value, value_arity: values, target_arity: targets });
+        frame.pc = token.next; result
+    }
+    state branch(input: &[u8; 1024], frame: &mut Frame, token: Read) -> ExecutionOutcome {
+        transition frame.operation_count == 0 { true -> package(input, frame, token) _ -> (ExecutionOutcome::BadEncoding) }
+    }
+    state package(input: &[u8; 1024], frame: &mut Frame, token: Read) -> ExecutionOutcome {
+        let body: Envelope = envelope(input, frame.end, token.next);
+        let outcome: ExecutionOutcome = decode_outcome(body.outcome);
+        transition outcome == ExecutionOutcome::Success { true -> predicate(frame, token, body) _ -> (outcome) }
+    }
+    state predicate(frame: &mut Frame, token: Read, body: Envelope) -> ExecutionOutcome {
+        let result: ExecutionOutcome = push_operation(frame, Operation { opcode: token.value, value_arity: 1, body_end: body.end, predicate: frame.pc, parent_end: frame.end });
+        frame.pc = body.body; frame.end = body.end; result
+    }
+    state noop(frame: &mut Frame, next: u64) -> ExecutionOutcome {
+        transition frame.operation_count == 0 { true -> advance(frame, next) _ -> (ExecutionOutcome::BadEncoding) }
+    }
+    state advance(frame: &mut Frame, next: u64) -> ExecutionOutcome { frame.pc = next; ExecutionOutcome::Success }
+    state loop_control(frame: &mut Frame, token: Read) -> ExecutionOutcome {
+        let again: bool = token.value == 0x9f;
+        let result: ExecutionOutcome = leave_loop(frame, again); result
+    }
+    state named(input: &[u8; 1024], space: &Namespace, frame: &mut Frame) -> ExecutionOutcome {
+        let found: NamedResult = cached_named(input, space, frame);
+        transition found.outcome == ExecutionOutcome::Success && found.object_id < space.object_count && found.object_id < 64 {
+            true -> named_value(space, frame, found) _ -> (found.outcome)
+        }
+    }
+    state named_value(space: &Namespace, frame: &mut Frame, found: NamedResult) -> ExecutionOutcome {
+        let index: u64 = found.object_id;
+        transition index < 64 { true -> named_slot(space, frame, found, index) _ -> (ExecutionOutcome::MissingObject) }
+    }
+    state named_slot(space: &Namespace, frame: &mut Frame, found: NamedResult, index: u64) -> ExecutionOutcome {
+        let value: Value = space.objects[index].value;
+        let result: ExecutionOutcome = named_operand(frame, found, value); result
+    }
+}
+machine named_operand(frame: &mut Frame, found: NamedResult, value: Value) -> ExecutionOutcome {
+    transition value {
+        Value::Integer { number } -> integer(frame, found.next, number)
+        Value::Method { flags, body } -> method(frame, found, flags, body)
+        Value::Uninitialized -> (ExecutionOutcome::Uninitialized)
+        Value::OperationRegion { space, base, length, scope } -> (ExecutionOutcome::UnresolvedRegion)
+        _ -> (ExecutionOutcome::UnsupportedValue)
+    }
+    state integer(frame: &mut Frame, next: u64, number: u64) -> ExecutionOutcome {
+        frame.pc = next; let result: ExecutionOutcome = contribute_integer(frame, number); result
+    }
+    state method(frame: &mut Frame, found: NamedResult, flags: u8, body: aml::model::Span) -> ExecutionOutcome {
+        let count: u64 = (flags & 7) as u64;
+        let result: ExecutionOutcome = push_operation(frame, Operation { opcode: 0x10000, value_arity: count, method_id: found.object_id, method_body: body, method_flags: flags });
+        frame.pc = found.next; result
+    }
+}
