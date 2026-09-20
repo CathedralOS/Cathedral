@@ -4,7 +4,7 @@
 
 **Stage: inventoried, 2026-09-20.** This milestone covers the complete pinned
 Rust corpus and test-scenario metadata. It does not claim an Omega translation,
-compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 473 translated table/topology/static-AML/helper anchors and 1,108
+compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 480 translated table/topology/AML/helper anchors and 1,101
 pending anchors. Inventory completion and translation completion are different
 milestones. The bounded ACPI-001 slice is separately
 [tested by Omega semantic evaluation](headers.PORT.md): 65 original scenarios
@@ -19,8 +19,10 @@ Those slices pass 291 and 77 original Omega semantic scenarios respectively,
 each with three body-mutating controls. The [AML helper slice](interpreter/PORT.md)
 passes 150 integer/byte scenarios and three body controls. The [static AML layer](aml/PORT.md)
 passes 27 semantic cases and 27 body controls for bounded parsing, declarations
-and namespace behavior. Bytecode execution, methods and complete object/context
-behavior remain separate queue work.
+and namespace behavior. [Field declaration metadata](aml/fields/PORT.md) adds
+18 cases and 18 body controls for all three declaration families and five
+FieldList forms. Bytecode execution, runtime field installation and complete
+object/context behavior remain separate queue work.
 No production build root imports this directory. The libraries charter governs
 pure algorithms; firmware/physical-address facts convey no mapping authority.
 

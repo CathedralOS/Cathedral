@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral semantic fixture; no firmware or external example content.
+use aml::model::Outcome;
+use aml::model::Path;
+use aml::model::Span;
+use aml::model::Read;
+use fields::field_model::Access;
+use fields::field_model::AccessType;
+use fields::field_model::UpdateRule;
+use fields::field_model::AccessResult;
+use fields::field_model::Connection;
+use fields::field_model::ListState;
+use fields::field_model::DeclarationKind;
+use fields::field_model::DeclarationResult;
+use fields::field_model::Pending;
+use fields::flags::decode_flags;
+use fields::flags::change_access;
+use fields::flags::nominal_width;
+
+machine test()->u64 {
+let initial:AccessResult=decode_flags(0x52);let ordinary:AccessResult=change_access(initial.access,0x85,9,false,0);let extended:AccessResult=change_access(ordinary.access,5,14,true,6);let bad:AccessResult=change_access(initial.access,0x12,0,false,0);let bad_extended:AccessResult=change_access(initial.access,5,12,true,1);
+ transition ordinary.outcome==Outcome::Success && ordinary.access.attribute_mode==2 && ordinary.access.attribute==9 && ordinary.access.flags==0x55 && ordinary.access.locked && extended.access.extended && extended.access.access_length==6 && extended.access.attribute==14 && bad.outcome==Outcome::BadEncoding && bad_extended.outcome==Outcome::BadEncoding {true -> (0) _ -> (1)}
+}
+
+const TEST_RESULT:u64=test();
+machine require_ok(result:u64) requires result==0; {}
+data Main {}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

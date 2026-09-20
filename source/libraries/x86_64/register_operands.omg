@@ -1,0 +1,168 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified detached recipes from x86_64 cc35c876d3badb57df54a66e22f7768a52be95f2.
+// See register-operands.PORT.md. No instructions, current CPU facts or authority.
+module register_operands;
+use addresses;
+use addresses::NumberResult;
+use pages;
+use registers;
+use page_entries;
+use facts::x86_registers;
+use facts::x86_registers::Cr3Flags;
+use facts::x86_registers::PriorityClass;
+use facts::x86_registers::SegmentSelector;
+use facts::x86_registers::CetFlags;
+use facts::x86_registers::ApicBaseFlags;
+use facts::x86_tlb_operands::Pcid;
+
+pub data RegisterKind [copy] { case Cr0; case Cr4; case Efer; case Rflags; case Xcr0; }
+pub data Xcr0Plan [copy] {
+    case MissingX87;
+    case AvxRequiresSse;
+    case IncompleteMpx;
+    case Avx512RequiresAvx;
+    case IncompleteAvx512;
+    case Value(bits: u64);
+}
+pub data Cr3Observation [copy] { frame: u64; low: u16; }
+pub data ObservedPriority [copy] { case None; case Class(value: PriorityClass); }
+pub data StarSelectors [copy] {
+    cs_sysret: SegmentSelector; ss_sysret: SegmentSelector;
+    cs_syscall: SegmentSelector; ss_syscall: SegmentSelector;
+}
+pub data StarExpansion [copy] { case Overflow; case Value(selectors: StarSelectors); }
+pub data CetObservation [copy] { case InvalidAddress; case Value(flags: CetFlags, bitmap: u64); }
+pub data ApicObservation [copy] { frame: u64; raw_flags: u64; flags: ApicBaseFlags; }
+
+pub machine register_mask(kind: RegisterKind) -> u64 {
+    transition kind {
+        RegisterKind::Cr0 -> (x86_registers::CR0_FLAGS_KNOWN_BITS)
+        RegisterKind::Cr4 -> (x86_registers::CR4_FLAGS_KNOWN_BITS)
+        RegisterKind::Efer -> (x86_registers::EFER_FLAGS_KNOWN_BITS)
+        RegisterKind::Rflags -> (x86_registers::RFLAGS_KNOWN_BITS)
+        RegisterKind::Xcr0 -> (x86_registers::XCR0_FLAGS_KNOWN_BITS)
+    }
+}
+// Supplied unknown bits are retained, as with Rust from_bits_retain.
+// For XCR0 this is composition only; xcr0_plan separately checks pinned rules.
+pub machine register_merge(kind: RegisterKind, old: u64, supplied: u64) -> u64 {
+    let known: u64 = register_mask(kind);
+    (old & ~known) | supplied
+}
+pub machine xcr0_plan(old: u64, supplied: u64) -> Xcr0Plan {
+    let x87: u64 = x86_registers::XCR0_FLAGS_X87.raw;
+    let sse: u64 = x86_registers::XCR0_FLAGS_SSE.raw;
+    let avx: u64 = x86_registers::XCR0_FLAGS_AVX.raw;
+    let mpx: u64 = x86_registers::XCR0_FLAGS_BNDREG.raw | x86_registers::XCR0_FLAGS_BNDCSR.raw;
+    let avx512: u64 = x86_registers::XCR0_FLAGS_OPMASK.raw | x86_registers::XCR0_FLAGS_ZMM_HI256.raw | x86_registers::XCR0_FLAGS_HI16_ZMM.raw;
+    let bits: u64 = register_merge(RegisterKind::Xcr0, old, supplied);
+    let missing_x87: bool = (supplied & x87) == 0;
+    let missing_sse: bool = (supplied & avx) != 0 && (supplied & sse) == 0;
+    let partial_mpx: bool = (supplied & mpx) != 0 && (supplied & mpx) != mpx;
+    let missing_avx: bool = (supplied & avx512) != 0 && (supplied & avx) == 0;
+    let partial_avx512: bool = (supplied & avx512) != 0 && (supplied & avx512) != avx512;
+    transition {
+        missing_x87 -> (Xcr0Plan::MissingX87)
+        missing_sse -> (Xcr0Plan::AvxRequiresSse)
+        partial_mpx -> (Xcr0Plan::IncompleteMpx)
+        missing_avx -> (Xcr0Plan::Avx512RequiresAvx)
+        partial_avx512 -> (Xcr0Plan::IncompleteAvx512)
+        _ -> (Xcr0Plan::Value { bits: bits })
+    }
+}
+pub machine cr3_observed(raw: u64) -> Cr3Observation {
+    Cr3Observation { frame: raw & page_entries::ADDRESS_MASK, low: (raw & 4095) as u16 }
+}
+pub machine cr3_observed_flags(raw: u64) -> Cr3Flags {
+    Cr3Flags { raw: raw & x86_registers::CR3_FLAGS_KNOWN_BITS }
+}
+pub machine cr3_observed_pcid(raw: u64) -> Pcid { Pcid { value: (raw & 4095) as u16 } }
+// Raw val is the complete u16: bits12..15 may OR into the frame address.
+pub machine cr3_raw_operand(frame: u64, val: u16, no_flush: bool) -> NumberResult {
+    let valid: bool = pages::start_valid(frame, 4096, true);
+    transition valid { true -> compose(frame, val, no_flush) _ -> (NumberResult::Rejected) }
+    state compose(frame: u64, val: u16, no_flush: bool) -> NumberResult {
+        let bits: u64 = frame | (val as u64);
+        transition no_flush {
+            true -> (NumberResult::Value { value: bits | 9223372036854775808 })
+            _ -> (NumberResult::Value { value: bits })
+        }
+    }
+}
+pub machine cr3_flags_operand(frame: u64, flags: Cr3Flags) -> NumberResult {
+    cr3_raw_operand(frame, (flags.raw & 65535) as u16, false)
+}
+pub machine cr3_pcid_operand(frame: u64, pcid: Pcid, no_flush: bool) -> NumberResult {
+    cr3_raw_operand(frame, pcid.value, no_flush)
+}
+// The pin casts to u8 first: observed257 denotes priority1; it is not rejected.
+pub machine cr8_observed(raw: u64) -> ObservedPriority {
+    let value: u8 = (raw & 255) as u8;
+    let valid: bool = registers::priority_class_valid(value);
+    transition valid {
+        true -> (ObservedPriority::Class { value: PriorityClass { raw: value } })
+        _ -> (ObservedPriority::None)
+    }
+}
+pub machine cr8_operand(priority: ObservedPriority) -> NumberResult {
+    transition priority {
+        ObservedPriority::None -> (NumberResult::Value { value: 0 })
+        ObservedPriority::Class { value } -> checked(value.raw)
+    }
+    state checked(value: u8) -> NumberResult {
+        let valid: bool = registers::priority_class_valid(value);
+        transition valid {
+            true -> (NumberResult::Value { value: value as u64 })
+            _ -> (NumberResult::Rejected)
+        }
+    }
+}
+// Checked deviation: never wrap overflowing u16 selector additions.
+pub machine star_expand(raw: u64) -> StarExpansion {
+    let sysret: u16 = registers::star_sysret_base(raw);
+    let syscall: u16 = registers::star_syscall_base(raw);
+    transition sysret <= 65519 && syscall <= 65527 {
+        true -> selectors(sysret, syscall)
+        _ -> (StarExpansion::Overflow)
+    }
+    state selectors(sysret: u16, syscall: u16) -> StarExpansion {
+        StarExpansion::Value { selectors: StarSelectors {
+            cs_sysret: SegmentSelector { raw: (((sysret as u32) + 16) & 65535) as u16 },
+            ss_sysret: SegmentSelector { raw: (((sysret as u32) + 8) & 65535) as u16 },
+            cs_syscall: SegmentSelector { raw: syscall },
+            ss_syscall: SegmentSelector { raw: (((syscall as u32) + 8) & 65535) as u16 }
+        } }
+    }
+}
+pub machine cet_observed(raw: u64) -> CetObservation {
+    let bitmap: u64 = raw & ~4095;
+    let valid: bool = addresses::virtual_valid(bitmap);
+    transition valid {
+        true -> (CetObservation::Value { flags: CetFlags { raw: raw & x86_registers::CET_FLAGS_KNOWN_BITS }, bitmap: bitmap })
+        _ -> (CetObservation::InvalidAddress)
+    }
+}
+pub machine cet_operand(bitmap: u64, flags: CetFlags) -> NumberResult {
+    let valid: bool = pages::start_valid(bitmap, 4096, false);
+    transition valid {
+        true -> (NumberResult::Value { value: bitmap | flags.raw })
+        _ -> (NumberResult::Rejected)
+    }
+}
+// Default physical52 profile only. raw_flags deliberately retains every bit.
+pub machine apic_observed(raw: u64) -> ApicObservation {
+    ApicObservation { frame: raw & page_entries::ADDRESS_MASK, raw_flags: raw,
+        flags: ApicBaseFlags { raw: raw & x86_registers::APIC_BASE_FLAGS_KNOWN_BITS } }
+}
+pub machine apic_raw_operand(frame: u64, flags: u64) -> NumberResult {
+    let valid: bool = pages::start_valid(frame, 4096, true);
+    transition valid {
+        true -> (NumberResult::Value { value: frame | flags })
+        _ -> (NumberResult::Rejected)
+    }
+}
+// Pinned behavior retains old address bits too; this is OR, not replacement.
+pub machine apic_preserving_operand(old: u64, frame: u64, flags: ApicBaseFlags) -> NumberResult {
+    let merged: u64 = (old & ~x86_registers::APIC_BASE_FLAGS_KNOWN_BITS) | flags.raw;
+    apic_raw_operand(frame, merged)
+}

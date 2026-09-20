@@ -1,0 +1,5 @@
+machine build(builder:&mut Build) {
+ builder.application("cathedral-acpi-field-tests");builder.freestanding=true;
+ builder.depend_as("fields",Source::Path {location:"../../../../../source/libraries/acpi/aml/fields"});
+ builder.depend_as("aml",Source::Path {location:"../../../../../source/libraries/acpi/aml"});
+}

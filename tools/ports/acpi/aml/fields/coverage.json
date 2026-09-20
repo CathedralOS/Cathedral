@@ -1,0 +1,101 @@
+{
+  "forms": {
+    "AccessField": {
+      "reason": "Access type, mode bits and raw attributes retained; protocol-context validation pending.",
+      "status": "metadata",
+      "target": {
+        "anchor": "machine access_field(",
+        "path": "source/libraries/acpi/aml/fields/field_list.omg"
+      }
+    },
+    "BankField": {
+      "reason": "Literal BankValue parsed; dynamic TermArg leaves entire remainder unparsed.",
+      "status": "literal-subset",
+      "target": {
+        "anchor": "0x5b87 -> body(",
+        "path": "source/libraries/acpi/aml/fields/declarations.omg"
+      }
+    },
+    "BankValue.TermArg": {
+      "reason": "Unknown operand boundary prevents flags/list decoding; span is explicitly the whole remainder, not a validated TermArg.",
+      "status": "pending",
+      "target": {
+        "anchor": "state bank_pending(",
+        "path": "source/libraries/acpi/aml/fields/declarations.omg"
+      }
+    },
+    "ConnectField.Buffer": {
+      "reason": "Complete Buffer encoding retained; literal size/initializer boundary recorded when supported, dynamic inner expression remains opaque.",
+      "status": "bounded-envelope",
+      "target": {
+        "anchor": "state pending(",
+        "path": "source/libraries/acpi/aml/fields/field_list.omg"
+      }
+    },
+    "ConnectField.Name": {
+      "reason": "Lexical connection NameString retained for later scope-aware resolution.",
+      "status": "metadata",
+      "target": {
+        "anchor": "state install_name(",
+        "path": "source/libraries/acpi/aml/fields/field_list.omg"
+      }
+    },
+    "CreateField.family": {
+      "reason": "Separate executable declaration family remains pending; no claim based on FieldList coverage.",
+      "status": "pending",
+      "target": {
+        "anchor": "CreateField and CreateBit/Byte/Word/DWord/QWordField",
+        "path": "source/libraries/acpi/aml/fields/PORT.md"
+      }
+    },
+    "ExtendedAccessField": {
+      "reason": "Preserves extended attribute and length; validates reserved type bits and extended attribute codes.",
+      "status": "metadata",
+      "target": {
+        "anchor": "pub machine change_access(",
+        "path": "source/libraries/acpi/aml/fields/flags.omg"
+      }
+    },
+    "Field": {
+      "reason": "Package, region NameString, flags and bounded list; no region lookup or installation.",
+      "status": "metadata",
+      "target": {
+        "anchor": "pub machine parse_declaration(",
+        "path": "source/libraries/acpi/aml/fields/declarations.omg"
+      }
+    },
+    "FieldUnit.runtime": {
+      "reason": "No runtime field storage, namespace bindings, type resolution, locks, bank/index operations, connections or handlers.",
+      "status": "pending",
+      "target": {
+        "anchor": "pub data Field",
+        "path": "source/libraries/acpi/aml/fields/field_model.omg"
+      }
+    },
+    "IndexField": {
+      "reason": "Index/data NameStrings retained; register type/width validation and runtime access pending.",
+      "status": "metadata",
+      "target": {
+        "anchor": "0x5b86 -> body(",
+        "path": "source/libraries/acpi/aml/fields/declarations.omg"
+      }
+    },
+    "NamedField": {
+      "reason": "Exactly one NameSeg plus raw PkgLength bit length; local declaration path and effective metadata retained.",
+      "status": "metadata",
+      "target": {
+        "anchor": "machine named_field(",
+        "path": "source/libraries/acpi/aml/fields/field_list.omg"
+      }
+    },
+    "ReservedField": {
+      "reason": "PkgLength bit count advances bounded cumulative cursor.",
+      "status": "metadata",
+      "target": {
+        "anchor": "machine reserved_field(",
+        "path": "source/libraries/acpi/aml/fields/field_list.omg"
+      }
+    }
+  },
+  "scope": "FieldList and Field/IndexField/BankField metadata only"
+}

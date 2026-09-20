@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral semantic fixture; no firmware or external example content.
+use aml::model::Outcome;
+use aml::model::Path;
+use aml::model::Span;
+use aml::model::Read;
+use fields::field_model::Access;
+use fields::field_model::AccessType;
+use fields::field_model::UpdateRule;
+use fields::field_model::AccessResult;
+use fields::field_model::Connection;
+use fields::field_model::ListState;
+use fields::field_model::DeclarationKind;
+use fields::field_model::DeclarationResult;
+use fields::field_model::Pending;
+use fields::field_list::parse_list;
+
+machine test()->u64 {
+let mut input:[u8;1024];
+input[0]=65;
+input[1]=65;
+input[2]=65;
+input[3]=65;
+input[4]=8;
+input[5]=0;
+input[6]=3;
+input[7]=1;
+input[8]=68;
+input[9]=7;
+input[10]=66;
+input[11]=66;
+input[12]=66;
+input[13]=66;
+input[14]=16;
+input[15]=3;
+input[16]=5;
+input[17]=14;
+input[18]=6;
+input[19]=67;
+input[20]=67;
+input[21]=67;
+input[22]=67;
+input[23]=0;
+let scope:Path=Path {absolute:true};let result:ListState=parse_list(&input,24,0,9,scope,18,1024,32);
+ transition result.outcome==Outcome::Success && result.count==3 && result.bit_offset==27 && result.fields[0].bit_offset==0 && result.fields[1].bit_offset==11 && result.fields[1].access.kind==AccessType::QWord && result.fields[1].access.attribute_mode==1 && result.fields[2].access.extended && result.fields[2].access.access_length==6 && result.fields[2].access.locked && result.fields[2].bit_length==0 {true -> (0) _ -> (1)}
+}
+
+const TEST_RESULT:u64=test();
+machine require_ok(result:u64) requires result==0; {}
+data Main {}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

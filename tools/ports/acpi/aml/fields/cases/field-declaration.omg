@@ -1,0 +1,47 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral semantic fixture; no firmware or external example content.
+use aml::model::Outcome;
+use aml::model::Path;
+use aml::model::Span;
+use aml::model::Read;
+use fields::field_model::Access;
+use fields::field_model::AccessType;
+use fields::field_model::UpdateRule;
+use fields::field_model::AccessResult;
+use fields::field_model::Connection;
+use fields::field_model::ListState;
+use fields::field_model::DeclarationKind;
+use fields::field_model::DeclarationResult;
+use fields::field_model::Pending;
+use fields::declarations::parse_declaration;
+
+machine test()->u64 {
+let mut input:[u8;1024];
+input[0]=91;
+input[1]=129;
+input[2]=18;
+input[3]=82;
+input[4]=69;
+input[5]=71;
+input[6]=48;
+input[7]=49;
+input[8]=70;
+input[9]=48;
+input[10]=48;
+input[11]=48;
+input[12]=5;
+input[13]=0;
+input[14]=3;
+input[15]=70;
+input[16]=48;
+input[17]=48;
+input[18]=49;
+input[19]=8;
+let scope:Path=Path {absolute:true};let result:DeclarationResult=parse_declaration(&input,20,0,7,scope,1024,32);
+ transition result.outcome==Outcome::Success && result.next==20 && result.declaration.kind==DeclarationKind::Field && result.declaration.primary_name.segments[0]==0x30474552 && result.list.count==2 && result.list.fields[1].bit_offset==8 && result.list.fields[0].access.update==UpdateRule::WriteAsOnes {true -> (0) _ -> (1)}
+}
+
+const TEST_RESULT:u64=test();
+machine require_ok(result:u64) requires result==0; {}
+data Main {}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

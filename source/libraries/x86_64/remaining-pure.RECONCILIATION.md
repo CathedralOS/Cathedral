@@ -17,6 +17,9 @@ existing PORT files remain separate from this implementation queue.
 Subsequent completion: `gdt-storage` is now implemented and tested in
 [owned GDT storage](gdt-storage.PORT.md). The missing-family table below records
 the original audit findings; subsequent completions supersede those rows.
+[Register recipes](register-operands.PORT.md) also complete `register-merge`,
+`cr3-cr8-operands`, `xcr0-validation` and STAR/CET/APIC parts of `msr-composition`;
+the latter still has its small raw MSR word-splitting component pending.
 
 ## Work that already has a reusable implementation
 

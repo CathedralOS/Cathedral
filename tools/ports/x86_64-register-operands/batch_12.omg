@@ -1,0 +1,104 @@
+use checks;
+use x86_values::register_operands::RegisterKind;
+machine test_result() -> i32 {
+    transition checks::cet_operand(18446603336221196288, 3135, 0, 18446603336221199423) &&
+        checks::cet_operand(18446603336221196288, 4096, 0, 18446603336221200384) &&
+        checks::cet_operand(18446603336221196288, 140737488355328, 0, 18446603336221196288) &&
+        checks::cet_operand(18446603336221196288, 9223372036854775808, 0, 18446603336221196288) &&
+        checks::cet_operand(18446603336221196288, 18446744073709551615, 0, 18446744073709551615) &&
+        checks::cet_operand(18446744073709547520, 0, 0, 18446744073709547520) &&
+        checks::cet_operand(18446744073709547520, 3135, 0, 18446744073709550655) &&
+        checks::cet_operand(18446744073709547520, 4096, 0, 18446744073709547520) &&
+        checks::cet_operand(18446744073709547520, 140737488355328, 0, 18446744073709547520) &&
+        checks::cet_operand(18446744073709547520, 9223372036854775808, 0, 18446744073709547520) &&
+        checks::cet_operand(18446744073709547520, 18446744073709551615, 0, 18446744073709551615) &&
+        checks::cet_operand(1, 1, 1, 0) &&
+        checks::cet_operand(4095, 1, 1, 0) &&
+        checks::cet_operand(140737488355328, 1, 1, 0) &&
+        checks::apic_observed(0, 0, 0, 0) &&
+        checks::apic_observed(18446744073709551615, 4503599627366400, 18446744073709551615, 3328) &&
+        checks::apic_observed(4276096256, 4276092928, 4276096256, 3328) &&
+        checks::apic_observed(1, 0, 1, 0) &&
+        checks::apic_observed(2, 0, 2, 0) &&
+        checks::apic_observed(4, 0, 4, 0) &&
+        checks::apic_observed(8, 0, 8, 0) &&
+        checks::apic_observed(16, 0, 16, 0) &&
+        checks::apic_observed(32, 0, 32, 0) &&
+        checks::apic_observed(64, 0, 64, 0) &&
+        checks::apic_observed(128, 0, 128, 0) &&
+        checks::apic_observed(256, 0, 256, 256) &&
+        checks::apic_observed(512, 0, 512, 0) &&
+        checks::apic_observed(1024, 0, 1024, 1024) &&
+        checks::apic_observed(2048, 0, 2048, 2048) &&
+        checks::apic_observed(4096, 4096, 4096, 0) &&
+        checks::apic_observed(8192, 8192, 8192, 0) &&
+        checks::apic_observed(16384, 16384, 16384, 0) &&
+        checks::apic_observed(32768, 32768, 32768, 0) &&
+        checks::apic_observed(65536, 65536, 65536, 0) &&
+        checks::apic_observed(131072, 131072, 131072, 0) &&
+        checks::apic_observed(262144, 262144, 262144, 0) &&
+        checks::apic_observed(524288, 524288, 524288, 0) &&
+        checks::apic_observed(1048576, 1048576, 1048576, 0) &&
+        checks::apic_observed(2097152, 2097152, 2097152, 0) &&
+        checks::apic_observed(4194304, 4194304, 4194304, 0) &&
+        checks::apic_observed(8388608, 8388608, 8388608, 0) &&
+        checks::apic_observed(16777216, 16777216, 16777216, 0) &&
+        checks::apic_observed(33554432, 33554432, 33554432, 0) &&
+        checks::apic_observed(67108864, 67108864, 67108864, 0) &&
+        checks::apic_observed(134217728, 134217728, 134217728, 0) &&
+        checks::apic_observed(268435456, 268435456, 268435456, 0) &&
+        checks::apic_observed(536870912, 536870912, 536870912, 0) &&
+        checks::apic_observed(1073741824, 1073741824, 1073741824, 0) &&
+        checks::apic_observed(2147483648, 2147483648, 2147483648, 0) &&
+        checks::apic_observed(4294967296, 4294967296, 4294967296, 0) &&
+        checks::apic_observed(8589934592, 8589934592, 8589934592, 0) &&
+        checks::apic_observed(17179869184, 17179869184, 17179869184, 0) &&
+        checks::apic_observed(34359738368, 34359738368, 34359738368, 0) &&
+        checks::apic_observed(68719476736, 68719476736, 68719476736, 0) &&
+        checks::apic_observed(137438953472, 137438953472, 137438953472, 0) &&
+        checks::apic_observed(274877906944, 274877906944, 274877906944, 0) &&
+        checks::apic_observed(549755813888, 549755813888, 549755813888, 0) &&
+        checks::apic_observed(1099511627776, 1099511627776, 1099511627776, 0) &&
+        checks::apic_observed(2199023255552, 2199023255552, 2199023255552, 0) &&
+        checks::apic_observed(4398046511104, 4398046511104, 4398046511104, 0) &&
+        checks::apic_observed(8796093022208, 8796093022208, 8796093022208, 0) &&
+        checks::apic_observed(17592186044416, 17592186044416, 17592186044416, 0) &&
+        checks::apic_observed(35184372088832, 35184372088832, 35184372088832, 0) &&
+        checks::apic_observed(70368744177664, 70368744177664, 70368744177664, 0) &&
+        checks::apic_observed(140737488355328, 140737488355328, 140737488355328, 0) &&
+        checks::apic_observed(281474976710656, 281474976710656, 281474976710656, 0) &&
+        checks::apic_observed(562949953421312, 562949953421312, 562949953421312, 0) &&
+        checks::apic_observed(1125899906842624, 1125899906842624, 1125899906842624, 0) &&
+        checks::apic_observed(2251799813685248, 2251799813685248, 2251799813685248, 0) &&
+        checks::apic_observed(4503599627370496, 0, 4503599627370496, 0) &&
+        checks::apic_observed(9007199254740992, 0, 9007199254740992, 0) &&
+        checks::apic_observed(18014398509481984, 0, 18014398509481984, 0) &&
+        checks::apic_observed(36028797018963968, 0, 36028797018963968, 0) &&
+        checks::apic_observed(72057594037927936, 0, 72057594037927936, 0) &&
+        checks::apic_observed(144115188075855872, 0, 144115188075855872, 0) &&
+        checks::apic_observed(288230376151711744, 0, 288230376151711744, 0) &&
+        checks::apic_observed(576460752303423488, 0, 576460752303423488, 0) &&
+        checks::apic_observed(1152921504606846976, 0, 1152921504606846976, 0) &&
+        checks::apic_observed(2305843009213693952, 0, 2305843009213693952, 0) &&
+        checks::apic_observed(4611686018427387904, 0, 4611686018427387904, 0) &&
+        checks::apic_observed(9223372036854775808, 0, 9223372036854775808, 0) &&
+        checks::apic_raw(0, 0, 0, 0) &&
+        checks::apic_raw(0, 3328, 0, 3328) &&
+        checks::apic_raw(0, 4096, 0, 4096) &&
+        checks::apic_raw(0, 18446744073709551615, 0, 18446744073709551615) &&
+        checks::apic_raw(4096, 0, 0, 4096) &&
+        checks::apic_raw(4096, 3328, 0, 7424) &&
+        checks::apic_raw(4096, 4096, 0, 4096) &&
+        checks::apic_raw(4096, 18446744073709551615, 0, 18446744073709551615) &&
+        checks::apic_raw(4503599627366400, 0, 0, 4503599627366400) &&
+        checks::apic_raw(4503599627366400, 3328, 0, 4503599627369728) &&
+        checks::apic_raw(4503599627366400, 4096, 0, 4503599627366400) &&
+        checks::apic_raw(4503599627366400, 18446744073709551615, 0, 18446744073709551615) &&
+        checks::apic_raw(1, 0, 1, 0) &&
+        checks::apic_raw(4503599627370496, 0, 1, 0) &&
+        checks::apic_raw(18446744073709551615, 0, 1, 0) { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

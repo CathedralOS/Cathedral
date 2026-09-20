@@ -1,0 +1,104 @@
+use checks;
+use x86_values::register_operands::RegisterKind;
+machine test_result() -> i32 {
+    transition checks::cr3_observed(562949953421312, 562949953421312, 0, 0, 0) &&
+        checks::cr3_observed(1125899906842624, 1125899906842624, 0, 0, 0) &&
+        checks::cr3_observed(2251799813685248, 2251799813685248, 0, 0, 0) &&
+        checks::cr3_observed(4503599627370496, 0, 0, 0, 0) &&
+        checks::cr3_observed(9007199254740992, 0, 0, 0, 0) &&
+        checks::cr3_observed(18014398509481984, 0, 0, 0, 0) &&
+        checks::cr3_observed(36028797018963968, 0, 0, 0, 0) &&
+        checks::cr3_observed(72057594037927936, 0, 0, 0, 0) &&
+        checks::cr3_observed(144115188075855872, 0, 0, 0, 0) &&
+        checks::cr3_observed(288230376151711744, 0, 0, 0, 0) &&
+        checks::cr3_observed(576460752303423488, 0, 0, 0, 0) &&
+        checks::cr3_observed(1152921504606846976, 0, 0, 0, 0) &&
+        checks::cr3_observed(2305843009213693952, 0, 0, 0, 0) &&
+        checks::cr3_observed(4611686018427387904, 0, 0, 0, 0) &&
+        checks::cr3_observed(9223372036854775808, 0, 0, 0, 0) &&
+        checks::cr3_raw(0, 0, false, 0, 0) &&
+        checks::cr3_raw(0, 0, true, 0, 9223372036854775808) &&
+        checks::cr3_raw(0, 24, false, 0, 24) &&
+        checks::cr3_raw(0, 24, true, 0, 9223372036854775832) &&
+        checks::cr3_raw(0, 4095, false, 0, 4095) &&
+        checks::cr3_raw(0, 4095, true, 0, 9223372036854779903) &&
+        checks::cr3_raw(0, 4096, false, 0, 4096) &&
+        checks::cr3_raw(0, 4096, true, 0, 9223372036854779904) &&
+        checks::cr3_raw(0, 32768, false, 0, 32768) &&
+        checks::cr3_raw(0, 32768, true, 0, 9223372036854808576) &&
+        checks::cr3_raw(0, 65535, false, 0, 65535) &&
+        checks::cr3_raw(0, 65535, true, 0, 9223372036854841343) &&
+        checks::cr3_flags(0, 0, 0, 0) &&
+        checks::cr3_flags(0, 24, 0, 24) &&
+        checks::cr3_flags(0, 65535, 0, 65535) &&
+        checks::cr3_flags(0, 65536, 0, 0) &&
+        checks::cr3_flags(0, 18446744073709551615, 0, 65535) &&
+        checks::cr3_pcid(0, 0, false, 0, 0) &&
+        checks::cr3_pcid(0, 0, true, 0, 9223372036854775808) &&
+        checks::cr3_pcid(0, 1, false, 0, 1) &&
+        checks::cr3_pcid(0, 1, true, 0, 9223372036854775809) &&
+        checks::cr3_pcid(0, 4095, false, 0, 4095) &&
+        checks::cr3_pcid(0, 4095, true, 0, 9223372036854779903) &&
+        checks::cr3_raw(4096, 0, false, 0, 4096) &&
+        checks::cr3_raw(4096, 0, true, 0, 9223372036854779904) &&
+        checks::cr3_raw(4096, 24, false, 0, 4120) &&
+        checks::cr3_raw(4096, 24, true, 0, 9223372036854779928) &&
+        checks::cr3_raw(4096, 4095, false, 0, 8191) &&
+        checks::cr3_raw(4096, 4095, true, 0, 9223372036854783999) &&
+        checks::cr3_raw(4096, 4096, false, 0, 4096) &&
+        checks::cr3_raw(4096, 4096, true, 0, 9223372036854779904) &&
+        checks::cr3_raw(4096, 32768, false, 0, 36864) &&
+        checks::cr3_raw(4096, 32768, true, 0, 9223372036854812672) &&
+        checks::cr3_raw(4096, 65535, false, 0, 65535) &&
+        checks::cr3_raw(4096, 65535, true, 0, 9223372036854841343) &&
+        checks::cr3_flags(4096, 0, 0, 4096) &&
+        checks::cr3_flags(4096, 24, 0, 4120) &&
+        checks::cr3_flags(4096, 65535, 0, 65535) &&
+        checks::cr3_flags(4096, 65536, 0, 4096) &&
+        checks::cr3_flags(4096, 18446744073709551615, 0, 65535) &&
+        checks::cr3_pcid(4096, 0, false, 0, 4096) &&
+        checks::cr3_pcid(4096, 0, true, 0, 9223372036854779904) &&
+        checks::cr3_pcid(4096, 1, false, 0, 4097) &&
+        checks::cr3_pcid(4096, 1, true, 0, 9223372036854779905) &&
+        checks::cr3_pcid(4096, 4095, false, 0, 8191) &&
+        checks::cr3_pcid(4096, 4095, true, 0, 9223372036854783999) &&
+        checks::cr3_raw(4503599627366400, 0, false, 0, 4503599627366400) &&
+        checks::cr3_raw(4503599627366400, 0, true, 0, 9227875636482142208) &&
+        checks::cr3_raw(4503599627366400, 24, false, 0, 4503599627366424) &&
+        checks::cr3_raw(4503599627366400, 24, true, 0, 9227875636482142232) &&
+        checks::cr3_raw(4503599627366400, 4095, false, 0, 4503599627370495) &&
+        checks::cr3_raw(4503599627366400, 4095, true, 0, 9227875636482146303) &&
+        checks::cr3_raw(4503599627366400, 4096, false, 0, 4503599627366400) &&
+        checks::cr3_raw(4503599627366400, 4096, true, 0, 9227875636482142208) &&
+        checks::cr3_raw(4503599627366400, 32768, false, 0, 4503599627366400) &&
+        checks::cr3_raw(4503599627366400, 32768, true, 0, 9227875636482142208) &&
+        checks::cr3_raw(4503599627366400, 65535, false, 0, 4503599627370495) &&
+        checks::cr3_raw(4503599627366400, 65535, true, 0, 9227875636482146303) &&
+        checks::cr3_flags(4503599627366400, 0, 0, 4503599627366400) &&
+        checks::cr3_flags(4503599627366400, 24, 0, 4503599627366424) &&
+        checks::cr3_flags(4503599627366400, 65535, 0, 4503599627370495) &&
+        checks::cr3_flags(4503599627366400, 65536, 0, 4503599627366400) &&
+        checks::cr3_flags(4503599627366400, 18446744073709551615, 0, 4503599627370495) &&
+        checks::cr3_pcid(4503599627366400, 0, false, 0, 4503599627366400) &&
+        checks::cr3_pcid(4503599627366400, 0, true, 0, 9227875636482142208) &&
+        checks::cr3_pcid(4503599627366400, 1, false, 0, 4503599627366401) &&
+        checks::cr3_pcid(4503599627366400, 1, true, 0, 9227875636482142209) &&
+        checks::cr3_pcid(4503599627366400, 4095, false, 0, 4503599627370495) &&
+        checks::cr3_pcid(4503599627366400, 4095, true, 0, 9227875636482146303) &&
+        checks::cr3_raw(1, 65535, true, 1, 0) &&
+        checks::cr3_raw(4095, 65535, true, 1, 0) &&
+        checks::cr3_raw(4503599627370496, 65535, true, 1, 0) &&
+        checks::cr3_raw(18446744073709551615, 65535, true, 1, 0) &&
+        checks::cr8_observed(0, 1, 0) &&
+        checks::cr8_observed(1, 0, 1) &&
+        checks::cr8_observed(2, 0, 2) &&
+        checks::cr8_observed(3, 0, 3) &&
+        checks::cr8_observed(4, 0, 4) &&
+        checks::cr8_observed(5, 0, 5) &&
+        checks::cr8_observed(6, 0, 6) &&
+        checks::cr8_observed(7, 0, 7) { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

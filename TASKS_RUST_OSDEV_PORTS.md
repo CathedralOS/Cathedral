@@ -259,11 +259,16 @@ mutations, including partial edits, allocation failures and capture mismatches.
 [Mapper conveniences](source/libraries/x86_64/mapper-conveniences.PORT.md) add
 actual trait-default witnesses, three Omega fixtures and four body mutations.
 The [remaining pure-work audit](source/libraries/x86_64/remaining-pure.RECONCILIATION.md)
-identifies unfinished recursive mapper algorithms, explicit encryption and
-register recipes; these are implementation work.
+identifies unfinished recursive mapper algorithms and explicit encryption;
+these are implementation work. Remaining small register transport arithmetic
+is recorded with the later register slice.
 [Owned GDT storage](source/libraries/x86_64/gdt-storage.PORT.md) now passes 16
 actual Rust/Omega scenarios, malformed-input/reset checks and four body mutations,
 including full 8192-word import and failed system appends without partial writes.
+[Register operand recipes](source/libraries/x86_64/register-operands.PORT.md) add
+1,323 exact pure-body Rust observations, 14 Omega batches, four rejection cases
+and seven body mutations, covering reserved bits, XCR0 validation, CR3/CR8 and
+STAR/CET/APIC composition. No live register methods or instructions execute.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors
@@ -375,8 +380,12 @@ ACPI-004 partial evidence: [static AML syntax and namespace](source/libraries/ac
 passes 27 Omega scenarios with 27 body mutations and an 18-file source check.
 It covers NameString/package framing, literal/package values, static declarations,
 retained method bodies, stable aliases, scoped lazy references and transactional
-loader errors under explicit capacities/budgets. Field syntax, executable terms
-and full interpreter behavior remain pending; ACPI-004/006 stay open.
+loader errors under explicit capacities/budgets.
+[Field declaration metadata](source/libraries/acpi/aml/fields/PORT.md) adds 18
+semantic cases, 18 body mutations and a 19-file source check for Field, IndexField,
+BankField and all five FieldList forms. Dynamic BankValue/BufferSize bodies remain
+explicitly unparsed or opaque; namespace installation, executable terms and full
+interpreter behavior remain pending. ACPI-004/006 stay open.
 
 ## Phase 5 — only after the corpus above is healthy
 

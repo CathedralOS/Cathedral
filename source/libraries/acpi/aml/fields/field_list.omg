@@ -1,0 +1,159 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// parse_field_list adapted from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Upstream copyright 2018 Isaac Woods; Cathedral bounded metadata adaptation 2026.
+module field_list;
+use aml::model::Outcome;
+use aml::model::Read;
+use aml::model::Path;
+use aml::model::PathResult;
+use aml::model::Span;
+use aml::model::Envelope;
+use aml::bytes::read_le;
+use aml::bytes::pkg_length;
+use aml::bytes::envelope;
+use aml::names::path_valid;
+use aml::names::segment_valid;
+use aml::names::namestring;
+use aml::names::resolve;
+use aml::values::integer;
+use field_model::Access;
+use field_model::AccessResult;
+use field_model::Connection;
+use field_model::Field;
+use field_model::ListState;
+use flags::decode_flags;
+use flags::change_access;
+
+pub machine parse_list(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:Path,flags:u8,bit_limit:u64,budget:u64)->ListState {
+ let checked:AccessResult=decode_flags(flags);let valid:bool=path_valid(scope);
+ transition end<=1024 && at<=end && budget<=1024 && scope.absolute && scope.parents==0 && valid {
+  true -> start(input,end,at,unit,scope,checked,bit_limit,budget) _ -> (ListState {outcome:Outcome::InvalidState,offset:at})
+ }
+ state start(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:Path,checked:AccessResult,bit_limit:u64,budget:u64)->ListState {
+  let mut out:ListState=ListState {outcome:checked.outcome,offset:at,at:at,end:end,unit:unit,scope:scope,access:checked.access,bit_limit:bit_limit,done:checked.outcome==Outcome::Success && at==end};
+  let result:Outcome=field_list_driver(input,&mut out,0,budget);
+  transition result==Outcome::Success && out.at!=out.end {true -> exhausted(out) _ -> (out)}
+ }
+ state exhausted(value:ListState)->ListState {let mut out:ListState=value;out.outcome=Outcome::WorkLimit;out.offset=out.at;out}
+}
+machine field_list_driver(input:&[u8;1024],out:&mut ListState,index:u64,budget:u64)
+terminates by (index,budget) -> Nat::BoundedDistance;
+-> Outcome {
+ let result:Outcome=field_list_turn(input,out,index,budget);
+ transition index<budget {true -> field_list_driver(input,out,index+1,budget) _ -> (result)}
+}
+machine field_list_turn(input:&[u8;1024],out:&mut ListState,index:u64,budget:u64)->Outcome {
+ transition index<budget && out.outcome==Outcome::Success && out.at<out.end {
+  true -> consume(input,out) _ -> (out.outcome)
+ }
+ state consume(input:&[u8;1024],out:&mut ListState)->Outcome {
+  out.offset=out.at;let lead:Read=read_le(input,out.end,out.at,1);
+  let result:Outcome=field_element(input,out,lead);out.outcome=result;out.done=out.at==out.end;result
+ }
+}
+machine field_element(input:&[u8;1024],out:&mut ListState,lead:Read)->Outcome {
+ transition lead.outcome==Outcome::Success {
+  true -> choose(input,out,lead) _ -> (lead.outcome)
+ }
+ state choose(input:&[u8;1024],out:&mut ListState,lead:Read)->Outcome {
+  transition lead.value {
+   0 -> reserved(input,out,lead.next)
+   1 -> access(input,out,lead.next,false)
+   2 -> connect(input,out,lead.next)
+   3 -> access(input,out,lead.next,true)
+   _ -> named(input,out)
+  }
+ }
+ state reserved(input:&[u8;1024],out:&mut ListState,at:u64)->Outcome {let result:Outcome=reserved_field(input,out,at);result}
+ state access(input:&[u8;1024],out:&mut ListState,at:u64,extended:bool)->Outcome {let result:Outcome=access_field(input,out,at,extended);result}
+ state connect(input:&[u8;1024],out:&mut ListState,at:u64)->Outcome {let result:Outcome=connect_field(input,out,at);result}
+ state named(input:&[u8;1024],out:&mut ListState)->Outcome {let result:Outcome=named_field(input,out);result}
+}
+machine advance_bits(offset:u64,limit:u64,length:u64)->Read {
+ transition offset<=limit {true -> room(offset,limit,length) _ -> (Read {outcome:Outcome::InvalidState})}
+ state room(offset:u64,limit:u64,length:u64)->Read {
+  let available:u64=limit-offset;
+  transition length<=available {true -> (Read {value:offset+length}) _ -> (Read {outcome:Outcome::Capacity})}
+ }
+}
+machine reserved_field(input:&[u8;1024],out:&mut ListState,at:u64)->Outcome {
+ let size:Read=pkg_length(input,out.end,at);
+ transition size.outcome==Outcome::Success {true -> append(out,size) _ -> (size.outcome)}
+ state append(out:&mut ListState,size:Read)->Outcome {
+  let offset:u64=out.bit_offset;let limit:u64=out.bit_limit;let length:u64=size.value;
+  let next:Read=advance_bits(offset,limit,length);
+  transition next.outcome==Outcome::Success {true -> advance(out,size,next.value) _ -> (next.outcome)}
+ }
+ state advance(out:&mut ListState,size:Read,next:u64)->Outcome {out.bit_offset=next;out.at=size.next;Outcome::Success}
+}
+machine named_field(input:&[u8;1024],out:&mut ListState)->Outcome {
+ let segment:Read=read_le(input,out.end,out.at,4);let good:bool=segment_valid((segment.value&0xffffffff) as u32);
+ transition segment.outcome==Outcome::Success {true -> name(input,out,segment,good) _ -> (segment.outcome)}
+ state name(input:&[u8;1024],out:&mut ListState,segment:Read,good:bool)->Outcome {
+  transition good {true -> length(input,out,segment) _ -> (Outcome::InvalidName)}
+ }
+ state length(input:&[u8;1024],out:&mut ListState,segment:Read)->Outcome {
+  let mut relative:Path=Path {count:1};relative.segments[0]=(segment.value&0xffffffff) as u32;
+  let path:PathResult=resolve(relative,out.scope);let size:Read=pkg_length(input,out.end,segment.next);
+  transition path.outcome==Outcome::Success {true -> size_checked(out,path.value,size) _ -> (path.outcome)}
+ }
+ state size_checked(out:&mut ListState,path:Path,size:Read)->Outcome {
+  transition size.outcome==Outcome::Success {true -> bounds(out,path,size) _ -> (size.outcome)}
+ }
+ state bounds(out:&mut ListState,path:Path,size:Read)->Outcome {
+  let offset:u64=out.bit_offset;let limit:u64=out.bit_limit;let length:u64=size.value;
+  let next:Read=advance_bits(offset,limit,length);
+  transition next.outcome==Outcome::Success {true -> store(out,path,size,next.value) _ -> (next.outcome)}
+ }
+ state store(out:&mut ListState,path:Path,size:Read,next:u64)->Outcome {
+  let field:Field=Field {name:path,bit_offset:out.bit_offset,bit_length:size.value,access:out.access,connection:out.connection,source:Span {unit:out.unit,start:out.at,end:size.next}};
+  let index:u64=out.count;
+  transition index<32 {true -> slot(out,field,size,next,index) _ -> (Outcome::Capacity)}
+ }
+ state slot(out:&mut ListState,field:Field,size:Read,next:u64,index:u64)->Outcome {
+  out.fields[index]=field;out.count=index+1;out.bit_offset=next;out.at=size.next;Outcome::Success
+ }
+
+}
+machine access_field(input:&[u8;1024],out:&mut ListState,at:u64,extended:bool)->Outcome {
+ let width:u64=match extended {true -> 3 _ -> 2};let bytes:Read=read_le(input,out.end,at,width);
+ transition bytes.outcome==Outcome::Success {true -> apply(out,bytes,extended) _ -> (bytes.outcome)}
+ state apply(out:&mut ListState,bytes:Read,extended:bool)->Outcome {
+  let type_byte:u8=(bytes.value&255) as u8;let attribute:u8=((bytes.value>>8)&255) as u8;let length:u8=((bytes.value>>16)&255) as u8;
+  let changed:AccessResult=change_access(out.access,type_byte,attribute,extended,length);
+  transition changed.outcome==Outcome::Success {true -> store(out,bytes.next,changed.access) _ -> (changed.outcome)}
+ }
+ state store(out:&mut ListState,next:u64,value:Access)->Outcome {out.access=value;out.at=next;Outcome::Success}
+}
+machine connect_field(input:&[u8;1024],out:&mut ListState,at:u64)->Outcome {
+ let lead:Read=read_le(input,out.end,at,1);
+ transition lead.outcome==Outcome::Success {true -> choose(input,out,at,lead) _ -> (lead.outcome)}
+ state choose(input:&[u8;1024],out:&mut ListState,at:u64,lead:Read)->Outcome {
+  transition lead.value==0x11 {true -> buffer(input,out,at,lead.next) _ -> name(input,out,at)}
+ }
+ state name(input:&[u8;1024],out:&mut ListState,at:u64)->Outcome {
+  let name:PathResult=namestring(input,out.end,at);
+  transition name.outcome==Outcome::Success {true -> name_valid(out,name) _ -> (name.outcome)}
+ }
+ state name_valid(out:&mut ListState,name:PathResult)->Outcome {transition name.value.count>0 {true -> install_name(out,name) _ -> (Outcome::InvalidName)}}
+ state install_name(out:&mut ListState,name:PathResult)->Outcome {out.connection=Connection::Name {connection_name:name.value};out.at=name.next;Outcome::Success}
+ state buffer(input:&[u8;1024],out:&mut ListState,start:u64,at:u64)->Outcome {
+  let body:Envelope=envelope(input,out.end,at);
+  transition body.outcome==Outcome::Success {true -> size(input,out,start,body) _ -> (body.outcome)}
+ }
+ state size(input:&[u8;1024],out:&mut ListState,start:u64,body:Envelope)->Outcome {
+  let size:Read=integer(input,body.end,body.body);
+  transition size.outcome {
+   Outcome::Success -> known(out,start,body,size)
+   Outcome::UnsupportedSyntax -> pending(out,start,body)
+   _ -> (size.outcome)
+  }
+ }
+ state known(out:&mut ListState,start:u64,body:Envelope,size:Read)->Outcome {
+  out.connection=Connection::Buffer {buffer_encoding:Span {unit:out.unit,start:start,end:body.end},size_known:true,declared_size:size.value,initializer:Span {unit:out.unit,start:size.next,end:body.end}};
+  out.at=body.end;Outcome::Success
+ }
+ state pending(out:&mut ListState,start:u64,body:Envelope)->Outcome {
+  out.connection=Connection::Buffer {buffer_encoding:Span {unit:out.unit,start:start,end:body.end}};out.at=body.end;Outcome::Success
+ }
+}

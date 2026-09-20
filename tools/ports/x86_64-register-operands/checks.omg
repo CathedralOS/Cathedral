@@ -1,0 +1,103 @@
+module checks;
+use x86_values::register_operands;
+use x86_values::register_operands::RegisterKind;
+use x86_values::register_operands::Cr3Observation;
+use x86_values::register_operands::ApicObservation;
+use x86_values::register_operands::Xcr0Plan;
+use x86_values::register_operands::ObservedPriority;
+use x86_values::register_operands::StarExpansion;
+use x86_values::register_operands::CetObservation;
+use x86_values::addresses::NumberResult;
+use facts::x86_registers::PriorityClass;
+use facts::x86_registers::Cr3Flags;
+use facts::x86_registers::CetFlags;
+use facts::x86_registers::ApicBaseFlags;
+use facts::x86_tlb_operands::Pcid;
+
+machine number(v: NumberResult, tag: u64, bits: u64) -> bool {
+    transition v {
+        NumberResult::Rejected -> (tag == 1 && bits == 0)
+        NumberResult::Value { value } -> (tag == 0 && value == bits)
+    }
+}
+pub machine merge(kind: RegisterKind, old: u64, supplied: u64, expected: u64) -> bool {
+    register_operands::register_merge(kind, old, supplied) == expected
+}
+pub machine xcr0(old: u64, supplied: u64, tag: u64, expected_bits: u64) -> bool {
+    let plan: Xcr0Plan = register_operands::xcr0_plan(old, supplied);
+    transition plan {
+        Xcr0Plan::MissingX87 -> (tag == 1 && expected_bits == 0)
+        Xcr0Plan::AvxRequiresSse -> (tag == 2 && expected_bits == 0)
+        Xcr0Plan::IncompleteMpx -> (tag == 3 && expected_bits == 0)
+        Xcr0Plan::Avx512RequiresAvx -> (tag == 4 && expected_bits == 0)
+        Xcr0Plan::IncompleteAvx512 -> (tag == 5 && expected_bits == 0)
+        Xcr0Plan::Value { bits } -> (tag == 0 && expected_bits == bits)
+    }
+}
+pub machine cr3_observed(raw: u64, frame: u64, low: u64, flags: u64, pcid: u64) -> bool {
+    let v: Cr3Observation = register_operands::cr3_observed(raw);
+    let f: Cr3Flags = register_operands::cr3_observed_flags(raw);
+    let p: Pcid = register_operands::cr3_observed_pcid(raw);
+    v.frame == frame && (v.low as u64) == low && f.raw == flags && (p.value as u64) == pcid
+}
+pub machine cr3_raw(frame: u64, val: u16, top: bool, tag: u64, bits: u64) -> bool {
+    let v: NumberResult = register_operands::cr3_raw_operand(frame, val, top);
+    number(v, tag, bits)
+}
+pub machine cr3_flags(frame: u64, flags: u64, tag: u64, bits: u64) -> bool {
+    let v: NumberResult = register_operands::cr3_flags_operand(frame, Cr3Flags { raw: flags });
+    number(v, tag, bits)
+}
+pub machine cr3_pcid(frame: u64, pcid: u16 [0..=4095], top: bool, tag: u64, bits: u64) -> bool {
+    let v: NumberResult = register_operands::cr3_pcid_operand(frame, Pcid { value: pcid }, top);
+    number(v, tag, bits)
+}
+pub machine cr8_observed(raw: u64, tag: u64, code: u64) -> bool {
+    let v: ObservedPriority = register_operands::cr8_observed(raw);
+    transition v {
+        ObservedPriority::None -> (tag == 1 && code == 0)
+        ObservedPriority::Class { value } -> (tag == 0 && (value.raw as u64) == code)
+    }
+}
+pub machine cr8_operand(code: u8, tag: u64, bits: u64) -> bool {
+    transition code == 0 { true -> none(tag, bits) _ -> some(code, tag, bits) }
+    state none(tag: u64, bits: u64) -> bool {
+        let v: NumberResult = register_operands::cr8_operand(ObservedPriority::None);
+        number(v, tag, bits)
+    }
+    state some(code: u8, tag: u64, bits: u64) -> bool {
+        let v: NumberResult = register_operands::cr8_operand(ObservedPriority::Class { value: PriorityClass { raw: code } });
+        number(v, tag, bits)
+    }
+}
+pub machine star(raw: u64, tag: u64, a: u64, b: u64, c: u64, d: u64) -> bool {
+    let v: StarExpansion = register_operands::star_expand(raw);
+    transition v {
+        StarExpansion::Overflow -> (tag == 1 && a == 0 && b == 0 && c == 0 && d == 0)
+        StarExpansion::Value { selectors } -> (tag == 0 && (selectors.cs_sysret.raw as u64) == a &&
+            (selectors.ss_sysret.raw as u64) == b && (selectors.cs_syscall.raw as u64) == c && (selectors.ss_syscall.raw as u64) == d)
+    }
+}
+pub machine cet_observed(raw: u64, tag: u64, expected_flags: u64, expected_bitmap: u64) -> bool {
+    let v: CetObservation = register_operands::cet_observed(raw);
+    transition v {
+        CetObservation::InvalidAddress -> (tag == 1 && expected_flags == 0 && expected_bitmap == 0)
+        CetObservation::Value { flags, bitmap } -> (tag == 0 && flags.raw == expected_flags && bitmap == expected_bitmap)
+    }
+}
+pub machine cet_operand(bitmap: u64, flags: u64, tag: u64, bits: u64) -> bool {
+    let v: NumberResult = register_operands::cet_operand(bitmap, CetFlags { raw: flags });
+    number(v, tag, bits)
+}
+pub machine apic_observed(raw: u64, frame: u64, raw_flags: u64, flags: u64) -> bool {
+    let v: ApicObservation = register_operands::apic_observed(raw);
+    v.frame == frame && v.raw_flags == raw_flags && v.flags.raw == flags
+}
+pub machine apic_raw(frame: u64, flags: u64, tag: u64, bits: u64) -> bool {
+    let v: NumberResult = register_operands::apic_raw_operand(frame, flags);
+    number(v, tag, bits)
+}
+pub machine apic_preserving(old: u64, frame: u64, flags: u64, tag: u64, bits: u64) -> bool {
+    let v: NumberResult = register_operands::apic_preserving_operand(old, frame, ApicBaseFlags { raw: flags });
+    number(v, tag, bits)
+}

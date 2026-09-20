@@ -1,0 +1,4 @@
+use fields::declarations::parse_declaration;
+use fields::flags::nominal_width;
+data Main {}
+machine Main::main(&mut self) {}

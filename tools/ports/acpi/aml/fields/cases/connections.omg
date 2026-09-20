@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral semantic fixture; no firmware or external example content.
+use aml::model::Outcome;
+use aml::model::Path;
+use aml::model::Span;
+use aml::model::Read;
+use fields::field_model::Access;
+use fields::field_model::AccessType;
+use fields::field_model::UpdateRule;
+use fields::field_model::AccessResult;
+use fields::field_model::Connection;
+use fields::field_model::ListState;
+use fields::field_model::DeclarationKind;
+use fields::field_model::DeclarationResult;
+use fields::field_model::Pending;
+use fields::field_list::parse_list;
+machine named(connection:Connection)->bool {transition connection {Connection::Name {connection_name} -> check(connection_name) _ -> (false)} state check(path:Path)->bool {path.parents==1 && path.count==1 && path.segments[0]==0x304e4f43}}
+machine buffered(connection:Connection)->bool {transition connection {Connection::Buffer {buffer_encoding,size_known,declared_size,initializer} -> check(buffer_encoding,size_known,declared_size,initializer) _ -> (false)} state check(span:Span,known:bool,size:u64,bytes:Span)->bool {span.unit==9 && known && size==2 && bytes.start==16 && bytes.end==18}}
+
+machine test()->u64 {
+let mut input:[u8;1024];
+input[0]=2;
+input[1]=94;
+input[2]=67;
+input[3]=79;
+input[4]=78;
+input[5]=48;
+input[6]=76;
+input[7]=73;
+input[8]=78;
+input[9]=75;
+input[10]=8;
+input[11]=2;
+input[12]=17;
+input[13]=5;
+input[14]=10;
+input[15]=2;
+input[16]=170;
+input[17]=187;
+input[18]=66;
+input[19]=85;
+input[20]=70;
+input[21]=48;
+input[22]=16;
+let scope:Path=Path {absolute:true};let result:ListState=parse_list(&input,23,0,9,scope,0,1024,32);let one:bool=named(result.fields[0].connection);let two:bool=buffered(result.fields[1].connection);
+ transition result.outcome==Outcome::Success && result.count==2 && result.bit_offset==24 && one && two {true -> (0) _ -> (1)}
+}
+
+const TEST_RESULT:u64=test();
+machine require_ok(result:u64) requires result==0; {}
+data Main {}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

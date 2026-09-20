@@ -1,0 +1,35 @@
+{
+  "license": "MIT OR Apache-2.0",
+  "license_and_manifest_sha256": {
+    "Cargo.toml": "437a679d0f958db2171af775e0a1368ac35edd4cc0a48ec8b449233750db61cf",
+    "LICENCE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "LICENCE-MIT": "d7ed579f795c55b1b9f734f3f1ac6410ba84fef011acf3aaff95d0c9fe6cdd77"
+  },
+  "original_fixture_policy": "Independent synthetic bytes and expected metadata; no firmware, external uACPI or live command fixtures copied.",
+  "primary_spec": "https://uefi.org/specs/ACPI/6.5_A/20_AML_Specification.html#named-objects-encoding",
+  "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "source_sections": [
+    "src/aml/mod.rs:1025 BankField retirement",
+    "src/aml/mod.rs:1411 Field/BankField/IndexField declaration",
+    "src/aml/mod.rs:1832 parse_field_list",
+    "src/aml/object.rs:393 FieldUnit/FieldFlags"
+  ],
+  "test_assets": {
+    "tests/bank_fields.rs": {
+      "disposition": "metadata-only; scenario reviewed, fixture not copied; hardware read/write portions unported",
+      "sha256": "e3510c597486599419c80a74fbcaf816ab6fdd365e7d9c5a507f7e885f5ef79e"
+    },
+    "tests/fields.asl": {
+      "disposition": "metadata-only; scenario reviewed, fixture not copied; hardware read/write portions unported",
+      "sha256": "1305a1383943ea54d265e4f62464b327105dfceec0da9952e516b0a049cd93f4"
+    },
+    "tests/index_fields.rs": {
+      "disposition": "metadata-only; scenario reviewed, fixture not copied; hardware read/write portions unported",
+      "sha256": "ad7a6a334f3e2df13289166a7a208229a33a8b7302757f12ac66319b9c282e15"
+    },
+    "tests/normal_fields.rs": {
+      "disposition": "metadata-only; scenario reviewed, fixture not copied; hardware read/write portions unported",
+      "sha256": "b920dfafac62febb8763ae4c6e882078ab3c7d555339dc652e21ec347fb64894"
+    }
+  }
+}

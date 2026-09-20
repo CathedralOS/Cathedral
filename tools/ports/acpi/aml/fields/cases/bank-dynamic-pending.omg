@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral semantic fixture; no firmware or external example content.
+use aml::model::Outcome;
+use aml::model::Path;
+use aml::model::Span;
+use aml::model::Read;
+use fields::field_model::Access;
+use fields::field_model::AccessType;
+use fields::field_model::UpdateRule;
+use fields::field_model::AccessResult;
+use fields::field_model::Connection;
+use fields::field_model::ListState;
+use fields::field_model::DeclarationKind;
+use fields::field_model::DeclarationResult;
+use fields::field_model::Pending;
+use fields::declarations::parse_declaration;
+machine pending_bank(value:Pending)->bool {transition value {Pending::BankTermArgRemainder {unparsed} -> check(unparsed) _ -> (false)} state check(span:Span)->bool {span.unit==7 && span.start==11 && span.end==21}}
+
+machine test()->u64 {
+let mut input:[u8;1024];
+input[0]=91;
+input[1]=135;
+input[2]=19;
+input[3]=82;
+input[4]=69;
+input[5]=71;
+input[6]=48;
+input[7]=66;
+input[8]=78;
+input[9]=75;
+input[10]=48;
+input[11]=114;
+input[12]=1;
+input[13]=1;
+input[14]=0;
+input[15]=1;
+input[16]=66;
+input[17]=78;
+input[18]=75;
+input[19]=49;
+input[20]=8;
+let scope:Path=Path {absolute:true};let result:DeclarationResult=parse_declaration(&input,21,0,7,scope,1024,32);let pending:bool=pending_bank(result.pending);
+ transition result.outcome==Outcome::UnsupportedSyntax && result.next==11 && result.list.count==0 && result.declaration.field_list.end==0 && pending {true -> (0) _ -> (1)}
+}
+
+const TEST_RESULT:u64=test();
+machine require_ok(result:u64) requires result==0; {}
+data Main {}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

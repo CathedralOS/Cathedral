@@ -1,0 +1,129 @@
+{
+  "behavior_command": "python3 tools/ports/acpi/aml/fields/check.py --jobs 4",
+  "body_mutation_rejections": 18,
+  "cases": {
+    "access-attributes": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "5bc93333a8a3db379d9364c206420aaf0a5ba727cc2ed6feba77c371d97aa7a0",
+      "positive": "passed"
+    },
+    "bank-declaration": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "7cb1eefa429b2a9679f2bf3d734f977eb3a9cbea519f5397b04f31a6503ca35e",
+      "positive": "passed"
+    },
+    "bank-dynamic-pending": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "9df2c6c95de08305834496e4cd02d73583b542313b6056e352fee2df1d623662",
+      "positive": "passed"
+    },
+    "bit-limit": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "bdca0581a852fd108db79038f913e1406aeedcd11a583c79867720eabca4d9a1",
+      "positive": "passed"
+    },
+    "connection-deferred-buffer": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "430351ff8d0dc9dcb6aa4074c9ef72862603b584e6a7d92a3c7cc1abeac56afd",
+      "positive": "passed"
+    },
+    "connections": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "edbdbd9d759f606124458037c48b34fa34349867800bbf8d1e0b23896748dc8a",
+      "positive": "passed"
+    },
+    "declaration-short-envelope": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "d8053965ac7ea560452ecabeeeb78790f4dc365963693c5c791bfb4b04c7f2ca",
+      "positive": "passed"
+    },
+    "empty-list": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "fbf03e9c36c7ab8935d87ee7d3d1ad0a4def62ee7a79b96030181e498d708732",
+      "positive": "passed"
+    },
+    "field-capacity": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "5ad78a77b6438fd7a9299a70fb75cedca7f6cc2ea2d3b0d18d92555386d65a93",
+      "positive": "passed"
+    },
+    "field-declaration": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "ff2bc76370cc42b2c4ee66b03a7ab411e257a175c6a0349e4e363ca92ba28ca8",
+      "positive": "passed"
+    },
+    "field-work-limit": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "6a5fccd456ec11578409ff1667ec017255a12bb77527935d4da49fd16761c9ec",
+      "positive": "passed"
+    },
+    "flags": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "aee6b0151c209cbb33bbf18fed89a2d7ba6fef9c30d147a98e774dba62463cdb",
+      "positive": "passed"
+    },
+    "index-declaration": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "82728f4479dd69e335f3fa4a32d87fb21ef301abde4059b930d3fd236fbf4fc1",
+      "positive": "passed"
+    },
+    "invalid-flags-empty": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "4c8c2d9bfd7efa2fb354aae2eae6748c4ec1998a44133081c9d1b53b6017ebcc",
+      "positive": "passed"
+    },
+    "large-bit-offset": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "ca9868b783414807b2d350faf20b75ef2c777e30d7a83e962bae4f5330d27155",
+      "positive": "passed"
+    },
+    "list-offsets-access": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "a018416ae8b793fd61c96dfbaad5d5d6449ab376d34c32d47ff0e7ff7b5d1dbb",
+      "positive": "passed"
+    },
+    "named-field-rejects-path": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "a1725b6fd688fa5143c00fee76ce00ab76bbc1868e6d2eef25cda081bc7f5b92",
+      "positive": "passed"
+    },
+    "truncated-access": {
+      "body_mutation": "computed 1 and was rejected",
+      "fixture_sha256": "970f8880314c6b80973d51b0acd84ae3189adcad5612ec078378c2cf0705894c",
+      "positive": "passed"
+    }
+  },
+  "comparison_reproducer": {
+    "command": "python3 tools/ports/acpi/aml/fields/reproduce-field-comparison.py",
+    "compiler_modified": false,
+    "direct_record": "witnessed false comparison result",
+    "scalar": "passed",
+    "staged_record": "passed"
+  },
+  "compiler_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "inventory": {
+    "anchors": 158,
+    "blocked": 0,
+    "omitted": 0,
+    "pending": 151,
+    "pinned_files": 2,
+    "translated": 7
+  },
+  "kind": "observed Omega semantic evaluation only; inert field descriptions",
+  "limits": [
+    "No namespace installation, register resolution or runtime FieldUnit storage",
+    "No native ABI or field I/O validation",
+    "Dynamic BankValue remainder and dynamic BufferSize body remain pending",
+    "CreateField family remains separate pending execution syntax"
+  ],
+  "positive_count": 18,
+  "source_check": {
+    "command": "/tmp/cathedral-omega-eaa7993/release/omega --check tools/ports/acpi/aml/fields/source-check.omg",
+    "source_files": 19,
+    "wrote_output": false
+  },
+  "source_closure_sha256": "dad41980ba8c12c6fe51a9529d9ad973189e9e30de3a08a6f658df63f06ccc5d",
+  "source_hash_algorithm": "SHA-256 over sorted parent aml/*.omg and child aml/fields/*.omg relative path + NUL + file bytes",
+  "unchanged_parent_source_sha256": "403fba2b75f2951d4d9b8df48dda77d34c3c052191ba81c438c5114db9212190"
+}

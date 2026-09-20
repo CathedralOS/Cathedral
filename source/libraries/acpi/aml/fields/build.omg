@@ -1,0 +1,4 @@
+machine build(builder: &mut Build) {
+ builder.package("cathedral-acpi-field-syntax");
+ builder.depend_as("aml", Source::Path {location:".."});
+}

@@ -1,0 +1,119 @@
+{
+  "cases": 1323,
+  "batches": [
+    {
+      "path": "batch_00.omg",
+      "start": 0,
+      "count": 96
+    },
+    {
+      "path": "batch_01.omg",
+      "start": 96,
+      "count": 96
+    },
+    {
+      "path": "batch_02.omg",
+      "start": 192,
+      "count": 96
+    },
+    {
+      "path": "batch_03.omg",
+      "start": 288,
+      "count": 96
+    },
+    {
+      "path": "batch_04.omg",
+      "start": 384,
+      "count": 96
+    },
+    {
+      "path": "batch_05.omg",
+      "start": 480,
+      "count": 96
+    },
+    {
+      "path": "batch_06.omg",
+      "start": 576,
+      "count": 96
+    },
+    {
+      "path": "batch_07.omg",
+      "start": 672,
+      "count": 96
+    },
+    {
+      "path": "batch_08.omg",
+      "start": 768,
+      "count": 96
+    },
+    {
+      "path": "batch_09.omg",
+      "start": 864,
+      "count": 96
+    },
+    {
+      "path": "batch_10.omg",
+      "start": 960,
+      "count": 96
+    },
+    {
+      "path": "batch_11.omg",
+      "start": 1056,
+      "count": 96
+    },
+    {
+      "path": "batch_12.omg",
+      "start": 1152,
+      "count": 96
+    },
+    {
+      "path": "batch_13.omg",
+      "start": 1248,
+      "count": 75
+    }
+  ],
+  "controls": [
+    {
+      "path": "batch_00.omg",
+      "old": "checks::merge(RegisterKind::Cr0, 18446744073709551615, 1, 18446744069951127489)",
+      "new": "checks::merge(RegisterKind::Cr0, 18446744073709551615, 1, 18446744069951127488)",
+      "family": "merge"
+    },
+    {
+      "path": "batch_03.omg",
+      "old": "checks::xcr0(18446744073709551615, 5, 2, 0)",
+      "new": "checks::xcr0(18446744073709551615, 5, 1, 0)",
+      "family": "xcr0"
+    },
+    {
+      "path": "batch_07.omg",
+      "old": "checks::cr3_raw(0, 4096, false, 0, 4096)",
+      "new": "checks::cr3_raw(0, 4096, false, 0, 4097)",
+      "family": "cr3_raw"
+    },
+    {
+      "path": "batch_10.omg",
+      "old": "checks::cr8_observed(257, 0, 1)",
+      "new": "checks::cr8_observed(257, 0, 0)",
+      "family": "cr8_observed"
+    },
+    {
+      "path": "batch_10.omg",
+      "old": "checks::star(18442240478377148415, 1, 0, 0, 0, 0)",
+      "new": "checks::star(18442240478377148415, 0, 0, 0, 0, 0)",
+      "family": "star"
+    },
+    {
+      "path": "batch_11.omg",
+      "old": "checks::cet_observed(140737488355328, 1, 0, 0)",
+      "new": "checks::cet_observed(140737488355328, 0, 0, 0)",
+      "family": "cet_observed"
+    },
+    {
+      "path": "batch_13.omg",
+      "old": "checks::apic_preserving(4096, 8192, 0, 0, 12288)",
+      "new": "checks::apic_preserving(4096, 8192, 0, 0, 12289)",
+      "family": "apic_preserving"
+    }
+  ]
+}

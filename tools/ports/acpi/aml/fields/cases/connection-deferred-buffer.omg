@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral semantic fixture; no firmware or external example content.
+use aml::model::Outcome;
+use aml::model::Path;
+use aml::model::Span;
+use aml::model::Read;
+use fields::field_model::Access;
+use fields::field_model::AccessType;
+use fields::field_model::UpdateRule;
+use fields::field_model::AccessResult;
+use fields::field_model::Connection;
+use fields::field_model::ListState;
+use fields::field_model::DeclarationKind;
+use fields::field_model::DeclarationResult;
+use fields::field_model::Pending;
+use fields::field_list::parse_list;
+machine deferred(connection:Connection)->bool {transition connection {Connection::Buffer {buffer_encoding,size_known,declared_size,initializer} -> check(buffer_encoding,size_known,initializer) _ -> (false)} state check(span:Span,known:bool,bytes:Span)->bool {!known && span.start==1 && span.end==5 && bytes.end==0}}
+
+machine test()->u64 {
+let mut input:[u8;1024];
+input[0]=2;
+input[1]=17;
+input[2]=3;
+input[3]=96;
+input[4]=171;
+input[5]=68;
+input[6]=89;
+input[7]=78;
+input[8]=48;
+input[9]=8;
+let scope:Path=Path {absolute:true};let result:ListState=parse_list(&input,10,0,9,scope,0,1024,32);let pending:bool=deferred(result.fields[0].connection);
+ transition result.outcome==Outcome::Success && result.count==1 && result.at==10 && pending {true -> (0) _ -> (1)}
+}
+
+const TEST_RESULT:u64=test();
+machine require_ok(result:u64) requires result==0; {}
+data Main {}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

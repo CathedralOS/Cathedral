@@ -12061,6 +12061,31 @@
       "stage": "tested",
       "evidence": "source/libraries/x86_64/gdt-storage.PORT.md",
       "inventory": "source/libraries/x86_64/gdt-storage-inventory.json"
+    },
+    {
+      "family": "register-merge",
+      "stage": "tested",
+      "evidence": "source/libraries/x86_64/register-operands.PORT.md",
+      "inventory": "source/libraries/x86_64/register-operands-inventory.json"
+    },
+    {
+      "family": "cr3-cr8-operands",
+      "stage": "tested",
+      "evidence": "source/libraries/x86_64/register-operands.PORT.md",
+      "inventory": "source/libraries/x86_64/register-operands-inventory.json"
+    },
+    {
+      "family": "xcr0-validation",
+      "stage": "tested",
+      "evidence": "source/libraries/x86_64/register-operands.PORT.md",
+      "inventory": "source/libraries/x86_64/register-operands-inventory.json"
+    },
+    {
+      "family": "msr-composition",
+      "stage": "partially-tested",
+      "completed": "STAR/CET/APIC observations and composition",
+      "remaining": "Raw MSR u64/two-u32 transport arithmetic",
+      "evidence": "source/libraries/x86_64/register-operands.PORT.md"
     }
   ]
 }

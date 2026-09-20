@@ -1,0 +1,104 @@
+use checks;
+use x86_values::register_operands::RegisterKind;
+machine test_result() -> i32 {
+    transition checks::cr8_observed(200, 1, 0) &&
+        checks::cr8_observed(201, 1, 0) &&
+        checks::cr8_observed(202, 1, 0) &&
+        checks::cr8_observed(203, 1, 0) &&
+        checks::cr8_observed(204, 1, 0) &&
+        checks::cr8_observed(205, 1, 0) &&
+        checks::cr8_observed(206, 1, 0) &&
+        checks::cr8_observed(207, 1, 0) &&
+        checks::cr8_observed(208, 1, 0) &&
+        checks::cr8_observed(209, 1, 0) &&
+        checks::cr8_observed(210, 1, 0) &&
+        checks::cr8_observed(211, 1, 0) &&
+        checks::cr8_observed(212, 1, 0) &&
+        checks::cr8_observed(213, 1, 0) &&
+        checks::cr8_observed(214, 1, 0) &&
+        checks::cr8_observed(215, 1, 0) &&
+        checks::cr8_observed(216, 1, 0) &&
+        checks::cr8_observed(217, 1, 0) &&
+        checks::cr8_observed(218, 1, 0) &&
+        checks::cr8_observed(219, 1, 0) &&
+        checks::cr8_observed(220, 1, 0) &&
+        checks::cr8_observed(221, 1, 0) &&
+        checks::cr8_observed(222, 1, 0) &&
+        checks::cr8_observed(223, 1, 0) &&
+        checks::cr8_observed(224, 1, 0) &&
+        checks::cr8_observed(225, 1, 0) &&
+        checks::cr8_observed(226, 1, 0) &&
+        checks::cr8_observed(227, 1, 0) &&
+        checks::cr8_observed(228, 1, 0) &&
+        checks::cr8_observed(229, 1, 0) &&
+        checks::cr8_observed(230, 1, 0) &&
+        checks::cr8_observed(231, 1, 0) &&
+        checks::cr8_observed(232, 1, 0) &&
+        checks::cr8_observed(233, 1, 0) &&
+        checks::cr8_observed(234, 1, 0) &&
+        checks::cr8_observed(235, 1, 0) &&
+        checks::cr8_observed(236, 1, 0) &&
+        checks::cr8_observed(237, 1, 0) &&
+        checks::cr8_observed(238, 1, 0) &&
+        checks::cr8_observed(239, 1, 0) &&
+        checks::cr8_observed(240, 1, 0) &&
+        checks::cr8_observed(241, 1, 0) &&
+        checks::cr8_observed(242, 1, 0) &&
+        checks::cr8_observed(243, 1, 0) &&
+        checks::cr8_observed(244, 1, 0) &&
+        checks::cr8_observed(245, 1, 0) &&
+        checks::cr8_observed(246, 1, 0) &&
+        checks::cr8_observed(247, 1, 0) &&
+        checks::cr8_observed(248, 1, 0) &&
+        checks::cr8_observed(249, 1, 0) &&
+        checks::cr8_observed(250, 1, 0) &&
+        checks::cr8_observed(251, 1, 0) &&
+        checks::cr8_observed(252, 1, 0) &&
+        checks::cr8_observed(253, 1, 0) &&
+        checks::cr8_observed(254, 1, 0) &&
+        checks::cr8_observed(255, 1, 0) &&
+        checks::cr8_observed(257, 0, 1) &&
+        checks::cr8_observed(271, 0, 15) &&
+        checks::cr8_observed(272, 1, 0) &&
+        checks::cr8_observed(512, 1, 0) &&
+        checks::cr8_observed(18446744073709551615, 1, 0) &&
+        checks::cr8_operand(0, 0, 0) &&
+        checks::cr8_operand(1, 0, 1) &&
+        checks::cr8_operand(2, 0, 2) &&
+        checks::cr8_operand(3, 0, 3) &&
+        checks::cr8_operand(4, 0, 4) &&
+        checks::cr8_operand(5, 0, 5) &&
+        checks::cr8_operand(6, 0, 6) &&
+        checks::cr8_operand(7, 0, 7) &&
+        checks::cr8_operand(8, 0, 8) &&
+        checks::cr8_operand(9, 0, 9) &&
+        checks::cr8_operand(10, 0, 10) &&
+        checks::cr8_operand(11, 0, 11) &&
+        checks::cr8_operand(12, 0, 12) &&
+        checks::cr8_operand(13, 0, 13) &&
+        checks::cr8_operand(14, 0, 14) &&
+        checks::cr8_operand(15, 0, 15) &&
+        checks::star(4294967295, 0, 16, 8, 0, 8) &&
+        checks::star(38654705663, 0, 16, 8, 8, 16) &&
+        checks::star(281440616972287, 0, 16, 8, 65527, 65535) &&
+        checks::star(281444911939583, 1, 0, 0, 0, 0) &&
+        checks::star(281474976710655, 1, 0, 0, 0, 0) &&
+        checks::star(844429225099263, 0, 19, 11, 0, 8) &&
+        checks::star(844463584837631, 0, 19, 11, 8, 16) &&
+        checks::star(1125865547104255, 0, 19, 11, 65527, 65535) &&
+        checks::star(1125869842071551, 1, 0, 0, 0, 0) &&
+        checks::star(1125899906842623, 1, 0, 0, 0, 0) &&
+        checks::star(18441959003400437759, 0, 65535, 65527, 0, 8) &&
+        checks::star(18441959037760176127, 0, 65535, 65527, 8, 16) &&
+        checks::star(18442240439722442751, 0, 65535, 65527, 65527, 65535) &&
+        checks::star(18442240444017410047, 1, 0, 0, 0, 0) &&
+        checks::star(18442240474082181119, 1, 0, 0, 0, 0) &&
+        checks::star(18442240478377148415, 1, 0, 0, 0, 0) &&
+        checks::star(18442240512736886783, 1, 0, 0, 0, 0) &&
+        checks::star(18442521914699153407, 1, 0, 0, 0, 0) &&
+        checks::star(18442521918994120703, 1, 0, 0, 0, 0) { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

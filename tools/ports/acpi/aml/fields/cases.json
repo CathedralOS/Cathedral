@@ -1,0 +1,128 @@
+{
+  "access-attributes": {
+    "behavior": "ordinary.outcome==Outcome::Success && ordinary.access.attribute_mode==2 && ordinary.access.attribute==9 && ordinary.access.flags==0x55 && ordinary.access.locked && extended.access.extended && extended.access.access_length==6 && extended.access.attribute==14 && bad.outcome==Outcome::BadEncoding && bad_extended.outcome==Outcome::BadEncoding",
+    "mutation": [
+      "extended.access.access_length==6",
+      "extended.access.access_length==5"
+    ]
+  },
+  "bank-declaration": {
+    "behavior": "result.outcome==Outcome::Success && result.declaration.kind==DeclarationKind::Bank && result.declaration.bank_value==0x1234 && result.list.count==1",
+    "mutation": [
+      "result.declaration.bank_value==0x1234",
+      "result.declaration.bank_value==0x1233"
+    ]
+  },
+  "bank-dynamic-pending": {
+    "behavior": "result.outcome==Outcome::UnsupportedSyntax && result.next==11 && result.list.count==0 && result.declaration.field_list.end==0 && pending",
+    "mutation": [
+      "result.next==11",
+      "result.next==12"
+    ]
+  },
+  "bit-limit": {
+    "behavior": "result.outcome==Outcome::Capacity && result.count==1 && result.bit_offset==8",
+    "mutation": [
+      "result.bit_offset==8",
+      "result.bit_offset==7"
+    ]
+  },
+  "connection-deferred-buffer": {
+    "behavior": "result.outcome==Outcome::Success && result.count==1 && result.at==10 && pending",
+    "mutation": [
+      "result.at==10",
+      "result.at==9"
+    ]
+  },
+  "connections": {
+    "behavior": "result.outcome==Outcome::Success && result.count==2 && result.bit_offset==24 && one && two",
+    "mutation": [
+      "result.bit_offset==24",
+      "result.bit_offset==23"
+    ]
+  },
+  "declaration-short-envelope": {
+    "behavior": "result.outcome==Outcome::Truncated && result.list.count==0",
+    "mutation": [
+      "result.list.count==0",
+      "result.list.count==1"
+    ]
+  },
+  "empty-list": {
+    "behavior": "result.outcome==Outcome::Success && result.done && result.count==0 && result.at==0",
+    "mutation": [
+      "result.count==0",
+      "result.count==1"
+    ]
+  },
+  "field-capacity": {
+    "behavior": "result.outcome==Outcome::Capacity && result.count==32 && result.bit_offset==32",
+    "mutation": [
+      "result.count==32",
+      "result.count==31"
+    ]
+  },
+  "field-declaration": {
+    "behavior": "result.outcome==Outcome::Success && result.next==20 && result.declaration.kind==DeclarationKind::Field && result.declaration.primary_name.segments[0]==0x30474552 && result.list.count==2 && result.list.fields[1].bit_offset==8 && result.list.fields[0].access.update==UpdateRule::WriteAsOnes",
+    "mutation": [
+      "result.list.count==2",
+      "result.list.count==1"
+    ]
+  },
+  "field-work-limit": {
+    "behavior": "result.outcome==Outcome::WorkLimit && result.count==1 && result.at==5",
+    "mutation": [
+      "result.at==5",
+      "result.at==4"
+    ]
+  },
+  "flags": {
+    "behavior": "good.outcome==Outcome::Success && good.access.kind==AccessType::Word && good.access.locked && good.access.update==UpdateRule::WriteAsZeros && invalid_access.outcome==Outcome::BadEncoding && invalid_update.outcome==Outcome::BadEncoding && reserved.outcome==Outcome::BadEncoding && width.value==8",
+    "mutation": [
+      "width.value==8",
+      "width.value==7"
+    ]
+  },
+  "index-declaration": {
+    "behavior": "result.outcome==Outcome::Success && result.declaration.kind==DeclarationKind::Index && result.declaration.secondary_name.segments[0]==0x30544144 && result.list.count==1 && result.list.fields[0].bit_length==16",
+    "mutation": [
+      "result.list.fields[0].bit_length==16",
+      "result.list.fields[0].bit_length==15"
+    ]
+  },
+  "invalid-flags-empty": {
+    "behavior": "result.outcome==Outcome::BadEncoding && result.count==0",
+    "mutation": [
+      "result.count==0",
+      "result.count==1"
+    ]
+  },
+  "large-bit-offset": {
+    "behavior": "result.outcome==Outcome::Success && result.fields[0].bit_offset==0xffffff1 && result.bit_offset==0xffffff2",
+    "mutation": [
+      "result.bit_offset==0xffffff2",
+      "result.bit_offset==0xffffff1"
+    ]
+  },
+  "list-offsets-access": {
+    "behavior": "result.outcome==Outcome::Success && result.count==3 && result.bit_offset==27 && result.fields[0].bit_offset==0 && result.fields[1].bit_offset==11 && result.fields[1].access.kind==AccessType::QWord && result.fields[1].access.attribute_mode==1 && result.fields[2].access.extended && result.fields[2].access.access_length==6 && result.fields[2].access.locked && result.fields[2].bit_length==0",
+    "mutation": [
+      "result.bit_offset==27",
+      "result.bit_offset==26"
+    ]
+  },
+  "named-field-rejects-path": {
+    "behavior": "result.outcome==Outcome::InvalidName && result.count==0",
+    "mutation": [
+      "result.count==0",
+      "result.count==1"
+    ]
+  },
+  "truncated-access": {
+    "behavior": "result.outcome==Outcome::Truncated && result.count==0",
+    "mutation": [
+      "result.count==0",
+      "result.count==1"
+    ]
+  }
+}

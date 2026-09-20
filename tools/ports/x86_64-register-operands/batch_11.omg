@@ -1,0 +1,104 @@
+use checks;
+use x86_values::register_operands::RegisterKind;
+machine test_result() -> i32 {
+    transition checks::star(18442521949058891775, 1, 0, 0, 0, 0) &&
+        checks::star(18444210803214123007, 1, 0, 0, 0, 0) &&
+        checks::star(18444210837573861375, 1, 0, 0, 0, 0) &&
+        checks::star(18444492239536127999, 1, 0, 0, 0, 0) &&
+        checks::star(18444492243831095295, 1, 0, 0, 0, 0) &&
+        checks::star(18444492273895866367, 1, 0, 0, 0, 0) &&
+        checks::star(18444492278190833663, 1, 0, 0, 0, 0) &&
+        checks::star(18444492312550572031, 1, 0, 0, 0, 0) &&
+        checks::star(18444773714512838655, 1, 0, 0, 0, 0) &&
+        checks::star(18444773718807805951, 1, 0, 0, 0, 0) &&
+        checks::star(18444773748872577023, 1, 0, 0, 0, 0) &&
+        checks::star(18446462603027808255, 1, 0, 0, 0, 0) &&
+        checks::star(18446462637387546623, 1, 0, 0, 0, 0) &&
+        checks::star(18446744039349813247, 1, 0, 0, 0, 0) &&
+        checks::star(18446744043644780543, 1, 0, 0, 0, 0) &&
+        checks::star(18446744073709551615, 1, 0, 0, 0, 0) &&
+        checks::cet_observed(0, 0, 0, 0) &&
+        checks::cet_observed(18446744073709551615, 0, 3135, 18446744073709547520) &&
+        checks::cet_observed(18446603336526618623, 0, 3135, 18446603336526614528) &&
+        checks::cet_observed(1, 0, 1, 0) &&
+        checks::cet_observed(2, 0, 2, 0) &&
+        checks::cet_observed(4, 0, 4, 0) &&
+        checks::cet_observed(8, 0, 8, 0) &&
+        checks::cet_observed(16, 0, 16, 0) &&
+        checks::cet_observed(32, 0, 32, 0) &&
+        checks::cet_observed(64, 0, 0, 0) &&
+        checks::cet_observed(128, 0, 0, 0) &&
+        checks::cet_observed(256, 0, 0, 0) &&
+        checks::cet_observed(512, 0, 0, 0) &&
+        checks::cet_observed(1024, 0, 1024, 0) &&
+        checks::cet_observed(2048, 0, 2048, 0) &&
+        checks::cet_observed(4096, 0, 0, 4096) &&
+        checks::cet_observed(8192, 0, 0, 8192) &&
+        checks::cet_observed(16384, 0, 0, 16384) &&
+        checks::cet_observed(32768, 0, 0, 32768) &&
+        checks::cet_observed(65536, 0, 0, 65536) &&
+        checks::cet_observed(131072, 0, 0, 131072) &&
+        checks::cet_observed(262144, 0, 0, 262144) &&
+        checks::cet_observed(524288, 0, 0, 524288) &&
+        checks::cet_observed(1048576, 0, 0, 1048576) &&
+        checks::cet_observed(2097152, 0, 0, 2097152) &&
+        checks::cet_observed(4194304, 0, 0, 4194304) &&
+        checks::cet_observed(8388608, 0, 0, 8388608) &&
+        checks::cet_observed(16777216, 0, 0, 16777216) &&
+        checks::cet_observed(33554432, 0, 0, 33554432) &&
+        checks::cet_observed(67108864, 0, 0, 67108864) &&
+        checks::cet_observed(134217728, 0, 0, 134217728) &&
+        checks::cet_observed(268435456, 0, 0, 268435456) &&
+        checks::cet_observed(536870912, 0, 0, 536870912) &&
+        checks::cet_observed(1073741824, 0, 0, 1073741824) &&
+        checks::cet_observed(2147483648, 0, 0, 2147483648) &&
+        checks::cet_observed(4294967296, 0, 0, 4294967296) &&
+        checks::cet_observed(8589934592, 0, 0, 8589934592) &&
+        checks::cet_observed(17179869184, 0, 0, 17179869184) &&
+        checks::cet_observed(34359738368, 0, 0, 34359738368) &&
+        checks::cet_observed(68719476736, 0, 0, 68719476736) &&
+        checks::cet_observed(137438953472, 0, 0, 137438953472) &&
+        checks::cet_observed(274877906944, 0, 0, 274877906944) &&
+        checks::cet_observed(549755813888, 0, 0, 549755813888) &&
+        checks::cet_observed(1099511627776, 0, 0, 1099511627776) &&
+        checks::cet_observed(2199023255552, 0, 0, 2199023255552) &&
+        checks::cet_observed(4398046511104, 0, 0, 4398046511104) &&
+        checks::cet_observed(8796093022208, 0, 0, 8796093022208) &&
+        checks::cet_observed(17592186044416, 0, 0, 17592186044416) &&
+        checks::cet_observed(35184372088832, 0, 0, 35184372088832) &&
+        checks::cet_observed(70368744177664, 0, 0, 70368744177664) &&
+        checks::cet_observed(140737488355328, 1, 0, 0) &&
+        checks::cet_observed(281474976710656, 1, 0, 0) &&
+        checks::cet_observed(562949953421312, 1, 0, 0) &&
+        checks::cet_observed(1125899906842624, 1, 0, 0) &&
+        checks::cet_observed(2251799813685248, 1, 0, 0) &&
+        checks::cet_observed(4503599627370496, 1, 0, 0) &&
+        checks::cet_observed(9007199254740992, 1, 0, 0) &&
+        checks::cet_observed(18014398509481984, 1, 0, 0) &&
+        checks::cet_observed(36028797018963968, 1, 0, 0) &&
+        checks::cet_observed(72057594037927936, 1, 0, 0) &&
+        checks::cet_observed(144115188075855872, 1, 0, 0) &&
+        checks::cet_observed(288230376151711744, 1, 0, 0) &&
+        checks::cet_observed(576460752303423488, 1, 0, 0) &&
+        checks::cet_observed(1152921504606846976, 1, 0, 0) &&
+        checks::cet_observed(2305843009213693952, 1, 0, 0) &&
+        checks::cet_observed(4611686018427387904, 1, 0, 0) &&
+        checks::cet_observed(9223372036854775808, 1, 0, 0) &&
+        checks::cet_operand(0, 0, 0, 0) &&
+        checks::cet_operand(0, 3135, 0, 3135) &&
+        checks::cet_operand(0, 4096, 0, 4096) &&
+        checks::cet_operand(0, 140737488355328, 0, 140737488355328) &&
+        checks::cet_operand(0, 9223372036854775808, 0, 9223372036854775808) &&
+        checks::cet_operand(0, 18446744073709551615, 0, 18446744073709551615) &&
+        checks::cet_operand(4096, 0, 0, 4096) &&
+        checks::cet_operand(4096, 3135, 0, 7231) &&
+        checks::cet_operand(4096, 4096, 0, 4096) &&
+        checks::cet_operand(4096, 140737488355328, 0, 140737488359424) &&
+        checks::cet_operand(4096, 9223372036854775808, 0, 9223372036854779904) &&
+        checks::cet_operand(4096, 18446744073709551615, 0, 18446744073709551615) &&
+        checks::cet_operand(18446603336221196288, 0, 0, 18446603336221196288) { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral semantic fixture; no firmware or external example content.
+use aml::model::Outcome;
+use aml::model::Path;
+use aml::model::Span;
+use aml::model::Read;
+use fields::field_model::Access;
+use fields::field_model::AccessType;
+use fields::field_model::UpdateRule;
+use fields::field_model::AccessResult;
+use fields::field_model::Connection;
+use fields::field_model::ListState;
+use fields::field_model::DeclarationKind;
+use fields::field_model::DeclarationResult;
+use fields::field_model::Pending;
+use fields::flags::decode_flags;
+use fields::flags::change_access;
+use fields::flags::nominal_width;
+
+machine test()->u64 {
+let good:AccessResult=decode_flags(0x52);let invalid_access:AccessResult=decode_flags(6);let invalid_update:AccessResult=decode_flags(0x60);let reserved:AccessResult=decode_flags(0x80);let width:Read=nominal_width(4);
+ transition good.outcome==Outcome::Success && good.access.kind==AccessType::Word && good.access.locked && good.access.update==UpdateRule::WriteAsZeros && invalid_access.outcome==Outcome::BadEncoding && invalid_update.outcome==Outcome::BadEncoding && reserved.outcome==Outcome::BadEncoding && width.value==8 {true -> (0) _ -> (1)}
+}
+
+const TEST_RESULT:u64=test();
+machine require_ok(result:u64) requires result==0; {}
+data Main {}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}
