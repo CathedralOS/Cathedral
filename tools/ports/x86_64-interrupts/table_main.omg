@@ -1,0 +1,6 @@
+use table_impl;
+machine test_result() -> i32 { transition table_impl::bounded_table_test() { true -> (0) _ -> (1) } }
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

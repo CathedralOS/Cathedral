@@ -1,0 +1,1477 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/x86_64",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/idt.rs"
+    ]
+  },
+  "files": {
+    "src/structures/idt.rs": {
+      "sha256": "e6fd82e5e76243c2e10bb1af8f476ed79c8905d1fa5aedaa070a99b4e01c02ce",
+      "disposition": "translated",
+      "reason": "Bounded inert interrupt representations and pure codecs; all anchors individually classified.",
+      "symbols": {
+        "57:InterruptDescriptorTable": {
+          "anchor": "pub struct InterruptDescriptorTable {",
+          "disposition": "translated",
+          "reason": "Detached array storage, numeric index/range classification and replacement/default primitives only; typed borrowed Rust indexing and live table API are not claimed.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub data DetachedIdt"
+            }
+          ]
+        },
+        "65:divide_error": {
+          "anchor": "pub divide_error: Entry<HandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "97:debug": {
+          "anchor": "pub debug: Entry<HandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "107:non_maskable_interrupt": {
+          "anchor": "pub non_maskable_interrupt: Entry<HandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "115:breakpoint": {
+          "anchor": "pub breakpoint: Entry<HandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "124:overflow": {
+          "anchor": "pub overflow: Entry<HandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "134:bound_range_exceeded": {
+          "anchor": "pub bound_range_exceeded: Entry<HandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "168:invalid_opcode": {
+          "anchor": "pub invalid_opcode: Entry<HandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "185:device_not_available": {
+          "anchor": "pub device_not_available: Entry<HandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "219:double_fault": {
+          "anchor": "pub double_fault: Entry<DivergingHandlerFuncWithErrCode>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "236:invalid_tss": {
+          "anchor": "pub invalid_tss: Entry<HandlerFuncWithErrCode>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "246:segment_not_present": {
+          "anchor": "pub segment_not_present: Entry<HandlerFuncWithErrCode>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "263:stack_segment_fault": {
+          "anchor": "pub stack_segment_fault: Entry<HandlerFuncWithErrCode>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "279:general_protection_fault": {
+          "anchor": "pub general_protection_fault: Entry<HandlerFuncWithErrCode>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "300:page_fault": {
+          "anchor": "pub page_fault: Entry<PageFaultHandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "311:x87_floating_point": {
+          "anchor": "pub x87_floating_point: Entry<HandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "320:alignment_check": {
+          "anchor": "pub alignment_check: Entry<HandlerFuncWithErrCode>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "329:machine_check": {
+          "anchor": "pub machine_check: Entry<DivergingHandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "345:simd_floating_point": {
+          "anchor": "pub simd_floating_point: Entry<HandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "348:virtualization": {
+          "anchor": "pub virtualization: Entry<HandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "361:cp_protection_exception": {
+          "anchor": "pub cp_protection_exception: Entry<HandlerFuncWithErrCode>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "381:hv_injection_exception": {
+          "anchor": "pub hv_injection_exception: Entry<HandlerFunc>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "410:vmm_communication_exception": {
+          "anchor": "pub vmm_communication_exception: Entry<HandlerFuncWithErrCode>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "421:security_exception": {
+          "anchor": "pub security_exception: Entry<HandlerFuncWithErrCode>,",
+          "disposition": "translated",
+          "reason": "Named upstream entry maps to its vector slot in canonical 256-entry array; actual public field offset verified in measure.py. Existing exception policy remains separate.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "entries: [X86IdtGate; 256]"
+            }
+          ]
+        },
+        "453:new": {
+          "anchor": "pub fn new() -> InterruptDescriptorTable {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine idt_missing"
+            }
+          ]
+        },
+        "488:reset": {
+          "anchor": "pub fn reset(&mut self) {",
+          "disposition": "translated",
+          "reason": "Detached array storage, numeric index/range classification and replacement/default primitives only; typed borrowed Rust indexing and live table API are not claimed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine idt_reset"
+            }
+          ]
+        },
+        "495:load": {
+          "anchor": "pub fn load(&'static self) {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "511:load_unsafe": {
+          "anchor": "pub unsafe fn load_unsafe(&self) {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "521:pointer": {
+          "anchor": "fn pointer(&self) -> crate::structures::DescriptorTablePointer {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "532:condition_slice_bounds": {
+          "anchor": "fn condition_slice_bounds(&self, bounds: impl RangeBounds<u8>) -> (usize, usize) {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine idt_range"
+            }
+          ]
+        },
+        "554:slice": {
+          "anchor": "pub fn slice(&self, bounds: impl RangeBounds<u8>) -> &[Entry<HandlerFunc>] {",
+          "disposition": "translated",
+          "reason": "Detached array storage, numeric index/range classification and replacement/default primitives only; typed borrowed Rust indexing and live table API are not claimed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine idt_range"
+            }
+          ]
+        },
+        "563:slice_mut": {
+          "anchor": "pub fn slice_mut(&mut self, bounds: impl RangeBounds<u8>) -> &mut [Entry<HandlerFunc>] {",
+          "disposition": "translated",
+          "reason": "Detached array storage, numeric index/range classification and replacement/default primitives only; typed borrowed Rust indexing and live table API are not claimed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine idt_range"
+            }
+          ]
+        },
+        "571:default": {
+          "anchor": "fn default() -> Self {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine idt_missing"
+            }
+          ]
+        },
+        "577:Output": {
+          "anchor": "type Output = Entry<HandlerFunc>;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/equality/scaffolding or integration-only test; no Omega algorithm claim and no compiler blocker."
+        },
+        "583:index": {
+          "anchor": "fn index(&self, index: u8) -> &Self::Output {",
+          "disposition": "translated",
+          "reason": "Detached array storage, numeric index/range classification and replacement/default primitives only; typed borrowed Rust indexing and live table API are not claimed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine idt_index_kind"
+            }
+          ]
+        },
+        "613:index_mut": {
+          "anchor": "fn index_mut(&mut self, index: u8) -> &mut Self::Output {",
+          "disposition": "translated",
+          "reason": "Detached array storage, numeric index/range classification and replacement/default primitives only; typed borrowed Rust indexing and live table API are not claimed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine idt_index_kind"
+            }
+          ]
+        },
+        "641:Output": {
+          "anchor": "type Output = [Entry<HandlerFunc>];",
+          "disposition": "omitted",
+          "reason": "Rust formatting/equality/scaffolding or integration-only test; no Omega algorithm claim and no compiler blocker."
+        },
+        "648:index": {
+          "anchor": "fn index(&self, index: $ty) -> &Self::Output {",
+          "disposition": "translated",
+          "reason": "Detached array storage, numeric index/range classification and replacement/default primitives only; typed borrowed Rust indexing and live table API are not claimed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine idt_range"
+            }
+          ]
+        },
+        "658:index_mut": {
+          "anchor": "fn index_mut(&mut self, index: $ty) -> &mut Self::Output {",
+          "disposition": "translated",
+          "reason": "Detached array storage, numeric index/range classification and replacement/default primitives only; typed borrowed Rust indexing and live table API are not claimed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine idt_range"
+            }
+          ]
+        },
+        "685:Entry": {
+          "anchor": "pub struct Entry<F> {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_idt_gate.omg",
+              "anchor": "pub data X86IdtGate"
+            }
+          ]
+        },
+        "695:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/equality/scaffolding or integration-only test; no Omega algorithm claim and no compiler blocker."
+        },
+        "704:eq": {
+          "anchor": "fn eq(&self, other: &Self) -> bool {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/equality/scaffolding or integration-only test; no Omega algorithm claim and no compiler blocker."
+        },
+        "720:HandlerFunc": {
+          "anchor": "pub type HandlerFunc = extern \"x86-interrupt\" fn(InterruptStackFrame);",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "727:HandlerFunc": {
+          "anchor": "pub struct HandlerFunc(());",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "736:HandlerFuncWithErrCode": {
+          "anchor": "pub type HandlerFuncWithErrCode = extern \"x86-interrupt\" fn(InterruptStackFrame, error_code: u64);",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "743:HandlerFuncWithErrCode": {
+          "anchor": "pub struct HandlerFuncWithErrCode(());",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "752:PageFaultHandlerFunc": {
+          "anchor": "pub type PageFaultHandlerFunc =",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "760:PageFaultHandlerFunc": {
+          "anchor": "pub struct PageFaultHandlerFunc(());",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "769:DivergingHandlerFunc": {
+          "anchor": "pub type DivergingHandlerFunc = extern \"x86-interrupt\" fn(InterruptStackFrame) -> !;",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "776:DivergingHandlerFunc": {
+          "anchor": "pub struct DivergingHandlerFunc(());",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "785:DivergingHandlerFuncWithErrCode": {
+          "anchor": "pub type DivergingHandlerFuncWithErrCode =",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "793:DivergingHandlerFuncWithErrCode": {
+          "anchor": "pub struct DivergingHandlerFuncWithErrCode(());",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "796:GeneralHandlerFunc": {
+          "anchor": "pub type GeneralHandlerFunc = fn(InterruptStackFrame, index: u8, error_code: Option<u64>);",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "801:missing": {
+          "anchor": "pub const fn missing() -> Self {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine gate_missing"
+            }
+          ]
+        },
+        "828:set_handler_addr": {
+          "anchor": "pub unsafe fn set_handler_addr(&mut self, addr: VirtAddr) -> &mut EntryOptions {",
+          "disposition": "translated",
+          "reason": "Numeric candidate requires an explicit selector. Upstream current-CS read, unsafe validity obligations and handler authority deliberately excluded.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine gate_candidate"
+            }
+          ]
+        },
+        "845:handler_addr": {
+          "anchor": "pub fn handler_addr(&self) -> VirtAddr {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine gate_handler_canonical48"
+            }
+          ]
+        },
+        "870:set_handler_fn": {
+          "anchor": "pub fn set_handler_fn(&mut self, handler: F) -> &mut EntryOptions {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "880:HandlerFuncType": {
+          "anchor": "pub unsafe trait HandlerFuncType {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "882:to_virt_addr": {
+          "anchor": "fn to_virt_addr(self) -> VirtAddr;",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "893:to_virt_addr": {
+          "anchor": "fn to_virt_addr(self) -> VirtAddr {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "915:EntryOptions": {
+          "anchor": "pub struct EntryOptions {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub data EntryOptions"
+            }
+          ]
+        },
+        "921:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/equality/scaffolding or integration-only test; no Omega algorithm claim and no compiler blocker."
+        },
+        "936:minimal": {
+          "anchor": "const fn minimal() -> Self {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine options_minimal"
+            }
+          ]
+        },
+        "948:set_code_selector": {
+          "anchor": "pub unsafe fn set_code_selector(&mut self, cs: SegmentSelector) -> &mut Self {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine options_set_selector"
+            }
+          ]
+        },
+        "955:set_present": {
+          "anchor": "pub fn set_present(&mut self, present: bool) -> &mut Self {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine options_set_present"
+            }
+          ]
+        },
+        "960:present": {
+          "anchor": "fn present(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine options_present"
+            }
+          ]
+        },
+        "967:disable_interrupts": {
+          "anchor": "pub fn disable_interrupts(&mut self, disable: bool) -> &mut Self {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine options_disable_interrupts"
+            }
+          ]
+        },
+        "975:set_privilege_level": {
+          "anchor": "pub fn set_privilege_level(&mut self, dpl: PrivilegeLevel) -> &mut Self {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine options_set_privilege"
+            }
+          ]
+        },
+        "980:privilege_level": {
+          "anchor": "fn privilege_level(&self) -> PrivilegeLevel {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine options_privilege"
+            }
+          ]
+        },
+        "998:set_stack_index": {
+          "anchor": "pub unsafe fn set_stack_index(&mut self, index: u16) -> &mut Self {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine options_set_stack_index"
+            }
+          ]
+        },
+        "1005:stack_index": {
+          "anchor": "fn stack_index(&self) -> Option<u16> {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine options_stack_index"
+            }
+          ]
+        },
+        "1018:InterruptStackFrame": {
+          "anchor": "pub struct InterruptStackFrame(InterruptStackFrameValue);",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub data RawInterruptStackFrame"
+            }
+          ]
+        },
+        "1023:new": {
+          "anchor": "pub fn new(",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine frame_new"
+            }
+          ]
+        },
+        "1054:as_mut": {
+          "anchor": "pub unsafe fn as_mut(&mut self) -> Volatile<&mut InterruptStackFrameValue> {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1060:Target": {
+          "anchor": "type Target = InterruptStackFrameValue;",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1063:deref": {
+          "anchor": "fn deref(&self) -> &Self::Target {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1070:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/equality/scaffolding or integration-only test; no Omega algorithm claim and no compiler blocker."
+        },
+        "1078:InterruptStackFrameValue": {
+          "anchor": "pub struct InterruptStackFrameValue {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub data RawInterruptStackFrame"
+            }
+          ]
+        },
+        "1084:instruction_pointer": {
+          "anchor": "pub instruction_pointer: VirtAddr,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "instruction_pointer:"
+            }
+          ]
+        },
+        "1086:code_segment": {
+          "anchor": "pub code_segment: SegmentSelector,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "code_segment:"
+            }
+          ]
+        },
+        "1089:cpu_flags": {
+          "anchor": "pub cpu_flags: RFlags,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "cpu_flags:"
+            }
+          ]
+        },
+        "1091:stack_pointer": {
+          "anchor": "pub stack_pointer: VirtAddr,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "stack_pointer:"
+            }
+          ]
+        },
+        "1093:stack_segment": {
+          "anchor": "pub stack_segment: SegmentSelector,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "stack_segment:"
+            }
+          ]
+        },
+        "1100:new": {
+          "anchor": "pub fn new(",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine frame_new"
+            }
+          ]
+        },
+        "1131:iretq": {
+          "anchor": "pub unsafe fn iretq(&self) -> ! {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1152:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/equality/scaffolding or integration-only test; no Omega algorithm claim and no compiler blocker."
+        },
+        "1171:PageFaultErrorCode": {
+          "anchor": "pub struct PageFaultErrorCode: u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub data PageFaultErrorCode"
+            }
+          ]
+        },
+        "1174:PROTECTION_VIOLATION": {
+          "anchor": "const PROTECTION_VIOLATION = 1;",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub const PAGE_FAULT_PROTECTION_VIOLATION:"
+            }
+          ]
+        },
+        "1179:CAUSED_BY_WRITE": {
+          "anchor": "const CAUSED_BY_WRITE = 1 << 1;",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub const PAGE_FAULT_CAUSED_BY_WRITE:"
+            }
+          ]
+        },
+        "1184:USER_MODE": {
+          "anchor": "const USER_MODE = 1 << 2;",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub const PAGE_FAULT_USER_MODE:"
+            }
+          ]
+        },
+        "1188:MALFORMED_TABLE": {
+          "anchor": "const MALFORMED_TABLE = 1 << 3;",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub const PAGE_FAULT_MALFORMED_TABLE:"
+            }
+          ]
+        },
+        "1192:INSTRUCTION_FETCH": {
+          "anchor": "const INSTRUCTION_FETCH = 1 << 4;",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub const PAGE_FAULT_INSTRUCTION_FETCH:"
+            }
+          ]
+        },
+        "1195:PROTECTION_KEY": {
+          "anchor": "const PROTECTION_KEY = 1 << 5;",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub const PAGE_FAULT_PROTECTION_KEY:"
+            }
+          ]
+        },
+        "1199:SHADOW_STACK": {
+          "anchor": "const SHADOW_STACK = 1 << 6;",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub const PAGE_FAULT_SHADOW_STACK:"
+            }
+          ]
+        },
+        "1203:HLAT": {
+          "anchor": "const HLAT = 1 << 7;",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub const PAGE_FAULT_HLAT:"
+            }
+          ]
+        },
+        "1207:SGX": {
+          "anchor": "const SGX = 1 << 15;",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub const PAGE_FAULT_SGX:"
+            }
+          ]
+        },
+        "1211:RMP": {
+          "anchor": "const RMP = 1 << 31;",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_interrupts.omg",
+              "anchor": "pub const PAGE_FAULT_RMP:"
+            }
+          ]
+        },
+        "1218:SelectorErrorCode": {
+          "anchor": "pub struct SelectorErrorCode {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_descriptors.omg",
+              "anchor": "pub data SelectorErrorCode"
+            }
+          ]
+        },
+        "1224:new": {
+          "anchor": "pub const fn new(value: u64) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/descriptors.omg",
+              "anchor": "pub machine selector_error_valid"
+            }
+          ]
+        },
+        "1233:new_truncate": {
+          "anchor": "pub const fn new_truncate(value: u64) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/descriptors.omg",
+              "anchor": "pub machine selector_error_truncate"
+            }
+          ]
+        },
+        "1241:external": {
+          "anchor": "pub fn external(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/descriptors.omg",
+              "anchor": "pub machine selector_error_external"
+            }
+          ]
+        },
+        "1246:descriptor_table": {
+          "anchor": "pub fn descriptor_table(&self) -> DescriptorTable {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/descriptors.omg",
+              "anchor": "pub machine selector_error_table"
+            }
+          ]
+        },
+        "1257:index": {
+          "anchor": "pub fn index(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/descriptors.omg",
+              "anchor": "pub machine selector_error_index"
+            }
+          ]
+        },
+        "1262:is_null": {
+          "anchor": "pub fn is_null(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/descriptors.omg",
+              "anchor": "pub machine selector_error_is_null"
+            }
+          ]
+        },
+        "1268:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/equality/scaffolding or integration-only test; no Omega algorithm claim and no compiler blocker."
+        },
+        "1281:DescriptorTable": {
+          "anchor": "pub enum DescriptorTable {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/x86_descriptors.omg",
+              "anchor": "pub const DESCRIPTOR_TABLE_GDT"
+            }
+          ]
+        },
+        "1298:ExceptionVector": {
+          "anchor": "pub enum ExceptionVector {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1300:Division": {
+          "anchor": "Division = 0x00,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1303:Debug": {
+          "anchor": "Debug = 0x01,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1306:NonMaskableInterrupt": {
+          "anchor": "NonMaskableInterrupt = 0x02,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1309:Breakpoint": {
+          "anchor": "Breakpoint = 0x03,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1312:Overflow": {
+          "anchor": "Overflow = 0x04,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1315:BoundRange": {
+          "anchor": "BoundRange = 0x05,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1318:InvalidOpcode": {
+          "anchor": "InvalidOpcode = 0x06,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1321:DeviceNotAvailable": {
+          "anchor": "DeviceNotAvailable = 0x07,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1324:Double": {
+          "anchor": "Double = 0x08,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1327:InvalidTss": {
+          "anchor": "InvalidTss = 0x0A,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1330:SegmentNotPresent": {
+          "anchor": "SegmentNotPresent = 0x0B,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1333:Stack": {
+          "anchor": "Stack = 0x0C,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1336:GeneralProtection": {
+          "anchor": "GeneralProtection = 0x0D,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1339:Page": {
+          "anchor": "Page = 0x0E,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1342:X87FloatingPoint": {
+          "anchor": "X87FloatingPoint = 0x10,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1345:AlignmentCheck": {
+          "anchor": "AlignmentCheck = 0x11,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1348:MachineCheck": {
+          "anchor": "MachineCheck = 0x12,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1351:SimdFloatingPoint": {
+          "anchor": "SimdFloatingPoint = 0x13,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1354:Virtualization": {
+          "anchor": "Virtualization = 0x14,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1357:ControlProtection": {
+          "anchor": "ControlProtection = 0x15,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1360:HypervisorInjection": {
+          "anchor": "HypervisorInjection = 0x1C,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1363:VmmCommunication": {
+          "anchor": "VmmCommunication = 0x1D,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1366:Security": {
+          "anchor": "Security = 0x1E,",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_known"
+            }
+          ]
+        },
+        "1371:InvalidExceptionVectorNumber": {
+          "anchor": "pub struct InvalidExceptionVectorNumber(u8);",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub data ExceptionVectorCheck"
+            }
+          ]
+        },
+        "1374:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/equality/scaffolding or integration-only test; no Omega algorithm claim and no compiler blocker."
+        },
+        "1380:Error": {
+          "anchor": "type Error = InvalidExceptionVectorNumber;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/equality/scaffolding or integration-only test; no Omega algorithm claim and no compiler blocker."
+        },
+        "1385:try_from": {
+          "anchor": "fn try_from(exception_vector_number: u8) -> Result<Self, Self::Error> {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/interrupts.omg",
+              "anchor": "pub machine exception_vector_check"
+            }
+          ]
+        },
+        "1467:GENERAL_HANDLER": {
+          "anchor": "const GENERAL_HANDLER: $crate::structures::idt::GeneralHandlerFunc = $handler;",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1470:set_general_handler": {
+          "anchor": "fn set_general_handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1493:IDX": {
+          "anchor": "const IDX: u8 = $bit0 | ($bit1 << 1) | ($bit2 << 2) | ($bit3 << 3) | ($bit4 << 4) | ($bit5 << 5) | ($bit6 << 6) | ($bit7 << 7);",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1517:handler": {
+          "anchor": "extern \"x86-interrupt\" fn handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1527:handler": {
+          "anchor": "extern \"x86-interrupt\" fn handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1536:handler": {
+          "anchor": "extern \"x86-interrupt\" fn handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1545:handler": {
+          "anchor": "extern \"x86-interrupt\" fn handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1554:handler": {
+          "anchor": "extern \"x86-interrupt\" fn handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1563:handler": {
+          "anchor": "extern \"x86-interrupt\" fn handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1572:handler": {
+          "anchor": "extern \"x86-interrupt\" fn handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1581:handler": {
+          "anchor": "extern \"x86-interrupt\" fn handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1590:handler": {
+          "anchor": "extern \"x86-interrupt\" fn handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1599:handler": {
+          "anchor": "extern \"x86-interrupt\" fn handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1608:handler": {
+          "anchor": "extern \"x86-interrupt\" fn handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1631:handler": {
+          "anchor": "extern \"x86-interrupt\" fn handler(frame: $crate::structures::idt::InterruptStackFrame) {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1639:test": {
+          "anchor": "mod test {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1643:entry_present": {
+          "anchor": "fn entry_present(idt: &InterruptDescriptorTable, index: u8) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-interrupts/src/tests.rs",
+              "anchor": "#[test]"
+            }
+          ]
+        },
+        "1666:size_test": {
+          "anchor": "fn size_test() {",
+          "disposition": "translated",
+          "reason": "Pure numeric facts/behavior translated; raw bytes do not establish handler, live frame, CS, table lifetime or CPU authority.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-interrupts/measure.py",
+              "anchor": "measurements"
+            }
+          ]
+        },
+        "1683:default_handlers": {
+          "anchor": "fn default_handlers() {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1684:general_handler": {
+          "anchor": "fn general_handler(",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1728:idt_fmt_debug": {
+          "anchor": "fn idt_fmt_debug() {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1733:entry_derive_test": {
+          "anchor": "fn entry_derive_test() {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1734:foo": {
+          "anchor": "fn foo(_: impl Copy + PartialEq + fmt::Debug) {}",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        },
+        "1747:isr_frame_manipulation": {
+          "anchor": "fn isr_frame_manipulation() {",
+          "disposition": "omitted",
+          "reason": "Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/drivers/facts/x86_interrupts.omg",
+          "anchor": "module x86_interrupts;"
+        }
+      ]
+    }
+  },
+  "private_representation_mappings": [
+    {
+      "source": "Entry::{pointer_low,pointer_middle,pointer_high}",
+      "target": "source/libraries/x86_64/interrupt_bytes.omg::encode_gate/decode_gate",
+      "meaning": "Explicit16/16/32-bit little-endian fragments of existing X86IdtGate.entry."
+    },
+    {
+      "source": "Entry::options / EntryOptions::{cs,bits}",
+      "target": "source/drivers/facts/x86_interrupts.omg::EntryOptions and source/libraries/x86_64/interrupts.omg::gate_options/gate_from_options",
+      "meaning": "Selector renamed from cs; raw16-bit options preserved, constrained gate rejects reserved IST bits."
+    },
+    {
+      "source": "Entry::reserved",
+      "target": "source/drivers/facts/x86_idt_gate.omg::reserved",
+      "meaning": "Existing zero-domain field; parser rejects nonzero raw32-bit tail."
+    },
+    {
+      "source": "Entry::phantom",
+      "target": "deliberately omitted",
+      "meaning": "Rust handler-type marker supplies no valid Omega handler authority."
+    },
+    {
+      "source": "InterruptDescriptorTable private/reserved and interrupt array entries",
+      "target": "source/drivers/facts/x86_interrupts.omg::DetachedIdt.entries",
+      "meaning": "All256 numeric slots preserved; no competing named table field API or typed handler pointer."
+    },
+    {
+      "source": "InterruptStackFrameValue reserved fields",
+      "target": "source/drivers/facts/x86_interrupts.omg::RawInterruptStackFrame.reserved_1/reserved_2",
+      "meaning": "Exact six bytes in each gap preserved by codec; constructor zeroes both."
+    }
+  ],
+  "representation_notes": [
+    "Canonical X86IdtGate retained; selected align16 differs from measured upstream Entry align4.",
+    "DetachedIdt semantic storage is not a native4096-byte layout claim; explicit byte codecs define serialized4096 bytes.",
+    "Raw saved-frame contents preserve bits without validity or return authority.",
+    "SelectorErrorCode mapping reused from completed descriptor slice."
+  ]
+}

@@ -1,0 +1,23 @@
+use x86_values::interrupts;
+use facts::x86_interrupts::DetachedIdt;
+use facts::x86_idt_gate;
+use facts::x86_registers::SegmentSelector;
+machine test_result() -> i32 {
+    let mut table: DetachedIdt = interrupts::idt_missing();
+    let gate: X86IdtGate = interrupts::gate_candidate(1234, SegmentSelector { raw: 40 });
+    interrupts::idt_set(&mut table, 200, gate);
+    let changed: X86IdtGate = interrupts::idt_entry(&table, 200);
+    interrupts::idt_reset(&mut table);
+    let reset: X86IdtGate = interrupts::idt_entry(&table, 200);
+    let first: X86IdtGate = interrupts::idt_entry(&table, 0);
+    let last: X86IdtGate = interrupts::idt_entry(&table, 255);
+    transition changed.entry == 1234 && changed.selector == 40 && changed.type_attributes == 142 &&
+        reset.entry == 0 && reset.selector == 0 && reset.ist == 0 && reset.type_attributes == 14 &&
+        first.type_attributes == 14 && last.type_attributes == 14 {
+        true -> (0) _ -> (1)
+    }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

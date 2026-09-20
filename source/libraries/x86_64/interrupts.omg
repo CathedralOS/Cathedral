@@ -1,0 +1,141 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright 2017 Philipp Oppermann. See the README.md (upstream idt.rs).
+// Modified detached algorithms at cc35c876d3badb57df54a66e22f7768a52be95f2.
+// No handler function, live IDT, volatile frame, stack or CPU-return authority.
+module interrupts;
+use facts::x86_idt_gate;
+use facts::x86_exception_vectors;
+use facts::x86_interrupts::EntryOptions;
+use facts::x86_interrupts::RawInterruptStackFrame;
+use facts::x86_interrupts::PageFaultErrorCode;
+use facts::x86_interrupts::DetachedIdt;
+use facts::x86_interrupts;
+use facts::x86_registers::SegmentSelector;
+use facts::x86_registers::RFlags;
+use addresses;
+
+pub data StackIndex [copy] { case Current; case Dedicated(index: u8 [0..=6]); }
+pub data GateDecodeResult [copy] {
+    case ReservedIstBits(value: u8);
+    case ReservedTail(value: u32);
+    case Value(gate: X86IdtGate);
+}
+pub data ExceptionVectorCheck [copy] { case Invalid(value: u8); case Known(value: u8); }
+// These are the pinned Rust index API categories, not Cathedral delivery policy.
+pub data IdtIndexKind [copy] { case Available; case Reserved; case ErrorCode; case Diverging; }
+pub data IdtRangeBound [copy] { case Unbounded; case Included(value: u8); case Excluded(value: u8); }
+pub data IdtRangeResult [copy] { case IncludesException; case Reversed; case Range(start: u16, end: u16); }
+
+pub machine options_minimal() -> EntryOptions { EntryOptions { selector: SegmentSelector { raw: 0 }, bits: 3584 } }
+pub machine options_set_selector(value: EntryOptions, selector: SegmentSelector) -> EntryOptions { EntryOptions { selector: selector, bits: value.bits } }
+pub machine options_set_present(value: EntryOptions, present: bool) -> EntryOptions {
+    transition present {
+        true -> (EntryOptions { selector: value.selector, bits: value.bits | 32768 })
+        _ -> (EntryOptions { selector: value.selector, bits: value.bits & 32767 })
+    }
+}
+pub machine options_present(value: EntryOptions) -> bool { (value.bits & 32768) != 0 }
+pub machine options_disable_interrupts(value: EntryOptions, disable: bool) -> EntryOptions {
+    transition disable {
+        true -> (EntryOptions { selector: value.selector, bits: value.bits & 65279 })
+        _ -> (EntryOptions { selector: value.selector, bits: value.bits | 256 })
+    }
+}
+pub machine options_set_privilege(value: EntryOptions, dpl: u8 [0..=3]) -> EntryOptions {
+    EntryOptions { selector: value.selector, bits: (value.bits & 40959) | ((dpl as u16) << 13) }
+}
+pub machine options_privilege(value: EntryOptions) -> u8 { ((value.bits >> 13) & 3) as u8 }
+pub machine options_set_stack_index(value: EntryOptions, index: u8 [0..=6]) -> EntryOptions {
+    EntryOptions { selector: value.selector, bits: (value.bits & 65528) | ((index as u16) + 1) }
+}
+pub machine options_stack_index(value: EntryOptions) -> StackIndex {
+    let hardware: u8 = (value.bits & 7) as u8;
+    transition hardware >= 1 && hardware <= 7 {
+        true -> dedicated(hardware)
+        _ -> (StackIndex::Current)
+    }
+    state dedicated(hardware: u8 [1..=7]) {
+        StackIndex::Dedicated { index: hardware - 1 }
+    }
+}
+pub machine gate_missing() -> X86IdtGate { X86IdtGate { entry: 0, selector: 0, ist: 0, type_attributes: 14, reserved: 0 } }
+pub machine gate_options(value: &X86IdtGate) -> EntryOptions {
+    EntryOptions { selector: SegmentSelector { raw: value.selector }, bits: (value.ist as u16) | ((value.type_attributes as u16) << 8) }
+}
+pub machine gate_from_options(entry: u64, value: EntryOptions) -> GateDecodeResult {
+    transition (value.bits & 248) == 0 {
+        true -> (GateDecodeResult::Value { gate: X86IdtGate { entry: entry, selector: value.selector.raw,
+            ist: (value.bits & 7) as u8, type_attributes: ((value.bits >> 8) & 255) as u8, reserved: 0 } })
+        _ -> (GateDecodeResult::ReservedIstBits { value: (value.bits & 255) as u8 })
+    }
+}
+// Caller supplies a numeric CS candidate; no current-CS observation occurs.
+pub machine gate_candidate(entry: u64, selector: SegmentSelector) -> X86IdtGate {
+    X86IdtGate { entry: entry, selector: selector.raw, ist: 0, type_attributes: PRESENT_RING0_INTERRUPT_GATE, reserved: 0 }
+}
+pub machine gate_handler_bits(value: &X86IdtGate) -> u64 { value.entry }
+pub machine gate_handler_canonical48(value: &X86IdtGate) -> u64 {
+    let address: u64 = addresses::virtual_truncate(value.entry);
+    address
+}
+pub machine page_fault_truncate(bits: u64) -> PageFaultErrorCode { PageFaultErrorCode { raw: bits & x86_interrupts::PAGE_FAULT_KNOWN_BITS } }
+pub machine page_fault_known(bits: u64) -> bool { (bits & ~x86_interrupts::PAGE_FAULT_KNOWN_BITS) == 0 }
+pub machine page_fault_contains(value: PageFaultErrorCode, mask: PageFaultErrorCode) -> bool { (value.raw & mask.raw) == mask.raw }
+pub machine frame_new(ip: u64, cs: SegmentSelector, flags: RFlags, sp: u64, ss: SegmentSelector) -> RawInterruptStackFrame {
+    RawInterruptStackFrame { instruction_pointer: ip, code_segment: cs, reserved_1: [0, 0, 0, 0, 0, 0],
+        cpu_flags: flags, stack_pointer: sp, stack_segment: ss, reserved_2: [0, 0, 0, 0, 0, 0] }
+}
+pub machine exception_vector_known(vector: u8) -> bool {
+    vector <= 8 || (vector >= 10 && vector <= 14) || (vector >= 16 && vector <= 21) || (vector >= 28 && vector <= 30)
+}
+pub machine exception_vector_check(vector: u8) -> ExceptionVectorCheck {
+    let known: bool = exception_vector_known(vector);
+    transition known { true -> (ExceptionVectorCheck::Known { value: vector }) _ -> (ExceptionVectorCheck::Invalid { value: vector }) }
+}
+pub machine idt_index_kind(vector: u8) -> IdtIndexKind {
+    transition vector == 15 || vector == 31 || (vector >= 22 && vector <= 27) {
+        true -> (IdtIndexKind::Reserved)
+        _ -> error_code(vector)
+    }
+    state error_code(vector: u8) {
+        transition vector == 8 || (vector >= 10 && vector <= 14) || vector == 17 || vector == 21 || vector == 29 || vector == 30 {
+            true -> (IdtIndexKind::ErrorCode)
+            _ -> diverging(vector)
+        }
+    }
+    state diverging(vector: u8) {
+        transition vector == 18 { true -> (IdtIndexKind::Diverging) _ -> (IdtIndexKind::Available) }
+    }
+}
+machine range_lower(bound: IdtRangeBound) -> u16 {
+    transition bound { IdtRangeBound::Unbounded -> (0) IdtRangeBound::Included { value } -> (value as u16) IdtRangeBound::Excluded { value } -> ((value as u16) + 1) }
+}
+machine range_upper(bound: IdtRangeBound) -> u16 {
+    transition bound { IdtRangeBound::Unbounded -> (256) IdtRangeBound::Included { value } -> ((value as u16) + 1) IdtRangeBound::Excluded { value } -> (value as u16) }
+}
+pub machine idt_range(start: IdtRangeBound, end: IdtRangeBound) -> IdtRangeResult {
+    let first: u16 = range_lower(start);
+    let last: u16 = range_upper(end);
+    transition first >= 32 {
+        true -> ordered(first, last)
+        _ -> (IdtRangeResult::IncludesException)
+    }
+    state ordered(first: u16, last: u16) {
+        transition first <= last {
+            true -> (IdtRangeResult::Range { start: first, end: last })
+            _ -> (IdtRangeResult::Reversed)
+        }
+    }
+}
+pub machine idt_entry(value: &DetachedIdt, vector: u8) -> X86IdtGate { value.entries[vector] }
+pub machine idt_set(value: &mut DetachedIdt, vector: u8, gate: X86IdtGate) { value.entries[vector] = gate; }
+
+pub machine idt_missing() -> DetachedIdt {
+    let gate: X86IdtGate = gate_missing();
+    DetachedIdt { entries: [gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate, gate] }
+}
+
+pub machine idt_reset(value: &mut DetachedIdt) {
+    let fresh: DetachedIdt = idt_missing();
+    value.entries = fresh.entries;
+}

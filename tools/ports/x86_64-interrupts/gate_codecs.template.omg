@@ -1,0 +1,149 @@
+// Canonical constrained gate: reserved bytes are checked before construction.
+use facts::x86_idt_gate;
+use facts::x86_interrupts::DetachedIdt;
+use interrupts::GateDecodeResult;
+
+pub machine encode_gate(value: &X86IdtGate) -> [u8; 16] {
+    [ (value.entry & 255) as u8, ((value.entry >> 8) & 255) as u8,
+      (value.selector & 255) as u8, ((value.selector >> 8) & 255) as u8,
+      value.ist, value.type_attributes,
+      ((value.entry >> 16) & 255) as u8, ((value.entry >> 24) & 255) as u8,
+      ((value.entry >> 32) & 255) as u8, ((value.entry >> 40) & 255) as u8,
+      ((value.entry >> 48) & 255) as u8, ((value.entry >> 56) & 255) as u8,
+      0, 0, 0, 0 ]
+}
+pub machine decode_gate(input: &[u8; 16]) -> GateDecodeResult {
+    transition input[4] <= 7 {
+        true -> reserved(input)
+        _ -> (GateDecodeResult::ReservedIstBits { value: input[4] })
+    }
+    state reserved(input: &[u8; 16]) {
+        let tail: u32 = (input[12] as u32) | ((input[13] as u32) << 8) | ((input[14] as u32) << 16) | ((input[15] as u32) << 24);
+        transition tail == 0 {
+            true -> ready(input)
+            _ -> (GateDecodeResult::ReservedTail { value: tail })
+        }
+    }
+    state ready(input: &[u8; 16]) {
+        GateDecodeResult::Value { gate: X86IdtGate {
+            entry: (input[0] as u64) | ((input[1] as u64) << 8) | ((input[6] as u64) << 16) | ((input[7] as u64) << 24) |
+                ((input[8] as u64) << 32) | ((input[9] as u64) << 40) | ((input[10] as u64) << 48) | ((input[11] as u64) << 56),
+            selector: (input[2] as u16) | ((input[3] as u16) << 8),
+            ist: input[4] & 7, type_attributes: input[5], reserved: 0
+        } }
+    }
+}
+
+pub data IdtDecodeResult [copy] {
+    case ReservedIstBits(vector: u8, value: u8);
+    case ReservedTail(vector: u8, value: u32);
+    case Value(table: DetachedIdt);
+}
+pub machine encode_idt(input: &DetachedIdt) -> [u8; 4096] {
+    let mut output: [u8; 4096];
+    encode_idt_scan(input, &mut output, 0);
+    output
+}
+machine encode_idt_scan(input: &DetachedIdt, output: &mut [u8; 4096], index: u16)
+terminates by (index, 256) -> Nat::BoundedDistance;
+{
+    transition index < 256 { true -> active(input, output, index) _ -> done() }
+    state active(input: &DetachedIdt, output: &mut [u8; 4096], index: u16 [0..=255]) {
+        let gate: X86IdtGate = input.entries[index];
+        let bytes: [u8; 16] = encode_gate(&gate);
+        let offset: u16 [0..=4080] = index * 16;
+        let o0: u16 [0..=4095] = offset + 0;
+        let o1: u16 [0..=4095] = offset + 1;
+        let o2: u16 [0..=4095] = offset + 2;
+        let o3: u16 [0..=4095] = offset + 3;
+        let o4: u16 [0..=4095] = offset + 4;
+        let o5: u16 [0..=4095] = offset + 5;
+        let o6: u16 [0..=4095] = offset + 6;
+        let o7: u16 [0..=4095] = offset + 7;
+        let o8: u16 [0..=4095] = offset + 8;
+        let o9: u16 [0..=4095] = offset + 9;
+        let o10: u16 [0..=4095] = offset + 10;
+        let o11: u16 [0..=4095] = offset + 11;
+        let o12: u16 [0..=4095] = offset + 12;
+        let o13: u16 [0..=4095] = offset + 13;
+        let o14: u16 [0..=4095] = offset + 14;
+        let o15: u16 [0..=4095] = offset + 15;
+        output[o0] = bytes[0];
+        output[o1] = bytes[1];
+        output[o2] = bytes[2];
+        output[o3] = bytes[3];
+        output[o4] = bytes[4];
+        output[o5] = bytes[5];
+        output[o6] = bytes[6];
+        output[o7] = bytes[7];
+        output[o8] = bytes[8];
+        output[o9] = bytes[9];
+        output[o10] = bytes[10];
+        output[o11] = bytes[11];
+        output[o12] = bytes[12];
+        output[o13] = bytes[13];
+        output[o14] = bytes[14];
+        output[o15] = bytes[15];
+        encode_idt_scan(input, output, index + 1);
+    }
+    state done() {}
+}
+pub machine decode_idt_slot(input: &[u8; 4096], vector: u8) -> GateDecodeResult {
+    let offset: u16 [0..=4080] = (vector as u16) * 16;
+    let o0: u16 [0..=4095] = offset + 0;
+    let o1: u16 [0..=4095] = offset + 1;
+    let o2: u16 [0..=4095] = offset + 2;
+    let o3: u16 [0..=4095] = offset + 3;
+    let o4: u16 [0..=4095] = offset + 4;
+    let o5: u16 [0..=4095] = offset + 5;
+    let o6: u16 [0..=4095] = offset + 6;
+    let o7: u16 [0..=4095] = offset + 7;
+    let o8: u16 [0..=4095] = offset + 8;
+    let o9: u16 [0..=4095] = offset + 9;
+    let o10: u16 [0..=4095] = offset + 10;
+    let o11: u16 [0..=4095] = offset + 11;
+    let o12: u16 [0..=4095] = offset + 12;
+    let o13: u16 [0..=4095] = offset + 13;
+    let o14: u16 [0..=4095] = offset + 14;
+    let o15: u16 [0..=4095] = offset + 15;
+    let bytes: [u8; 16] = [input[o0], input[o1], input[o2], input[o3], input[o4], input[o5], input[o6], input[o7], input[o8], input[o9], input[o10], input[o11], input[o12], input[o13], input[o14], input[o15]];
+    let result: GateDecodeResult = decode_gate(&bytes);
+    result
+}
+pub machine decode_idt(input: &[u8; 4096]) -> IdtDecodeResult {
+    let table: DetachedIdt;
+    let value: IdtDecodeResult = IdtDecodeResult::Value { table: table };
+    let result: IdtDecodeResult = decode_idt_scan(input, value, 0, 256);
+    result
+}
+machine decode_idt_scan(input: &[u8; 4096], value: IdtDecodeResult, index: u16, limit: u16)
+terminates by (index, limit) -> Nat::BoundedDistance;
+-> IdtDecodeResult {
+    let next: IdtDecodeResult = decode_idt_step(input, value, index);
+    transition index < limit {
+        true -> decode_idt_scan(input, next, index + 1, limit)
+        _ -> (value)
+    }
+}
+machine decode_idt_step(input: &[u8; 4096], value: IdtDecodeResult, index: u16) -> IdtDecodeResult {
+    transition index < 256 { true -> bounded(input, value, index) _ -> (value) }
+    state bounded(input: &[u8; 4096], value: IdtDecodeResult, index: u16 [0..=255]) {
+        transition value {
+            IdtDecodeResult::Value { table } -> active(input, table, index)
+            _ -> (value)
+        }
+    }
+    state active(input: &[u8; 4096], table: DetachedIdt, index: u16 [0..=255]) {
+        let decoded: GateDecodeResult = decode_idt_slot(input, index as u8);
+        transition decoded {
+            GateDecodeResult::Value { gate } -> assign(table, index, gate)
+            GateDecodeResult::ReservedIstBits { value } -> (IdtDecodeResult::ReservedIstBits { vector: index as u8, value: value })
+            GateDecodeResult::ReservedTail { value } -> (IdtDecodeResult::ReservedTail { vector: index as u8, value: value })
+        }
+    }
+    state assign(table: DetachedIdt, index: u16 [0..=255], gate: X86IdtGate) {
+        let mut updated: DetachedIdt = table;
+        updated.entries[index] = gate;
+        IdtDecodeResult::Value { table: updated }
+    }
+}

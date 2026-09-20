@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright 2017 Philipp Oppermann. See the README.md (upstream idt.rs).
+// Modified inert IDT/frame translation at cc35c876d3badb57df54a66e22f7768a52be95f2. See x86_interrupts.PORT.md.
+module interrupt_frame_layouts;
+use omega::language::core::layout;
+
+pub data EntryOptionsLayout {}
+pub EntryOptionsPolicy: EntryOptionsLayout satisfies Layout;
+pub machine EntryOptionsLayout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 2 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 4, size_is_dynamic: false, align: 2 }
+}
+
+pub data RawInterruptStackFrameLayout {}
+pub RawInterruptStackFramePolicy: RawInterruptStackFrameLayout satisfies Layout;
+pub machine RawInterruptStackFrameLayout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 10 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 16 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 24 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 32 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 34 } };
+    Plan { entries: entries, entry_count: 7, size_fixed: 40, size_is_dynamic: false, align: 8 }
+}

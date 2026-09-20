@@ -1,0 +1,15 @@
+use facts::x86_idt_gate_layout;
+use facts::interrupt_frame_layouts::EntryOptionsLayout;
+use facts::interrupt_frame_layouts::RawInterruptStackFrameLayout;
+data LocalGate { entry: u64; selector: u16; ist: u8 [0..=7]; type_attributes: u8; reserved: u32 [0..=0]; }
+data LocalOptions { selector: u16; bits: u16; }
+data LocalFrame { instruction_pointer: u64; code_segment: u16; reserved_1: [u8; 6]; cpu_flags: u64; stack_pointer: u64; stack_segment: u16; reserved_2: [u8; 6]; }
+data Main { gate: X86IdtGateLayout<LocalGate>; options: EntryOptionsLayout<LocalOptions>; frame: RawInterruptStackFrameLayout<LocalFrame>; }
+machine Main::main(&mut self) -> i32 {
+    self.gate.entry = 0x1122334455667788;
+    self.gate.ist = 7;
+    self.options.bits = 0x8e00;
+    self.frame.instruction_pointer = 4096;
+    self.frame.stack_pointer = 8192;
+    transition self.gate.entry == 0x1122334455667788 && self.gate.ist == 7 && self.options.bits == 0x8e00 && self.frame.instruction_pointer == 4096 && self.frame.stack_pointer == 8192 { true -> (0) _ -> (1) }
+}

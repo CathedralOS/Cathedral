@@ -1,0 +1,34 @@
+// Fixture-only bridge into the exact private production scan bodies above.
+// Three final slots fit Omega's const-evaluator budget; full256 remains a probe.
+use x86_values::interrupts;
+pub machine bounded_table_test() -> bool {
+    let mut table: DetachedIdt = interrupts::idt_missing();
+    table.entries[254] = X86IdtGate { entry: 0x112233445566, selector: 40, ist: 7, type_attributes: 142, reserved: 0 };
+    let mut output: [u8; 4096];
+    encode_idt_scan(&table, &mut output, 253);
+    let empty: DetachedIdt;
+    let initial: IdtDecodeResult = IdtDecodeResult::Value { table: empty };
+    let decoded: IdtDecodeResult = decode_idt_scan(&output, initial, 253, 256);
+    let good: bool = table_is_good(decoded);
+    output[4084] = 8;
+    let rejected: IdtDecodeResult = decode_idt_scan(&output, initial, 253, 256);
+    let bad: bool = table_is_bad(rejected);
+    output[4084] = 0;
+    output[4076] = 1;
+    let tail: IdtDecodeResult = decode_idt_scan(&output, initial, 253, 256);
+    output[4053] == 14 && output[4064] == 102 && output[4066] == 40 && output[4068] == 7 &&
+        output[4069] == 142 && output[4085] == 14 && good && bad && table_tail_bad(tail)
+}
+machine table_is_good(value: IdtDecodeResult) -> bool {
+    transition value { IdtDecodeResult::Value { table } -> inspect(table) _ -> (false) }
+    state inspect(table: DetachedIdt) {
+        table.entries[253].type_attributes == 14 && table.entries[254].entry == 0x112233445566 &&
+        table.entries[254].selector == 40 && table.entries[254].ist == 7 && table.entries[255].type_attributes == 14
+    }
+}
+machine table_is_bad(value: IdtDecodeResult) -> bool {
+    transition value { IdtDecodeResult::ReservedIstBits { vector, value } -> (vector == 255 && value == 8) _ -> (false) }
+}
+machine table_tail_bad(value: IdtDecodeResult) -> bool {
+    transition value { IdtDecodeResult::ReservedTail { vector, value } -> (vector == 254 && value == 1) _ -> (false) }
+}

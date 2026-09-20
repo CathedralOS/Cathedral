@@ -1,0 +1,232 @@
+{
+  "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+  "source": "src/structures/idt.rs",
+  "flags": [
+    {
+      "name": "PROTECTION_VIOLATION",
+      "value": 1,
+      "line": 1174
+    },
+    {
+      "name": "CAUSED_BY_WRITE",
+      "value": 2,
+      "line": 1179
+    },
+    {
+      "name": "USER_MODE",
+      "value": 4,
+      "line": 1184
+    },
+    {
+      "name": "MALFORMED_TABLE",
+      "value": 8,
+      "line": 1188
+    },
+    {
+      "name": "INSTRUCTION_FETCH",
+      "value": 16,
+      "line": 1192
+    },
+    {
+      "name": "PROTECTION_KEY",
+      "value": 32,
+      "line": 1195
+    },
+    {
+      "name": "SHADOW_STACK",
+      "value": 64,
+      "line": 1199
+    },
+    {
+      "name": "HLAT",
+      "value": 128,
+      "line": 1203
+    },
+    {
+      "name": "SGX",
+      "value": 32768,
+      "line": 1207
+    },
+    {
+      "name": "RMP",
+      "value": 2147483648,
+      "line": 1211
+    }
+  ],
+  "records": {
+    "EntryOptions": {
+      "size": 4,
+      "align": 2,
+      "fields": [
+        [
+          "selector",
+          "SegmentSelector",
+          0
+        ],
+        [
+          "bits",
+          "u16",
+          2
+        ]
+      ]
+    },
+    "RawInterruptStackFrame": {
+      "size": 40,
+      "align": 8,
+      "fields": [
+        [
+          "instruction_pointer",
+          "u64",
+          0
+        ],
+        [
+          "code_segment",
+          "SegmentSelector",
+          8
+        ],
+        [
+          "reserved_1",
+          "[u8; 6]",
+          10
+        ],
+        [
+          "cpu_flags",
+          "RFlags",
+          16
+        ],
+        [
+          "stack_pointer",
+          "u64",
+          24
+        ],
+        [
+          "stack_segment",
+          "SegmentSelector",
+          32
+        ],
+        [
+          "reserved_2",
+          "[u8; 6]",
+          34
+        ]
+      ]
+    }
+  },
+  "exception_vectors": [
+    {
+      "name": "Division",
+      "value": 0,
+      "line": 1300
+    },
+    {
+      "name": "Debug",
+      "value": 1,
+      "line": 1303
+    },
+    {
+      "name": "NonMaskableInterrupt",
+      "value": 2,
+      "line": 1306
+    },
+    {
+      "name": "Breakpoint",
+      "value": 3,
+      "line": 1309
+    },
+    {
+      "name": "Overflow",
+      "value": 4,
+      "line": 1312
+    },
+    {
+      "name": "BoundRange",
+      "value": 5,
+      "line": 1315
+    },
+    {
+      "name": "InvalidOpcode",
+      "value": 6,
+      "line": 1318
+    },
+    {
+      "name": "DeviceNotAvailable",
+      "value": 7,
+      "line": 1321
+    },
+    {
+      "name": "Double",
+      "value": 8,
+      "line": 1324
+    },
+    {
+      "name": "InvalidTss",
+      "value": 10,
+      "line": 1327
+    },
+    {
+      "name": "SegmentNotPresent",
+      "value": 11,
+      "line": 1330
+    },
+    {
+      "name": "Stack",
+      "value": 12,
+      "line": 1333
+    },
+    {
+      "name": "GeneralProtection",
+      "value": 13,
+      "line": 1336
+    },
+    {
+      "name": "Page",
+      "value": 14,
+      "line": 1339
+    },
+    {
+      "name": "X87FloatingPoint",
+      "value": 16,
+      "line": 1342
+    },
+    {
+      "name": "AlignmentCheck",
+      "value": 17,
+      "line": 1345
+    },
+    {
+      "name": "MachineCheck",
+      "value": 18,
+      "line": 1348
+    },
+    {
+      "name": "SimdFloatingPoint",
+      "value": 19,
+      "line": 1351
+    },
+    {
+      "name": "Virtualization",
+      "value": 20,
+      "line": 1354
+    },
+    {
+      "name": "ControlProtection",
+      "value": 21,
+      "line": 1357
+    },
+    {
+      "name": "HypervisorInjection",
+      "value": 28,
+      "line": 1360
+    },
+    {
+      "name": "VmmCommunication",
+      "value": 29,
+      "line": 1363
+    },
+    {
+      "name": "Security",
+      "value": 30,
+      "line": 1366
+    }
+  ]
+}

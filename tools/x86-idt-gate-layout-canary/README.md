@@ -1,24 +1,22 @@
 # x86 IDT gate layout source canary
 
-This compile-only harness checks Cathedral's pure x86-64 interrupt-gate schema
-and programmable layout policy. It pins one fixed 16-byte, 16-aligned gate and
-the exact three-fragment tiling of the logical 64-bit entry field across offset
-bits 0..15, 16..31, and 32..63. The selector, IST, attributes, and reserved
-word occupy the remaining architectural positions. All five logical inputs
-remain runtime-relevant, and the checked layout constructor's complete write
-frame is exactly its private `self.entries` planning buffer.
-
-Run:
+The current harness checks the canonical gate schema and separate static Layout
+policy, then checks field access through local equivalent schemas. A source
+regression audit compares all five fields, constants and seven placements with
+commit `d4b8fa5aae189e9ee10768a1e6de5c1370fb5dcb`: size16, alignment16, offset
+fragments16/16/32 at bytes0/6/8, selector2, IST4, attributes5, reserved12.
 
 ```sh
-tools/x86-idt-gate-layout-canary/run.sh
+OMEGA_BIN=/path/to/omega tools/x86-idt-gate-layout-canary/run.sh
 ```
 
-Set `OMEGA_BIN` to test with a specific compiler binary. Otherwise the harness
-uses an installed `omega`, a built sibling `../Omega/target/debug/omega`, or
-builds that sibling with Cargo, in that order. Typed-artifact validation uses
-`jq` and fails with an explicit dependency error when it is unavailable.
+Without OMEGA_BIN, the sibling release binary is used. The old dependency API,
+nonexistent omega-cli fallback and retired JSON dump checks were replaced;
+`assert-layout.jq` remains a historical artifact and is not claimed to pass.
+The plan now uses a local entries array and a named Layout witness.
 
-The canary validates geometry only. It resolves no entry identity, writes or
-publishes no IDT, provisions no stack, executes no `lidt`, and grants no
-resolver, root-admission, or `IdtControl` authority.
+Imported generated field access has a separate reproducer in
+`tools/ports/x86_64-interrupts/layout_imported_probe.omg`. The successful local
+consumer verifies plan normalization/source field access; it does not measure
+native Omega bytes. The upstream Rust Entry has alignment4; Cathedral's existing
+selected alignment16 is preserved. No instruction or live table operation runs.

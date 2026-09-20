@@ -1,0 +1,98 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86_values::interrupts;
+use x86_values::interrupts::GateDecodeResult;
+use x86_values::interrupts::StackIndex;
+use x86_values::interrupts::IdtRangeBound;
+use x86_values::interrupts::IdtRangeResult;
+use x86_values::interrupt_bytes;
+use x86_values::interrupt_bytes::IdtDecodeResult;
+use facts::x86_idt_gate;
+use facts::x86_interrupts::EntryOptions;
+use facts::x86_interrupts::RawInterruptStackFrame;
+use facts::x86_interrupts::DetachedIdt;
+use facts::x86_interrupts::PageFaultErrorCode;
+use facts::x86_registers::SegmentSelector;
+use facts::x86_registers::RFlags;
+use cases;
+
+machine decoded_gate(result: GateDecodeResult, expected: u64) -> bool {
+    transition result {
+        GateDecodeResult::Value { gate } -> (gate.entry == expected && gate.selector == 0xabcd && gate.ist == 7 && gate.type_attributes == 142 && gate.reserved == 0)
+        _ -> (false)
+    }
+}
+machine reserved_ist(result: GateDecodeResult) -> bool {
+    transition result { GateDecodeResult::ReservedIstBits { value } -> (value == 8) _ -> (false) }
+}
+machine reserved_tail(result: GateDecodeResult) -> bool {
+    transition result { GateDecodeResult::ReservedTail { value } -> (value == 1) _ -> (false) }
+}
+machine gate_cases() -> bool {
+    let gate: X86IdtGate = X86IdtGate { entry: 0x1122334455667788, selector: 0xabcd, ist: 7, type_attributes: 142, reserved: 0 };
+    let encoded: [u8; 16] = interrupt_bytes::encode_gate(&gate);
+    let golden: [u8; 16] = [136,119,205,171,7,142,102,85,68,51,34,17,0,0,0,0];
+    let mut bad_ist: [u8; 16] = golden;
+    let mut bad_tail: [u8; 16] = golden;
+    bad_ist[4] = 8; bad_tail[12] = 1;
+    let decoded: GateDecodeResult = interrupt_bytes::decode_gate(&golden);
+    let options: EntryOptions = interrupts::gate_options(&gate);
+    let from_options: GateDecodeResult = interrupts::gate_from_options(0x1122334455667788, options);
+    let invalid_options: EntryOptions = EntryOptions { selector: SegmentSelector { raw: 0 }, bits: 0x0e08 };
+    let candidate: X86IdtGate = interrupts::gate_candidate(0x1234, SegmentSelector { raw: 8 });
+    let missing: X86IdtGate = interrupts::gate_missing();
+    encoded[0] == 136 && encoded[1] == 119 && encoded[2] == 205 && encoded[3] == 171 &&
+    encoded[4] == 7 && encoded[5] == 142 && encoded[6] == 102 && encoded[7] == 85 &&
+    encoded[8] == 68 && encoded[9] == 51 && encoded[10] == 34 && encoded[11] == 17 &&
+    encoded[12] == 0 && encoded[13] == 0 && encoded[14] == 0 && encoded[15] == 0 &&
+    decoded_gate(decoded, 0x1122334455667788) && decoded_gate(from_options, 0x1122334455667788) &&
+    reserved_ist(interrupt_bytes::decode_gate(&bad_ist)) && reserved_tail(interrupt_bytes::decode_gate(&bad_tail)) &&
+    reserved_ist(interrupts::gate_from_options(0, invalid_options)) &&
+    interrupts::gate_handler_bits(&gate) == 0x1122334455667788 && interrupts::gate_handler_canonical48(&gate) == 0x334455667788 &&
+    candidate.entry == 0x1234 && candidate.selector == 8 && candidate.type_attributes == 142 && candidate.ist == 0 &&
+    missing.entry == 0 && missing.selector == 0 && missing.type_attributes == 14 && missing.reserved == 0
+}
+machine range_is(result: IdtRangeResult, first: u16, last: u16) -> bool {
+    transition result { IdtRangeResult::Range { start, end } -> (start == first && end == last) _ -> (false) }
+}
+machine range_cases() -> bool {
+    let whole: IdtRangeResult = interrupts::idt_range(IdtRangeBound::Included { value: 32 }, IdtRangeBound::Unbounded);
+    let last: IdtRangeResult = interrupts::idt_range(IdtRangeBound::Included { value: 255 }, IdtRangeBound::Included { value: 255 });
+    let empty: IdtRangeResult = interrupts::idt_range(IdtRangeBound::Excluded { value: 255 }, IdtRangeBound::Unbounded);
+    let exception: IdtRangeResult = interrupts::idt_range(IdtRangeBound::Unbounded, IdtRangeBound::Unbounded);
+    let reversed: IdtRangeResult = interrupts::idt_range(IdtRangeBound::Included { value: 64 }, IdtRangeBound::Excluded { value: 32 });
+    range_is(whole, 32, 256) && range_is(last, 255, 256) && range_is(empty, 256, 256) &&
+    exception in IdtRangeResult::IncludesException && reversed in IdtRangeResult::Reversed
+}
+machine table_roundtrip(result: IdtDecodeResult) -> bool {
+    transition result {
+        IdtDecodeResult::Value { table } -> valid(table)
+        _ -> (false)
+    }
+    state valid(table: DetachedIdt) {
+        let first: X86IdtGate = interrupts::idt_entry(&table, 0);
+        let chosen: X86IdtGate = interrupts::idt_entry(&table, 200);
+        let last: X86IdtGate = interrupts::idt_entry(&table, 255);
+        first.entry == 0 && first.type_attributes == 14 && chosen.entry == 0x112233445566 &&
+        chosen.selector == 40 && chosen.type_attributes == 142 && last.entry == 0 && last.type_attributes == 14
+    }
+}
+machine bad_table(result: IdtDecodeResult) -> bool {
+    transition result { IdtDecodeResult::ReservedIstBits { vector, value } -> (vector == 255 && value == 8) _ -> (false) }
+}
+machine table_cases() -> bool {
+    let mut input: [u8; 4096];
+    input[5] = 14; input[4085] = 14;
+    input[3200] = 102; input[3201] = 85; input[3202] = 40; input[3205] = 142;
+    input[3206] = 68; input[3207] = 51; input[3208] = 34; input[3209] = 17;
+    let result: IdtDecodeResult = interrupt_bytes::decode_idt(&input);
+    table_roundtrip(result)
+}
+machine test_result() -> i32 {
+    transition table_cases() {
+        true -> (0) _ -> (1)
+    }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

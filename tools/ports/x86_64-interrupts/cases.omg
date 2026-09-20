@@ -1,0 +1,524 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Independent literal expectations; actual imported helper bodies are evaluated.
+module cases;
+use x86_values::interrupts;
+use x86_values::interrupts::StackIndex;
+use x86_values::interrupts::IdtIndexKind;
+use x86_values::interrupts::ExceptionVectorCheck;
+use x86_values::interrupt_bytes;
+use facts::x86_interrupts;
+use facts::x86_interrupts::EntryOptions;
+use facts::x86_interrupts::RawInterruptStackFrame;
+use facts::x86_interrupts::PageFaultErrorCode;
+use facts::x86_registers::SegmentSelector;
+use facts::x86_registers::RFlags;
+use facts::x86_exception_vectors;
+machine flag_cases_0() -> bool { x86_interrupts::PAGE_FAULT_PROTECTION_VIOLATION.raw == 1 &&
+x86_interrupts::PAGE_FAULT_CAUSED_BY_WRITE.raw == 2 &&
+x86_interrupts::PAGE_FAULT_USER_MODE.raw == 4 &&
+x86_interrupts::PAGE_FAULT_MALFORMED_TABLE.raw == 8 &&
+x86_interrupts::PAGE_FAULT_INSTRUCTION_FETCH.raw == 16 &&
+x86_interrupts::PAGE_FAULT_PROTECTION_KEY.raw == 32 &&
+x86_interrupts::PAGE_FAULT_SHADOW_STACK.raw == 64 &&
+x86_interrupts::PAGE_FAULT_HLAT.raw == 128 }
+machine flag_cases_1() -> bool { x86_interrupts::PAGE_FAULT_SGX.raw == 32768 &&
+x86_interrupts::PAGE_FAULT_RMP.raw == 2147483648 &&
+x86_interrupts::PAGE_FAULT_KNOWN_BITS == 2147516671 &&
+interrupts::page_fault_known(2147516671) &&
+!interrupts::page_fault_known(256) &&
+interrupts::page_fault_truncate(0xffffffffffffffff).raw == 2147516671 &&
+interrupts::page_fault_contains(PageFaultErrorCode { raw: 3 }, PageFaultErrorCode { raw: 1 }) &&
+!interrupts::page_fault_contains(PageFaultErrorCode { raw: 1 }, PageFaultErrorCode { raw: 2 }) }
+pub machine flag_cases() -> bool { flag_cases_0() && flag_cases_1() }
+machine stack_is(value: StackIndex, expected: u8) -> bool {
+ transition value { StackIndex::Dedicated { index } -> (index == expected) _ -> (false) }
+}
+machine option_case(index: u8 [0..=6], dpl: u8 [0..=3], present: bool, disable: bool, expected: u16) -> bool {
+ let minimal: EntryOptions = interrupts::options_minimal();
+ let selected: EntryOptions = interrupts::options_set_selector(minimal, SegmentSelector { raw: 43981 });
+ let stack: EntryOptions = interrupts::options_set_stack_index(selected, index);
+ let privilege: EntryOptions = interrupts::options_set_privilege(stack, dpl);
+ let visibility: EntryOptions = interrupts::options_set_present(privilege, present);
+ let result: EntryOptions = interrupts::options_disable_interrupts(visibility, disable);
+ result.selector.raw == 43981 && result.bits == expected && interrupts::options_present(result) == present &&
+ interrupts::options_privilege(result) == dpl && stack_is(interrupts::options_stack_index(result), index)
+}
+machine option_cases_0() -> bool { interrupts::options_stack_index(interrupts::options_minimal()) in StackIndex::Current &&
+option_case(0, 0, false, false, 3841) &&
+option_case(0, 0, false, true, 3585) &&
+option_case(0, 0, true, false, 36609) &&
+option_case(0, 0, true, true, 36353) &&
+option_case(0, 1, false, false, 12033) &&
+option_case(0, 1, false, true, 11777) &&
+option_case(0, 1, true, false, 44801) }
+machine option_cases_1() -> bool { option_case(0, 1, true, true, 44545) &&
+option_case(0, 2, false, false, 20225) &&
+option_case(0, 2, false, true, 19969) &&
+option_case(0, 2, true, false, 52993) &&
+option_case(0, 2, true, true, 52737) &&
+option_case(0, 3, false, false, 28417) &&
+option_case(0, 3, false, true, 28161) &&
+option_case(0, 3, true, false, 61185) }
+machine option_cases_2() -> bool { option_case(0, 3, true, true, 60929) &&
+option_case(1, 0, false, false, 3842) &&
+option_case(1, 0, false, true, 3586) &&
+option_case(1, 0, true, false, 36610) &&
+option_case(1, 0, true, true, 36354) &&
+option_case(1, 1, false, false, 12034) &&
+option_case(1, 1, false, true, 11778) &&
+option_case(1, 1, true, false, 44802) }
+machine option_cases_3() -> bool { option_case(1, 1, true, true, 44546) &&
+option_case(1, 2, false, false, 20226) &&
+option_case(1, 2, false, true, 19970) &&
+option_case(1, 2, true, false, 52994) &&
+option_case(1, 2, true, true, 52738) &&
+option_case(1, 3, false, false, 28418) &&
+option_case(1, 3, false, true, 28162) &&
+option_case(1, 3, true, false, 61186) }
+machine option_cases_4() -> bool { option_case(1, 3, true, true, 60930) &&
+option_case(2, 0, false, false, 3843) &&
+option_case(2, 0, false, true, 3587) &&
+option_case(2, 0, true, false, 36611) &&
+option_case(2, 0, true, true, 36355) &&
+option_case(2, 1, false, false, 12035) &&
+option_case(2, 1, false, true, 11779) &&
+option_case(2, 1, true, false, 44803) }
+machine option_cases_5() -> bool { option_case(2, 1, true, true, 44547) &&
+option_case(2, 2, false, false, 20227) &&
+option_case(2, 2, false, true, 19971) &&
+option_case(2, 2, true, false, 52995) &&
+option_case(2, 2, true, true, 52739) &&
+option_case(2, 3, false, false, 28419) &&
+option_case(2, 3, false, true, 28163) &&
+option_case(2, 3, true, false, 61187) }
+machine option_cases_6() -> bool { option_case(2, 3, true, true, 60931) &&
+option_case(3, 0, false, false, 3844) &&
+option_case(3, 0, false, true, 3588) &&
+option_case(3, 0, true, false, 36612) &&
+option_case(3, 0, true, true, 36356) &&
+option_case(3, 1, false, false, 12036) &&
+option_case(3, 1, false, true, 11780) &&
+option_case(3, 1, true, false, 44804) }
+machine option_cases_7() -> bool { option_case(3, 1, true, true, 44548) &&
+option_case(3, 2, false, false, 20228) &&
+option_case(3, 2, false, true, 19972) &&
+option_case(3, 2, true, false, 52996) &&
+option_case(3, 2, true, true, 52740) &&
+option_case(3, 3, false, false, 28420) &&
+option_case(3, 3, false, true, 28164) &&
+option_case(3, 3, true, false, 61188) }
+machine option_cases_8() -> bool { option_case(3, 3, true, true, 60932) &&
+option_case(4, 0, false, false, 3845) &&
+option_case(4, 0, false, true, 3589) &&
+option_case(4, 0, true, false, 36613) &&
+option_case(4, 0, true, true, 36357) &&
+option_case(4, 1, false, false, 12037) &&
+option_case(4, 1, false, true, 11781) &&
+option_case(4, 1, true, false, 44805) }
+machine option_cases_9() -> bool { option_case(4, 1, true, true, 44549) &&
+option_case(4, 2, false, false, 20229) &&
+option_case(4, 2, false, true, 19973) &&
+option_case(4, 2, true, false, 52997) &&
+option_case(4, 2, true, true, 52741) &&
+option_case(4, 3, false, false, 28421) &&
+option_case(4, 3, false, true, 28165) &&
+option_case(4, 3, true, false, 61189) }
+machine option_cases_10() -> bool { option_case(4, 3, true, true, 60933) &&
+option_case(5, 0, false, false, 3846) &&
+option_case(5, 0, false, true, 3590) &&
+option_case(5, 0, true, false, 36614) &&
+option_case(5, 0, true, true, 36358) &&
+option_case(5, 1, false, false, 12038) &&
+option_case(5, 1, false, true, 11782) &&
+option_case(5, 1, true, false, 44806) }
+machine option_cases_11() -> bool { option_case(5, 1, true, true, 44550) &&
+option_case(5, 2, false, false, 20230) &&
+option_case(5, 2, false, true, 19974) &&
+option_case(5, 2, true, false, 52998) &&
+option_case(5, 2, true, true, 52742) &&
+option_case(5, 3, false, false, 28422) &&
+option_case(5, 3, false, true, 28166) &&
+option_case(5, 3, true, false, 61190) }
+machine option_cases_12() -> bool { option_case(5, 3, true, true, 60934) &&
+option_case(6, 0, false, false, 3847) &&
+option_case(6, 0, false, true, 3591) &&
+option_case(6, 0, true, false, 36615) &&
+option_case(6, 0, true, true, 36359) &&
+option_case(6, 1, false, false, 12039) &&
+option_case(6, 1, false, true, 11783) &&
+option_case(6, 1, true, false, 44807) }
+machine option_cases_13() -> bool { option_case(6, 1, true, true, 44551) &&
+option_case(6, 2, false, false, 20231) &&
+option_case(6, 2, false, true, 19975) &&
+option_case(6, 2, true, false, 52999) &&
+option_case(6, 2, true, true, 52743) &&
+option_case(6, 3, false, false, 28423) &&
+option_case(6, 3, false, true, 28167) &&
+option_case(6, 3, true, false, 61191) }
+machine option_cases_14() -> bool { option_case(6, 3, true, true, 60935) }
+pub machine option_cases() -> bool { option_cases_0() && option_cases_1() && option_cases_2() && option_cases_3() && option_cases_4() && option_cases_5() && option_cases_6() && option_cases_7() && option_cases_8() && option_cases_9() && option_cases_10() && option_cases_11() && option_cases_12() && option_cases_13() && option_cases_14() }
+machine index_code(value: IdtIndexKind) -> u8 {
+ transition value { IdtIndexKind::Available -> (0) IdtIndexKind::Reserved -> (1) IdtIndexKind::ErrorCode -> (2) IdtIndexKind::Diverging -> (3) }
+}
+machine vector_check_is(value: ExceptionVectorCheck, expected: u8, valid: bool) -> bool {
+ transition value { ExceptionVectorCheck::Known { value } -> (value == expected && valid) ExceptionVectorCheck::Invalid { value } -> (value == expected && !valid) }
+}
+machine vector_cases_0() -> bool { (interrupts::exception_vector_known(0) == true && vector_check_is(interrupts::exception_vector_check(0), 0, true) && index_code(interrupts::idt_index_kind(0)) == 0) &&
+(interrupts::exception_vector_known(1) == true && vector_check_is(interrupts::exception_vector_check(1), 1, true) && index_code(interrupts::idt_index_kind(1)) == 0) &&
+(interrupts::exception_vector_known(2) == true && vector_check_is(interrupts::exception_vector_check(2), 2, true) && index_code(interrupts::idt_index_kind(2)) == 0) &&
+(interrupts::exception_vector_known(3) == true && vector_check_is(interrupts::exception_vector_check(3), 3, true) && index_code(interrupts::idt_index_kind(3)) == 0) &&
+(interrupts::exception_vector_known(4) == true && vector_check_is(interrupts::exception_vector_check(4), 4, true) && index_code(interrupts::idt_index_kind(4)) == 0) &&
+(interrupts::exception_vector_known(5) == true && vector_check_is(interrupts::exception_vector_check(5), 5, true) && index_code(interrupts::idt_index_kind(5)) == 0) &&
+(interrupts::exception_vector_known(6) == true && vector_check_is(interrupts::exception_vector_check(6), 6, true) && index_code(interrupts::idt_index_kind(6)) == 0) &&
+(interrupts::exception_vector_known(7) == true && vector_check_is(interrupts::exception_vector_check(7), 7, true) && index_code(interrupts::idt_index_kind(7)) == 0) }
+machine vector_cases_1() -> bool { (interrupts::exception_vector_known(8) == true && vector_check_is(interrupts::exception_vector_check(8), 8, true) && index_code(interrupts::idt_index_kind(8)) == 2) &&
+(interrupts::exception_vector_known(9) == false && vector_check_is(interrupts::exception_vector_check(9), 9, false) && index_code(interrupts::idt_index_kind(9)) == 0) &&
+(interrupts::exception_vector_known(10) == true && vector_check_is(interrupts::exception_vector_check(10), 10, true) && index_code(interrupts::idt_index_kind(10)) == 2) &&
+(interrupts::exception_vector_known(11) == true && vector_check_is(interrupts::exception_vector_check(11), 11, true) && index_code(interrupts::idt_index_kind(11)) == 2) &&
+(interrupts::exception_vector_known(12) == true && vector_check_is(interrupts::exception_vector_check(12), 12, true) && index_code(interrupts::idt_index_kind(12)) == 2) &&
+(interrupts::exception_vector_known(13) == true && vector_check_is(interrupts::exception_vector_check(13), 13, true) && index_code(interrupts::idt_index_kind(13)) == 2) &&
+(interrupts::exception_vector_known(14) == true && vector_check_is(interrupts::exception_vector_check(14), 14, true) && index_code(interrupts::idt_index_kind(14)) == 2) &&
+(interrupts::exception_vector_known(15) == false && vector_check_is(interrupts::exception_vector_check(15), 15, false) && index_code(interrupts::idt_index_kind(15)) == 1) }
+machine vector_cases_2() -> bool { (interrupts::exception_vector_known(16) == true && vector_check_is(interrupts::exception_vector_check(16), 16, true) && index_code(interrupts::idt_index_kind(16)) == 0) &&
+(interrupts::exception_vector_known(17) == true && vector_check_is(interrupts::exception_vector_check(17), 17, true) && index_code(interrupts::idt_index_kind(17)) == 2) &&
+(interrupts::exception_vector_known(18) == true && vector_check_is(interrupts::exception_vector_check(18), 18, true) && index_code(interrupts::idt_index_kind(18)) == 3) &&
+(interrupts::exception_vector_known(19) == true && vector_check_is(interrupts::exception_vector_check(19), 19, true) && index_code(interrupts::idt_index_kind(19)) == 0) &&
+(interrupts::exception_vector_known(20) == true && vector_check_is(interrupts::exception_vector_check(20), 20, true) && index_code(interrupts::idt_index_kind(20)) == 0) &&
+(interrupts::exception_vector_known(21) == true && vector_check_is(interrupts::exception_vector_check(21), 21, true) && index_code(interrupts::idt_index_kind(21)) == 2) &&
+(interrupts::exception_vector_known(22) == false && vector_check_is(interrupts::exception_vector_check(22), 22, false) && index_code(interrupts::idt_index_kind(22)) == 1) &&
+(interrupts::exception_vector_known(23) == false && vector_check_is(interrupts::exception_vector_check(23), 23, false) && index_code(interrupts::idt_index_kind(23)) == 1) }
+machine vector_cases_3() -> bool { (interrupts::exception_vector_known(24) == false && vector_check_is(interrupts::exception_vector_check(24), 24, false) && index_code(interrupts::idt_index_kind(24)) == 1) &&
+(interrupts::exception_vector_known(25) == false && vector_check_is(interrupts::exception_vector_check(25), 25, false) && index_code(interrupts::idt_index_kind(25)) == 1) &&
+(interrupts::exception_vector_known(26) == false && vector_check_is(interrupts::exception_vector_check(26), 26, false) && index_code(interrupts::idt_index_kind(26)) == 1) &&
+(interrupts::exception_vector_known(27) == false && vector_check_is(interrupts::exception_vector_check(27), 27, false) && index_code(interrupts::idt_index_kind(27)) == 1) &&
+(interrupts::exception_vector_known(28) == true && vector_check_is(interrupts::exception_vector_check(28), 28, true) && index_code(interrupts::idt_index_kind(28)) == 0) &&
+(interrupts::exception_vector_known(29) == true && vector_check_is(interrupts::exception_vector_check(29), 29, true) && index_code(interrupts::idt_index_kind(29)) == 2) &&
+(interrupts::exception_vector_known(30) == true && vector_check_is(interrupts::exception_vector_check(30), 30, true) && index_code(interrupts::idt_index_kind(30)) == 2) &&
+(interrupts::exception_vector_known(31) == false && vector_check_is(interrupts::exception_vector_check(31), 31, false) && index_code(interrupts::idt_index_kind(31)) == 1) }
+machine vector_cases_4() -> bool { (interrupts::exception_vector_known(32) == false && vector_check_is(interrupts::exception_vector_check(32), 32, false) && index_code(interrupts::idt_index_kind(32)) == 0) &&
+(interrupts::exception_vector_known(33) == false && vector_check_is(interrupts::exception_vector_check(33), 33, false) && index_code(interrupts::idt_index_kind(33)) == 0) &&
+(interrupts::exception_vector_known(34) == false && vector_check_is(interrupts::exception_vector_check(34), 34, false) && index_code(interrupts::idt_index_kind(34)) == 0) &&
+(interrupts::exception_vector_known(35) == false && vector_check_is(interrupts::exception_vector_check(35), 35, false) && index_code(interrupts::idt_index_kind(35)) == 0) &&
+(interrupts::exception_vector_known(36) == false && vector_check_is(interrupts::exception_vector_check(36), 36, false) && index_code(interrupts::idt_index_kind(36)) == 0) &&
+(interrupts::exception_vector_known(37) == false && vector_check_is(interrupts::exception_vector_check(37), 37, false) && index_code(interrupts::idt_index_kind(37)) == 0) &&
+(interrupts::exception_vector_known(38) == false && vector_check_is(interrupts::exception_vector_check(38), 38, false) && index_code(interrupts::idt_index_kind(38)) == 0) &&
+(interrupts::exception_vector_known(39) == false && vector_check_is(interrupts::exception_vector_check(39), 39, false) && index_code(interrupts::idt_index_kind(39)) == 0) }
+machine vector_cases_5() -> bool { (interrupts::exception_vector_known(40) == false && vector_check_is(interrupts::exception_vector_check(40), 40, false) && index_code(interrupts::idt_index_kind(40)) == 0) &&
+(interrupts::exception_vector_known(41) == false && vector_check_is(interrupts::exception_vector_check(41), 41, false) && index_code(interrupts::idt_index_kind(41)) == 0) &&
+(interrupts::exception_vector_known(42) == false && vector_check_is(interrupts::exception_vector_check(42), 42, false) && index_code(interrupts::idt_index_kind(42)) == 0) &&
+(interrupts::exception_vector_known(43) == false && vector_check_is(interrupts::exception_vector_check(43), 43, false) && index_code(interrupts::idt_index_kind(43)) == 0) &&
+(interrupts::exception_vector_known(44) == false && vector_check_is(interrupts::exception_vector_check(44), 44, false) && index_code(interrupts::idt_index_kind(44)) == 0) &&
+(interrupts::exception_vector_known(45) == false && vector_check_is(interrupts::exception_vector_check(45), 45, false) && index_code(interrupts::idt_index_kind(45)) == 0) &&
+(interrupts::exception_vector_known(46) == false && vector_check_is(interrupts::exception_vector_check(46), 46, false) && index_code(interrupts::idt_index_kind(46)) == 0) &&
+(interrupts::exception_vector_known(47) == false && vector_check_is(interrupts::exception_vector_check(47), 47, false) && index_code(interrupts::idt_index_kind(47)) == 0) }
+machine vector_cases_6() -> bool { (interrupts::exception_vector_known(48) == false && vector_check_is(interrupts::exception_vector_check(48), 48, false) && index_code(interrupts::idt_index_kind(48)) == 0) &&
+(interrupts::exception_vector_known(49) == false && vector_check_is(interrupts::exception_vector_check(49), 49, false) && index_code(interrupts::idt_index_kind(49)) == 0) &&
+(interrupts::exception_vector_known(50) == false && vector_check_is(interrupts::exception_vector_check(50), 50, false) && index_code(interrupts::idt_index_kind(50)) == 0) &&
+(interrupts::exception_vector_known(51) == false && vector_check_is(interrupts::exception_vector_check(51), 51, false) && index_code(interrupts::idt_index_kind(51)) == 0) &&
+(interrupts::exception_vector_known(52) == false && vector_check_is(interrupts::exception_vector_check(52), 52, false) && index_code(interrupts::idt_index_kind(52)) == 0) &&
+(interrupts::exception_vector_known(53) == false && vector_check_is(interrupts::exception_vector_check(53), 53, false) && index_code(interrupts::idt_index_kind(53)) == 0) &&
+(interrupts::exception_vector_known(54) == false && vector_check_is(interrupts::exception_vector_check(54), 54, false) && index_code(interrupts::idt_index_kind(54)) == 0) &&
+(interrupts::exception_vector_known(55) == false && vector_check_is(interrupts::exception_vector_check(55), 55, false) && index_code(interrupts::idt_index_kind(55)) == 0) }
+machine vector_cases_7() -> bool { (interrupts::exception_vector_known(56) == false && vector_check_is(interrupts::exception_vector_check(56), 56, false) && index_code(interrupts::idt_index_kind(56)) == 0) &&
+(interrupts::exception_vector_known(57) == false && vector_check_is(interrupts::exception_vector_check(57), 57, false) && index_code(interrupts::idt_index_kind(57)) == 0) &&
+(interrupts::exception_vector_known(58) == false && vector_check_is(interrupts::exception_vector_check(58), 58, false) && index_code(interrupts::idt_index_kind(58)) == 0) &&
+(interrupts::exception_vector_known(59) == false && vector_check_is(interrupts::exception_vector_check(59), 59, false) && index_code(interrupts::idt_index_kind(59)) == 0) &&
+(interrupts::exception_vector_known(60) == false && vector_check_is(interrupts::exception_vector_check(60), 60, false) && index_code(interrupts::idt_index_kind(60)) == 0) &&
+(interrupts::exception_vector_known(61) == false && vector_check_is(interrupts::exception_vector_check(61), 61, false) && index_code(interrupts::idt_index_kind(61)) == 0) &&
+(interrupts::exception_vector_known(62) == false && vector_check_is(interrupts::exception_vector_check(62), 62, false) && index_code(interrupts::idt_index_kind(62)) == 0) &&
+(interrupts::exception_vector_known(63) == false && vector_check_is(interrupts::exception_vector_check(63), 63, false) && index_code(interrupts::idt_index_kind(63)) == 0) }
+machine vector_cases_8() -> bool { (interrupts::exception_vector_known(64) == false && vector_check_is(interrupts::exception_vector_check(64), 64, false) && index_code(interrupts::idt_index_kind(64)) == 0) &&
+(interrupts::exception_vector_known(65) == false && vector_check_is(interrupts::exception_vector_check(65), 65, false) && index_code(interrupts::idt_index_kind(65)) == 0) &&
+(interrupts::exception_vector_known(66) == false && vector_check_is(interrupts::exception_vector_check(66), 66, false) && index_code(interrupts::idt_index_kind(66)) == 0) &&
+(interrupts::exception_vector_known(67) == false && vector_check_is(interrupts::exception_vector_check(67), 67, false) && index_code(interrupts::idt_index_kind(67)) == 0) &&
+(interrupts::exception_vector_known(68) == false && vector_check_is(interrupts::exception_vector_check(68), 68, false) && index_code(interrupts::idt_index_kind(68)) == 0) &&
+(interrupts::exception_vector_known(69) == false && vector_check_is(interrupts::exception_vector_check(69), 69, false) && index_code(interrupts::idt_index_kind(69)) == 0) &&
+(interrupts::exception_vector_known(70) == false && vector_check_is(interrupts::exception_vector_check(70), 70, false) && index_code(interrupts::idt_index_kind(70)) == 0) &&
+(interrupts::exception_vector_known(71) == false && vector_check_is(interrupts::exception_vector_check(71), 71, false) && index_code(interrupts::idt_index_kind(71)) == 0) }
+machine vector_cases_9() -> bool { (interrupts::exception_vector_known(72) == false && vector_check_is(interrupts::exception_vector_check(72), 72, false) && index_code(interrupts::idt_index_kind(72)) == 0) &&
+(interrupts::exception_vector_known(73) == false && vector_check_is(interrupts::exception_vector_check(73), 73, false) && index_code(interrupts::idt_index_kind(73)) == 0) &&
+(interrupts::exception_vector_known(74) == false && vector_check_is(interrupts::exception_vector_check(74), 74, false) && index_code(interrupts::idt_index_kind(74)) == 0) &&
+(interrupts::exception_vector_known(75) == false && vector_check_is(interrupts::exception_vector_check(75), 75, false) && index_code(interrupts::idt_index_kind(75)) == 0) &&
+(interrupts::exception_vector_known(76) == false && vector_check_is(interrupts::exception_vector_check(76), 76, false) && index_code(interrupts::idt_index_kind(76)) == 0) &&
+(interrupts::exception_vector_known(77) == false && vector_check_is(interrupts::exception_vector_check(77), 77, false) && index_code(interrupts::idt_index_kind(77)) == 0) &&
+(interrupts::exception_vector_known(78) == false && vector_check_is(interrupts::exception_vector_check(78), 78, false) && index_code(interrupts::idt_index_kind(78)) == 0) &&
+(interrupts::exception_vector_known(79) == false && vector_check_is(interrupts::exception_vector_check(79), 79, false) && index_code(interrupts::idt_index_kind(79)) == 0) }
+machine vector_cases_10() -> bool { (interrupts::exception_vector_known(80) == false && vector_check_is(interrupts::exception_vector_check(80), 80, false) && index_code(interrupts::idt_index_kind(80)) == 0) &&
+(interrupts::exception_vector_known(81) == false && vector_check_is(interrupts::exception_vector_check(81), 81, false) && index_code(interrupts::idt_index_kind(81)) == 0) &&
+(interrupts::exception_vector_known(82) == false && vector_check_is(interrupts::exception_vector_check(82), 82, false) && index_code(interrupts::idt_index_kind(82)) == 0) &&
+(interrupts::exception_vector_known(83) == false && vector_check_is(interrupts::exception_vector_check(83), 83, false) && index_code(interrupts::idt_index_kind(83)) == 0) &&
+(interrupts::exception_vector_known(84) == false && vector_check_is(interrupts::exception_vector_check(84), 84, false) && index_code(interrupts::idt_index_kind(84)) == 0) &&
+(interrupts::exception_vector_known(85) == false && vector_check_is(interrupts::exception_vector_check(85), 85, false) && index_code(interrupts::idt_index_kind(85)) == 0) &&
+(interrupts::exception_vector_known(86) == false && vector_check_is(interrupts::exception_vector_check(86), 86, false) && index_code(interrupts::idt_index_kind(86)) == 0) &&
+(interrupts::exception_vector_known(87) == false && vector_check_is(interrupts::exception_vector_check(87), 87, false) && index_code(interrupts::idt_index_kind(87)) == 0) }
+machine vector_cases_11() -> bool { (interrupts::exception_vector_known(88) == false && vector_check_is(interrupts::exception_vector_check(88), 88, false) && index_code(interrupts::idt_index_kind(88)) == 0) &&
+(interrupts::exception_vector_known(89) == false && vector_check_is(interrupts::exception_vector_check(89), 89, false) && index_code(interrupts::idt_index_kind(89)) == 0) &&
+(interrupts::exception_vector_known(90) == false && vector_check_is(interrupts::exception_vector_check(90), 90, false) && index_code(interrupts::idt_index_kind(90)) == 0) &&
+(interrupts::exception_vector_known(91) == false && vector_check_is(interrupts::exception_vector_check(91), 91, false) && index_code(interrupts::idt_index_kind(91)) == 0) &&
+(interrupts::exception_vector_known(92) == false && vector_check_is(interrupts::exception_vector_check(92), 92, false) && index_code(interrupts::idt_index_kind(92)) == 0) &&
+(interrupts::exception_vector_known(93) == false && vector_check_is(interrupts::exception_vector_check(93), 93, false) && index_code(interrupts::idt_index_kind(93)) == 0) &&
+(interrupts::exception_vector_known(94) == false && vector_check_is(interrupts::exception_vector_check(94), 94, false) && index_code(interrupts::idt_index_kind(94)) == 0) &&
+(interrupts::exception_vector_known(95) == false && vector_check_is(interrupts::exception_vector_check(95), 95, false) && index_code(interrupts::idt_index_kind(95)) == 0) }
+machine vector_cases_12() -> bool { (interrupts::exception_vector_known(96) == false && vector_check_is(interrupts::exception_vector_check(96), 96, false) && index_code(interrupts::idt_index_kind(96)) == 0) &&
+(interrupts::exception_vector_known(97) == false && vector_check_is(interrupts::exception_vector_check(97), 97, false) && index_code(interrupts::idt_index_kind(97)) == 0) &&
+(interrupts::exception_vector_known(98) == false && vector_check_is(interrupts::exception_vector_check(98), 98, false) && index_code(interrupts::idt_index_kind(98)) == 0) &&
+(interrupts::exception_vector_known(99) == false && vector_check_is(interrupts::exception_vector_check(99), 99, false) && index_code(interrupts::idt_index_kind(99)) == 0) &&
+(interrupts::exception_vector_known(100) == false && vector_check_is(interrupts::exception_vector_check(100), 100, false) && index_code(interrupts::idt_index_kind(100)) == 0) &&
+(interrupts::exception_vector_known(101) == false && vector_check_is(interrupts::exception_vector_check(101), 101, false) && index_code(interrupts::idt_index_kind(101)) == 0) &&
+(interrupts::exception_vector_known(102) == false && vector_check_is(interrupts::exception_vector_check(102), 102, false) && index_code(interrupts::idt_index_kind(102)) == 0) &&
+(interrupts::exception_vector_known(103) == false && vector_check_is(interrupts::exception_vector_check(103), 103, false) && index_code(interrupts::idt_index_kind(103)) == 0) }
+machine vector_cases_13() -> bool { (interrupts::exception_vector_known(104) == false && vector_check_is(interrupts::exception_vector_check(104), 104, false) && index_code(interrupts::idt_index_kind(104)) == 0) &&
+(interrupts::exception_vector_known(105) == false && vector_check_is(interrupts::exception_vector_check(105), 105, false) && index_code(interrupts::idt_index_kind(105)) == 0) &&
+(interrupts::exception_vector_known(106) == false && vector_check_is(interrupts::exception_vector_check(106), 106, false) && index_code(interrupts::idt_index_kind(106)) == 0) &&
+(interrupts::exception_vector_known(107) == false && vector_check_is(interrupts::exception_vector_check(107), 107, false) && index_code(interrupts::idt_index_kind(107)) == 0) &&
+(interrupts::exception_vector_known(108) == false && vector_check_is(interrupts::exception_vector_check(108), 108, false) && index_code(interrupts::idt_index_kind(108)) == 0) &&
+(interrupts::exception_vector_known(109) == false && vector_check_is(interrupts::exception_vector_check(109), 109, false) && index_code(interrupts::idt_index_kind(109)) == 0) &&
+(interrupts::exception_vector_known(110) == false && vector_check_is(interrupts::exception_vector_check(110), 110, false) && index_code(interrupts::idt_index_kind(110)) == 0) &&
+(interrupts::exception_vector_known(111) == false && vector_check_is(interrupts::exception_vector_check(111), 111, false) && index_code(interrupts::idt_index_kind(111)) == 0) }
+machine vector_cases_14() -> bool { (interrupts::exception_vector_known(112) == false && vector_check_is(interrupts::exception_vector_check(112), 112, false) && index_code(interrupts::idt_index_kind(112)) == 0) &&
+(interrupts::exception_vector_known(113) == false && vector_check_is(interrupts::exception_vector_check(113), 113, false) && index_code(interrupts::idt_index_kind(113)) == 0) &&
+(interrupts::exception_vector_known(114) == false && vector_check_is(interrupts::exception_vector_check(114), 114, false) && index_code(interrupts::idt_index_kind(114)) == 0) &&
+(interrupts::exception_vector_known(115) == false && vector_check_is(interrupts::exception_vector_check(115), 115, false) && index_code(interrupts::idt_index_kind(115)) == 0) &&
+(interrupts::exception_vector_known(116) == false && vector_check_is(interrupts::exception_vector_check(116), 116, false) && index_code(interrupts::idt_index_kind(116)) == 0) &&
+(interrupts::exception_vector_known(117) == false && vector_check_is(interrupts::exception_vector_check(117), 117, false) && index_code(interrupts::idt_index_kind(117)) == 0) &&
+(interrupts::exception_vector_known(118) == false && vector_check_is(interrupts::exception_vector_check(118), 118, false) && index_code(interrupts::idt_index_kind(118)) == 0) &&
+(interrupts::exception_vector_known(119) == false && vector_check_is(interrupts::exception_vector_check(119), 119, false) && index_code(interrupts::idt_index_kind(119)) == 0) }
+machine vector_cases_15() -> bool { (interrupts::exception_vector_known(120) == false && vector_check_is(interrupts::exception_vector_check(120), 120, false) && index_code(interrupts::idt_index_kind(120)) == 0) &&
+(interrupts::exception_vector_known(121) == false && vector_check_is(interrupts::exception_vector_check(121), 121, false) && index_code(interrupts::idt_index_kind(121)) == 0) &&
+(interrupts::exception_vector_known(122) == false && vector_check_is(interrupts::exception_vector_check(122), 122, false) && index_code(interrupts::idt_index_kind(122)) == 0) &&
+(interrupts::exception_vector_known(123) == false && vector_check_is(interrupts::exception_vector_check(123), 123, false) && index_code(interrupts::idt_index_kind(123)) == 0) &&
+(interrupts::exception_vector_known(124) == false && vector_check_is(interrupts::exception_vector_check(124), 124, false) && index_code(interrupts::idt_index_kind(124)) == 0) &&
+(interrupts::exception_vector_known(125) == false && vector_check_is(interrupts::exception_vector_check(125), 125, false) && index_code(interrupts::idt_index_kind(125)) == 0) &&
+(interrupts::exception_vector_known(126) == false && vector_check_is(interrupts::exception_vector_check(126), 126, false) && index_code(interrupts::idt_index_kind(126)) == 0) &&
+(interrupts::exception_vector_known(127) == false && vector_check_is(interrupts::exception_vector_check(127), 127, false) && index_code(interrupts::idt_index_kind(127)) == 0) }
+machine vector_cases_16() -> bool { (interrupts::exception_vector_known(128) == false && vector_check_is(interrupts::exception_vector_check(128), 128, false) && index_code(interrupts::idt_index_kind(128)) == 0) &&
+(interrupts::exception_vector_known(129) == false && vector_check_is(interrupts::exception_vector_check(129), 129, false) && index_code(interrupts::idt_index_kind(129)) == 0) &&
+(interrupts::exception_vector_known(130) == false && vector_check_is(interrupts::exception_vector_check(130), 130, false) && index_code(interrupts::idt_index_kind(130)) == 0) &&
+(interrupts::exception_vector_known(131) == false && vector_check_is(interrupts::exception_vector_check(131), 131, false) && index_code(interrupts::idt_index_kind(131)) == 0) &&
+(interrupts::exception_vector_known(132) == false && vector_check_is(interrupts::exception_vector_check(132), 132, false) && index_code(interrupts::idt_index_kind(132)) == 0) &&
+(interrupts::exception_vector_known(133) == false && vector_check_is(interrupts::exception_vector_check(133), 133, false) && index_code(interrupts::idt_index_kind(133)) == 0) &&
+(interrupts::exception_vector_known(134) == false && vector_check_is(interrupts::exception_vector_check(134), 134, false) && index_code(interrupts::idt_index_kind(134)) == 0) &&
+(interrupts::exception_vector_known(135) == false && vector_check_is(interrupts::exception_vector_check(135), 135, false) && index_code(interrupts::idt_index_kind(135)) == 0) }
+machine vector_cases_17() -> bool { (interrupts::exception_vector_known(136) == false && vector_check_is(interrupts::exception_vector_check(136), 136, false) && index_code(interrupts::idt_index_kind(136)) == 0) &&
+(interrupts::exception_vector_known(137) == false && vector_check_is(interrupts::exception_vector_check(137), 137, false) && index_code(interrupts::idt_index_kind(137)) == 0) &&
+(interrupts::exception_vector_known(138) == false && vector_check_is(interrupts::exception_vector_check(138), 138, false) && index_code(interrupts::idt_index_kind(138)) == 0) &&
+(interrupts::exception_vector_known(139) == false && vector_check_is(interrupts::exception_vector_check(139), 139, false) && index_code(interrupts::idt_index_kind(139)) == 0) &&
+(interrupts::exception_vector_known(140) == false && vector_check_is(interrupts::exception_vector_check(140), 140, false) && index_code(interrupts::idt_index_kind(140)) == 0) &&
+(interrupts::exception_vector_known(141) == false && vector_check_is(interrupts::exception_vector_check(141), 141, false) && index_code(interrupts::idt_index_kind(141)) == 0) &&
+(interrupts::exception_vector_known(142) == false && vector_check_is(interrupts::exception_vector_check(142), 142, false) && index_code(interrupts::idt_index_kind(142)) == 0) &&
+(interrupts::exception_vector_known(143) == false && vector_check_is(interrupts::exception_vector_check(143), 143, false) && index_code(interrupts::idt_index_kind(143)) == 0) }
+machine vector_cases_18() -> bool { (interrupts::exception_vector_known(144) == false && vector_check_is(interrupts::exception_vector_check(144), 144, false) && index_code(interrupts::idt_index_kind(144)) == 0) &&
+(interrupts::exception_vector_known(145) == false && vector_check_is(interrupts::exception_vector_check(145), 145, false) && index_code(interrupts::idt_index_kind(145)) == 0) &&
+(interrupts::exception_vector_known(146) == false && vector_check_is(interrupts::exception_vector_check(146), 146, false) && index_code(interrupts::idt_index_kind(146)) == 0) &&
+(interrupts::exception_vector_known(147) == false && vector_check_is(interrupts::exception_vector_check(147), 147, false) && index_code(interrupts::idt_index_kind(147)) == 0) &&
+(interrupts::exception_vector_known(148) == false && vector_check_is(interrupts::exception_vector_check(148), 148, false) && index_code(interrupts::idt_index_kind(148)) == 0) &&
+(interrupts::exception_vector_known(149) == false && vector_check_is(interrupts::exception_vector_check(149), 149, false) && index_code(interrupts::idt_index_kind(149)) == 0) &&
+(interrupts::exception_vector_known(150) == false && vector_check_is(interrupts::exception_vector_check(150), 150, false) && index_code(interrupts::idt_index_kind(150)) == 0) &&
+(interrupts::exception_vector_known(151) == false && vector_check_is(interrupts::exception_vector_check(151), 151, false) && index_code(interrupts::idt_index_kind(151)) == 0) }
+machine vector_cases_19() -> bool { (interrupts::exception_vector_known(152) == false && vector_check_is(interrupts::exception_vector_check(152), 152, false) && index_code(interrupts::idt_index_kind(152)) == 0) &&
+(interrupts::exception_vector_known(153) == false && vector_check_is(interrupts::exception_vector_check(153), 153, false) && index_code(interrupts::idt_index_kind(153)) == 0) &&
+(interrupts::exception_vector_known(154) == false && vector_check_is(interrupts::exception_vector_check(154), 154, false) && index_code(interrupts::idt_index_kind(154)) == 0) &&
+(interrupts::exception_vector_known(155) == false && vector_check_is(interrupts::exception_vector_check(155), 155, false) && index_code(interrupts::idt_index_kind(155)) == 0) &&
+(interrupts::exception_vector_known(156) == false && vector_check_is(interrupts::exception_vector_check(156), 156, false) && index_code(interrupts::idt_index_kind(156)) == 0) &&
+(interrupts::exception_vector_known(157) == false && vector_check_is(interrupts::exception_vector_check(157), 157, false) && index_code(interrupts::idt_index_kind(157)) == 0) &&
+(interrupts::exception_vector_known(158) == false && vector_check_is(interrupts::exception_vector_check(158), 158, false) && index_code(interrupts::idt_index_kind(158)) == 0) &&
+(interrupts::exception_vector_known(159) == false && vector_check_is(interrupts::exception_vector_check(159), 159, false) && index_code(interrupts::idt_index_kind(159)) == 0) }
+machine vector_cases_20() -> bool { (interrupts::exception_vector_known(160) == false && vector_check_is(interrupts::exception_vector_check(160), 160, false) && index_code(interrupts::idt_index_kind(160)) == 0) &&
+(interrupts::exception_vector_known(161) == false && vector_check_is(interrupts::exception_vector_check(161), 161, false) && index_code(interrupts::idt_index_kind(161)) == 0) &&
+(interrupts::exception_vector_known(162) == false && vector_check_is(interrupts::exception_vector_check(162), 162, false) && index_code(interrupts::idt_index_kind(162)) == 0) &&
+(interrupts::exception_vector_known(163) == false && vector_check_is(interrupts::exception_vector_check(163), 163, false) && index_code(interrupts::idt_index_kind(163)) == 0) &&
+(interrupts::exception_vector_known(164) == false && vector_check_is(interrupts::exception_vector_check(164), 164, false) && index_code(interrupts::idt_index_kind(164)) == 0) &&
+(interrupts::exception_vector_known(165) == false && vector_check_is(interrupts::exception_vector_check(165), 165, false) && index_code(interrupts::idt_index_kind(165)) == 0) &&
+(interrupts::exception_vector_known(166) == false && vector_check_is(interrupts::exception_vector_check(166), 166, false) && index_code(interrupts::idt_index_kind(166)) == 0) &&
+(interrupts::exception_vector_known(167) == false && vector_check_is(interrupts::exception_vector_check(167), 167, false) && index_code(interrupts::idt_index_kind(167)) == 0) }
+machine vector_cases_21() -> bool { (interrupts::exception_vector_known(168) == false && vector_check_is(interrupts::exception_vector_check(168), 168, false) && index_code(interrupts::idt_index_kind(168)) == 0) &&
+(interrupts::exception_vector_known(169) == false && vector_check_is(interrupts::exception_vector_check(169), 169, false) && index_code(interrupts::idt_index_kind(169)) == 0) &&
+(interrupts::exception_vector_known(170) == false && vector_check_is(interrupts::exception_vector_check(170), 170, false) && index_code(interrupts::idt_index_kind(170)) == 0) &&
+(interrupts::exception_vector_known(171) == false && vector_check_is(interrupts::exception_vector_check(171), 171, false) && index_code(interrupts::idt_index_kind(171)) == 0) &&
+(interrupts::exception_vector_known(172) == false && vector_check_is(interrupts::exception_vector_check(172), 172, false) && index_code(interrupts::idt_index_kind(172)) == 0) &&
+(interrupts::exception_vector_known(173) == false && vector_check_is(interrupts::exception_vector_check(173), 173, false) && index_code(interrupts::idt_index_kind(173)) == 0) &&
+(interrupts::exception_vector_known(174) == false && vector_check_is(interrupts::exception_vector_check(174), 174, false) && index_code(interrupts::idt_index_kind(174)) == 0) &&
+(interrupts::exception_vector_known(175) == false && vector_check_is(interrupts::exception_vector_check(175), 175, false) && index_code(interrupts::idt_index_kind(175)) == 0) }
+machine vector_cases_22() -> bool { (interrupts::exception_vector_known(176) == false && vector_check_is(interrupts::exception_vector_check(176), 176, false) && index_code(interrupts::idt_index_kind(176)) == 0) &&
+(interrupts::exception_vector_known(177) == false && vector_check_is(interrupts::exception_vector_check(177), 177, false) && index_code(interrupts::idt_index_kind(177)) == 0) &&
+(interrupts::exception_vector_known(178) == false && vector_check_is(interrupts::exception_vector_check(178), 178, false) && index_code(interrupts::idt_index_kind(178)) == 0) &&
+(interrupts::exception_vector_known(179) == false && vector_check_is(interrupts::exception_vector_check(179), 179, false) && index_code(interrupts::idt_index_kind(179)) == 0) &&
+(interrupts::exception_vector_known(180) == false && vector_check_is(interrupts::exception_vector_check(180), 180, false) && index_code(interrupts::idt_index_kind(180)) == 0) &&
+(interrupts::exception_vector_known(181) == false && vector_check_is(interrupts::exception_vector_check(181), 181, false) && index_code(interrupts::idt_index_kind(181)) == 0) &&
+(interrupts::exception_vector_known(182) == false && vector_check_is(interrupts::exception_vector_check(182), 182, false) && index_code(interrupts::idt_index_kind(182)) == 0) &&
+(interrupts::exception_vector_known(183) == false && vector_check_is(interrupts::exception_vector_check(183), 183, false) && index_code(interrupts::idt_index_kind(183)) == 0) }
+machine vector_cases_23() -> bool { (interrupts::exception_vector_known(184) == false && vector_check_is(interrupts::exception_vector_check(184), 184, false) && index_code(interrupts::idt_index_kind(184)) == 0) &&
+(interrupts::exception_vector_known(185) == false && vector_check_is(interrupts::exception_vector_check(185), 185, false) && index_code(interrupts::idt_index_kind(185)) == 0) &&
+(interrupts::exception_vector_known(186) == false && vector_check_is(interrupts::exception_vector_check(186), 186, false) && index_code(interrupts::idt_index_kind(186)) == 0) &&
+(interrupts::exception_vector_known(187) == false && vector_check_is(interrupts::exception_vector_check(187), 187, false) && index_code(interrupts::idt_index_kind(187)) == 0) &&
+(interrupts::exception_vector_known(188) == false && vector_check_is(interrupts::exception_vector_check(188), 188, false) && index_code(interrupts::idt_index_kind(188)) == 0) &&
+(interrupts::exception_vector_known(189) == false && vector_check_is(interrupts::exception_vector_check(189), 189, false) && index_code(interrupts::idt_index_kind(189)) == 0) &&
+(interrupts::exception_vector_known(190) == false && vector_check_is(interrupts::exception_vector_check(190), 190, false) && index_code(interrupts::idt_index_kind(190)) == 0) &&
+(interrupts::exception_vector_known(191) == false && vector_check_is(interrupts::exception_vector_check(191), 191, false) && index_code(interrupts::idt_index_kind(191)) == 0) }
+machine vector_cases_24() -> bool { (interrupts::exception_vector_known(192) == false && vector_check_is(interrupts::exception_vector_check(192), 192, false) && index_code(interrupts::idt_index_kind(192)) == 0) &&
+(interrupts::exception_vector_known(193) == false && vector_check_is(interrupts::exception_vector_check(193), 193, false) && index_code(interrupts::idt_index_kind(193)) == 0) &&
+(interrupts::exception_vector_known(194) == false && vector_check_is(interrupts::exception_vector_check(194), 194, false) && index_code(interrupts::idt_index_kind(194)) == 0) &&
+(interrupts::exception_vector_known(195) == false && vector_check_is(interrupts::exception_vector_check(195), 195, false) && index_code(interrupts::idt_index_kind(195)) == 0) &&
+(interrupts::exception_vector_known(196) == false && vector_check_is(interrupts::exception_vector_check(196), 196, false) && index_code(interrupts::idt_index_kind(196)) == 0) &&
+(interrupts::exception_vector_known(197) == false && vector_check_is(interrupts::exception_vector_check(197), 197, false) && index_code(interrupts::idt_index_kind(197)) == 0) &&
+(interrupts::exception_vector_known(198) == false && vector_check_is(interrupts::exception_vector_check(198), 198, false) && index_code(interrupts::idt_index_kind(198)) == 0) &&
+(interrupts::exception_vector_known(199) == false && vector_check_is(interrupts::exception_vector_check(199), 199, false) && index_code(interrupts::idt_index_kind(199)) == 0) }
+machine vector_cases_25() -> bool { (interrupts::exception_vector_known(200) == false && vector_check_is(interrupts::exception_vector_check(200), 200, false) && index_code(interrupts::idt_index_kind(200)) == 0) &&
+(interrupts::exception_vector_known(201) == false && vector_check_is(interrupts::exception_vector_check(201), 201, false) && index_code(interrupts::idt_index_kind(201)) == 0) &&
+(interrupts::exception_vector_known(202) == false && vector_check_is(interrupts::exception_vector_check(202), 202, false) && index_code(interrupts::idt_index_kind(202)) == 0) &&
+(interrupts::exception_vector_known(203) == false && vector_check_is(interrupts::exception_vector_check(203), 203, false) && index_code(interrupts::idt_index_kind(203)) == 0) &&
+(interrupts::exception_vector_known(204) == false && vector_check_is(interrupts::exception_vector_check(204), 204, false) && index_code(interrupts::idt_index_kind(204)) == 0) &&
+(interrupts::exception_vector_known(205) == false && vector_check_is(interrupts::exception_vector_check(205), 205, false) && index_code(interrupts::idt_index_kind(205)) == 0) &&
+(interrupts::exception_vector_known(206) == false && vector_check_is(interrupts::exception_vector_check(206), 206, false) && index_code(interrupts::idt_index_kind(206)) == 0) &&
+(interrupts::exception_vector_known(207) == false && vector_check_is(interrupts::exception_vector_check(207), 207, false) && index_code(interrupts::idt_index_kind(207)) == 0) }
+machine vector_cases_26() -> bool { (interrupts::exception_vector_known(208) == false && vector_check_is(interrupts::exception_vector_check(208), 208, false) && index_code(interrupts::idt_index_kind(208)) == 0) &&
+(interrupts::exception_vector_known(209) == false && vector_check_is(interrupts::exception_vector_check(209), 209, false) && index_code(interrupts::idt_index_kind(209)) == 0) &&
+(interrupts::exception_vector_known(210) == false && vector_check_is(interrupts::exception_vector_check(210), 210, false) && index_code(interrupts::idt_index_kind(210)) == 0) &&
+(interrupts::exception_vector_known(211) == false && vector_check_is(interrupts::exception_vector_check(211), 211, false) && index_code(interrupts::idt_index_kind(211)) == 0) &&
+(interrupts::exception_vector_known(212) == false && vector_check_is(interrupts::exception_vector_check(212), 212, false) && index_code(interrupts::idt_index_kind(212)) == 0) &&
+(interrupts::exception_vector_known(213) == false && vector_check_is(interrupts::exception_vector_check(213), 213, false) && index_code(interrupts::idt_index_kind(213)) == 0) &&
+(interrupts::exception_vector_known(214) == false && vector_check_is(interrupts::exception_vector_check(214), 214, false) && index_code(interrupts::idt_index_kind(214)) == 0) &&
+(interrupts::exception_vector_known(215) == false && vector_check_is(interrupts::exception_vector_check(215), 215, false) && index_code(interrupts::idt_index_kind(215)) == 0) }
+machine vector_cases_27() -> bool { (interrupts::exception_vector_known(216) == false && vector_check_is(interrupts::exception_vector_check(216), 216, false) && index_code(interrupts::idt_index_kind(216)) == 0) &&
+(interrupts::exception_vector_known(217) == false && vector_check_is(interrupts::exception_vector_check(217), 217, false) && index_code(interrupts::idt_index_kind(217)) == 0) &&
+(interrupts::exception_vector_known(218) == false && vector_check_is(interrupts::exception_vector_check(218), 218, false) && index_code(interrupts::idt_index_kind(218)) == 0) &&
+(interrupts::exception_vector_known(219) == false && vector_check_is(interrupts::exception_vector_check(219), 219, false) && index_code(interrupts::idt_index_kind(219)) == 0) &&
+(interrupts::exception_vector_known(220) == false && vector_check_is(interrupts::exception_vector_check(220), 220, false) && index_code(interrupts::idt_index_kind(220)) == 0) &&
+(interrupts::exception_vector_known(221) == false && vector_check_is(interrupts::exception_vector_check(221), 221, false) && index_code(interrupts::idt_index_kind(221)) == 0) &&
+(interrupts::exception_vector_known(222) == false && vector_check_is(interrupts::exception_vector_check(222), 222, false) && index_code(interrupts::idt_index_kind(222)) == 0) &&
+(interrupts::exception_vector_known(223) == false && vector_check_is(interrupts::exception_vector_check(223), 223, false) && index_code(interrupts::idt_index_kind(223)) == 0) }
+machine vector_cases_28() -> bool { (interrupts::exception_vector_known(224) == false && vector_check_is(interrupts::exception_vector_check(224), 224, false) && index_code(interrupts::idt_index_kind(224)) == 0) &&
+(interrupts::exception_vector_known(225) == false && vector_check_is(interrupts::exception_vector_check(225), 225, false) && index_code(interrupts::idt_index_kind(225)) == 0) &&
+(interrupts::exception_vector_known(226) == false && vector_check_is(interrupts::exception_vector_check(226), 226, false) && index_code(interrupts::idt_index_kind(226)) == 0) &&
+(interrupts::exception_vector_known(227) == false && vector_check_is(interrupts::exception_vector_check(227), 227, false) && index_code(interrupts::idt_index_kind(227)) == 0) &&
+(interrupts::exception_vector_known(228) == false && vector_check_is(interrupts::exception_vector_check(228), 228, false) && index_code(interrupts::idt_index_kind(228)) == 0) &&
+(interrupts::exception_vector_known(229) == false && vector_check_is(interrupts::exception_vector_check(229), 229, false) && index_code(interrupts::idt_index_kind(229)) == 0) &&
+(interrupts::exception_vector_known(230) == false && vector_check_is(interrupts::exception_vector_check(230), 230, false) && index_code(interrupts::idt_index_kind(230)) == 0) &&
+(interrupts::exception_vector_known(231) == false && vector_check_is(interrupts::exception_vector_check(231), 231, false) && index_code(interrupts::idt_index_kind(231)) == 0) }
+machine vector_cases_29() -> bool { (interrupts::exception_vector_known(232) == false && vector_check_is(interrupts::exception_vector_check(232), 232, false) && index_code(interrupts::idt_index_kind(232)) == 0) &&
+(interrupts::exception_vector_known(233) == false && vector_check_is(interrupts::exception_vector_check(233), 233, false) && index_code(interrupts::idt_index_kind(233)) == 0) &&
+(interrupts::exception_vector_known(234) == false && vector_check_is(interrupts::exception_vector_check(234), 234, false) && index_code(interrupts::idt_index_kind(234)) == 0) &&
+(interrupts::exception_vector_known(235) == false && vector_check_is(interrupts::exception_vector_check(235), 235, false) && index_code(interrupts::idt_index_kind(235)) == 0) &&
+(interrupts::exception_vector_known(236) == false && vector_check_is(interrupts::exception_vector_check(236), 236, false) && index_code(interrupts::idt_index_kind(236)) == 0) &&
+(interrupts::exception_vector_known(237) == false && vector_check_is(interrupts::exception_vector_check(237), 237, false) && index_code(interrupts::idt_index_kind(237)) == 0) &&
+(interrupts::exception_vector_known(238) == false && vector_check_is(interrupts::exception_vector_check(238), 238, false) && index_code(interrupts::idt_index_kind(238)) == 0) &&
+(interrupts::exception_vector_known(239) == false && vector_check_is(interrupts::exception_vector_check(239), 239, false) && index_code(interrupts::idt_index_kind(239)) == 0) }
+machine vector_cases_30() -> bool { (interrupts::exception_vector_known(240) == false && vector_check_is(interrupts::exception_vector_check(240), 240, false) && index_code(interrupts::idt_index_kind(240)) == 0) &&
+(interrupts::exception_vector_known(241) == false && vector_check_is(interrupts::exception_vector_check(241), 241, false) && index_code(interrupts::idt_index_kind(241)) == 0) &&
+(interrupts::exception_vector_known(242) == false && vector_check_is(interrupts::exception_vector_check(242), 242, false) && index_code(interrupts::idt_index_kind(242)) == 0) &&
+(interrupts::exception_vector_known(243) == false && vector_check_is(interrupts::exception_vector_check(243), 243, false) && index_code(interrupts::idt_index_kind(243)) == 0) &&
+(interrupts::exception_vector_known(244) == false && vector_check_is(interrupts::exception_vector_check(244), 244, false) && index_code(interrupts::idt_index_kind(244)) == 0) &&
+(interrupts::exception_vector_known(245) == false && vector_check_is(interrupts::exception_vector_check(245), 245, false) && index_code(interrupts::idt_index_kind(245)) == 0) &&
+(interrupts::exception_vector_known(246) == false && vector_check_is(interrupts::exception_vector_check(246), 246, false) && index_code(interrupts::idt_index_kind(246)) == 0) &&
+(interrupts::exception_vector_known(247) == false && vector_check_is(interrupts::exception_vector_check(247), 247, false) && index_code(interrupts::idt_index_kind(247)) == 0) }
+machine vector_cases_31() -> bool { (interrupts::exception_vector_known(248) == false && vector_check_is(interrupts::exception_vector_check(248), 248, false) && index_code(interrupts::idt_index_kind(248)) == 0) &&
+(interrupts::exception_vector_known(249) == false && vector_check_is(interrupts::exception_vector_check(249), 249, false) && index_code(interrupts::idt_index_kind(249)) == 0) &&
+(interrupts::exception_vector_known(250) == false && vector_check_is(interrupts::exception_vector_check(250), 250, false) && index_code(interrupts::idt_index_kind(250)) == 0) &&
+(interrupts::exception_vector_known(251) == false && vector_check_is(interrupts::exception_vector_check(251), 251, false) && index_code(interrupts::idt_index_kind(251)) == 0) &&
+(interrupts::exception_vector_known(252) == false && vector_check_is(interrupts::exception_vector_check(252), 252, false) && index_code(interrupts::idt_index_kind(252)) == 0) &&
+(interrupts::exception_vector_known(253) == false && vector_check_is(interrupts::exception_vector_check(253), 253, false) && index_code(interrupts::idt_index_kind(253)) == 0) &&
+(interrupts::exception_vector_known(254) == false && vector_check_is(interrupts::exception_vector_check(254), 254, false) && index_code(interrupts::idt_index_kind(254)) == 0) &&
+(interrupts::exception_vector_known(255) == false && vector_check_is(interrupts::exception_vector_check(255), 255, false) && index_code(interrupts::idt_index_kind(255)) == 0) }
+machine vector_cases_32() -> bool { X86_EXCEPTION_DIVIDE_ERROR == 0 &&
+X86_EXCEPTION_DEBUG == 1 &&
+X86_EXCEPTION_NON_MASKABLE_INTERRUPT == 2 &&
+X86_EXCEPTION_BREAKPOINT == 3 &&
+X86_EXCEPTION_OVERFLOW == 4 &&
+X86_EXCEPTION_BOUND_RANGE_EXCEEDED == 5 &&
+X86_EXCEPTION_INVALID_OPCODE == 6 &&
+X86_EXCEPTION_DEVICE_NOT_AVAILABLE == 7 }
+machine vector_cases_33() -> bool { X86_EXCEPTION_DOUBLE_FAULT == 8 &&
+X86_EXCEPTION_INVALID_TSS == 10 &&
+X86_EXCEPTION_SEGMENT_NOT_PRESENT == 11 &&
+X86_EXCEPTION_STACK_SEGMENT_FAULT == 12 &&
+X86_EXCEPTION_GENERAL_PROTECTION == 13 &&
+X86_EXCEPTION_PAGE_FAULT == 14 &&
+X86_EXCEPTION_X87_FLOATING_POINT == 16 &&
+X86_EXCEPTION_ALIGNMENT_CHECK == 17 }
+machine vector_cases_34() -> bool { X86_EXCEPTION_MACHINE_CHECK == 18 &&
+X86_EXCEPTION_SIMD_FLOATING_POINT == 19 &&
+X86_EXCEPTION_VIRTUALIZATION == 20 &&
+X86_EXCEPTION_CONTROL_PROTECTION == 21 &&
+AMD_EXCEPTION_HYPERVISOR_INJECTION == 28 &&
+AMD_EXCEPTION_VMM_COMMUNICATION == 29 &&
+AMD_EXCEPTION_SECURITY == 30 }
+pub machine vector_cases() -> bool { vector_cases_0() && vector_cases_1() && vector_cases_2() && vector_cases_3() && vector_cases_4() && vector_cases_5() && vector_cases_6() && vector_cases_7() && vector_cases_8() && vector_cases_9() && vector_cases_10() && vector_cases_11() && vector_cases_12() && vector_cases_13() && vector_cases_14() && vector_cases_15() && vector_cases_16() && vector_cases_17() && vector_cases_18() && vector_cases_19() && vector_cases_20() && vector_cases_21() && vector_cases_22() && vector_cases_23() && vector_cases_24() && vector_cases_25() && vector_cases_26() && vector_cases_27() && vector_cases_28() && vector_cases_29() && vector_cases_30() && vector_cases_31() && vector_cases_32() && vector_cases_33() && vector_cases_34() }
+machine bytes_EntryOptions() -> bool {
+let value: EntryOptions = EntryOptions { selector: SegmentSelector { raw: 513 }, bits: 1027 };
+let encoded: [u8; 4] = interrupt_bytes::encode_EntryOptions(&value);
+let golden: [u8; 4] = [1, 2, 3, 4];
+let decoded: EntryOptions = interrupt_bytes::decode_EntryOptions(&golden);
+encoded[0] == 1 &&
+encoded[1] == 2 &&
+encoded[2] == 3 &&
+encoded[3] == 4 &&
+decoded.selector.raw == value.selector.raw &&
+decoded.bits == value.bits
+}
+machine bytes_RawInterruptStackFrame() -> bool {
+let value: RawInterruptStackFrame = RawInterruptStackFrame { instruction_pointer: 578437695752307201, code_segment: SegmentSelector { raw: 2569 }, reserved_1: [11, 12, 13, 14, 15, 16], cpu_flags: RFlags { raw: 1735880461161533969 }, stack_pointer: 2314601843866147353, stack_segment: SegmentSelector { raw: 8737 }, reserved_2: [35, 36, 37, 38, 39, 40] };
+let encoded: [u8; 40] = interrupt_bytes::encode_RawInterruptStackFrame(&value);
+let golden: [u8; 40] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40];
+let decoded: RawInterruptStackFrame = interrupt_bytes::decode_RawInterruptStackFrame(&golden);
+encoded[0] == 1 &&
+encoded[1] == 2 &&
+encoded[2] == 3 &&
+encoded[3] == 4 &&
+encoded[4] == 5 &&
+encoded[5] == 6 &&
+encoded[6] == 7 &&
+encoded[7] == 8 &&
+encoded[8] == 9 &&
+encoded[9] == 10 &&
+encoded[10] == 11 &&
+encoded[11] == 12 &&
+encoded[12] == 13 &&
+encoded[13] == 14 &&
+encoded[14] == 15 &&
+encoded[15] == 16 &&
+encoded[16] == 17 &&
+encoded[17] == 18 &&
+encoded[18] == 19 &&
+encoded[19] == 20 &&
+encoded[20] == 21 &&
+encoded[21] == 22 &&
+encoded[22] == 23 &&
+encoded[23] == 24 &&
+encoded[24] == 25 &&
+encoded[25] == 26 &&
+encoded[26] == 27 &&
+encoded[27] == 28 &&
+encoded[28] == 29 &&
+encoded[29] == 30 &&
+encoded[30] == 31 &&
+encoded[31] == 32 &&
+encoded[32] == 33 &&
+encoded[33] == 34 &&
+encoded[34] == 35 &&
+encoded[35] == 36 &&
+encoded[36] == 37 &&
+encoded[37] == 38 &&
+encoded[38] == 39 &&
+encoded[39] == 40 &&
+decoded.instruction_pointer == value.instruction_pointer &&
+decoded.code_segment.raw == value.code_segment.raw &&
+decoded.reserved_1[0] == value.reserved_1[0] &&
+decoded.reserved_1[1] == value.reserved_1[1] &&
+decoded.reserved_1[2] == value.reserved_1[2] &&
+decoded.reserved_1[3] == value.reserved_1[3] &&
+decoded.reserved_1[4] == value.reserved_1[4] &&
+decoded.reserved_1[5] == value.reserved_1[5] &&
+decoded.cpu_flags.raw == value.cpu_flags.raw &&
+decoded.stack_pointer == value.stack_pointer &&
+decoded.stack_segment.raw == value.stack_segment.raw &&
+decoded.reserved_2[0] == value.reserved_2[0] &&
+decoded.reserved_2[1] == value.reserved_2[1] &&
+decoded.reserved_2[2] == value.reserved_2[2] &&
+decoded.reserved_2[3] == value.reserved_2[3] &&
+decoded.reserved_2[4] == value.reserved_2[4] &&
+decoded.reserved_2[5] == value.reserved_2[5]
+}
+machine frame_default() -> bool {
+ let value: RawInterruptStackFrame = interrupts::frame_new(4096, SegmentSelector { raw: 8 }, RFlags { raw: 512 }, 8192, SegmentSelector { raw: 16 });
+ value.instruction_pointer == 4096 && value.code_segment.raw == 8 && value.cpu_flags.raw == 512 && value.stack_pointer == 8192 && value.stack_segment.raw == 16 && value.reserved_1[0] == 0 && value.reserved_1[1] == 0 && value.reserved_1[2] == 0 && value.reserved_1[3] == 0 && value.reserved_1[4] == 0 && value.reserved_1[5] == 0 && value.reserved_2[0] == 0 && value.reserved_2[1] == 0 && value.reserved_2[2] == 0 && value.reserved_2[3] == 0 && value.reserved_2[4] == 0 && value.reserved_2[5] == 0 }
+pub machine record_byte_cases() -> bool { bytes_EntryOptions() && bytes_RawInterruptStackFrame() && frame_default() }

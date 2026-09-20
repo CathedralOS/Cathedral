@@ -1,0 +1,75 @@
+// Existing Cathedral gate policy, separated from the canonical semantic schema.
+// Same seven placements, 16-byte size/alignment; modern stateless Layout witness.
+module x86_idt_gate_layout;
+use omega::language::core::layout;
+
+pub data X86IdtGateLayout {}
+pub X86IdtGatePolicy: X86IdtGateLayout satisfies Layout;
+
+pub machine X86IdtGateLayout::plan(
+    schema: Schema
+) -> Plan satisfies Layout::plan
+{
+    let mut entries: [FieldEntry; 64];
+    // offset[15:0]
+    entries[0] = FieldEntry {
+        key: schema.fields[0].key,
+        placement: FieldPlan::Bits {
+            container: 0,
+            container_width: 16,
+            destination_lsb: 0,
+            source_lsb: 0,
+            width: 16,
+        },
+    };
+    // segment selector
+    entries[1] = FieldEntry {
+        key: schema.fields[1].key,
+        placement: FieldPlan::At { offset: 2 },
+    };
+    // IST index; the field domain guarantees the architecturally reserved
+    // upper five bits stay zero.
+    entries[2] = FieldEntry {
+        key: schema.fields[2].key,
+        placement: FieldPlan::At { offset: 4 },
+    };
+    // gate type, DPL, and present bit
+    entries[3] = FieldEntry {
+        key: schema.fields[3].key,
+        placement: FieldPlan::At { offset: 5 },
+    };
+    // offset[31:16]
+    entries[4] = FieldEntry {
+        key: schema.fields[0].key,
+        placement: FieldPlan::Bits {
+            container: 6,
+            container_width: 16,
+            destination_lsb: 0,
+            source_lsb: 16,
+            width: 16,
+        },
+    };
+    // offset[63:32]
+    entries[5] = FieldEntry {
+        key: schema.fields[0].key,
+        placement: FieldPlan::Bits {
+            container: 8,
+            container_width: 32,
+            destination_lsb: 0,
+            source_lsb: 32,
+            width: 32,
+        },
+    };
+    entries[6] = FieldEntry {
+        key: schema.fields[4].key,
+        placement: FieldPlan::At { offset: 12 },
+    };
+
+    Plan {
+        entries: entries,
+        entry_count: 7,
+        size_fixed: 16,
+        size_is_dynamic: false,
+        align: 16,
+    }
+}

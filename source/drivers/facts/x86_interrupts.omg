@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright 2017 Philipp Oppermann. See the README.md (upstream idt.rs).
+// Modified inert IDT/frame translation at cc35c876d3badb57df54a66e22f7768a52be95f2. See x86_interrupts.PORT.md.
+module x86_interrupts;
+use x86_registers::SegmentSelector;
+use x86_registers::RFlags;
+use x86_idt_gate;
+
+pub data EntryOptions [copy] { selector: SegmentSelector; bits: u16; }
+pub data RawInterruptStackFrame [copy] { instruction_pointer: u64; code_segment: SegmentSelector; reserved_1: [u8; 6]; cpu_flags: RFlags; stack_pointer: u64; stack_segment: SegmentSelector; reserved_2: [u8; 6]; }
+pub data PageFaultErrorCode [copy] { raw: u64; }
+pub data DetachedIdt [copy] { entries: [X86IdtGate; 256]; }
+
+pub const PAGE_FAULT_PROTECTION_VIOLATION: PageFaultErrorCode = PageFaultErrorCode { raw: 1 };
+pub const PAGE_FAULT_CAUSED_BY_WRITE: PageFaultErrorCode = PageFaultErrorCode { raw: 2 };
+pub const PAGE_FAULT_USER_MODE: PageFaultErrorCode = PageFaultErrorCode { raw: 4 };
+pub const PAGE_FAULT_MALFORMED_TABLE: PageFaultErrorCode = PageFaultErrorCode { raw: 8 };
+pub const PAGE_FAULT_INSTRUCTION_FETCH: PageFaultErrorCode = PageFaultErrorCode { raw: 16 };
+pub const PAGE_FAULT_PROTECTION_KEY: PageFaultErrorCode = PageFaultErrorCode { raw: 32 };
+pub const PAGE_FAULT_SHADOW_STACK: PageFaultErrorCode = PageFaultErrorCode { raw: 64 };
+pub const PAGE_FAULT_HLAT: PageFaultErrorCode = PageFaultErrorCode { raw: 128 };
+pub const PAGE_FAULT_SGX: PageFaultErrorCode = PageFaultErrorCode { raw: 32768 };
+pub const PAGE_FAULT_RMP: PageFaultErrorCode = PageFaultErrorCode { raw: 2147483648 };
+pub const PAGE_FAULT_KNOWN_BITS: u64 = 2147516671;
+pub const IDT_ENTRY_COUNT: u16 = 256;
+pub const IDT_BYTE_LENGTH: u16 = 4096;
+pub const IDT_BYTE_LIMIT: u16 = 4095;

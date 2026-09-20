@@ -1,0 +1,310 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "pointer_bits": 64,
+    "endian": "little",
+    "abi": "pinned Rust UEFI-x64 IDT/frame ABI; Cathedral gate policy alignment16 deliberately distinct"
+  },
+  "provenance": {
+    "kind": "upstream",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "sources": [
+      "src/structures/idt.rs"
+    ],
+    "description": "Actual Rust host values/size/alignment/public offsets, each independently const-asserted for UEFI x64. Rust Entry alignment4 differs from Cathedral requested gate alignment16. Native Omega layout not observed."
+  },
+  "measurements": {
+    "PAGE_FAULT_PROTECTION_VIOLATION": {
+      "kind": "value",
+      "value": 1
+    },
+    "PAGE_FAULT_CAUSED_BY_WRITE": {
+      "kind": "value",
+      "value": 2
+    },
+    "PAGE_FAULT_USER_MODE": {
+      "kind": "value",
+      "value": 4
+    },
+    "PAGE_FAULT_MALFORMED_TABLE": {
+      "kind": "value",
+      "value": 8
+    },
+    "PAGE_FAULT_INSTRUCTION_FETCH": {
+      "kind": "value",
+      "value": 16
+    },
+    "PAGE_FAULT_PROTECTION_KEY": {
+      "kind": "value",
+      "value": 32
+    },
+    "PAGE_FAULT_SHADOW_STACK": {
+      "kind": "value",
+      "value": 64
+    },
+    "PAGE_FAULT_HLAT": {
+      "kind": "value",
+      "value": 128
+    },
+    "PAGE_FAULT_SGX": {
+      "kind": "value",
+      "value": 32768
+    },
+    "PAGE_FAULT_RMP": {
+      "kind": "value",
+      "value": 2147483648
+    },
+    "EXCEPTION_Division": {
+      "kind": "value",
+      "value": 0
+    },
+    "EXCEPTION_Debug": {
+      "kind": "value",
+      "value": 1
+    },
+    "EXCEPTION_NonMaskableInterrupt": {
+      "kind": "value",
+      "value": 2
+    },
+    "EXCEPTION_Breakpoint": {
+      "kind": "value",
+      "value": 3
+    },
+    "EXCEPTION_Overflow": {
+      "kind": "value",
+      "value": 4
+    },
+    "EXCEPTION_BoundRange": {
+      "kind": "value",
+      "value": 5
+    },
+    "EXCEPTION_InvalidOpcode": {
+      "kind": "value",
+      "value": 6
+    },
+    "EXCEPTION_DeviceNotAvailable": {
+      "kind": "value",
+      "value": 7
+    },
+    "EXCEPTION_Double": {
+      "kind": "value",
+      "value": 8
+    },
+    "EXCEPTION_InvalidTss": {
+      "kind": "value",
+      "value": 10
+    },
+    "EXCEPTION_SegmentNotPresent": {
+      "kind": "value",
+      "value": 11
+    },
+    "EXCEPTION_Stack": {
+      "kind": "value",
+      "value": 12
+    },
+    "EXCEPTION_GeneralProtection": {
+      "kind": "value",
+      "value": 13
+    },
+    "EXCEPTION_Page": {
+      "kind": "value",
+      "value": 14
+    },
+    "EXCEPTION_X87FloatingPoint": {
+      "kind": "value",
+      "value": 16
+    },
+    "EXCEPTION_AlignmentCheck": {
+      "kind": "value",
+      "value": 17
+    },
+    "EXCEPTION_MachineCheck": {
+      "kind": "value",
+      "value": 18
+    },
+    "EXCEPTION_SimdFloatingPoint": {
+      "kind": "value",
+      "value": 19
+    },
+    "EXCEPTION_Virtualization": {
+      "kind": "value",
+      "value": 20
+    },
+    "EXCEPTION_ControlProtection": {
+      "kind": "value",
+      "value": 21
+    },
+    "EXCEPTION_HypervisorInjection": {
+      "kind": "value",
+      "value": 28
+    },
+    "EXCEPTION_VmmCommunication": {
+      "kind": "value",
+      "value": 29
+    },
+    "EXCEPTION_Security": {
+      "kind": "value",
+      "value": 30
+    },
+    "Entry<HandlerFunc>.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "Entry<HandlerFunc>.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "EntryOptions.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "EntryOptions.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "InterruptDescriptorTable.size": {
+      "kind": "size",
+      "value": 4096
+    },
+    "InterruptDescriptorTable.alignment": {
+      "kind": "alignment",
+      "value": 16
+    },
+    "InterruptStackFrameValue.size": {
+      "kind": "size",
+      "value": 40
+    },
+    "InterruptStackFrameValue.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "InterruptStackFrame.size": {
+      "kind": "size",
+      "value": 40
+    },
+    "InterruptStackFrame.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "PageFaultErrorCode.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "PageFaultErrorCode.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "InterruptStackFrameValue.instruction_pointer.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "InterruptStackFrameValue.code_segment.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "InterruptStackFrameValue.cpu_flags.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "InterruptStackFrameValue.stack_pointer.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "InterruptStackFrameValue.stack_segment.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "InterruptDescriptorTable.divide_error.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "InterruptDescriptorTable.debug.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "InterruptDescriptorTable.non_maskable_interrupt.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "InterruptDescriptorTable.breakpoint.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "InterruptDescriptorTable.overflow.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "InterruptDescriptorTable.bound_range_exceeded.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "InterruptDescriptorTable.invalid_opcode.offset": {
+      "kind": "offset",
+      "value": 96
+    },
+    "InterruptDescriptorTable.device_not_available.offset": {
+      "kind": "offset",
+      "value": 112
+    },
+    "InterruptDescriptorTable.double_fault.offset": {
+      "kind": "offset",
+      "value": 128
+    },
+    "InterruptDescriptorTable.invalid_tss.offset": {
+      "kind": "offset",
+      "value": 160
+    },
+    "InterruptDescriptorTable.segment_not_present.offset": {
+      "kind": "offset",
+      "value": 176
+    },
+    "InterruptDescriptorTable.stack_segment_fault.offset": {
+      "kind": "offset",
+      "value": 192
+    },
+    "InterruptDescriptorTable.general_protection_fault.offset": {
+      "kind": "offset",
+      "value": 208
+    },
+    "InterruptDescriptorTable.page_fault.offset": {
+      "kind": "offset",
+      "value": 224
+    },
+    "InterruptDescriptorTable.x87_floating_point.offset": {
+      "kind": "offset",
+      "value": 256
+    },
+    "InterruptDescriptorTable.alignment_check.offset": {
+      "kind": "offset",
+      "value": 272
+    },
+    "InterruptDescriptorTable.machine_check.offset": {
+      "kind": "offset",
+      "value": 288
+    },
+    "InterruptDescriptorTable.simd_floating_point.offset": {
+      "kind": "offset",
+      "value": 304
+    },
+    "InterruptDescriptorTable.virtualization.offset": {
+      "kind": "offset",
+      "value": 320
+    },
+    "InterruptDescriptorTable.cp_protection_exception.offset": {
+      "kind": "offset",
+      "value": 336
+    },
+    "InterruptDescriptorTable.hv_injection_exception.offset": {
+      "kind": "offset",
+      "value": 448
+    },
+    "InterruptDescriptorTable.vmm_communication_exception.offset": {
+      "kind": "offset",
+      "value": 464
+    },
+    "InterruptDescriptorTable.security_exception.offset": {
+      "kind": "offset",
+      "value": 480
+    }
+  }
+}
