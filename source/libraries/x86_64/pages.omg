@@ -1,0 +1,223 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified numeric page/frame algorithms from x86_64 cc35c876d3badb57df54a66e22f7768a52be95f2.
+// See pages.PORT.md. Numeric geometry does not establish backing or mapping authority.
+module pages;
+use addresses;
+use addresses::NumberResult;
+use addresses::OverflowingStep;
+
+pub const SIZE_4K: u64 = 4096;
+pub const SIZE_2M: u64 = 2097152;
+pub const SIZE_1G: u64 = 1073741824;
+pub machine page_size_valid(size: u64) -> bool {
+    size == SIZE_4K || size == SIZE_2M || size == SIZE_1G
+}
+pub machine start_valid(address: u64, size: u64, physical: bool) -> bool {
+    let virtual_ok: bool = addresses::virtual_valid(address);
+    let physical_ok: bool = addresses::physical_valid(address, 0);
+    transition size > 0 && page_size_valid(size) {
+        true -> (((address & (size - 1)) == 0) && ((physical && physical_ok) || (!physical && virtual_ok)))
+        _ -> (false)
+    }
+}
+pub machine from_start(address: u64, size: u64, physical: bool) -> NumberResult {
+    transition start_valid(address, size, physical) {
+        true -> (NumberResult::Value { value: address })
+        _ -> (NumberResult::Rejected)
+    }
+}
+pub machine containing(address: u64, size: u64, physical: bool) -> NumberResult {
+    transition size > 0 && page_size_valid(size) {
+        true -> checked(address, size, physical)
+        _ -> (NumberResult::Rejected)
+    }
+    state checked(address: u64, size: u64, physical: bool) -> NumberResult {
+        let virtual_result: NumberResult = addresses::virtual_align(address, size, false);
+        let physical_result: NumberResult = addresses::physical_align(address, size, false, 0);
+        transition physical { true -> (physical_result) _ -> (virtual_result) }
+    }
+}
+pub machine frame_from_pfn(pfn: u64, size: u64) -> NumberResult {
+    transition size > 0 && page_size_valid(size) {
+        true -> bounded(pfn, size)
+        _ -> (NumberResult::Rejected)
+    }
+    state bounded(pfn: u64, size: u64) -> NumberResult {
+        transition size > 0 && pfn <= addresses::PHYSICAL_MAX / size {
+            true -> (NumberResult::Value { value: pfn * size })
+            _ -> (NumberResult::Rejected)
+        }
+    }
+}
+pub machine frame_pfn(address: u64, size: u64) -> NumberResult {
+    transition size > 0 && start_valid(address, size, true) {
+        true -> (NumberResult::Value { value: address / size })
+        _ -> (NumberResult::Rejected)
+    }
+}
+pub machine from_indices(p4: u16, p3: u16, p2: u16, p1: u16, size: u64) -> NumberResult {
+    transition page_size_valid(size) && p4 <= 511 && p3 <= 511 && p2 <= 511 && p1 <= 511 &&
+        (size == SIZE_4K || p1 == 0) && (size != SIZE_1G || p2 == 0) {
+        true -> compose(p4, p3, p2, p1)
+        _ -> (NumberResult::Rejected)
+    }
+    state compose(p4: u16, p3: u16, p2: u16, p1: u16) -> NumberResult {
+        let raw: u64 = ((p4 as u64) << 39) | ((p3 as u64) << 30) | ((p2 as u64) << 21) | ((p1 as u64) << 12);
+        let value: u64 = addresses::virtual_truncate(raw);
+        NumberResult::Value { value: value }
+    }
+}
+// Ordinary Page/PhysFrame arithmetic uses raw address arithmetic, not Step.
+pub machine arithmetic(address: u64, size: u64, count: u64, backwards: bool, physical: bool) -> NumberResult {
+    transition size > 0 && start_valid(address, size, physical) {
+        true -> bounded(address, size, count, backwards, physical)
+        _ -> (NumberResult::Rejected)
+    }
+    state bounded(address: u64, size: u64, count: u64, backwards: bool, physical: bool) -> NumberResult {
+        transition size > 0 && count <= addresses::INTEGER_MAX / size {
+            true -> calculate(address, count * size, backwards, physical)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state calculate(address: u64, bytes: u64, backwards: bool, physical: bool) -> NumberResult {
+        let va: NumberResult = addresses::virtual_add(address, bytes);
+        let vs: NumberResult = addresses::virtual_sub(address, bytes);
+        let pa: NumberResult = addresses::physical_add(address, bytes, 0);
+        let ps: NumberResult = addresses::physical_sub(address, bytes, 0);
+        transition physical {
+            true -> physical_result(pa, ps, backwards)
+            _ -> virtual_result(va, vs, backwards)
+        }
+    }
+    state physical_result(add: NumberResult, sub: NumberResult, backwards: bool) -> NumberResult {
+        transition backwards { true -> (sub) _ -> (add) }
+    }
+    state virtual_result(add: NumberResult, sub: NumberResult, backwards: bool) -> NumberResult {
+        transition backwards { true -> (sub) _ -> (add) }
+    }
+}
+pub machine step(address: u64, size: u64, count: u64, backwards: bool) -> NumberResult {
+    transition size > 0 && start_valid(address, size, false) {
+        true -> bounded(address, size, count, backwards)
+        _ -> (NumberResult::Rejected)
+    }
+    state bounded(address: u64, size: u64, count: u64, backwards: bool) -> NumberResult {
+        transition size > 0 && count <= addresses::INTEGER_MAX / size {
+            true -> calculate(address, size * count, backwards)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state calculate(address: u64, count: u64, backwards: bool) -> NumberResult {
+        let result: NumberResult = addresses::virtual_step(address, count, backwards);
+        result
+    }
+}
+// Raw numeric difference, matching Page subtraction. Canonical Step distance
+// remains distinct and is obtained from addresses::virtual_steps_between.
+pub machine difference(end: u64, start: u64, size: u64, physical: bool) -> NumberResult {
+    transition size > 0 && start_valid(start, size, physical) && start_valid(end, size, physical) && end >= start {
+        true -> (NumberResult::Value { value: (end - start) / size })
+        _ -> (NumberResult::Rejected)
+    }
+}
+pub machine steps_between(start: u64, end: u64, size: u64) -> NumberResult {
+    let bytes: NumberResult = addresses::virtual_steps_between(start, end);
+    transition size > 0 && start_valid(start, size, false) && start_valid(end, size, false) {
+        true -> divide(bytes, size)
+        _ -> (NumberResult::Rejected)
+    }
+    state divide(bytes: NumberResult, size: u64) -> NumberResult {
+        transition bytes {
+            NumberResult::Value { value } -> quotient(value, size)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state quotient(bytes: u64, size: u64) -> NumberResult {
+        transition size > 0 {
+            true -> (NumberResult::Value { value: bytes / size })
+            _ -> (NumberResult::Rejected)
+        }
+    }
+}
+pub machine step_overflowing(original: u64, size: u64, count: u64, backwards: bool) -> OverflowingStep {
+    let result: NumberResult = step(original, size, count, backwards);
+    transition result {
+        NumberResult::Value { value } -> (OverflowingStep { value: value, overflow: false })
+        _ -> (OverflowingStep { value: original, overflow: true })
+    }
+}
+// Range construction fails early when iteration would cross the canonical gap.
+// It retains ordinary raw-arithmetic range behavior for each accepted interval.
+pub machine range_count(start: u64, end: u64, size: u64, inclusive: bool, physical: bool) -> NumberResult {
+    transition size > 0 && start_valid(start, size, physical) && start_valid(end, size, physical) {
+        true -> order(start, end, size, inclusive, physical)
+        _ -> (NumberResult::Rejected)
+    }
+    state order(start: u64, end: u64, size: u64, inclusive: bool, physical: bool) -> NumberResult {
+        transition start > end || (!inclusive && start == end) {
+            true -> (NumberResult::Value { value: 0 })
+            _ -> same_half(start, end, size, inclusive, physical)
+        }
+    }
+    state same_half(start: u64, end: u64, size: u64, inclusive: bool, physical: bool) -> NumberResult {
+        transition physical || end <= addresses::VIRTUAL_LOW_MAX || start >= addresses::VIRTUAL_HIGH_MIN {
+            true -> count(start, end, size, inclusive)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state count(start: u64, end: u64, size: u64, inclusive: bool) -> NumberResult {
+        transition size > 0 && end >= start {
+            true -> finish((end - start) / size, inclusive)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state finish(count: u64, inclusive: bool) -> NumberResult {
+        let included: NumberResult = addresses::checked_add(count, 1);
+        transition inclusive { true -> (included) _ -> (NumberResult::Value { value: count }) }
+    }
+}
+pub machine range_bytes(start: u64, end: u64, size: u64, inclusive: bool, physical: bool) -> NumberResult {
+    let count: NumberResult = range_count(start, end, size, inclusive, physical);
+    transition count {
+        NumberResult::Value { value } -> multiply(value, size)
+        _ -> (NumberResult::Rejected)
+    }
+    state multiply(count: u64, size: u64) -> NumberResult {
+        transition size > 0 && count <= addresses::INTEGER_MAX / size {
+            true -> (NumberResult::Value { value: count * size })
+            _ -> (NumberResult::Rejected)
+        }
+    }
+}
+// A bounded pure substitute for next/nth and reverse iteration. The caller owns
+// its numeric index; an exhausted/invalid selection returns Rejected, never a pointer.
+pub machine range_at(start: u64, end: u64, size: u64, inclusive: bool, physical: bool, index: u64, reverse: bool) -> NumberResult {
+    let count: NumberResult = range_count(start, end, size, inclusive, physical);
+    transition count {
+        NumberResult::Value { value } -> bounded(start, size, physical, index, reverse, value)
+        _ -> (NumberResult::Rejected)
+    }
+    state bounded(start: u64, size: u64, physical: bool, index: u64, reverse: bool, count: u64) -> NumberResult {
+        transition index < count && count > 0 {
+            true -> choose(start, size, physical, index, reverse, count)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state choose(start: u64, size: u64, physical: bool, index: u64, reverse: bool, count: u64) -> NumberResult {
+        transition index < count && count > 0 {
+            true -> remaining(start, size, physical, index, count - index, reverse)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state remaining(start: u64, size: u64, physical: bool, index: u64, remaining: u64, reverse: bool) -> NumberResult {
+        transition remaining > 0 {
+            true -> calculate(start, size, physical, index, remaining - 1, reverse)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state calculate(start: u64, size: u64, physical: bool, front: u64, back: u64, reverse: bool) -> NumberResult {
+        let forward: NumberResult = arithmetic(start, size, front, false, physical);
+        let backward: NumberResult = arithmetic(start, size, back, false, physical);
+        transition reverse { true -> (backward) _ -> (forward) }
+    }
+}

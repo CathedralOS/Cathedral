@@ -1,0 +1,1637 @@
+{
+  "files": {
+    "src/structures/paging/frame.rs": {
+      "disposition": "translated",
+      "reason": "Reviewed numeric page/frame profile; iterator object/ABI/proof infrastructure adaptations and omissions are explicit per symbol and in pages.PORT.md.",
+      "sha256": "ef176a88a1b52eb33a2843f98286ac79946d77c5b4afa5959c5dc750af876880",
+      "symbols": {
+        "112:from_pfn_unchecked": {
+          "anchor": "pub unsafe fn from_pfn_unchecked(pfn: u64) -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "122:containing_address": {
+          "anchor": "pub fn containing_address(address: PhysAddr) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine containing("
+            }
+          ]
+        },
+        "132:start_address": {
+          "anchor": "pub fn start_address(self) -> PhysAddr {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine from_start("
+            }
+          ]
+        },
+        "139:size": {
+          "anchor": "pub fn size(self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine page_size_valid("
+            }
+          ]
+        },
+        "14:PhysFrame": {
+          "anchor": "pub struct PhysFrame<S: PageSize = Size4KiB> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine from_start("
+            }
+          ]
+        },
+        "160:pfn": {
+          "anchor": "pub fn pfn(self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine frame_pfn("
+            }
+          ]
+        },
+        "167:range": {
+          "anchor": "pub fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "16:start_address": {
+          "anchor": "pub(crate) start_address: PhysAddr,",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine from_start("
+            }
+          ]
+        },
+        "174:range_inclusive": {
+          "anchor": "pub fn range_inclusive(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRangeInclusive<S> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "180:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "190:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "192:add": {
+          "anchor": "fn add(self, rhs: u64) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine arithmetic("
+            }
+          ]
+        },
+        "199:add_assign": {
+          "anchor": "fn add_assign(&mut self, rhs: u64) {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine arithmetic("
+            }
+          ]
+        },
+        "205:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "207:sub": {
+          "anchor": "fn sub(self, rhs: u64) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine arithmetic("
+            }
+          ]
+        },
+        "214:sub_assign": {
+          "anchor": "fn sub_assign(&mut self, rhs: u64) {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine arithmetic("
+            }
+          ]
+        },
+        "220:Output": {
+          "anchor": "type Output = u64;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "222:sub": {
+          "anchor": "fn sub(self, rhs: PhysFrame<S>) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine difference("
+            }
+          ]
+        },
+        "230:PhysFrameRange": {
+          "anchor": "pub struct PhysFrameRange<S: PageSize = Size4KiB> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "232:start": {
+          "anchor": "pub start: PhysFrame<S>,",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "234:end": {
+          "anchor": "pub end: PhysFrame<S>,",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "240:is_empty": {
+          "anchor": "pub fn is_empty(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "246:len": {
+          "anchor": "pub fn len(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "256:size": {
+          "anchor": "pub fn size(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_bytes("
+            }
+          ]
+        },
+        "262:Item": {
+          "anchor": "type Item = PhysFrame<S>;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "265:next": {
+          "anchor": "fn next(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "26:from_start_address": {
+          "anchor": "pub fn from_start_address(address: PhysAddr) -> Result<Self, AddressNotAligned> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine from_start("
+            }
+          ]
+        },
+        "275:nth": {
+          "anchor": "fn nth(&mut self, n: usize) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "298:size_hint": {
+          "anchor": "fn size_hint(&self) -> (usize, Option<usize>) {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "308:next_back": {
+          "anchor": "fn next_back(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "317:nth_back": {
+          "anchor": "fn nth_back(&mut self, n: usize) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "342:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "357:PfnNotValid": {
+          "anchor": "pub struct PfnNotValid(pub u64);",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine from_start("
+            }
+          ]
+        },
+        "361:fmt": {
+          "anchor": "fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "371:PhysFrameRangeInclusive": {
+          "anchor": "pub struct PhysFrameRangeInclusive<S: PageSize = Size4KiB> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "373:start": {
+          "anchor": "pub start: PhysFrame<S>,",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "375:end": {
+          "anchor": "pub end: PhysFrame<S>,",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "381:is_empty": {
+          "anchor": "pub fn is_empty(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "387:len": {
+          "anchor": "pub fn len(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "397:size": {
+          "anchor": "pub fn size(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_bytes("
+            }
+          ]
+        },
+        "403:Item": {
+          "anchor": "type Item = PhysFrame<S>;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "406:next": {
+          "anchor": "fn next(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "425:nth": {
+          "anchor": "fn nth(&mut self, n: usize) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "42:from_start_address_unchecked": {
+          "anchor": "pub unsafe fn from_start_address_unchecked(start_address: PhysAddr) -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "448:size_hint": {
+          "anchor": "fn size_hint(&self) -> (usize, Option<usize>) {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "458:next_back": {
+          "anchor": "fn next_back(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "476:nth_back": {
+          "anchor": "fn nth_back(&mut self, n: usize) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "501:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "511:any": {
+          "anchor": "fn any() -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "517:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "520:test_frame_range_len": {
+          "anchor": "pub fn test_frame_range_len() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/extras.omg",
+              "anchor": "pub machine result("
+            }
+          ]
+        },
+        "534:proofs": {
+          "anchor": "mod proofs {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "538:phys_frame_range_next": {
+          "anchor": "fn phys_frame_range_next() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "555:phys_frame_range_inclusive_next": {
+          "anchor": "fn phys_frame_range_inclusive_next() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "572:phys_frame_range_next_back": {
+          "anchor": "fn phys_frame_range_next_back() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "589:phys_frame_range_inclusive_next_back": {
+          "anchor": "fn phys_frame_range_inclusive_next_back() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "607:phys_frame_range_nth_0": {
+          "anchor": "fn phys_frame_range_nth_0() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "620:phys_frame_range_nth": {
+          "anchor": "fn phys_frame_range_nth() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "637:phys_frame_range_inclusive_nth_0": {
+          "anchor": "fn phys_frame_range_inclusive_nth_0() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "650:phys_frame_range_inclusive_nth": {
+          "anchor": "fn phys_frame_range_inclusive_nth() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "65:from_pfn": {
+          "anchor": "pub fn from_pfn(pfn: u64) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine frame_from_pfn("
+            }
+          ]
+        },
+        "667:phys_frame_range_nth_back_0": {
+          "anchor": "fn phys_frame_range_nth_back_0() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "680:phys_frame_range_nth_back": {
+          "anchor": "fn phys_frame_range_nth_back() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "697:phys_frame_range_inclusive_nth_back_0": {
+          "anchor": "fn phys_frame_range_inclusive_nth_back_0() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "710:phys_frame_range_inclusive_nth_back": {
+          "anchor": "fn phys_frame_range_inclusive_nth_back() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "88:try_from_pfn": {
+          "anchor": "pub fn try_from_pfn(pfn: u64) -> Result<Self, PfnNotValid> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine frame_from_pfn("
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/pages.omg",
+          "anchor": "module pages;"
+        }
+      ]
+    },
+    "src/structures/paging/page.rs": {
+      "disposition": "translated",
+      "reason": "Reviewed numeric page/frame profile; iterator object/ABI/proof infrastructure adaptations and omissions are explicit per symbol and in pages.PORT.md.",
+      "sha256": "3314b425ea669e883900bfbcb2357e3ea7b03517734d674596e613ff3664d630",
+      "symbols": {
+        "1021:page_range_next_back": {
+          "anchor": "fn page_range_next_back() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1027:page_range_next_back_panic": {
+          "anchor": "fn page_range_next_back_panic() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1031:page_range_inclusive_next_harness": {
+          "anchor": "fn page_range_inclusive_next_harness(should_panic_mode: bool) {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1059:page_range_inclusive_next": {
+          "anchor": "fn page_range_inclusive_next() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1065:page_range_inclusive_next_panic": {
+          "anchor": "fn page_range_inclusive_next_panic() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1069:page_range_inclusive_next_back_harness": {
+          "anchor": "fn page_range_inclusive_next_back_harness(should_panic_mode: bool) {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "106:containing_address": {
+          "anchor": "pub fn containing_address(address: VirtAddr) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine containing("
+            }
+          ]
+        },
+        "1097:page_range_inclusive_next_back": {
+          "anchor": "fn page_range_inclusive_next_back() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1103:page_range_inclusive_next_back_panic": {
+          "anchor": "fn page_range_inclusive_next_back_panic() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1107:page_range_nth_harness": {
+          "anchor": "fn page_range_nth_harness(should_panic_mode: bool) {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1143:page_range_nth": {
+          "anchor": "fn page_range_nth() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1150:page_range_nth_panic": {
+          "anchor": "fn page_range_nth_panic() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1154:page_range_nth_back_harness": {
+          "anchor": "fn page_range_nth_back_harness(should_panic_mode: bool) {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "116:start_address": {
+          "anchor": "pub fn start_address(self) -> VirtAddr {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine from_start("
+            }
+          ]
+        },
+        "1197:page_range_nth_back": {
+          "anchor": "fn page_range_nth_back() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1204:page_range_nth_back_panic": {
+          "anchor": "fn page_range_nth_back_panic() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1208:page_range_inclusive_nth_harness": {
+          "anchor": "fn page_range_inclusive_nth_harness(should_panic_mode: bool) {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "123:size": {
+          "anchor": "pub fn size(self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine page_size_valid("
+            }
+          ]
+        },
+        "1244:page_range_inclusive_nth": {
+          "anchor": "fn page_range_inclusive_nth() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1251:page_range_inclusive_nth_panic": {
+          "anchor": "fn page_range_inclusive_nth_panic() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1255:page_range_inclusive_nth_back_harness": {
+          "anchor": "fn page_range_inclusive_nth_back_harness(should_panic_mode: bool) {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1298:page_range_inclusive_nth_back": {
+          "anchor": "fn page_range_inclusive_nth_back() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "1305:page_range_inclusive_nth_back_panic": {
+          "anchor": "fn page_range_inclusive_nth_back_panic() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "130:p4_index": {
+          "anchor": "pub fn p4_index(self) -> PageTableIndex {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine page_index("
+            }
+          ]
+        },
+        "137:p3_index": {
+          "anchor": "pub fn p3_index(self) -> PageTableIndex {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine page_index("
+            }
+          ]
+        },
+        "144:page_table_index": {
+          "anchor": "pub fn page_table_index(self, level: PageTableLevel) -> PageTableIndex {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine page_index("
+            }
+          ]
+        },
+        "151:range": {
+          "anchor": "pub fn range(start: Self, end: Self) -> PageRange<S> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "158:range_inclusive": {
+          "anchor": "pub fn range_inclusive(start: Self, end: Self) -> PageRangeInclusive<S> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "15:PageSize": {
+          "anchor": "pub trait PageSize: Copy + Eq + PartialOrd + Ord + Sealed {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "163:steps_between_u64": {
+          "anchor": "pub(crate) fn steps_between_u64(start: &Self, end: &Self) -> Option<u64> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine steps_between("
+            }
+          ]
+        },
+        "170:steps_between_impl": {
+          "anchor": "pub(crate) fn steps_between_impl(start: &Self, end: &Self) -> (usize, Option<usize>) {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine steps_between("
+            }
+          ]
+        },
+        "17:SIZE": {
+          "anchor": "const SIZE: u64;",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine page_size_valid("
+            }
+          ]
+        },
+        "181:forward_checked_impl": {
+          "anchor": "pub(crate) fn forward_checked_impl(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine step("
+            }
+          ]
+        },
+        "195:p2_index": {
+          "anchor": "pub fn p2_index(self) -> PageTableIndex {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine page_index("
+            }
+          ]
+        },
+        "204:from_page_table_indices_1gib": {
+          "anchor": "pub fn from_page_table_indices_1gib(",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine from_indices("
+            }
+          ]
+        },
+        "20:DEBUG_STR": {
+          "anchor": "const DEBUG_STR: &'static str;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "219:from_page_table_indices_2mib": {
+          "anchor": "pub fn from_page_table_indices_2mib(",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine from_indices("
+            }
+          ]
+        },
+        "236:from_page_table_indices": {
+          "anchor": "pub fn from_page_table_indices(",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine from_indices("
+            }
+          ]
+        },
+        "24:NotGiantPageSize": {
+          "anchor": "pub trait NotGiantPageSize: PageSize {}",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "252:p1_index": {
+          "anchor": "pub const fn p1_index(self) -> PageTableIndex {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/addresses.omg",
+              "anchor": "machine page_index("
+            }
+          ]
+        },
+        "258:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "268:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "270:add": {
+          "anchor": "fn add(self, rhs: u64) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine arithmetic("
+            }
+          ]
+        },
+        "277:add_assign": {
+          "anchor": "fn add_assign(&mut self, rhs: u64) {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine arithmetic("
+            }
+          ]
+        },
+        "283:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "285:sub": {
+          "anchor": "fn sub(self, rhs: u64) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine arithmetic("
+            }
+          ]
+        },
+        "28:Size4KiB": {
+          "anchor": "pub enum Size4KiB {}",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "pub const SIZE_4K:"
+            }
+          ]
+        },
+        "292:sub_assign": {
+          "anchor": "fn sub_assign(&mut self, rhs: u64) {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine arithmetic("
+            }
+          ]
+        },
+        "298:Output": {
+          "anchor": "type Output = u64;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "300:sub": {
+          "anchor": "fn sub(self, rhs: Self) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine difference("
+            }
+          ]
+        },
+        "307:steps_between": {
+          "anchor": "fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine steps_between("
+            }
+          ]
+        },
+        "311:forward_checked": {
+          "anchor": "fn forward_checked(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine step("
+            }
+          ]
+        },
+        "315:backward_checked": {
+          "anchor": "fn backward_checked(start: Self, count: usize) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine step("
+            }
+          ]
+        },
+        "326:forward_overflowing": {
+          "anchor": "fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine step_overflowing("
+            }
+          ]
+        },
+        "32:Size2MiB": {
+          "anchor": "pub enum Size2MiB {}",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "pub const SIZE_2M:"
+            }
+          ]
+        },
+        "333:backward_overflowing": {
+          "anchor": "fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine step_overflowing("
+            }
+          ]
+        },
+        "344:PageRange": {
+          "anchor": "pub struct PageRange<S: PageSize = Size4KiB> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "346:start": {
+          "anchor": "pub start: Page<S>,",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "348:end": {
+          "anchor": "pub end: Page<S>,",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "354:is_empty": {
+          "anchor": "pub fn is_empty(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "360:len": {
+          "anchor": "pub fn len(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "370:size": {
+          "anchor": "pub fn size(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_bytes("
+            }
+          ]
+        },
+        "376:Item": {
+          "anchor": "type Item = Page<S>;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "379:next": {
+          "anchor": "fn next(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "389:nth": {
+          "anchor": "fn nth(&mut self, n: usize) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "38:Size1GiB": {
+          "anchor": "pub enum Size1GiB {}",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "pub const SIZE_1G:"
+            }
+          ]
+        },
+        "41:SIZE": {
+          "anchor": "const SIZE: u64 = 4096;",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine page_size_valid("
+            }
+          ]
+        },
+        "423:size_hint": {
+          "anchor": "fn size_hint(&self) -> (usize, Option<usize>) {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "42:DEBUG_STR": {
+          "anchor": "const DEBUG_STR: &'static str = \"4KiB\";",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "433:next_back": {
+          "anchor": "fn next_back(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "442:nth_back": {
+          "anchor": "fn nth_back(&mut self, n: usize) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "480:as_4kib_page_range": {
+          "anchor": "pub fn as_4kib_page_range(self) -> PageRange<Size4KiB> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "489:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "500:PageRangeInclusive": {
+          "anchor": "pub struct PageRangeInclusive<S: PageSize = Size4KiB> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "502:start": {
+          "anchor": "pub start: Page<S>,",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "504:end": {
+          "anchor": "pub end: Page<S>,",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "50:SIZE": {
+          "anchor": "const SIZE: u64 = Size4KiB::SIZE * 512;",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine page_size_valid("
+            }
+          ]
+        },
+        "510:is_empty": {
+          "anchor": "pub fn is_empty(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "516:len": {
+          "anchor": "pub fn len(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "51:DEBUG_STR": {
+          "anchor": "const DEBUG_STR: &'static str = \"2MiB\";",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "526:size": {
+          "anchor": "pub fn size(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_bytes("
+            }
+          ]
+        },
+        "532:Item": {
+          "anchor": "type Item = Page<S>;",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "535:next": {
+          "anchor": "fn next(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "554:nth": {
+          "anchor": "fn nth(&mut self, n: usize) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "588:size_hint": {
+          "anchor": "fn size_hint(&self) -> (usize, Option<usize>) {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_count("
+            }
+          ]
+        },
+        "598:next_back": {
+          "anchor": "fn next_back(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "59:SIZE": {
+          "anchor": "const SIZE: u64 = Size2MiB::SIZE * 512;",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine page_size_valid("
+            }
+          ]
+        },
+        "60:DEBUG_STR": {
+          "anchor": "const DEBUG_STR: &'static str = \"1GiB\";",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "616:nth_back": {
+          "anchor": "fn nth_back(&mut self, n: usize) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine range_at("
+            }
+          ]
+        },
+        "652:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "662:any": {
+          "anchor": "fn any() -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "669:AddressNotAligned": {
+          "anchor": "pub struct AddressNotAligned;",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine from_start("
+            }
+          ]
+        },
+        "672:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "678:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "681:test_is_hash": {
+          "anchor": "fn test_is_hash<T: core::hash::Hash>() {}",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "684:test_page_is_hash": {
+          "anchor": "pub fn test_page_is_hash() {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "68:Page": {
+          "anchor": "pub struct Page<S: PageSize = Size4KiB> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine from_start("
+            }
+          ]
+        },
+        "691:test_page_ranges": {
+          "anchor": "pub fn test_page_ranges() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/extras.omg",
+              "anchor": "pub machine result("
+            }
+          ]
+        },
+        "719:test_page_range_inclusive_overflow": {
+          "anchor": "pub fn test_page_range_inclusive_overflow() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/extras.omg",
+              "anchor": "pub machine result("
+            }
+          ]
+        },
+        "739:test_page_range_next_jumping_gap_panics": {
+          "anchor": "fn test_page_range_next_jumping_gap_panics() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "752:test_page_range_next_back_jumping_gap_panics": {
+          "anchor": "fn test_page_range_next_back_jumping_gap_panics() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "75:SIZE": {
+          "anchor": "pub const SIZE: u64 = S::SIZE;",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine page_size_valid("
+            }
+          ]
+        },
+        "764:test_page_range_inclusive_next_not_jumping_gap_panics": {
+          "anchor": "fn test_page_range_inclusive_next_not_jumping_gap_panics() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "776:test_page_range_inclusive_next_back_not_jumping_gap_panics": {
+          "anchor": "fn test_page_range_inclusive_next_back_not_jumping_gap_panics() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "789:test_page_range_inclusive_next_jumping_gap_panics": {
+          "anchor": "fn test_page_range_inclusive_next_jumping_gap_panics() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "802:test_page_range_inclusive_next_back_jumping_gap_panics": {
+          "anchor": "fn test_page_range_inclusive_next_back_jumping_gap_panics() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "814:test_page_range_len": {
+          "anchor": "pub fn test_page_range_len() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "828:page_step_forward": {
+          "anchor": "fn page_step_forward() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "82:from_start_address": {
+          "anchor": "pub fn from_start_address(address: VirtAddr) -> Result<Self, AddressNotAligned> {",
+          "disposition": "translated",
+          "reason": "Pure numeric geometry/operation retained with explicit checked inputs/results; page/frame ownership and native representation are not recreated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/pages.omg",
+              "anchor": "machine from_start("
+            }
+          ]
+        },
+        "860:page_step_backwards": {
+          "anchor": "fn page_step_backwards() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "889:page_steps_between": {
+          "anchor": "fn page_steps_between() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/main.omg",
+              "anchor": "machine test_result("
+            }
+          ]
+        },
+        "934:page_step_overflowing": {
+          "anchor": "fn page_step_overflowing() {",
+          "disposition": "translated",
+          "reason": "Adapted expectations: all stepping tables and overflow outcomes; representative positions of the 1000-element ranges, explicit checked gap-range deviations. Original host tests additionally execute unchanged.",
+          "targets": [
+            {
+              "path": "tools/ports/x86_64-pages/extras.omg",
+              "anchor": "pub machine result("
+            }
+          ]
+        },
+        "952:proofs": {
+          "anchor": "mod proofs {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "955:page_range_next_harness": {
+          "anchor": "fn page_range_next_harness(should_panic_mode: bool) {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "96:from_start_address_unchecked": {
+          "anchor": "pub unsafe fn from_start_address_unchecked(start_address: VirtAddr) -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust formatting/trait/newtype/unchecked-construction machinery deliberately omitted. Explicit size validation and checked numeric operations replace it."
+        },
+        "983:page_range_next": {
+          "anchor": "fn page_range_next() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "989:page_range_next_panic": {
+          "anchor": "fn page_range_next_panic() {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        },
+        "993:page_range_next_back_harness": {
+          "anchor": "fn page_range_next_back_harness(should_panic_mode: bool) {",
+          "disposition": "omitted",
+          "reason": "Kani proof infrastructure is retained as upstream audit metadata, not claimed as an Omega universal proof. Finite boundaries and iterator behavior have executable fixtures."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/pages.omg",
+          "anchor": "module pages;"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/paging/page.rs",
+      "src/structures/paging/frame.rs"
+    ],
+    "url": "https://github.com/rust-osdev/x86_64"
+  }
+}

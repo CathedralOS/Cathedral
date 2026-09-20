@@ -1,0 +1,1607 @@
+{
+  "scope": "numeric expected results; explicit Rust deviations recorded per case",
+  "cases": [
+    {
+      "call": "containing(0, 4096, false)",
+      "expected": 0,
+      "rust": "Some(Page::<Size4KiB>::containing_address(VirtAddr::new(0)).start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "from_start(0, 4096, false)",
+      "expected": 0,
+      "rust": "Page::<Size4KiB>::from_start_address(VirtAddr::new(0)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "containing(1, 4096, false)",
+      "expected": 0,
+      "rust": "Some(Page::<Size4KiB>::containing_address(VirtAddr::new(1)).start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "from_start(1, 4096, false)",
+      "expected": null,
+      "rust": "Page::<Size4KiB>::from_start_address(VirtAddr::new(1)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(3735928495, 4096, false)",
+      "expected": 3735924736,
+      "rust": "Some(Page::<Size4KiB>::containing_address(VirtAddr::new(3735928495)).start_address().as_u64())",
+      "rust_expected": 3735924736
+    },
+    {
+      "call": "from_start(3735928495, 4096, false)",
+      "expected": null,
+      "rust": "Page::<Size4KiB>::from_start_address(VirtAddr::new(3735928495)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(18446744073709551615, 4096, false)",
+      "expected": 18446744073709547520,
+      "rust": "Some(Page::<Size4KiB>::containing_address(VirtAddr::new(18446744073709551615)).start_address().as_u64())",
+      "rust_expected": 18446744073709547520
+    },
+    {
+      "call": "from_start(18446744073709551615, 4096, false)",
+      "expected": null,
+      "rust": "Page::<Size4KiB>::from_start_address(VirtAddr::new(18446744073709551615)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "arithmetic(12288, 4096, 2, false, false)",
+      "expected": 20480,
+      "rust": "caught(|| (Page::<Size4KiB>::containing_address(VirtAddr::new(12288)) + 2u64).start_address().as_u64())",
+      "rust_expected": 20480
+    },
+    {
+      "call": "arithmetic(12288, 4096, 2, true, false)",
+      "expected": 4096,
+      "rust": "caught(|| (Page::<Size4KiB>::containing_address(VirtAddr::new(12288)) - 2u64).start_address().as_u64())",
+      "rust_expected": 4096
+    },
+    {
+      "call": "range_count(0, 12288, 4096, false, false)",
+      "expected": 3,
+      "rust": "Some(Page::range(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).len())",
+      "rust_expected": 3
+    },
+    {
+      "call": "range_bytes(0, 12288, 4096, false, false)",
+      "expected": 12288,
+      "rust": "Some(Page::range(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).size())",
+      "rust_expected": 12288
+    },
+    {
+      "call": "range_at(0, 12288, 4096, false, false, 0, false)",
+      "expected": 0,
+      "rust": "Page::range(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).nth(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 12288, 4096, false, false, 0, true)",
+      "expected": 8192,
+      "rust": "Page::range(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).nth_back(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 8192
+    },
+    {
+      "call": "range_at(0, 12288, 4096, false, false, 2, false)",
+      "expected": 8192,
+      "rust": "Page::range(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).nth(2).map(|p| p.start_address().as_u64())",
+      "rust_expected": 8192
+    },
+    {
+      "call": "range_at(0, 12288, 4096, false, false, 2, true)",
+      "expected": 0,
+      "rust": "Page::range(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).nth_back(2).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 12288, 4096, false, false, 3, false)",
+      "expected": null,
+      "rust": "Page::range(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).nth(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(0, 12288, 4096, false, false, 3, true)",
+      "expected": null,
+      "rust": "Page::range(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).nth_back(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(0, 12288, 4096, true, false)",
+      "expected": 4,
+      "rust": "Some(Page::range_inclusive(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).len())",
+      "rust_expected": 4
+    },
+    {
+      "call": "range_bytes(0, 12288, 4096, true, false)",
+      "expected": 16384,
+      "rust": "Some(Page::range_inclusive(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).size())",
+      "rust_expected": 16384
+    },
+    {
+      "call": "range_at(0, 12288, 4096, true, false, 0, false)",
+      "expected": 0,
+      "rust": "Page::range_inclusive(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).nth(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 12288, 4096, true, false, 0, true)",
+      "expected": 12288,
+      "rust": "Page::range_inclusive(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).nth_back(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 12288
+    },
+    {
+      "call": "range_at(0, 12288, 4096, true, false, 3, false)",
+      "expected": 12288,
+      "rust": "Page::range_inclusive(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).nth(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": 12288
+    },
+    {
+      "call": "range_at(0, 12288, 4096, true, false, 3, true)",
+      "expected": 0,
+      "rust": "Page::range_inclusive(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).nth_back(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 12288, 4096, true, false, 4, false)",
+      "expected": null,
+      "rust": "Page::range_inclusive(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).nth(4).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(0, 12288, 4096, true, false, 4, true)",
+      "expected": null,
+      "rust": "Page::range_inclusive(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), Page::<Size4KiB>::containing_address(VirtAddr::new(12288))).nth_back(4).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(18446744073709547520, 18446744073709547520, 4096, true, false, 0, false)",
+      "expected": 18446744073709547520,
+      "rust": "Page::range_inclusive(Page::<Size4KiB>::containing_address(VirtAddr::new(18446744073709547520)), Page::<Size4KiB>::containing_address(VirtAddr::new(18446744073709547520))).next().map(|p| p.start_address().as_u64())",
+      "rust_expected": 18446744073709547520
+    },
+    {
+      "call": "range_at(18446744073709547520, 18446744073709547520, 4096, true, false, 1, false)",
+      "expected": null,
+      "rust": "Page::range_inclusive(Page::<Size4KiB>::containing_address(VirtAddr::new(18446744073709547520)), Page::<Size4KiB>::containing_address(VirtAddr::new(18446744073709547520))).nth(1).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(4096, 0, 4096, false, false)",
+      "expected": 0,
+      "rust": "Some(Page::range(Page::<Size4KiB>::containing_address(VirtAddr::new(4096)), Page::<Size4KiB>::containing_address(VirtAddr::new(0))).len())",
+      "rust_expected": 0
+    },
+    {
+      "call": "containing(0, 4096, true)",
+      "expected": 0,
+      "rust": "Some(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)).start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "from_start(0, 4096, true)",
+      "expected": 0,
+      "rust": "PhysFrame::<Size4KiB>::from_start_address(PhysAddr::new(0)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "containing(1, 4096, true)",
+      "expected": 0,
+      "rust": "Some(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(1)).start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "from_start(1, 4096, true)",
+      "expected": null,
+      "rust": "PhysFrame::<Size4KiB>::from_start_address(PhysAddr::new(1)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(3735928495, 4096, true)",
+      "expected": 3735924736,
+      "rust": "Some(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(3735928495)).start_address().as_u64())",
+      "rust_expected": 3735924736
+    },
+    {
+      "call": "from_start(3735928495, 4096, true)",
+      "expected": null,
+      "rust": "PhysFrame::<Size4KiB>::from_start_address(PhysAddr::new(3735928495)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(4503599627370495, 4096, true)",
+      "expected": 4503599627366400,
+      "rust": "Some(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(4503599627370495)).start_address().as_u64())",
+      "rust_expected": 4503599627366400
+    },
+    {
+      "call": "from_start(4503599627370495, 4096, true)",
+      "expected": null,
+      "rust": "PhysFrame::<Size4KiB>::from_start_address(PhysAddr::new(4503599627370495)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "arithmetic(12288, 4096, 2, false, true)",
+      "expected": 20480,
+      "rust": "caught(|| (PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288)) + 2u64).start_address().as_u64())",
+      "rust_expected": 20480
+    },
+    {
+      "call": "arithmetic(12288, 4096, 2, true, true)",
+      "expected": 4096,
+      "rust": "caught(|| (PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288)) - 2u64).start_address().as_u64())",
+      "rust_expected": 4096
+    },
+    {
+      "call": "range_count(0, 12288, 4096, false, true)",
+      "expected": 3,
+      "rust": "Some(PhysFrame::range(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).len())",
+      "rust_expected": 3
+    },
+    {
+      "call": "range_bytes(0, 12288, 4096, false, true)",
+      "expected": 12288,
+      "rust": "Some(PhysFrame::range(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).size())",
+      "rust_expected": 12288
+    },
+    {
+      "call": "range_at(0, 12288, 4096, false, true, 0, false)",
+      "expected": 0,
+      "rust": "PhysFrame::range(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).nth(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 12288, 4096, false, true, 0, true)",
+      "expected": 8192,
+      "rust": "PhysFrame::range(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).nth_back(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 8192
+    },
+    {
+      "call": "range_at(0, 12288, 4096, false, true, 2, false)",
+      "expected": 8192,
+      "rust": "PhysFrame::range(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).nth(2).map(|p| p.start_address().as_u64())",
+      "rust_expected": 8192
+    },
+    {
+      "call": "range_at(0, 12288, 4096, false, true, 2, true)",
+      "expected": 0,
+      "rust": "PhysFrame::range(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).nth_back(2).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 12288, 4096, false, true, 3, false)",
+      "expected": null,
+      "rust": "PhysFrame::range(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).nth(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(0, 12288, 4096, false, true, 3, true)",
+      "expected": null,
+      "rust": "PhysFrame::range(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).nth_back(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(0, 12288, 4096, true, true)",
+      "expected": 4,
+      "rust": "Some(PhysFrame::range_inclusive(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).len())",
+      "rust_expected": 4
+    },
+    {
+      "call": "range_bytes(0, 12288, 4096, true, true)",
+      "expected": 16384,
+      "rust": "Some(PhysFrame::range_inclusive(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).size())",
+      "rust_expected": 16384
+    },
+    {
+      "call": "range_at(0, 12288, 4096, true, true, 0, false)",
+      "expected": 0,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).nth(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 12288, 4096, true, true, 0, true)",
+      "expected": 12288,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).nth_back(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 12288
+    },
+    {
+      "call": "range_at(0, 12288, 4096, true, true, 3, false)",
+      "expected": 12288,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).nth(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": 12288
+    },
+    {
+      "call": "range_at(0, 12288, 4096, true, true, 3, true)",
+      "expected": 0,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).nth_back(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 12288, 4096, true, true, 4, false)",
+      "expected": null,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).nth(4).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(0, 12288, 4096, true, true, 4, true)",
+      "expected": null,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(12288))).nth_back(4).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(4503599627366400, 4503599627366400, 4096, true, true, 0, false)",
+      "expected": 4503599627366400,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(4503599627366400)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(4503599627366400))).next().map(|p| p.start_address().as_u64())",
+      "rust_expected": 4503599627366400
+    },
+    {
+      "call": "range_at(4503599627366400, 4503599627366400, 4096, true, true, 1, false)",
+      "expected": null,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(4503599627366400)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(4503599627366400))).nth(1).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(4096, 0, 4096, false, true)",
+      "expected": 0,
+      "rust": "Some(PhysFrame::range(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(4096)), PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(0))).len())",
+      "rust_expected": 0
+    },
+    {
+      "call": "frame_from_pfn(0, 4096)",
+      "expected": 0,
+      "rust": "PhysFrame::<Size4KiB>::try_from_pfn(0).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "frame_from_pfn(291, 4096)",
+      "expected": 1191936,
+      "rust": "PhysFrame::<Size4KiB>::try_from_pfn(291).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 1191936
+    },
+    {
+      "call": "frame_from_pfn(1099511627775, 4096)",
+      "expected": 4503599627366400,
+      "rust": "PhysFrame::<Size4KiB>::try_from_pfn(1099511627775).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 4503599627366400
+    },
+    {
+      "call": "frame_from_pfn(1099511627776, 4096)",
+      "expected": null,
+      "rust": "PhysFrame::<Size4KiB>::try_from_pfn(1099511627776).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "frame_from_pfn(18446744073709551615, 4096)",
+      "expected": null,
+      "rust": "PhysFrame::<Size4KiB>::try_from_pfn(18446744073709551615).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "frame_pfn(3221225472, 4096)",
+      "expected": 786432,
+      "rust": "Some(PhysFrame::<Size4KiB>::containing_address(PhysAddr::new(3221225472)).pfn())",
+      "rust_expected": 786432
+    },
+    {
+      "call": "from_indices(511, 123, 45, 67, 4096)",
+      "expected": 18446743656118628352,
+      "rust": "Some(Page::<Size4KiB>::from_page_table_indices(PageTableIndex::new(511), PageTableIndex::new(123), PageTableIndex::new(45), PageTableIndex::new(67)).start_address().as_u64())",
+      "rust_expected": 18446743656118628352
+    },
+    {
+      "call": "step(140737488351232, 4096, 1, false)",
+      "expected": 18446603336221196288,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(140737488351232)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 18446603336221196288
+    },
+    {
+      "call": "arithmetic(140737488351232, 4096, 1, false, false)",
+      "expected": null,
+      "rust": "caught(|| (Page::<Size4KiB>::containing_address(VirtAddr::new(140737488351232)) + 1u64).start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "step(18446603336221196288, 4096, 1, true)",
+      "expected": 140737488351232,
+      "rust": "Step::backward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 140737488351232
+    },
+    {
+      "call": "arithmetic(18446603336221196288, 4096, 1, true, false)",
+      "expected": null,
+      "rust": "caught(|| (Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288)) - 1u64).start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "steps_between(140737488351232, 18446603336221196288, 4096)",
+      "expected": 1,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(140737488351232)), &Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288))).1.map(|n|n as u64)",
+      "rust_expected": 1
+    },
+    {
+      "call": "difference(18446603336221196288, 140737488351232, 4096, false)",
+      "expected": 4503530907893761,
+      "rust": "Some(Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288)) - Page::<Size4KiB>::containing_address(VirtAddr::new(140737488351232)))",
+      "rust_expected": 4503530907893761
+    },
+    {
+      "call": "range_count(140737488351232, 18446603336221196288, 4096, false, false)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(140737488351232, 140737488351232, 4096, true, false, 0, false)",
+      "expected": 140737488351232,
+      "rust": "caught(|| Page::range_inclusive(Page::<Size4KiB>::containing_address(VirtAddr::new(140737488351232)), Page::<Size4KiB>::containing_address(VirtAddr::new(140737488351232))).next().unwrap().start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(18446603336221196288, 18446603336221196288, 4096, true, false, 0, true)",
+      "expected": 18446603336221196288,
+      "rust": "caught(|| Page::range_inclusive(Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288)), Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288))).next_back().unwrap().start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(0, 2097152, false)",
+      "expected": 0,
+      "rust": "Some(Page::<Size2MiB>::containing_address(VirtAddr::new(0)).start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "from_start(0, 2097152, false)",
+      "expected": 0,
+      "rust": "Page::<Size2MiB>::from_start_address(VirtAddr::new(0)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "containing(1, 2097152, false)",
+      "expected": 0,
+      "rust": "Some(Page::<Size2MiB>::containing_address(VirtAddr::new(1)).start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "from_start(1, 2097152, false)",
+      "expected": null,
+      "rust": "Page::<Size2MiB>::from_start_address(VirtAddr::new(1)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(3735928495, 2097152, false)",
+      "expected": 3735027712,
+      "rust": "Some(Page::<Size2MiB>::containing_address(VirtAddr::new(3735928495)).start_address().as_u64())",
+      "rust_expected": 3735027712
+    },
+    {
+      "call": "from_start(3735928495, 2097152, false)",
+      "expected": null,
+      "rust": "Page::<Size2MiB>::from_start_address(VirtAddr::new(3735928495)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(18446744073709551615, 2097152, false)",
+      "expected": 18446744073707454464,
+      "rust": "Some(Page::<Size2MiB>::containing_address(VirtAddr::new(18446744073709551615)).start_address().as_u64())",
+      "rust_expected": 18446744073707454464
+    },
+    {
+      "call": "from_start(18446744073709551615, 2097152, false)",
+      "expected": null,
+      "rust": "Page::<Size2MiB>::from_start_address(VirtAddr::new(18446744073709551615)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "arithmetic(6291456, 2097152, 2, false, false)",
+      "expected": 10485760,
+      "rust": "caught(|| (Page::<Size2MiB>::containing_address(VirtAddr::new(6291456)) + 2u64).start_address().as_u64())",
+      "rust_expected": 10485760
+    },
+    {
+      "call": "arithmetic(6291456, 2097152, 2, true, false)",
+      "expected": 2097152,
+      "rust": "caught(|| (Page::<Size2MiB>::containing_address(VirtAddr::new(6291456)) - 2u64).start_address().as_u64())",
+      "rust_expected": 2097152
+    },
+    {
+      "call": "range_count(0, 6291456, 2097152, false, false)",
+      "expected": 3,
+      "rust": "Some(Page::range(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).len())",
+      "rust_expected": 3
+    },
+    {
+      "call": "range_bytes(0, 6291456, 2097152, false, false)",
+      "expected": 6291456,
+      "rust": "Some(Page::range(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).size())",
+      "rust_expected": 6291456
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, false, false, 0, false)",
+      "expected": 0,
+      "rust": "Page::range(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).nth(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, false, false, 0, true)",
+      "expected": 4194304,
+      "rust": "Page::range(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).nth_back(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 4194304
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, false, false, 2, false)",
+      "expected": 4194304,
+      "rust": "Page::range(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).nth(2).map(|p| p.start_address().as_u64())",
+      "rust_expected": 4194304
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, false, false, 2, true)",
+      "expected": 0,
+      "rust": "Page::range(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).nth_back(2).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, false, false, 3, false)",
+      "expected": null,
+      "rust": "Page::range(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).nth(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, false, false, 3, true)",
+      "expected": null,
+      "rust": "Page::range(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).nth_back(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(0, 6291456, 2097152, true, false)",
+      "expected": 4,
+      "rust": "Some(Page::range_inclusive(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).len())",
+      "rust_expected": 4
+    },
+    {
+      "call": "range_bytes(0, 6291456, 2097152, true, false)",
+      "expected": 8388608,
+      "rust": "Some(Page::range_inclusive(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).size())",
+      "rust_expected": 8388608
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, true, false, 0, false)",
+      "expected": 0,
+      "rust": "Page::range_inclusive(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).nth(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, true, false, 0, true)",
+      "expected": 6291456,
+      "rust": "Page::range_inclusive(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).nth_back(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 6291456
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, true, false, 3, false)",
+      "expected": 6291456,
+      "rust": "Page::range_inclusive(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).nth(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": 6291456
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, true, false, 3, true)",
+      "expected": 0,
+      "rust": "Page::range_inclusive(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).nth_back(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, true, false, 4, false)",
+      "expected": null,
+      "rust": "Page::range_inclusive(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).nth(4).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, true, false, 4, true)",
+      "expected": null,
+      "rust": "Page::range_inclusive(Page::<Size2MiB>::containing_address(VirtAddr::new(0)), Page::<Size2MiB>::containing_address(VirtAddr::new(6291456))).nth_back(4).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(18446744073707454464, 18446744073707454464, 2097152, true, false, 0, false)",
+      "expected": 18446744073707454464,
+      "rust": "Page::range_inclusive(Page::<Size2MiB>::containing_address(VirtAddr::new(18446744073707454464)), Page::<Size2MiB>::containing_address(VirtAddr::new(18446744073707454464))).next().map(|p| p.start_address().as_u64())",
+      "rust_expected": 18446744073707454464
+    },
+    {
+      "call": "range_at(18446744073707454464, 18446744073707454464, 2097152, true, false, 1, false)",
+      "expected": null,
+      "rust": "Page::range_inclusive(Page::<Size2MiB>::containing_address(VirtAddr::new(18446744073707454464)), Page::<Size2MiB>::containing_address(VirtAddr::new(18446744073707454464))).nth(1).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(2097152, 0, 2097152, false, false)",
+      "expected": 0,
+      "rust": "Some(Page::range(Page::<Size2MiB>::containing_address(VirtAddr::new(2097152)), Page::<Size2MiB>::containing_address(VirtAddr::new(0))).len())",
+      "rust_expected": 0
+    },
+    {
+      "call": "containing(0, 2097152, true)",
+      "expected": 0,
+      "rust": "Some(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)).start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "from_start(0, 2097152, true)",
+      "expected": 0,
+      "rust": "PhysFrame::<Size2MiB>::from_start_address(PhysAddr::new(0)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "containing(1, 2097152, true)",
+      "expected": 0,
+      "rust": "Some(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(1)).start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "from_start(1, 2097152, true)",
+      "expected": null,
+      "rust": "PhysFrame::<Size2MiB>::from_start_address(PhysAddr::new(1)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(3735928495, 2097152, true)",
+      "expected": 3735027712,
+      "rust": "Some(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(3735928495)).start_address().as_u64())",
+      "rust_expected": 3735027712
+    },
+    {
+      "call": "from_start(3735928495, 2097152, true)",
+      "expected": null,
+      "rust": "PhysFrame::<Size2MiB>::from_start_address(PhysAddr::new(3735928495)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(4503599627370495, 2097152, true)",
+      "expected": 4503599625273344,
+      "rust": "Some(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(4503599627370495)).start_address().as_u64())",
+      "rust_expected": 4503599625273344
+    },
+    {
+      "call": "from_start(4503599627370495, 2097152, true)",
+      "expected": null,
+      "rust": "PhysFrame::<Size2MiB>::from_start_address(PhysAddr::new(4503599627370495)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "arithmetic(6291456, 2097152, 2, false, true)",
+      "expected": 10485760,
+      "rust": "caught(|| (PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456)) + 2u64).start_address().as_u64())",
+      "rust_expected": 10485760
+    },
+    {
+      "call": "arithmetic(6291456, 2097152, 2, true, true)",
+      "expected": 2097152,
+      "rust": "caught(|| (PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456)) - 2u64).start_address().as_u64())",
+      "rust_expected": 2097152
+    },
+    {
+      "call": "range_count(0, 6291456, 2097152, false, true)",
+      "expected": 3,
+      "rust": "Some(PhysFrame::range(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).len())",
+      "rust_expected": 3
+    },
+    {
+      "call": "range_bytes(0, 6291456, 2097152, false, true)",
+      "expected": 6291456,
+      "rust": "Some(PhysFrame::range(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).size())",
+      "rust_expected": 6291456
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, false, true, 0, false)",
+      "expected": 0,
+      "rust": "PhysFrame::range(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).nth(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, false, true, 0, true)",
+      "expected": 4194304,
+      "rust": "PhysFrame::range(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).nth_back(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 4194304
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, false, true, 2, false)",
+      "expected": 4194304,
+      "rust": "PhysFrame::range(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).nth(2).map(|p| p.start_address().as_u64())",
+      "rust_expected": 4194304
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, false, true, 2, true)",
+      "expected": 0,
+      "rust": "PhysFrame::range(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).nth_back(2).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, false, true, 3, false)",
+      "expected": null,
+      "rust": "PhysFrame::range(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).nth(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, false, true, 3, true)",
+      "expected": null,
+      "rust": "PhysFrame::range(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).nth_back(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(0, 6291456, 2097152, true, true)",
+      "expected": 4,
+      "rust": "Some(PhysFrame::range_inclusive(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).len())",
+      "rust_expected": 4
+    },
+    {
+      "call": "range_bytes(0, 6291456, 2097152, true, true)",
+      "expected": 8388608,
+      "rust": "Some(PhysFrame::range_inclusive(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).size())",
+      "rust_expected": 8388608
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, true, true, 0, false)",
+      "expected": 0,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).nth(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, true, true, 0, true)",
+      "expected": 6291456,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).nth_back(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 6291456
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, true, true, 3, false)",
+      "expected": 6291456,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).nth(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": 6291456
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, true, true, 3, true)",
+      "expected": 0,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).nth_back(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, true, true, 4, false)",
+      "expected": null,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).nth(4).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(0, 6291456, 2097152, true, true, 4, true)",
+      "expected": null,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(6291456))).nth_back(4).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(4503599625273344, 4503599625273344, 2097152, true, true, 0, false)",
+      "expected": 4503599625273344,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(4503599625273344)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(4503599625273344))).next().map(|p| p.start_address().as_u64())",
+      "rust_expected": 4503599625273344
+    },
+    {
+      "call": "range_at(4503599625273344, 4503599625273344, 2097152, true, true, 1, false)",
+      "expected": null,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(4503599625273344)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(4503599625273344))).nth(1).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(2097152, 0, 2097152, false, true)",
+      "expected": 0,
+      "rust": "Some(PhysFrame::range(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(2097152)), PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(0))).len())",
+      "rust_expected": 0
+    },
+    {
+      "call": "frame_from_pfn(0, 2097152)",
+      "expected": 0,
+      "rust": "PhysFrame::<Size2MiB>::try_from_pfn(0).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "frame_from_pfn(291, 2097152)",
+      "expected": 610271232,
+      "rust": "PhysFrame::<Size2MiB>::try_from_pfn(291).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 610271232
+    },
+    {
+      "call": "frame_from_pfn(2147483647, 2097152)",
+      "expected": 4503599625273344,
+      "rust": "PhysFrame::<Size2MiB>::try_from_pfn(2147483647).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 4503599625273344
+    },
+    {
+      "call": "frame_from_pfn(2147483648, 2097152)",
+      "expected": null,
+      "rust": "PhysFrame::<Size2MiB>::try_from_pfn(2147483648).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "frame_from_pfn(18446744073709551615, 2097152)",
+      "expected": null,
+      "rust": "PhysFrame::<Size2MiB>::try_from_pfn(18446744073709551615).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "frame_pfn(3221225472, 2097152)",
+      "expected": 1536,
+      "rust": "Some(PhysFrame::<Size2MiB>::containing_address(PhysAddr::new(3221225472)).pfn())",
+      "rust_expected": 1536
+    },
+    {
+      "call": "from_indices(511, 123, 45, 0, 2097152)",
+      "expected": 18446743656118353920,
+      "rust": "Some(Page::<Size2MiB>::from_page_table_indices_2mib(PageTableIndex::new(511), PageTableIndex::new(123), PageTableIndex::new(45)).start_address().as_u64())",
+      "rust_expected": 18446743656118353920
+    },
+    {
+      "call": "step(140737486258176, 2097152, 1, false)",
+      "expected": 18446603336221196288,
+      "rust": "Step::forward_checked(Page::<Size2MiB>::containing_address(VirtAddr::new(140737486258176)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 18446603336221196288
+    },
+    {
+      "call": "arithmetic(140737486258176, 2097152, 1, false, false)",
+      "expected": null,
+      "rust": "caught(|| (Page::<Size2MiB>::containing_address(VirtAddr::new(140737486258176)) + 1u64).start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "step(18446603336221196288, 2097152, 1, true)",
+      "expected": 140737486258176,
+      "rust": "Step::backward_checked(Page::<Size2MiB>::containing_address(VirtAddr::new(18446603336221196288)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 140737486258176
+    },
+    {
+      "call": "arithmetic(18446603336221196288, 2097152, 1, true, false)",
+      "expected": null,
+      "rust": "caught(|| (Page::<Size2MiB>::containing_address(VirtAddr::new(18446603336221196288)) - 1u64).start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "steps_between(140737486258176, 18446603336221196288, 2097152)",
+      "expected": 1,
+      "rust": "Step::steps_between(&Page::<Size2MiB>::containing_address(VirtAddr::new(140737486258176)), &Page::<Size2MiB>::containing_address(VirtAddr::new(18446603336221196288))).1.map(|n|n as u64)",
+      "rust_expected": 1
+    },
+    {
+      "call": "difference(18446603336221196288, 140737486258176, 2097152, false)",
+      "expected": 8795958804481,
+      "rust": "Some(Page::<Size2MiB>::containing_address(VirtAddr::new(18446603336221196288)) - Page::<Size2MiB>::containing_address(VirtAddr::new(140737486258176)))",
+      "rust_expected": 8795958804481
+    },
+    {
+      "call": "range_count(140737486258176, 18446603336221196288, 2097152, false, false)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(140737486258176, 140737486258176, 2097152, true, false, 0, false)",
+      "expected": 140737486258176,
+      "rust": "caught(|| Page::range_inclusive(Page::<Size2MiB>::containing_address(VirtAddr::new(140737486258176)), Page::<Size2MiB>::containing_address(VirtAddr::new(140737486258176))).next().unwrap().start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(18446603336221196288, 18446603336221196288, 2097152, true, false, 0, true)",
+      "expected": 18446603336221196288,
+      "rust": "caught(|| Page::range_inclusive(Page::<Size2MiB>::containing_address(VirtAddr::new(18446603336221196288)), Page::<Size2MiB>::containing_address(VirtAddr::new(18446603336221196288))).next_back().unwrap().start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(0, 1073741824, false)",
+      "expected": 0,
+      "rust": "Some(Page::<Size1GiB>::containing_address(VirtAddr::new(0)).start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "from_start(0, 1073741824, false)",
+      "expected": 0,
+      "rust": "Page::<Size1GiB>::from_start_address(VirtAddr::new(0)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "containing(1, 1073741824, false)",
+      "expected": 0,
+      "rust": "Some(Page::<Size1GiB>::containing_address(VirtAddr::new(1)).start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "from_start(1, 1073741824, false)",
+      "expected": null,
+      "rust": "Page::<Size1GiB>::from_start_address(VirtAddr::new(1)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(3735928495, 1073741824, false)",
+      "expected": 3221225472,
+      "rust": "Some(Page::<Size1GiB>::containing_address(VirtAddr::new(3735928495)).start_address().as_u64())",
+      "rust_expected": 3221225472
+    },
+    {
+      "call": "from_start(3735928495, 1073741824, false)",
+      "expected": null,
+      "rust": "Page::<Size1GiB>::from_start_address(VirtAddr::new(3735928495)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(18446744073709551615, 1073741824, false)",
+      "expected": 18446744072635809792,
+      "rust": "Some(Page::<Size1GiB>::containing_address(VirtAddr::new(18446744073709551615)).start_address().as_u64())",
+      "rust_expected": 18446744072635809792
+    },
+    {
+      "call": "from_start(18446744073709551615, 1073741824, false)",
+      "expected": null,
+      "rust": "Page::<Size1GiB>::from_start_address(VirtAddr::new(18446744073709551615)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "arithmetic(3221225472, 1073741824, 2, false, false)",
+      "expected": 5368709120,
+      "rust": "caught(|| (Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472)) + 2u64).start_address().as_u64())",
+      "rust_expected": 5368709120
+    },
+    {
+      "call": "arithmetic(3221225472, 1073741824, 2, true, false)",
+      "expected": 1073741824,
+      "rust": "caught(|| (Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472)) - 2u64).start_address().as_u64())",
+      "rust_expected": 1073741824
+    },
+    {
+      "call": "range_count(0, 3221225472, 1073741824, false, false)",
+      "expected": 3,
+      "rust": "Some(Page::range(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).len())",
+      "rust_expected": 3
+    },
+    {
+      "call": "range_bytes(0, 3221225472, 1073741824, false, false)",
+      "expected": 3221225472,
+      "rust": "Some(Page::range(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).size())",
+      "rust_expected": 3221225472
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, false, false, 0, false)",
+      "expected": 0,
+      "rust": "Page::range(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).nth(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, false, false, 0, true)",
+      "expected": 2147483648,
+      "rust": "Page::range(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).nth_back(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 2147483648
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, false, false, 2, false)",
+      "expected": 2147483648,
+      "rust": "Page::range(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).nth(2).map(|p| p.start_address().as_u64())",
+      "rust_expected": 2147483648
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, false, false, 2, true)",
+      "expected": 0,
+      "rust": "Page::range(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).nth_back(2).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, false, false, 3, false)",
+      "expected": null,
+      "rust": "Page::range(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).nth(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, false, false, 3, true)",
+      "expected": null,
+      "rust": "Page::range(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).nth_back(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(0, 3221225472, 1073741824, true, false)",
+      "expected": 4,
+      "rust": "Some(Page::range_inclusive(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).len())",
+      "rust_expected": 4
+    },
+    {
+      "call": "range_bytes(0, 3221225472, 1073741824, true, false)",
+      "expected": 4294967296,
+      "rust": "Some(Page::range_inclusive(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).size())",
+      "rust_expected": 4294967296
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, true, false, 0, false)",
+      "expected": 0,
+      "rust": "Page::range_inclusive(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).nth(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, true, false, 0, true)",
+      "expected": 3221225472,
+      "rust": "Page::range_inclusive(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).nth_back(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 3221225472
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, true, false, 3, false)",
+      "expected": 3221225472,
+      "rust": "Page::range_inclusive(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).nth(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": 3221225472
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, true, false, 3, true)",
+      "expected": 0,
+      "rust": "Page::range_inclusive(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).nth_back(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, true, false, 4, false)",
+      "expected": null,
+      "rust": "Page::range_inclusive(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).nth(4).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, true, false, 4, true)",
+      "expected": null,
+      "rust": "Page::range_inclusive(Page::<Size1GiB>::containing_address(VirtAddr::new(0)), Page::<Size1GiB>::containing_address(VirtAddr::new(3221225472))).nth_back(4).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(18446744072635809792, 18446744072635809792, 1073741824, true, false, 0, false)",
+      "expected": 18446744072635809792,
+      "rust": "Page::range_inclusive(Page::<Size1GiB>::containing_address(VirtAddr::new(18446744072635809792)), Page::<Size1GiB>::containing_address(VirtAddr::new(18446744072635809792))).next().map(|p| p.start_address().as_u64())",
+      "rust_expected": 18446744072635809792
+    },
+    {
+      "call": "range_at(18446744072635809792, 18446744072635809792, 1073741824, true, false, 1, false)",
+      "expected": null,
+      "rust": "Page::range_inclusive(Page::<Size1GiB>::containing_address(VirtAddr::new(18446744072635809792)), Page::<Size1GiB>::containing_address(VirtAddr::new(18446744072635809792))).nth(1).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(1073741824, 0, 1073741824, false, false)",
+      "expected": 0,
+      "rust": "Some(Page::range(Page::<Size1GiB>::containing_address(VirtAddr::new(1073741824)), Page::<Size1GiB>::containing_address(VirtAddr::new(0))).len())",
+      "rust_expected": 0
+    },
+    {
+      "call": "containing(0, 1073741824, true)",
+      "expected": 0,
+      "rust": "Some(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)).start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "from_start(0, 1073741824, true)",
+      "expected": 0,
+      "rust": "PhysFrame::<Size1GiB>::from_start_address(PhysAddr::new(0)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "containing(1, 1073741824, true)",
+      "expected": 0,
+      "rust": "Some(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(1)).start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "from_start(1, 1073741824, true)",
+      "expected": null,
+      "rust": "PhysFrame::<Size1GiB>::from_start_address(PhysAddr::new(1)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(3735928495, 1073741824, true)",
+      "expected": 3221225472,
+      "rust": "Some(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3735928495)).start_address().as_u64())",
+      "rust_expected": 3221225472
+    },
+    {
+      "call": "from_start(3735928495, 1073741824, true)",
+      "expected": null,
+      "rust": "PhysFrame::<Size1GiB>::from_start_address(PhysAddr::new(3735928495)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(4503599627370495, 1073741824, true)",
+      "expected": 4503598553628672,
+      "rust": "Some(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(4503599627370495)).start_address().as_u64())",
+      "rust_expected": 4503598553628672
+    },
+    {
+      "call": "from_start(4503599627370495, 1073741824, true)",
+      "expected": null,
+      "rust": "PhysFrame::<Size1GiB>::from_start_address(PhysAddr::new(4503599627370495)).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "arithmetic(3221225472, 1073741824, 2, false, true)",
+      "expected": 5368709120,
+      "rust": "caught(|| (PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472)) + 2u64).start_address().as_u64())",
+      "rust_expected": 5368709120
+    },
+    {
+      "call": "arithmetic(3221225472, 1073741824, 2, true, true)",
+      "expected": 1073741824,
+      "rust": "caught(|| (PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472)) - 2u64).start_address().as_u64())",
+      "rust_expected": 1073741824
+    },
+    {
+      "call": "range_count(0, 3221225472, 1073741824, false, true)",
+      "expected": 3,
+      "rust": "Some(PhysFrame::range(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).len())",
+      "rust_expected": 3
+    },
+    {
+      "call": "range_bytes(0, 3221225472, 1073741824, false, true)",
+      "expected": 3221225472,
+      "rust": "Some(PhysFrame::range(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).size())",
+      "rust_expected": 3221225472
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, false, true, 0, false)",
+      "expected": 0,
+      "rust": "PhysFrame::range(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).nth(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, false, true, 0, true)",
+      "expected": 2147483648,
+      "rust": "PhysFrame::range(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).nth_back(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 2147483648
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, false, true, 2, false)",
+      "expected": 2147483648,
+      "rust": "PhysFrame::range(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).nth(2).map(|p| p.start_address().as_u64())",
+      "rust_expected": 2147483648
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, false, true, 2, true)",
+      "expected": 0,
+      "rust": "PhysFrame::range(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).nth_back(2).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, false, true, 3, false)",
+      "expected": null,
+      "rust": "PhysFrame::range(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).nth(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, false, true, 3, true)",
+      "expected": null,
+      "rust": "PhysFrame::range(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).nth_back(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(0, 3221225472, 1073741824, true, true)",
+      "expected": 4,
+      "rust": "Some(PhysFrame::range_inclusive(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).len())",
+      "rust_expected": 4
+    },
+    {
+      "call": "range_bytes(0, 3221225472, 1073741824, true, true)",
+      "expected": 4294967296,
+      "rust": "Some(PhysFrame::range_inclusive(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).size())",
+      "rust_expected": 4294967296
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, true, true, 0, false)",
+      "expected": 0,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).nth(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, true, true, 0, true)",
+      "expected": 3221225472,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).nth_back(0).map(|p| p.start_address().as_u64())",
+      "rust_expected": 3221225472
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, true, true, 3, false)",
+      "expected": 3221225472,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).nth(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": 3221225472
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, true, true, 3, true)",
+      "expected": 0,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).nth_back(3).map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, true, true, 4, false)",
+      "expected": null,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).nth(4).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(0, 3221225472, 1073741824, true, true, 4, true)",
+      "expected": null,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472))).nth_back(4).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(4503598553628672, 4503598553628672, 1073741824, true, true, 0, false)",
+      "expected": 4503598553628672,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(4503598553628672)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(4503598553628672))).next().map(|p| p.start_address().as_u64())",
+      "rust_expected": 4503598553628672
+    },
+    {
+      "call": "range_at(4503598553628672, 4503598553628672, 1073741824, true, true, 1, false)",
+      "expected": null,
+      "rust": "PhysFrame::range_inclusive(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(4503598553628672)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(4503598553628672))).nth(1).map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(1073741824, 0, 1073741824, false, true)",
+      "expected": 0,
+      "rust": "Some(PhysFrame::range(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(1073741824)), PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(0))).len())",
+      "rust_expected": 0
+    },
+    {
+      "call": "frame_from_pfn(0, 1073741824)",
+      "expected": 0,
+      "rust": "PhysFrame::<Size1GiB>::try_from_pfn(0).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "frame_from_pfn(291, 1073741824)",
+      "expected": 312458870784,
+      "rust": "PhysFrame::<Size1GiB>::try_from_pfn(291).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 312458870784
+    },
+    {
+      "call": "frame_from_pfn(4194303, 1073741824)",
+      "expected": 4503598553628672,
+      "rust": "PhysFrame::<Size1GiB>::try_from_pfn(4194303).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": 4503598553628672
+    },
+    {
+      "call": "frame_from_pfn(4194304, 1073741824)",
+      "expected": null,
+      "rust": "PhysFrame::<Size1GiB>::try_from_pfn(4194304).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "frame_from_pfn(18446744073709551615, 1073741824)",
+      "expected": null,
+      "rust": "PhysFrame::<Size1GiB>::try_from_pfn(18446744073709551615).ok().map(|p| p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "frame_pfn(3221225472, 1073741824)",
+      "expected": 3,
+      "rust": "Some(PhysFrame::<Size1GiB>::containing_address(PhysAddr::new(3221225472)).pfn())",
+      "rust_expected": 3
+    },
+    {
+      "call": "from_indices(511, 123, 0, 0, 1073741824)",
+      "expected": 18446743656023982080,
+      "rust": "Some(Page::<Size1GiB>::from_page_table_indices_1gib(PageTableIndex::new(511), PageTableIndex::new(123)).start_address().as_u64())",
+      "rust_expected": 18446743656023982080
+    },
+    {
+      "call": "step(140736414613504, 1073741824, 1, false)",
+      "expected": 18446603336221196288,
+      "rust": "Step::forward_checked(Page::<Size1GiB>::containing_address(VirtAddr::new(140736414613504)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 18446603336221196288
+    },
+    {
+      "call": "arithmetic(140736414613504, 1073741824, 1, false, false)",
+      "expected": null,
+      "rust": "caught(|| (Page::<Size1GiB>::containing_address(VirtAddr::new(140736414613504)) + 1u64).start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "step(18446603336221196288, 1073741824, 1, true)",
+      "expected": 140736414613504,
+      "rust": "Step::backward_checked(Page::<Size1GiB>::containing_address(VirtAddr::new(18446603336221196288)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 140736414613504
+    },
+    {
+      "call": "arithmetic(18446603336221196288, 1073741824, 1, true, false)",
+      "expected": null,
+      "rust": "caught(|| (Page::<Size1GiB>::containing_address(VirtAddr::new(18446603336221196288)) - 1u64).start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "steps_between(140736414613504, 18446603336221196288, 1073741824)",
+      "expected": 1,
+      "rust": "Step::steps_between(&Page::<Size1GiB>::containing_address(VirtAddr::new(140736414613504)), &Page::<Size1GiB>::containing_address(VirtAddr::new(18446603336221196288))).1.map(|n|n as u64)",
+      "rust_expected": 1
+    },
+    {
+      "call": "difference(18446603336221196288, 140736414613504, 1073741824, false)",
+      "expected": 17179607041,
+      "rust": "Some(Page::<Size1GiB>::containing_address(VirtAddr::new(18446603336221196288)) - Page::<Size1GiB>::containing_address(VirtAddr::new(140736414613504)))",
+      "rust_expected": 17179607041
+    },
+    {
+      "call": "range_count(140736414613504, 18446603336221196288, 1073741824, false, false)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(140736414613504, 140736414613504, 1073741824, true, false, 0, false)",
+      "expected": 140736414613504,
+      "rust": "caught(|| Page::range_inclusive(Page::<Size1GiB>::containing_address(VirtAddr::new(140736414613504)), Page::<Size1GiB>::containing_address(VirtAddr::new(140736414613504))).next().unwrap().start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "range_at(18446603336221196288, 18446603336221196288, 1073741824, true, false, 0, true)",
+      "expected": 18446603336221196288,
+      "rust": "caught(|| Page::range_inclusive(Page::<Size1GiB>::containing_address(VirtAddr::new(18446603336221196288)), Page::<Size1GiB>::containing_address(VirtAddr::new(18446603336221196288))).next_back().unwrap().start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "containing(0, 0, false)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "containing(0, 8192, false)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "from_start(140737488355328, 4096, false)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "from_start(4503599627370496, 4096, true)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "frame_from_pfn(0, 0)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "from_indices(512, 0, 0, 0, 4096)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "from_indices(0, 0, 0, 1, 2097152)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "from_indices(0, 0, 1, 0, 1073741824)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "arithmetic(0, 4096, 18446744073709551615, false, false)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "step(0, 4096, 18446744073709551615, false)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "range_count(1, 4096, 4096, false, false)",
+      "expected": null,
+      "rust": null,
+      "rust_expected": null
+    },
+    {
+      "call": "step(0, 4096, 0, false)",
+      "expected": 0,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), 0).map(|p|p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "step(0, 4096, 1, false)",
+      "expected": 4096,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 4096
+    },
+    {
+      "call": "step(4096, 4096, 1, false)",
+      "expected": 8192,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(4096)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 8192
+    },
+    {
+      "call": "step(140737488351232, 4096, 1, false)",
+      "expected": 18446603336221196288,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(140737488351232)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 18446603336221196288
+    },
+    {
+      "call": "step(18446603336221196288, 4096, 1, false)",
+      "expected": 18446603336221200384,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 18446603336221200384
+    },
+    {
+      "call": "step(18446744073709547520, 4096, 1, false)",
+      "expected": null,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(18446744073709547520)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "step(140737488351232, 4096, 4886718345, false)",
+      "expected": 18446623352219533312,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(140737488351232)), 4886718345).map(|p|p.start_address().as_u64())",
+      "rust_expected": 18446623352219533312
+    },
+    {
+      "call": "step(140737488351232, 4096, 34359738368, false)",
+      "expected": 18446744073709547520,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(140737488351232)), 34359738368).map(|p|p.start_address().as_u64())",
+      "rust_expected": 18446744073709547520
+    },
+    {
+      "call": "step(140737487306752, 4096, 34359738623, false)",
+      "expected": 18446744073709547520,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(140737487306752)), 34359738623).map(|p|p.start_address().as_u64())",
+      "rust_expected": 18446744073709547520
+    },
+    {
+      "call": "step(140737487306752, 4096, 34359738624, false)",
+      "expected": null,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(140737487306752)), 34359738624).map(|p|p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "step(140737488351232, 4096, 34359738369, false)",
+      "expected": null,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(140737488351232)), 34359738369).map(|p|p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "step(0, 4096, 1048576, false)",
+      "expected": 4294967296,
+      "rust": "Step::forward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), 1048576).map(|p|p.start_address().as_u64())",
+      "rust_expected": 4294967296
+    },
+    {
+      "call": "step(0, 4096, 0, true)",
+      "expected": 0,
+      "rust": "Step::backward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), 0).map(|p|p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "step(0, 4096, 1, true)",
+      "expected": null,
+      "rust": "Step::backward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(0)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "step(4096, 4096, 1, true)",
+      "expected": 0,
+      "rust": "Step::backward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(4096)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "step(18446603336221196288, 4096, 1, true)",
+      "expected": 140737488351232,
+      "rust": "Step::backward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 140737488351232
+    },
+    {
+      "call": "step(18446603336221200384, 4096, 1, true)",
+      "expected": 18446603336221196288,
+      "rust": "Step::backward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221200384)), 1).map(|p|p.start_address().as_u64())",
+      "rust_expected": 18446603336221196288
+    },
+    {
+      "call": "step(18446623352219533312, 4096, 4886718345, true)",
+      "expected": 140737488351232,
+      "rust": "Step::backward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(18446623352219533312)), 4886718345).map(|p|p.start_address().as_u64())",
+      "rust_expected": 140737488351232
+    },
+    {
+      "call": "step(18446603336221196288, 4096, 34359738368, true)",
+      "expected": 0,
+      "rust": "Step::backward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288)), 34359738368).map(|p|p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "step(18446603336221196288, 4096, 34359738113, true)",
+      "expected": 1044480,
+      "rust": "Step::backward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288)), 34359738113).map(|p|p.start_address().as_u64())",
+      "rust_expected": 1044480
+    },
+    {
+      "call": "step(18446603336221196288, 4096, 34359738369, true)",
+      "expected": null,
+      "rust": "Step::backward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288)), 34359738369).map(|p|p.start_address().as_u64())",
+      "rust_expected": null
+    },
+    {
+      "call": "step(4294967296, 4096, 1048576, true)",
+      "expected": 0,
+      "rust": "Step::backward_checked(Page::<Size4KiB>::containing_address(VirtAddr::new(4294967296)), 1048576).map(|p|p.start_address().as_u64())",
+      "rust_expected": 0
+    },
+    {
+      "call": "steps_between(0, 0, 4096)",
+      "expected": 0,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(0)), &Page::<Size4KiB>::containing_address(VirtAddr::new(0))).1.map(|n|n as u64)",
+      "rust_expected": 0
+    },
+    {
+      "call": "steps_between(0, 4096, 4096)",
+      "expected": 1,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(0)), &Page::<Size4KiB>::containing_address(VirtAddr::new(4096))).1.map(|n|n as u64)",
+      "rust_expected": 1
+    },
+    {
+      "call": "steps_between(4096, 0, 4096)",
+      "expected": null,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(4096)), &Page::<Size4KiB>::containing_address(VirtAddr::new(0))).1.map(|n|n as u64)",
+      "rust_expected": null
+    },
+    {
+      "call": "steps_between(4096, 4096, 4096)",
+      "expected": 0,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(4096)), &Page::<Size4KiB>::containing_address(VirtAddr::new(4096))).1.map(|n|n as u64)",
+      "rust_expected": 0
+    },
+    {
+      "call": "steps_between(140737488351232, 18446603336221196288, 4096)",
+      "expected": 1,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(140737488351232)), &Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288))).1.map(|n|n as u64)",
+      "rust_expected": 1
+    },
+    {
+      "call": "steps_between(18446603336221196288, 140737488351232, 4096)",
+      "expected": null,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288)), &Page::<Size4KiB>::containing_address(VirtAddr::new(140737488351232))).1.map(|n|n as u64)",
+      "rust_expected": null
+    },
+    {
+      "call": "steps_between(18446603336221196288, 18446603336221196288, 4096)",
+      "expected": 0,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288)), &Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288))).1.map(|n|n as u64)",
+      "rust_expected": 0
+    },
+    {
+      "call": "steps_between(18446603336221196288, 18446603336221200384, 4096)",
+      "expected": 1,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288)), &Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221200384))).1.map(|n|n as u64)",
+      "rust_expected": 1
+    },
+    {
+      "call": "steps_between(18446603336221200384, 18446603336221196288, 4096)",
+      "expected": null,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221200384)), &Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221196288))).1.map(|n|n as u64)",
+      "rust_expected": null
+    },
+    {
+      "call": "steps_between(18446603336221200384, 18446603336221200384, 4096)",
+      "expected": 0,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221200384)), &Page::<Size4KiB>::containing_address(VirtAddr::new(18446603336221200384))).1.map(|n|n as u64)",
+      "rust_expected": 0
+    },
+    {
+      "call": "steps_between(0, 4294967296, 4096)",
+      "expected": 1048576,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(0)), &Page::<Size4KiB>::containing_address(VirtAddr::new(4294967296))).1.map(|n|n as u64)",
+      "rust_expected": 1048576
+    },
+    {
+      "call": "steps_between(0, 17592186044416, 4096)",
+      "expected": 4294967296,
+      "rust": "Step::steps_between(&Page::<Size4KiB>::containing_address(VirtAddr::new(0)), &Page::<Size4KiB>::containing_address(VirtAddr::new(17592186044416))).1.map(|n|n as u64)",
+      "rust_expected": 4294967296
+    }
+  ]
+}

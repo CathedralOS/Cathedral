@@ -212,8 +212,8 @@ adds 177 observed constants and 31 tested helpers, including checked STAR
 underflow handling. The [descriptor slice](source/drivers/facts/x86_descriptors.PORT.md)
 adds semantic descriptor cases, complete byte codecs, GDT append and bitmap
 plans, four Rust tests and four body mutations; native imported-layout limits
-are recorded. Page/frame and detached table work remains; the full task
-checkboxes stay open. The [PTE codec slice](source/libraries/x86_64/page-entries.PORT.md)
+are recorded. The full task checkboxes stay open for remaining instruction,
+IDT and mapper surfaces. The [PTE codec slice](source/libraries/x86_64/page-entries.PORT.md)
 reuses the canonical entry schema: 151 Omega scenarios, 143 actual Rust
 witnesses and three body mutations pass. The modernized layout canary demands
 all fourteen fields through the existing bit policy; native ABI is not measured.
@@ -221,6 +221,9 @@ The [detached table slice](source/libraries/x86_64/tables.PORT.md) adds full-arr
 operations and captured translation: 42 actual Rust mapper calls, 43 Omega
 translation scenarios, six table/address fixtures and six body mutations pass.
 Map/unmap/update/cleanup and live ownership/invalidation integration remain open.
+The [page/frame slice](source/libraries/x86_64/pages.PORT.md) passes 267 numeric
+scenarios, 253 actual Rust witnesses, 15 upstream Rust tests, range/overflow
+extras and three body mutations. Checked canonical-gap range deviations are explicit.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

@@ -1,0 +1,46 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Adapted range endpoints and overflowing-step checks from the pinned tests.
+module extras;
+use x86::pages;
+use x86::addresses::NumberResult;
+use x86::addresses::OverflowingStep;
+machine equal(result: NumberResult, expected: u64) -> bool {
+    transition result { NumberResult::Value { value } -> (value == expected) _ -> (false) }
+}
+pub machine result() -> i32 {
+    let start: u64 = 0xdeadb000;
+    let end: u64 = start + 4096000;
+    let first: NumberResult = pages::range_at(start, end, 4096, false, false, 0, false);
+    let middle: NumberResult = pages::range_at(start, end, 4096, false, false, 499, false);
+    let last: NumberResult = pages::range_at(start, end, 4096, false, false, 999, false);
+    let exhausted: NumberResult = pages::range_at(start, end, 4096, false, false, 1000, false);
+    let included: NumberResult = pages::range_at(start, end, 4096, true, false, 1000, false);
+    let top: u64 = 0xfffffffffffff000;
+    let near_top: NumberResult = pages::range_at(0xffffffffffc17000, top, 4096, true, false, 1000, false);
+    let count50: NumberResult = pages::range_count(start, start + 204800, 4096, false, true);
+    let count51: NumberResult = pages::range_count(start, start + 204800, 4096, true, true);
+    let forward: OverflowingStep = pages::step_overflowing(0x7ffffffff000, 4096, 1, false);
+    let backward: OverflowingStep = pages::step_overflowing(0xffff800000000000, 4096, 1, true);
+    let overflow: OverflowingStep = pages::step_overflowing(top, 4096, 1, false);
+    let underflow: OverflowingStep = pages::step_overflowing(0, 4096, 1, true);
+    let passed0: bool = equal(first, start);
+    let passed1: bool = equal(middle, start + 2043904);
+    let passed2: bool = equal(last, end - 4096);
+    let passed3: bool = exhausted in NumberResult::Rejected;
+    let passed4: bool = equal(included, end);
+    let passed5: bool = equal(near_top, top);
+    let passed6: bool = equal(count50, 50);
+    let passed7: bool = equal(count51, 51);
+    let passed8: bool = forward.value == 0xffff800000000000;
+    let passed9: bool = !forward.overflow;
+    let passed10: bool = backward.value == 0x7ffffffff000;
+    let passed11: bool = !backward.overflow;
+    let passed12: bool = overflow.value == top;
+    let passed13: bool = overflow.overflow;
+    let passed14: bool = underflow.value == 0;
+    let passed15: bool = underflow.overflow;
+    transition passed0 && passed1 && passed2 && passed3 && passed4 && passed5 && passed6 && passed7 && passed8 && passed9 && passed10 && passed11 && passed12 && passed13 && passed14 && passed15 {
+        true -> (0)
+        _ -> (1)
+    }
+}

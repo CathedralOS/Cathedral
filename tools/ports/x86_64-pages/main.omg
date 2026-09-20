@@ -1,0 +1,685 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pinned page/frame test expectations with explicit checked deviations.
+use x86::pages;
+use x86::addresses::NumberResult;
+use extras;
+machine equal(result: NumberResult, expected: u64) -> bool { transition result { NumberResult::Value { value } -> (value == expected) _ -> (false) } }
+machine rejected(result: NumberResult) -> bool { result in NumberResult::Rejected }
+machine group_0() -> i32 {
+    let result0: NumberResult = pages::containing(0, 4096, false);
+    let passed0: bool = equal(result0, 0);
+    let result1: NumberResult = pages::from_start(0, 4096, false);
+    let passed1: bool = equal(result1, 0);
+    let result2: NumberResult = pages::containing(1, 4096, false);
+    let passed2: bool = equal(result2, 0);
+    let result3: NumberResult = pages::from_start(1, 4096, false);
+    let passed3: bool = rejected(result3);
+    let result4: NumberResult = pages::containing(3735928495, 4096, false);
+    let passed4: bool = equal(result4, 3735924736);
+    let result5: NumberResult = pages::from_start(3735928495, 4096, false);
+    let passed5: bool = rejected(result5);
+    let result6: NumberResult = pages::containing(18446744073709551615, 4096, false);
+    let passed6: bool = equal(result6, 18446744073709547520);
+    let result7: NumberResult = pages::from_start(18446744073709551615, 4096, false);
+    let passed7: bool = rejected(result7);
+    transition passed0 && passed1 && passed2 && passed3 && passed4 && passed5 && passed6 && passed7 { true -> (0) _ -> (1) }
+}
+machine group_8() -> i32 {
+    let result8: NumberResult = pages::arithmetic(12288, 4096, 2, false, false);
+    let passed8: bool = equal(result8, 20480);
+    let result9: NumberResult = pages::arithmetic(12288, 4096, 2, true, false);
+    let passed9: bool = equal(result9, 4096);
+    let result10: NumberResult = pages::range_count(0, 12288, 4096, false, false);
+    let passed10: bool = equal(result10, 3);
+    let result11: NumberResult = pages::range_bytes(0, 12288, 4096, false, false);
+    let passed11: bool = equal(result11, 12288);
+    let result12: NumberResult = pages::range_at(0, 12288, 4096, false, false, 0, false);
+    let passed12: bool = equal(result12, 0);
+    let result13: NumberResult = pages::range_at(0, 12288, 4096, false, false, 0, true);
+    let passed13: bool = equal(result13, 8192);
+    let result14: NumberResult = pages::range_at(0, 12288, 4096, false, false, 2, false);
+    let passed14: bool = equal(result14, 8192);
+    let result15: NumberResult = pages::range_at(0, 12288, 4096, false, false, 2, true);
+    let passed15: bool = equal(result15, 0);
+    transition passed8 && passed9 && passed10 && passed11 && passed12 && passed13 && passed14 && passed15 { true -> (0) _ -> (1) }
+}
+machine group_16() -> i32 {
+    let result16: NumberResult = pages::range_at(0, 12288, 4096, false, false, 3, false);
+    let passed16: bool = rejected(result16);
+    let result17: NumberResult = pages::range_at(0, 12288, 4096, false, false, 3, true);
+    let passed17: bool = rejected(result17);
+    let result18: NumberResult = pages::range_count(0, 12288, 4096, true, false);
+    let passed18: bool = equal(result18, 4);
+    let result19: NumberResult = pages::range_bytes(0, 12288, 4096, true, false);
+    let passed19: bool = equal(result19, 16384);
+    let result20: NumberResult = pages::range_at(0, 12288, 4096, true, false, 0, false);
+    let passed20: bool = equal(result20, 0);
+    let result21: NumberResult = pages::range_at(0, 12288, 4096, true, false, 0, true);
+    let passed21: bool = equal(result21, 12288);
+    let result22: NumberResult = pages::range_at(0, 12288, 4096, true, false, 3, false);
+    let passed22: bool = equal(result22, 12288);
+    let result23: NumberResult = pages::range_at(0, 12288, 4096, true, false, 3, true);
+    let passed23: bool = equal(result23, 0);
+    transition passed16 && passed17 && passed18 && passed19 && passed20 && passed21 && passed22 && passed23 { true -> (0) _ -> (1) }
+}
+machine group_24() -> i32 {
+    let result24: NumberResult = pages::range_at(0, 12288, 4096, true, false, 4, false);
+    let passed24: bool = rejected(result24);
+    let result25: NumberResult = pages::range_at(0, 12288, 4096, true, false, 4, true);
+    let passed25: bool = rejected(result25);
+    let result26: NumberResult = pages::range_at(18446744073709547520, 18446744073709547520, 4096, true, false, 0, false);
+    let passed26: bool = equal(result26, 18446744073709547520);
+    let result27: NumberResult = pages::range_at(18446744073709547520, 18446744073709547520, 4096, true, false, 1, false);
+    let passed27: bool = rejected(result27);
+    let result28: NumberResult = pages::range_count(4096, 0, 4096, false, false);
+    let passed28: bool = equal(result28, 0);
+    let result29: NumberResult = pages::containing(0, 4096, true);
+    let passed29: bool = equal(result29, 0);
+    let result30: NumberResult = pages::from_start(0, 4096, true);
+    let passed30: bool = equal(result30, 0);
+    let result31: NumberResult = pages::containing(1, 4096, true);
+    let passed31: bool = equal(result31, 0);
+    transition passed24 && passed25 && passed26 && passed27 && passed28 && passed29 && passed30 && passed31 { true -> (0) _ -> (1) }
+}
+machine group_32() -> i32 {
+    let result32: NumberResult = pages::from_start(1, 4096, true);
+    let passed32: bool = rejected(result32);
+    let result33: NumberResult = pages::containing(3735928495, 4096, true);
+    let passed33: bool = equal(result33, 3735924736);
+    let result34: NumberResult = pages::from_start(3735928495, 4096, true);
+    let passed34: bool = rejected(result34);
+    let result35: NumberResult = pages::containing(4503599627370495, 4096, true);
+    let passed35: bool = equal(result35, 4503599627366400);
+    let result36: NumberResult = pages::from_start(4503599627370495, 4096, true);
+    let passed36: bool = rejected(result36);
+    let result37: NumberResult = pages::arithmetic(12288, 4096, 2, false, true);
+    let passed37: bool = equal(result37, 20480);
+    let result38: NumberResult = pages::arithmetic(12288, 4096, 2, true, true);
+    let passed38: bool = equal(result38, 4096);
+    let result39: NumberResult = pages::range_count(0, 12288, 4096, false, true);
+    let passed39: bool = equal(result39, 3);
+    transition passed32 && passed33 && passed34 && passed35 && passed36 && passed37 && passed38 && passed39 { true -> (0) _ -> (1) }
+}
+machine group_40() -> i32 {
+    let result40: NumberResult = pages::range_bytes(0, 12288, 4096, false, true);
+    let passed40: bool = equal(result40, 12288);
+    let result41: NumberResult = pages::range_at(0, 12288, 4096, false, true, 0, false);
+    let passed41: bool = equal(result41, 0);
+    let result42: NumberResult = pages::range_at(0, 12288, 4096, false, true, 0, true);
+    let passed42: bool = equal(result42, 8192);
+    let result43: NumberResult = pages::range_at(0, 12288, 4096, false, true, 2, false);
+    let passed43: bool = equal(result43, 8192);
+    let result44: NumberResult = pages::range_at(0, 12288, 4096, false, true, 2, true);
+    let passed44: bool = equal(result44, 0);
+    let result45: NumberResult = pages::range_at(0, 12288, 4096, false, true, 3, false);
+    let passed45: bool = rejected(result45);
+    let result46: NumberResult = pages::range_at(0, 12288, 4096, false, true, 3, true);
+    let passed46: bool = rejected(result46);
+    let result47: NumberResult = pages::range_count(0, 12288, 4096, true, true);
+    let passed47: bool = equal(result47, 4);
+    transition passed40 && passed41 && passed42 && passed43 && passed44 && passed45 && passed46 && passed47 { true -> (0) _ -> (1) }
+}
+machine group_48() -> i32 {
+    let result48: NumberResult = pages::range_bytes(0, 12288, 4096, true, true);
+    let passed48: bool = equal(result48, 16384);
+    let result49: NumberResult = pages::range_at(0, 12288, 4096, true, true, 0, false);
+    let passed49: bool = equal(result49, 0);
+    let result50: NumberResult = pages::range_at(0, 12288, 4096, true, true, 0, true);
+    let passed50: bool = equal(result50, 12288);
+    let result51: NumberResult = pages::range_at(0, 12288, 4096, true, true, 3, false);
+    let passed51: bool = equal(result51, 12288);
+    let result52: NumberResult = pages::range_at(0, 12288, 4096, true, true, 3, true);
+    let passed52: bool = equal(result52, 0);
+    let result53: NumberResult = pages::range_at(0, 12288, 4096, true, true, 4, false);
+    let passed53: bool = rejected(result53);
+    let result54: NumberResult = pages::range_at(0, 12288, 4096, true, true, 4, true);
+    let passed54: bool = rejected(result54);
+    let result55: NumberResult = pages::range_at(4503599627366400, 4503599627366400, 4096, true, true, 0, false);
+    let passed55: bool = equal(result55, 4503599627366400);
+    transition passed48 && passed49 && passed50 && passed51 && passed52 && passed53 && passed54 && passed55 { true -> (0) _ -> (1) }
+}
+machine group_56() -> i32 {
+    let result56: NumberResult = pages::range_at(4503599627366400, 4503599627366400, 4096, true, true, 1, false);
+    let passed56: bool = rejected(result56);
+    let result57: NumberResult = pages::range_count(4096, 0, 4096, false, true);
+    let passed57: bool = equal(result57, 0);
+    let result58: NumberResult = pages::frame_from_pfn(0, 4096);
+    let passed58: bool = equal(result58, 0);
+    let result59: NumberResult = pages::frame_from_pfn(291, 4096);
+    let passed59: bool = equal(result59, 1191936);
+    let result60: NumberResult = pages::frame_from_pfn(1099511627775, 4096);
+    let passed60: bool = equal(result60, 4503599627366400);
+    let result61: NumberResult = pages::frame_from_pfn(1099511627776, 4096);
+    let passed61: bool = rejected(result61);
+    let result62: NumberResult = pages::frame_from_pfn(18446744073709551615, 4096);
+    let passed62: bool = rejected(result62);
+    let result63: NumberResult = pages::frame_pfn(3221225472, 4096);
+    let passed63: bool = equal(result63, 786432);
+    transition passed56 && passed57 && passed58 && passed59 && passed60 && passed61 && passed62 && passed63 { true -> (0) _ -> (1) }
+}
+machine group_64() -> i32 {
+    let result64: NumberResult = pages::from_indices(511, 123, 45, 67, 4096);
+    let passed64: bool = equal(result64, 18446743656118628352);
+    let result65: NumberResult = pages::step(140737488351232, 4096, 1, false);
+    let passed65: bool = equal(result65, 18446603336221196288);
+    let result66: NumberResult = pages::arithmetic(140737488351232, 4096, 1, false, false);
+    let passed66: bool = rejected(result66);
+    let result67: NumberResult = pages::step(18446603336221196288, 4096, 1, true);
+    let passed67: bool = equal(result67, 140737488351232);
+    let result68: NumberResult = pages::arithmetic(18446603336221196288, 4096, 1, true, false);
+    let passed68: bool = rejected(result68);
+    let result69: NumberResult = pages::steps_between(140737488351232, 18446603336221196288, 4096);
+    let passed69: bool = equal(result69, 1);
+    let result70: NumberResult = pages::difference(18446603336221196288, 140737488351232, 4096, false);
+    let passed70: bool = equal(result70, 4503530907893761);
+    let result71: NumberResult = pages::range_count(140737488351232, 18446603336221196288, 4096, false, false);
+    let passed71: bool = rejected(result71);
+    transition passed64 && passed65 && passed66 && passed67 && passed68 && passed69 && passed70 && passed71 { true -> (0) _ -> (1) }
+}
+machine group_72() -> i32 {
+    let result72: NumberResult = pages::range_at(140737488351232, 140737488351232, 4096, true, false, 0, false);
+    let passed72: bool = equal(result72, 140737488351232);
+    let result73: NumberResult = pages::range_at(18446603336221196288, 18446603336221196288, 4096, true, false, 0, true);
+    let passed73: bool = equal(result73, 18446603336221196288);
+    let result74: NumberResult = pages::containing(0, 2097152, false);
+    let passed74: bool = equal(result74, 0);
+    let result75: NumberResult = pages::from_start(0, 2097152, false);
+    let passed75: bool = equal(result75, 0);
+    let result76: NumberResult = pages::containing(1, 2097152, false);
+    let passed76: bool = equal(result76, 0);
+    let result77: NumberResult = pages::from_start(1, 2097152, false);
+    let passed77: bool = rejected(result77);
+    let result78: NumberResult = pages::containing(3735928495, 2097152, false);
+    let passed78: bool = equal(result78, 3735027712);
+    let result79: NumberResult = pages::from_start(3735928495, 2097152, false);
+    let passed79: bool = rejected(result79);
+    transition passed72 && passed73 && passed74 && passed75 && passed76 && passed77 && passed78 && passed79 { true -> (0) _ -> (1) }
+}
+machine group_80() -> i32 {
+    let result80: NumberResult = pages::containing(18446744073709551615, 2097152, false);
+    let passed80: bool = equal(result80, 18446744073707454464);
+    let result81: NumberResult = pages::from_start(18446744073709551615, 2097152, false);
+    let passed81: bool = rejected(result81);
+    let result82: NumberResult = pages::arithmetic(6291456, 2097152, 2, false, false);
+    let passed82: bool = equal(result82, 10485760);
+    let result83: NumberResult = pages::arithmetic(6291456, 2097152, 2, true, false);
+    let passed83: bool = equal(result83, 2097152);
+    let result84: NumberResult = pages::range_count(0, 6291456, 2097152, false, false);
+    let passed84: bool = equal(result84, 3);
+    let result85: NumberResult = pages::range_bytes(0, 6291456, 2097152, false, false);
+    let passed85: bool = equal(result85, 6291456);
+    let result86: NumberResult = pages::range_at(0, 6291456, 2097152, false, false, 0, false);
+    let passed86: bool = equal(result86, 0);
+    let result87: NumberResult = pages::range_at(0, 6291456, 2097152, false, false, 0, true);
+    let passed87: bool = equal(result87, 4194304);
+    transition passed80 && passed81 && passed82 && passed83 && passed84 && passed85 && passed86 && passed87 { true -> (0) _ -> (1) }
+}
+machine group_88() -> i32 {
+    let result88: NumberResult = pages::range_at(0, 6291456, 2097152, false, false, 2, false);
+    let passed88: bool = equal(result88, 4194304);
+    let result89: NumberResult = pages::range_at(0, 6291456, 2097152, false, false, 2, true);
+    let passed89: bool = equal(result89, 0);
+    let result90: NumberResult = pages::range_at(0, 6291456, 2097152, false, false, 3, false);
+    let passed90: bool = rejected(result90);
+    let result91: NumberResult = pages::range_at(0, 6291456, 2097152, false, false, 3, true);
+    let passed91: bool = rejected(result91);
+    let result92: NumberResult = pages::range_count(0, 6291456, 2097152, true, false);
+    let passed92: bool = equal(result92, 4);
+    let result93: NumberResult = pages::range_bytes(0, 6291456, 2097152, true, false);
+    let passed93: bool = equal(result93, 8388608);
+    let result94: NumberResult = pages::range_at(0, 6291456, 2097152, true, false, 0, false);
+    let passed94: bool = equal(result94, 0);
+    let result95: NumberResult = pages::range_at(0, 6291456, 2097152, true, false, 0, true);
+    let passed95: bool = equal(result95, 6291456);
+    transition passed88 && passed89 && passed90 && passed91 && passed92 && passed93 && passed94 && passed95 { true -> (0) _ -> (1) }
+}
+machine group_96() -> i32 {
+    let result96: NumberResult = pages::range_at(0, 6291456, 2097152, true, false, 3, false);
+    let passed96: bool = equal(result96, 6291456);
+    let result97: NumberResult = pages::range_at(0, 6291456, 2097152, true, false, 3, true);
+    let passed97: bool = equal(result97, 0);
+    let result98: NumberResult = pages::range_at(0, 6291456, 2097152, true, false, 4, false);
+    let passed98: bool = rejected(result98);
+    let result99: NumberResult = pages::range_at(0, 6291456, 2097152, true, false, 4, true);
+    let passed99: bool = rejected(result99);
+    let result100: NumberResult = pages::range_at(18446744073707454464, 18446744073707454464, 2097152, true, false, 0, false);
+    let passed100: bool = equal(result100, 18446744073707454464);
+    let result101: NumberResult = pages::range_at(18446744073707454464, 18446744073707454464, 2097152, true, false, 1, false);
+    let passed101: bool = rejected(result101);
+    let result102: NumberResult = pages::range_count(2097152, 0, 2097152, false, false);
+    let passed102: bool = equal(result102, 0);
+    let result103: NumberResult = pages::containing(0, 2097152, true);
+    let passed103: bool = equal(result103, 0);
+    transition passed96 && passed97 && passed98 && passed99 && passed100 && passed101 && passed102 && passed103 { true -> (0) _ -> (1) }
+}
+machine group_104() -> i32 {
+    let result104: NumberResult = pages::from_start(0, 2097152, true);
+    let passed104: bool = equal(result104, 0);
+    let result105: NumberResult = pages::containing(1, 2097152, true);
+    let passed105: bool = equal(result105, 0);
+    let result106: NumberResult = pages::from_start(1, 2097152, true);
+    let passed106: bool = rejected(result106);
+    let result107: NumberResult = pages::containing(3735928495, 2097152, true);
+    let passed107: bool = equal(result107, 3735027712);
+    let result108: NumberResult = pages::from_start(3735928495, 2097152, true);
+    let passed108: bool = rejected(result108);
+    let result109: NumberResult = pages::containing(4503599627370495, 2097152, true);
+    let passed109: bool = equal(result109, 4503599625273344);
+    let result110: NumberResult = pages::from_start(4503599627370495, 2097152, true);
+    let passed110: bool = rejected(result110);
+    let result111: NumberResult = pages::arithmetic(6291456, 2097152, 2, false, true);
+    let passed111: bool = equal(result111, 10485760);
+    transition passed104 && passed105 && passed106 && passed107 && passed108 && passed109 && passed110 && passed111 { true -> (0) _ -> (1) }
+}
+machine group_112() -> i32 {
+    let result112: NumberResult = pages::arithmetic(6291456, 2097152, 2, true, true);
+    let passed112: bool = equal(result112, 2097152);
+    let result113: NumberResult = pages::range_count(0, 6291456, 2097152, false, true);
+    let passed113: bool = equal(result113, 3);
+    let result114: NumberResult = pages::range_bytes(0, 6291456, 2097152, false, true);
+    let passed114: bool = equal(result114, 6291456);
+    let result115: NumberResult = pages::range_at(0, 6291456, 2097152, false, true, 0, false);
+    let passed115: bool = equal(result115, 0);
+    let result116: NumberResult = pages::range_at(0, 6291456, 2097152, false, true, 0, true);
+    let passed116: bool = equal(result116, 4194304);
+    let result117: NumberResult = pages::range_at(0, 6291456, 2097152, false, true, 2, false);
+    let passed117: bool = equal(result117, 4194304);
+    let result118: NumberResult = pages::range_at(0, 6291456, 2097152, false, true, 2, true);
+    let passed118: bool = equal(result118, 0);
+    let result119: NumberResult = pages::range_at(0, 6291456, 2097152, false, true, 3, false);
+    let passed119: bool = rejected(result119);
+    transition passed112 && passed113 && passed114 && passed115 && passed116 && passed117 && passed118 && passed119 { true -> (0) _ -> (1) }
+}
+machine group_120() -> i32 {
+    let result120: NumberResult = pages::range_at(0, 6291456, 2097152, false, true, 3, true);
+    let passed120: bool = rejected(result120);
+    let result121: NumberResult = pages::range_count(0, 6291456, 2097152, true, true);
+    let passed121: bool = equal(result121, 4);
+    let result122: NumberResult = pages::range_bytes(0, 6291456, 2097152, true, true);
+    let passed122: bool = equal(result122, 8388608);
+    let result123: NumberResult = pages::range_at(0, 6291456, 2097152, true, true, 0, false);
+    let passed123: bool = equal(result123, 0);
+    let result124: NumberResult = pages::range_at(0, 6291456, 2097152, true, true, 0, true);
+    let passed124: bool = equal(result124, 6291456);
+    let result125: NumberResult = pages::range_at(0, 6291456, 2097152, true, true, 3, false);
+    let passed125: bool = equal(result125, 6291456);
+    let result126: NumberResult = pages::range_at(0, 6291456, 2097152, true, true, 3, true);
+    let passed126: bool = equal(result126, 0);
+    let result127: NumberResult = pages::range_at(0, 6291456, 2097152, true, true, 4, false);
+    let passed127: bool = rejected(result127);
+    transition passed120 && passed121 && passed122 && passed123 && passed124 && passed125 && passed126 && passed127 { true -> (0) _ -> (1) }
+}
+machine group_128() -> i32 {
+    let result128: NumberResult = pages::range_at(0, 6291456, 2097152, true, true, 4, true);
+    let passed128: bool = rejected(result128);
+    let result129: NumberResult = pages::range_at(4503599625273344, 4503599625273344, 2097152, true, true, 0, false);
+    let passed129: bool = equal(result129, 4503599625273344);
+    let result130: NumberResult = pages::range_at(4503599625273344, 4503599625273344, 2097152, true, true, 1, false);
+    let passed130: bool = rejected(result130);
+    let result131: NumberResult = pages::range_count(2097152, 0, 2097152, false, true);
+    let passed131: bool = equal(result131, 0);
+    let result132: NumberResult = pages::frame_from_pfn(0, 2097152);
+    let passed132: bool = equal(result132, 0);
+    let result133: NumberResult = pages::frame_from_pfn(291, 2097152);
+    let passed133: bool = equal(result133, 610271232);
+    let result134: NumberResult = pages::frame_from_pfn(2147483647, 2097152);
+    let passed134: bool = equal(result134, 4503599625273344);
+    let result135: NumberResult = pages::frame_from_pfn(2147483648, 2097152);
+    let passed135: bool = rejected(result135);
+    transition passed128 && passed129 && passed130 && passed131 && passed132 && passed133 && passed134 && passed135 { true -> (0) _ -> (1) }
+}
+machine group_136() -> i32 {
+    let result136: NumberResult = pages::frame_from_pfn(18446744073709551615, 2097152);
+    let passed136: bool = rejected(result136);
+    let result137: NumberResult = pages::frame_pfn(3221225472, 2097152);
+    let passed137: bool = equal(result137, 1536);
+    let result138: NumberResult = pages::from_indices(511, 123, 45, 0, 2097152);
+    let passed138: bool = equal(result138, 18446743656118353920);
+    let result139: NumberResult = pages::step(140737486258176, 2097152, 1, false);
+    let passed139: bool = equal(result139, 18446603336221196288);
+    let result140: NumberResult = pages::arithmetic(140737486258176, 2097152, 1, false, false);
+    let passed140: bool = rejected(result140);
+    let result141: NumberResult = pages::step(18446603336221196288, 2097152, 1, true);
+    let passed141: bool = equal(result141, 140737486258176);
+    let result142: NumberResult = pages::arithmetic(18446603336221196288, 2097152, 1, true, false);
+    let passed142: bool = rejected(result142);
+    let result143: NumberResult = pages::steps_between(140737486258176, 18446603336221196288, 2097152);
+    let passed143: bool = equal(result143, 1);
+    transition passed136 && passed137 && passed138 && passed139 && passed140 && passed141 && passed142 && passed143 { true -> (0) _ -> (1) }
+}
+machine group_144() -> i32 {
+    let result144: NumberResult = pages::difference(18446603336221196288, 140737486258176, 2097152, false);
+    let passed144: bool = equal(result144, 8795958804481);
+    let result145: NumberResult = pages::range_count(140737486258176, 18446603336221196288, 2097152, false, false);
+    let passed145: bool = rejected(result145);
+    let result146: NumberResult = pages::range_at(140737486258176, 140737486258176, 2097152, true, false, 0, false);
+    let passed146: bool = equal(result146, 140737486258176);
+    let result147: NumberResult = pages::range_at(18446603336221196288, 18446603336221196288, 2097152, true, false, 0, true);
+    let passed147: bool = equal(result147, 18446603336221196288);
+    let result148: NumberResult = pages::containing(0, 1073741824, false);
+    let passed148: bool = equal(result148, 0);
+    let result149: NumberResult = pages::from_start(0, 1073741824, false);
+    let passed149: bool = equal(result149, 0);
+    let result150: NumberResult = pages::containing(1, 1073741824, false);
+    let passed150: bool = equal(result150, 0);
+    let result151: NumberResult = pages::from_start(1, 1073741824, false);
+    let passed151: bool = rejected(result151);
+    transition passed144 && passed145 && passed146 && passed147 && passed148 && passed149 && passed150 && passed151 { true -> (0) _ -> (1) }
+}
+machine group_152() -> i32 {
+    let result152: NumberResult = pages::containing(3735928495, 1073741824, false);
+    let passed152: bool = equal(result152, 3221225472);
+    let result153: NumberResult = pages::from_start(3735928495, 1073741824, false);
+    let passed153: bool = rejected(result153);
+    let result154: NumberResult = pages::containing(18446744073709551615, 1073741824, false);
+    let passed154: bool = equal(result154, 18446744072635809792);
+    let result155: NumberResult = pages::from_start(18446744073709551615, 1073741824, false);
+    let passed155: bool = rejected(result155);
+    let result156: NumberResult = pages::arithmetic(3221225472, 1073741824, 2, false, false);
+    let passed156: bool = equal(result156, 5368709120);
+    let result157: NumberResult = pages::arithmetic(3221225472, 1073741824, 2, true, false);
+    let passed157: bool = equal(result157, 1073741824);
+    let result158: NumberResult = pages::range_count(0, 3221225472, 1073741824, false, false);
+    let passed158: bool = equal(result158, 3);
+    let result159: NumberResult = pages::range_bytes(0, 3221225472, 1073741824, false, false);
+    let passed159: bool = equal(result159, 3221225472);
+    transition passed152 && passed153 && passed154 && passed155 && passed156 && passed157 && passed158 && passed159 { true -> (0) _ -> (1) }
+}
+machine group_160() -> i32 {
+    let result160: NumberResult = pages::range_at(0, 3221225472, 1073741824, false, false, 0, false);
+    let passed160: bool = equal(result160, 0);
+    let result161: NumberResult = pages::range_at(0, 3221225472, 1073741824, false, false, 0, true);
+    let passed161: bool = equal(result161, 2147483648);
+    let result162: NumberResult = pages::range_at(0, 3221225472, 1073741824, false, false, 2, false);
+    let passed162: bool = equal(result162, 2147483648);
+    let result163: NumberResult = pages::range_at(0, 3221225472, 1073741824, false, false, 2, true);
+    let passed163: bool = equal(result163, 0);
+    let result164: NumberResult = pages::range_at(0, 3221225472, 1073741824, false, false, 3, false);
+    let passed164: bool = rejected(result164);
+    let result165: NumberResult = pages::range_at(0, 3221225472, 1073741824, false, false, 3, true);
+    let passed165: bool = rejected(result165);
+    let result166: NumberResult = pages::range_count(0, 3221225472, 1073741824, true, false);
+    let passed166: bool = equal(result166, 4);
+    let result167: NumberResult = pages::range_bytes(0, 3221225472, 1073741824, true, false);
+    let passed167: bool = equal(result167, 4294967296);
+    transition passed160 && passed161 && passed162 && passed163 && passed164 && passed165 && passed166 && passed167 { true -> (0) _ -> (1) }
+}
+machine group_168() -> i32 {
+    let result168: NumberResult = pages::range_at(0, 3221225472, 1073741824, true, false, 0, false);
+    let passed168: bool = equal(result168, 0);
+    let result169: NumberResult = pages::range_at(0, 3221225472, 1073741824, true, false, 0, true);
+    let passed169: bool = equal(result169, 3221225472);
+    let result170: NumberResult = pages::range_at(0, 3221225472, 1073741824, true, false, 3, false);
+    let passed170: bool = equal(result170, 3221225472);
+    let result171: NumberResult = pages::range_at(0, 3221225472, 1073741824, true, false, 3, true);
+    let passed171: bool = equal(result171, 0);
+    let result172: NumberResult = pages::range_at(0, 3221225472, 1073741824, true, false, 4, false);
+    let passed172: bool = rejected(result172);
+    let result173: NumberResult = pages::range_at(0, 3221225472, 1073741824, true, false, 4, true);
+    let passed173: bool = rejected(result173);
+    let result174: NumberResult = pages::range_at(18446744072635809792, 18446744072635809792, 1073741824, true, false, 0, false);
+    let passed174: bool = equal(result174, 18446744072635809792);
+    let result175: NumberResult = pages::range_at(18446744072635809792, 18446744072635809792, 1073741824, true, false, 1, false);
+    let passed175: bool = rejected(result175);
+    transition passed168 && passed169 && passed170 && passed171 && passed172 && passed173 && passed174 && passed175 { true -> (0) _ -> (1) }
+}
+machine group_176() -> i32 {
+    let result176: NumberResult = pages::range_count(1073741824, 0, 1073741824, false, false);
+    let passed176: bool = equal(result176, 0);
+    let result177: NumberResult = pages::containing(0, 1073741824, true);
+    let passed177: bool = equal(result177, 0);
+    let result178: NumberResult = pages::from_start(0, 1073741824, true);
+    let passed178: bool = equal(result178, 0);
+    let result179: NumberResult = pages::containing(1, 1073741824, true);
+    let passed179: bool = equal(result179, 0);
+    let result180: NumberResult = pages::from_start(1, 1073741824, true);
+    let passed180: bool = rejected(result180);
+    let result181: NumberResult = pages::containing(3735928495, 1073741824, true);
+    let passed181: bool = equal(result181, 3221225472);
+    let result182: NumberResult = pages::from_start(3735928495, 1073741824, true);
+    let passed182: bool = rejected(result182);
+    let result183: NumberResult = pages::containing(4503599627370495, 1073741824, true);
+    let passed183: bool = equal(result183, 4503598553628672);
+    transition passed176 && passed177 && passed178 && passed179 && passed180 && passed181 && passed182 && passed183 { true -> (0) _ -> (1) }
+}
+machine group_184() -> i32 {
+    let result184: NumberResult = pages::from_start(4503599627370495, 1073741824, true);
+    let passed184: bool = rejected(result184);
+    let result185: NumberResult = pages::arithmetic(3221225472, 1073741824, 2, false, true);
+    let passed185: bool = equal(result185, 5368709120);
+    let result186: NumberResult = pages::arithmetic(3221225472, 1073741824, 2, true, true);
+    let passed186: bool = equal(result186, 1073741824);
+    let result187: NumberResult = pages::range_count(0, 3221225472, 1073741824, false, true);
+    let passed187: bool = equal(result187, 3);
+    let result188: NumberResult = pages::range_bytes(0, 3221225472, 1073741824, false, true);
+    let passed188: bool = equal(result188, 3221225472);
+    let result189: NumberResult = pages::range_at(0, 3221225472, 1073741824, false, true, 0, false);
+    let passed189: bool = equal(result189, 0);
+    let result190: NumberResult = pages::range_at(0, 3221225472, 1073741824, false, true, 0, true);
+    let passed190: bool = equal(result190, 2147483648);
+    let result191: NumberResult = pages::range_at(0, 3221225472, 1073741824, false, true, 2, false);
+    let passed191: bool = equal(result191, 2147483648);
+    transition passed184 && passed185 && passed186 && passed187 && passed188 && passed189 && passed190 && passed191 { true -> (0) _ -> (1) }
+}
+machine group_192() -> i32 {
+    let result192: NumberResult = pages::range_at(0, 3221225472, 1073741824, false, true, 2, true);
+    let passed192: bool = equal(result192, 0);
+    let result193: NumberResult = pages::range_at(0, 3221225472, 1073741824, false, true, 3, false);
+    let passed193: bool = rejected(result193);
+    let result194: NumberResult = pages::range_at(0, 3221225472, 1073741824, false, true, 3, true);
+    let passed194: bool = rejected(result194);
+    let result195: NumberResult = pages::range_count(0, 3221225472, 1073741824, true, true);
+    let passed195: bool = equal(result195, 4);
+    let result196: NumberResult = pages::range_bytes(0, 3221225472, 1073741824, true, true);
+    let passed196: bool = equal(result196, 4294967296);
+    let result197: NumberResult = pages::range_at(0, 3221225472, 1073741824, true, true, 0, false);
+    let passed197: bool = equal(result197, 0);
+    let result198: NumberResult = pages::range_at(0, 3221225472, 1073741824, true, true, 0, true);
+    let passed198: bool = equal(result198, 3221225472);
+    let result199: NumberResult = pages::range_at(0, 3221225472, 1073741824, true, true, 3, false);
+    let passed199: bool = equal(result199, 3221225472);
+    transition passed192 && passed193 && passed194 && passed195 && passed196 && passed197 && passed198 && passed199 { true -> (0) _ -> (1) }
+}
+machine group_200() -> i32 {
+    let result200: NumberResult = pages::range_at(0, 3221225472, 1073741824, true, true, 3, true);
+    let passed200: bool = equal(result200, 0);
+    let result201: NumberResult = pages::range_at(0, 3221225472, 1073741824, true, true, 4, false);
+    let passed201: bool = rejected(result201);
+    let result202: NumberResult = pages::range_at(0, 3221225472, 1073741824, true, true, 4, true);
+    let passed202: bool = rejected(result202);
+    let result203: NumberResult = pages::range_at(4503598553628672, 4503598553628672, 1073741824, true, true, 0, false);
+    let passed203: bool = equal(result203, 4503598553628672);
+    let result204: NumberResult = pages::range_at(4503598553628672, 4503598553628672, 1073741824, true, true, 1, false);
+    let passed204: bool = rejected(result204);
+    let result205: NumberResult = pages::range_count(1073741824, 0, 1073741824, false, true);
+    let passed205: bool = equal(result205, 0);
+    let result206: NumberResult = pages::frame_from_pfn(0, 1073741824);
+    let passed206: bool = equal(result206, 0);
+    let result207: NumberResult = pages::frame_from_pfn(291, 1073741824);
+    let passed207: bool = equal(result207, 312458870784);
+    transition passed200 && passed201 && passed202 && passed203 && passed204 && passed205 && passed206 && passed207 { true -> (0) _ -> (1) }
+}
+machine group_208() -> i32 {
+    let result208: NumberResult = pages::frame_from_pfn(4194303, 1073741824);
+    let passed208: bool = equal(result208, 4503598553628672);
+    let result209: NumberResult = pages::frame_from_pfn(4194304, 1073741824);
+    let passed209: bool = rejected(result209);
+    let result210: NumberResult = pages::frame_from_pfn(18446744073709551615, 1073741824);
+    let passed210: bool = rejected(result210);
+    let result211: NumberResult = pages::frame_pfn(3221225472, 1073741824);
+    let passed211: bool = equal(result211, 3);
+    let result212: NumberResult = pages::from_indices(511, 123, 0, 0, 1073741824);
+    let passed212: bool = equal(result212, 18446743656023982080);
+    let result213: NumberResult = pages::step(140736414613504, 1073741824, 1, false);
+    let passed213: bool = equal(result213, 18446603336221196288);
+    let result214: NumberResult = pages::arithmetic(140736414613504, 1073741824, 1, false, false);
+    let passed214: bool = rejected(result214);
+    let result215: NumberResult = pages::step(18446603336221196288, 1073741824, 1, true);
+    let passed215: bool = equal(result215, 140736414613504);
+    transition passed208 && passed209 && passed210 && passed211 && passed212 && passed213 && passed214 && passed215 { true -> (0) _ -> (1) }
+}
+machine group_216() -> i32 {
+    let result216: NumberResult = pages::arithmetic(18446603336221196288, 1073741824, 1, true, false);
+    let passed216: bool = rejected(result216);
+    let result217: NumberResult = pages::steps_between(140736414613504, 18446603336221196288, 1073741824);
+    let passed217: bool = equal(result217, 1);
+    let result218: NumberResult = pages::difference(18446603336221196288, 140736414613504, 1073741824, false);
+    let passed218: bool = equal(result218, 17179607041);
+    let result219: NumberResult = pages::range_count(140736414613504, 18446603336221196288, 1073741824, false, false);
+    let passed219: bool = rejected(result219);
+    let result220: NumberResult = pages::range_at(140736414613504, 140736414613504, 1073741824, true, false, 0, false);
+    let passed220: bool = equal(result220, 140736414613504);
+    let result221: NumberResult = pages::range_at(18446603336221196288, 18446603336221196288, 1073741824, true, false, 0, true);
+    let passed221: bool = equal(result221, 18446603336221196288);
+    let result222: NumberResult = pages::containing(0, 0, false);
+    let passed222: bool = rejected(result222);
+    let result223: NumberResult = pages::containing(0, 8192, false);
+    let passed223: bool = rejected(result223);
+    transition passed216 && passed217 && passed218 && passed219 && passed220 && passed221 && passed222 && passed223 { true -> (0) _ -> (1) }
+}
+machine group_224() -> i32 {
+    let result224: NumberResult = pages::from_start(140737488355328, 4096, false);
+    let passed224: bool = rejected(result224);
+    let result225: NumberResult = pages::from_start(4503599627370496, 4096, true);
+    let passed225: bool = rejected(result225);
+    let result226: NumberResult = pages::frame_from_pfn(0, 0);
+    let passed226: bool = rejected(result226);
+    let result227: NumberResult = pages::from_indices(512, 0, 0, 0, 4096);
+    let passed227: bool = rejected(result227);
+    let result228: NumberResult = pages::from_indices(0, 0, 0, 1, 2097152);
+    let passed228: bool = rejected(result228);
+    let result229: NumberResult = pages::from_indices(0, 0, 1, 0, 1073741824);
+    let passed229: bool = rejected(result229);
+    let result230: NumberResult = pages::arithmetic(0, 4096, 18446744073709551615, false, false);
+    let passed230: bool = rejected(result230);
+    let result231: NumberResult = pages::step(0, 4096, 18446744073709551615, false);
+    let passed231: bool = rejected(result231);
+    transition passed224 && passed225 && passed226 && passed227 && passed228 && passed229 && passed230 && passed231 { true -> (0) _ -> (1) }
+}
+machine group_232() -> i32 {
+    let result232: NumberResult = pages::range_count(1, 4096, 4096, false, false);
+    let passed232: bool = rejected(result232);
+    let result233: NumberResult = pages::step(0, 4096, 0, false);
+    let passed233: bool = equal(result233, 0);
+    let result234: NumberResult = pages::step(0, 4096, 1, false);
+    let passed234: bool = equal(result234, 4096);
+    let result235: NumberResult = pages::step(4096, 4096, 1, false);
+    let passed235: bool = equal(result235, 8192);
+    let result236: NumberResult = pages::step(140737488351232, 4096, 1, false);
+    let passed236: bool = equal(result236, 18446603336221196288);
+    let result237: NumberResult = pages::step(18446603336221196288, 4096, 1, false);
+    let passed237: bool = equal(result237, 18446603336221200384);
+    let result238: NumberResult = pages::step(18446744073709547520, 4096, 1, false);
+    let passed238: bool = rejected(result238);
+    let result239: NumberResult = pages::step(140737488351232, 4096, 4886718345, false);
+    let passed239: bool = equal(result239, 18446623352219533312);
+    transition passed232 && passed233 && passed234 && passed235 && passed236 && passed237 && passed238 && passed239 { true -> (0) _ -> (1) }
+}
+machine group_240() -> i32 {
+    let result240: NumberResult = pages::step(140737488351232, 4096, 34359738368, false);
+    let passed240: bool = equal(result240, 18446744073709547520);
+    let result241: NumberResult = pages::step(140737487306752, 4096, 34359738623, false);
+    let passed241: bool = equal(result241, 18446744073709547520);
+    let result242: NumberResult = pages::step(140737487306752, 4096, 34359738624, false);
+    let passed242: bool = rejected(result242);
+    let result243: NumberResult = pages::step(140737488351232, 4096, 34359738369, false);
+    let passed243: bool = rejected(result243);
+    let result244: NumberResult = pages::step(0, 4096, 1048576, false);
+    let passed244: bool = equal(result244, 4294967296);
+    let result245: NumberResult = pages::step(0, 4096, 0, true);
+    let passed245: bool = equal(result245, 0);
+    let result246: NumberResult = pages::step(0, 4096, 1, true);
+    let passed246: bool = rejected(result246);
+    let result247: NumberResult = pages::step(4096, 4096, 1, true);
+    let passed247: bool = equal(result247, 0);
+    transition passed240 && passed241 && passed242 && passed243 && passed244 && passed245 && passed246 && passed247 { true -> (0) _ -> (1) }
+}
+machine group_248() -> i32 {
+    let result248: NumberResult = pages::step(18446603336221196288, 4096, 1, true);
+    let passed248: bool = equal(result248, 140737488351232);
+    let result249: NumberResult = pages::step(18446603336221200384, 4096, 1, true);
+    let passed249: bool = equal(result249, 18446603336221196288);
+    let result250: NumberResult = pages::step(18446623352219533312, 4096, 4886718345, true);
+    let passed250: bool = equal(result250, 140737488351232);
+    let result251: NumberResult = pages::step(18446603336221196288, 4096, 34359738368, true);
+    let passed251: bool = equal(result251, 0);
+    let result252: NumberResult = pages::step(18446603336221196288, 4096, 34359738113, true);
+    let passed252: bool = equal(result252, 1044480);
+    let result253: NumberResult = pages::step(18446603336221196288, 4096, 34359738369, true);
+    let passed253: bool = rejected(result253);
+    let result254: NumberResult = pages::step(4294967296, 4096, 1048576, true);
+    let passed254: bool = equal(result254, 0);
+    let result255: NumberResult = pages::steps_between(0, 0, 4096);
+    let passed255: bool = equal(result255, 0);
+    transition passed248 && passed249 && passed250 && passed251 && passed252 && passed253 && passed254 && passed255 { true -> (0) _ -> (1) }
+}
+machine group_256() -> i32 {
+    let result256: NumberResult = pages::steps_between(0, 4096, 4096);
+    let passed256: bool = equal(result256, 1);
+    let result257: NumberResult = pages::steps_between(4096, 0, 4096);
+    let passed257: bool = rejected(result257);
+    let result258: NumberResult = pages::steps_between(4096, 4096, 4096);
+    let passed258: bool = equal(result258, 0);
+    let result259: NumberResult = pages::steps_between(140737488351232, 18446603336221196288, 4096);
+    let passed259: bool = equal(result259, 1);
+    let result260: NumberResult = pages::steps_between(18446603336221196288, 140737488351232, 4096);
+    let passed260: bool = rejected(result260);
+    let result261: NumberResult = pages::steps_between(18446603336221196288, 18446603336221196288, 4096);
+    let passed261: bool = equal(result261, 0);
+    let result262: NumberResult = pages::steps_between(18446603336221196288, 18446603336221200384, 4096);
+    let passed262: bool = equal(result262, 1);
+    let result263: NumberResult = pages::steps_between(18446603336221200384, 18446603336221196288, 4096);
+    let passed263: bool = rejected(result263);
+    transition passed256 && passed257 && passed258 && passed259 && passed260 && passed261 && passed262 && passed263 { true -> (0) _ -> (1) }
+}
+machine group_264() -> i32 {
+    let result264: NumberResult = pages::steps_between(18446603336221200384, 18446603336221200384, 4096);
+    let passed264: bool = equal(result264, 0);
+    let result265: NumberResult = pages::steps_between(0, 4294967296, 4096);
+    let passed265: bool = equal(result265, 1048576);
+    let result266: NumberResult = pages::steps_between(0, 17592186044416, 4096);
+    let passed266: bool = equal(result266, 4294967296);
+    transition passed264 && passed265 && passed266 { true -> (0) _ -> (1) }
+}
+machine test_result() -> i32 {
+    let group_0_ok: bool = group_0() == 0;
+    let group_8_ok: bool = group_8() == 0;
+    let group_16_ok: bool = group_16() == 0;
+    let group_24_ok: bool = group_24() == 0;
+    let group_32_ok: bool = group_32() == 0;
+    let group_40_ok: bool = group_40() == 0;
+    let group_48_ok: bool = group_48() == 0;
+    let group_56_ok: bool = group_56() == 0;
+    let group_64_ok: bool = group_64() == 0;
+    let group_72_ok: bool = group_72() == 0;
+    let group_80_ok: bool = group_80() == 0;
+    let group_88_ok: bool = group_88() == 0;
+    let group_96_ok: bool = group_96() == 0;
+    let group_104_ok: bool = group_104() == 0;
+    let group_112_ok: bool = group_112() == 0;
+    let group_120_ok: bool = group_120() == 0;
+    let group_128_ok: bool = group_128() == 0;
+    let group_136_ok: bool = group_136() == 0;
+    let group_144_ok: bool = group_144() == 0;
+    let group_152_ok: bool = group_152() == 0;
+    let group_160_ok: bool = group_160() == 0;
+    let group_168_ok: bool = group_168() == 0;
+    let group_176_ok: bool = group_176() == 0;
+    let group_184_ok: bool = group_184() == 0;
+    let group_192_ok: bool = group_192() == 0;
+    let group_200_ok: bool = group_200() == 0;
+    let group_208_ok: bool = group_208() == 0;
+    let group_216_ok: bool = group_216() == 0;
+    let group_224_ok: bool = group_224() == 0;
+    let group_232_ok: bool = group_232() == 0;
+    let group_240_ok: bool = group_240() == 0;
+    let group_248_ok: bool = group_248() == 0;
+    let group_256_ok: bool = group_256() == 0;
+    let group_264_ok: bool = group_264() == 0;
+    let extras_ok: bool = extras::result() == 0;
+    transition extras_ok && group_0_ok && group_8_ok && group_16_ok && group_24_ok && group_32_ok && group_40_ok && group_48_ok && group_56_ok && group_64_ok && group_72_ok && group_80_ok && group_88_ok && group_96_ok && group_104_ok && group_112_ok && group_120_ok && group_128_ok && group_136_ok && group_144_ok && group_152_ok && group_160_ok && group_168_ok && group_176_ok && group_184_ok && group_192_ok && group_200_ok && group_208_ok && group_216_ok && group_224_ok && group_232_ok && group_240_ok && group_248_ok && group_256_ok && group_264_ok { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

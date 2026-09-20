@@ -9,6 +9,7 @@ belong to separately audited slices. No baseline count is a native ABI or
 production-integration claim.
 
 Completed slices: [tested numeric address algorithms](addresses.PORT.md) and
+[page/frame geometry and ranges](pages.PORT.md),
 [tested register facts and transformations](../../drivers/facts/x86_registers.PORT.md),
 [descriptor cases and TSS codecs](../../drivers/facts/x86_descriptors.PORT.md), and
 [PTE word/index/level operations](page-entries.PORT.md), and
