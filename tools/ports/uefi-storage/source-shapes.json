@@ -1,0 +1,4881 @@
+{
+  "pin": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a",
+  "structs": {
+    "SimpleFileSystemProtocol": {
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "fields": [
+        [
+          "revision",
+          "revision",
+          "u64",
+          "u64"
+        ],
+        [
+          "open_volume",
+          "open_volume",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, root: *mut *mut FileProtocolV1) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8
+      ]
+    },
+    "FileProtocolV1": {
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "fields": [
+        [
+          "revision",
+          "revision",
+          "FileProtocolRevision",
+          "FileProtocolRevision"
+        ],
+        [
+          "open",
+          "open",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, new_handle: *mut *mut Self, file_name: *const Char16, open_mode: FileMode, attributes: FileAttribute, ) -> Status",
+          "addr"
+        ],
+        [
+          "close",
+          "close",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
+          "addr"
+        ],
+        [
+          "delete",
+          "delete",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
+          "addr"
+        ],
+        [
+          "read",
+          "read",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status",
+          "addr"
+        ],
+        [
+          "write",
+          "write",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, buffer_size: *mut usize, buffer: *const c_void, ) -> Status",
+          "addr"
+        ],
+        [
+          "get_position",
+          "get_position",
+          "unsafe extern \"efiapi\" fn(this: *const Self, position: *mut u64) -> Status",
+          "addr"
+        ],
+        [
+          "set_position",
+          "set_position",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, position: u64) -> Status",
+          "addr"
+        ],
+        [
+          "get_info",
+          "get_info",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, information_type: *const Guid, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status",
+          "addr"
+        ],
+        [
+          "set_info",
+          "set_info",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, information_type: *const Guid, buffer_size: usize, buffer: *const c_void, ) -> Status",
+          "addr"
+        ],
+        [
+          "flush",
+          "flush",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32,
+        40,
+        48,
+        56,
+        64,
+        72,
+        80
+      ]
+    },
+    "FileProtocolV2": {
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "fields": [
+        [
+          "v1",
+          "v1",
+          "FileProtocolV1",
+          "FileProtocolV1"
+        ],
+        [
+          "open_ex",
+          "open_ex",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, new_handle: *mut *mut Self, file_name: *const Char16, open_mode: FileMode, attributes: FileAttribute, token: *mut FileIoToken, ) -> Status",
+          "addr"
+        ],
+        [
+          "read_ex",
+          "read_ex",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut FileIoToken) -> Status",
+          "addr"
+        ],
+        [
+          "write_ex",
+          "write_ex",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut FileIoToken) -> Status",
+          "addr"
+        ],
+        [
+          "flush_ex",
+          "flush_ex",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut FileIoToken) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        88,
+        96,
+        104,
+        112
+      ]
+    },
+    "FileIoToken": {
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "fields": [
+        [
+          "event",
+          "event",
+          "Event",
+          "Event"
+        ],
+        [
+          "status",
+          "status",
+          "Status",
+          "Status"
+        ],
+        [
+          "buffer_size",
+          "buffer_size",
+          "usize",
+          "u64"
+        ],
+        [
+          "buffer",
+          "buffer",
+          "*mut c_void",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24
+      ]
+    },
+    "FileInfo": {
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "fields": [
+        [
+          "size",
+          "size",
+          "u64",
+          "u64"
+        ],
+        [
+          "file_size",
+          "file_size",
+          "u64",
+          "u64"
+        ],
+        [
+          "physical_size",
+          "physical_size",
+          "u64",
+          "u64"
+        ],
+        [
+          "create_time",
+          "create_time",
+          "Time",
+          "Time"
+        ],
+        [
+          "last_access_time",
+          "last_access_time",
+          "Time",
+          "Time"
+        ],
+        [
+          "modification_time",
+          "modification_time",
+          "Time",
+          "Time"
+        ],
+        [
+          "attribute",
+          "attribute",
+          "FileAttribute",
+          "FileAttribute"
+        ],
+        [
+          "file_name",
+          "file_name",
+          "[Char16; 0]",
+          "[Char16; 0]"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        40,
+        56,
+        72,
+        80
+      ]
+    },
+    "FileSystemInfo": {
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "fields": [
+        [
+          "size",
+          "size",
+          "u64",
+          "u64"
+        ],
+        [
+          "read_only",
+          "read_only",
+          "Boolean",
+          "Boolean"
+        ],
+        [
+          "volume_size",
+          "volume_size",
+          "u64",
+          "u64"
+        ],
+        [
+          "free_space",
+          "free_space",
+          "u64",
+          "u64"
+        ],
+        [
+          "block_size",
+          "block_size",
+          "u32",
+          "u32"
+        ],
+        [
+          "volume_label",
+          "volume_label",
+          "[Char16; 0]",
+          "[Char16; 0]"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32,
+        36
+      ]
+    },
+    "FileSystemVolumeLabel": {
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "fields": [
+        [
+          "volume_label",
+          "volume_label",
+          "[Char16; 0]",
+          "[Char16; 0]"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0
+      ]
+    },
+    "BlockIoMedia": {
+      "path": "uefi-raw/src/protocol/block.rs",
+      "fields": [
+        [
+          "media_id",
+          "media_id",
+          "u32",
+          "u32"
+        ],
+        [
+          "removable_media",
+          "removable_media",
+          "Boolean",
+          "Boolean"
+        ],
+        [
+          "media_present",
+          "media_present",
+          "Boolean",
+          "Boolean"
+        ],
+        [
+          "logical_partition",
+          "logical_partition",
+          "Boolean",
+          "Boolean"
+        ],
+        [
+          "read_only",
+          "read_only",
+          "Boolean",
+          "Boolean"
+        ],
+        [
+          "write_caching",
+          "write_caching",
+          "Boolean",
+          "Boolean"
+        ],
+        [
+          "block_size",
+          "block_size",
+          "u32",
+          "u32"
+        ],
+        [
+          "io_align",
+          "io_align",
+          "u32",
+          "u32"
+        ],
+        [
+          "last_block",
+          "last_block",
+          "Lba",
+          "Lba"
+        ],
+        [
+          "lowest_aligned_lba",
+          "lowest_aligned_lba",
+          "Lba",
+          "Lba"
+        ],
+        [
+          "logical_blocks_per_physical_block",
+          "logical_blocks_per_physical_block",
+          "u32",
+          "u32"
+        ],
+        [
+          "optimal_transfer_length_granularity",
+          "optimal_transfer_length_granularity",
+          "u32",
+          "u32"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        4,
+        5,
+        6,
+        7,
+        8,
+        12,
+        16,
+        24,
+        32,
+        40,
+        44
+      ]
+    },
+    "BlockIoProtocol": {
+      "path": "uefi-raw/src/protocol/block.rs",
+      "fields": [
+        [
+          "revision",
+          "revision",
+          "u64",
+          "u64"
+        ],
+        [
+          "media",
+          "media",
+          "*const BlockIoMedia",
+          "addr"
+        ],
+        [
+          "reset",
+          "reset",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, extended_verification: Boolean) -> Status",
+          "addr"
+        ],
+        [
+          "read_blocks",
+          "read_blocks",
+          "unsafe extern \"efiapi\" fn( this: *const Self, media_id: u32, lba: Lba, buffer_size: usize, buffer: *mut c_void, ) -> Status",
+          "addr"
+        ],
+        [
+          "write_blocks",
+          "write_blocks",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, media_id: u32, lba: Lba, buffer_size: usize, buffer: *const c_void, ) -> Status",
+          "addr"
+        ],
+        [
+          "flush_blocks",
+          "flush_blocks",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32,
+        40
+      ]
+    },
+    "BlockIo2Token": {
+      "path": "uefi-raw/src/protocol/block.rs",
+      "fields": [
+        [
+          "event",
+          "event",
+          "Event",
+          "Event"
+        ],
+        [
+          "transaction_status",
+          "transaction_status",
+          "Status",
+          "Status"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8
+      ]
+    },
+    "BlockIo2Protocol": {
+      "path": "uefi-raw/src/protocol/block.rs",
+      "fields": [
+        [
+          "media",
+          "media",
+          "*const BlockIoMedia",
+          "addr"
+        ],
+        [
+          "reset",
+          "reset",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, extended_verification: Boolean) -> Status",
+          "addr"
+        ],
+        [
+          "read_blocks_ex",
+          "read_blocks_ex",
+          "unsafe extern \"efiapi\" fn( this: *const Self, media_id: u32, lba: Lba, token: *mut BlockIo2Token, buffer_size: usize, buffer: *mut c_void, ) -> Status",
+          "addr"
+        ],
+        [
+          "write_blocks_ex",
+          "write_blocks_ex",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, media_id: u32, lba: Lba, token: *mut BlockIo2Token, buffer_size: usize, buffer: *const c_void, ) -> Status",
+          "addr"
+        ],
+        [
+          "flush_blocks_ex",
+          "flush_blocks_ex",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut BlockIo2Token) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32
+      ]
+    },
+    "DiskIoProtocol": {
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "fields": [
+        [
+          "revision",
+          "revision",
+          "u64",
+          "u64"
+        ],
+        [
+          "read_disk",
+          "read_disk",
+          "unsafe extern \"efiapi\" fn( this: *const Self, media_id: u32, offset: u64, buffer_size: usize, buffer: *mut c_void, ) -> Status",
+          "addr"
+        ],
+        [
+          "write_disk",
+          "write_disk",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, media_id: u32, offset: u64, buffer_size: usize, buffer: *const c_void, ) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16
+      ]
+    },
+    "DiskIo2Token": {
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "fields": [
+        [
+          "event",
+          "event",
+          "Event",
+          "Event"
+        ],
+        [
+          "transaction_status",
+          "transaction_status",
+          "Status",
+          "Status"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8
+      ]
+    },
+    "DiskIo2Protocol": {
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "fields": [
+        [
+          "revision",
+          "revision",
+          "u64",
+          "u64"
+        ],
+        [
+          "cancel",
+          "cancel",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
+          "addr"
+        ],
+        [
+          "read_disk_ex",
+          "read_disk_ex",
+          "unsafe extern \"efiapi\" fn( this: *const Self, media_id: u32, offset: u64, token: *mut DiskIo2Token, buffer_size: usize, buffer: *mut c_void, ) -> Status",
+          "addr"
+        ],
+        [
+          "write_disk_ex",
+          "write_disk_ex",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, media_id: u32, offset: u64, token: *mut DiskIo2Token, buffer_size: usize, buffer: *const c_void, ) -> Status",
+          "addr"
+        ],
+        [
+          "flush_disk_ex",
+          "flush_disk_ex",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut DiskIo2Token) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32
+      ]
+    },
+    "DiskInfoProtocol": {
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "fields": [
+        [
+          "interface",
+          "interface",
+          "Guid",
+          "Guid"
+        ],
+        [
+          "inquiry",
+          "inquiry",
+          "unsafe extern \"efiapi\" fn( this: *const Self, inquiry_data: *mut c_void, inquiry_data_size: *mut u32, ) -> Status",
+          "addr"
+        ],
+        [
+          "identify",
+          "identify",
+          "unsafe extern \"efiapi\" fn( this: *const Self, identify_data: *mut c_void, identify_data_size: *mut u32, ) -> Status",
+          "addr"
+        ],
+        [
+          "sense_data",
+          "sense_data",
+          "unsafe extern \"efiapi\" fn( this: *const Self, sense_data: *mut c_void, sense_data_size: *mut u32, sense_data_number: *mut u8, ) -> Status",
+          "addr"
+        ],
+        [
+          "which_ide",
+          "which_ide",
+          "unsafe extern \"efiapi\" fn( this: *const Self, ide_channel: *mut u32, ide_device: *mut u32, ) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        16,
+        24,
+        32,
+        40
+      ]
+    },
+    "AtaPassThruMode": {
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "fields": [
+        [
+          "attributes",
+          "attributes",
+          "AtaPassThruAttributes",
+          "AtaPassThruAttributes"
+        ],
+        [
+          "io_align",
+          "io_align",
+          "u32",
+          "u32"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        4
+      ]
+    },
+    "AtaStatusBlock": {
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "fields": [
+        [
+          "reserved1",
+          "reserved1",
+          "[u8; 2]",
+          "[u8; 2]"
+        ],
+        [
+          "status",
+          "status",
+          "u8",
+          "u8"
+        ],
+        [
+          "error",
+          "error",
+          "u8",
+          "u8"
+        ],
+        [
+          "sector_number",
+          "sector_number",
+          "u8",
+          "u8"
+        ],
+        [
+          "cylinder_low",
+          "cylinder_low",
+          "u8",
+          "u8"
+        ],
+        [
+          "cylinder_high",
+          "cylinder_high",
+          "u8",
+          "u8"
+        ],
+        [
+          "device_head",
+          "device_head",
+          "u8",
+          "u8"
+        ],
+        [
+          "sector_number_exp",
+          "sector_number_exp",
+          "u8",
+          "u8"
+        ],
+        [
+          "cylinder_low_exp",
+          "cylinder_low_exp",
+          "u8",
+          "u8"
+        ],
+        [
+          "cylinder_high_exp",
+          "cylinder_high_exp",
+          "u8",
+          "u8"
+        ],
+        [
+          "reserved2",
+          "reserved2",
+          "u8",
+          "u8"
+        ],
+        [
+          "sector_count",
+          "sector_count",
+          "u8",
+          "u8"
+        ],
+        [
+          "sector_count_exp",
+          "sector_count_exp",
+          "u8",
+          "u8"
+        ],
+        [
+          "reserved3",
+          "reserved3",
+          "[u8; 6]",
+          "[u8; 6]"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ]
+    },
+    "AtaCommandBlock": {
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "fields": [
+        [
+          "reserved1",
+          "reserved1",
+          "[u8; 2]",
+          "[u8; 2]"
+        ],
+        [
+          "command",
+          "command",
+          "u8",
+          "u8"
+        ],
+        [
+          "features",
+          "features",
+          "u8",
+          "u8"
+        ],
+        [
+          "sector_number",
+          "sector_number",
+          "u8",
+          "u8"
+        ],
+        [
+          "cylinder_low",
+          "cylinder_low",
+          "u8",
+          "u8"
+        ],
+        [
+          "cylinder_high",
+          "cylinder_high",
+          "u8",
+          "u8"
+        ],
+        [
+          "device_head",
+          "device_head",
+          "u8",
+          "u8"
+        ],
+        [
+          "sector_number_exp",
+          "sector_number_exp",
+          "u8",
+          "u8"
+        ],
+        [
+          "cylinder_low_exp",
+          "cylinder_low_exp",
+          "u8",
+          "u8"
+        ],
+        [
+          "cylinder_high_exp",
+          "cylinder_high_exp",
+          "u8",
+          "u8"
+        ],
+        [
+          "features_exp",
+          "features_exp",
+          "u8",
+          "u8"
+        ],
+        [
+          "sector_count",
+          "sector_count",
+          "u8",
+          "u8"
+        ],
+        [
+          "sector_count_exp",
+          "sector_count_exp",
+          "u8",
+          "u8"
+        ],
+        [
+          "reserved2",
+          "reserved2",
+          "[u8; 6]",
+          "[u8; 6]"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ]
+    },
+    "AtaPassThruCommandPacket": {
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "fields": [
+        [
+          "asb",
+          "asb",
+          "*mut AtaStatusBlock",
+          "addr"
+        ],
+        [
+          "acb",
+          "acb",
+          "*const AtaCommandBlock",
+          "addr"
+        ],
+        [
+          "timeout",
+          "timeout",
+          "u64",
+          "u64"
+        ],
+        [
+          "in_data_buffer",
+          "in_data_buffer",
+          "*mut c_void",
+          "addr"
+        ],
+        [
+          "out_data_buffer",
+          "out_data_buffer",
+          "*const c_void",
+          "addr"
+        ],
+        [
+          "in_transfer_length",
+          "in_transfer_length",
+          "u32",
+          "u32"
+        ],
+        [
+          "out_transfer_length",
+          "out_transfer_length",
+          "u32",
+          "u32"
+        ],
+        [
+          "protocol",
+          "protocol",
+          "AtaPassThruCommandProtocol",
+          "AtaPassThruCommandProtocol"
+        ],
+        [
+          "length",
+          "length",
+          "AtaPassThruLength",
+          "AtaPassThruLength"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32,
+        40,
+        44,
+        48,
+        49
+      ]
+    },
+    "AtaPassThruProtocol": {
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "fields": [
+        [
+          "mode",
+          "mode",
+          "*const AtaPassThruMode",
+          "addr"
+        ],
+        [
+          "pass_thru",
+          "pass_thru",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, port: u16, port_multiplier_port: u16, packet: *mut AtaPassThruCommandPacket, event: Event, ) -> Status",
+          "addr"
+        ],
+        [
+          "get_next_port",
+          "get_next_port",
+          "unsafe extern \"efiapi\" fn(this: *const Self, port: *mut u16) -> Status",
+          "addr"
+        ],
+        [
+          "get_next_device",
+          "get_next_device",
+          "unsafe extern \"efiapi\" fn( this: *const Self, port: u16, port_multiplier_port: *mut u16, ) -> Status",
+          "addr"
+        ],
+        [
+          "build_device_path",
+          "build_device_path",
+          "unsafe extern \"efiapi\" fn( this: *const Self, port: u16, port_multiplier_port: u16, device_path: *mut *mut DevicePathProtocol, ) -> Status",
+          "addr"
+        ],
+        [
+          "get_device",
+          "get_device",
+          "unsafe extern \"efiapi\" fn( this: *const Self, device_path: *const DevicePathProtocol, port: *mut u16, port_multiplier_port: *mut u16, ) -> Status",
+          "addr"
+        ],
+        [
+          "reset_port",
+          "reset_port",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, port: u16) -> Status",
+          "addr"
+        ],
+        [
+          "reset_device",
+          "reset_device",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, port: u16, port_multiplier_port: u16) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32,
+        40,
+        48,
+        56
+      ]
+    },
+    "ScsiIoScsiRequestPacket": {
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "fields": [
+        [
+          "timeout",
+          "timeout",
+          "u64",
+          "u64"
+        ],
+        [
+          "in_data_buffer",
+          "in_data_buffer",
+          "*mut c_void",
+          "addr"
+        ],
+        [
+          "out_data_buffer",
+          "out_data_buffer",
+          "*mut c_void",
+          "addr"
+        ],
+        [
+          "sense_data",
+          "sense_data",
+          "*mut c_void",
+          "addr"
+        ],
+        [
+          "cdb",
+          "cdb",
+          "*mut c_void",
+          "addr"
+        ],
+        [
+          "in_transfer_length",
+          "in_transfer_length",
+          "u32",
+          "u32"
+        ],
+        [
+          "out_transfer_length",
+          "out_transfer_length",
+          "u32",
+          "u32"
+        ],
+        [
+          "cdb_length",
+          "cdb_length",
+          "u8",
+          "u8"
+        ],
+        [
+          "data_direction",
+          "data_direction",
+          "ScsiIoDataDirection",
+          "ScsiIoDataDirection"
+        ],
+        [
+          "host_adapter_status",
+          "host_adapter_status",
+          "ScsiIoHostAdapterStatus",
+          "ScsiIoHostAdapterStatus"
+        ],
+        [
+          "target_status",
+          "target_status",
+          "ScsiIoTargetStatus",
+          "ScsiIoTargetStatus"
+        ],
+        [
+          "sense_data_length",
+          "sense_data_length",
+          "u8",
+          "u8"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32,
+        40,
+        44,
+        48,
+        49,
+        50,
+        51,
+        52
+      ]
+    },
+    "ScsiIoProtocol": {
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "fields": [
+        [
+          "get_device_type",
+          "get_device_type",
+          "unsafe extern \"efiapi\" fn(this: *const Self, device_type: *mut ScsiIoType) -> Status",
+          "addr"
+        ],
+        [
+          "get_device_location",
+          "get_device_location",
+          "unsafe extern \"efiapi\" fn( this: *const Self, target: *const *mut u8, lun: *mut u64, ) -> Status",
+          "addr"
+        ],
+        [
+          "reset_bus",
+          "reset_bus",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
+          "addr"
+        ],
+        [
+          "reset_device",
+          "reset_device",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
+          "addr"
+        ],
+        [
+          "execute_scsi_command",
+          "execute_scsi_command",
+          "unsafe extern \"efiapi\" fn( this: *const Self, packet: *mut ScsiIoScsiRequestPacket, event: Event, ) -> Status",
+          "addr"
+        ],
+        [
+          "io_align",
+          "io_align",
+          "u32",
+          "u32"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32,
+        40
+      ]
+    },
+    "ExtScsiPassThruMode": {
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "fields": [
+        [
+          "adapter_id",
+          "adapter_id",
+          "u32",
+          "u32"
+        ],
+        [
+          "attributes",
+          "attributes",
+          "u32",
+          "u32"
+        ],
+        [
+          "io_align",
+          "io_align",
+          "u32",
+          "u32"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        4,
+        8
+      ]
+    },
+    "ExtScsiPassThruProtocol": {
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "fields": [
+        [
+          "passthru_mode",
+          "passthru_mode",
+          "*const ExtScsiPassThruMode",
+          "addr"
+        ],
+        [
+          "pass_thru",
+          "pass_thru",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, target: *const u8, lun: u64, packet: *mut ScsiIoScsiRequestPacket, event: Event, ) -> Status",
+          "addr"
+        ],
+        [
+          "get_next_target_lun",
+          "get_next_target_lun",
+          "unsafe extern \"efiapi\" fn(this: *const Self, target: *mut *mut u8, lun: *mut u64) -> Status",
+          "addr"
+        ],
+        [
+          "build_device_path",
+          "build_device_path",
+          "unsafe extern \"efiapi\" fn( this: *const Self, target: *const u8, lun: u64, device_path: *mut *mut DevicePathProtocol, ) -> Status",
+          "addr"
+        ],
+        [
+          "get_target_lun",
+          "get_target_lun",
+          "unsafe extern \"efiapi\" fn( this: *const Self, device_path: *const DevicePathProtocol, target: *const *mut u8, lun: *mut u64, ) -> Status",
+          "addr"
+        ],
+        [
+          "reset_channel",
+          "reset_channel",
+          "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
+          "addr"
+        ],
+        [
+          "reset_target_lun",
+          "reset_target_lun",
+          "unsafe extern \"efiapi\" fn(this: *mut Self, target: *const u8, lun: u64) -> Status",
+          "addr"
+        ],
+        [
+          "get_next_target",
+          "get_next_target",
+          "unsafe extern \"efiapi\" fn(this: *const Self, target: *mut *mut u8) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32,
+        40,
+        48,
+        56
+      ]
+    },
+    "NvmExpressPassThruMode": {
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "fields": [
+        [
+          "attributes",
+          "attributes",
+          "NvmExpressPassThruAttributes",
+          "NvmExpressPassThruAttributes"
+        ],
+        [
+          "io_align",
+          "io_align",
+          "u32",
+          "u32"
+        ],
+        [
+          "nvme_version",
+          "nvme_version",
+          "u32",
+          "u32"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        4,
+        8
+      ]
+    },
+    "NvmExpressCommand": {
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "fields": [
+        [
+          "cdw0",
+          "cdw0",
+          "u32",
+          "u32"
+        ],
+        [
+          "flags",
+          "flags",
+          "u8",
+          "u8"
+        ],
+        [
+          "nsid",
+          "nsid",
+          "u32",
+          "u32"
+        ],
+        [
+          "cdw2",
+          "cdw2",
+          "u32",
+          "u32"
+        ],
+        [
+          "cdw3",
+          "cdw3",
+          "u32",
+          "u32"
+        ],
+        [
+          "cdw10",
+          "cdw10",
+          "u32",
+          "u32"
+        ],
+        [
+          "cdw11",
+          "cdw11",
+          "u32",
+          "u32"
+        ],
+        [
+          "cdw12",
+          "cdw12",
+          "u32",
+          "u32"
+        ],
+        [
+          "cdw13",
+          "cdw13",
+          "u32",
+          "u32"
+        ],
+        [
+          "cdw14",
+          "cdw14",
+          "u32",
+          "u32"
+        ],
+        [
+          "cdw15",
+          "cdw15",
+          "u32",
+          "u32"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28,
+        32,
+        36,
+        40
+      ]
+    },
+    "NvmExpressCompletion": {
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "fields": [
+        [
+          "dw0",
+          "dw0",
+          "u32",
+          "u32"
+        ],
+        [
+          "dw1",
+          "dw1",
+          "u32",
+          "u32"
+        ],
+        [
+          "dw2",
+          "dw2",
+          "u32",
+          "u32"
+        ],
+        [
+          "dw3",
+          "dw3",
+          "u32",
+          "u32"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        4,
+        8,
+        12
+      ]
+    },
+    "NvmExpressPassThruCommandPacket": {
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "fields": [
+        [
+          "command_timeout",
+          "command_timeout",
+          "u64",
+          "u64"
+        ],
+        [
+          "transfer_buffer",
+          "transfer_buffer",
+          "*mut c_void",
+          "addr"
+        ],
+        [
+          "transfer_length",
+          "transfer_length",
+          "u32",
+          "u32"
+        ],
+        [
+          "meta_data_buffer",
+          "meta_data_buffer",
+          "*mut c_void",
+          "addr"
+        ],
+        [
+          "meta_data_length",
+          "meta_data_length",
+          "u32",
+          "u32"
+        ],
+        [
+          "queue_type",
+          "queue_type",
+          "NvmExpressQueueType",
+          "NvmExpressQueueType"
+        ],
+        [
+          "nvme_cmd",
+          "nvme_cmd",
+          "*const NvmExpressCommand",
+          "addr"
+        ],
+        [
+          "nvme_completion",
+          "nvme_completion",
+          "*mut NvmExpressCompletion",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32,
+        36,
+        40,
+        48
+      ]
+    },
+    "NvmExpressPassThruProtocol": {
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "fields": [
+        [
+          "mode",
+          "mode",
+          "*const NvmExpressPassThruMode",
+          "addr"
+        ],
+        [
+          "pass_thru",
+          "pass_thru",
+          "unsafe extern \"efiapi\" fn( this: *mut Self, namespace_id: u32, packet: *mut NvmExpressPassThruCommandPacket, event: Event, ) -> Status",
+          "addr"
+        ],
+        [
+          "get_next_namespace",
+          "get_next_namespace",
+          "unsafe extern \"efiapi\" fn(this: *const Self, namespace_id: *mut u32) -> Status",
+          "addr"
+        ],
+        [
+          "build_device_path",
+          "build_device_path",
+          "unsafe extern \"efiapi\" fn( this: *const Self, namespace_id: u32, device_path: *mut *mut DevicePathProtocol, ) -> Status",
+          "addr"
+        ],
+        [
+          "get_namespace",
+          "get_namespace",
+          "unsafe extern \"efiapi\" fn( this: *const Self, device_path: *const DevicePathProtocol, namespace_id: *mut u32, ) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32
+      ]
+    },
+    "FvWriteFileData": {
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "fields": [
+        [
+          "name_guid",
+          "name_guid",
+          "*const Guid",
+          "addr"
+        ],
+        [
+          "r#type",
+          "file_type",
+          "FvFiletype",
+          "FvFiletype"
+        ],
+        [
+          "file_attributes",
+          "file_attributes",
+          "FvFileAttributes",
+          "FvFileAttributes"
+        ],
+        [
+          "buffer",
+          "buffer",
+          "*const u8",
+          "addr"
+        ],
+        [
+          "buffer_size",
+          "buffer_size",
+          "u32",
+          "u32"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        12,
+        16,
+        24
+      ]
+    },
+    "FirmwareVolume2Protocol": {
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "fields": [
+        [
+          "get_volume_attributes",
+          "get_volume_attributes",
+          "unsafe extern \"efiapi\" fn(this: *const Self, fv_attributes: *mut FvAttributes) -> Status",
+          "addr"
+        ],
+        [
+          "set_volume_attributes",
+          "set_volume_attributes",
+          "unsafe extern \"efiapi\" fn(this: *const Self, fv_attributes: *mut FvAttributes) -> Status",
+          "addr"
+        ],
+        [
+          "read_file",
+          "read_file",
+          "unsafe extern \"efiapi\" fn( this: *const Self, name_guid: *const Guid, buffer: *mut *mut c_void, buffer_size: *mut usize, found_type: *mut FvFiletype, file_attributes: *mut FvFileAttributes, authentication_status: *mut u32, ) -> Status",
+          "addr"
+        ],
+        [
+          "read_section",
+          "read_section",
+          "unsafe extern \"efiapi\" fn( this: *const Self, name_guid: *const Guid, section_type: SectionType, section_instance: usize, buffer: *mut *mut c_void, buffer_size: *mut usize, authentication_status: *mut u32, ) -> Status",
+          "addr"
+        ],
+        [
+          "write_file",
+          "write_file",
+          "unsafe extern \"efiapi\" fn( this: *const Self, number_of_files: u32, write_policy: FvWritePolicy, file_data: *const FvWriteFileData, ) -> Status",
+          "addr"
+        ],
+        [
+          "get_next_file",
+          "get_next_file",
+          "unsafe extern \"efiapi\" fn( this: *const Self, key: *mut c_void, file_type: *mut FvFiletype, name_guid: *mut Guid, attributes: *mut FvFileAttributes, size: *mut usize, ) -> Status",
+          "addr"
+        ],
+        [
+          "key_size",
+          "key_size",
+          "u32",
+          "u32"
+        ],
+        [
+          "parent_handle",
+          "parent_handle",
+          "Handle",
+          "Handle"
+        ],
+        [
+          "get_info",
+          "get_info",
+          "unsafe extern \"efiapi\" fn( this: *const Self, information_type: *const Guid, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status",
+          "addr"
+        ],
+        [
+          "set_info",
+          "set_info",
+          "unsafe extern \"efiapi\" fn( this: *const Self, information_type: *const Guid, buffer_size: usize, buffer: *const c_void, ) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32,
+        40,
+        48,
+        56,
+        64,
+        72
+      ]
+    },
+    "FirmwareVolumeBlock2Protocol": {
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "fields": [
+        [
+          "get_attributes",
+          "get_attributes",
+          "unsafe extern \"efiapi\" fn( this: *const Self, attributes: *mut FirmwareVolumeAttributes, ) -> Status",
+          "addr"
+        ],
+        [
+          "set_attributes",
+          "set_attributes",
+          "unsafe extern \"efiapi\" fn( this: *const Self, attributes: *mut FirmwareVolumeAttributes, ) -> Status",
+          "addr"
+        ],
+        [
+          "get_physical_address",
+          "get_physical_address",
+          "unsafe extern \"efiapi\" fn(this: *const Self, address: *mut PhysicalAddress) -> Status",
+          "addr"
+        ],
+        [
+          "get_block_size",
+          "get_block_size",
+          "unsafe extern \"efiapi\" fn( this: *const Self, lba: Lba, block_size: *mut usize, number_of_blocks: *mut usize, ) -> Status",
+          "addr"
+        ],
+        [
+          "read",
+          "read",
+          "unsafe extern \"efiapi\" fn( this: *const Self, lba: Lba, offset: usize, num_bytes: *mut usize, buffer: *mut u8, ) -> Status",
+          "addr"
+        ],
+        [
+          "write",
+          "write",
+          "unsafe extern \"efiapi\" fn( this: *const Self, lba: Lba, offset: usize, num_bytes: *mut usize, buffer: *const u8, ) -> Status",
+          "addr"
+        ],
+        [
+          "erase_blocks",
+          "erase_blocks",
+          "unsafe extern \"C\" fn(this: *const Self, ...) -> Status",
+          "addr"
+        ],
+        [
+          "parent_handle",
+          "parent_handle",
+          "Handle",
+          "Handle"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32,
+        40,
+        48,
+        56
+      ]
+    },
+    "FirmwareManagementCapsuleHeader": {
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "fields": [
+        [
+          "version",
+          "version",
+          "u32",
+          "u32"
+        ],
+        [
+          "embedded_driver_count",
+          "embedded_driver_count",
+          "u16",
+          "u16"
+        ],
+        [
+          "payload_item_count",
+          "payload_item_count",
+          "u16",
+          "u16"
+        ],
+        [
+          "item_offset_list",
+          "item_offset_list",
+          "[u64; 0]",
+          "[u64; 0]"
+        ]
+      ],
+      "packed": true,
+      "offsets": [
+        0,
+        4,
+        6,
+        8
+      ]
+    },
+    "FirmwareManagementCapsuleImageHeader": {
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "fields": [
+        [
+          "version",
+          "version",
+          "u32",
+          "u32"
+        ],
+        [
+          "update_image_type_id",
+          "update_image_type_id",
+          "Guid",
+          "Guid"
+        ],
+        [
+          "update_image_index",
+          "update_image_index",
+          "u8",
+          "u8"
+        ],
+        [
+          "reserved_bytes",
+          "reserved_bytes",
+          "[u8; 3]",
+          "[u8; 3]"
+        ],
+        [
+          "update_image_size",
+          "update_image_size",
+          "u32",
+          "u32"
+        ],
+        [
+          "update_vendor_code_size",
+          "update_vendor_code_size",
+          "u32",
+          "u32"
+        ],
+        [
+          "update_hardware_instance",
+          "update_hardware_instance",
+          "u64",
+          "u64"
+        ],
+        [
+          "image_capsule_support",
+          "image_capsule_support",
+          "CapsuleSupport",
+          "CapsuleSupport"
+        ]
+      ],
+      "packed": true,
+      "offsets": [
+        0,
+        4,
+        20,
+        21,
+        24,
+        28,
+        32,
+        40
+      ]
+    },
+    "FirmwareImageDep": {
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "fields": [
+        [
+          "dependencies",
+          "dependencies",
+          "[u8; 0]",
+          "[u8; 0]"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0
+      ]
+    },
+    "FirmwareImageDescriptor": {
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "fields": [
+        [
+          "image_index",
+          "image_index",
+          "u8",
+          "u8"
+        ],
+        [
+          "image_type_id",
+          "image_type_id",
+          "Guid",
+          "Guid"
+        ],
+        [
+          "image_id",
+          "image_id",
+          "u64",
+          "u64"
+        ],
+        [
+          "image_id_name",
+          "image_id_name",
+          "*const Char16",
+          "addr"
+        ],
+        [
+          "version",
+          "version",
+          "u32",
+          "u32"
+        ],
+        [
+          "version_name",
+          "version_name",
+          "*const Char16",
+          "addr"
+        ],
+        [
+          "size",
+          "size",
+          "usize",
+          "u64"
+        ],
+        [
+          "attributes_supported",
+          "attributes_supported",
+          "ImageAttributes",
+          "ImageAttributes"
+        ],
+        [
+          "attributes_setting",
+          "attributes_setting",
+          "ImageAttributes",
+          "ImageAttributes"
+        ],
+        [
+          "compatibilities",
+          "compatibilities",
+          "ImageCompatibilities",
+          "ImageCompatibilities"
+        ],
+        [
+          "lowest_supported_image_version",
+          "lowest_supported_image_version",
+          "u32",
+          "u32"
+        ],
+        [
+          "last_attempt_version",
+          "last_attempt_version",
+          "u32",
+          "u32"
+        ],
+        [
+          "last_attempt_status",
+          "last_attempt_status",
+          "u32",
+          "u32"
+        ],
+        [
+          "hardware_instance",
+          "hardware_instance",
+          "u64",
+          "u64"
+        ],
+        [
+          "dependencies",
+          "dependencies",
+          "*const FirmwareImageDep",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        4,
+        24,
+        32,
+        40,
+        48,
+        56,
+        64,
+        72,
+        80,
+        88,
+        92,
+        96,
+        104,
+        112
+      ]
+    },
+    "FirmwareManagementProtocol": {
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "fields": [
+        [
+          "get_image_info",
+          "get_image_info",
+          "unsafe extern \"efiapi\" fn( this: *const Self, image_info_size: *mut usize, image_info: *mut FirmwareImageDescriptor, descriptor_version: *mut u32, descriptor_count: *mut u8, descriptor_size: *mut usize, package_version: *mut u32, package_version_name: *mut *mut Char16, ) -> Status",
+          "addr"
+        ],
+        [
+          "get_image",
+          "get_image",
+          "unsafe extern \"efiapi\" fn( this: *const Self, image_index: u8, image: *mut c_void, image_size: *mut usize, ) -> Status",
+          "addr"
+        ],
+        [
+          "set_image",
+          "set_image",
+          "unsafe extern \"efiapi\" fn( this: *const Self, image_index: u8, image: *const c_void, image_size: usize, vendor_code: *const c_void, progress: unsafe extern \"efiapi\" fn(completion: usize) -> Status, abort_reason: *mut *mut Char16, ) -> Status",
+          "addr"
+        ],
+        [
+          "check_image",
+          "check_image",
+          "unsafe extern \"efiapi\" fn( this: *const Self, image_index: u8, image: *const c_void, image_size: usize, image_updatable: *mut ImageUpdatable, ) -> Status",
+          "addr"
+        ],
+        [
+          "get_package_info",
+          "get_package_info",
+          "unsafe extern \"efiapi\" fn( this: *const Self, package_version: *mut u32, package_version_name: *mut *mut Char16, package_version_name_max_len: *mut u32, attributes_supported: *mut PackageAttributes, attributes_setting: *mut PackageAttributes, ) -> Status",
+          "addr"
+        ],
+        [
+          "set_package_info",
+          "set_package_info",
+          "unsafe extern \"efiapi\" fn( this: *const Self, image: *const c_void, image_size: usize, vendor_code: *const c_void, package_version: u32, package_version_name: *const Char16, ) -> Status",
+          "addr"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        8,
+        16,
+        24,
+        32,
+        40
+      ]
+    },
+    "FirmwareVolumeHeader": {
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "fields": [
+        [
+          "zero_vector",
+          "zero_vector",
+          "[u8; 16]",
+          "[u8; 16]"
+        ],
+        [
+          "file_system_guid",
+          "file_system_guid",
+          "Guid",
+          "Guid"
+        ],
+        [
+          "fv_length",
+          "fv_length",
+          "u64",
+          "u64"
+        ],
+        [
+          "signature",
+          "signature",
+          "[u8; 4]",
+          "[u8; 4]"
+        ],
+        [
+          "attributes",
+          "attributes",
+          "FirmwareVolumeAttributes",
+          "FirmwareVolumeAttributes"
+        ],
+        [
+          "header_length",
+          "header_length",
+          "u16",
+          "u16"
+        ],
+        [
+          "checksum",
+          "checksum",
+          "u16",
+          "u16"
+        ],
+        [
+          "ext_header_offset",
+          "ext_header_offset",
+          "u16",
+          "u16"
+        ],
+        [
+          "reserved",
+          "reserved",
+          "u8",
+          "u8"
+        ],
+        [
+          "revision",
+          "revision",
+          "u8",
+          "u8"
+        ],
+        [
+          "block_map",
+          "block_map",
+          "[FirmwareVolumeBlockMap; 0]",
+          "[FirmwareVolumeBlockMap; 0]"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        16,
+        32,
+        40,
+        44,
+        48,
+        50,
+        52,
+        54,
+        55,
+        56
+      ]
+    },
+    "FirmwareVolumeBlockMap": {
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "fields": [
+        [
+          "num_blocks",
+          "num_blocks",
+          "u32",
+          "u32"
+        ],
+        [
+          "length",
+          "length",
+          "u32",
+          "u32"
+        ]
+      ],
+      "packed": false,
+      "offsets": [
+        0,
+        4
+      ]
+    }
+  },
+  "wrappers": {
+    "Lba": [
+      "u64",
+      "uefi-raw/src/protocol/block.rs"
+    ],
+    "FileProtocolRevision": [
+      "u64",
+      "uefi-raw/src/protocol/file_system.rs"
+    ],
+    "FileAttribute": [
+      "u64",
+      "uefi-raw/src/protocol/file_system.rs"
+    ],
+    "FileMode": [
+      "u64",
+      "uefi-raw/src/protocol/file_system.rs"
+    ],
+    "AtaPassThruAttributes": [
+      "u32",
+      "uefi-raw/src/protocol/ata.rs"
+    ],
+    "AtaPassThruCommandProtocol": [
+      "u8",
+      "uefi-raw/src/protocol/ata.rs"
+    ],
+    "AtaPassThruLength": [
+      "u8",
+      "uefi-raw/src/protocol/ata.rs"
+    ],
+    "ScsiIoType": [
+      "u8",
+      "uefi-raw/src/protocol/scsi.rs"
+    ],
+    "ScsiIoDataDirection": [
+      "u8",
+      "uefi-raw/src/protocol/scsi.rs"
+    ],
+    "ScsiIoHostAdapterStatus": [
+      "u8",
+      "uefi-raw/src/protocol/scsi.rs"
+    ],
+    "ScsiIoTargetStatus": [
+      "u8",
+      "uefi-raw/src/protocol/scsi.rs"
+    ],
+    "NvmExpressCommandCdwValidity": [
+      "u8",
+      "uefi-raw/src/protocol/nvme.rs"
+    ],
+    "NvmExpressPassThruAttributes": [
+      "u32",
+      "uefi-raw/src/protocol/nvme.rs"
+    ],
+    "NvmExpressQueueType": [
+      "u8",
+      "uefi-raw/src/protocol/nvme.rs"
+    ],
+    "FvAttributes": [
+      "u64",
+      "uefi-raw/src/protocol/firmware_volume.rs"
+    ],
+    "FvFileAttributes": [
+      "u32",
+      "uefi-raw/src/protocol/firmware_volume.rs"
+    ],
+    "FvWritePolicy": [
+      "u32",
+      "uefi-raw/src/protocol/firmware_volume.rs"
+    ],
+    "FvFiletype": [
+      "u8",
+      "uefi-raw/src/protocol/firmware_volume.rs"
+    ],
+    "SectionType": [
+      "u8",
+      "uefi-raw/src/protocol/firmware_volume.rs"
+    ],
+    "CapsuleSupport": [
+      "u64",
+      "uefi-raw/src/protocol/firmware_management.rs"
+    ],
+    "FmpDep": [
+      "u8",
+      "uefi-raw/src/protocol/firmware_management.rs"
+    ],
+    "ImageAttributes": [
+      "u64",
+      "uefi-raw/src/protocol/firmware_management.rs"
+    ],
+    "ImageCompatibilities": [
+      "u64",
+      "uefi-raw/src/protocol/firmware_management.rs"
+    ],
+    "ImageUpdatable": [
+      "u32",
+      "uefi-raw/src/protocol/firmware_management.rs"
+    ],
+    "PackageAttributes": [
+      "u64",
+      "uefi-raw/src/protocol/firmware_management.rs"
+    ],
+    "FirmwareVolumeAttributes": [
+      "u32",
+      "uefi-raw/src/firmware_storage.rs"
+    ]
+  },
+  "constants": [
+    {
+      "name": "FILE_PROTOCOL_REVISION_REVISION_1",
+      "type": "FileProtocolRevision",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "REVISION_1",
+      "source_owner": "FileProtocolRevision",
+      "value": 65536
+    },
+    {
+      "name": "FILE_PROTOCOL_REVISION_REVISION_2",
+      "type": "FileProtocolRevision",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "REVISION_2",
+      "source_owner": "FileProtocolRevision",
+      "value": 131072
+    },
+    {
+      "name": "FILE_ATTRIBUTE_READ_ONLY",
+      "type": "FileAttribute",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "READ_ONLY",
+      "source_owner": "FileAttribute",
+      "value": 1
+    },
+    {
+      "name": "FILE_ATTRIBUTE_HIDDEN",
+      "type": "FileAttribute",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "HIDDEN",
+      "source_owner": "FileAttribute",
+      "value": 2
+    },
+    {
+      "name": "FILE_ATTRIBUTE_SYSTEM",
+      "type": "FileAttribute",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "SYSTEM",
+      "source_owner": "FileAttribute",
+      "value": 4
+    },
+    {
+      "name": "FILE_ATTRIBUTE_DIRECTORY",
+      "type": "FileAttribute",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "DIRECTORY",
+      "source_owner": "FileAttribute",
+      "value": 16
+    },
+    {
+      "name": "FILE_ATTRIBUTE_ARCHIVE",
+      "type": "FileAttribute",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "ARCHIVE",
+      "source_owner": "FileAttribute",
+      "value": 32
+    },
+    {
+      "name": "FILE_ATTRIBUTE_VALID_ATTR",
+      "type": "FileAttribute",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "VALID_ATTR",
+      "source_owner": "FileAttribute",
+      "value": 55
+    },
+    {
+      "name": "FILE_MODE_READ",
+      "type": "FileMode",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "READ",
+      "source_owner": "FileMode",
+      "value": 1
+    },
+    {
+      "name": "FILE_MODE_WRITE",
+      "type": "FileMode",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "WRITE",
+      "source_owner": "FileMode",
+      "value": 2
+    },
+    {
+      "name": "FILE_MODE_CREATE",
+      "type": "FileMode",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "CREATE",
+      "source_owner": "FileMode",
+      "value": 9223372036854775808
+    },
+    {
+      "name": "SIMPLE_FILE_SYSTEM_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "GUID",
+      "source_owner": "SimpleFileSystemProtocol",
+      "value": "964e5b22-6459-11d2-8e39-00a0c969723b"
+    },
+    {
+      "name": "FILE_INFO_ID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "ID",
+      "source_owner": "FileInfo",
+      "value": "09576e92-6d3f-11d2-8e39-00a0c969723b"
+    },
+    {
+      "name": "FILE_SYSTEM_INFO_ID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "ID",
+      "source_owner": "FileSystemInfo",
+      "value": "09576e93-6d3f-11d2-8e39-00a0c969723b"
+    },
+    {
+      "name": "FILE_SYSTEM_VOLUME_LABEL_ID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/file_system.rs",
+      "source_symbol": "ID",
+      "source_owner": "FileSystemVolumeLabel",
+      "value": "db47d7d3-fe81-11d3-9a35-0090273fc14d"
+    },
+    {
+      "name": "BLOCK_IO_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/block.rs",
+      "source_symbol": "GUID",
+      "source_owner": "BlockIoProtocol",
+      "value": "964e5b21-6459-11d2-8e39-00a0c969723b"
+    },
+    {
+      "name": "BLOCK_IO_PROTOCOL_REVISION",
+      "type": "u64",
+      "kind": "primitive",
+      "path": "uefi-raw/src/protocol/block.rs",
+      "source_symbol": "REVISION",
+      "source_owner": "BlockIoProtocol",
+      "value": 65536
+    },
+    {
+      "name": "BLOCK_IO_PROTOCOL_REVISION_2",
+      "type": "u64",
+      "kind": "primitive",
+      "path": "uefi-raw/src/protocol/block.rs",
+      "source_symbol": "REVISION_2",
+      "source_owner": "BlockIoProtocol",
+      "value": 131073
+    },
+    {
+      "name": "BLOCK_IO_PROTOCOL_REVISION_3",
+      "type": "u64",
+      "kind": "primitive",
+      "path": "uefi-raw/src/protocol/block.rs",
+      "source_symbol": "REVISION_3",
+      "source_owner": "BlockIoProtocol",
+      "value": 131103
+    },
+    {
+      "name": "BLOCK_IO2_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/block.rs",
+      "source_symbol": "GUID",
+      "source_owner": "BlockIo2Protocol",
+      "value": "a77b2472-e282-4e9f-a245-c2c0e27bbcc1"
+    },
+    {
+      "name": "DISK_IO_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "source_symbol": "GUID",
+      "source_owner": "DiskIoProtocol",
+      "value": "ce345171-ba0b-11d2-8e4f-00a0c969723b"
+    },
+    {
+      "name": "DISK_IO_PROTOCOL_REVISION",
+      "type": "u64",
+      "kind": "primitive",
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "source_symbol": "REVISION",
+      "source_owner": "DiskIoProtocol",
+      "value": 65536
+    },
+    {
+      "name": "DISK_IO2_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "source_symbol": "GUID",
+      "source_owner": "DiskIo2Protocol",
+      "value": "151c8eae-7f2c-472c-9e54-9828194f6a88"
+    },
+    {
+      "name": "DISK_IO2_PROTOCOL_REVISION",
+      "type": "u64",
+      "kind": "primitive",
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "source_symbol": "REVISION",
+      "source_owner": "DiskIo2Protocol",
+      "value": 131072
+    },
+    {
+      "name": "DISK_INFO_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "source_symbol": "GUID",
+      "source_owner": "DiskInfoProtocol",
+      "value": "d432a67f-14dc-484b-b3bb-3f0291849327"
+    },
+    {
+      "name": "DISK_INFO_PROTOCOL_IDE_INTERFACE_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "source_symbol": "IDE_INTERFACE_GUID",
+      "source_owner": "DiskInfoProtocol",
+      "value": "5e948fe3-26d3-42b5-af17-610287188dec"
+    },
+    {
+      "name": "DISK_INFO_PROTOCOL_UFS_INTERFACE_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "source_symbol": "UFS_INTERFACE_GUID",
+      "source_owner": "DiskInfoProtocol",
+      "value": "4b3029cc-6b98-47fb-bc96-76dcb80441f0"
+    },
+    {
+      "name": "DISK_INFO_PROTOCOL_USB_INTERFACE_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "source_symbol": "USB_INTERFACE_GUID",
+      "source_owner": "DiskInfoProtocol",
+      "value": "cb871572-c11a-47b5-b492-675eafa77727"
+    },
+    {
+      "name": "DISK_INFO_PROTOCOL_AHCI_INTERFACE_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "source_symbol": "AHCI_INTERFACE_GUID",
+      "source_owner": "DiskInfoProtocol",
+      "value": "9e498932-4abc-45af-a34d-0247787be7c6"
+    },
+    {
+      "name": "DISK_INFO_PROTOCOL_NVME_INTERFACE_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "source_symbol": "NVME_INTERFACE_GUID",
+      "source_owner": "DiskInfoProtocol",
+      "value": "3ab14680-5d3f-4a4d-bcdc-cc380018c7f7"
+    },
+    {
+      "name": "DISK_INFO_PROTOCOL_SCSI_INTERFACE_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "source_symbol": "SCSI_INTERFACE_GUID",
+      "source_owner": "DiskInfoProtocol",
+      "value": "08f74baa-ea36-41d9-9521-21a70f8780bc"
+    },
+    {
+      "name": "DISK_INFO_PROTOCOL_SD_MMC_INTERFACE_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/disk.rs",
+      "source_symbol": "SD_MMC_INTERFACE_GUID",
+      "source_owner": "DiskInfoProtocol",
+      "value": "8deec992-d39c-4a5c-ab6b-986e14242b9d"
+    },
+    {
+      "name": "ATA_PASS_THRU_ATTRIBUTES_PHYSICAL",
+      "type": "AtaPassThruAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "PHYSICAL",
+      "source_owner": "AtaPassThruAttributes",
+      "value": 1
+    },
+    {
+      "name": "ATA_PASS_THRU_ATTRIBUTES_LOGICAL",
+      "type": "AtaPassThruAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "LOGICAL",
+      "source_owner": "AtaPassThruAttributes",
+      "value": 2
+    },
+    {
+      "name": "ATA_PASS_THRU_ATTRIBUTES_NONBLOCKIO",
+      "type": "AtaPassThruAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "NONBLOCKIO",
+      "source_owner": "AtaPassThruAttributes",
+      "value": 4
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_ATA_HARDWARE_RESET",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "ATA_HARDWARE_RESET",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 0
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_ATA_SOFTWARE_RESET",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "ATA_SOFTWARE_RESET",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 1
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_ATA_NON_DATA",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "ATA_NON_DATA",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 2
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_PIO_DATA_IN",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "PIO_DATA_IN",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 4
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_PIO_DATA_OUT",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "PIO_DATA_OUT",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 5
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_DMA",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "DMA",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 6
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_DMA_QUEUED",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "DMA_QUEUED",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 7
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_DEVICE_DIAGNOSTIC",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "DEVICE_DIAGNOSTIC",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 8
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_DEVICE_RESET",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "DEVICE_RESET",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 9
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_UDMA_DATA_IN",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "UDMA_DATA_IN",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 10
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_UDMA_DATA_OUT",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "UDMA_DATA_OUT",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 11
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_FPDMA",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "FPDMA",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 12
+    },
+    {
+      "name": "ATA_PASS_THRU_COMMAND_PROTOCOL_RETURN_RESPONSE",
+      "type": "AtaPassThruCommandProtocol",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "RETURN_RESPONSE",
+      "source_owner": "AtaPassThruCommandProtocol",
+      "value": 255
+    },
+    {
+      "name": "ATA_PASS_THRU_LENGTH_BYTES",
+      "type": "AtaPassThruLength",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "BYTES",
+      "source_owner": "AtaPassThruLength",
+      "value": 128
+    },
+    {
+      "name": "ATA_PASS_THRU_LENGTH_MASK",
+      "type": "AtaPassThruLength",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "MASK",
+      "source_owner": "AtaPassThruLength",
+      "value": 112
+    },
+    {
+      "name": "ATA_PASS_THRU_LENGTH_NO_DATA_TRANSFER",
+      "type": "AtaPassThruLength",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "NO_DATA_TRANSFER",
+      "source_owner": "AtaPassThruLength",
+      "value": 0
+    },
+    {
+      "name": "ATA_PASS_THRU_LENGTH_FEATURES",
+      "type": "AtaPassThruLength",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "FEATURES",
+      "source_owner": "AtaPassThruLength",
+      "value": 16
+    },
+    {
+      "name": "ATA_PASS_THRU_LENGTH_SECTOR_COUNT",
+      "type": "AtaPassThruLength",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "SECTOR_COUNT",
+      "source_owner": "AtaPassThruLength",
+      "value": 32
+    },
+    {
+      "name": "ATA_PASS_THRU_LENGTH_TPSIU",
+      "type": "AtaPassThruLength",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "TPSIU",
+      "source_owner": "AtaPassThruLength",
+      "value": 48
+    },
+    {
+      "name": "ATA_PASS_THRU_LENGTH_COUNT",
+      "type": "AtaPassThruLength",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "COUNT",
+      "source_owner": "AtaPassThruLength",
+      "value": 15
+    },
+    {
+      "name": "ATA_PASS_THRU_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/ata.rs",
+      "source_symbol": "GUID",
+      "source_owner": "AtaPassThruProtocol",
+      "value": "1d3de7f0-0807-424f-aa69-11a54e19a46f"
+    },
+    {
+      "name": "SCSI_IO_TYPE_DISK",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "DISK",
+      "source_owner": "ScsiIoType",
+      "value": 0
+    },
+    {
+      "name": "SCSI_IO_TYPE_TAPE",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "TAPE",
+      "source_owner": "ScsiIoType",
+      "value": 1
+    },
+    {
+      "name": "SCSI_IO_TYPE_PRINTER",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "PRINTER",
+      "source_owner": "ScsiIoType",
+      "value": 2
+    },
+    {
+      "name": "SCSI_IO_TYPE_PROCESSOR",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "PROCESSOR",
+      "source_owner": "ScsiIoType",
+      "value": 3
+    },
+    {
+      "name": "SCSI_IO_TYPE_WRITE_ONCE_READ_MULTIPLE",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "WRITE_ONCE_READ_MULTIPLE",
+      "source_owner": "ScsiIoType",
+      "value": 4
+    },
+    {
+      "name": "SCSI_IO_TYPE_CDROM",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "CDROM",
+      "source_owner": "ScsiIoType",
+      "value": 5
+    },
+    {
+      "name": "SCSI_IO_TYPE_SCANNER",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "SCANNER",
+      "source_owner": "ScsiIoType",
+      "value": 6
+    },
+    {
+      "name": "SCSI_IO_TYPE_OPTICAL",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "OPTICAL",
+      "source_owner": "ScsiIoType",
+      "value": 7
+    },
+    {
+      "name": "SCSI_IO_TYPE_MEDIUM_CHANGER",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "MEDIUM_CHANGER",
+      "source_owner": "ScsiIoType",
+      "value": 8
+    },
+    {
+      "name": "SCSI_IO_TYPE_COMMUNICATION",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "COMMUNICATION",
+      "source_owner": "ScsiIoType",
+      "value": 9
+    },
+    {
+      "name": "SCSI_IO_TYPE_RAID",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "RAID",
+      "source_owner": "ScsiIoType",
+      "value": 12
+    },
+    {
+      "name": "SCSI_IO_TYPE_ENCLOSURE_SERVICES",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "ENCLOSURE_SERVICES",
+      "source_owner": "ScsiIoType",
+      "value": 13
+    },
+    {
+      "name": "SCSI_IO_TYPE_REDUCED_BLOCK_COMMANDS",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "REDUCED_BLOCK_COMMANDS",
+      "source_owner": "ScsiIoType",
+      "value": 14
+    },
+    {
+      "name": "SCSI_IO_TYPE_OPTICAL_CARD_READER_WRITER",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "OPTICAL_CARD_READER_WRITER",
+      "source_owner": "ScsiIoType",
+      "value": 15
+    },
+    {
+      "name": "SCSI_IO_TYPE_BRIDGE_CONTROLLER",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "BRIDGE_CONTROLLER",
+      "source_owner": "ScsiIoType",
+      "value": 16
+    },
+    {
+      "name": "SCSI_IO_TYPE_OBJECT_BASED_STORAGE",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "OBJECT_BASED_STORAGE",
+      "source_owner": "ScsiIoType",
+      "value": 17
+    },
+    {
+      "name": "SCSI_IO_TYPE_RESERVED_LOW",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "RESERVED_LOW",
+      "source_owner": "ScsiIoType",
+      "value": 18
+    },
+    {
+      "name": "SCSI_IO_TYPE_RESERVED_HIGH",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "RESERVED_HIGH",
+      "source_owner": "ScsiIoType",
+      "value": 30
+    },
+    {
+      "name": "SCSI_IO_TYPE_UNKNOWN",
+      "type": "ScsiIoType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "UNKNOWN",
+      "source_owner": "ScsiIoType",
+      "value": 31
+    },
+    {
+      "name": "SCSI_IO_DATA_DIRECTION_READ",
+      "type": "ScsiIoDataDirection",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "READ",
+      "source_owner": "ScsiIoDataDirection",
+      "value": 0
+    },
+    {
+      "name": "SCSI_IO_DATA_DIRECTION_WRITE",
+      "type": "ScsiIoDataDirection",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "WRITE",
+      "source_owner": "ScsiIoDataDirection",
+      "value": 1
+    },
+    {
+      "name": "SCSI_IO_DATA_DIRECTION_BIDIRECTIONAL",
+      "type": "ScsiIoDataDirection",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "BIDIRECTIONAL",
+      "source_owner": "ScsiIoDataDirection",
+      "value": 2
+    },
+    {
+      "name": "SCSI_IO_HOST_ADAPTER_STATUS_OK",
+      "type": "ScsiIoHostAdapterStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "OK",
+      "source_owner": "ScsiIoHostAdapterStatus",
+      "value": 0
+    },
+    {
+      "name": "SCSI_IO_HOST_ADAPTER_STATUS_TIMEOUT_COMMAND",
+      "type": "ScsiIoHostAdapterStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "TIMEOUT_COMMAND",
+      "source_owner": "ScsiIoHostAdapterStatus",
+      "value": 9
+    },
+    {
+      "name": "SCSI_IO_HOST_ADAPTER_STATUS_TIMEOUT",
+      "type": "ScsiIoHostAdapterStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "TIMEOUT",
+      "source_owner": "ScsiIoHostAdapterStatus",
+      "value": 11
+    },
+    {
+      "name": "SCSI_IO_HOST_ADAPTER_STATUS_MESSAGE_REJECT",
+      "type": "ScsiIoHostAdapterStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "MESSAGE_REJECT",
+      "source_owner": "ScsiIoHostAdapterStatus",
+      "value": 13
+    },
+    {
+      "name": "SCSI_IO_HOST_ADAPTER_STATUS_BUS_RESET",
+      "type": "ScsiIoHostAdapterStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "BUS_RESET",
+      "source_owner": "ScsiIoHostAdapterStatus",
+      "value": 14
+    },
+    {
+      "name": "SCSI_IO_HOST_ADAPTER_STATUS_PARITY_ERROR",
+      "type": "ScsiIoHostAdapterStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "PARITY_ERROR",
+      "source_owner": "ScsiIoHostAdapterStatus",
+      "value": 15
+    },
+    {
+      "name": "SCSI_IO_HOST_ADAPTER_STATUS_REQUEST_SENSE_FAILED",
+      "type": "ScsiIoHostAdapterStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "REQUEST_SENSE_FAILED",
+      "source_owner": "ScsiIoHostAdapterStatus",
+      "value": 16
+    },
+    {
+      "name": "SCSI_IO_HOST_ADAPTER_STATUS_SELECTION_TIMEOUT",
+      "type": "ScsiIoHostAdapterStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "SELECTION_TIMEOUT",
+      "source_owner": "ScsiIoHostAdapterStatus",
+      "value": 17
+    },
+    {
+      "name": "SCSI_IO_HOST_ADAPTER_STATUS_DATA_OVERRUN_UNDERRUN",
+      "type": "ScsiIoHostAdapterStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "DATA_OVERRUN_UNDERRUN",
+      "source_owner": "ScsiIoHostAdapterStatus",
+      "value": 18
+    },
+    {
+      "name": "SCSI_IO_HOST_ADAPTER_STATUS_BUS_FREE",
+      "type": "ScsiIoHostAdapterStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "BUS_FREE",
+      "source_owner": "ScsiIoHostAdapterStatus",
+      "value": 19
+    },
+    {
+      "name": "SCSI_IO_HOST_ADAPTER_STATUS_PHASE_ERROR",
+      "type": "ScsiIoHostAdapterStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "PHASE_ERROR",
+      "source_owner": "ScsiIoHostAdapterStatus",
+      "value": 20
+    },
+    {
+      "name": "SCSI_IO_HOST_ADAPTER_STATUS_OTHER",
+      "type": "ScsiIoHostAdapterStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "OTHER",
+      "source_owner": "ScsiIoHostAdapterStatus",
+      "value": 127
+    },
+    {
+      "name": "SCSI_IO_TARGET_STATUS_GOOD",
+      "type": "ScsiIoTargetStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "GOOD",
+      "source_owner": "ScsiIoTargetStatus",
+      "value": 0
+    },
+    {
+      "name": "SCSI_IO_TARGET_STATUS_CHECK_CONDITION",
+      "type": "ScsiIoTargetStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "CHECK_CONDITION",
+      "source_owner": "ScsiIoTargetStatus",
+      "value": 2
+    },
+    {
+      "name": "SCSI_IO_TARGET_STATUS_CONDITION_MET",
+      "type": "ScsiIoTargetStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "CONDITION_MET",
+      "source_owner": "ScsiIoTargetStatus",
+      "value": 4
+    },
+    {
+      "name": "SCSI_IO_TARGET_STATUS_BUSY",
+      "type": "ScsiIoTargetStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "BUSY",
+      "source_owner": "ScsiIoTargetStatus",
+      "value": 8
+    },
+    {
+      "name": "SCSI_IO_TARGET_STATUS_INTERMEDIATE",
+      "type": "ScsiIoTargetStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "INTERMEDIATE",
+      "source_owner": "ScsiIoTargetStatus",
+      "value": 16
+    },
+    {
+      "name": "SCSI_IO_TARGET_STATUS_INTERMEDIATE_CONDITION_MET",
+      "type": "ScsiIoTargetStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "INTERMEDIATE_CONDITION_MET",
+      "source_owner": "ScsiIoTargetStatus",
+      "value": 20
+    },
+    {
+      "name": "SCSI_IO_TARGET_STATUS_RESERVATION_CONFLICT",
+      "type": "ScsiIoTargetStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "RESERVATION_CONFLICT",
+      "source_owner": "ScsiIoTargetStatus",
+      "value": 24
+    },
+    {
+      "name": "SCSI_IO_TARGET_STATUS_COMMAND_TERMINATED",
+      "type": "ScsiIoTargetStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "COMMAND_TERMINATED",
+      "source_owner": "ScsiIoTargetStatus",
+      "value": 34
+    },
+    {
+      "name": "SCSI_IO_TARGET_STATUS_QUEUE_FULL",
+      "type": "ScsiIoTargetStatus",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "QUEUE_FULL",
+      "source_owner": "ScsiIoTargetStatus",
+      "value": 40
+    },
+    {
+      "name": "SCSI_IO_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "GUID",
+      "source_owner": "ScsiIoProtocol",
+      "value": "932f47e6-2362-4002-803e-3cd54b138f85"
+    },
+    {
+      "name": "EXT_SCSI_PASS_THRU_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "GUID",
+      "source_owner": "ExtScsiPassThruProtocol",
+      "value": "143b7632-b81b-4cb7-abd3-b625a5b9bffe"
+    },
+    {
+      "name": "NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_2",
+      "type": "NvmExpressCommandCdwValidity",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "CDW_2",
+      "source_owner": "NvmExpressCommandCdwValidity",
+      "value": 1
+    },
+    {
+      "name": "NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_3",
+      "type": "NvmExpressCommandCdwValidity",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "CDW_3",
+      "source_owner": "NvmExpressCommandCdwValidity",
+      "value": 2
+    },
+    {
+      "name": "NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_10",
+      "type": "NvmExpressCommandCdwValidity",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "CDW_10",
+      "source_owner": "NvmExpressCommandCdwValidity",
+      "value": 4
+    },
+    {
+      "name": "NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_11",
+      "type": "NvmExpressCommandCdwValidity",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "CDW_11",
+      "source_owner": "NvmExpressCommandCdwValidity",
+      "value": 8
+    },
+    {
+      "name": "NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_12",
+      "type": "NvmExpressCommandCdwValidity",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "CDW_12",
+      "source_owner": "NvmExpressCommandCdwValidity",
+      "value": 16
+    },
+    {
+      "name": "NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_13",
+      "type": "NvmExpressCommandCdwValidity",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "CDW_13",
+      "source_owner": "NvmExpressCommandCdwValidity",
+      "value": 32
+    },
+    {
+      "name": "NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_14",
+      "type": "NvmExpressCommandCdwValidity",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "CDW_14",
+      "source_owner": "NvmExpressCommandCdwValidity",
+      "value": 64
+    },
+    {
+      "name": "NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_15",
+      "type": "NvmExpressCommandCdwValidity",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "CDW_15",
+      "source_owner": "NvmExpressCommandCdwValidity",
+      "value": 128
+    },
+    {
+      "name": "NVM_EXPRESS_PASS_THRU_ATTRIBUTES_PHYSICAL",
+      "type": "NvmExpressPassThruAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "PHYSICAL",
+      "source_owner": "NvmExpressPassThruAttributes",
+      "value": 1
+    },
+    {
+      "name": "NVM_EXPRESS_PASS_THRU_ATTRIBUTES_LOGICAL",
+      "type": "NvmExpressPassThruAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "LOGICAL",
+      "source_owner": "NvmExpressPassThruAttributes",
+      "value": 2
+    },
+    {
+      "name": "NVM_EXPRESS_PASS_THRU_ATTRIBUTES_NONBLOCKIO",
+      "type": "NvmExpressPassThruAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "NONBLOCKIO",
+      "source_owner": "NvmExpressPassThruAttributes",
+      "value": 4
+    },
+    {
+      "name": "NVM_EXPRESS_PASS_THRU_ATTRIBUTES_CMD_SET_NVM",
+      "type": "NvmExpressPassThruAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "CMD_SET_NVM",
+      "source_owner": "NvmExpressPassThruAttributes",
+      "value": 8
+    },
+    {
+      "name": "NVM_EXPRESS_QUEUE_TYPE_ADMIN",
+      "type": "NvmExpressQueueType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "ADMIN",
+      "source_owner": "NvmExpressQueueType",
+      "value": 0
+    },
+    {
+      "name": "NVM_EXPRESS_QUEUE_TYPE_IO",
+      "type": "NvmExpressQueueType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "IO",
+      "source_owner": "NvmExpressQueueType",
+      "value": 1
+    },
+    {
+      "name": "NVM_EXPRESS_PASS_THRU_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/nvme.rs",
+      "source_symbol": "GUID",
+      "source_owner": "NvmExpressPassThruProtocol",
+      "value": "52c78312-8edc-4233-98f2-1a1aa5e388a5"
+    },
+    {
+      "name": "FV_ATTRIBUTES_READ_DISABLE_CAP",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "READ_DISABLE_CAP",
+      "source_owner": "FvAttributes",
+      "value": 1
+    },
+    {
+      "name": "FV_ATTRIBUTES_READ_ENABLE_CAP",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "READ_ENABLE_CAP",
+      "source_owner": "FvAttributes",
+      "value": 2
+    },
+    {
+      "name": "FV_ATTRIBUTES_READ_STATUS",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "READ_STATUS",
+      "source_owner": "FvAttributes",
+      "value": 4
+    },
+    {
+      "name": "FV_ATTRIBUTES_WRITE_DISABLE_CAP",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "WRITE_DISABLE_CAP",
+      "source_owner": "FvAttributes",
+      "value": 8
+    },
+    {
+      "name": "FV_ATTRIBUTES_WRITE_ENABLE_CAP",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "WRITE_ENABLE_CAP",
+      "source_owner": "FvAttributes",
+      "value": 16
+    },
+    {
+      "name": "FV_ATTRIBUTES_WRITE_STATUS",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "WRITE_STATUS",
+      "source_owner": "FvAttributes",
+      "value": 32
+    },
+    {
+      "name": "FV_ATTRIBUTES_LOCK_CAP",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "LOCK_CAP",
+      "source_owner": "FvAttributes",
+      "value": 64
+    },
+    {
+      "name": "FV_ATTRIBUTES_LOCK_STATUS",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "LOCK_STATUS",
+      "source_owner": "FvAttributes",
+      "value": 128
+    },
+    {
+      "name": "FV_ATTRIBUTES_WRITE_POLICY_RELIABLE",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "WRITE_POLICY_RELIABLE",
+      "source_owner": "FvAttributes",
+      "value": 256
+    },
+    {
+      "name": "FV_ATTRIBUTES_READ_LOCK_CAP",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "READ_LOCK_CAP",
+      "source_owner": "FvAttributes",
+      "value": 4096
+    },
+    {
+      "name": "FV_ATTRIBUTES_READ_LOCK_STATUS",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "READ_LOCK_STATUS",
+      "source_owner": "FvAttributes",
+      "value": 8192
+    },
+    {
+      "name": "FV_ATTRIBUTES_WRITE_LOCK_CAP",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "WRITE_LOCK_CAP",
+      "source_owner": "FvAttributes",
+      "value": 16384
+    },
+    {
+      "name": "FV_ATTRIBUTES_WRITE_LOCK_STATUS",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "WRITE_LOCK_STATUS",
+      "source_owner": "FvAttributes",
+      "value": 32768
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT",
+      "source_owner": "FvAttributes",
+      "value": 2031616
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_1",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_1",
+      "source_owner": "FvAttributes",
+      "value": 0
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_2",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_2",
+      "source_owner": "FvAttributes",
+      "value": 65536
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_4",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_4",
+      "source_owner": "FvAttributes",
+      "value": 131072
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_8",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_8",
+      "source_owner": "FvAttributes",
+      "value": 196608
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_16",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_16",
+      "source_owner": "FvAttributes",
+      "value": 262144
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_32",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_32",
+      "source_owner": "FvAttributes",
+      "value": 327680
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_64",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_64",
+      "source_owner": "FvAttributes",
+      "value": 393216
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_128",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_128",
+      "source_owner": "FvAttributes",
+      "value": 458752
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_256",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_256",
+      "source_owner": "FvAttributes",
+      "value": 524288
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_512",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_512",
+      "source_owner": "FvAttributes",
+      "value": 589824
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_1K",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_1K",
+      "source_owner": "FvAttributes",
+      "value": 655360
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_2K",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_2K",
+      "source_owner": "FvAttributes",
+      "value": 720896
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_4K",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_4K",
+      "source_owner": "FvAttributes",
+      "value": 786432
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_8K",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_8K",
+      "source_owner": "FvAttributes",
+      "value": 851968
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_16K",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_16K",
+      "source_owner": "FvAttributes",
+      "value": 917504
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_32K",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_32K",
+      "source_owner": "FvAttributes",
+      "value": 983040
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_64K",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_64K",
+      "source_owner": "FvAttributes",
+      "value": 1048576
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_128K",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_128K",
+      "source_owner": "FvAttributes",
+      "value": 1114112
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_256K",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_256K",
+      "source_owner": "FvAttributes",
+      "value": 1179648
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_512K",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_512K",
+      "source_owner": "FvAttributes",
+      "value": 1245184
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_1M",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_1M",
+      "source_owner": "FvAttributes",
+      "value": 1310720
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_2M",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_2M",
+      "source_owner": "FvAttributes",
+      "value": 1376256
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_4M",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_4M",
+      "source_owner": "FvAttributes",
+      "value": 1441792
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_8M",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_8M",
+      "source_owner": "FvAttributes",
+      "value": 1507328
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_16M",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_16M",
+      "source_owner": "FvAttributes",
+      "value": 1572864
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_32M",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_32M",
+      "source_owner": "FvAttributes",
+      "value": 1638400
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_64M",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_64M",
+      "source_owner": "FvAttributes",
+      "value": 1703936
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_128M",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_128M",
+      "source_owner": "FvAttributes",
+      "value": 1769472
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_256M",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_256M",
+      "source_owner": "FvAttributes",
+      "value": 1835008
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_512M",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_512M",
+      "source_owner": "FvAttributes",
+      "value": 1900544
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_1G",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_1G",
+      "source_owner": "FvAttributes",
+      "value": 1966080
+    },
+    {
+      "name": "FV_ATTRIBUTES_ALIGNMENT_2G",
+      "type": "FvAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT_2G",
+      "source_owner": "FvAttributes",
+      "value": 2031616
+    },
+    {
+      "name": "FV_FILE_ATTRIBUTES_ALIGNMENT",
+      "type": "FvFileAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALIGNMENT",
+      "source_owner": "FvFileAttributes",
+      "value": 31
+    },
+    {
+      "name": "FV_FILE_ATTRIBUTES_FIXED",
+      "type": "FvFileAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "FIXED",
+      "source_owner": "FvFileAttributes",
+      "value": 256
+    },
+    {
+      "name": "FV_FILE_ATTRIBUTES_MEMORY_MAPPED",
+      "type": "FvFileAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "MEMORY_MAPPED",
+      "source_owner": "FvFileAttributes",
+      "value": 512
+    },
+    {
+      "name": "FV_WRITE_POLICY_EFI_FV_UNRELIABLE_WRITE",
+      "type": "FvWritePolicy",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "EFI_FV_UNRELIABLE_WRITE",
+      "source_owner": "FvWritePolicy",
+      "value": 0
+    },
+    {
+      "name": "FV_WRITE_POLICY_EFI_FV_RELIABLE_WRITE",
+      "type": "FvWritePolicy",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "EFI_FV_RELIABLE_WRITE",
+      "source_owner": "FvWritePolicy",
+      "value": 1
+    },
+    {
+      "name": "FV_FILETYPE_ALL",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALL",
+      "source_owner": "FvFiletype",
+      "value": 0
+    },
+    {
+      "name": "FV_FILETYPE_RAW",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "RAW",
+      "source_owner": "FvFiletype",
+      "value": 1
+    },
+    {
+      "name": "FV_FILETYPE_FREEFORM",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "FREEFORM",
+      "source_owner": "FvFiletype",
+      "value": 2
+    },
+    {
+      "name": "FV_FILETYPE_SECURITY_CORE",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "SECURITY_CORE",
+      "source_owner": "FvFiletype",
+      "value": 3
+    },
+    {
+      "name": "FV_FILETYPE_PEI_CORE",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "PEI_CORE",
+      "source_owner": "FvFiletype",
+      "value": 4
+    },
+    {
+      "name": "FV_FILETYPE_DXE_CORE",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "DXE_CORE",
+      "source_owner": "FvFiletype",
+      "value": 5
+    },
+    {
+      "name": "FV_FILETYPE_PEIM",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "PEIM",
+      "source_owner": "FvFiletype",
+      "value": 6
+    },
+    {
+      "name": "FV_FILETYPE_DRIVER",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "DRIVER",
+      "source_owner": "FvFiletype",
+      "value": 7
+    },
+    {
+      "name": "FV_FILETYPE_COMBINED_PEIM_DRIVER",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "COMBINED_PEIM_DRIVER",
+      "source_owner": "FvFiletype",
+      "value": 8
+    },
+    {
+      "name": "FV_FILETYPE_APPLICATION",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "APPLICATION",
+      "source_owner": "FvFiletype",
+      "value": 9
+    },
+    {
+      "name": "FV_FILETYPE_MM",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "MM",
+      "source_owner": "FvFiletype",
+      "value": 10
+    },
+    {
+      "name": "FV_FILETYPE_FIRMWARE_VOLUME_IMAGE",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "FIRMWARE_VOLUME_IMAGE",
+      "source_owner": "FvFiletype",
+      "value": 11
+    },
+    {
+      "name": "FV_FILETYPE_COMBINED_MM_DXE",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "COMBINED_MM_DXE",
+      "source_owner": "FvFiletype",
+      "value": 12
+    },
+    {
+      "name": "FV_FILETYPE_MM_CORE",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "MM_CORE",
+      "source_owner": "FvFiletype",
+      "value": 13
+    },
+    {
+      "name": "FV_FILETYPE_MM_STANDALONE",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "MM_STANDALONE",
+      "source_owner": "FvFiletype",
+      "value": 14
+    },
+    {
+      "name": "FV_FILETYPE_MM_CORE_STANDALONE",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "MM_CORE_STANDALONE",
+      "source_owner": "FvFiletype",
+      "value": 15
+    },
+    {
+      "name": "FV_FILETYPE_FFS_PAD",
+      "type": "FvFiletype",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "FFS_PAD",
+      "source_owner": "FvFiletype",
+      "value": 240
+    },
+    {
+      "name": "SECTION_TYPE_ALL",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "ALL",
+      "source_owner": "SectionType",
+      "value": 0
+    },
+    {
+      "name": "SECTION_TYPE_COMPRESSION",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "COMPRESSION",
+      "source_owner": "SectionType",
+      "value": 1
+    },
+    {
+      "name": "SECTION_TYPE_GUID_DEFINED",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "GUID_DEFINED",
+      "source_owner": "SectionType",
+      "value": 2
+    },
+    {
+      "name": "SECTION_TYPE_DISPOSABLE",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "DISPOSABLE",
+      "source_owner": "SectionType",
+      "value": 3
+    },
+    {
+      "name": "SECTION_TYPE_PE32",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "PE32",
+      "source_owner": "SectionType",
+      "value": 16
+    },
+    {
+      "name": "SECTION_TYPE_PIC",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "PIC",
+      "source_owner": "SectionType",
+      "value": 17
+    },
+    {
+      "name": "SECTION_TYPE_TE",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "TE",
+      "source_owner": "SectionType",
+      "value": 18
+    },
+    {
+      "name": "SECTION_TYPE_DXE_DEPEX",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "DXE_DEPEX",
+      "source_owner": "SectionType",
+      "value": 19
+    },
+    {
+      "name": "SECTION_TYPE_VERSION",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "VERSION",
+      "source_owner": "SectionType",
+      "value": 20
+    },
+    {
+      "name": "SECTION_TYPE_USER_INTERFACE",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "USER_INTERFACE",
+      "source_owner": "SectionType",
+      "value": 21
+    },
+    {
+      "name": "SECTION_TYPE_COMPATIBILITY16",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "COMPATIBILITY16",
+      "source_owner": "SectionType",
+      "value": 22
+    },
+    {
+      "name": "SECTION_TYPE_FIRMWARE_VOLUME_IMAGE",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "FIRMWARE_VOLUME_IMAGE",
+      "source_owner": "SectionType",
+      "value": 23
+    },
+    {
+      "name": "SECTION_TYPE_FREEFORM_SUBTYPE_GUID",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "FREEFORM_SUBTYPE_GUID",
+      "source_owner": "SectionType",
+      "value": 24
+    },
+    {
+      "name": "SECTION_TYPE_RAW",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "RAW",
+      "source_owner": "SectionType",
+      "value": 25
+    },
+    {
+      "name": "SECTION_TYPE_PEI_DEPEX",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "PEI_DEPEX",
+      "source_owner": "SectionType",
+      "value": 27
+    },
+    {
+      "name": "SECTION_TYPE_MM_DEPEX",
+      "type": "SectionType",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "MM_DEPEX",
+      "source_owner": "SectionType",
+      "value": 28
+    },
+    {
+      "name": "FV_FILETYPE_OEM_RANGE_MIN",
+      "type": "u8",
+      "kind": "range-min",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "OEM_RANGE",
+      "source_owner": "FvFiletype",
+      "value": 192
+    },
+    {
+      "name": "FV_FILETYPE_OEM_RANGE_MAX",
+      "type": "u8",
+      "kind": "range-max",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "OEM_RANGE",
+      "source_owner": "FvFiletype",
+      "value": 223
+    },
+    {
+      "name": "FV_FILETYPE_DEBUG_RANGE_MIN",
+      "type": "u8",
+      "kind": "range-min",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "DEBUG_RANGE",
+      "source_owner": "FvFiletype",
+      "value": 224
+    },
+    {
+      "name": "FV_FILETYPE_DEBUG_RANGE_MAX",
+      "type": "u8",
+      "kind": "range-max",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "DEBUG_RANGE",
+      "source_owner": "FvFiletype",
+      "value": 239
+    },
+    {
+      "name": "FV_FILETYPE_FFS_RANGE_MIN",
+      "type": "u8",
+      "kind": "range-min",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "FFS_RANGE",
+      "source_owner": "FvFiletype",
+      "value": 240
+    },
+    {
+      "name": "FV_FILETYPE_FFS_RANGE_MAX",
+      "type": "u8",
+      "kind": "range-max",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "FFS_RANGE",
+      "source_owner": "FvFiletype",
+      "value": 255
+    },
+    {
+      "name": "FIRMWARE_VOLUME2_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "GUID",
+      "source_owner": "FirmwareVolume2Protocol",
+      "value": "220e73b6-6bdb-4413-8405-b974b108619a"
+    },
+    {
+      "name": "FIRMWARE_VOLUME_BLOCK2_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "GUID",
+      "source_owner": "FirmwareVolumeBlock2Protocol",
+      "value": "8f644fa9-e850-4db1-9ce2-0b44698e8da4"
+    },
+    {
+      "name": "FIRMWARE_VOLUME_BLOCK2_PROTOCOL_LBA_LIST_TERMINATOR",
+      "type": "u64",
+      "kind": "primitive",
+      "path": "uefi-raw/src/protocol/firmware_volume.rs",
+      "source_symbol": "LBA_LIST_TERMINATOR",
+      "source_owner": "FirmwareVolumeBlock2Protocol",
+      "value": 18446744073709551615
+    },
+    {
+      "name": "CAPSULE_SUPPORT_AUTHENTICATION",
+      "type": "CapsuleSupport",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "AUTHENTICATION",
+      "source_owner": "CapsuleSupport",
+      "value": 1
+    },
+    {
+      "name": "CAPSULE_SUPPORT_DEPENDENCY",
+      "type": "CapsuleSupport",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "DEPENDENCY",
+      "source_owner": "CapsuleSupport",
+      "value": 2
+    },
+    {
+      "name": "FMP_DEP_PUSH_GUID",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "PUSH_GUID",
+      "source_owner": "FmpDep",
+      "value": 0
+    },
+    {
+      "name": "FMP_DEP_PUSH_VERSION",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "PUSH_VERSION",
+      "source_owner": "FmpDep",
+      "value": 1
+    },
+    {
+      "name": "FMP_DEP_VERSION_STR",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "VERSION_STR",
+      "source_owner": "FmpDep",
+      "value": 2
+    },
+    {
+      "name": "FMP_DEP_AND",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "AND",
+      "source_owner": "FmpDep",
+      "value": 3
+    },
+    {
+      "name": "FMP_DEP_OR",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "OR",
+      "source_owner": "FmpDep",
+      "value": 4
+    },
+    {
+      "name": "FMP_DEP_NOT",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "NOT",
+      "source_owner": "FmpDep",
+      "value": 5
+    },
+    {
+      "name": "FMP_DEP_TRUE",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "TRUE",
+      "source_owner": "FmpDep",
+      "value": 6
+    },
+    {
+      "name": "FMP_DEP_FALSE",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "FALSE",
+      "source_owner": "FmpDep",
+      "value": 7
+    },
+    {
+      "name": "FMP_DEP_EQ",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "EQ",
+      "source_owner": "FmpDep",
+      "value": 8
+    },
+    {
+      "name": "FMP_DEP_GT",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "GT",
+      "source_owner": "FmpDep",
+      "value": 9
+    },
+    {
+      "name": "FMP_DEP_GTE",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "GTE",
+      "source_owner": "FmpDep",
+      "value": 10
+    },
+    {
+      "name": "FMP_DEP_LT",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "LT",
+      "source_owner": "FmpDep",
+      "value": 11
+    },
+    {
+      "name": "FMP_DEP_LTE",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "LTE",
+      "source_owner": "FmpDep",
+      "value": 12
+    },
+    {
+      "name": "FMP_DEP_END",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "END",
+      "source_owner": "FmpDep",
+      "value": 13
+    },
+    {
+      "name": "FMP_DEP_DECLARE_LENGTH",
+      "type": "FmpDep",
+      "kind": "enum",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "DECLARE_LENGTH",
+      "source_owner": "FmpDep",
+      "value": 14
+    },
+    {
+      "name": "IMAGE_ATTRIBUTES_IMAGE_UPDATABLE",
+      "type": "ImageAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "IMAGE_UPDATABLE",
+      "source_owner": "ImageAttributes",
+      "value": 1
+    },
+    {
+      "name": "IMAGE_ATTRIBUTES_RESET_REQUIRED",
+      "type": "ImageAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "RESET_REQUIRED",
+      "source_owner": "ImageAttributes",
+      "value": 2
+    },
+    {
+      "name": "IMAGE_ATTRIBUTES_AUTHENTICATION_REQUIRED",
+      "type": "ImageAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "AUTHENTICATION_REQUIRED",
+      "source_owner": "ImageAttributes",
+      "value": 4
+    },
+    {
+      "name": "IMAGE_ATTRIBUTES_IN_USE",
+      "type": "ImageAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "IN_USE",
+      "source_owner": "ImageAttributes",
+      "value": 8
+    },
+    {
+      "name": "IMAGE_ATTRIBUTES_UEFI_IMAGE",
+      "type": "ImageAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "UEFI_IMAGE",
+      "source_owner": "ImageAttributes",
+      "value": 16
+    },
+    {
+      "name": "IMAGE_ATTRIBUTES_DEPENDENCY",
+      "type": "ImageAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "DEPENDENCY",
+      "source_owner": "ImageAttributes",
+      "value": 32
+    },
+    {
+      "name": "IMAGE_COMPATIBILITIES_CHECK_SUPPORTED",
+      "type": "ImageCompatibilities",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "CHECK_SUPPORTED",
+      "source_owner": "ImageCompatibilities",
+      "value": 1
+    },
+    {
+      "name": "IMAGE_COMPATIBILITIES_ALL_BITS",
+      "type": "ImageCompatibilities",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "_",
+      "source_owner": "ImageCompatibilities",
+      "value": 18446744073709551615
+    },
+    {
+      "name": "IMAGE_UPDATABLE_VALID",
+      "type": "ImageUpdatable",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "VALID",
+      "source_owner": "ImageUpdatable",
+      "value": 1
+    },
+    {
+      "name": "IMAGE_UPDATABLE_INVALID",
+      "type": "ImageUpdatable",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "INVALID",
+      "source_owner": "ImageUpdatable",
+      "value": 2
+    },
+    {
+      "name": "IMAGE_UPDATABLE_INVALID_TYPE",
+      "type": "ImageUpdatable",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "INVALID_TYPE",
+      "source_owner": "ImageUpdatable",
+      "value": 4
+    },
+    {
+      "name": "IMAGE_UPDATABLE_INVALID_OLD",
+      "type": "ImageUpdatable",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "INVALID_OLD",
+      "source_owner": "ImageUpdatable",
+      "value": 8
+    },
+    {
+      "name": "IMAGE_UPDATABLE_VALID_WITH_VENDOR_CODE",
+      "type": "ImageUpdatable",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "VALID_WITH_VENDOR_CODE",
+      "source_owner": "ImageUpdatable",
+      "value": 16
+    },
+    {
+      "name": "PACKAGE_ATTRIBUTES_UPDATABLE",
+      "type": "PackageAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "UPDATABLE",
+      "source_owner": "PackageAttributes",
+      "value": 1
+    },
+    {
+      "name": "PACKAGE_ATTRIBUTES_RESET_REQUIRED",
+      "type": "PackageAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "RESET_REQUIRED",
+      "source_owner": "PackageAttributes",
+      "value": 2
+    },
+    {
+      "name": "PACKAGE_ATTRIBUTES_AUTHENTICATION_REQUIRED",
+      "type": "PackageAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "AUTHENTICATION_REQUIRED",
+      "source_owner": "PackageAttributes",
+      "value": 4
+    },
+    {
+      "name": "FIRMWARE_MANAGEMENT_CAPSULE_HEADER_INIT_VERSION",
+      "type": "u32",
+      "kind": "primitive",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "INIT_VERSION",
+      "source_owner": "FirmwareManagementCapsuleHeader",
+      "value": 1
+    },
+    {
+      "name": "FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER_INIT_VERSION",
+      "type": "u32",
+      "kind": "primitive",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "INIT_VERSION",
+      "source_owner": "FirmwareManagementCapsuleImageHeader",
+      "value": 3
+    },
+    {
+      "name": "FIRMWARE_IMAGE_DESCRIPTOR_VERSION",
+      "type": "u32",
+      "kind": "primitive",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "VERSION",
+      "source_owner": "FirmwareImageDescriptor",
+      "value": 4
+    },
+    {
+      "name": "FIRMWARE_MANAGEMENT_PROTOCOL_GUID",
+      "type": "Guid",
+      "kind": "guid",
+      "path": "uefi-raw/src/protocol/firmware_management.rs",
+      "source_symbol": "GUID",
+      "source_owner": "FirmwareManagementProtocol",
+      "value": "86c77a67-0b97-4633-a187-49104d0685c7"
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_READ_DISABLED_CAP",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "READ_DISABLED_CAP",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_READ_ENABLED_CAP",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "READ_ENABLED_CAP",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 2
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_READ_STATUS",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "READ_STATUS",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 4
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_WRITE_DISABLED_CAP",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "WRITE_DISABLED_CAP",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 8
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_WRITE_ENABLED_CAP",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "WRITE_ENABLED_CAP",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 16
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_WRITE_STATUS",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "WRITE_STATUS",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 32
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_LOCK_CAP",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "LOCK_CAP",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 64
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_LOCK_STATUS",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "LOCK_STATUS",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 128
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_STICKY_WRITE",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "STICKY_WRITE",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 512
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_MEMORY_MAPPED",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "MEMORY_MAPPED",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1024
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ERASE_POLARITY",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ERASE_POLARITY",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 2048
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_READ_LOCK_CAP",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "READ_LOCK_CAP",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 4096
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_READ_LOCK_STATUS",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "READ_LOCK_STATUS",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 8192
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_WRITE_LOCK_CAP",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "WRITE_LOCK_CAP",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 16384
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_WRITE_LOCK_STATUS",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "WRITE_LOCK_STATUS",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 32768
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 2031616
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_WEAK_ALIGNMENT",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "WEAK_ALIGNMENT",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 2147483648
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_1",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_1",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 0
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_2",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_2",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 65536
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_4",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_4",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 131072
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_8",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_8",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 196608
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_16",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_16",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 262144
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_32",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_32",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 327680
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_64",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_64",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 393216
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_128",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_128",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 458752
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_256",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_256",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 524288
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_512",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_512",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 589824
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_1K",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_1K",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 655360
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_2K",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_2K",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 720896
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_4K",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_4K",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 786432
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_8K",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_8K",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 851968
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_16K",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_16K",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 917504
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_32K",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_32K",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 983040
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_64K",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_64K",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1048576
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_128K",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_128K",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1114112
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_256K",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_256K",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1179648
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_512K",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_512K",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1245184
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_1M",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_1M",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1310720
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_2M",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_2M",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1376256
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_4M",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_4M",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1441792
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_8M",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_8M",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1507328
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_16M",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_16M",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1572864
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_32M",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_32M",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1638400
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_64M",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_64M",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1703936
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_128M",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_128M",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1769472
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_256M",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_256M",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1835008
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_512M",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_512M",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1900544
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_1G",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_1G",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 1966080
+    },
+    {
+      "name": "FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_2G",
+      "type": "FirmwareVolumeAttributes",
+      "kind": "struct",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "ALIGNMENT_2G",
+      "source_owner": "FirmwareVolumeAttributes",
+      "value": 2031616
+    },
+    {
+      "name": "FIRMWARE_VOLUME_HEADER_SIGNATURE",
+      "type": "[u8; 4]",
+      "kind": "bytes",
+      "path": "uefi-raw/src/firmware_storage.rs",
+      "source_symbol": "SIGNATURE",
+      "source_owner": "FirmwareVolumeHeader",
+      "value": [
+        95,
+        70,
+        86,
+        72
+      ]
+    },
+    {
+      "name": "SCSI_TARGET_MAX_BYTES",
+      "type": "u64",
+      "kind": "primitive",
+      "path": "uefi-raw/src/protocol/scsi.rs",
+      "source_symbol": "SCSI_TARGET_MAX_BYTES",
+      "source_owner": null,
+      "value": 16
+    }
+  ]
+}

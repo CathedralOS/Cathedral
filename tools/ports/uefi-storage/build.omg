@@ -1,0 +1,6 @@
+// Verification-only source package; no device or firmware dependencies.
+machine build(builder: &mut Build) {
+    builder.application("cathedral-uefi-storage-tests");
+    builder.freestanding = true;
+    builder.depend_as("cathedral_uefi_raw", Source::Path { location: "../../../source/contracts/uefi/raw" });
+}

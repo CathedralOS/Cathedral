@@ -1,0 +1,879 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) The uefi-rs contributors
+// Derived from https://github.com/rust-osdev/uefi-rs at
+// c0facddf9ba42b74906a37fca2869e6cdbc8da6a; exact source map in storage.PORT.md.
+// Modified for Cathedral: Omega raw carriers, inert address slots, explicit
+// foreign geometry, named constants, and zero-length tail prefix markers.
+// No pointer, protocol GUID, token, or descriptor grants device/firmware access.
+module storage;
+use scalars::Guid;
+use scalars::Char16;
+use scalars::Boolean;
+use scalars::Event;
+use scalars::Handle;
+use status::Status;
+use time::Time;
+
+// Zero-length arrays preserve the upstream ABI prefix boundary only. Their
+// declarations do not provide variable-tail length, bounds, or live access.
+// PORT-BLOCKED[omega:variable-tail-layout]: general validated runtime-tail
+// placement/projection still needs its specified source form and consumer.
+
+pub data Lba [copy] { raw: u64; }
+pub data FileProtocolRevision [copy] { raw: u64; }
+pub data FileAttribute [copy] { raw: u64; }
+pub data FileMode [copy] { raw: u64; }
+pub data AtaPassThruAttributes [copy] { raw: u32; }
+pub data AtaPassThruCommandProtocol [copy] { raw: u8; }
+pub data AtaPassThruLength [copy] { raw: u8; }
+pub data ScsiIoType [copy] { raw: u8; }
+pub data ScsiIoDataDirection [copy] { raw: u8; }
+pub data ScsiIoHostAdapterStatus [copy] { raw: u8; }
+pub data ScsiIoTargetStatus [copy] { raw: u8; }
+pub data NvmExpressCommandCdwValidity [copy] { raw: u8; }
+pub data NvmExpressPassThruAttributes [copy] { raw: u32; }
+pub data NvmExpressQueueType [copy] { raw: u8; }
+pub data FvAttributes [copy] { raw: u64; }
+pub data FvFileAttributes [copy] { raw: u32; }
+pub data FvWritePolicy [copy] { raw: u32; }
+pub data FvFiletype [copy] { raw: u8; }
+pub data SectionType [copy] { raw: u8; }
+pub data CapsuleSupport [copy] { raw: u64; }
+pub data FmpDep [copy] { raw: u8; }
+pub data ImageAttributes [copy] { raw: u64; }
+pub data ImageCompatibilities [copy] { raw: u64; }
+pub data ImageUpdatable [copy] { raw: u32; }
+pub data PackageAttributes [copy] { raw: u64; }
+pub data FirmwareVolumeAttributes [copy] { raw: u32; }
+
+// Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
+pub data SimpleFileSystemProtocol {
+    revision: u64;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self, root: *mut *mut FileProtocolV1) -> Status
+    open_volume: addr;
+}
+
+// Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
+pub data FileProtocolV1 {
+    revision: FileProtocolRevision;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, new_handle: *mut *mut Self, file_name: *const Char16, open_mode: FileMode, attributes: FileAttribute, ) -> Status
+    open: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+    close: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+    delete: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status
+    read: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, buffer_size: *mut usize, buffer: *const c_void, ) -> Status
+    write: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *const Self, position: *mut u64) -> Status
+    get_position: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self, position: u64) -> Status
+    set_position: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, information_type: *const Guid, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status
+    get_info: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, information_type: *const Guid, buffer_size: usize, buffer: *const c_void, ) -> Status
+    set_info: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+    flush: addr;
+}
+
+// Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
+pub data FileProtocolV2 {
+    v1: FileProtocolV1;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, new_handle: *mut *mut Self, file_name: *const Char16, open_mode: FileMode, attributes: FileAttribute, token: *mut FileIoToken, ) -> Status
+    open_ex: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self, token: *mut FileIoToken) -> Status
+    read_ex: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self, token: *mut FileIoToken) -> Status
+    write_ex: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self, token: *mut FileIoToken) -> Status
+    flush_ex: addr;
+}
+
+// Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
+pub data FileIoToken {
+    event: Event;
+    status: Status;
+    buffer_size: u64;
+    // Upstream: *mut c_void
+    buffer: addr;
+}
+
+// Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
+pub data FileInfo {
+    size: u64;
+    file_size: u64;
+    physical_size: u64;
+    create_time: Time;
+    last_access_time: Time;
+    modification_time: Time;
+    attribute: FileAttribute;
+    file_name: [Char16; 0];
+}
+
+// Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
+pub data FileSystemInfo {
+    size: u64;
+    read_only: Boolean;
+    volume_size: u64;
+    free_space: u64;
+    block_size: u32;
+    volume_label: [Char16; 0];
+}
+
+// Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
+pub data FileSystemVolumeLabel {
+    volume_label: [Char16; 0];
+}
+
+// Upstream uefi-raw/src/protocol/block.rs; repr(C).
+pub data BlockIoMedia {
+    media_id: u32;
+    removable_media: Boolean;
+    media_present: Boolean;
+    logical_partition: Boolean;
+    read_only: Boolean;
+    write_caching: Boolean;
+    block_size: u32;
+    io_align: u32;
+    last_block: Lba;
+    lowest_aligned_lba: Lba;
+    logical_blocks_per_physical_block: u32;
+    optimal_transfer_length_granularity: u32;
+}
+
+// Upstream uefi-raw/src/protocol/block.rs; repr(C).
+pub data BlockIoProtocol {
+    revision: u64;
+    // Upstream: *const BlockIoMedia
+    media: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self, extended_verification: Boolean) -> Status
+    reset: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, media_id: u32, lba: Lba, buffer_size: usize, buffer: *mut c_void, ) -> Status
+    read_blocks: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, lba: Lba, buffer_size: usize, buffer: *const c_void, ) -> Status
+    write_blocks: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+    flush_blocks: addr;
+}
+
+// Upstream uefi-raw/src/protocol/block.rs; repr(C).
+pub data BlockIo2Token {
+    event: Event;
+    transaction_status: Status;
+}
+
+// Upstream uefi-raw/src/protocol/block.rs; repr(C).
+pub data BlockIo2Protocol {
+    // Upstream: *const BlockIoMedia
+    media: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self, extended_verification: Boolean) -> Status
+    reset: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, media_id: u32, lba: Lba, token: *mut BlockIo2Token, buffer_size: usize, buffer: *mut c_void, ) -> Status
+    read_blocks_ex: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, lba: Lba, token: *mut BlockIo2Token, buffer_size: usize, buffer: *const c_void, ) -> Status
+    write_blocks_ex: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self, token: *mut BlockIo2Token) -> Status
+    flush_blocks_ex: addr;
+}
+
+// Upstream uefi-raw/src/protocol/disk.rs; repr(C).
+pub data DiskIoProtocol {
+    revision: u64;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, media_id: u32, offset: u64, buffer_size: usize, buffer: *mut c_void, ) -> Status
+    read_disk: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, offset: u64, buffer_size: usize, buffer: *const c_void, ) -> Status
+    write_disk: addr;
+}
+
+// Upstream uefi-raw/src/protocol/disk.rs; repr(C).
+pub data DiskIo2Token {
+    event: Event;
+    transaction_status: Status;
+}
+
+// Upstream uefi-raw/src/protocol/disk.rs; repr(C).
+pub data DiskIo2Protocol {
+    revision: u64;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+    cancel: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, media_id: u32, offset: u64, token: *mut DiskIo2Token, buffer_size: usize, buffer: *mut c_void, ) -> Status
+    read_disk_ex: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, offset: u64, token: *mut DiskIo2Token, buffer_size: usize, buffer: *const c_void, ) -> Status
+    write_disk_ex: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self, token: *mut DiskIo2Token) -> Status
+    flush_disk_ex: addr;
+}
+
+// Upstream uefi-raw/src/protocol/disk.rs; repr(C).
+pub data DiskInfoProtocol {
+    interface: Guid;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, inquiry_data: *mut c_void, inquiry_data_size: *mut u32, ) -> Status
+    inquiry: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, identify_data: *mut c_void, identify_data_size: *mut u32, ) -> Status
+    identify: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, sense_data: *mut c_void, sense_data_size: *mut u32, sense_data_number: *mut u8, ) -> Status
+    sense_data: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, ide_channel: *mut u32, ide_device: *mut u32, ) -> Status
+    which_ide: addr;
+}
+
+// Upstream uefi-raw/src/protocol/ata.rs; repr(C).
+pub data AtaPassThruMode {
+    attributes: AtaPassThruAttributes;
+    io_align: u32;
+}
+
+// Upstream uefi-raw/src/protocol/ata.rs; repr(C).
+pub data AtaStatusBlock {
+    reserved1: [u8; 2];
+    status: u8;
+    error: u8;
+    sector_number: u8;
+    cylinder_low: u8;
+    cylinder_high: u8;
+    device_head: u8;
+    sector_number_exp: u8;
+    cylinder_low_exp: u8;
+    cylinder_high_exp: u8;
+    reserved2: u8;
+    sector_count: u8;
+    sector_count_exp: u8;
+    reserved3: [u8; 6];
+}
+
+// Upstream uefi-raw/src/protocol/ata.rs; repr(C).
+pub data AtaCommandBlock {
+    reserved1: [u8; 2];
+    command: u8;
+    features: u8;
+    sector_number: u8;
+    cylinder_low: u8;
+    cylinder_high: u8;
+    device_head: u8;
+    sector_number_exp: u8;
+    cylinder_low_exp: u8;
+    cylinder_high_exp: u8;
+    features_exp: u8;
+    sector_count: u8;
+    sector_count_exp: u8;
+    reserved2: [u8; 6];
+}
+
+// Upstream uefi-raw/src/protocol/ata.rs; repr(C).
+pub data AtaPassThruCommandPacket {
+    // Upstream: *mut AtaStatusBlock
+    asb: addr;
+    // Upstream: *const AtaCommandBlock
+    acb: addr;
+    timeout: u64;
+    // Upstream: *mut c_void
+    in_data_buffer: addr;
+    // Upstream: *const c_void
+    out_data_buffer: addr;
+    in_transfer_length: u32;
+    out_transfer_length: u32;
+    protocol: AtaPassThruCommandProtocol;
+    length: AtaPassThruLength;
+}
+
+// Upstream uefi-raw/src/protocol/ata.rs; repr(C).
+pub data AtaPassThruProtocol {
+    // Upstream: *const AtaPassThruMode
+    mode: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, port: u16, port_multiplier_port: u16, packet: *mut AtaPassThruCommandPacket, event: Event, ) -> Status
+    pass_thru: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *const Self, port: *mut u16) -> Status
+    get_next_port: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, port: u16, port_multiplier_port: *mut u16, ) -> Status
+    get_next_device: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, port: u16, port_multiplier_port: u16, device_path: *mut *mut DevicePathProtocol, ) -> Status
+    build_device_path: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, device_path: *const DevicePathProtocol, port: *mut u16, port_multiplier_port: *mut u16, ) -> Status
+    get_device: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self, port: u16) -> Status
+    reset_port: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self, port: u16, port_multiplier_port: u16) -> Status
+    reset_device: addr;
+}
+
+// Upstream uefi-raw/src/protocol/scsi.rs; repr(C).
+pub data ScsiIoScsiRequestPacket {
+    timeout: u64;
+    // Upstream: *mut c_void
+    in_data_buffer: addr;
+    // Upstream: *mut c_void
+    out_data_buffer: addr;
+    // Upstream: *mut c_void
+    sense_data: addr;
+    // Upstream: *mut c_void
+    cdb: addr;
+    in_transfer_length: u32;
+    out_transfer_length: u32;
+    cdb_length: u8;
+    data_direction: ScsiIoDataDirection;
+    host_adapter_status: ScsiIoHostAdapterStatus;
+    target_status: ScsiIoTargetStatus;
+    sense_data_length: u8;
+}
+
+// Upstream uefi-raw/src/protocol/scsi.rs; repr(C).
+pub data ScsiIoProtocol {
+    // Upstream: unsafe extern "efiapi" fn(this: *const Self, device_type: *mut ScsiIoType) -> Status
+    get_device_type: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, target: *const *mut u8, lun: *mut u64, ) -> Status
+    get_device_location: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+    reset_bus: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+    reset_device: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, packet: *mut ScsiIoScsiRequestPacket, event: Event, ) -> Status
+    execute_scsi_command: addr;
+    io_align: u32;
+}
+
+// Upstream uefi-raw/src/protocol/scsi.rs; repr(C).
+pub data ExtScsiPassThruMode {
+    adapter_id: u32;
+    attributes: u32;
+    io_align: u32;
+}
+
+// Upstream uefi-raw/src/protocol/scsi.rs; repr(C).
+pub data ExtScsiPassThruProtocol {
+    // Upstream: *const ExtScsiPassThruMode
+    passthru_mode: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, target: *const u8, lun: u64, packet: *mut ScsiIoScsiRequestPacket, event: Event, ) -> Status
+    pass_thru: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *const Self, target: *mut *mut u8, lun: *mut u64) -> Status
+    get_next_target_lun: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, target: *const u8, lun: u64, device_path: *mut *mut DevicePathProtocol, ) -> Status
+    build_device_path: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, device_path: *const DevicePathProtocol, target: *const *mut u8, lun: *mut u64, ) -> Status
+    get_target_lun: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
+    reset_channel: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *mut Self, target: *const u8, lun: u64) -> Status
+    reset_target_lun: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *const Self, target: *mut *mut u8) -> Status
+    get_next_target: addr;
+}
+
+// Upstream uefi-raw/src/protocol/nvme.rs; repr(C).
+pub data NvmExpressPassThruMode {
+    attributes: NvmExpressPassThruAttributes;
+    io_align: u32;
+    nvme_version: u32;
+}
+
+// Upstream uefi-raw/src/protocol/nvme.rs; repr(C).
+pub data NvmExpressCommand {
+    cdw0: u32;
+    flags: u8;
+    nsid: u32;
+    cdw2: u32;
+    cdw3: u32;
+    cdw10: u32;
+    cdw11: u32;
+    cdw12: u32;
+    cdw13: u32;
+    cdw14: u32;
+    cdw15: u32;
+}
+
+// Upstream uefi-raw/src/protocol/nvme.rs; repr(C).
+pub data NvmExpressCompletion {
+    dw0: u32;
+    dw1: u32;
+    dw2: u32;
+    dw3: u32;
+}
+
+// Upstream uefi-raw/src/protocol/nvme.rs; repr(C).
+pub data NvmExpressPassThruCommandPacket {
+    command_timeout: u64;
+    // Upstream: *mut c_void
+    transfer_buffer: addr;
+    transfer_length: u32;
+    // Upstream: *mut c_void
+    meta_data_buffer: addr;
+    meta_data_length: u32;
+    queue_type: NvmExpressQueueType;
+    // Upstream: *const NvmExpressCommand
+    nvme_cmd: addr;
+    // Upstream: *mut NvmExpressCompletion
+    nvme_completion: addr;
+}
+
+// Upstream uefi-raw/src/protocol/nvme.rs; repr(C).
+pub data NvmExpressPassThruProtocol {
+    // Upstream: *const NvmExpressPassThruMode
+    mode: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *mut Self, namespace_id: u32, packet: *mut NvmExpressPassThruCommandPacket, event: Event, ) -> Status
+    pass_thru: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *const Self, namespace_id: *mut u32) -> Status
+    get_next_namespace: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, namespace_id: u32, device_path: *mut *mut DevicePathProtocol, ) -> Status
+    build_device_path: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, device_path: *const DevicePathProtocol, namespace_id: *mut u32, ) -> Status
+    get_namespace: addr;
+}
+
+// Upstream uefi-raw/src/protocol/firmware_volume.rs; repr(C).
+pub data FvWriteFileData {
+    // Upstream: *const Guid
+    name_guid: addr;
+    // Upstream raw identifier r#type renamed to file_type.
+    file_type: FvFiletype;
+    file_attributes: FvFileAttributes;
+    // Upstream: *const u8
+    buffer: addr;
+    buffer_size: u32;
+}
+
+// Upstream uefi-raw/src/protocol/firmware_volume.rs; repr(C).
+pub data FirmwareVolume2Protocol {
+    // Upstream: unsafe extern "efiapi" fn(this: *const Self, fv_attributes: *mut FvAttributes) -> Status
+    get_volume_attributes: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *const Self, fv_attributes: *mut FvAttributes) -> Status
+    set_volume_attributes: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, name_guid: *const Guid, buffer: *mut *mut c_void, buffer_size: *mut usize, found_type: *mut FvFiletype, file_attributes: *mut FvFileAttributes, authentication_status: *mut u32, ) -> Status
+    read_file: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, name_guid: *const Guid, section_type: SectionType, section_instance: usize, buffer: *mut *mut c_void, buffer_size: *mut usize, authentication_status: *mut u32, ) -> Status
+    read_section: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, number_of_files: u32, write_policy: FvWritePolicy, file_data: *const FvWriteFileData, ) -> Status
+    write_file: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, key: *mut c_void, file_type: *mut FvFiletype, name_guid: *mut Guid, attributes: *mut FvFileAttributes, size: *mut usize, ) -> Status
+    get_next_file: addr;
+    key_size: u32;
+    parent_handle: Handle;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, information_type: *const Guid, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status
+    get_info: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, information_type: *const Guid, buffer_size: usize, buffer: *const c_void, ) -> Status
+    set_info: addr;
+}
+
+// Upstream uefi-raw/src/protocol/firmware_volume.rs; repr(C).
+pub data FirmwareVolumeBlock2Protocol {
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, attributes: *mut FirmwareVolumeAttributes, ) -> Status
+    get_attributes: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, attributes: *mut FirmwareVolumeAttributes, ) -> Status
+    set_attributes: addr;
+    // Upstream: unsafe extern "efiapi" fn(this: *const Self, address: *mut PhysicalAddress) -> Status
+    get_physical_address: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, lba: Lba, block_size: *mut usize, number_of_blocks: *mut usize, ) -> Status
+    get_block_size: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, lba: Lba, offset: usize, num_bytes: *mut usize, buffer: *mut u8, ) -> Status
+    read: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, lba: Lba, offset: usize, num_bytes: *mut usize, buffer: *const u8, ) -> Status
+    write: addr;
+    // Upstream: unsafe extern "C" fn(this: *const Self, ...) -> Status
+    erase_blocks: addr;
+    parent_handle: Handle;
+}
+
+// Upstream uefi-raw/src/protocol/firmware_management.rs; repr(C, packed).
+pub data FirmwareManagementCapsuleHeader {
+    version: u32;
+    embedded_driver_count: u16;
+    payload_item_count: u16;
+    item_offset_list: [u64; 0];
+}
+
+// Upstream uefi-raw/src/protocol/firmware_management.rs; repr(C, packed).
+pub data FirmwareManagementCapsuleImageHeader {
+    version: u32;
+    update_image_type_id: Guid;
+    update_image_index: u8;
+    reserved_bytes: [u8; 3];
+    update_image_size: u32;
+    update_vendor_code_size: u32;
+    update_hardware_instance: u64;
+    image_capsule_support: CapsuleSupport;
+}
+
+// Upstream uefi-raw/src/protocol/firmware_management.rs; repr(C).
+pub data FirmwareImageDep {
+    dependencies: [u8; 0];
+}
+
+// Upstream uefi-raw/src/protocol/firmware_management.rs; repr(C).
+pub data FirmwareImageDescriptor {
+    image_index: u8;
+    image_type_id: Guid;
+    image_id: u64;
+    // Upstream: *const Char16
+    image_id_name: addr;
+    version: u32;
+    // Upstream: *const Char16
+    version_name: addr;
+    size: u64;
+    attributes_supported: ImageAttributes;
+    attributes_setting: ImageAttributes;
+    compatibilities: ImageCompatibilities;
+    lowest_supported_image_version: u32;
+    last_attempt_version: u32;
+    last_attempt_status: u32;
+    hardware_instance: u64;
+    // Upstream: *const FirmwareImageDep
+    dependencies: addr;
+}
+
+// Upstream uefi-raw/src/protocol/firmware_management.rs; repr(C).
+pub data FirmwareManagementProtocol {
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, image_info_size: *mut usize, image_info: *mut FirmwareImageDescriptor, descriptor_version: *mut u32, descriptor_count: *mut u8, descriptor_size: *mut usize, package_version: *mut u32, package_version_name: *mut *mut Char16, ) -> Status
+    get_image_info: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, image_index: u8, image: *mut c_void, image_size: *mut usize, ) -> Status
+    get_image: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, image_index: u8, image: *const c_void, image_size: usize, vendor_code: *const c_void, progress: unsafe extern "efiapi" fn(completion: usize) -> Status, abort_reason: *mut *mut Char16, ) -> Status
+    set_image: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, image_index: u8, image: *const c_void, image_size: usize, image_updatable: *mut ImageUpdatable, ) -> Status
+    check_image: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, package_version: *mut u32, package_version_name: *mut *mut Char16, package_version_name_max_len: *mut u32, attributes_supported: *mut PackageAttributes, attributes_setting: *mut PackageAttributes, ) -> Status
+    get_package_info: addr;
+    // Upstream: unsafe extern "efiapi" fn( this: *const Self, image: *const c_void, image_size: usize, vendor_code: *const c_void, package_version: u32, package_version_name: *const Char16, ) -> Status
+    set_package_info: addr;
+}
+
+// Upstream uefi-raw/src/firmware_storage.rs; repr(C).
+pub data FirmwareVolumeHeader {
+    zero_vector: [u8; 16];
+    file_system_guid: Guid;
+    fv_length: u64;
+    signature: [u8; 4];
+    attributes: FirmwareVolumeAttributes;
+    header_length: u16;
+    checksum: u16;
+    ext_header_offset: u16;
+    reserved: u8;
+    revision: u8;
+    block_map: [FirmwareVolumeBlockMap; 0];
+}
+
+// Upstream uefi-raw/src/firmware_storage.rs; repr(C).
+pub data FirmwareVolumeBlockMap {
+    num_blocks: u32;
+    length: u32;
+}
+
+pub const FILE_PROTOCOL_REVISION_REVISION_1: FileProtocolRevision = FileProtocolRevision { raw: 65536 };
+pub const FILE_PROTOCOL_REVISION_REVISION_2: FileProtocolRevision = FileProtocolRevision { raw: 131072 };
+pub const FILE_ATTRIBUTE_READ_ONLY: FileAttribute = FileAttribute { raw: 1 };
+pub const FILE_ATTRIBUTE_HIDDEN: FileAttribute = FileAttribute { raw: 2 };
+pub const FILE_ATTRIBUTE_SYSTEM: FileAttribute = FileAttribute { raw: 4 };
+pub const FILE_ATTRIBUTE_DIRECTORY: FileAttribute = FileAttribute { raw: 16 };
+pub const FILE_ATTRIBUTE_ARCHIVE: FileAttribute = FileAttribute { raw: 32 };
+pub const FILE_ATTRIBUTE_VALID_ATTR: FileAttribute = FileAttribute { raw: 55 };
+pub const FILE_MODE_READ: FileMode = FileMode { raw: 1 };
+pub const FILE_MODE_WRITE: FileMode = FileMode { raw: 2 };
+pub const FILE_MODE_CREATE: FileMode = FileMode { raw: 9223372036854775808 };
+// 964e5b22-6459-11d2-8e39-00a0c969723b
+pub const SIMPLE_FILE_SYSTEM_PROTOCOL_GUID: Guid = Guid { data1: 0x964e5b22, data2: 0x6459, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+// 09576e92-6d3f-11d2-8e39-00a0c969723b
+pub const FILE_INFO_ID: Guid = Guid { data1: 0x09576e92, data2: 0x6d3f, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+// 09576e93-6d3f-11d2-8e39-00a0c969723b
+pub const FILE_SYSTEM_INFO_ID: Guid = Guid { data1: 0x09576e93, data2: 0x6d3f, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+// db47d7d3-fe81-11d3-9a35-0090273fc14d
+pub const FILE_SYSTEM_VOLUME_LABEL_ID: Guid = Guid { data1: 0xdb47d7d3, data2: 0xfe81, data3: 0x11d3, data4: [0x9a, 0x35, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+// 964e5b21-6459-11d2-8e39-00a0c969723b
+pub const BLOCK_IO_PROTOCOL_GUID: Guid = Guid { data1: 0x964e5b21, data2: 0x6459, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const BLOCK_IO_PROTOCOL_REVISION: u64 = 65536;
+pub const BLOCK_IO_PROTOCOL_REVISION_2: u64 = 131073;
+pub const BLOCK_IO_PROTOCOL_REVISION_3: u64 = 131103;
+// a77b2472-e282-4e9f-a245-c2c0e27bbcc1
+pub const BLOCK_IO2_PROTOCOL_GUID: Guid = Guid { data1: 0xa77b2472, data2: 0xe282, data3: 0x4e9f, data4: [0xa2, 0x45, 0xc2, 0xc0, 0xe2, 0x7b, 0xbc, 0xc1] };
+// ce345171-ba0b-11d2-8e4f-00a0c969723b
+pub const DISK_IO_PROTOCOL_GUID: Guid = Guid { data1: 0xce345171, data2: 0xba0b, data3: 0x11d2, data4: [0x8e, 0x4f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const DISK_IO_PROTOCOL_REVISION: u64 = 65536;
+// 151c8eae-7f2c-472c-9e54-9828194f6a88
+pub const DISK_IO2_PROTOCOL_GUID: Guid = Guid { data1: 0x151c8eae, data2: 0x7f2c, data3: 0x472c, data4: [0x9e, 0x54, 0x98, 0x28, 0x19, 0x4f, 0x6a, 0x88] };
+pub const DISK_IO2_PROTOCOL_REVISION: u64 = 131072;
+// d432a67f-14dc-484b-b3bb-3f0291849327
+pub const DISK_INFO_PROTOCOL_GUID: Guid = Guid { data1: 0xd432a67f, data2: 0x14dc, data3: 0x484b, data4: [0xb3, 0xbb, 0x3f, 0x02, 0x91, 0x84, 0x93, 0x27] };
+// 5e948fe3-26d3-42b5-af17-610287188dec
+pub const DISK_INFO_PROTOCOL_IDE_INTERFACE_GUID: Guid = Guid { data1: 0x5e948fe3, data2: 0x26d3, data3: 0x42b5, data4: [0xaf, 0x17, 0x61, 0x02, 0x87, 0x18, 0x8d, 0xec] };
+// 4b3029cc-6b98-47fb-bc96-76dcb80441f0
+pub const DISK_INFO_PROTOCOL_UFS_INTERFACE_GUID: Guid = Guid { data1: 0x4b3029cc, data2: 0x6b98, data3: 0x47fb, data4: [0xbc, 0x96, 0x76, 0xdc, 0xb8, 0x04, 0x41, 0xf0] };
+// cb871572-c11a-47b5-b492-675eafa77727
+pub const DISK_INFO_PROTOCOL_USB_INTERFACE_GUID: Guid = Guid { data1: 0xcb871572, data2: 0xc11a, data3: 0x47b5, data4: [0xb4, 0x92, 0x67, 0x5e, 0xaf, 0xa7, 0x77, 0x27] };
+// 9e498932-4abc-45af-a34d-0247787be7c6
+pub const DISK_INFO_PROTOCOL_AHCI_INTERFACE_GUID: Guid = Guid { data1: 0x9e498932, data2: 0x4abc, data3: 0x45af, data4: [0xa3, 0x4d, 0x02, 0x47, 0x78, 0x7b, 0xe7, 0xc6] };
+// 3ab14680-5d3f-4a4d-bcdc-cc380018c7f7
+pub const DISK_INFO_PROTOCOL_NVME_INTERFACE_GUID: Guid = Guid { data1: 0x3ab14680, data2: 0x5d3f, data3: 0x4a4d, data4: [0xbc, 0xdc, 0xcc, 0x38, 0x00, 0x18, 0xc7, 0xf7] };
+// 08f74baa-ea36-41d9-9521-21a70f8780bc
+pub const DISK_INFO_PROTOCOL_SCSI_INTERFACE_GUID: Guid = Guid { data1: 0x08f74baa, data2: 0xea36, data3: 0x41d9, data4: [0x95, 0x21, 0x21, 0xa7, 0x0f, 0x87, 0x80, 0xbc] };
+// 8deec992-d39c-4a5c-ab6b-986e14242b9d
+pub const DISK_INFO_PROTOCOL_SD_MMC_INTERFACE_GUID: Guid = Guid { data1: 0x8deec992, data2: 0xd39c, data3: 0x4a5c, data4: [0xab, 0x6b, 0x98, 0x6e, 0x14, 0x24, 0x2b, 0x9d] };
+pub const ATA_PASS_THRU_ATTRIBUTES_PHYSICAL: AtaPassThruAttributes = AtaPassThruAttributes { raw: 1 };
+pub const ATA_PASS_THRU_ATTRIBUTES_LOGICAL: AtaPassThruAttributes = AtaPassThruAttributes { raw: 2 };
+pub const ATA_PASS_THRU_ATTRIBUTES_NONBLOCKIO: AtaPassThruAttributes = AtaPassThruAttributes { raw: 4 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_ATA_HARDWARE_RESET: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 0 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_ATA_SOFTWARE_RESET: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 1 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_ATA_NON_DATA: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 2 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_PIO_DATA_IN: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 4 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_PIO_DATA_OUT: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 5 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_DMA: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 6 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_DMA_QUEUED: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 7 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_DEVICE_DIAGNOSTIC: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 8 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_DEVICE_RESET: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 9 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_UDMA_DATA_IN: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 10 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_UDMA_DATA_OUT: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 11 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_FPDMA: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 12 };
+pub const ATA_PASS_THRU_COMMAND_PROTOCOL_RETURN_RESPONSE: AtaPassThruCommandProtocol = AtaPassThruCommandProtocol { raw: 255 };
+pub const ATA_PASS_THRU_LENGTH_BYTES: AtaPassThruLength = AtaPassThruLength { raw: 128 };
+pub const ATA_PASS_THRU_LENGTH_MASK: AtaPassThruLength = AtaPassThruLength { raw: 112 };
+pub const ATA_PASS_THRU_LENGTH_NO_DATA_TRANSFER: AtaPassThruLength = AtaPassThruLength { raw: 0 };
+pub const ATA_PASS_THRU_LENGTH_FEATURES: AtaPassThruLength = AtaPassThruLength { raw: 16 };
+pub const ATA_PASS_THRU_LENGTH_SECTOR_COUNT: AtaPassThruLength = AtaPassThruLength { raw: 32 };
+pub const ATA_PASS_THRU_LENGTH_TPSIU: AtaPassThruLength = AtaPassThruLength { raw: 48 };
+pub const ATA_PASS_THRU_LENGTH_COUNT: AtaPassThruLength = AtaPassThruLength { raw: 15 };
+// 1d3de7f0-0807-424f-aa69-11a54e19a46f
+pub const ATA_PASS_THRU_PROTOCOL_GUID: Guid = Guid { data1: 0x1d3de7f0, data2: 0x0807, data3: 0x424f, data4: [0xaa, 0x69, 0x11, 0xa5, 0x4e, 0x19, 0xa4, 0x6f] };
+pub const SCSI_IO_TYPE_DISK: ScsiIoType = ScsiIoType { raw: 0 };
+pub const SCSI_IO_TYPE_TAPE: ScsiIoType = ScsiIoType { raw: 1 };
+pub const SCSI_IO_TYPE_PRINTER: ScsiIoType = ScsiIoType { raw: 2 };
+pub const SCSI_IO_TYPE_PROCESSOR: ScsiIoType = ScsiIoType { raw: 3 };
+pub const SCSI_IO_TYPE_WRITE_ONCE_READ_MULTIPLE: ScsiIoType = ScsiIoType { raw: 4 };
+pub const SCSI_IO_TYPE_CDROM: ScsiIoType = ScsiIoType { raw: 5 };
+pub const SCSI_IO_TYPE_SCANNER: ScsiIoType = ScsiIoType { raw: 6 };
+pub const SCSI_IO_TYPE_OPTICAL: ScsiIoType = ScsiIoType { raw: 7 };
+pub const SCSI_IO_TYPE_MEDIUM_CHANGER: ScsiIoType = ScsiIoType { raw: 8 };
+pub const SCSI_IO_TYPE_COMMUNICATION: ScsiIoType = ScsiIoType { raw: 9 };
+pub const SCSI_IO_TYPE_RAID: ScsiIoType = ScsiIoType { raw: 12 };
+pub const SCSI_IO_TYPE_ENCLOSURE_SERVICES: ScsiIoType = ScsiIoType { raw: 13 };
+pub const SCSI_IO_TYPE_REDUCED_BLOCK_COMMANDS: ScsiIoType = ScsiIoType { raw: 14 };
+pub const SCSI_IO_TYPE_OPTICAL_CARD_READER_WRITER: ScsiIoType = ScsiIoType { raw: 15 };
+pub const SCSI_IO_TYPE_BRIDGE_CONTROLLER: ScsiIoType = ScsiIoType { raw: 16 };
+pub const SCSI_IO_TYPE_OBJECT_BASED_STORAGE: ScsiIoType = ScsiIoType { raw: 17 };
+pub const SCSI_IO_TYPE_RESERVED_LOW: ScsiIoType = ScsiIoType { raw: 18 };
+pub const SCSI_IO_TYPE_RESERVED_HIGH: ScsiIoType = ScsiIoType { raw: 30 };
+pub const SCSI_IO_TYPE_UNKNOWN: ScsiIoType = ScsiIoType { raw: 31 };
+pub const SCSI_IO_DATA_DIRECTION_READ: ScsiIoDataDirection = ScsiIoDataDirection { raw: 0 };
+pub const SCSI_IO_DATA_DIRECTION_WRITE: ScsiIoDataDirection = ScsiIoDataDirection { raw: 1 };
+pub const SCSI_IO_DATA_DIRECTION_BIDIRECTIONAL: ScsiIoDataDirection = ScsiIoDataDirection { raw: 2 };
+pub const SCSI_IO_HOST_ADAPTER_STATUS_OK: ScsiIoHostAdapterStatus = ScsiIoHostAdapterStatus { raw: 0 };
+pub const SCSI_IO_HOST_ADAPTER_STATUS_TIMEOUT_COMMAND: ScsiIoHostAdapterStatus = ScsiIoHostAdapterStatus { raw: 9 };
+pub const SCSI_IO_HOST_ADAPTER_STATUS_TIMEOUT: ScsiIoHostAdapterStatus = ScsiIoHostAdapterStatus { raw: 11 };
+pub const SCSI_IO_HOST_ADAPTER_STATUS_MESSAGE_REJECT: ScsiIoHostAdapterStatus = ScsiIoHostAdapterStatus { raw: 13 };
+pub const SCSI_IO_HOST_ADAPTER_STATUS_BUS_RESET: ScsiIoHostAdapterStatus = ScsiIoHostAdapterStatus { raw: 14 };
+pub const SCSI_IO_HOST_ADAPTER_STATUS_PARITY_ERROR: ScsiIoHostAdapterStatus = ScsiIoHostAdapterStatus { raw: 15 };
+pub const SCSI_IO_HOST_ADAPTER_STATUS_REQUEST_SENSE_FAILED: ScsiIoHostAdapterStatus = ScsiIoHostAdapterStatus { raw: 16 };
+pub const SCSI_IO_HOST_ADAPTER_STATUS_SELECTION_TIMEOUT: ScsiIoHostAdapterStatus = ScsiIoHostAdapterStatus { raw: 17 };
+pub const SCSI_IO_HOST_ADAPTER_STATUS_DATA_OVERRUN_UNDERRUN: ScsiIoHostAdapterStatus = ScsiIoHostAdapterStatus { raw: 18 };
+pub const SCSI_IO_HOST_ADAPTER_STATUS_BUS_FREE: ScsiIoHostAdapterStatus = ScsiIoHostAdapterStatus { raw: 19 };
+pub const SCSI_IO_HOST_ADAPTER_STATUS_PHASE_ERROR: ScsiIoHostAdapterStatus = ScsiIoHostAdapterStatus { raw: 20 };
+pub const SCSI_IO_HOST_ADAPTER_STATUS_OTHER: ScsiIoHostAdapterStatus = ScsiIoHostAdapterStatus { raw: 127 };
+pub const SCSI_IO_TARGET_STATUS_GOOD: ScsiIoTargetStatus = ScsiIoTargetStatus { raw: 0 };
+pub const SCSI_IO_TARGET_STATUS_CHECK_CONDITION: ScsiIoTargetStatus = ScsiIoTargetStatus { raw: 2 };
+pub const SCSI_IO_TARGET_STATUS_CONDITION_MET: ScsiIoTargetStatus = ScsiIoTargetStatus { raw: 4 };
+pub const SCSI_IO_TARGET_STATUS_BUSY: ScsiIoTargetStatus = ScsiIoTargetStatus { raw: 8 };
+pub const SCSI_IO_TARGET_STATUS_INTERMEDIATE: ScsiIoTargetStatus = ScsiIoTargetStatus { raw: 16 };
+pub const SCSI_IO_TARGET_STATUS_INTERMEDIATE_CONDITION_MET: ScsiIoTargetStatus = ScsiIoTargetStatus { raw: 20 };
+pub const SCSI_IO_TARGET_STATUS_RESERVATION_CONFLICT: ScsiIoTargetStatus = ScsiIoTargetStatus { raw: 24 };
+pub const SCSI_IO_TARGET_STATUS_COMMAND_TERMINATED: ScsiIoTargetStatus = ScsiIoTargetStatus { raw: 34 };
+pub const SCSI_IO_TARGET_STATUS_QUEUE_FULL: ScsiIoTargetStatus = ScsiIoTargetStatus { raw: 40 };
+// 932f47e6-2362-4002-803e-3cd54b138f85
+pub const SCSI_IO_PROTOCOL_GUID: Guid = Guid { data1: 0x932f47e6, data2: 0x2362, data3: 0x4002, data4: [0x80, 0x3e, 0x3c, 0xd5, 0x4b, 0x13, 0x8f, 0x85] };
+// 143b7632-b81b-4cb7-abd3-b625a5b9bffe
+pub const EXT_SCSI_PASS_THRU_PROTOCOL_GUID: Guid = Guid { data1: 0x143b7632, data2: 0xb81b, data3: 0x4cb7, data4: [0xab, 0xd3, 0xb6, 0x25, 0xa5, 0xb9, 0xbf, 0xfe] };
+pub const NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_2: NvmExpressCommandCdwValidity = NvmExpressCommandCdwValidity { raw: 1 };
+pub const NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_3: NvmExpressCommandCdwValidity = NvmExpressCommandCdwValidity { raw: 2 };
+pub const NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_10: NvmExpressCommandCdwValidity = NvmExpressCommandCdwValidity { raw: 4 };
+pub const NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_11: NvmExpressCommandCdwValidity = NvmExpressCommandCdwValidity { raw: 8 };
+pub const NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_12: NvmExpressCommandCdwValidity = NvmExpressCommandCdwValidity { raw: 16 };
+pub const NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_13: NvmExpressCommandCdwValidity = NvmExpressCommandCdwValidity { raw: 32 };
+pub const NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_14: NvmExpressCommandCdwValidity = NvmExpressCommandCdwValidity { raw: 64 };
+pub const NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_15: NvmExpressCommandCdwValidity = NvmExpressCommandCdwValidity { raw: 128 };
+pub const NVM_EXPRESS_PASS_THRU_ATTRIBUTES_PHYSICAL: NvmExpressPassThruAttributes = NvmExpressPassThruAttributes { raw: 1 };
+pub const NVM_EXPRESS_PASS_THRU_ATTRIBUTES_LOGICAL: NvmExpressPassThruAttributes = NvmExpressPassThruAttributes { raw: 2 };
+pub const NVM_EXPRESS_PASS_THRU_ATTRIBUTES_NONBLOCKIO: NvmExpressPassThruAttributes = NvmExpressPassThruAttributes { raw: 4 };
+pub const NVM_EXPRESS_PASS_THRU_ATTRIBUTES_CMD_SET_NVM: NvmExpressPassThruAttributes = NvmExpressPassThruAttributes { raw: 8 };
+pub const NVM_EXPRESS_QUEUE_TYPE_ADMIN: NvmExpressQueueType = NvmExpressQueueType { raw: 0 };
+pub const NVM_EXPRESS_QUEUE_TYPE_IO: NvmExpressQueueType = NvmExpressQueueType { raw: 1 };
+// 52c78312-8edc-4233-98f2-1a1aa5e388a5
+pub const NVM_EXPRESS_PASS_THRU_PROTOCOL_GUID: Guid = Guid { data1: 0x52c78312, data2: 0x8edc, data3: 0x4233, data4: [0x98, 0xf2, 0x1a, 0x1a, 0xa5, 0xe3, 0x88, 0xa5] };
+pub const FV_ATTRIBUTES_READ_DISABLE_CAP: FvAttributes = FvAttributes { raw: 1 };
+pub const FV_ATTRIBUTES_READ_ENABLE_CAP: FvAttributes = FvAttributes { raw: 2 };
+pub const FV_ATTRIBUTES_READ_STATUS: FvAttributes = FvAttributes { raw: 4 };
+pub const FV_ATTRIBUTES_WRITE_DISABLE_CAP: FvAttributes = FvAttributes { raw: 8 };
+pub const FV_ATTRIBUTES_WRITE_ENABLE_CAP: FvAttributes = FvAttributes { raw: 16 };
+pub const FV_ATTRIBUTES_WRITE_STATUS: FvAttributes = FvAttributes { raw: 32 };
+pub const FV_ATTRIBUTES_LOCK_CAP: FvAttributes = FvAttributes { raw: 64 };
+pub const FV_ATTRIBUTES_LOCK_STATUS: FvAttributes = FvAttributes { raw: 128 };
+pub const FV_ATTRIBUTES_WRITE_POLICY_RELIABLE: FvAttributes = FvAttributes { raw: 256 };
+pub const FV_ATTRIBUTES_READ_LOCK_CAP: FvAttributes = FvAttributes { raw: 4096 };
+pub const FV_ATTRIBUTES_READ_LOCK_STATUS: FvAttributes = FvAttributes { raw: 8192 };
+pub const FV_ATTRIBUTES_WRITE_LOCK_CAP: FvAttributes = FvAttributes { raw: 16384 };
+pub const FV_ATTRIBUTES_WRITE_LOCK_STATUS: FvAttributes = FvAttributes { raw: 32768 };
+pub const FV_ATTRIBUTES_ALIGNMENT: FvAttributes = FvAttributes { raw: 2031616 };
+pub const FV_ATTRIBUTES_ALIGNMENT_1: FvAttributes = FvAttributes { raw: 0 };
+pub const FV_ATTRIBUTES_ALIGNMENT_2: FvAttributes = FvAttributes { raw: 65536 };
+pub const FV_ATTRIBUTES_ALIGNMENT_4: FvAttributes = FvAttributes { raw: 131072 };
+pub const FV_ATTRIBUTES_ALIGNMENT_8: FvAttributes = FvAttributes { raw: 196608 };
+pub const FV_ATTRIBUTES_ALIGNMENT_16: FvAttributes = FvAttributes { raw: 262144 };
+pub const FV_ATTRIBUTES_ALIGNMENT_32: FvAttributes = FvAttributes { raw: 327680 };
+pub const FV_ATTRIBUTES_ALIGNMENT_64: FvAttributes = FvAttributes { raw: 393216 };
+pub const FV_ATTRIBUTES_ALIGNMENT_128: FvAttributes = FvAttributes { raw: 458752 };
+pub const FV_ATTRIBUTES_ALIGNMENT_256: FvAttributes = FvAttributes { raw: 524288 };
+pub const FV_ATTRIBUTES_ALIGNMENT_512: FvAttributes = FvAttributes { raw: 589824 };
+pub const FV_ATTRIBUTES_ALIGNMENT_1K: FvAttributes = FvAttributes { raw: 655360 };
+pub const FV_ATTRIBUTES_ALIGNMENT_2K: FvAttributes = FvAttributes { raw: 720896 };
+pub const FV_ATTRIBUTES_ALIGNMENT_4K: FvAttributes = FvAttributes { raw: 786432 };
+pub const FV_ATTRIBUTES_ALIGNMENT_8K: FvAttributes = FvAttributes { raw: 851968 };
+pub const FV_ATTRIBUTES_ALIGNMENT_16K: FvAttributes = FvAttributes { raw: 917504 };
+pub const FV_ATTRIBUTES_ALIGNMENT_32K: FvAttributes = FvAttributes { raw: 983040 };
+pub const FV_ATTRIBUTES_ALIGNMENT_64K: FvAttributes = FvAttributes { raw: 1048576 };
+pub const FV_ATTRIBUTES_ALIGNMENT_128K: FvAttributes = FvAttributes { raw: 1114112 };
+pub const FV_ATTRIBUTES_ALIGNMENT_256K: FvAttributes = FvAttributes { raw: 1179648 };
+pub const FV_ATTRIBUTES_ALIGNMENT_512K: FvAttributes = FvAttributes { raw: 1245184 };
+pub const FV_ATTRIBUTES_ALIGNMENT_1M: FvAttributes = FvAttributes { raw: 1310720 };
+pub const FV_ATTRIBUTES_ALIGNMENT_2M: FvAttributes = FvAttributes { raw: 1376256 };
+pub const FV_ATTRIBUTES_ALIGNMENT_4M: FvAttributes = FvAttributes { raw: 1441792 };
+pub const FV_ATTRIBUTES_ALIGNMENT_8M: FvAttributes = FvAttributes { raw: 1507328 };
+pub const FV_ATTRIBUTES_ALIGNMENT_16M: FvAttributes = FvAttributes { raw: 1572864 };
+pub const FV_ATTRIBUTES_ALIGNMENT_32M: FvAttributes = FvAttributes { raw: 1638400 };
+pub const FV_ATTRIBUTES_ALIGNMENT_64M: FvAttributes = FvAttributes { raw: 1703936 };
+pub const FV_ATTRIBUTES_ALIGNMENT_128M: FvAttributes = FvAttributes { raw: 1769472 };
+pub const FV_ATTRIBUTES_ALIGNMENT_256M: FvAttributes = FvAttributes { raw: 1835008 };
+pub const FV_ATTRIBUTES_ALIGNMENT_512M: FvAttributes = FvAttributes { raw: 1900544 };
+pub const FV_ATTRIBUTES_ALIGNMENT_1G: FvAttributes = FvAttributes { raw: 1966080 };
+pub const FV_ATTRIBUTES_ALIGNMENT_2G: FvAttributes = FvAttributes { raw: 2031616 };
+pub const FV_FILE_ATTRIBUTES_ALIGNMENT: FvFileAttributes = FvFileAttributes { raw: 31 };
+pub const FV_FILE_ATTRIBUTES_FIXED: FvFileAttributes = FvFileAttributes { raw: 256 };
+pub const FV_FILE_ATTRIBUTES_MEMORY_MAPPED: FvFileAttributes = FvFileAttributes { raw: 512 };
+pub const FV_WRITE_POLICY_EFI_FV_UNRELIABLE_WRITE: FvWritePolicy = FvWritePolicy { raw: 0 };
+pub const FV_WRITE_POLICY_EFI_FV_RELIABLE_WRITE: FvWritePolicy = FvWritePolicy { raw: 1 };
+pub const FV_FILETYPE_ALL: FvFiletype = FvFiletype { raw: 0 };
+pub const FV_FILETYPE_RAW: FvFiletype = FvFiletype { raw: 1 };
+pub const FV_FILETYPE_FREEFORM: FvFiletype = FvFiletype { raw: 2 };
+pub const FV_FILETYPE_SECURITY_CORE: FvFiletype = FvFiletype { raw: 3 };
+pub const FV_FILETYPE_PEI_CORE: FvFiletype = FvFiletype { raw: 4 };
+pub const FV_FILETYPE_DXE_CORE: FvFiletype = FvFiletype { raw: 5 };
+pub const FV_FILETYPE_PEIM: FvFiletype = FvFiletype { raw: 6 };
+pub const FV_FILETYPE_DRIVER: FvFiletype = FvFiletype { raw: 7 };
+pub const FV_FILETYPE_COMBINED_PEIM_DRIVER: FvFiletype = FvFiletype { raw: 8 };
+pub const FV_FILETYPE_APPLICATION: FvFiletype = FvFiletype { raw: 9 };
+pub const FV_FILETYPE_MM: FvFiletype = FvFiletype { raw: 10 };
+pub const FV_FILETYPE_FIRMWARE_VOLUME_IMAGE: FvFiletype = FvFiletype { raw: 11 };
+pub const FV_FILETYPE_COMBINED_MM_DXE: FvFiletype = FvFiletype { raw: 12 };
+pub const FV_FILETYPE_MM_CORE: FvFiletype = FvFiletype { raw: 13 };
+pub const FV_FILETYPE_MM_STANDALONE: FvFiletype = FvFiletype { raw: 14 };
+pub const FV_FILETYPE_MM_CORE_STANDALONE: FvFiletype = FvFiletype { raw: 15 };
+pub const FV_FILETYPE_FFS_PAD: FvFiletype = FvFiletype { raw: 240 };
+pub const SECTION_TYPE_ALL: SectionType = SectionType { raw: 0 };
+pub const SECTION_TYPE_COMPRESSION: SectionType = SectionType { raw: 1 };
+pub const SECTION_TYPE_GUID_DEFINED: SectionType = SectionType { raw: 2 };
+pub const SECTION_TYPE_DISPOSABLE: SectionType = SectionType { raw: 3 };
+pub const SECTION_TYPE_PE32: SectionType = SectionType { raw: 16 };
+pub const SECTION_TYPE_PIC: SectionType = SectionType { raw: 17 };
+pub const SECTION_TYPE_TE: SectionType = SectionType { raw: 18 };
+pub const SECTION_TYPE_DXE_DEPEX: SectionType = SectionType { raw: 19 };
+pub const SECTION_TYPE_VERSION: SectionType = SectionType { raw: 20 };
+pub const SECTION_TYPE_USER_INTERFACE: SectionType = SectionType { raw: 21 };
+pub const SECTION_TYPE_COMPATIBILITY16: SectionType = SectionType { raw: 22 };
+pub const SECTION_TYPE_FIRMWARE_VOLUME_IMAGE: SectionType = SectionType { raw: 23 };
+pub const SECTION_TYPE_FREEFORM_SUBTYPE_GUID: SectionType = SectionType { raw: 24 };
+pub const SECTION_TYPE_RAW: SectionType = SectionType { raw: 25 };
+pub const SECTION_TYPE_PEI_DEPEX: SectionType = SectionType { raw: 27 };
+pub const SECTION_TYPE_MM_DEPEX: SectionType = SectionType { raw: 28 };
+pub const FV_FILETYPE_OEM_RANGE_MIN: u8 = 192;
+pub const FV_FILETYPE_OEM_RANGE_MAX: u8 = 223;
+pub const FV_FILETYPE_DEBUG_RANGE_MIN: u8 = 224;
+pub const FV_FILETYPE_DEBUG_RANGE_MAX: u8 = 239;
+pub const FV_FILETYPE_FFS_RANGE_MIN: u8 = 240;
+pub const FV_FILETYPE_FFS_RANGE_MAX: u8 = 255;
+// 220e73b6-6bdb-4413-8405-b974b108619a
+pub const FIRMWARE_VOLUME2_PROTOCOL_GUID: Guid = Guid { data1: 0x220e73b6, data2: 0x6bdb, data3: 0x4413, data4: [0x84, 0x05, 0xb9, 0x74, 0xb1, 0x08, 0x61, 0x9a] };
+// 8f644fa9-e850-4db1-9ce2-0b44698e8da4
+pub const FIRMWARE_VOLUME_BLOCK2_PROTOCOL_GUID: Guid = Guid { data1: 0x8f644fa9, data2: 0xe850, data3: 0x4db1, data4: [0x9c, 0xe2, 0x0b, 0x44, 0x69, 0x8e, 0x8d, 0xa4] };
+pub const FIRMWARE_VOLUME_BLOCK2_PROTOCOL_LBA_LIST_TERMINATOR: u64 = 18446744073709551615;
+pub const CAPSULE_SUPPORT_AUTHENTICATION: CapsuleSupport = CapsuleSupport { raw: 1 };
+pub const CAPSULE_SUPPORT_DEPENDENCY: CapsuleSupport = CapsuleSupport { raw: 2 };
+pub const FMP_DEP_PUSH_GUID: FmpDep = FmpDep { raw: 0 };
+pub const FMP_DEP_PUSH_VERSION: FmpDep = FmpDep { raw: 1 };
+pub const FMP_DEP_VERSION_STR: FmpDep = FmpDep { raw: 2 };
+pub const FMP_DEP_AND: FmpDep = FmpDep { raw: 3 };
+pub const FMP_DEP_OR: FmpDep = FmpDep { raw: 4 };
+pub const FMP_DEP_NOT: FmpDep = FmpDep { raw: 5 };
+pub const FMP_DEP_TRUE: FmpDep = FmpDep { raw: 6 };
+pub const FMP_DEP_FALSE: FmpDep = FmpDep { raw: 7 };
+pub const FMP_DEP_EQ: FmpDep = FmpDep { raw: 8 };
+pub const FMP_DEP_GT: FmpDep = FmpDep { raw: 9 };
+pub const FMP_DEP_GTE: FmpDep = FmpDep { raw: 10 };
+pub const FMP_DEP_LT: FmpDep = FmpDep { raw: 11 };
+pub const FMP_DEP_LTE: FmpDep = FmpDep { raw: 12 };
+pub const FMP_DEP_END: FmpDep = FmpDep { raw: 13 };
+pub const FMP_DEP_DECLARE_LENGTH: FmpDep = FmpDep { raw: 14 };
+pub const IMAGE_ATTRIBUTES_IMAGE_UPDATABLE: ImageAttributes = ImageAttributes { raw: 1 };
+pub const IMAGE_ATTRIBUTES_RESET_REQUIRED: ImageAttributes = ImageAttributes { raw: 2 };
+pub const IMAGE_ATTRIBUTES_AUTHENTICATION_REQUIRED: ImageAttributes = ImageAttributes { raw: 4 };
+pub const IMAGE_ATTRIBUTES_IN_USE: ImageAttributes = ImageAttributes { raw: 8 };
+pub const IMAGE_ATTRIBUTES_UEFI_IMAGE: ImageAttributes = ImageAttributes { raw: 16 };
+pub const IMAGE_ATTRIBUTES_DEPENDENCY: ImageAttributes = ImageAttributes { raw: 32 };
+pub const IMAGE_COMPATIBILITIES_CHECK_SUPPORTED: ImageCompatibilities = ImageCompatibilities { raw: 1 };
+pub const IMAGE_COMPATIBILITIES_ALL_BITS: ImageCompatibilities = ImageCompatibilities { raw: 18446744073709551615 };
+pub const IMAGE_UPDATABLE_VALID: ImageUpdatable = ImageUpdatable { raw: 1 };
+pub const IMAGE_UPDATABLE_INVALID: ImageUpdatable = ImageUpdatable { raw: 2 };
+pub const IMAGE_UPDATABLE_INVALID_TYPE: ImageUpdatable = ImageUpdatable { raw: 4 };
+pub const IMAGE_UPDATABLE_INVALID_OLD: ImageUpdatable = ImageUpdatable { raw: 8 };
+pub const IMAGE_UPDATABLE_VALID_WITH_VENDOR_CODE: ImageUpdatable = ImageUpdatable { raw: 16 };
+pub const PACKAGE_ATTRIBUTES_UPDATABLE: PackageAttributes = PackageAttributes { raw: 1 };
+pub const PACKAGE_ATTRIBUTES_RESET_REQUIRED: PackageAttributes = PackageAttributes { raw: 2 };
+pub const PACKAGE_ATTRIBUTES_AUTHENTICATION_REQUIRED: PackageAttributes = PackageAttributes { raw: 4 };
+pub const FIRMWARE_MANAGEMENT_CAPSULE_HEADER_INIT_VERSION: u32 = 1;
+pub const FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER_INIT_VERSION: u32 = 3;
+pub const FIRMWARE_IMAGE_DESCRIPTOR_VERSION: u32 = 4;
+// 86c77a67-0b97-4633-a187-49104d0685c7
+pub const FIRMWARE_MANAGEMENT_PROTOCOL_GUID: Guid = Guid { data1: 0x86c77a67, data2: 0x0b97, data3: 0x4633, data4: [0xa1, 0x87, 0x49, 0x10, 0x4d, 0x06, 0x85, 0xc7] };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_READ_DISABLED_CAP: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_READ_ENABLED_CAP: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 2 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_READ_STATUS: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 4 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_WRITE_DISABLED_CAP: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 8 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_WRITE_ENABLED_CAP: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 16 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_WRITE_STATUS: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 32 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_LOCK_CAP: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 64 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_LOCK_STATUS: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 128 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_STICKY_WRITE: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 512 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_MEMORY_MAPPED: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1024 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ERASE_POLARITY: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 2048 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_READ_LOCK_CAP: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 4096 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_READ_LOCK_STATUS: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 8192 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_WRITE_LOCK_CAP: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 16384 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_WRITE_LOCK_STATUS: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 32768 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 2031616 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_WEAK_ALIGNMENT: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 2147483648 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_1: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 0 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_2: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 65536 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_4: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 131072 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_8: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 196608 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_16: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 262144 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_32: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 327680 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_64: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 393216 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_128: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 458752 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_256: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 524288 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_512: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 589824 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_1K: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 655360 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_2K: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 720896 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_4K: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 786432 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_8K: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 851968 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_16K: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 917504 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_32K: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 983040 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_64K: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1048576 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_128K: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1114112 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_256K: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1179648 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_512K: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1245184 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_1M: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1310720 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_2M: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1376256 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_4M: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1441792 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_8M: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1507328 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_16M: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1572864 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_32M: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1638400 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_64M: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1703936 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_128M: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1769472 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_256M: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1835008 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_512M: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1900544 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_1G: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1966080 };
+pub const FIRMWARE_VOLUME_ATTRIBUTES_ALIGNMENT_2G: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 2031616 };
+pub const FIRMWARE_VOLUME_HEADER_SIGNATURE: [u8; 4] = [95, 70, 86, 72];
+pub const SCSI_TARGET_MAX_BYTES: u64 = 16;

@@ -135,7 +135,7 @@ Cathedral's authority-bearing boot policy do not belong in this phase.
   field-offset vectors; calling a slot remains a boundary concern.
 - [x] **UEFI-003 — Port console and image-loading protocols.** Text input/output,
   serial I/O, loaded image, device path, load-file, and shell parameter shapes.
-- [ ] **UEFI-004 — Port storage protocols.** Simple file system, file, block I/O,
+- [x] **UEFI-004 — Port storage protocols.** Simple file system, file, block I/O,
   disk I/O, ATA, SCSI, NVMe, firmware volume/storage, and firmware-management
   raw representations.
 - [x] **UEFI-005 — Port display, bus, and machine protocols.** Graphics output,

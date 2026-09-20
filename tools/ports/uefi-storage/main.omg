@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Cathedral tests for constants transcribed from pinned uefi-raw.
+// The raw files have no standalone upstream #[test] cases. These cases cover
+// high bits, protocol version distinctions, vendor ranges, unknown values,
+// a signature byte order, and protocol identity without invoking a service.
+use cathedral_uefi_raw::storage::FILE_MODE_CREATE;
+use cathedral_uefi_raw::storage::FILE_ATTRIBUTE_VALID_ATTR;
+use cathedral_uefi_raw::storage::BLOCK_IO_PROTOCOL_REVISION;
+use cathedral_uefi_raw::storage::BLOCK_IO_PROTOCOL_REVISION_2;
+use cathedral_uefi_raw::storage::BLOCK_IO_PROTOCOL_REVISION_3;
+use cathedral_uefi_raw::storage::IMAGE_COMPATIBILITIES_ALL_BITS;
+use cathedral_uefi_raw::storage::ScsiIoType;
+use cathedral_uefi_raw::storage::FvFiletype;
+use cathedral_uefi_raw::storage::FV_FILETYPE_OEM_RANGE_MIN;
+use cathedral_uefi_raw::storage::FV_FILETYPE_OEM_RANGE_MAX;
+use cathedral_uefi_raw::storage::FV_FILETYPE_DEBUG_RANGE_MIN;
+use cathedral_uefi_raw::storage::FV_FILETYPE_DEBUG_RANGE_MAX;
+use cathedral_uefi_raw::storage::FV_FILETYPE_FFS_RANGE_MIN;
+use cathedral_uefi_raw::storage::FV_FILETYPE_FFS_RANGE_MAX;
+use cathedral_uefi_raw::storage::FIRMWARE_VOLUME_BLOCK2_PROTOCOL_LBA_LIST_TERMINATOR;
+use cathedral_uefi_raw::storage::FIRMWARE_VOLUME_HEADER_SIGNATURE;
+use cathedral_uefi_raw::storage::SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
+use cathedral_uefi_raw::storage::FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER_INIT_VERSION;
+
+machine storage_constant_cases() -> bool {
+    let unknown: ScsiIoType = ScsiIoType { raw: 255 };
+    let vendor: FvFiletype = FvFiletype { raw: 192 };
+    let high_bit: u64 = 0x8000000000000000;
+    let all_bits: u64 = 0xffffffffffffffff;
+    let create_mode: u64 = FILE_MODE_CREATE.raw;
+    let vendor_mask: u64 = IMAGE_COMPATIBILITIES_ALL_BITS.raw;
+    let lba_end: u64 = FIRMWARE_VOLUME_BLOCK2_PROTOCOL_LBA_LIST_TERMINATOR;
+    create_mode == high_bit &&
+    FILE_ATTRIBUTE_VALID_ATTR.raw == 0x37 &&
+    BLOCK_IO_PROTOCOL_REVISION == 0x10000 &&
+    BLOCK_IO_PROTOCOL_REVISION_2 == 0x20001 &&
+    BLOCK_IO_PROTOCOL_REVISION_3 == 0x2001f &&
+    vendor_mask == all_bits &&
+    unknown.raw == 255 && vendor.raw == FV_FILETYPE_OEM_RANGE_MIN &&
+    FV_FILETYPE_OEM_RANGE_MIN == 192 && FV_FILETYPE_OEM_RANGE_MAX == 223 &&
+    FV_FILETYPE_DEBUG_RANGE_MIN == 224 && FV_FILETYPE_DEBUG_RANGE_MAX == 239 &&
+    FV_FILETYPE_FFS_RANGE_MIN == 240 && FV_FILETYPE_FFS_RANGE_MAX == 255 &&
+    lba_end == all_bits &&
+    FIRMWARE_VOLUME_HEADER_SIGNATURE[0] == 95 &&
+    FIRMWARE_VOLUME_HEADER_SIGNATURE[1] == 70 &&
+    FIRMWARE_VOLUME_HEADER_SIGNATURE[2] == 86 &&
+    FIRMWARE_VOLUME_HEADER_SIGNATURE[3] == 72 &&
+    SIMPLE_FILE_SYSTEM_PROTOCOL_GUID.data1 == 0x964e5b22 &&
+    SIMPLE_FILE_SYSTEM_PROTOCOL_GUID.data4[7] == 0x3b &&
+    FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER_INIT_VERSION == 3
+}
+machine test_result() -> i32 {
+    transition storage_constant_cases() { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

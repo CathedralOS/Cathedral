@@ -12,6 +12,7 @@ source inventory, vectors, verification commands, and deviations.
 | Complete boot/runtime/system table declarations | [Typechecked; semantic fixture tested; full plan reflection blocked](tables.PORT.md) |
 | Console, image loading, and device paths | [Semantic helpers tested; fixed policies typechecked; dynamic tails blocked](console.PORT.md) |
 | Display, PCI/USB, and machine protocols | [Typechecked; 325 upstream representation vectors verified](machine.PORT.md) |
+| Storage and firmware volume/management | [Typechecked; semantic constants tested; 681 representation vectors verified](storage.PORT.md) |
 | TCG v1/v2 measured-boot representations | [Typechecked; upstream ABI vectors verified](tcg.PORT.md) |
 
 Stages apply to individual slices, not the entire upstream crate. The package
