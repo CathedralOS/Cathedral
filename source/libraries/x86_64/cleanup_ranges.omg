@@ -1,0 +1,109 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pure orchestration of pinned MappedPageTable::clean_up_addr_range.
+// Caller supplies successive consistent detached snapshots and retains effects.
+module cleanup_ranges;
+use pages;
+use addresses;
+use cleanup_branch;
+use cleanup_branch::CleanupPlan;
+use cleanup_branch::CleanupOutcome;
+
+pub data RangeStatus [copy] {
+    case InvalidRange;
+    case Active;
+    case Done;
+    case Exhausted;
+    case CaptureMismatch(expected: u64, supplied: u64);
+}
+pub data Cursor [copy] { next_page: u64; last_page: u64; budget: u64; status: RangeStatus; }
+pub data RangeStep [copy] { cursor: Cursor; has_plan: bool; branch: CleanupPlan; }
+pub machine begin(first: u64, last: u64, budget: u64) -> Cursor {
+    let first_valid: bool = pages::start_valid(first, 4096, false);
+    let last_valid: bool = pages::start_valid(last, 4096, false);
+    transition first_valid && last_valid {
+        true -> order(first, last, budget)
+        _ -> (Cursor {})
+    }
+    state order(first: u64, last: u64, budget: u64) -> Cursor {
+        transition { first > last -> (Cursor { next_page: first, last_page: last, budget: budget, status: RangeStatus::Done })
+            budget == 0 -> (Cursor { next_page: first, last_page: last, status: RangeStatus::Exhausted })
+            _ -> (Cursor { next_page: first, last_page: last, budget: budget, status: RangeStatus::Active }) }
+    }
+}
+pub machine resume(cursor: Cursor, budget: u64) -> Cursor {
+    transition cursor.status {
+        RangeStatus::Exhausted -> restart(cursor.next_page, cursor.last_page, budget)
+        _ -> (cursor)
+    }
+    state restart(first: u64, last: u64, budget: u64) -> Cursor {
+        let next: Cursor = begin(first, last, budget);
+        next
+    }
+}
+pub machine step(cursor: Cursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> RangeStep {
+    transition cursor.status {
+        RangeStatus::Active -> validate(cursor, words, table_ids, other_nonzero)
+        _ -> (RangeStep { cursor: cursor })
+    }
+    state validate(cursor: Cursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> RangeStep {
+        let checked: Cursor = begin(cursor.next_page, cursor.last_page, cursor.budget);
+        transition checked.status {
+            RangeStatus::Active -> inspect(checked, words, table_ids, other_nonzero)
+            _ -> (RangeStep { cursor: checked })
+        }
+    }
+    state inspect(cursor: Cursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> RangeStep {
+        let branch: CleanupPlan = cleanup_branch::plan(words, table_ids, other_nonzero, cursor.next_page);
+        transition branch.outcome {
+            CleanupOutcome::Ready -> complete(cursor, branch, other_nonzero[0])
+            CleanupOutcome::CaptureMismatch { expected, supplied } -> (RangeStep {
+                cursor: Cursor { next_page: cursor.next_page, last_page: cursor.last_page, budget: cursor.budget,
+                    status: RangeStatus::CaptureMismatch { expected: expected, supplied: supplied } },
+                has_plan: true, branch: branch })
+            _ -> (RangeStep { cursor: Cursor {}, has_plan: true, branch: branch })
+        }
+    }
+    state complete(cursor: Cursor, branch: CleanupPlan, root_has_other: bool) -> RangeStep {
+        let span: u64 = covered_span(&branch.words, root_has_other);
+        let next: Cursor = advance(cursor, span);
+        RangeStep { cursor: next, has_plan: true, branch: branch }
+    }
+}
+// Once a selected link is absent or huge, no finer table can be reclaimed in
+// that entry's coverage. A reached P1 table is already examined in full and
+// cleanup never unmaps its leaves, so its entire 2MiB coverage can be skipped.
+machine covered_span(words: &[u64; 4], root_has_other: bool) -> u64 {
+    let p4: bool = (words[0] & 129) == 1;
+    let p3: bool = (words[1] & 129) == 1;
+    let root_empty: bool = words[0] == 0 && !root_has_other;
+    transition { root_empty -> (281474976710656) !p4 -> (549755813888) !p3 -> (1073741824) _ -> (2097152) }
+}
+machine advance(cursor: Cursor, span: u64) -> Cursor {
+    let current: u64 = cursor.next_page & 281474976710655;
+    let last: u64 = cursor.last_page & 281474976710655;
+    transition cursor.budget > 0 && span >= 4096 && span <= 281474976710656 {
+        true -> interval(cursor, current, last, span)
+        _ -> (Cursor {})
+    }
+    state interval(cursor: Cursor, current: u64, last: u64, span: u64) -> Cursor {
+        let end: u64 = (current | (span - 1)) & 18446744073709547520;
+        let remaining: u64 = cursor.budget - 1;
+        transition last <= end {
+            true -> (Cursor { next_page: cursor.next_page, last_page: cursor.last_page, budget: remaining, status: RangeStatus::Done })
+            _ -> next(cursor.last_page, end, remaining)
+        }
+    }
+    state next(last: u64, end: u64, remaining: u64) -> Cursor {
+        transition end <= 281474976706560 {
+            true -> canonical(last, end + 4096, remaining)
+            _ -> (Cursor {})
+        }
+    }
+    state canonical(last: u64, dense: u64, remaining: u64) -> Cursor {
+        let address: u64 = addresses::virtual_truncate(dense);
+        transition remaining == 0 {
+            true -> (Cursor { next_page: address, last_page: last, status: RangeStatus::Exhausted })
+            _ -> (Cursor { next_page: address, last_page: last, budget: remaining, status: RangeStatus::Active })
+        }
+    }
+}

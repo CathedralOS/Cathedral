@@ -1,0 +1,1048 @@
+{
+  "scenarios": [
+    [
+      "empty-root",
+      0,
+      18446744073709547520,
+      [],
+      4
+    ],
+    [
+      "empty-chain-all",
+      0,
+      18446744073709547520,
+      [
+        [
+          16384,
+          0,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8193
+        ],
+        [
+          8192,
+          0,
+          12289
+        ]
+      ],
+      4
+    ],
+    [
+      "two-empty-leaves",
+      0,
+      2097152,
+      [
+        [
+          16384,
+          0,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8193
+        ],
+        [
+          8192,
+          0,
+          12289
+        ],
+        [
+          8192,
+          1,
+          20481
+        ]
+      ],
+      4
+    ],
+    [
+      "partial-first-leaf",
+      4096,
+      8192,
+      [
+        [
+          16384,
+          0,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8193
+        ],
+        [
+          8192,
+          0,
+          12289
+        ],
+        [
+          8192,
+          1,
+          20481
+        ]
+      ],
+      4
+    ],
+    [
+      "later-leaf-only",
+      2097152,
+      2097152,
+      [
+        [
+          16384,
+          0,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8193
+        ],
+        [
+          8192,
+          0,
+          12289
+        ],
+        [
+          8192,
+          1,
+          20481
+        ]
+      ],
+      4
+    ],
+    [
+      "neighbor-nonpresent",
+      0,
+      0,
+      [
+        [
+          16384,
+          0,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8193
+        ],
+        [
+          8192,
+          0,
+          12289
+        ],
+        [
+          12288,
+          511,
+          9223372036854775808
+        ]
+      ],
+      4
+    ],
+    [
+      "leaf-nonpresent",
+      0,
+      8192,
+      [
+        [
+          16384,
+          0,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8193
+        ],
+        [
+          8192,
+          0,
+          12289
+        ],
+        [
+          12288,
+          0,
+          512
+        ]
+      ],
+      4
+    ],
+    [
+      "huge-parent",
+      0,
+      2097152,
+      [
+        [
+          16384,
+          0,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8193
+        ],
+        [
+          8192,
+          0,
+          129
+        ]
+      ],
+      4
+    ],
+    [
+      "nonpresent-parent",
+      0,
+      1073741824,
+      [
+        [
+          16384,
+          0,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8192
+        ]
+      ],
+      4
+    ],
+    [
+      "high-half",
+      18446603336221196288,
+      18446603336223293440,
+      [
+        [
+          16384,
+          256,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8193
+        ],
+        [
+          8192,
+          0,
+          12289
+        ],
+        [
+          8192,
+          1,
+          20481
+        ]
+      ],
+      4
+    ],
+    [
+      "canonical-gap",
+      140737488351232,
+      18446603336221196288,
+      [
+        [
+          16384,
+          256,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8193
+        ],
+        [
+          8192,
+          0,
+          12289
+        ]
+      ],
+      4
+    ],
+    [
+      "last-page",
+      18446744073709547520,
+      18446744073709547520,
+      [
+        [
+          16384,
+          511,
+          4097
+        ],
+        [
+          4096,
+          511,
+          8193
+        ],
+        [
+          8192,
+          511,
+          12289
+        ]
+      ],
+      4
+    ],
+    [
+      "reversed",
+      4096,
+      0,
+      [
+        [
+          16384,
+          0,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8193
+        ],
+        [
+          8192,
+          0,
+          12289
+        ]
+      ],
+      4
+    ],
+    [
+      "budget-after-prefix",
+      0,
+      2097152,
+      [
+        [
+          16384,
+          0,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8193
+        ],
+        [
+          8192,
+          0,
+          12289
+        ],
+        [
+          8192,
+          1,
+          20481
+        ]
+      ],
+      1
+    ],
+    [
+      "budget-before-work",
+      0,
+      2097152,
+      [
+        [
+          16384,
+          0,
+          4097
+        ],
+        [
+          4096,
+          0,
+          8193
+        ],
+        [
+          8192,
+          0,
+          12289
+        ],
+        [
+          8192,
+          1,
+          20481
+        ]
+      ],
+      0
+    ]
+  ],
+  "steps": [
+    {
+      "scenario": "empty-root",
+      "page": 0,
+      "last": 18446744073709547520,
+      "budget": 4,
+      "ids": [
+        16384,
+        0,
+        0,
+        0
+      ],
+      "words": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "out": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "retired": [],
+      "write": 0,
+      "visited": 1,
+      "next": 0,
+      "remaining": 3,
+      "status": "Done"
+    },
+    {
+      "scenario": "empty-chain-all",
+      "page": 0,
+      "last": 18446744073709547520,
+      "budget": 4,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        12288
+      ],
+      "words": [
+        4097,
+        8193,
+        12289,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "out": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "retired": [
+        12288,
+        8192,
+        4096
+      ],
+      "write": 7,
+      "visited": 4,
+      "next": 0,
+      "remaining": 3,
+      "status": "Done"
+    },
+    {
+      "scenario": "two-empty-leaves",
+      "page": 0,
+      "last": 2097152,
+      "budget": 4,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        12288
+      ],
+      "words": [
+        4097,
+        8193,
+        12289,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        true,
+        false
+      ],
+      "out": [
+        4097,
+        8193,
+        0,
+        0
+      ],
+      "retired": [
+        12288
+      ],
+      "write": 4,
+      "visited": 4,
+      "next": 2097152,
+      "remaining": 3,
+      "status": "Active"
+    },
+    {
+      "scenario": "two-empty-leaves",
+      "page": 2097152,
+      "last": 2097152,
+      "budget": 3,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        20480
+      ],
+      "words": [
+        4097,
+        8193,
+        20481,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "out": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "retired": [
+        20480,
+        8192,
+        4096
+      ],
+      "write": 7,
+      "visited": 4,
+      "next": 2097152,
+      "remaining": 2,
+      "status": "Done"
+    },
+    {
+      "scenario": "partial-first-leaf",
+      "page": 4096,
+      "last": 8192,
+      "budget": 4,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        12288
+      ],
+      "words": [
+        4097,
+        8193,
+        12289,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        true,
+        false
+      ],
+      "out": [
+        4097,
+        8193,
+        0,
+        0
+      ],
+      "retired": [
+        12288
+      ],
+      "write": 4,
+      "visited": 4,
+      "next": 4096,
+      "remaining": 3,
+      "status": "Done"
+    },
+    {
+      "scenario": "later-leaf-only",
+      "page": 2097152,
+      "last": 2097152,
+      "budget": 4,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        20480
+      ],
+      "words": [
+        4097,
+        8193,
+        20481,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        true,
+        false
+      ],
+      "out": [
+        4097,
+        8193,
+        0,
+        0
+      ],
+      "retired": [
+        20480
+      ],
+      "write": 4,
+      "visited": 4,
+      "next": 2097152,
+      "remaining": 3,
+      "status": "Done"
+    },
+    {
+      "scenario": "neighbor-nonpresent",
+      "page": 0,
+      "last": 0,
+      "budget": 4,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        12288
+      ],
+      "words": [
+        4097,
+        8193,
+        12289,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "out": [
+        4097,
+        8193,
+        12289,
+        0
+      ],
+      "retired": [],
+      "write": 0,
+      "visited": 4,
+      "next": 0,
+      "remaining": 3,
+      "status": "Done"
+    },
+    {
+      "scenario": "leaf-nonpresent",
+      "page": 0,
+      "last": 8192,
+      "budget": 4,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        12288
+      ],
+      "words": [
+        4097,
+        8193,
+        12289,
+        512
+      ],
+      "others": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "out": [
+        4097,
+        8193,
+        12289,
+        512
+      ],
+      "retired": [],
+      "write": 0,
+      "visited": 4,
+      "next": 0,
+      "remaining": 3,
+      "status": "Done"
+    },
+    {
+      "scenario": "huge-parent",
+      "page": 0,
+      "last": 2097152,
+      "budget": 4,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        0
+      ],
+      "words": [
+        4097,
+        8193,
+        129,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "out": [
+        4097,
+        8193,
+        129,
+        0
+      ],
+      "retired": [],
+      "write": 0,
+      "visited": 3,
+      "next": 2097152,
+      "remaining": 3,
+      "status": "Active"
+    },
+    {
+      "scenario": "huge-parent",
+      "page": 2097152,
+      "last": 2097152,
+      "budget": 3,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        0
+      ],
+      "words": [
+        4097,
+        8193,
+        0,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        true,
+        false
+      ],
+      "out": [
+        4097,
+        8193,
+        0,
+        0
+      ],
+      "retired": [],
+      "write": 0,
+      "visited": 3,
+      "next": 2097152,
+      "remaining": 2,
+      "status": "Done"
+    },
+    {
+      "scenario": "nonpresent-parent",
+      "page": 0,
+      "last": 1073741824,
+      "budget": 4,
+      "ids": [
+        16384,
+        4096,
+        0,
+        0
+      ],
+      "words": [
+        4097,
+        8192,
+        0,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "out": [
+        4097,
+        8192,
+        0,
+        0
+      ],
+      "retired": [],
+      "write": 0,
+      "visited": 2,
+      "next": 1073741824,
+      "remaining": 3,
+      "status": "Active"
+    },
+    {
+      "scenario": "nonpresent-parent",
+      "page": 1073741824,
+      "last": 1073741824,
+      "budget": 3,
+      "ids": [
+        16384,
+        4096,
+        0,
+        0
+      ],
+      "words": [
+        4097,
+        0,
+        0,
+        0
+      ],
+      "others": [
+        false,
+        true,
+        false,
+        false
+      ],
+      "out": [
+        4097,
+        0,
+        0,
+        0
+      ],
+      "retired": [],
+      "write": 0,
+      "visited": 2,
+      "next": 1073741824,
+      "remaining": 2,
+      "status": "Done"
+    },
+    {
+      "scenario": "high-half",
+      "page": 18446603336221196288,
+      "last": 18446603336223293440,
+      "budget": 4,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        12288
+      ],
+      "words": [
+        4097,
+        8193,
+        12289,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        true,
+        false
+      ],
+      "out": [
+        4097,
+        8193,
+        0,
+        0
+      ],
+      "retired": [
+        12288
+      ],
+      "write": 4,
+      "visited": 4,
+      "next": 18446603336223293440,
+      "remaining": 3,
+      "status": "Active"
+    },
+    {
+      "scenario": "high-half",
+      "page": 18446603336223293440,
+      "last": 18446603336223293440,
+      "budget": 3,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        20480
+      ],
+      "words": [
+        4097,
+        8193,
+        20481,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "out": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "retired": [
+        20480,
+        8192,
+        4096
+      ],
+      "write": 7,
+      "visited": 4,
+      "next": 18446603336223293440,
+      "remaining": 2,
+      "status": "Done"
+    },
+    {
+      "scenario": "canonical-gap",
+      "page": 140737488351232,
+      "last": 18446603336221196288,
+      "budget": 4,
+      "ids": [
+        16384,
+        0,
+        0,
+        0
+      ],
+      "words": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "others": [
+        true,
+        false,
+        false,
+        false
+      ],
+      "out": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "retired": [],
+      "write": 0,
+      "visited": 1,
+      "next": 18446603336221196288,
+      "remaining": 3,
+      "status": "Active"
+    },
+    {
+      "scenario": "canonical-gap",
+      "page": 18446603336221196288,
+      "last": 18446603336221196288,
+      "budget": 3,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        12288
+      ],
+      "words": [
+        4097,
+        8193,
+        12289,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "out": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "retired": [
+        12288,
+        8192,
+        4096
+      ],
+      "write": 7,
+      "visited": 4,
+      "next": 18446603336221196288,
+      "remaining": 2,
+      "status": "Done"
+    },
+    {
+      "scenario": "last-page",
+      "page": 18446744073709547520,
+      "last": 18446744073709547520,
+      "budget": 4,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        12288
+      ],
+      "words": [
+        4097,
+        8193,
+        12289,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "out": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "retired": [
+        12288,
+        8192,
+        4096
+      ],
+      "write": 7,
+      "visited": 4,
+      "next": 18446744073709547520,
+      "remaining": 3,
+      "status": "Done"
+    },
+    {
+      "scenario": "budget-after-prefix",
+      "page": 0,
+      "last": 2097152,
+      "budget": 1,
+      "ids": [
+        16384,
+        4096,
+        8192,
+        12288
+      ],
+      "words": [
+        4097,
+        8193,
+        12289,
+        0
+      ],
+      "others": [
+        false,
+        false,
+        true,
+        false
+      ],
+      "out": [
+        4097,
+        8193,
+        0,
+        0
+      ],
+      "retired": [
+        12288
+      ],
+      "write": 4,
+      "visited": 4,
+      "next": 2097152,
+      "remaining": 0,
+      "status": "Exhausted"
+    }
+  ]
+}

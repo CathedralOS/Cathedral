@@ -1,0 +1,44 @@
+use x86::cleanup_ranges;
+use x86::cleanup_ranges::Cursor;
+use x86::cleanup_ranges::RangeStep;
+use x86::cleanup_ranges::RangeStatus;
+
+machine begin_checks()->i32 {
+    let invalid:Cursor=cleanup_ranges::begin(1,4096,5);
+    let hole:Cursor=cleanup_ranges::begin(0,140737488355328,5);
+    let reversed:Cursor=cleanup_ranges::begin(4096,0,0);
+    let empty_budget:Cursor=cleanup_ranges::begin(0,4096,0);
+    let correct:bool=invalid.status in RangeStatus::InvalidRange && hole.status in RangeStatus::InvalidRange && reversed.status in RangeStatus::Done && empty_budget.status in RangeStatus::Exhausted;
+    transition correct { true -> (0) _ -> (1) }
+}
+machine inactive()->i32 {
+    let words:[u64;4];let ids:[u64;4];let others:[bool;4];
+    let done:Cursor=cleanup_ranges::begin(4096,0,7);
+    let unchanged:Cursor=cleanup_ranges::resume(done,99);
+    let value:RangeStep=cleanup_ranges::step(unchanged,&words,&ids,&others);
+    transition !value.has_plan && value.cursor.status in RangeStatus::Done && value.cursor.budget==7 { true -> (0) _ -> (1) }
+}
+machine forged()->i32 {
+    let words:[u64;4];let ids:[u64;4];let others:[bool;4];
+    let active:Cursor=Cursor { next_page:1,last_page:4096,budget:3,status:RangeStatus::Active };
+    let value:RangeStep=cleanup_ranges::step(active,&words,&ids,&others);
+    transition !value.has_plan && value.cursor.status in RangeStatus::InvalidRange { true -> (0) _ -> (1) }
+}
+machine mismatch()->i32 {
+    let words:[u64;4]=[4097,8193,12289,0];let ids:[u64;4]=[16384,4096,8192,20480];let others:[bool;4];
+    let cursor:Cursor=cleanup_ranges::begin(0,4096,2);
+    let value:RangeStep=cleanup_ranges::step(cursor,&words,&ids,&others);
+    let unchanged:bool=value.has_plan && value.branch.write_mask==0 && value.branch.retire_count==0 && value.cursor.next_page==0;
+    transition value.cursor.status { RangeStatus::CaptureMismatch { expected,supplied } -> payload(unchanged,expected,supplied) _ -> (1) }
+    state payload(unchanged:bool,expected:u64,supplied:u64)->i32 { transition unchanged && expected==12288 && supplied==20480 { true -> (0) _ -> (1) } }
+}
+machine resume_two()->i32 {
+    let words:[u64;4]=[4097,8193,12289,0];let ids:[u64;4]=[16384,4096,8192,12288];let others:[bool;4]=[false,false,true,false];
+    let cursor:Cursor=cleanup_ranges::begin(0,2097152,1);
+    let first:RangeStep=cleanup_ranges::step(cursor,&words,&ids,&others);
+    let resumed:Cursor=cleanup_ranges::resume(first.cursor,1);
+    let later_words:[u64;4]=[4097,8193,20481,0];let later_ids:[u64;4]=[16384,4096,8192,20480];let later_others:[bool;4];
+    let second:RangeStep=cleanup_ranges::step(resumed,&later_words,&later_ids,&later_others);
+    let correct:bool=first.cursor.status in RangeStatus::Exhausted && first.cursor.next_page==2097152 && first.branch.retire_count==1 && first.branch.frames_to_retire[0]==12288 && second.cursor.status in RangeStatus::Done && second.branch.retire_count==3 && second.branch.frames_to_retire[0]==20480 && second.branch.frames_to_retire[1]==8192 && second.branch.frames_to_retire[2]==4096;
+    transition correct { true -> (0) _ -> (1) }
+}

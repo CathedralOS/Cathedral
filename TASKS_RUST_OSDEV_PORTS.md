@@ -242,7 +242,11 @@ The [cleanup branch slice](source/libraries/x86_64/cleanup-branch.PORT.md) passe
 112 actual Rust/Omega singleton-range scenarios, five additional fixtures and
 three body mutations. It retains non-present nonzero entries, checks all 512
 entries for sibling occupancy and records deepest-first retirement requests.
-Arbitrary-range orchestration and actual reclamation remain separate work.
+The [cleanup range cursor](source/libraries/x86_64/cleanup-ranges.PORT.md) adds
+bounded, resumable inclusive-range traversal: 13 whole-range Rust witnesses,
+18 Omega steps, five additional fixtures and three body mutations pass. Exhaustion
+retains the exact next page; actual custody, invalidation and reclamation remain
+separate integration work.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

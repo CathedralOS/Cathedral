@@ -1,0 +1,290 @@
+{
+  "files": {
+    "src/structures/paging/mapper/mapped_page_table.rs": {
+      "disposition": "pending",
+      "reason": "Pure cleanup algorithms translated; other mapper methods have separate slice inventories. Live ownership, mutable references and invalidation interfaces remain outside numeric proposals.",
+      "sha256": "e250c729f0588d1ce129c1c68ab43337f2f44328d2b38fe896cbeeacc1bc4ff2",
+      "symbols": {
+        "108:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "126:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "143:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "151:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "159:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "15:MappedPageTable": {
+          "anchor": "pub struct MappedPageTable<'a, P: PageTableFrameMapping> {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "176:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "207:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "236:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "258:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "275:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "295:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "303:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "31:new": {
+          "anchor": "pub unsafe fn new(level_4_table: &'a mut PageTable, page_table_frame_mapping: P) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "321:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "357:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "383:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "39:level_4_table": {
+          "anchor": "pub fn level_4_table(&self) -> &PageTable {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "408:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "425:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "445:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "44:level_4_table_mut": {
+          "anchor": "pub fn level_4_table_mut(&mut self) -> &mut PageTable {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "468:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "487:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "49:page_table_frame_mapping": {
+          "anchor": "pub fn page_table_frame_mapping(&self) -> &P {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "551:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "translated",
+          "reason": "Bounded resumable pure range orchestration and tested deepest-first branch cleanup. Initialized snapshots are caller-supplied numeric observations; actual parent mutation, deallocation, custody and invalidation remain external integration.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/cleanup_ranges.omg",
+              "anchor": "pub machine step("
+            },
+            {
+              "path": "source/libraries/x86_64/cleanup_branch.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "566:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "translated",
+          "reason": "Bounded resumable pure range orchestration and tested deepest-first branch cleanup. Initialized snapshots are caller-supplied numeric observations; actual parent mutation, deallocation, custody and invalidation remain external integration.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/cleanup_ranges.omg",
+              "anchor": "pub machine step("
+            },
+            {
+              "path": "source/libraries/x86_64/cleanup_branch.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "56:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "573:clean_up": {
+          "anchor": "unsafe fn clean_up<P: PageTableFrameMapping>(",
+          "disposition": "translated",
+          "reason": "Bounded resumable pure range orchestration and tested deepest-first branch cleanup. Initialized snapshots are caller-supplied numeric observations; actual parent mutation, deallocation, custody and invalidation remain external integration.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/cleanup_ranges.omg",
+              "anchor": "pub machine step("
+            },
+            {
+              "path": "source/libraries/x86_64/cleanup_branch.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "644:PageTableWalker": {
+          "anchor": "struct PageTableWalker<P: PageTableFrameMapping> {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "650:new": {
+          "anchor": "pub unsafe fn new(page_table_frame_mapping: P) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "662:next_table": {
+          "anchor": "fn next_table<'b>(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "680:next_table_mut": {
+          "anchor": "fn next_table_mut<'b>(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "701:create_next_table": {
+          "anchor": "fn create_next_table<'b, A>(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "742:PageTableWalkError": {
+          "anchor": "enum PageTableWalkError {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "748:PageTableCreateError": {
+          "anchor": "enum PageTableCreateError {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "755:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "765:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "775:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "785:from": {
+          "anchor": "fn from(err: FrameError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "795:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "805:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "815:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "82:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "832:PageTableFrameMapping": {
+          "anchor": "pub unsafe trait PageTableFrameMapping {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "834:frame_to_pointer": {
+          "anchor": "fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable;",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        },
+        "839:frame_to_pointer": {
+          "anchor": "fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable {",
+          "disposition": "pending",
+          "reason": "Outside the single-page cleanup branch slice; see the separate captured-route and table inventories."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/cleanup_branch.omg",
+          "anchor": "module cleanup_branch;"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/paging/mapper/mapped_page_table.rs"
+    ],
+    "url": "https://github.com/rust-osdev/x86_64"
+  }
+}
