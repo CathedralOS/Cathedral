@@ -1,0 +1,138 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use cathedral_virtio::features::Features;
+use cathedral_virtio::packed::Cursor;
+use cathedral_virtio::packed::EventSuppress;
+use cathedral_virtio::packed::EventSuppressDesc;
+use cathedral_virtio::packed::EventSuppressFlags;
+use cathedral_virtio::simulator::DeviceSession;
+use cathedral_virtio::simulator::SessionResult;
+use cathedral_virtio::simulator::QueueSimulation;
+use cathedral_virtio::simulator::QueueStep;
+use cathedral_virtio::simulator::device_acknowledge;
+use cathedral_virtio::simulator::device_driver;
+use cathedral_virtio::simulator::device_negotiate;
+use cathedral_virtio::simulator::device_ready;
+use cathedral_virtio::simulator::device_reset;
+use cathedral_virtio::simulator::queue_create;
+use cathedral_virtio::simulator::queue_well_formed;
+use cathedral_virtio::simulator::queue_submit;
+use cathedral_virtio::simulator::queue_process;
+use cathedral_virtio::simulator::queue_reap;
+use cathedral_virtio::simulator::queue_reset;
+
+machine session_for(features: Features) -> DeviceSession {
+    let initial: DeviceSession = DeviceSession { offered: features };
+    let ack: SessionResult = device_acknowledge(initial);
+    let driver: SessionResult = device_driver(ack.session);
+    let negotiated: SessionResult = device_negotiate(driver.session, features, Features { low: 0x100000000 }, false);
+    let ready: SessionResult = device_ready(negotiated.session);
+    ready.session
+}
+machine negotiation_cases() -> bool {
+    let features: Features = Features { low: 0x520000000, high: 64 };
+    let initial: DeviceSession = DeviceSession { offered: features };
+    let ack: SessionResult = device_acknowledge(initial);
+    let driver: SessionResult = device_driver(ack.session);
+    let negotiated: SessionResult = device_negotiate(driver.session, features, Features { low: 0x100000000 }, true);
+    let ready: SessionResult = device_ready(negotiated.session);
+    let reset: DeviceSession = device_reset(ready.session);
+    let bad: SessionResult = device_negotiate(DeviceSession { status: 3, offered: Features { low: 0x100000800 } }, Features { low: 0x100000800 }, Features {}, true);
+    !device_driver(initial).ok && !device_ready(initial).ok && ack.ok && ack.session.status == 1 &&
+    driver.ok && driver.session.status == 3 && negotiated.ok && negotiated.session.status == 11 &&
+    ready.ok && ready.session.status == 15 && ready.session.accepted.high == 64 &&
+    reset.status == 0 && reset.accepted.low == 0 && reset.accepted.high == 0 && reset.offered.high == 64 &&
+    !bad.ok && bad.session.status == 131 && !device_ready(bad.session).ok &&
+    !device_negotiate(initial, features, Features {}, false).ok
+}
+machine split_cases() -> bool {
+    let session: DeviceSession = session_for(Features { low: 0x120000000 });
+    let created: QueueStep = queue_create(session, 2);
+    let first: QueueStep = queue_submit(created.queue, 1, 64, true, EventSuppress {}, 0, 1);
+    let duplicate: QueueStep = queue_submit(first.queue, 1, 8, false, EventSuppress {}, 1, 0);
+    let second: QueueStep = queue_submit(first.queue, 0, 8, false, EventSuppress {}, 1, 0);
+    let full: QueueStep = queue_submit(second.queue, 0, 8, false, EventSuppress {}, 2, 0);
+    let bad_length: QueueStep = queue_process(second.queue, 65);
+    let done1: QueueStep = queue_process(second.queue, 64);
+    let readonly: QueueStep = queue_process(done1.queue, 1);
+    let done2: QueueStep = queue_process(done1.queue, 0);
+    let reap1: QueueStep = queue_reap(done2.queue);
+    let reap2: QueueStep = queue_reap(reap1.queue);
+    let reused: QueueStep = queue_submit(reap2.queue, 1, 0, false, EventSuppress {}, 2, 0);
+    created.ok && first.ok && first.notification && first.queue.available[0] == 1 && first.queue.descriptors[1].bytes == 64 &&
+    !duplicate.ok && duplicate.queue.inflight == 1 && second.ok && second.queue.inflight == 2 && !full.ok &&
+    !bad_length.ok && bad_length.queue.queued == 2 && done1.ok && done1.completion.id == 1 && done1.completion.bytes == 64 &&
+    !readonly.ok && done2.ok && done2.completion.id == 0 && done2.queue.completed == 2 && done2.queue.queued == 0 &&
+    reap1.ok && reap1.completion.id == 1 && reap2.ok && reap2.completion.id == 0 && reap2.queue.inflight == 0 &&
+    !reap2.queue.busy[0] && !reap2.queue.busy[1] && !queue_reap(reap2.queue).ok && reused.ok && queue_well_formed(reused.queue)
+}
+machine packed_cases() -> bool {
+    let session: DeviceSession = session_for(Features { low: 0x520000000 });
+    let created: QueueStep = queue_create(session, 3);
+    let a: QueueStep = queue_submit(created.queue, 7, 16, true, EventSuppress {}, 0, 0);
+    let b: QueueStep = queue_submit(a.queue, 5, 8, false, EventSuppress {}, 0, 0);
+    let c: QueueStep = queue_submit(b.queue, 0, 8, true, EventSuppress {}, 0, 0);
+    let d1: QueueStep = queue_process(c.queue, 16);
+    let d2: QueueStep = queue_process(d1.queue, 0);
+    let d3: QueueStep = queue_process(d2.queue, 8);
+    let r1: QueueStep = queue_reap(d3.queue);
+    let r2: QueueStep = queue_reap(r1.queue);
+    let r3: QueueStep = queue_reap(r2.queue);
+    let next: QueueStep = queue_submit(r3.queue, 7, 1, false, EventSuppress {}, 0, 0);
+    let completed: QueueStep = queue_process(next.queue, 0);
+    let reaped: QueueStep = queue_reap(completed.queue);
+    created.ok && created.queue.packed && a.ok && b.ok && c.ok && c.queue.producer.offset == 0 && c.queue.producer.wrap == 0 &&
+    c.queue.descriptors[0].flags == 130 && c.queue.descriptors[1].id == 5 && c.queue.descriptors[2].id == 0 &&
+    d1.ok && d1.queue.descriptors[0].flags == 32898 && d2.ok && d3.ok && d3.queue.consumer.wrap == 0 &&
+    r1.ok && r1.completion.id == 7 && r2.completion.id == 5 && r3.completion.id == 0 && r3.queue.reaper.wrap == 0 &&
+    next.ok && next.queue.descriptors[0].flags == 32768 && completed.ok && completed.queue.descriptors[0].flags == 0 &&
+    reaped.ok && reaped.completion.id == 7 && reaped.queue.inflight == 0 && queue_well_formed(reaped.queue)
+}
+machine counter_cases() -> bool {
+    let session: DeviceSession = session_for(Features { low: 0x100000000 });
+    let created: QueueStep = queue_create(session, 2);
+    let mut queue: QueueSimulation = created.queue;
+    queue.produced = 65535; queue.consumed = 65535; queue.reaped = 65535;
+    queue.producer = Cursor { offset: 1, wrap: 0 }; queue.consumer = Cursor { offset: 1, wrap: 0 }; queue.reaper = Cursor { offset: 1, wrap: 0 };
+    let submit: QueueStep = queue_submit(queue, 0, 0, false, EventSuppress {}, 0, 0);
+    let done: QueueStep = queue_process(submit.queue, 0);
+    let reap: QueueStep = queue_reap(done.queue);
+    submit.ok && submit.queue.produced == 0 && submit.queue.producer.offset == 0 && submit.queue.producer.wrap == 1 &&
+    done.ok && done.queue.consumed == 0 && reap.ok && reap.queue.reaped == 0 && reap.queue.inflight == 0
+}
+machine notification_cases() -> bool {
+    let split_session: DeviceSession = session_for(Features { low: 0x100000000 });
+    let split_queue: QueueStep = queue_create(split_session, 1);
+    let suppressed: QueueStep = queue_submit(split_queue.queue, 0, 1, false, EventSuppress {}, 0, 1);
+    let packed_session: DeviceSession = session_for(Features { low: 0x520000000 });
+    let packed_queue: QueueStep = queue_create(packed_session, 3);
+    let event: EventSuppress = EventSuppress { desc: EventSuppressDesc { raw: 32768 }, flags: EventSuppressFlags { raw: 2 } };
+    let targeted: QueueStep = queue_submit(packed_queue.queue, 0, 1, false, event, 0, 0);
+    let future: EventSuppress = EventSuppress { desc: EventSuppressDesc { raw: 32769 }, flags: EventSuppressFlags { raw: 2 } };
+    let not_crossed: QueueStep = queue_submit(packed_queue.queue, 0, 1, false, future, 0, 0);
+    let disabled: QueueStep = queue_submit(packed_queue.queue, 0, 1, false, EventSuppress { flags: EventSuppressFlags { raw: 1 } }, 0, 0);
+    let no_event_session: DeviceSession = session_for(Features { low: 0x500000000 });
+    let no_event_queue: QueueStep = queue_create(no_event_session, 3);
+    let invalid: QueueStep = queue_submit(no_event_queue.queue, 0, 1, false, event, 0, 0);
+    suppressed.ok && !suppressed.notification && targeted.ok && targeted.notification && not_crossed.ok && !not_crossed.notification &&
+    disabled.ok && !disabled.notification && !invalid.ok && invalid.queue.inflight == 0 && invalid.queue.produced == 0
+}
+machine validation_cases() -> bool {
+    let session: DeviceSession = session_for(Features { low: 0x100000000 });
+    let created: QueueStep = queue_create(session, 2);
+    let submitted: QueueStep = queue_submit(created.queue, 0, 8, true, EventSuppress {}, 0, 0);
+    let reset: QueueSimulation = queue_reset(submitted.queue);
+    let mut malformed: QueueSimulation = created.queue; malformed.inflight = 9;
+    let mut leaked: QueueSimulation = created.queue; leaked.busy[7] = true;
+    !queue_create(session, 0).ok && !queue_create(session, 3).ok && !queue_create(session, 9).ok &&
+    !queue_create(DeviceSession { status: 11 }, 1).ok && !queue_create(DeviceSession { status: 15 }, 1).ok && !queue_well_formed(leaked) && !queue_submit(created.queue, 2, 0, false, EventSuppress {}, 0, 0).ok &&
+    !queue_submit(created.queue, 8, 0, false, EventSuppress {}, 0, 0).ok && !queue_process(created.queue, 0).ok &&
+    !queue_well_formed(malformed) && !queue_submit(malformed, 0, 0, false, EventSuppress {}, 0, 0).ok &&
+    submitted.ok && !reset.active && reset.inflight == 0 && !reset.busy[0] && !queue_process(reset, 0).ok
+}
+machine test_result() -> i32 {
+    transition negotiation_cases() && split_cases() && packed_cases() && counter_cases() && notification_cases() && validation_cases() { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

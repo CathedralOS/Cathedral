@@ -230,7 +230,7 @@ confirmed instruction-catalog gaps are limited to their exact live operations.
 - [x] **VIRTIO-003 — Port transport shapes.** PCI capability and MMIO transport
   representations.  Leave discovery, MMIO access, DMA grants, interrupts, and
   queue activation behind named seams.
-- [ ] **VIRTIO-004 — Add a pure queue simulator.** Exercise negotiation and ring
+- [x] **VIRTIO-004 — Add a pure queue simulator.** Exercise negotiation and ring
   transitions without hardware or DMA.  This is the unit-test target for later
   driver integration.
 
@@ -250,6 +250,11 @@ retains PCI capabilities, all 30 MMIO and 23 PCI common field descriptions,
 and inert ordered access plans. Seven semantic groups and seven body mutations
 pass; 28 Rust target geometry measurements agree. Five layout declarations
 check independently. Discovery, access and activation remain named owner seams.
+
+VIRTIO-004 evidence: [pure queue simulator](source/libraries/virtio/simulator.PORT.md)
+passes six lifecycle groups and six body-mutating controls for negotiation,
+split/packed submission, completion/reuse, wrap and event suppression. Its
+eight-slot direct-buffer profile is explicit; asynchronous DMA is not modeled.
 
 ## Phase 4 — ACPI tables, then AML
 

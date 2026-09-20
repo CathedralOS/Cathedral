@@ -13,7 +13,8 @@ The port changes language representation, replaces pointer projections/allocatio
 with inert plans, adds validation and tests, and retains unknown numeric values.
 
 The core milestone covers VIRTIO-000 and VIRTIO-001; packed queues are covered in
-`packed.PORT.md` for VIRTIO-002 and `transport.PORT.md` for VIRTIO-003. `inventory.json` binds all
+`packed.PORT.md` for VIRTIO-002, `transport.PORT.md` for VIRTIO-003, and
+`simulator.PORT.md` for the bounded VIRTIO-004 unit-test model. `inventory.json` binds all
 16 upstream source files and 629 lexical anchors to their exact hashes. There are
 620 translated anchors, nine deliberately omitted presentation/sealing anchors,
 and no pending or blocked source anchors. Effectful owner integration remains

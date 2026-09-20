@@ -1,0 +1,582 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Cathedral finite pure model built on the pinned translated VirtIO algorithms.
+// No addresses, DMA, devices, barriers or asynchronous execution are modeled.
+module simulator;
+use features::Features;
+use features::NegotiatedFeatures;
+use features::negotiate_features;
+use features::feature_has;
+use packed::Cursor;
+use packed::CursorResult;
+use packed::FlagsResult;
+use packed::NotifyResult;
+use packed::EventSuppress;
+use packed::advance;
+use packed::cursor_valid;
+use packed::available_flags;
+use packed::used_flags;
+use packed::descriptor_available;
+use packed::descriptor_used;
+use packed::notify;
+use split::split_notify;
+use split::index_add;
+use split::index_distance;
+use split::split_queue_size_valid;
+pub data DeviceSession [copy] { status: u8; offered: Features; accepted: Features; }
+pub data SessionResult [copy] { ok: bool; session: DeviceSession; }
+pub machine device_acknowledge(value: DeviceSession) -> SessionResult {
+    transition value.status == 0 { true -> set(value) _ -> (SessionResult { session: value }) }
+    state set(value: DeviceSession) -> SessionResult {
+      let mut out: DeviceSession = value; out.status = 1; SessionResult { ok: true, session: out }
+    }
+}
+pub machine device_driver(value: DeviceSession) -> SessionResult {
+    transition value.status == 1 { true -> set(value) _ -> (SessionResult { session: value }) }
+    state set(value: DeviceSession) -> SessionResult {
+      let mut out: DeviceSession = value; out.status = 3; SessionResult { ok: true, session: out }
+    }
+}
+pub machine device_negotiate(value: DeviceSession, supported: Features, required: Features, network: bool) -> SessionResult {
+    transition value.status == 3 { true -> choose(value, supported, required, network) _ -> (SessionResult { session: value }) }
+    state choose(value: DeviceSession, supported: Features, required: Features, network: bool) -> SessionResult {
+      let selected: NegotiatedFeatures = negotiate_features(value.offered, supported, required, network, true);
+      let mut out: DeviceSession = value;
+      transition selected.ok { true -> accept(out, selected.value) _ -> reject(out) }
+    }
+    state accept(value: DeviceSession, accepted: Features) -> SessionResult {
+      let mut out: DeviceSession = value; out.status = 11; out.accepted = accepted;
+      SessionResult { ok: true, session: out }
+    }
+    state reject(value: DeviceSession) -> SessionResult {
+      let mut out: DeviceSession = value; out.status = 131; SessionResult { session: out }
+    }
+}
+pub machine device_ready(value: DeviceSession) -> SessionResult {
+    transition value.status == 11 { true -> set(value) _ -> (SessionResult { session: value }) }
+    state set(value: DeviceSession) -> SessionResult {
+      let mut out: DeviceSession = value; out.status = 15; SessionResult { ok: true, session: out }
+    }
+}
+pub machine device_reset(value: DeviceSession) -> DeviceSession { DeviceSession { offered: value.offered } }
+pub data SimBuffer [copy] { id: u16; bytes: u32; writable: bool; flags: u16; }
+pub data Completion [copy] { id: u16; bytes: u32; }
+pub data QueueSimulation [copy] {
+    active: bool; size: u16; packed: bool; negotiated: Features;
+    produced: u16; consumed: u16; reaped: u16;
+    producer: Cursor; consumer: Cursor; reaper: Cursor;
+    queued: u16; inflight: u16; completed: u16;
+    descriptors: [SimBuffer; 8]; available: [u16; 8]; used: [Completion; 8];
+    busy: [bool; 8]; lengths: [u32; 8]; writable: [bool; 8];
+}
+pub data QueueStep [copy] { ok: bool; queue: QueueSimulation; completion: Completion; notification: bool; }
+pub machine queue_create(session: DeviceSession, size: u16) -> QueueStep {
+    let packed: bool = feature_has(session.accepted, 34);
+    transition session.status == 15 && feature_has(session.accepted, 32) && size > 0 && size <= 8 && (packed || split_queue_size_valid(size)) {
+      true -> create(session.accepted, size, packed) _ -> (QueueStep {})
+    }
+    state create(accepted: Features, size: u16, packed: bool) -> QueueStep {
+      QueueStep { ok: true, queue: QueueSimulation { active: true, size: size, packed: packed, negotiated: accepted,
+        producer: Cursor { wrap: 1 }, consumer: Cursor { wrap: 1 }, reaper: Cursor { wrap: 1 } } }
+    }
+}
+pub machine queue_well_formed(value: QueueSimulation) -> bool {
+    value.active && feature_has(value.negotiated, 32) && value.packed == feature_has(value.negotiated, 34) && value.size > 0 && value.size <= 8 && (value.packed || split_queue_size_valid(value.size)) &&
+    value.queued <= value.size && value.inflight <= value.size && value.completed <= value.size &&
+    (value.inflight as u32) == (value.queued as u32) + (value.completed as u32) &&
+    index_distance(value.produced, value.consumed) == value.queued &&
+    index_distance(value.consumed, value.reaped) == value.completed &&
+    index_distance(value.produced, value.reaped) == value.inflight && busy_count(value) == value.inflight &&
+    cursor_valid(value.size, value.producer) && cursor_valid(value.size, value.consumer) && cursor_valid(value.size, value.reaper)
+}
+machine flag_count(value: bool) -> u8 { transition value { true -> (1) _ -> (0) } }
+machine busy_count(value: QueueSimulation) -> u16 {
+    (flag_count(value.busy[0]) as u16) + (flag_count(value.busy[1]) as u16) +
+    (flag_count(value.busy[2]) as u16) + (flag_count(value.busy[3]) as u16) +
+    (flag_count(value.busy[4]) as u16) + (flag_count(value.busy[5]) as u16) +
+    (flag_count(value.busy[6]) as u16) + (flag_count(value.busy[7]) as u16)
+}
+machine increment_count(value: u16) -> u16 {
+    transition value < 8 { true -> (value + 1) _ -> (0) }
+}
+machine decrement_count(value: u16) -> u16 {
+    transition value > 0 { true -> (value - 1) _ -> (0) }
+}
+pub machine queue_reset(value: QueueSimulation) -> QueueSimulation { QueueSimulation {} }
+pub machine queue_submit(value: QueueSimulation, id: u16, bytes: u32, writable: bool, packed_event: EventSuppress, split_event: u16, split_flags: u16) -> QueueStep {
+    transition queue_well_formed(value) && value.inflight < value.size && id < 8 && (value.packed || id < value.size) {
+      true -> free(value, id, bytes, writable, packed_event, split_event, split_flags) _ -> (QueueStep { queue: value })
+    }
+    state free(value: QueueSimulation, id: u16, bytes: u32, writable: bool, event: EventSuppress, split_event: u16, split_flags: u16) -> QueueStep {
+      let safe_id: u16 = id & 7;
+      transition !busy_at(value, safe_id) { true -> prepare(value, safe_id, bytes, writable, event, split_event, split_flags) _ -> (QueueStep { queue: value }) }
+    }
+    state prepare(value: QueueSimulation, id: u16, bytes: u32, writable: bool, event: EventSuppress, split_event: u16, split_flags: u16) -> QueueStep {
+      let next: CursorResult = advance(value.size, value.producer, 1);
+      let sequence: u16 = index_add(value.produced, 1);
+      let event_idx: bool = feature_has(value.negotiated, 29);
+      transition value.packed {
+        true -> packed_notice(value, id, bytes, writable, event, next.value, sequence, event_idx)
+        _ -> split_notice(value, id, bytes, writable, split_event, split_flags, next.value, sequence, event_idx)
+      }
+    }
+    state packed_notice(value: QueueSimulation, id: u16, bytes: u32, writable: bool, event: EventSuppress, next: Cursor, sequence: u16, event_idx: bool) -> QueueStep {
+      let notice: NotifyResult = notify(event, value.size, event_idx, value.producer, next);
+      transition notice.ok { true -> select_flags(value, id, bytes, writable, next, sequence, notice.notify) _ -> (QueueStep { queue: value }) }
+    }
+    state split_notice(value: QueueSimulation, id: u16, bytes: u32, writable: bool, event: u16, flags: u16, next: Cursor, sequence: u16, event_idx: bool) -> QueueStep {
+      let notice: bool = split_notify(event_idx, event, flags, sequence, value.produced);
+      transition writable { true -> commit(value, id, bytes, writable, next, sequence, notice, 2) _ -> commit(value, id, bytes, writable, next, sequence, notice, 0) }
+    }
+    state select_flags(value: QueueSimulation, id: u16, bytes: u32, writable: bool, next: Cursor, sequence: u16, notice: bool) -> QueueStep {
+      transition writable { true -> packed_flags(value, id, bytes, writable, next, sequence, notice, 2) _ -> packed_flags(value, id, bytes, writable, next, sequence, notice, 0) }
+    }
+    state packed_flags(value: QueueSimulation, id: u16, bytes: u32, writable: bool, next: Cursor, sequence: u16, notice: bool, base: u16) -> QueueStep {
+      let flags: FlagsResult = available_flags(base, value.producer.wrap);
+      transition flags.ok { true -> commit(value, id, bytes, writable, next, sequence, notice, flags.value) _ -> (QueueStep { queue: value }) }
+    }
+    state commit(value: QueueSimulation, id: u16, bytes: u32, writable: bool, next: Cursor, sequence: u16, notice: bool, flags: u16) -> QueueStep {
+      let safe_id: u16 = id & 7; let slot: u16 = value.producer.offset & 7;
+      let mut out: QueueSimulation = value;
+      out = custody_set(out, safe_id, true, bytes, writable);
+      out = available_set(out, slot, id);
+      out.producer = next; out.produced = sequence;
+      out.queued = increment_count(value.queued);
+      out.inflight = increment_count(value.inflight);
+      let buffer: SimBuffer = SimBuffer { id: id, bytes: bytes, writable: writable, flags: flags };
+      transition value.packed { true -> packed_store(out, slot, buffer, notice) _ -> split_store(out, safe_id, buffer, notice) }
+    }
+    state packed_store(value: QueueSimulation, slot: u16, buffer: SimBuffer, notice: bool) -> QueueStep {
+      let index: u16 = slot & 7; let mut out: QueueSimulation = value; out = buffer_set(out, index, buffer);
+      QueueStep { ok: true, queue: out, notification: notice }
+    }
+    state split_store(value: QueueSimulation, id: u16, buffer: SimBuffer, notice: bool) -> QueueStep {
+      let index: u16 = id & 7; let mut out: QueueSimulation = value; out = buffer_set(out, index, buffer);
+      QueueStep { ok: true, queue: out, notification: notice }
+    }
+}
+pub machine queue_process(value: QueueSimulation, written: u32) -> QueueStep {
+    transition queue_well_formed(value) && value.queued > 0 { true -> select(value, written) _ -> (QueueStep { queue: value }) }
+    state select(value: QueueSimulation, written: u32) -> QueueStep {
+      let slot: u16 = value.consumer.offset & 7;
+      let buffer: SimBuffer = buffer_at(value, slot); let id: u16 = available_at(value, slot);
+      transition value.packed { true -> validate(value, written, buffer) _ -> indirect(value, written, id) }
+    }
+    state indirect(value: QueueSimulation, written: u32, id: u16) -> QueueStep {
+      transition id < 8 { true -> descriptor(value, written, id) _ -> (QueueStep { queue: value }) }
+    }
+    state descriptor(value: QueueSimulation, written: u32, id: u16) -> QueueStep {
+      let index: u16 = id & 7; let buffer: SimBuffer = buffer_at(value, index);
+      transition buffer.id == id { true -> validate(value, written, buffer) _ -> (QueueStep { queue: value }) }
+    }
+    state validate(value: QueueSimulation, written: u32, buffer: SimBuffer) -> QueueStep {
+      transition buffer.id < 8 && written <= buffer.bytes && (buffer.writable || written == 0) && (!value.packed || descriptor_available(buffer.flags, value.consumer.wrap)) {
+        true -> custody(value, written, buffer) _ -> (QueueStep { queue: value })
+      }
+    }
+    state custody(value: QueueSimulation, written: u32, buffer: SimBuffer) -> QueueStep {
+      let id: u16 = buffer.id & 7;
+      transition busy_at(value, id) && length_at(value, id) == buffer.bytes && writable_at(value, id) == buffer.writable { true -> ready(value, written, buffer) _ -> (QueueStep { queue: value }) }
+    }
+    state ready(value: QueueSimulation, written: u32, buffer: SimBuffer) -> QueueStep {
+      let next: CursorResult = advance(value.size, value.consumer, 1);
+      let sequence: u16 = index_add(value.consumed, 1);
+      transition buffer.writable { true -> complete(value, written, buffer.id, next.value, sequence, 2) _ -> complete(value, written, buffer.id, next.value, sequence, 0) }
+    }
+    state complete(value: QueueSimulation, written: u32, id: u16, next: Cursor, sequence: u16, base: u16) -> QueueStep {
+      let slot: u16 = value.consumer.offset & 7;
+      let flags: FlagsResult = used_flags(base, value.consumer.wrap);
+      let mut out: QueueSimulation = value;
+      let completion: Completion = Completion { id: id, bytes: written };
+      out = completion_set(out, slot, completion); out.consumer = next; out.consumed = sequence;
+      out.queued = decrement_count(value.queued); out.completed = increment_count(value.completed);
+      transition value.packed { true -> mark(out, slot, flags.value, completion) _ -> (QueueStep { ok: true, queue: out, completion: completion }) }
+    }
+    state mark(value: QueueSimulation, slot: u16, flags: u16, completion: Completion) -> QueueStep {
+      let index: u16 = slot & 7; let mut buffer: SimBuffer = buffer_at(value, index); buffer.flags = flags;
+      let out: QueueSimulation = buffer_set(value, index, buffer);
+      QueueStep { ok: true, queue: out, completion: completion }
+    }
+}
+pub machine queue_reap(value: QueueSimulation) -> QueueStep {
+    transition queue_well_formed(value) && value.completed > 0 { true -> select(value) _ -> (QueueStep { queue: value }) }
+    state select(value: QueueSimulation) -> QueueStep {
+      let slot: u16 = value.reaper.offset & 7; let completion: Completion = completion_at(value, slot);
+      let buffer: SimBuffer = buffer_at(value, slot);
+      transition completion.id < 8 && (!value.packed || descriptor_used(buffer.flags, value.reaper.wrap)) {
+        true -> validate(value, completion) _ -> (QueueStep { queue: value })
+      }
+    }
+    state validate(value: QueueSimulation, completion: Completion) -> QueueStep {
+      let id: u16 = completion.id & 7;
+      transition busy_at(value, id) && completion.bytes <= length_at(value, id) { true -> commit(value, completion) _ -> (QueueStep { queue: value }) }
+    }
+    state commit(value: QueueSimulation, completion: Completion) -> QueueStep {
+      let id: u16 = completion.id & 7; let next: CursorResult = advance(value.size, value.reaper, 1);
+      let mut out: QueueSimulation = value; out = busy_clear(out, id);
+      out.reaper = next.value; out.reaped = index_add(value.reaped, 1);
+      out.inflight = decrement_count(value.inflight); out.completed = decrement_count(value.completed);
+      QueueStep { ok: true, queue: out, completion: completion }
+    }
+}
+
+// Explicit finite dispatch keeps all storage projections within the model
+// capacity. Generic ring arithmetic remains independent of this eight-slot harness.
+machine busy_at(value: QueueSimulation, index: u16) -> bool {
+    transition index {
+      0 -> (value.busy[0])
+      1 -> (value.busy[1])
+      2 -> (value.busy[2])
+      3 -> (value.busy[3])
+      4 -> (value.busy[4])
+      5 -> (value.busy[5])
+      6 -> (value.busy[6])
+      7 -> (value.busy[7])
+      _ -> (false)
+    }
+}
+machine length_at(value: QueueSimulation, index: u16) -> u32 {
+    transition index {
+      0 -> (value.lengths[0])
+      1 -> (value.lengths[1])
+      2 -> (value.lengths[2])
+      3 -> (value.lengths[3])
+      4 -> (value.lengths[4])
+      5 -> (value.lengths[5])
+      6 -> (value.lengths[6])
+      7 -> (value.lengths[7])
+      _ -> (0)
+    }
+}
+machine writable_at(value: QueueSimulation, index: u16) -> bool {
+    transition index {
+      0 -> (value.writable[0])
+      1 -> (value.writable[1])
+      2 -> (value.writable[2])
+      3 -> (value.writable[3])
+      4 -> (value.writable[4])
+      5 -> (value.writable[5])
+      6 -> (value.writable[6])
+      7 -> (value.writable[7])
+      _ -> (false)
+    }
+}
+machine available_at(value: QueueSimulation, index: u16) -> u16 {
+    transition index {
+      0 -> (value.available[0])
+      1 -> (value.available[1])
+      2 -> (value.available[2])
+      3 -> (value.available[3])
+      4 -> (value.available[4])
+      5 -> (value.available[5])
+      6 -> (value.available[6])
+      7 -> (value.available[7])
+      _ -> (0)
+    }
+}
+machine buffer_at(value: QueueSimulation, index: u16) -> SimBuffer {
+    transition index {
+      0 -> (value.descriptors[0])
+      1 -> (value.descriptors[1])
+      2 -> (value.descriptors[2])
+      3 -> (value.descriptors[3])
+      4 -> (value.descriptors[4])
+      5 -> (value.descriptors[5])
+      6 -> (value.descriptors[6])
+      7 -> (value.descriptors[7])
+      _ -> (SimBuffer {})
+    }
+}
+machine completion_at(value: QueueSimulation, index: u16) -> Completion {
+    transition index {
+      0 -> (value.used[0])
+      1 -> (value.used[1])
+      2 -> (value.used[2])
+      3 -> (value.used[3])
+      4 -> (value.used[4])
+      5 -> (value.used[5])
+      6 -> (value.used[6])
+      7 -> (value.used[7])
+      _ -> (Completion {})
+    }
+}
+machine custody_set(value: QueueSimulation, index: u16, busy: bool, length: u32, writable: bool) -> QueueSimulation {
+    transition index {
+      0 -> slot0(value, busy, length, writable)
+      1 -> slot1(value, busy, length, writable)
+      2 -> slot2(value, busy, length, writable)
+      3 -> slot3(value, busy, length, writable)
+      4 -> slot4(value, busy, length, writable)
+      5 -> slot5(value, busy, length, writable)
+      6 -> slot6(value, busy, length, writable)
+      7 -> slot7(value, busy, length, writable)
+      _ -> (value)
+    }
+    state slot0(value: QueueSimulation, busy: bool, length: u32, writable: bool) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[0] = busy;
+      out.lengths[0] = length;
+      out.writable[0] = writable;
+      out
+    }
+    state slot1(value: QueueSimulation, busy: bool, length: u32, writable: bool) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[1] = busy;
+      out.lengths[1] = length;
+      out.writable[1] = writable;
+      out
+    }
+    state slot2(value: QueueSimulation, busy: bool, length: u32, writable: bool) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[2] = busy;
+      out.lengths[2] = length;
+      out.writable[2] = writable;
+      out
+    }
+    state slot3(value: QueueSimulation, busy: bool, length: u32, writable: bool) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[3] = busy;
+      out.lengths[3] = length;
+      out.writable[3] = writable;
+      out
+    }
+    state slot4(value: QueueSimulation, busy: bool, length: u32, writable: bool) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[4] = busy;
+      out.lengths[4] = length;
+      out.writable[4] = writable;
+      out
+    }
+    state slot5(value: QueueSimulation, busy: bool, length: u32, writable: bool) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[5] = busy;
+      out.lengths[5] = length;
+      out.writable[5] = writable;
+      out
+    }
+    state slot6(value: QueueSimulation, busy: bool, length: u32, writable: bool) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[6] = busy;
+      out.lengths[6] = length;
+      out.writable[6] = writable;
+      out
+    }
+    state slot7(value: QueueSimulation, busy: bool, length: u32, writable: bool) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[7] = busy;
+      out.lengths[7] = length;
+      out.writable[7] = writable;
+      out
+    }
+}
+machine available_set(value: QueueSimulation, index: u16, item: u16) -> QueueSimulation {
+    transition index {
+      0 -> slot0(value, item)
+      1 -> slot1(value, item)
+      2 -> slot2(value, item)
+      3 -> slot3(value, item)
+      4 -> slot4(value, item)
+      5 -> slot5(value, item)
+      6 -> slot6(value, item)
+      7 -> slot7(value, item)
+      _ -> (value)
+    }
+    state slot0(value: QueueSimulation, item: u16) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.available[0] = item;
+      out
+    }
+    state slot1(value: QueueSimulation, item: u16) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.available[1] = item;
+      out
+    }
+    state slot2(value: QueueSimulation, item: u16) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.available[2] = item;
+      out
+    }
+    state slot3(value: QueueSimulation, item: u16) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.available[3] = item;
+      out
+    }
+    state slot4(value: QueueSimulation, item: u16) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.available[4] = item;
+      out
+    }
+    state slot5(value: QueueSimulation, item: u16) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.available[5] = item;
+      out
+    }
+    state slot6(value: QueueSimulation, item: u16) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.available[6] = item;
+      out
+    }
+    state slot7(value: QueueSimulation, item: u16) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.available[7] = item;
+      out
+    }
+}
+machine buffer_set(value: QueueSimulation, index: u16, item: SimBuffer) -> QueueSimulation {
+    transition index {
+      0 -> slot0(value, item)
+      1 -> slot1(value, item)
+      2 -> slot2(value, item)
+      3 -> slot3(value, item)
+      4 -> slot4(value, item)
+      5 -> slot5(value, item)
+      6 -> slot6(value, item)
+      7 -> slot7(value, item)
+      _ -> (value)
+    }
+    state slot0(value: QueueSimulation, item: SimBuffer) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.descriptors[0] = item;
+      out
+    }
+    state slot1(value: QueueSimulation, item: SimBuffer) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.descriptors[1] = item;
+      out
+    }
+    state slot2(value: QueueSimulation, item: SimBuffer) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.descriptors[2] = item;
+      out
+    }
+    state slot3(value: QueueSimulation, item: SimBuffer) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.descriptors[3] = item;
+      out
+    }
+    state slot4(value: QueueSimulation, item: SimBuffer) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.descriptors[4] = item;
+      out
+    }
+    state slot5(value: QueueSimulation, item: SimBuffer) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.descriptors[5] = item;
+      out
+    }
+    state slot6(value: QueueSimulation, item: SimBuffer) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.descriptors[6] = item;
+      out
+    }
+    state slot7(value: QueueSimulation, item: SimBuffer) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.descriptors[7] = item;
+      out
+    }
+}
+machine completion_set(value: QueueSimulation, index: u16, item: Completion) -> QueueSimulation {
+    transition index {
+      0 -> slot0(value, item)
+      1 -> slot1(value, item)
+      2 -> slot2(value, item)
+      3 -> slot3(value, item)
+      4 -> slot4(value, item)
+      5 -> slot5(value, item)
+      6 -> slot6(value, item)
+      7 -> slot7(value, item)
+      _ -> (value)
+    }
+    state slot0(value: QueueSimulation, item: Completion) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.used[0] = item;
+      out
+    }
+    state slot1(value: QueueSimulation, item: Completion) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.used[1] = item;
+      out
+    }
+    state slot2(value: QueueSimulation, item: Completion) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.used[2] = item;
+      out
+    }
+    state slot3(value: QueueSimulation, item: Completion) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.used[3] = item;
+      out
+    }
+    state slot4(value: QueueSimulation, item: Completion) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.used[4] = item;
+      out
+    }
+    state slot5(value: QueueSimulation, item: Completion) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.used[5] = item;
+      out
+    }
+    state slot6(value: QueueSimulation, item: Completion) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.used[6] = item;
+      out
+    }
+    state slot7(value: QueueSimulation, item: Completion) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.used[7] = item;
+      out
+    }
+}
+machine busy_clear(value: QueueSimulation, index: u16) -> QueueSimulation {
+    transition index {
+      0 -> slot0(value)
+      1 -> slot1(value)
+      2 -> slot2(value)
+      3 -> slot3(value)
+      4 -> slot4(value)
+      5 -> slot5(value)
+      6 -> slot6(value)
+      7 -> slot7(value)
+      _ -> (value)
+    }
+    state slot0(value: QueueSimulation) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[0] = false;
+      out
+    }
+    state slot1(value: QueueSimulation) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[1] = false;
+      out
+    }
+    state slot2(value: QueueSimulation) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[2] = false;
+      out
+    }
+    state slot3(value: QueueSimulation) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[3] = false;
+      out
+    }
+    state slot4(value: QueueSimulation) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[4] = false;
+      out
+    }
+    state slot5(value: QueueSimulation) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[5] = false;
+      out
+    }
+    state slot6(value: QueueSimulation) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[6] = false;
+      out
+    }
+    state slot7(value: QueueSimulation) -> QueueSimulation {
+      let mut out: QueueSimulation = value;
+      out.busy[7] = false;
+      out
+    }
+}
