@@ -162,6 +162,8 @@ Phase 1 evidence: the isolated [raw corpus](source/contracts/uefi/raw/PORT.md)
 records status per slice. Scalar helper tests execute in Omega's semantic
 evaluator with a failing assertion control. These checks do not establish
 native execution, firmware behavior, or emitted foreign-layout agreement.
+The shell-protocol remainder is transcribed with 65 verified representation
+vectors; UEFI-009 remains open until the whole-crate audit is complete.
 
 ## Phase 2 — small, high-yield hardware packages
 

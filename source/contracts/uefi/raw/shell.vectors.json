@@ -1,0 +1,278 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "abi": "UEFI x86-64",
+    "pointer_bits": 64,
+    "endian": "little"
+  },
+  "provenance": {
+    "kind": "upstream",
+    "description": "Pinned actual Rust declarations cross-compiled for x86_64-unknown-uefi; not Omega observations.",
+    "sources": [
+      "uefi-raw/src/protocol/shell.rs"
+    ],
+    "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a"
+  },
+  "measurements": {
+    "ListEntry.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "ListEntry.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "ListEntry.f_link.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "ListEntry.b_link.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "ShellFileInfo.size": {
+      "kind": "size",
+      "value": 56
+    },
+    "ShellFileInfo.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "ShellFileInfo.link.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "ShellFileInfo.status.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "ShellFileInfo.full_name.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "ShellFileInfo.file_name.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "ShellFileInfo.handle.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "ShellFileInfo.info.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "ShellDeviceNameFlags.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "ShellDeviceNameFlags.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "ShellProtocol.size": {
+      "kind": "size",
+      "value": 360
+    },
+    "ShellProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "ShellProtocol.execute.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "ShellProtocol.get_env.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "ShellProtocol.set_env.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "ShellProtocol.get_alias.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "ShellProtocol.set_alias.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "ShellProtocol.get_help_text.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "ShellProtocol.get_device_path_from_map.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "ShellProtocol.get_map_from_device_path.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "ShellProtocol.get_device_path_from_file_path.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "ShellProtocol.get_file_path_from_device_path.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "ShellProtocol.set_map.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "ShellProtocol.get_cur_dir.offset": {
+      "kind": "offset",
+      "value": 88
+    },
+    "ShellProtocol.set_cur_dir.offset": {
+      "kind": "offset",
+      "value": 96
+    },
+    "ShellProtocol.open_file_list.offset": {
+      "kind": "offset",
+      "value": 104
+    },
+    "ShellProtocol.free_file_list.offset": {
+      "kind": "offset",
+      "value": 112
+    },
+    "ShellProtocol.remove_dup_in_file_list.offset": {
+      "kind": "offset",
+      "value": 120
+    },
+    "ShellProtocol.batch_is_active.offset": {
+      "kind": "offset",
+      "value": 128
+    },
+    "ShellProtocol.is_root_shell.offset": {
+      "kind": "offset",
+      "value": 136
+    },
+    "ShellProtocol.enable_page_break.offset": {
+      "kind": "offset",
+      "value": 144
+    },
+    "ShellProtocol.disable_page_break.offset": {
+      "kind": "offset",
+      "value": 152
+    },
+    "ShellProtocol.get_page_break.offset": {
+      "kind": "offset",
+      "value": 160
+    },
+    "ShellProtocol.get_device_name.offset": {
+      "kind": "offset",
+      "value": 168
+    },
+    "ShellProtocol.get_file_info.offset": {
+      "kind": "offset",
+      "value": 176
+    },
+    "ShellProtocol.set_file_info.offset": {
+      "kind": "offset",
+      "value": 184
+    },
+    "ShellProtocol.open_file_by_name.offset": {
+      "kind": "offset",
+      "value": 192
+    },
+    "ShellProtocol.close_file.offset": {
+      "kind": "offset",
+      "value": 200
+    },
+    "ShellProtocol.create_file.offset": {
+      "kind": "offset",
+      "value": 208
+    },
+    "ShellProtocol.read_file.offset": {
+      "kind": "offset",
+      "value": 216
+    },
+    "ShellProtocol.write_file.offset": {
+      "kind": "offset",
+      "value": 224
+    },
+    "ShellProtocol.delete_file.offset": {
+      "kind": "offset",
+      "value": 232
+    },
+    "ShellProtocol.delete_file_by_name.offset": {
+      "kind": "offset",
+      "value": 240
+    },
+    "ShellProtocol.get_file_position.offset": {
+      "kind": "offset",
+      "value": 248
+    },
+    "ShellProtocol.set_file_position.offset": {
+      "kind": "offset",
+      "value": 256
+    },
+    "ShellProtocol.flush_file.offset": {
+      "kind": "offset",
+      "value": 264
+    },
+    "ShellProtocol.find_files.offset": {
+      "kind": "offset",
+      "value": 272
+    },
+    "ShellProtocol.find_files_in_dir.offset": {
+      "kind": "offset",
+      "value": 280
+    },
+    "ShellProtocol.get_file_size.offset": {
+      "kind": "offset",
+      "value": 288
+    },
+    "ShellProtocol.open_root.offset": {
+      "kind": "offset",
+      "value": 296
+    },
+    "ShellProtocol.open_root_by_handle.offset": {
+      "kind": "offset",
+      "value": 304
+    },
+    "ShellProtocol.execution_break.offset": {
+      "kind": "offset",
+      "value": 312
+    },
+    "ShellProtocol.major_version.offset": {
+      "kind": "offset",
+      "value": 320
+    },
+    "ShellProtocol.minor_version.offset": {
+      "kind": "offset",
+      "value": 324
+    },
+    "ShellProtocol.register_guid_name.offset": {
+      "kind": "offset",
+      "value": 328
+    },
+    "ShellProtocol.get_guid_name.offset": {
+      "kind": "offset",
+      "value": 336
+    },
+    "ShellProtocol.get_guid_from_name.offset": {
+      "kind": "offset",
+      "value": 344
+    },
+    "ShellProtocol.get_env_ex.offset": {
+      "kind": "offset",
+      "value": 352
+    },
+    "SHELL_DEVICE_NAME_FLAGS_USE_COMPONENT_NAME": {
+      "kind": "value",
+      "value": 1
+    },
+    "SHELL_DEVICE_NAME_FLAGS_USE_DEVICE_PATH": {
+      "kind": "value",
+      "value": 2
+    },
+    "SHELL_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "08d002639b7f304f87ac60c9fef5da4e"
+    }
+  }
+}

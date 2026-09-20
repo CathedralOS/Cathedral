@@ -18,6 +18,7 @@ FILES = ['pci/mod.rs', 'pci/root_bridge.rs', 'usb/mod.rs', 'usb/io.rs',
          'usb/host_controller.rs', 'iommu.rs', 'rng.rs', 'acpi.rs',
          'memory_protection.rs', 'misc.rs', 'driver.rs', 'string.rs']
 ROOTS = ['uefi-raw/src/protocol/' + file for file in FILES]
+SLICE = 'machine'
 
 
 def endbrace(text, start):
@@ -93,7 +94,7 @@ def main():
             suffix = ('.bits()' if owners[const['owner']]['flags'] else '.0') if const['owner'] else ''
             measurements.append((const['name'], const['rust'] + suffix, 'value'))
     probe = ['// SPDX-License-Identifier: MIT OR Apache-2.0', '#![no_std]', 'use core::mem::{size_of, align_of, offset_of};',
-             '#[unsafe(no_mangle)]', f'pub static CATHEDRAL_MACHINE_LAYOUT: [u64; {len(measurements)}] = [']
+             '#[unsafe(no_mangle)]', f'pub static CATHEDRAL_{SLICE.upper()}_LAYOUT: [u64; {len(measurements)}] = [']
     probe += [f'    {expression} as u64, // {name}' for name, expression, kind in measurements]
     probe += ['];']
     # Actual upstream GUID values also must compile equal to the independent byte spelling.
@@ -104,16 +105,16 @@ def main():
             access = const['rust'] + ('.0' if const['owner'] and owners.get(const['owner'], {}).get('base') == 'Guid' else '')
             probe += [f'const _: () = {{ let actual = {access}.to_bytes(); let expected: [u8; 16] = {list(uuid.UUID(spelling).bytes_le)}; let mut i = 0; while i < 16 {{ assert!(actual[i] == expected[i]); i += 1; }} }};']
     (HERE / 'measure.rs').write_text('\n'.join(probe) + '\n')
-    measured, artifact = rust_layout.measure(HERE / 'Cargo.toml', HERE / 'measure.rs', 'CATHEDRAL_MACHINE_LAYOUT', 'cathedral_uefi_machine_probe')
+    measured, artifact = rust_layout.measure(HERE / 'Cargo.toml', HERE / 'measure.rs', 'CATHEDRAL_' + SLICE.upper() + '_LAYOUT', 'cathedral_uefi_' + SLICE + '_probe')
     values = {name: {'kind': kind, 'value': measured[name]} for name, expr, kind in measurements}
     output = ['// SPDX-License-Identifier: MIT OR Apache-2.0', '// Modified translation of rust-osdev/uefi-rs at ' + PIN + '.',
-              '// See machine.PORT.md. Inert carriers do not grant firmware, MMIO, DMA or I/O authority.',
+              '// See ' + SLICE + '.PORT.md. Inert carriers do not grant firmware, MMIO, DMA or I/O authority.',
               '// PORT-BLOCKED[omega:named-calling-policy]: native slots require admitted calling/ownership contracts.',
-              'module machine_protocols;', 'use scalars::Guid;', '']
+              'module ' + SLICE + '_protocols;', 'use scalars::Guid;', '']
     def mapped(typ):
         if '*' in typ or 'fn(' in typ or 'fn (' in typ:
             return 'addr'
-        return {'Handle': 'addr', 'usize': 'u64', 'isize': 'i64', 'Boolean': 'u8', 'ResetSystemFn': 'addr'}.get(typ, typ)
+        return {'Handle': 'addr', 'usize': 'u64', 'isize': 'i64', 'Boolean': 'u8', 'ResetSystemFn': 'addr', 'Status': 'u64', 'Event': 'addr', 'ShellFileHandle': 'addr'}.get(typ, typ)
     for record in records:
         output += ['// Upstream: ' + record['rust']]
         if record.get('alias'):
@@ -138,21 +139,23 @@ def main():
             if owner:
                 literal = owner + ' { raw: ' + literal + ' }'
         output += ['pub const ' + const['name'] + ': ' + typ + ' = ' + literal + ';']
-    (RAW / 'machine_protocols.omg').write_text('\n'.join(output) + '\n')
+    (RAW / (SLICE + '_protocols.omg')).write_text('\n'.join(output) + '\n')
     plans = ['// SPDX-License-Identifier: MIT OR Apache-2.0', '// Required UEFI x64 geometry, not an observed Omega layout.',
-             'module machine_layouts;', 'use omega::language::core::layout;', '']
+             'module ' + SLICE + '_layouts;', 'use omega::language::core::layout;', '']
     for record in records:
         name = record['name']
+        if len(record['fields']) > 32:
+            plans += ['// PORT-BLOCKED[omega:layout-reflection-capacity]: complete named schema exceeds current 32-field reflection.']
         plans += [f'pub data {name}X64Layout {{}}', f'pub {name}X64Policy: {name}X64Layout satisfies Layout;',
                   f'pub machine {name}X64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {{', '    let mut entries: [FieldEntry; 64];']
         for index, (field, typ) in enumerate(record['fields']):
             offset = measured.get(name + '.' + field + '.offset', 0)
             plans += [f'    entries[{index}] = FieldEntry {{ key: schema.fields[{index}].key, placement: FieldPlan::At {{ offset: {offset} }} }};']
         plans += ['    Plan { entries: entries, entry_count: ' + str(len(record['fields'])) + ', size_fixed: ' + str(measured[name + '.size']) + ', size_is_dynamic: false, align: ' + str(measured[name + '.alignment']) + ' }', '}', '']
-    (RAW / 'machine_layouts.omg').write_text('\n'.join(plans))
-    target = 'source/contracts/uefi/raw/machine_protocols.omg'
+    (RAW / (SLICE + '_layouts.omg')).write_text('\n'.join(plans))
+    target = 'source/contracts/uefi/raw/' + SLICE + '_protocols.omg'
     for path, entry in manifest['files'].items():
-        entry.update(disposition='translated', targets=[{'path': target, 'anchor': 'module machine_protocols;'}]); entry.pop('reason', None)
+        entry.update(disposition='translated', targets=[{'path': target, 'anchor': 'module ' + SLICE + '_protocols;'}]); entry.pop('reason', None)
         for key, row in entry['symbols'].items():
             name = key.split(':', 1)[1]
             anchor = row['anchor']
@@ -173,13 +176,22 @@ def main():
                     raise ValueError(('unmapped symbol', path, key, anchor))
                 destination = 'pub const ' + candidates[0]['name'] + ':'
             row.update(disposition='translated', targets=[{'path': target, 'anchor': destination}]); row.pop('reason', None)
-    (RAW / 'machine-inventory.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    (RAW / (SLICE + '-inventory.json')).write_text(json.dumps(manifest, indent=2) + '\n')
     vector = {'format': 'cathedral-port-vectors-v1', 'target': {'abi': 'UEFI x86-64', 'pointer_bits': 64, 'endian': 'little'},
               'provenance': {'kind': 'upstream', 'description': 'Pinned actual Rust declarations cross-compiled for x86_64-unknown-uefi; not Omega observations.', 'sources': ROOTS, 'revision': PIN}, 'measurements': values}
-    (RAW / 'machine.vectors.json').write_text(json.dumps(vector, indent=2) + '\n')
+    (RAW / (SLICE + '.vectors.json')).write_text(json.dumps(vector, indent=2) + '\n')
     (HERE / 'schema.json').write_text(json.dumps({'records': records, 'constants': constants}, indent=2) + '\n')
     print(len(records), 'records;', len(constants), 'constants;', len(values), 'measurements')
 
 
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--slice', choices=['machine', 'shell'], default='machine')
+    args = parser.parse_args()
+    if args.slice == 'shell':
+        SLICE = 'shell'
+        FILES = ['shell.rs']
+        ROOTS = ['uefi-raw/src/protocol/shell.rs']
+        HERE = HERE.parent / 'uefi-shell'
     main()

@@ -1,0 +1,88 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Required UEFI x64 geometry, not an observed Omega layout.
+module shell_layouts;
+use omega::language::core::layout;
+
+pub data ListEntryX64Layout {}
+pub ListEntryX64Policy: ListEntryX64Layout satisfies Layout;
+pub machine ListEntryX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    Plan { entries: entries, entry_count: 2, size_fixed: 16, size_is_dynamic: false, align: 8 }
+}
+
+pub data ShellFileInfoX64Layout {}
+pub ShellFileInfoX64Policy: ShellFileInfoX64Layout satisfies Layout;
+pub machine ShellFileInfoX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 16 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 24 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 32 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 40 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 48 } };
+    Plan { entries: entries, entry_count: 6, size_fixed: 56, size_is_dynamic: false, align: 8 }
+}
+
+pub data ShellDeviceNameFlagsX64Layout {}
+pub ShellDeviceNameFlagsX64Policy: ShellDeviceNameFlagsX64Layout satisfies Layout;
+pub machine ShellDeviceNameFlagsX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    Plan { entries: entries, entry_count: 1, size_fixed: 4, size_is_dynamic: false, align: 4 }
+}
+
+// PORT-BLOCKED[omega:layout-reflection-capacity]: complete named schema exceeds current 32-field reflection.
+pub data ShellProtocolX64Layout {}
+pub ShellProtocolX64Policy: ShellProtocolX64Layout satisfies Layout;
+pub machine ShellProtocolX64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 8 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 16 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 24 } };
+    entries[4] = FieldEntry { key: schema.fields[4].key, placement: FieldPlan::At { offset: 32 } };
+    entries[5] = FieldEntry { key: schema.fields[5].key, placement: FieldPlan::At { offset: 40 } };
+    entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 48 } };
+    entries[7] = FieldEntry { key: schema.fields[7].key, placement: FieldPlan::At { offset: 56 } };
+    entries[8] = FieldEntry { key: schema.fields[8].key, placement: FieldPlan::At { offset: 64 } };
+    entries[9] = FieldEntry { key: schema.fields[9].key, placement: FieldPlan::At { offset: 72 } };
+    entries[10] = FieldEntry { key: schema.fields[10].key, placement: FieldPlan::At { offset: 80 } };
+    entries[11] = FieldEntry { key: schema.fields[11].key, placement: FieldPlan::At { offset: 88 } };
+    entries[12] = FieldEntry { key: schema.fields[12].key, placement: FieldPlan::At { offset: 96 } };
+    entries[13] = FieldEntry { key: schema.fields[13].key, placement: FieldPlan::At { offset: 104 } };
+    entries[14] = FieldEntry { key: schema.fields[14].key, placement: FieldPlan::At { offset: 112 } };
+    entries[15] = FieldEntry { key: schema.fields[15].key, placement: FieldPlan::At { offset: 120 } };
+    entries[16] = FieldEntry { key: schema.fields[16].key, placement: FieldPlan::At { offset: 128 } };
+    entries[17] = FieldEntry { key: schema.fields[17].key, placement: FieldPlan::At { offset: 136 } };
+    entries[18] = FieldEntry { key: schema.fields[18].key, placement: FieldPlan::At { offset: 144 } };
+    entries[19] = FieldEntry { key: schema.fields[19].key, placement: FieldPlan::At { offset: 152 } };
+    entries[20] = FieldEntry { key: schema.fields[20].key, placement: FieldPlan::At { offset: 160 } };
+    entries[21] = FieldEntry { key: schema.fields[21].key, placement: FieldPlan::At { offset: 168 } };
+    entries[22] = FieldEntry { key: schema.fields[22].key, placement: FieldPlan::At { offset: 176 } };
+    entries[23] = FieldEntry { key: schema.fields[23].key, placement: FieldPlan::At { offset: 184 } };
+    entries[24] = FieldEntry { key: schema.fields[24].key, placement: FieldPlan::At { offset: 192 } };
+    entries[25] = FieldEntry { key: schema.fields[25].key, placement: FieldPlan::At { offset: 200 } };
+    entries[26] = FieldEntry { key: schema.fields[26].key, placement: FieldPlan::At { offset: 208 } };
+    entries[27] = FieldEntry { key: schema.fields[27].key, placement: FieldPlan::At { offset: 216 } };
+    entries[28] = FieldEntry { key: schema.fields[28].key, placement: FieldPlan::At { offset: 224 } };
+    entries[29] = FieldEntry { key: schema.fields[29].key, placement: FieldPlan::At { offset: 232 } };
+    entries[30] = FieldEntry { key: schema.fields[30].key, placement: FieldPlan::At { offset: 240 } };
+    entries[31] = FieldEntry { key: schema.fields[31].key, placement: FieldPlan::At { offset: 248 } };
+    entries[32] = FieldEntry { key: schema.fields[32].key, placement: FieldPlan::At { offset: 256 } };
+    entries[33] = FieldEntry { key: schema.fields[33].key, placement: FieldPlan::At { offset: 264 } };
+    entries[34] = FieldEntry { key: schema.fields[34].key, placement: FieldPlan::At { offset: 272 } };
+    entries[35] = FieldEntry { key: schema.fields[35].key, placement: FieldPlan::At { offset: 280 } };
+    entries[36] = FieldEntry { key: schema.fields[36].key, placement: FieldPlan::At { offset: 288 } };
+    entries[37] = FieldEntry { key: schema.fields[37].key, placement: FieldPlan::At { offset: 296 } };
+    entries[38] = FieldEntry { key: schema.fields[38].key, placement: FieldPlan::At { offset: 304 } };
+    entries[39] = FieldEntry { key: schema.fields[39].key, placement: FieldPlan::At { offset: 312 } };
+    entries[40] = FieldEntry { key: schema.fields[40].key, placement: FieldPlan::At { offset: 320 } };
+    entries[41] = FieldEntry { key: schema.fields[41].key, placement: FieldPlan::At { offset: 324 } };
+    entries[42] = FieldEntry { key: schema.fields[42].key, placement: FieldPlan::At { offset: 328 } };
+    entries[43] = FieldEntry { key: schema.fields[43].key, placement: FieldPlan::At { offset: 336 } };
+    entries[44] = FieldEntry { key: schema.fields[44].key, placement: FieldPlan::At { offset: 344 } };
+    entries[45] = FieldEntry { key: schema.fields[45].key, placement: FieldPlan::At { offset: 352 } };
+    Plan { entries: entries, entry_count: 46, size_fixed: 360, size_is_dynamic: false, align: 8 }
+}

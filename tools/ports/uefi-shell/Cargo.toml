@@ -1,0 +1,11 @@
+[package]
+name = "cathedral-uefi-shell-probe"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+path = "measure.rs"
+
+[dependencies]
+uefi-raw = { path = "../../../reference_code/rust-osdev/uefi-rs/uefi-raw" }

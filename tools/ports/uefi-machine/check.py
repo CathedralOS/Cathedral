@@ -15,6 +15,7 @@ import vectors
 HERE = Path(__file__).resolve().parent
 RAW = ROOT / 'source/contracts/uefi/raw'
 UPSTREAM = ROOT / 'reference_code/rust-osdev/uefi-rs'
+SLICE = 'machine'
 
 
 def require(condition, message):
@@ -23,23 +24,36 @@ def require(condition, message):
 
 
 def main():
-    print(inventory.check(inventory.read_json(RAW / 'machine-inventory.json'), UPSTREAM, require_transcribed=True))
-    values = vectors.validate(inventory.read_json(RAW / 'machine.vectors.json'))['measurements']
-    measured, artifact = rust_layout.measure(HERE / 'Cargo.toml', HERE / 'measure.rs', 'CATHEDRAL_MACHINE_LAYOUT', 'cathedral_uefi_machine_probe')
+    print(inventory.check(inventory.read_json(RAW / (SLICE + '-inventory.json')), UPSTREAM, require_transcribed=True))
+    values = vectors.validate(inventory.read_json(RAW / (SLICE + '.vectors.json')))['measurements']
+    measured, artifact = rust_layout.measure(HERE / 'Cargo.toml', HERE / 'measure.rs', 'CATHEDRAL_' + SLICE.upper() + '_LAYOUT', 'cathedral_uefi_' + SLICE + '_probe')
     require(set(measured) == {key for key, row in values.items() if row['kind'] != 'bytes'}, 'numeric measurement coverage differs')
     for key, value in measured.items():
         require(values[key]['value'] == value, key + ': Rust measurement differs')
     schema = inventory.read_json(HERE / 'schema.json')
-    source = (RAW / 'machine_protocols.omg').read_text()
-    plans = (RAW / 'machine_layouts.omg').read_text()
+    source = (RAW / (SLICE + '_protocols.omg')).read_text()
+    plans = (RAW / (SLICE + '_layouts.omg')).read_text()
     for record in schema['records']:
         name = record['name']
+        upstream = re.sub(r'//[^\n]*', '', (UPSTREAM / record['path']).read_text())
+        if record.get('alias'):
+            alias = re.search(r'pub type ' + name + r'\s*=\s*(.*?);', upstream, re.S)
+            require(alias is not None and ' '.join(alias[1].split()) == record['alias'], name + ': upstream alias differs')
+        elif record['base']:
+            require(re.search(r'pub (?:struct|enum) ' + name + r':\s*' + record['base'] + r'\b', upstream) is not None,
+                    name + ': upstream scalar carrier differs')
+        else:
+            upstream_body = re.search(r'pub struct ' + name + r'\s*{(.*?)\n}', upstream, re.S)[1]
+            hits = list(re.finditer(r'\bpub\s+((?:r#)?\w+)\s*:', upstream_body))
+            upstream_fields = [[hit[1], ' '.join(upstream_body[hit.end():hits[index + 1].start() if index + 1 < len(hits) else len(upstream_body)].strip().rstrip(',').split())]
+                               for index, hit in enumerate(hits)]
+            require(upstream_fields == record['fields'], name + ': upstream field metadata differs')
         body = re.search(r'pub data ' + name + r' \[copy\] {(.*?)\n}', source, re.S)[1]
         body = re.sub(r'//[^\n]*', '', body)
         actual = re.findall(r'^\s*(\w+): ([^;]+);', body, re.M)
         expected = []
         for field, typ in record['fields']:
-            mapped = 'addr' if '*' in typ or 'fn(' in typ or 'fn (' in typ else {'Handle': 'addr', 'usize': 'u64', 'isize': 'i64', 'Boolean': 'u8', 'ResetSystemFn': 'addr'}.get(typ, typ)
+            mapped = 'addr' if '*' in typ or 'fn(' in typ or 'fn (' in typ else {'Handle': 'addr', 'usize': 'u64', 'isize': 'i64', 'Boolean': 'u8', 'ResetSystemFn': 'addr', 'Status': 'u64', 'Event': 'addr', 'ShellFileHandle': 'addr'}.get(typ, typ)
             expected.append((field.removeprefix('r#'), mapped))
         require(actual == expected, name + ': field/type/order differs')
         plan = re.search(r'pub machine ' + name + r'X64Layout::plan.*?{(.*?)\n}', plans, re.S)[1]
@@ -65,4 +79,11 @@ def main():
 
 
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--slice', choices=['machine', 'shell'], default='machine')
+    args = parser.parse_args()
+    if args.slice == 'shell':
+        SLICE = 'shell'
+        HERE = HERE.parent / 'uefi-shell'
     main()

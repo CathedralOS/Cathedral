@@ -1,0 +1,634 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/uefi-rs",
+    "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a",
+    "roots": [
+      "uefi-raw/src/protocol/shell.rs"
+    ]
+  },
+  "files": {
+    "uefi-raw/src/protocol/shell.rs": {
+      "sha256": "fc029c28b3db2d020c38cb85f15bf6f343762153942ff4d61680cde5c1b555b3",
+      "disposition": "translated",
+      "symbols": {
+        "18:ListEntry": {
+          "anchor": "pub struct ListEntry {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "pub data ListEntry "
+            }
+          ]
+        },
+        "19:f_link": {
+          "anchor": "pub f_link: *mut Self,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "f_link:"
+            }
+          ]
+        },
+        "20:b_link": {
+          "anchor": "pub b_link: *mut Self,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "b_link:"
+            }
+          ]
+        },
+        "26:ShellFileInfo": {
+          "anchor": "pub struct ShellFileInfo {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "pub data ShellFileInfo "
+            }
+          ]
+        },
+        "27:link": {
+          "anchor": "pub link: ListEntry,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "link:"
+            }
+          ]
+        },
+        "28:status": {
+          "anchor": "pub status: Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "status:"
+            }
+          ]
+        },
+        "29:full_name": {
+          "anchor": "pub full_name: *const Char16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "full_name:"
+            }
+          ]
+        },
+        "30:file_name": {
+          "anchor": "pub file_name: *const Char16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "file_name:"
+            }
+          ]
+        },
+        "31:handle": {
+          "anchor": "pub handle: ShellFileHandle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "handle:"
+            }
+          ]
+        },
+        "32:info": {
+          "anchor": "pub info: *mut FileInfo,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "info:"
+            }
+          ]
+        },
+        "39:ShellDeviceNameFlags": {
+          "anchor": "pub struct ShellDeviceNameFlags: u32 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "pub data ShellDeviceNameFlags "
+            }
+          ]
+        },
+        "41:USE_COMPONENT_NAME": {
+          "anchor": "const USE_COMPONENT_NAME = 0x0000001;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "pub const SHELL_DEVICE_NAME_FLAGS_USE_COMPONENT_NAME:"
+            }
+          ]
+        },
+        "43:USE_DEVICE_PATH": {
+          "anchor": "const USE_DEVICE_PATH = 0x0000002;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "pub const SHELL_DEVICE_NAME_FLAGS_USE_DEVICE_PATH:"
+            }
+          ]
+        },
+        "50:ShellProtocol": {
+          "anchor": "pub struct ShellProtocol {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "pub data ShellProtocol "
+            }
+          ]
+        },
+        "51:execute": {
+          "anchor": "pub execute: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "execute:"
+            }
+          ]
+        },
+        "57:get_env": {
+          "anchor": "pub get_env: unsafe extern \"efiapi\" fn(name: *const Char16) -> *const Char16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_env:"
+            }
+          ]
+        },
+        "58:set_env": {
+          "anchor": "pub set_env: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "set_env:"
+            }
+          ]
+        },
+        "63:get_alias": {
+          "anchor": "pub get_alias:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_alias:"
+            }
+          ]
+        },
+        "65:set_alias": {
+          "anchor": "pub set_alias: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "set_alias:"
+            }
+          ]
+        },
+        "71:get_help_text": {
+          "anchor": "pub get_help_text: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_help_text:"
+            }
+          ]
+        },
+        "76:get_device_path_from_map": {
+          "anchor": "pub get_device_path_from_map:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_device_path_from_map:"
+            }
+          ]
+        },
+        "78:get_map_from_device_path": {
+          "anchor": "pub get_map_from_device_path:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_map_from_device_path:"
+            }
+          ]
+        },
+        "80:get_device_path_from_file_path": {
+          "anchor": "pub get_device_path_from_file_path:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_device_path_from_file_path:"
+            }
+          ]
+        },
+        "82:get_file_path_from_device_path": {
+          "anchor": "pub get_file_path_from_device_path:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_file_path_from_device_path:"
+            }
+          ]
+        },
+        "84:set_map": {
+          "anchor": "pub set_map: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "set_map:"
+            }
+          ]
+        },
+        "89:get_cur_dir": {
+          "anchor": "pub get_cur_dir: unsafe extern \"efiapi\" fn(file_system_mapping: *const Char16) -> *const Char16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_cur_dir:"
+            }
+          ]
+        },
+        "90:set_cur_dir": {
+          "anchor": "pub set_cur_dir:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "set_cur_dir:"
+            }
+          ]
+        },
+        "92:open_file_list": {
+          "anchor": "pub open_file_list: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "open_file_list:"
+            }
+          ]
+        },
+        "97:free_file_list": {
+          "anchor": "pub free_file_list: unsafe extern \"efiapi\" fn(file_list: *mut *mut ShellFileInfo) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "free_file_list:"
+            }
+          ]
+        },
+        "98:remove_dup_in_file_list": {
+          "anchor": "pub remove_dup_in_file_list:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "remove_dup_in_file_list:"
+            }
+          ]
+        },
+        "101:batch_is_active": {
+          "anchor": "pub batch_is_active: unsafe extern \"efiapi\" fn() -> Boolean,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "batch_is_active:"
+            }
+          ]
+        },
+        "102:is_root_shell": {
+          "anchor": "pub is_root_shell: unsafe extern \"efiapi\" fn() -> Boolean,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "is_root_shell:"
+            }
+          ]
+        },
+        "103:enable_page_break": {
+          "anchor": "pub enable_page_break: unsafe extern \"efiapi\" fn(),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "enable_page_break:"
+            }
+          ]
+        },
+        "104:disable_page_break": {
+          "anchor": "pub disable_page_break: unsafe extern \"efiapi\" fn(),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "disable_page_break:"
+            }
+          ]
+        },
+        "105:get_page_break": {
+          "anchor": "pub get_page_break: unsafe extern \"efiapi\" fn() -> Boolean,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_page_break:"
+            }
+          ]
+        },
+        "106:get_device_name": {
+          "anchor": "pub get_device_name: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_device_name:"
+            }
+          ]
+        },
+        "113:get_file_info": {
+          "anchor": "pub get_file_info: unsafe extern \"efiapi\" fn(file_handle: ShellFileHandle) -> *mut FileInfo,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_file_info:"
+            }
+          ]
+        },
+        "114:set_file_info": {
+          "anchor": "pub set_file_info: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "set_file_info:"
+            }
+          ]
+        },
+        "118:open_file_by_name": {
+          "anchor": "pub open_file_by_name: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "open_file_by_name:"
+            }
+          ]
+        },
+        "123:close_file": {
+          "anchor": "pub close_file: unsafe extern \"efiapi\" fn(file_handle: ShellFileHandle) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "close_file:"
+            }
+          ]
+        },
+        "124:create_file": {
+          "anchor": "pub create_file: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "create_file:"
+            }
+          ]
+        },
+        "129:read_file": {
+          "anchor": "pub read_file: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "read_file:"
+            }
+          ]
+        },
+        "134:write_file": {
+          "anchor": "pub write_file: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "write_file:"
+            }
+          ]
+        },
+        "139:delete_file": {
+          "anchor": "pub delete_file: unsafe extern \"efiapi\" fn(file_handle: ShellFileHandle) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "delete_file:"
+            }
+          ]
+        },
+        "140:delete_file_by_name": {
+          "anchor": "pub delete_file_by_name: unsafe extern \"efiapi\" fn(file_name: *const Char16) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "delete_file_by_name:"
+            }
+          ]
+        },
+        "141:get_file_position": {
+          "anchor": "pub get_file_position:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_file_position:"
+            }
+          ]
+        },
+        "143:set_file_position": {
+          "anchor": "pub set_file_position:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "set_file_position:"
+            }
+          ]
+        },
+        "145:flush_file": {
+          "anchor": "pub flush_file: unsafe extern \"efiapi\" fn(file_handle: ShellFileHandle) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "flush_file:"
+            }
+          ]
+        },
+        "146:find_files": {
+          "anchor": "pub find_files: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "find_files:"
+            }
+          ]
+        },
+        "150:find_files_in_dir": {
+          "anchor": "pub find_files_in_dir: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "find_files_in_dir:"
+            }
+          ]
+        },
+        "154:get_file_size": {
+          "anchor": "pub get_file_size:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_file_size:"
+            }
+          ]
+        },
+        "157:open_root": {
+          "anchor": "pub open_root: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "open_root:"
+            }
+          ]
+        },
+        "161:open_root_by_handle": {
+          "anchor": "pub open_root_by_handle: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "open_root_by_handle:"
+            }
+          ]
+        },
+        "166:execution_break": {
+          "anchor": "pub execution_break: Event,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "execution_break:"
+            }
+          ]
+        },
+        "168:major_version": {
+          "anchor": "pub major_version: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "major_version:"
+            }
+          ]
+        },
+        "169:minor_version": {
+          "anchor": "pub minor_version: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "minor_version:"
+            }
+          ]
+        },
+        "170:register_guid_name": {
+          "anchor": "pub register_guid_name:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "register_guid_name:"
+            }
+          ]
+        },
+        "172:get_guid_name": {
+          "anchor": "pub get_guid_name:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_guid_name:"
+            }
+          ]
+        },
+        "174:get_guid_from_name": {
+          "anchor": "pub get_guid_from_name:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_guid_from_name:"
+            }
+          ]
+        },
+        "176:get_env_ex": {
+          "anchor": "pub get_env_ex:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "get_env_ex:"
+            }
+          ]
+        },
+        "181:GUID": {
+          "anchor": "pub const GUID: Guid = guid!(\"6302d008-7f9b-4f30-87ac-60c9fef5da4e\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/shell_protocols.omg",
+              "anchor": "pub const SHELL_PROTOCOL_GUID:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/shell_protocols.omg",
+          "anchor": "module shell_protocols;"
+        }
+      ]
+    }
+  }
+}
