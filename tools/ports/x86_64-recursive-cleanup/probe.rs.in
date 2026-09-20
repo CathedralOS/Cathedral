@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+#![feature(step_trait)]
+use std::cell::{RefCell,UnsafeCell};
+use std::iter::Step;
+use x86_64::{PhysAddr,VirtAddr};
+use x86_64::structures::paging::{Page,PageTable,PageTableIndex,Size4KiB,PhysFrame,PageTableFlags,FrameDeallocator};
+use x86_64::structures::paging::page::PageRangeInclusive;
+use x86_64::structures::paging::page_table::{PageTableEntry,PageTableLevel};
+const ROOT_ID:u64=16384;
+const MASK:u64=0x000ffffffffff000;
+const IDS:[u64;6]=[4096,8192,12288,20480,24576,28672];
+// Stable initialized allocations, acyclic ordinary fixture links; root is
+// deliberately absent so following the recursive self-link fails immediately.
+struct Registry {tables:Vec<(u64,Box<UnsafeCell<PageTable>>)>,resolved:RefCell<Vec<u64>>}
+impl Registry {
+ fn resolve(&self,frame:PhysFrame)->*mut PageTable {
+  let id=frame.start_address().as_u64();self.resolved.borrow_mut().push(id);
+  assert_ne!(id,ROOT_ID,"recursive root must never be resolved");
+  self.tables.iter().find(|(key,_)|*key==id).expect("missing owned registry frame").1.get()
+ }
+}
+struct Retire(Vec<u64>);
+impl FrameDeallocator<Size4KiB> for Retire {
+ unsafe fn deallocate_frame(&mut self,frame:PhysFrame){let id=frame.start_address().as_u64();assert_ne!(id,ROOT_ID);self.0.push(id);}
+}
+include!("private_cleanup.rs");
+fn store(table:&mut PageTable,index:usize,word:u64){table[index].set_addr(PhysAddr::new(word&MASK),PageTableFlags::from_bits_retain(word&!MASK));}
+fn observe(first:u64,last:u64,r:u16,entries:&[(u64,usize,u64)]) -> (Vec<(u64,usize,u64)>,Vec<u64>,bool,Vec<u64>) {
+ let mut root=Box::new(PageTable::new());let mut registry=Registry {tables:IDS.into_iter().map(|id|(id,Box::new(UnsafeCell::new(PageTable::new())))).collect(),resolved:RefCell::new(vec![])};
+ for &(id,index,word) in entries {
+  if id==ROOT_ID {store(&mut root,index,word)}else{store(registry.tables.iter_mut().find(|(key,_)|*key==id).unwrap().1.get_mut(),index,word)}
+ }
+ let self_before=root[r as usize].addr().as_u64()|root[r as usize].flags().bits();
+ let range=Page::range_inclusive(Page::<Size4KiB>::from_start_address(VirtAddr::new(first)).unwrap(),Page::<Size4KiB>::from_start_address(VirtAddr::new(last)).unwrap());
+ let mut retired=Retire(vec![]);
+ let empty=clean_up(PageTableIndex::new(r),&mut root,PageTableLevel::Four,range,&mut retired,&registry);
+ let self_after=root[r as usize].addr().as_u64()|root[r as usize].flags().bits();assert_eq!(self_before,self_after);
+ let mut result=vec![];
+ for id in [4096,8192,12288,16384,20480,24576,28672] {
+  let table=if id==ROOT_ID {&*root}else{unsafe{&*registry.tables.iter().find(|(key,_)|*key==id).unwrap().1.get()}};
+  for i in 0..512 {let word=table[i].addr().as_u64()|table[i].flags().bits();if word!=0 {result.push((id,i,word));}}
+ }
+ let resolved=registry.resolved.into_inner();assert!(!resolved.contains(&ROOT_ID));assert!(!retired.0.contains(&ROOT_ID));
+ (result,retired.0,empty,resolved)
+}
+fn main(){
+ // GENERATED_CHECKS
+ println!("PASS pinned private recursive cleanup mirrors: owned trees, callback order, and no self-link traversal/retirement");
+}

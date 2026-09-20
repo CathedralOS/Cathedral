@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use values::recursive_cleanup::begin;
+use values::recursive_cleanup::resume;
+use values::recursive_cleanup::step;
+use values::recursive_cleanup::RecursiveCursor;
+use values::recursive_cleanup::RecursiveStep;
+use values::cleanup_ranges::Cursor;
+use values::cleanup_ranges::RangeStatus;
+machine test()->i32 {
+let words:[u64;4]=[0,0,0,0];let ids:[u64;4]=[16384,0,0,0];let others:[bool;4]=[true,false,false,false];
+let c:RecursiveCursor=begin(140187732541440,18446603336221196288,1,255);let first:RecursiveStep=step(c,&words,&ids,&others);let resumed:RecursiveCursor=resume(first.cursor,2);let result:RecursiveStep=step(resumed,&words,&ids,&others);let next:u64=first.cursor.range.next_page;
+transition first.cursor.range.status in RangeStatus::Exhausted && !first.has_plan && next==18446603336221196288 && result.cursor.range.status in RangeStatus::Done && result.has_plan && result.cursor.recursive_index==255 && result.cursor.range.budget==1 {true -> (0) _ -> (1)}
+}
+const RESULT:i32=test();machine require_ok(value:i32) requires value==0;{}data Main{}machine Main::main(&mut self){require_ok(RESULT);}

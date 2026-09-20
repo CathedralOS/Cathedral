@@ -26,6 +26,8 @@ the remaining raw MSR word-splitting component is completed by
 [Explicit encryption state](memory-encryption.PORT.md) completes the detached
 `memory-encryption` family. Default-profile captured walkers are not silently
 changed into encryption-profile walkers.
+[Recursive cleanup](recursive-cleanup.PORT.md) completes `recursive-cleanup`
+with tested self-link exclusion, bounded resumption and full-budget handling.
 
 ## Work that already has a reusable implementation
 
@@ -90,8 +92,8 @@ finite semantic relations/examples supplied locally. That difference remains
 explicit, not an implementation blocker.
 
 Descriptor and interrupt geometry has Rust measurements plus byte/source-plan
-evidence. GDT mutation tests currently execute actual Rust and validate detached
-Omega plans; they do not prove nonexistent Omega storage mutation. IDT default
+evidence. The subsequent owned GDT storage slice executes actual Rust and Omega storage
+mutation, including full capacity and failed append preservation. IDT default
 handler installation and interrupt-frame volatile mutation include live CPU/ABI
 operations even though their baseline triage category was pure-or-detached.
 Formatting/derive/hash tests test Rust conveniences deliberately not reproduced.

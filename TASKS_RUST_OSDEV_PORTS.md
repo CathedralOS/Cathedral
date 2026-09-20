@@ -253,6 +253,10 @@ bounded, resumable inclusive-range traversal: 13 whole-range Rust witnesses,
 high-bit and maximum budgets. Exhaustion
 retains the exact next page; actual custody, invalidation and reclamation remain
 separate integration work.
+[Recursive cleanup](source/libraries/x86_64/recursive-cleanup.PORT.md) adds
+20 pinned private-body whole-tree witnesses and 40 Omega cases with 40 body
+mutations. The recursive self-link participates in occupancy and is never
+traversed or retired; no live recursive mapper is constructed.
 
 The [complete route slice](source/libraries/x86_64/mapping-routes.PORT.md) passes
 208 actual Rust/Omega scenarios, four additional fixture groups and four body

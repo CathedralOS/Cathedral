@@ -1,0 +1,38 @@
+{
+  "extra-invalid-index": [
+    "RangeStatus::InvalidRange",
+    "RangeStatus::Done"
+  ],
+  "extra-invalid-address": [
+    "RangeStatus::InvalidRange",
+    "RangeStatus::Done"
+  ],
+  "extra-forged-active": [
+    "RangeStatus::InvalidRange",
+    "RangeStatus::Done"
+  ],
+  "extra-reversed": [
+    "RangeStatus::Done",
+    "RangeStatus::Active"
+  ],
+  "extra-zero-resume": [
+    "result.cursor.recursive_index==0",
+    "result.cursor.recursive_index==1"
+  ],
+  "extra-skip-resume-high": [
+    "result.cursor.recursive_index==255",
+    "result.cursor.recursive_index==254"
+  ],
+  "extra-inactive-resume": [
+    "result.range.budget==2",
+    "result.range.budget==99"
+  ],
+  "extra-capture-mismatch": [
+    "result.cursor.range.budget==2",
+    "result.cursor.range.budget==1"
+  ],
+  "extra-high-bit-budget": [
+    "budget==9223372036854775807",
+    "budget==9223372036854775806"
+  ]
+}

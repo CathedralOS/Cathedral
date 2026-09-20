@@ -1,0 +1,103 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified numeric RecursivePageTable cleanup orchestration, x86_64
+// cc35c876d3badb57df54a66e22f7768a52be95f2. See recursive-cleanup.PORT.md.
+// Excludes the recursive P4 slot; no live hierarchy access or frame reclamation.
+module recursive_cleanup;
+use addresses;
+use cleanup_ranges;
+use cleanup_ranges::Cursor;
+use cleanup_ranges::RangeStatus;
+use cleanup_ranges::RangeStep;
+use cleanup_branch::CleanupPlan;
+
+pub data RecursiveCursor [copy] { range: Cursor; recursive_index: u16; }
+pub data RecursiveStep [copy] { cursor: RecursiveCursor; has_plan: bool; branch: CleanupPlan; }
+pub machine begin(first: u64, last: u64, budget: u64, recursive_index: u16) -> RecursiveCursor {
+    let range: Cursor = cleanup_ranges::begin(first, last, budget);
+    transition recursive_index < 512 {
+        true -> (RecursiveCursor { range: range, recursive_index: recursive_index })
+        _ -> (RecursiveCursor {})
+    }
+}
+pub machine resume(cursor: RecursiveCursor, budget: u64) -> RecursiveCursor {
+    transition cursor.recursive_index < 512 {
+        true -> resumed(cursor, budget)
+        _ -> (RecursiveCursor {})
+    }
+    state resumed(cursor: RecursiveCursor, budget: u64) {
+        let range: Cursor = cleanup_ranges::resume(cursor.range, budget);
+        RecursiveCursor { range: range, recursive_index: cursor.recursive_index }
+    }
+}
+pub machine step(cursor: RecursiveCursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> RecursiveStep {
+    transition cursor.recursive_index < 512 {
+        true -> status(cursor, words, table_ids, other_nonzero)
+        _ -> (RecursiveStep {})
+    }
+    state status(cursor: RecursiveCursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) {
+        transition cursor.range.status {
+            RangeStatus::Active -> checked(cursor, words, table_ids, other_nonzero)
+            _ -> (RecursiveStep { cursor: cursor })
+        }
+    }
+    state checked(cursor: RecursiveCursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) {
+        let checked: Cursor = cleanup_ranges::begin(cursor.range.next_page, cursor.range.last_page, cursor.range.budget);
+        let next: RecursiveCursor = RecursiveCursor { range: checked, recursive_index: cursor.recursive_index };
+        transition checked.status {
+            RangeStatus::Active -> selected(next, words, table_ids, other_nonzero)
+            _ -> (RecursiveStep { cursor: next })
+        }
+    }
+    state selected(cursor: RecursiveCursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) {
+        let index: u16 = ((cursor.range.next_page >> 39) & 511) as u16;
+        transition index == cursor.recursive_index {
+            true -> excluded(cursor)
+            _ -> ordinary(cursor, words, table_ids, other_nonzero)
+        }
+    }
+    state excluded(cursor: RecursiveCursor) {
+        let next: Cursor = skip_root_slot(cursor.range);
+        RecursiveStep { cursor: RecursiveCursor { range: next, recursive_index: cursor.recursive_index } }
+    }
+    state ordinary(cursor: RecursiveCursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) {
+        let result: RangeStep = cleanup_ranges::step(cursor.range, words, table_ids, other_nonzero);
+        RecursiveStep { cursor: RecursiveCursor { range: result.cursor, recursive_index: cursor.recursive_index },
+            has_plan: result.has_plan, branch: result.branch }
+    }
+}
+// A skipped recursive slot uses one work unit and produces no branch plan. Its
+// entries are not inspected, even if the supplied child captures are inconsistent.
+machine skip_root_slot(cursor: Cursor) -> Cursor {
+    let budget: u64 = cursor.budget;
+    let result: Cursor = skip_with_budget(cursor, budget);
+    result
+}
+machine skip_with_budget(cursor: Cursor, budget: u64) -> Cursor {
+    let dense: u64 = cursor.next_page & 281474976710655;
+    let last: u64 = cursor.last_page & 281474976710655;
+    let end: u64 = (dense | 549755813887) & 18446744073709547520;
+    transition budget > 0 {
+        true -> interval(cursor, last, end, budget)
+        _ -> (Cursor {})
+    }
+    state interval(cursor: Cursor, last: u64, end: u64, budget: u64) {
+        let remaining: u64 = budget - 1;
+        transition last <= end {
+            true -> (Cursor { next_page: cursor.next_page, last_page: cursor.last_page, budget: remaining, status: RangeStatus::Done })
+            _ -> next(cursor.last_page, end, remaining)
+        }
+    }
+    state next(last: u64, end: u64, remaining: u64) {
+        transition end <= 281474976706560 {
+            true -> canonical(last, end + 4096, remaining)
+            _ -> (Cursor {})
+        }
+    }
+    state canonical(last: u64, dense: u64, remaining: u64) {
+        let address: u64 = addresses::virtual_truncate(dense);
+        transition remaining == 0 {
+            true -> (Cursor { next_page: address, last_page: last, status: RangeStatus::Exhausted })
+            _ -> (Cursor { next_page: address, last_page: last, budget: remaining, status: RangeStatus::Active })
+        }
+    }
+}

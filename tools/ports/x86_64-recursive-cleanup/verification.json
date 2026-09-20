@@ -1,0 +1,251 @@
+{
+  "compiler_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "inventory": {
+    "anchors": 40,
+    "blocked": 0,
+    "files": 1,
+    "omitted": 0,
+    "pending": 37,
+    "translated": 3
+  },
+  "kind": "detached numeric Omega semantics and exact private Rust cleanup mirror over owned initialized tables; no live table access, native ABI or custody claim",
+  "omega": {
+    "additional_cases": 11,
+    "body_mutation_rejections": 40,
+    "cases": {
+      "budget-max-ordinary": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "586bd12c03c41d3dfb2bce4beee3445563182b36fef1b6eca63f2d382b701ffe",
+        "positive": "passed"
+      },
+      "budget-max-skipped": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "b8ca07893658eddb47a936bfb6de0584c8d84e5109bdd67ece739e3802bf9080",
+        "positive": "passed"
+      },
+      "extra-capture-mismatch": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "36b887986f92e83e9019e941483d60df9749835e121743df7e9733afb78d1593",
+        "positive": "passed"
+      },
+      "extra-forged-active": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "af5d195068a705693b776321dfa6710705655427db0853e7af19a8a65fd6c5f2",
+        "positive": "passed"
+      },
+      "extra-high-bit-budget": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "0716c23487b642bf585450a7b28626d39c59cec7268f77621531acffae3567a7",
+        "positive": "passed"
+      },
+      "extra-inactive-resume": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "d38c6f045d88deadb736554fd66730e2bc0dbbb146b68c14b8a5fbf4f6156ab0",
+        "positive": "passed"
+      },
+      "extra-invalid-address": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "f1b543e66ce9182a838ef0ec8f1dcb2a98fc7548cf237c21b56bc73541395c77",
+        "positive": "passed"
+      },
+      "extra-invalid-index": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "cffec64a444b31aecb68c2d7b0a90a09ce2dfef0f2dfce0c356b7c6ae8560027",
+        "positive": "passed"
+      },
+      "extra-reversed": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "d92da3624ea6e2fd0f1c64bc8777470a7fd3da5aa0a13f2a334c81b5b992c1dd",
+        "positive": "passed"
+      },
+      "extra-skip-resume-high": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "cc89654da7831a77081f3fd924bd1d49c4dd2b8e96fb87fd62fde3da50b7b0cf",
+        "positive": "passed"
+      },
+      "extra-zero-resume": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "72927a144369ad1824a9ced980f420df719e8d2a8bb9bb4c4862880647d86f89",
+        "positive": "passed"
+      },
+      "step-000": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "8ddb5ce26cfb8b0a2c964412cfb4923ae321072a24e96ffea816d31571f43122",
+        "positive": "passed"
+      },
+      "step-001": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "7457dbfa1b33eeb61d2fa6befa7f19b87756dedae43af9cf7a8587df1141b0f1",
+        "positive": "passed"
+      },
+      "step-002": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "1ac629dd6f39c77b11b6c94999b42e3cff27a991526610b119f8e64dc5ff2c1f",
+        "positive": "passed"
+      },
+      "step-003": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "bfabdb3932076054b7ef1007e346c18e8eb3583fa75841044b9790da2b0a449d",
+        "positive": "passed"
+      },
+      "step-004": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "991a6e31bf61af3e5a831b3e21db3428ab0a508d15ca99473b26e66ed447298f",
+        "positive": "passed"
+      },
+      "step-005": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "80c1df13af1b5d729ee0bc48802bd11ffb373967df93666e7c07716ae795ee62",
+        "positive": "passed"
+      },
+      "step-006": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "1a5a9a6e01b83fb547af356ada64d43040818d488d30ebf9065e3ea96bc1ed3d",
+        "positive": "passed"
+      },
+      "step-007": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "850cbb60e3e13a52ef391a64fbe760c6bc15b2eb028128f0c33f6a3447098c50",
+        "positive": "passed"
+      },
+      "step-008": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "7843acb58a26c3e39e4218be4eb0e8655e479c18599291aa7535e492edd9ddf7",
+        "positive": "passed"
+      },
+      "step-009": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "8e455e805911e8a39e5d6cd7fc65d410e4214054615d26c36bef09bdf5a158ef",
+        "positive": "passed"
+      },
+      "step-010": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "a4732e4767fad0e323845bc8ae494f534cf00ef04abc5e069a5ee2f95bb0a2cb",
+        "positive": "passed"
+      },
+      "step-011": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "0917adc96f2ded251344bf5348422f97d159aeb2a17520d02cc36f8641801884",
+        "positive": "passed"
+      },
+      "step-012": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "47ca2f25c30e6a394478e0e189cfd207b578a26067055fcf0777f17e9f1fee85",
+        "positive": "passed"
+      },
+      "step-013": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "abef8e0666ce7a8a64a8ccdad49d8bc7883809a52be1e5a637e86aa3f572d0d2",
+        "positive": "passed"
+      },
+      "step-014": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "d1d1c35ee19d7dbb1e016c8abfa763f9bde48ffc8fbd97801a6a03b58d6bb595",
+        "positive": "passed"
+      },
+      "step-015": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "323c67464d5b3d063bbacb9e585e0e2f684e953f4e1857bdbf987351257071d1",
+        "positive": "passed"
+      },
+      "step-016": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "632482cc22bf7d140d8c1c7afd4f246a81ced835ace6861fb6884ed217e92bf9",
+        "positive": "passed"
+      },
+      "step-017": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "aad60b9367b0df81a10f99e58d4af79b7ff1fe2b96bbee382b57683e8a166992",
+        "positive": "passed"
+      },
+      "step-018": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "c9dbc19b680df888770964740aadfc844c47c3f85c6b43e35ff113b5ac3edec8",
+        "positive": "passed"
+      },
+      "step-019": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "65b69deb515b51f375b21ba09ac7d97e328c2c0b030930b199aeeb38934ce465",
+        "positive": "passed"
+      },
+      "step-020": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "0122bf4f49aff208eb2671cdffd37a014f7139c8c6a72d59db59cbeddd14414c",
+        "positive": "passed"
+      },
+      "step-021": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "d6726c4180dcbf29c7da52cd11e07bb9e9d66cb2f2a11636238020ba33940ac1",
+        "positive": "passed"
+      },
+      "step-022": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "d8a71ea3d5a2116c46e4027c6a6a693d7f7acd98bdfeb58cdddd08f216363cd6",
+        "positive": "passed"
+      },
+      "step-023": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "3f4e25197c1a0aaad1e28a6279ad7b84e9ee2f3e85fc50062d5eb3c7acd94ee0",
+        "positive": "passed"
+      },
+      "step-024": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "da74f88a255a64f4a85b3e3b235169895ac197e5e9ee83075d69490cf818711d",
+        "positive": "passed"
+      },
+      "step-025": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "b14b20556ae83ba76581f9e1e903643d8b4c1fa32670d9f29199098bbcab058b",
+        "positive": "passed"
+      },
+      "step-026": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "64f2b59b88a05b85abedf89350785ca0ce38ebaa6c5b8e9f6ba44abf35e5738a",
+        "positive": "passed"
+      },
+      "step-027": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "fba8ad044adadf162850a941fb5b4a377fa28df74b3e3732387cbdb3a6cf4eb1",
+        "positive": "passed"
+      },
+      "step-028": {
+        "body_mutation": "computed1 and rejected",
+        "fixture_sha256": "931f839f5d2608d0d1930539aa3766839e851da226a84406ac9a3e9815a9989b",
+        "positive": "passed"
+      }
+    },
+    "command": "python3 tools/ports/x86_64-recursive-cleanup/check.py --jobs 4",
+    "generated_steps": 29,
+    "positive_cases": 40
+  },
+  "pin": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+  "regression": "u64MAX initially failed both skip and shared ordinary advance; scalar budget staging makes both cases and negative controls pass without reducing accepted budget range. Shared cleanup_ranges change owned and independently checked by root.",
+  "rust": {
+    "cargo_lock_sha256": "a65bac0b5ea1266c21dd1319dcc6690db2e29e61c98c8df2f7fd813b9a0efb3f",
+    "command": "cargo +nightly-2026-09-04 run --quiet --locked --manifest-path tools/ports/x86_64-recursive-cleanup/Cargo.toml",
+    "policy": "Exact private clean_up body, owned stable registry pointer substitution and argument plumbing, same-body public Step forwarding. Actual public Page/VirtAddr/PageTableEntry operations. Root unavailable to resolver and never retired; callbacks record effects without releasing allocations.",
+    "private_reference_sha256": "e28dd2f87d7e2dfb5085c7ce3ecab900a30ee4193ae049317ffd2183390410eb",
+    "reference_sha256": "3a616d71e088e8d7a6f5d2d3103d06a1e3e8ee934f2865ba7bdf632a7920c790",
+    "rustc": "rustc 1.100.0-nightly (a69a63265 2026-09-03)",
+    "whole_tree_witnesses": 20
+  },
+  "selected_source_files": [
+    "source/libraries/x86_64/build.omg",
+    "source/libraries/x86_64/recursive_cleanup.omg",
+    "source/libraries/x86_64/cleanup_ranges.omg",
+    "source/libraries/x86_64/cleanup_branch.omg",
+    "source/libraries/x86_64/addresses.omg",
+    "source/libraries/x86_64/pages.omg",
+    "source/libraries/x86_64/page_entries.omg",
+    "source/drivers/facts/build.omg",
+    "source/drivers/facts/x86_page_table_entry.omg"
+  ],
+  "selected_source_sha256": "5e84d78fdb2dfaee4f46c2f1e3a594cba47e40ae89789e663d8e5db1815aeccc",
+  "source_check": {
+    "command": "/tmp/cathedral-omega-eaa7993/release/omega --check source/libraries/x86_64/recursive_cleanup.omg",
+    "source_files": 16,
+    "wrote_output": false
+  },
+  "source_hash_algorithm": "SHA-256 over sorted repository-relative path + NUL + file bytes"
+}

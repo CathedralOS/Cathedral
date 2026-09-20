@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use values::recursive_cleanup::begin;
+use values::recursive_cleanup::step;
+use values::recursive_cleanup::RecursiveCursor;
+use values::recursive_cleanup::RecursiveStep;
+use values::cleanup_ranges::RangeStatus;
+use values::cleanup_branch::CleanupOutcome;
+// huge-parent
+machine test()->i32 {
+let words:[u64;4]=[4097,8193,129,0];let ids:[u64;4]=[16384,4096,8192,0];let others:[bool;4]=[true,false,false,false];
+let cursor:RecursiveCursor=begin(0,2097152,4,511);let value:RecursiveStep=step(cursor,&words,&ids,&others);
+let next:u64=value.cursor.range.next_page;let last:u64=value.cursor.range.last_page;let budget:u64=value.cursor.range.budget;
+transition value.has_plan==true && value.cursor.range.status in RangeStatus::Active && next==2097152 && last==2097152 && budget==3 && value.cursor.recursive_index==511 && value.branch.retire_count==0 && value.branch.write_mask==0 && value.branch.visited==3 && value.branch.outcome in CleanupOutcome::Ready && value.branch.words[0]==4097 && value.branch.words[1]==8193 && value.branch.words[2]==129 && value.branch.words[3]==0 && value.branch.frames_to_retire[0]==0 && value.branch.frames_to_retire[1]==0 && value.branch.frames_to_retire[2]==0 {true -> (0) _ -> (1)}
+}
+const RESULT:i32=test();
+machine require_ok(value:i32) requires value==0;{}
+data Main{}
+machine Main::main(&mut self){require_ok(RESULT);}

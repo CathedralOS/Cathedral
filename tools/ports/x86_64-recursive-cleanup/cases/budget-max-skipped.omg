@@ -1,0 +1,14 @@
+use values::recursive_cleanup::begin;
+use values::recursive_cleanup::step;
+use values::recursive_cleanup::RecursiveCursor;
+use values::recursive_cleanup::RecursiveStep;
+use values::cleanup_ranges::RangeStatus;
+machine test()->u64 {
+ let maximum:u64=0xffffffffffffffff;
+ let words:[u64;4]=[0,0,0,0];let ids:[u64;4]=[16384,0,0,0];let others:[bool;4]=[true,false,false,false];
+ let cursor:RecursiveCursor=begin(0,0,maximum,0);
+ let result:RecursiveStep=step(cursor,&words,&ids,&others);
+ let remaining:u64=result.cursor.range.budget;
+ transition result.cursor.range.status in RangeStatus::Done && remaining==0xfffffffffffffffe {true -> (0) _ -> (1)}
+}
+const RESULT:u64=test();machine require_ok(value:u64) requires value==0;{}data Main{}machine Main::main(&mut self){require_ok(RESULT);}

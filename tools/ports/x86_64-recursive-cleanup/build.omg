@@ -1,0 +1,4 @@
+machine build(builder:&mut Build) {
+ builder.application("cathedral-recursive-cleanup-tests");builder.freestanding=true;
+ builder.depend_as("values",Source::Path {location:"../../../source/libraries/x86_64"});
+}

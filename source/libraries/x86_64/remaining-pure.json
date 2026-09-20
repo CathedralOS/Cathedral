@@ -12111,6 +12111,12 @@
       "evidence": "source/libraries/x86_64/memory-encryption.PORT.md",
       "inventory": "source/libraries/x86_64/memory-encryption-inventory.json",
       "boundary": "Explicit-state configuration and PTE/address helpers; existing captured walkers retain their default physical profile."
+    },
+    {
+      "family": "recursive-cleanup",
+      "stage": "tested",
+      "evidence": "source/libraries/x86_64/recursive-cleanup.PORT.md",
+      "inventory": "source/libraries/x86_64/recursive-cleanup-inventory.json"
     }
   ]
 }
