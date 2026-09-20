@@ -229,7 +229,7 @@ confirmed instruction-catalog gaps are limited to their exact live operations.
 
 ## Phase 4 — ACPI tables, then AML
 
-- [ ] **ACPI-000 — Inventory and partition `acpi`.** Separate byte/table facts,
+- [x] **ACPI-000 — Inventory and partition `acpi`.** Separate byte/table facts,
   pure table discovery/parsing, platform-topology results, AML parsing, AML
   execution, handler callbacks, and allocator/concurrency assumptions.
 - [ ] **ACPI-001 — Port table headers and checksums.** RSDP, RSDT/XSDT, SDT
@@ -253,6 +253,12 @@ confirmed instruction-catalog gaps are limited to their exact live operations.
 - [ ] **ACPI-007 — Define the later Cathedral adapter.** Specify—but do not yet
   integrate—the attenuation from discovered regions to separately granted
   physical/MMIO/I/O capabilities.
+
+ACPI-000 evidence: [partitioned inventory](source/libraries/acpi/PORT.md)
+classifies 52 Rust files, 1,581 anchors, 66 Rust tests and 19 ASL/AML assets.
+External fixture provenance remains explicit; no firmware dumps or externally
+derived test bodies were copied. Parsing and interpretation remain implementation
+work, separate from this completed inventory.
 
 ## Phase 5 — only after the corpus above is healthy
 

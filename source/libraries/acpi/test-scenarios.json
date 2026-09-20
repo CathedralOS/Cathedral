@@ -1,0 +1,1165 @@
+{
+  "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "rust_tests": [
+    {
+      "path": "src/aml/object.rs",
+      "line": 611,
+      "name": "test_copy_bits",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "aml_execution",
+        "allocator_concurrency"
+      ]
+    },
+    {
+      "path": "src/aml/object.rs",
+      "line": 620,
+      "name": "buffer_to_integer",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "aml_execution",
+        "allocator_concurrency"
+      ]
+    },
+    {
+      "path": "src/aml/object.rs",
+      "line": 625,
+      "name": "buffer_field_to_integer",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "aml_execution",
+        "allocator_concurrency"
+      ]
+    },
+    {
+      "path": "src/aml/object.rs",
+      "line": 634,
+      "name": "buffer_field_to_4_byte_integer",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "aml_execution",
+        "allocator_concurrency"
+      ]
+    },
+    {
+      "path": "src/aml/object.rs",
+      "line": 648,
+      "name": "buffer_field_to_8_byte_integer",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "aml_execution",
+        "allocator_concurrency"
+      ]
+    },
+    {
+      "path": "src/aml/resource.rs",
+      "line": 829,
+      "name": "test_parses_keyboard_crs",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "aml_syntax_namespace",
+        "byte_table_facts"
+      ]
+    },
+    {
+      "path": "src/aml/resource.rs",
+      "line": 891,
+      "name": "test_pci_crs",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "aml_syntax_namespace",
+        "byte_table_facts"
+      ]
+    },
+    {
+      "path": "src/aml/resource.rs",
+      "line": 1037,
+      "name": "skips_unsupported_large_resource_descriptors",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "aml_syntax_namespace",
+        "byte_table_facts"
+      ]
+    },
+    {
+      "path": "src/aml/resource.rs",
+      "line": 1060,
+      "name": "skips_unsupported_small_resource_descriptors",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "aml_syntax_namespace",
+        "byte_table_facts"
+      ]
+    },
+    {
+      "path": "src/aml/resource.rs",
+      "line": 1083,
+      "name": "test_fdc_crs",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "aml_syntax_namespace",
+        "byte_table_facts"
+      ]
+    },
+    {
+      "path": "src/lib.rs",
+      "line": 763,
+      "name": "test_physical_mapping_send_sync",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "table_discovery_parsing",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/bank_fields.rs",
+      "line": 14,
+      "name": "test_basic_bank_store_and_load",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/concatenate_res_template.rs",
+      "line": 8,
+      "name": "concatenate_res_template_strip_end_tags",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/de_ref_of.rs",
+      "line": 5,
+      "name": "test_deref_of_buffer_field",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/de_ref_of.rs",
+      "line": 30,
+      "name": "test_deref_of_direct_buffer_field",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/de_ref_of.rs",
+      "line": 47,
+      "name": "test_deref_of_local_buffer_field_after_store",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/de_ref_of.rs",
+      "line": 64,
+      "name": "test_deref_of_named_buffer_field_stores_value",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/de_ref_of.rs",
+      "line": 82,
+      "name": "test_deref_of_named_string_path",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/global_lock.rs",
+      "line": 25,
+      "name": "uncontended_acquire_release",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "allocator_concurrency",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/global_lock.rs",
+      "line": 34,
+      "name": "single_thread_acquire_release",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "allocator_concurrency",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/global_lock.rs",
+      "line": 45,
+      "name": "multi_thread_acquire_release",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "allocator_concurrency",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/global_lock.rs",
+      "line": 95,
+      "name": "uacpi_global_lock_test",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "external-uacpi-origin-review-required",
+      "scenario_partition": [
+        "host_test_tool",
+        "allocator_concurrency",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/index_fields.rs",
+      "line": 15,
+      "name": "test_basic_index_store_and_load_8_bit",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/index_fields.rs",
+      "line": 69,
+      "name": "test_basic_index_store_and_load_16_bit",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/index_fields.rs",
+      "line": 123,
+      "name": "test_index_multiple_aligned_reads",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/index_fields.rs",
+      "line": 172,
+      "name": "test_index_narrower_than_data",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/index_fields.rs",
+      "line": 223,
+      "name": "test_index_misaligned_field",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/name_search.rs",
+      "line": 5,
+      "name": "test_name_search_1",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_syntax_namespace"
+      ]
+    },
+    {
+      "path": "tests/name_search.rs",
+      "line": 27,
+      "name": "test_name_search_2",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_syntax_namespace"
+      ]
+    },
+    {
+      "path": "tests/namespace_paths.rs",
+      "line": 12,
+      "name": "namespace_rejects_relative_paths_without_panicking",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_syntax_namespace"
+      ]
+    },
+    {
+      "path": "tests/namespace_paths.rs",
+      "line": 25,
+      "name": "namespace_searches_reject_relative_starting_scopes_without_panicking",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_syntax_namespace"
+      ]
+    },
+    {
+      "path": "tests/namespace_paths.rs",
+      "line": 36,
+      "name": "relative_name_resolution_rejects_relative_scope_without_panicking",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_syntax_namespace"
+      ]
+    },
+    {
+      "path": "tests/namespace_paths.rs",
+      "line": 48,
+      "name": "absolute_paths_are_still_accepted",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_syntax_namespace"
+      ]
+    },
+    {
+      "path": "tests/normal_fields.rs",
+      "line": 17,
+      "name": "test_basic_store_and_load",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/normal_fields.rs",
+      "line": 47,
+      "name": "test_narrow_access_store_and_load",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/normal_fields.rs",
+      "line": 80,
+      "name": "test_unaligned_field_store",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/operation_region.rs",
+      "line": 14,
+      "name": "test_region_in_top_level",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/operation_region.rs",
+      "line": 46,
+      "name": "test_region_in_device",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/operation_region.rs",
+      "line": 82,
+      "name": "test_region_in_method",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/operation_region.rs",
+      "line": 125,
+      "name": "test_buffer_field_implicit_conv",
+      "ignored": true,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/operation_region.rs",
+      "line": 151,
+      "name": "test_region_in_pci_device",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution",
+        "handler_boundary"
+      ]
+    },
+    {
+      "path": "tests/package_name_references.rs",
+      "line": 18,
+      "name": "relative_name_in_package_refers_to_declaration_scope",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/package_name_references.rs",
+      "line": 70,
+      "name": "forward_reference_in_package_uses_declaration_scope",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/package_name_references.rs",
+      "line": 123,
+      "name": "prt_source_name_is_resolved_to_a_link_object",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/package_name_references.rs",
+      "line": 165,
+      "name": "deref_of_self_referential_string_terminates",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/stray_opcodes_test.rs",
+      "line": 6,
+      "name": "test_stray_opcode",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/uacpi_examples.rs",
+      "line": 14,
+      "name": "expressions_with_package",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "external-uacpi-origin-review-required",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/uacpi_examples.rs",
+      "line": 37,
+      "name": "package_outside_of_control_method",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "external-uacpi-origin-review-required",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/uacpi_examples.rs",
+      "line": 53,
+      "name": "reference_rebind_semantics",
+      "ignored": true,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "external-uacpi-origin-review-required",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/uacpi_examples.rs",
+      "line": 74,
+      "name": "increment_decrement",
+      "ignored": true,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "external-uacpi-origin-review-required",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/uacpi_examples.rs",
+      "line": 91,
+      "name": "multilevel_references",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "external-uacpi-origin-review-required",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/uacpi_examples.rs",
+      "line": 111,
+      "name": "implicit_case_semantics",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "external-uacpi-origin-review-required",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/uacpi_examples.rs",
+      "line": 131,
+      "name": "buffer_size_mutability",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "external-uacpi-origin-review-required",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/uacpi_examples.rs",
+      "line": 155,
+      "name": "ref_to_local",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "external-uacpi-origin-review-required",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tests/uacpi_examples.rs",
+      "line": 183,
+      "name": "copy_object_to_self",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "external-uacpi-origin-review-required",
+      "scenario_partition": [
+        "host_test_tool",
+        "aml_execution"
+      ]
+    },
+    {
+      "path": "tools/aml-test-tools/src/handlers/check_cmd_handler.rs",
+      "line": 255,
+      "name": "handler_basic_functions",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool"
+      ]
+    },
+    {
+      "path": "tools/aml-test-tools/src/handlers/check_cmd_handler.rs",
+      "line": 264,
+      "name": "handler_fails_for_wrong_command",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool"
+      ]
+    },
+    {
+      "path": "tools/aml-test-tools/src/handlers/check_cmd_handler.rs",
+      "line": 276,
+      "name": "handler_fails_for_too_many_commands",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool"
+      ]
+    },
+    {
+      "path": "tools/aml-test-tools/src/handlers/check_cmd_handler.rs",
+      "line": 287,
+      "name": "handler_fails_for_too_few_commands",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool"
+      ]
+    },
+    {
+      "path": "tools/aml-test-tools/src/handlers/check_cmd_handler.rs",
+      "line": 296,
+      "name": "check_handler_fails_gracefully_for_no_commands",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool"
+      ]
+    },
+    {
+      "path": "tools/aml-test-tools/src/handlers/listed_response_handler.rs",
+      "line": 206,
+      "name": "handler_basic_functions",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool"
+      ]
+    },
+    {
+      "path": "tools/aml-test-tools/src/handlers/listed_response_handler.rs",
+      "line": 215,
+      "name": "handler_fails_for_wrong_command",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool"
+      ]
+    },
+    {
+      "path": "tools/aml-test-tools/src/handlers/listed_response_handler.rs",
+      "line": 227,
+      "name": "handler_fails_for_too_many_commands",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool"
+      ]
+    },
+    {
+      "path": "tools/aml-test-tools/src/handlers/listed_response_handler.rs",
+      "line": 238,
+      "name": "handler_fails_for_too_few_commands",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool"
+      ]
+    },
+    {
+      "path": "tools/aml-test-tools/src/handlers/listed_response_handler.rs",
+      "line": 247,
+      "name": "check_handler_fails_gracefully_for_no_commands",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool"
+      ]
+    },
+    {
+      "path": "tools/uacpi-test-adapter/src/main.rs",
+      "line": 106,
+      "name": "test_filename_replacement",
+      "ignored": false,
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed",
+      "scenario_partition": [
+        "host_test_tool"
+      ]
+    }
+  ],
+  "bytecode_assets": [
+    {
+      "path": "tests/buffer_fields.asl",
+      "sha256": "ad4eb4a79abac8a1b10fedda89f1ddb8946a03df4497a1c54719daf8cf5bafe9",
+      "scenario": "buffer_fields",
+      "named_methods": [],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/buffer_logic.asl",
+      "sha256": "c826ad027af39a49c71d034831ac3078544e007fdd81a4eefb4a4796d60c6db6",
+      "scenario": "buffer_logic",
+      "named_methods": [
+        "CHEK",
+        "MAIN"
+      ],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/complex_package.asl",
+      "sha256": "e30b9402966711cbe669482beb8edc31d850305da7f6b48dc406ec312e5a7787",
+      "scenario": "complex_package",
+      "named_methods": [
+        "GPKG",
+        "MAIN"
+      ],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/fields.asl",
+      "sha256": "1305a1383943ea54d265e4f62464b327105dfceec0da9952e516b0a049cd93f4",
+      "scenario": "fields",
+      "named_methods": [
+        "MAIN"
+      ],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/incdec.asl",
+      "sha256": "4632b732ab5aad1a6e19ea565ddd528c6f93f5ad08ccaecb4201347cf13dab78",
+      "scenario": "incdec",
+      "named_methods": [],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/logical_not.asl",
+      "sha256": "66dbf7fb31b8e5454ce7e1ee30e12a22adf79d27453bd670f087703beba5dd31",
+      "scenario": "logical_not",
+      "named_methods": [
+        "MAIN"
+      ],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/method.asl",
+      "sha256": "b3cea0e5708fca22236c11f7204ec27dd77e04f3cfeae210296a7d6030d310a5",
+      "scenario": "method",
+      "named_methods": [
+        "FOO"
+      ],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/multi_table.asl",
+      "sha256": "9a7ec0587c101a5dad708ee37b0d7d784c1e9d239f990073b9db3a716efd549f",
+      "scenario": "multi_table",
+      "named_methods": [],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/object_type.asl",
+      "sha256": "4b0dec1bdc06ab564c320797432f4af1a7653e623d58a0238d6c70a4051f2d9b",
+      "scenario": "object_type",
+      "named_methods": [],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/package.asl",
+      "sha256": "fa19d8294eb81387aba7d6abce2bb06ddfd957d2fb6a931c994a1b2a49ffe67e",
+      "scenario": "package",
+      "named_methods": [],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/package_sizeof.asl",
+      "sha256": "4d78a6efc868ca9ac74316dfe0b45ece28c582187b16f5e791b11d97b8acf5a6",
+      "scenario": "package_sizeof",
+      "named_methods": [
+        "MAIN"
+      ],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/pc-bios_acpi-dsdt.asl",
+      "sha256": "bed82652616a6e95ca571afa9480f3c4374c845f8f7e89bea18d01cb3c5f953c",
+      "scenario": "pc-bios_acpi-dsdt",
+      "named_methods": [
+        "DBUG",
+        "_CRS",
+        "_STA",
+        "_S1D",
+        "_S2D",
+        "_S3D",
+        "_STA",
+        "_STA",
+        "_STA",
+        "_STA",
+        "_STA",
+        "_STA",
+        "PCEJ",
+        "PCNF",
+        "IQST",
+        "IQCR",
+        "_STA",
+        "_DIS",
+        "_CRS",
+        "_SRS",
+        "_STA",
+        "_DIS",
+        "_CRS",
+        "_SRS",
+        "_STA",
+        "_DIS",
+        "_CRS",
+        "_SRS",
+        "_STA",
+        "_DIS",
+        "_CRS",
+        "_SRS",
+        "_STA",
+        "_DIS",
+        "_CRS",
+        "_SRS",
+        "CPMA",
+        "CPST",
+        "CPEJ",
+        "PRSC",
+        "_L00",
+        "_E01",
+        "_E02",
+        "_L03",
+        "_L04",
+        "_L05",
+        "_L06",
+        "_L07",
+        "_L08",
+        "_L09",
+        "_L0A",
+        "_L0B",
+        "_L0C",
+        "_L0D",
+        "_L0E",
+        "_L0F"
+      ],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "firmware-capture-license-unresolved",
+      "copied_content": false
+    },
+    {
+      "path": "tests/power_res.asl",
+      "sha256": "335ac5720775ef039610ae3a34f80181838779360ff987194f5d2bfc2b1dedc2",
+      "scenario": "power_res",
+      "named_methods": [
+        "_STA",
+        "_ON",
+        "_OFF"
+      ],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/scopes.asl",
+      "sha256": "25a443f673777a6f1e16e9620204a86a2555ff4d4f8c82108c48cad803d123d3",
+      "scenario": "scopes",
+      "named_methods": [],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/string_logic.asl",
+      "sha256": "debf9aa8a22c4c713e4a38545f377c5421ee626517ef9fa020ebdd5e8515004b",
+      "scenario": "string_logic",
+      "named_methods": [
+        "CHEK",
+        "MAIN"
+      ],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/thermal_zone.asl",
+      "sha256": "5f1c1bfd9d6cecc2a474c9e2de3b9cad4f032a06f407a80dd634ec72457b0d93",
+      "scenario": "thermal_zone",
+      "named_methods": [
+        "_TMP",
+        "_AC0",
+        "_PSV",
+        "_HOT",
+        "_CRT",
+        "_SCP"
+      ],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/to_integer.asl",
+      "sha256": "42eb8ec99aa0bf501e6c398dac3ecd7e31b7c6a6463e22200960f434119b992e",
+      "scenario": "to_integer",
+      "named_methods": [
+        "CHEK",
+        "MAIN"
+      ],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/to_x.asl",
+      "sha256": "54f439899e61ce8bd917c4854884928e24dbd31804991856483fc4986f39a42f",
+      "scenario": "to_x",
+      "named_methods": [
+        "CHEK",
+        "MAIN"
+      ],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    },
+    {
+      "path": "tests/while.asl",
+      "sha256": "8f413edf837d021fafe8d9eee8d482f79f0d417f6d2926ae0e23e93ba6a6c253",
+      "scenario": "while",
+      "named_methods": [],
+      "execution": "not-run",
+      "translation": "pending",
+      "origin_review": "crate-license-reviewed-no-external-origin-identified",
+      "copied_content": false
+    }
+  ],
+  "external_suite": {
+    "project": "uACPI",
+    "pin": "not pinned by this checkout",
+    "execution": "not-run",
+    "origin_review": "separate license/pin review before import"
+  },
+  "license_evidence": {
+    "Cargo.toml": "437a679d0f958db2171af775e0a1368ac35edd4cc0a48ec8b449233750db61cf",
+    "README.md": "be4bd015007b3dd0b6f6f69d233bbaa6fdb8ca71c33f020cc2bd8073cfed546c",
+    "LICENCE-MIT": "d7ed579f795c55b1b9f734f3f1ac6410ba84fef011acf3aaff95d0c9fe6cdd77",
+    "LICENCE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+  }
+}
