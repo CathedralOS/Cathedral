@@ -1,6 +1,6 @@
 # Appendix: Open Questions Register
 
-Cross-cutting unknowns that do not belong to a single chapter. Each chapter has its own `## Open Questions` section for local issues; this register tracks the big questions whose answers ripple across many chapters. When one is resolved, it should collapse into a decision recorded in the relevant chapters and be struck from here.
+Cross-cutting unknowns that do not belong to a single chapter. Each chapter has its own `## Open Questions` section for local issues; this register tracks the big questions whose answers ripple across many chapters. When one is resolved, it should collapse into design rationale in the relevant chapters and be struck from here. These are not automatically owner-decision blockers; a concrete requirement promotes a narrow unresolved semantic or trust choice to [`OWNER_QUESTIONS.md`](../../OWNER_QUESTIONS.md), and an accepted answer lands in the [specification](../spec/README.md).
 
 ## Scope
 

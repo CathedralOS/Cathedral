@@ -1,8 +1,18 @@
-# Specification Gap Register
+# Design Gap Register
 
-A checkable backlog of **"named but not yet mechanized"** holes — places a chapter says *what* happens but not *how*. Generated from a full-spec gap audit (2026-06-15) and maintained as a living checklist.
+A checkable backlog of **"named but not yet mechanized"** holes — places a
+design chapter says *what* happens but not *how*. Generated from a design-gap
+audit (2026-06-15) and maintained as a living checklist. This is historical
+design inventory, not the current contract-coverage map; that map now lives in
+the [specification index](../spec/README.md).
 
-**How to use:** check an item off when its mechanism lands (a `### The decided mechanism` section in the chapter, or the hole otherwise closed) and note the commit. The biggest *cross-cutting* unknowns also live in [appendix_open_questions.md](appendix_open_questions.md) (the prose "ripple" view); this register is the granular per-chapter work list.
+**How to use:** check an item off when its design mechanism lands (a
+`### The decided mechanism` section in the chapter, or the hole otherwise
+closed) and note the commit. That does not make the mechanism normative; an
+accepted contract is separately extracted into `wiki/spec/`. The biggest
+*cross-cutting* unknowns also live in
+[appendix_open_questions.md](appendix_open_questions.md) (the prose "ripple"
+view); this register is the granular per-chapter design list.
 
 Legend: `[ ]` open · `[x]` closed.
 

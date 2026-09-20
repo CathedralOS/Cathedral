@@ -33,7 +33,7 @@ This ADR records the decisions that are now locked.
 ## Decision
 
 1. **Root separates the OS from everything about it.** The repository root holds
-   `README.md`, `wiki/` (design truth), `tools/` (host-side, never ships), and
+   `README.md`, `wiki/` (documentation truth), `tools/` (host-side, never ships), and
    `source/` (the OS). The OS is not sprayed across root; it lives under one
    roof. Root answers "what is this repository"; `source/` answers "what is the
    OS."

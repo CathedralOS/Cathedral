@@ -26,7 +26,7 @@ Two scans, two questions. **Root** tells you what the *repository* is;
 
 | Question | Answer by scanning |
 |---|---|
-| What is this repository? | `wiki/` (why it's built this way), `source/` (the OS), `tools/` (what builds it). |
+| What is this repository? | `wiki/` (its contracts, rationale, and explanations), `source/` (the OS), `tools/` (what builds it). |
 | Where does the kernel end and userspace OS code begin? | `source/core/` is the kernel (the proved TCB). `source/services`, `drivers`, `libraries`, `applications` are userspace. |
 | System service vs plain program vs boot code? | `source/services/` vs `source/applications/` vs `source/boot/`. |
 | What must I trust for the system's invariants to hold? | `source/core/` + `source/contracts/`, plus the trust-critical services named in [`tcb.md`](tcb.md). Nothing else. |
@@ -47,9 +47,11 @@ is ordered by trust, descending — reading top to bottom teaches the architectu
 ```
 Cathedral/
 ├── README.md
-├── wiki/          Design truth. wiki/design (the OS design chapters), wiki/architecture
-│                  (this doc, the TCB map, ownership rules), wiki/decisions (numbered ADRs),
-│                  wiki/speculation (parked, non-committed exploration).
+├── wiki/          Documentation truth. wiki/spec owns current contracts; wiki/design owns
+│                  rationale and direction; wiki/architecture owns this layout and the TCB;
+│                  wiki/boot explains cross-cutting flows; wiki/proposals and wiki/drafts are
+│                  non-normative work; wiki/decisions records ADRs; wiki/speculation parks
+│                  non-committed exploration. wiki/README.md defines their authority.
 │
 ├── tools/         Host-side, NEVER-SHIPS tooling — the SDK, the reference IDE, the debugger,
 │                  the hostile simulator, CI gate runners, image assembly, the migration tester.

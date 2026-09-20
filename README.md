@@ -37,15 +37,19 @@ driver.
 Current work continues to specify each meaningful contract before the wider
 system hardens around it.
 
-If a design chapter and an implementation disagree, the chapter is the bug
-report, not the law. Outside the narrow boot path, the chapters remain the
-system's primary specification.
+Accepted platform behavior lives in the subject-organized
+[`wiki/spec/`](wiki/spec/README.md). The specification is deliberately partial:
+unwritten behavior remains unspecified rather than being inferred from design
+prose. Code and its charters report implementation coverage; design chapters
+retain rationale, alternatives, and intended direction. See the
+[documentation map](wiki/README.md) for the complete authority model.
 
 ## Repository layout
 
 The source tree is being populated milestone by milestone. The root separates the OS from everything *about* it:
 
-- **`wiki/`** — design truth (why it's built this way).
+- **`wiki/`** — specifications, design rationale, architecture, explainers,
+  proposals, and drafts, separated by authority.
 - **`source/`** — the OS itself, split by trust: `contracts/` (the frozen ABI), `core/` (the proved kernel — the TCB), `foundation/` (the kernel-safe shared library), then userspace `services/`, `drivers/`, `libraries/`, `applications/`, and the `boot/` firmware seam.
 - **`tools/`** — host-side tooling that never ships.
 
@@ -55,9 +59,11 @@ The full plan, the dependency law, and the placement rules live in
 the trusted set is enumerated in [`wiki/architecture/tcb.md`](wiki/architecture/tcb.md);
 the decision is locked in [ADR 0001](wiki/decisions/0001-repository-layout.md).
 
-## The design wiki
+## Documentation
 
-All design lives under [`wiki/design/`](wiki/design/design.md). Start at the index:
+Start with the [documentation map](wiki/README.md). The current normative
+surface is indexed by the [Cathedral specification](wiki/spec/README.md), while
+the broad system rationale and reading path remain in `wiki/design/`:
 
 - **[Cathedral Design Index](wiki/design/design.md)** — the reading path, the chapter map, and the template every chapter follows.
 
@@ -82,6 +88,6 @@ Key Omega chapters Cathedral leans on heavily:
 - [Capabilities, Effects, And Boundaries](../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)
 - [Domains](../Omega/wiki/language_guide/chapter_8_domains.md)
 - [Machines](../Omega/wiki/language_guide/chapter_3_machines.md) and [States And Transitions](../Omega/wiki/language_guide/chapter_4_states_transitions.md)
-- [Versioned Data And Machine Replacement](../Omega/wiki/language_guide/chapter_22_versioned_data.md)
-- [Wire Protocols](../Omega/wiki/language_guide/chapter_21_wire_protocols.md)
+- [Versioned Data](../Omega/wiki/language_guide/chapter_14_traits.md#versioned-data)
+- [Wire Protocols](../Omega/wiki/language_guide/chapter_14_traits.md#wire-protocols)
 - [Proof Obligations](../Omega/wiki/language_guide/chapter_9_proof_obligations.md)

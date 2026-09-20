@@ -2,7 +2,12 @@
 
 > The full arc of how a Cathedral machine comes up, from power-on to a logged-in user, one phase at a time. This is an **explainer**, not a design chapter: it linearizes a sequence that crosses many design chapters and shows the order things happen in.
 >
-> Status: **intended mechanism.** There is no implementation yet. This describes how the design is meant to boot, and it will change as the design firms. Each phase links to the design chapters that own its contracts.
+> Status: **explainer over a partially implemented path.** The Omega-emitted
+> UEFI image currently validates a bounded firmware memory map, exits Boot
+> Services, obtains one qualified root extent, reports through the 16550 UART,
+> and parks while retaining that root. The later kernel, store, service, and
+> login phases remain intended mechanism. Normative rules for the implemented
+> transition begin at the [UEFI boot-services specification](../spec/boot/uefi_boot_services.md).
 
 ## The arc
 

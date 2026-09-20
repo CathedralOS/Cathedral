@@ -2,7 +2,7 @@
 
 This is the map of Cathedral's design. Every meaningful OS concept gets one chapter. Chapters are grouped into parts so the system can be read as a story rather than a flat pile of topics.
 
-These are **design stubs**, not finished specifications. Each chapter states the legacy contract being replaced, the contract Cathedral wants instead, the concerns and open questions to work through, and how the [Omega](../../../Omega/wiki/language_guide/language_guide.md) language substrate is expected to carry the weight. The point right now is to frame the problems sharply and consistently, not to resolve them.
+These are **design documents**, not specifications. Each chapter states the legacy contract being replaced, the contract Cathedral wants instead, the concerns and open questions to work through, and how the [Omega](../../../Omega/wiki/language_guide/language_guide.md) language substrate is expected to carry the weight. Some chapters now contain substantial settled rationale, but accepted normative behavior belongs in the [subject-organized specification](../spec/README.md). An omitted specification rule cannot be inferred from a design chapter.
 
 ## How to read this
 
@@ -21,7 +21,11 @@ If you read nothing else, read:
 
 ## The chapter template
 
-Every chapter follows the same shape so they stay comparable and skimmable. Keep them tight; these are framing documents, not essays. A chapter is a stub, not a spec.
+Every chapter follows the same shape so they stay comparable and skimmable.
+They may mature beyond short stubs, but they remain framing and rationale
+documents rather than normative contracts. When a mechanism becomes accepted,
+extract its required behavior into the specification and link back to the
+design instead of making implementation depend on a `decided` paragraph here.
 
 ```markdown
 # Chapter NN: Title
@@ -129,7 +133,7 @@ A few writing rules, inherited from Omega's docs:
 
 ## Appendix
 - [Open Questions Register](appendix_open_questions.md) — cross-cutting unknowns that don't belong to one chapter.
-- [Specification Gap Register](gap_register.md) — checkable per-chapter backlog of named-but-unmechanized holes; crossed off as mechanisms land.
+- [Design Gap Register](gap_register.md) — non-normative per-chapter backlog of named-but-unmechanized design holes; crossed off as mechanisms land.
 
 ## Speculative
 
