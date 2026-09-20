@@ -1,0 +1,5 @@
+machine build(builder: &mut Build) {
+    builder.application("cathedral-pic8259-tests");
+    builder.freestanding = true;
+    builder.depend_as("pic8259", Source::Path { location: "../../../source/libraries/pic8259" });
+}

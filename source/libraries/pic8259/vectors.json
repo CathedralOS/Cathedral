@@ -1,0 +1,107 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "pointer_bits": 64,
+    "endian": "little",
+    "abi": "x86 PC PIC numeric protocol only; no aggregate ABI"
+  },
+  "provenance": {
+    "kind": "test-fixture",
+    "description": "Reviewed existing hardware facts and pinned upstream protocol literals; no measured Omega layout or hardware output. Semantic tests independently assert init/mask/EOI values.",
+    "sources": [
+      "reference_code/rust-osdev/pic8259/src/lib.rs",
+      "https://www.pcjs.org/documents/datasheets/intel/INTEL_8259A_PIC.pdf"
+    ],
+    "revision": "136052bcbf081b9382fc3d72ba04b83b30f664b4"
+  },
+  "measurements": {
+    "PIC_MASTER_COMMAND_PORT": {
+      "kind": "value",
+      "value": 32
+    },
+    "PIC_MASTER_DATA_PORT": {
+      "kind": "value",
+      "value": 33
+    },
+    "PIC_SLAVE_COMMAND_PORT": {
+      "kind": "value",
+      "value": 160
+    },
+    "PIC_SLAVE_DATA_PORT": {
+      "kind": "value",
+      "value": 161
+    },
+    "PIC_MASTER_IRQ_BASE": {
+      "kind": "value",
+      "value": 0
+    },
+    "PIC_SLAVE_IRQ_BASE": {
+      "kind": "value",
+      "value": 8
+    },
+    "PIC_IRQ_COUNT": {
+      "kind": "value",
+      "value": 16
+    },
+    "ICW1_INITIALIZE": {
+      "kind": "value",
+      "value": 16
+    },
+    "ICW1_HAS_ICW4": {
+      "kind": "value",
+      "value": 1
+    },
+    "ICW1_PC_CASCADE": {
+      "kind": "value",
+      "value": 17
+    },
+    "MASTER_ICW3_SLAVE_ON_IRQ2": {
+      "kind": "value",
+      "value": 4
+    },
+    "SLAVE_ICW3_CASCADE_ID": {
+      "kind": "value",
+      "value": 2
+    },
+    "ICW4_8086_MODE": {
+      "kind": "value",
+      "value": 1
+    },
+    "OCW2_END_OF_INTERRUPT": {
+      "kind": "value",
+      "value": 32
+    },
+    "OCW1_MASK_NONE": {
+      "kind": "value",
+      "value": 0
+    },
+    "OCW1_MASK_ALL": {
+      "kind": "value",
+      "value": 255
+    },
+    "PROTECTED_MASTER_VECTOR_BASE": {
+      "kind": "value",
+      "value": 32
+    },
+    "PROTECTED_SLAVE_VECTOR_BASE": {
+      "kind": "value",
+      "value": 40
+    },
+    "upstream.wait.port": {
+      "kind": "value",
+      "value": 128
+    },
+    "upstream.wait.value": {
+      "kind": "value",
+      "value": 0
+    },
+    "upstream.wait.count": {
+      "kind": "value",
+      "value": 8
+    },
+    "upstream.init.write_count": {
+      "kind": "value",
+      "value": 10
+    }
+  }
+}

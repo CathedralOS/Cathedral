@@ -1,0 +1,4 @@
+machine build(builder: &mut Build) {
+    builder.package("cathedral-pic8259");
+    builder.depend_as("facts", Source::Path { location: "../../drivers/facts" });
+}

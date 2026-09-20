@@ -1,0 +1,82 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Locally authored semantic tests of the actual pure PIC translation.
+use pic8259::plans;
+machine contiguous_case(primary: u8) -> bool {
+    transition (primary & 7) == 0 && primary <= 240 {
+        true -> admitted(primary)
+        _ -> (false)
+    }
+    state admitted(primary: u8)
+    requires (primary & 7) == 0 && primary <= 240;
+    {
+        let top: plans::PicOffsets = plans::pic_contiguous_offsets(primary);
+        top.master == primary && (top.slave as u16) == (primary as u16) + 8
+    }
+}
+machine offset_cases() -> bool {
+    contiguous_case(240) && contiguous_case(32) &&
+    plans::pic_chain_handles_interrupt(plans::PicOffsets { master: 32, slave: 40 }, 47) &&
+    !plans::pic_chain_handles_interrupt(plans::PicOffsets { master: 32, slave: 40 }, 48) &&
+    plans::pic_offset_valid(0) && plans::pic_offset_valid(248) && !plans::pic_offset_valid(255) &&
+    plans::pic_offsets_valid(plans::PicOffsets { master: 32, slave: 40 }) &&
+    plans::pic_offsets_valid(plans::PicOffsets { master: 248, slave: 0 }) &&
+    !plans::pic_offsets_valid(plans::PicOffsets { master: 32, slave: 32 }) &&
+    !plans::pic_offsets_valid(plans::PicOffsets { master: 33, slave: 40 }) &&
+    !plans::pic_offsets_valid(plans::PicOffsets { master: 32, slave: 41 }) &&
+    plans::pic_contiguous_valid(0) && plans::pic_contiguous_valid(240) &&
+    !plans::pic_contiguous_valid(241) && !plans::pic_contiguous_valid(248) &&
+    !plans::pic_contiguous_valid(255) &&
+    !plans::pic_handles_interrupt(32, 31) && plans::pic_handles_interrupt(32, 32) &&
+    plans::pic_handles_interrupt(32, 39) && !plans::pic_handles_interrupt(32, 40) &&
+    plans::pic_handles_interrupt(248, 248) && plans::pic_handles_interrupt(248, 255) &&
+    !plans::pic_handles_interrupt(248, 0) && !plans::pic_handles_interrupt(249, 255)
+}
+machine initialization_cases() -> bool {
+    let plan: plans::PicInitPlan = plans::pic_initialization_plan(plans::PicOffsets { master: 32, slave: 40 }, plans::PicMasks { master: 0x5a, slave: 0xa5 });
+    plan.writes[0].port == 0x20 && plan.writes[0].value == 0x12 &&
+    plan.writes[1].port == 0xa0 && plan.writes[1].value == 0x11 &&
+    plan.writes[2].port == 0x21 && plan.writes[2].value == 0x20 &&
+    plan.writes[3].port == 0xa1 && plan.writes[3].value == 0x28 &&
+    plan.writes[4].port == 0x21 && plan.writes[4].value == 4 &&
+    plan.writes[5].port == 0xa1 && plan.writes[5].value == 2 &&
+    plan.writes[6].port == 0x21 && plan.writes[6].value == 1 &&
+    plan.writes[7].port == 0xa1 && plan.writes[7].value == 1 &&
+    plan.writes[8].port == 0x21 && plan.writes[8].value == 0x5a &&
+    plan.writes[9].port == 0xa1 && plan.writes[9].value == 0xa5 &&
+    plan.delay_port == 0x80 && plan.delay_value == 0 && plan.delayed_write_count == 8
+}
+machine mask_cases() -> bool {
+    let reads: plans::PicMaskReadPlan = plans::pic_read_masks_plan();
+    let writes: plans::PicMaskWritePlan = plans::pic_write_masks_plan(plans::PicMasks { master: 0, slave: 255 });
+    let disabled: plans::PicMaskWritePlan = plans::pic_disable_plan();
+    reads.master_port == 0x21 && reads.slave_port == 0xa1 &&
+    writes.master.port == 0x21 && writes.master.value == 0 &&
+    writes.slave.port == 0xa1 && writes.slave.value == 255 &&
+    disabled.master.value == 255 && disabled.slave.value == 255 &&
+    disabled.master.port == 0x21 && disabled.slave.port == 0xa1
+}
+machine eoi_cases() -> bool {
+    let master_first: plans::PicEoiPlan = plans::pic_eoi_plan(plans::PicOffsets { master: 32, slave: 40 }, 32);
+    let master_last: plans::PicEoiPlan = plans::pic_eoi_plan(plans::PicOffsets { master: 32, slave: 40 }, 39);
+    let slave_first: plans::PicEoiPlan = plans::pic_eoi_plan(plans::PicOffsets { master: 32, slave: 40 }, 40);
+    let slave_last: plans::PicEoiPlan = plans::pic_eoi_plan(plans::PicOffsets { master: 32, slave: 40 }, 47);
+    let unrelated_low: plans::PicEoiPlan = plans::pic_eoi_plan(plans::PicOffsets { master: 32, slave: 40 }, 31);
+    let unrelated_high: plans::PicEoiPlan = plans::pic_eoi_plan(plans::PicOffsets { master: 32, slave: 40 }, 48);
+    let top: plans::PicEoiPlan = plans::pic_eoi_plan(plans::PicOffsets { master: 240, slave: 248 }, 255);
+    master_first.count == 1 && master_last.count == 1 &&
+    master_first.writes[0].port == 0x20 && master_first.writes[0].value == 0x20 &&
+    slave_first.count == 2 && slave_last.count == 2 &&
+    slave_first.writes[0].port == 0xa0 && slave_first.writes[1].port == 0x20 &&
+    slave_first.writes[0].value == 0x20 && slave_first.writes[1].value == 0x20 &&
+    unrelated_low.count == 0 && unrelated_high.count == 0 && top.count == 2
+}
+machine test_result() -> i32 {
+    transition offset_cases() && initialization_cases() && mask_cases() && eoi_cases() {
+        true -> (0)
+        _ -> (1)
+    }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

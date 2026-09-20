@@ -178,7 +178,7 @@ projection, union/tail and native-boundary limitations remain recorded there.
   `source/drivers/facts/uart_16550.omg`.  Add omissions and upstream tests, then
   map constructor/read/write behavior into pure plans plus explicit port-I/O
   boundaries.
-- [ ] **PIC-000 — Audit `pic8259` against existing facts and plans.** Reconcile
+- [x] **PIC-000 — Audit `pic8259` against existing facts and plans.** Reconcile
   offsets, masks, initialization order, EOI behavior, and existing Cathedral
   tests.  Preserve Cathedral's explicit `PortIo` authority model.
 - [ ] **X86-000 — Inventory `x86_64` against Cathedral.** Classify every module

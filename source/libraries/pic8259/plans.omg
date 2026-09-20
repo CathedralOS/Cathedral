@@ -1,0 +1,105 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of pic8259/src/lib.rs at
+// 136052bcbf081b9382fc3d72ba04b83b30f664b4. See PORT.md.
+// Pure numeric recipes only: no port primitive, grant, or acknowledgement.
+module plans;
+use facts::pic_8259;
+
+pub data PicOffsets { master: u8; slave: u8; }
+pub data PicMasks { master: u8; slave: u8; }
+pub data PicWrite { port: u16; value: u8; }
+pub data PicInitPlan {
+    writes: [PicWrite; 10];
+    // Upstream performs one port-0x80 write after each of the first eight
+    // writes; delay_port/value/count describe that requirement inertly.
+    delay_port: u16;
+    delay_value: u8;
+    delayed_write_count: u8;
+}
+pub data PicMaskReadPlan { master_port: u16; slave_port: u16; }
+pub data PicMaskWritePlan { master: PicWrite; slave: PicWrite; }
+pub data PicEoiPlan { writes: [PicWrite; 2]; count: u8; }
+
+// Local validation: generic hardware geometry, not Cathedral vector admission.
+pub machine pic_offset_valid(offset: u8) -> bool { (offset & 7) == 0 }
+pub machine pic_offsets_valid(offsets: PicOffsets) -> bool {
+    pic_offset_valid(offsets.master) && pic_offset_valid(offsets.slave) &&
+    offsets.master != offsets.slave
+}
+pub machine pic_contiguous_valid(primary_offset: u8) -> bool {
+    pic_offset_valid(primary_offset) && primary_offset <= 240
+}
+pub machine pic_contiguous_offsets(primary_offset: u8) -> PicOffsets
+requires (primary_offset & 7) == 0 && primary_offset <= 240;
+{
+    PicOffsets { master: primary_offset, slave: primary_offset + 8 }
+}
+// Upstream computes offset+8 in u8; widen to represent the exclusive bound256.
+// Reject a truncated final range for malformed offsets249..255, rather than
+// reproducing build-profile-dependent Rust overflow behavior.
+pub machine pic_handles_interrupt(offset: u8, interrupt_id: u8) -> bool {
+    offset <= 248 && offset <= interrupt_id &&
+    (interrupt_id as u16) < (offset as u16) + 8
+}
+pub machine pic_chain_handles_interrupt(offsets: PicOffsets, interrupt_id: u8) -> bool {
+    pic_handles_interrupt(offsets.master, interrupt_id) ||
+    pic_handles_interrupt(offsets.slave, interrupt_id)
+}
+
+// Snapshot masks are supplied as data. Acquiring them needs independent PortIo.
+// Callers admit offsets separately; this recipe does not authorize a remap.
+pub machine pic_initialization_plan(offsets: PicOffsets, saved: PicMasks) -> PicInitPlan {
+    let mut writes: [PicWrite; 10];
+    writes[0] = PicWrite { port: PIC_MASTER_COMMAND_PORT, value: ICW1_PC_CASCADE };
+    writes[1] = PicWrite { port: PIC_SLAVE_COMMAND_PORT, value: ICW1_PC_CASCADE };
+    writes[2] = PicWrite { port: PIC_MASTER_DATA_PORT, value: offsets.master };
+    writes[3] = PicWrite { port: PIC_SLAVE_DATA_PORT, value: offsets.slave };
+    writes[4] = PicWrite { port: PIC_MASTER_DATA_PORT, value: MASTER_ICW3_SLAVE_ON_IRQ2 };
+    writes[5] = PicWrite { port: PIC_SLAVE_DATA_PORT, value: SLAVE_ICW3_CASCADE_ID };
+    writes[6] = PicWrite { port: PIC_MASTER_DATA_PORT, value: ICW4_8086_MODE };
+    writes[7] = PicWrite { port: PIC_SLAVE_DATA_PORT, value: ICW4_8086_MODE };
+    writes[8] = PicWrite { port: PIC_MASTER_DATA_PORT, value: saved.master };
+    writes[9] = PicWrite { port: PIC_SLAVE_DATA_PORT, value: saved.slave };
+    PicInitPlan { writes: writes, delay_port: 0x80, delay_value: 0, delayed_write_count: 8 }
+}
+pub machine pic_read_masks_plan() -> PicMaskReadPlan {
+    PicMaskReadPlan { master_port: PIC_MASTER_DATA_PORT, slave_port: PIC_SLAVE_DATA_PORT }
+}
+pub machine pic_write_masks_plan(masks: PicMasks) -> PicMaskWritePlan {
+    PicMaskWritePlan {
+        master: PicWrite { port: PIC_MASTER_DATA_PORT, value: masks.master },
+        slave: PicWrite { port: PIC_SLAVE_DATA_PORT, value: masks.slave }
+    }
+}
+pub machine pic_disable_plan() -> PicMaskWritePlan {
+    pic_write_masks_plan(PicMasks { master: OCW1_MASK_ALL, slave: OCW1_MASK_ALL })
+}
+// Slave first, then master; unrelated vectors produce no writes. This only
+// routes ordinary real interrupts, and does not detect spurious IRQ7/IRQ15.
+pub machine pic_eoi_plan(offsets: PicOffsets, interrupt_id: u8) -> PicEoiPlan {
+    transition pic_handles_interrupt(offsets.slave, interrupt_id) {
+        true -> slave()
+        _ -> master_or_none(offsets.master, interrupt_id)
+    }
+    state slave() {
+        let mut writes: [PicWrite; 2];
+        writes[0] = PicWrite { port: PIC_SLAVE_COMMAND_PORT, value: OCW2_END_OF_INTERRUPT };
+        writes[1] = PicWrite { port: PIC_MASTER_COMMAND_PORT, value: OCW2_END_OF_INTERRUPT };
+        PicEoiPlan { writes: writes, count: 2 }
+    }
+    state master_or_none(master_offset: u8, vector: u8) {
+        transition pic_handles_interrupt(master_offset, vector) {
+            true -> master()
+            _ -> none()
+        }
+    }
+    state master() {
+        let mut writes: [PicWrite; 2];
+        writes[0] = PicWrite { port: PIC_MASTER_COMMAND_PORT, value: OCW2_END_OF_INTERRUPT };
+        PicEoiPlan { writes: writes, count: 1 }
+    }
+    state none() {
+        let writes: [PicWrite; 2];
+        PicEoiPlan { writes: writes, count: 0 }
+    }
+}

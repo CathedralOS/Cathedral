@@ -1,0 +1,200 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/pic8259",
+    "revision": "136052bcbf081b9382fc3d72ba04b83b30f664b4",
+    "roots": [
+      "src"
+    ]
+  },
+  "files": {
+    "src/lib.rs": {
+      "sha256": "4f91bffa08cfbf587acf435747a68addabd76b5bd49a987404570496de07f8e3",
+      "disposition": "translated",
+      "reason": "Complete source reconciliation; pure decisions/protocol recipes translated; live Port wrappers deliberately omitted in favor of existing PortIo provider.",
+      "symbols": {
+        "27:CMD_INIT": {
+          "anchor": "const CMD_INIT: u8 = 0x11;",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/pic_8259.omg",
+              "anchor": "ICW1_PC_CASCADE"
+            }
+          ]
+        },
+        "30:CMD_END_OF_INTERRUPT": {
+          "anchor": "const CMD_END_OF_INTERRUPT: u8 = 0x20;",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/pic_8259.omg",
+              "anchor": "OCW2_END_OF_INTERRUPT"
+            }
+          ]
+        },
+        "33:MODE_8086": {
+          "anchor": "const MODE_8086: u8 = 0x01;",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/pic_8259.omg",
+              "anchor": "ICW4_8086_MODE"
+            }
+          ]
+        },
+        "37:Pic": {
+          "anchor": "struct Pic {",
+          "disposition": "omitted",
+          "reason": "Rust authority-bearing Port<u8> ownership wrapper is not duplicated. PicOffsets/PicMasks carry inert values; core::Pic8259 owns existing explicitly granted PortIo operations. No Rust representation ABI promised."
+        },
+        "51:handles_interrupt": {
+          "anchor": "fn handles_interrupt(&self, interrupt_id: u8) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/libraries/pic8259/plans.omg",
+              "anchor": "pic_handles_interrupt"
+            }
+          ]
+        },
+        "57:end_of_interrupt": {
+          "anchor": "unsafe fn end_of_interrupt(&mut self) {",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/libraries/pic8259/plans.omg",
+              "anchor": "pic_eoi_plan"
+            }
+          ]
+        },
+        "62:read_mask": {
+          "anchor": "unsafe fn read_mask(&mut self) -> u8 {",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/libraries/pic8259/plans.omg",
+              "anchor": "pic_read_masks_plan"
+            }
+          ]
+        },
+        "67:write_mask": {
+          "anchor": "unsafe fn write_mask(&mut self, mask: u8) {",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/libraries/pic8259/plans.omg",
+              "anchor": "pic_write_masks_plan"
+            }
+          ]
+        },
+        "73:ChainedPics": {
+          "anchor": "pub struct ChainedPics {",
+          "disposition": "omitted",
+          "reason": "Rust authority-bearing Port<u8> ownership wrapper is not duplicated. PicOffsets/PicMasks carry inert values; core::Pic8259 owns existing explicitly granted PortIo operations. No Rust representation ABI promised."
+        },
+        "80:new": {
+          "anchor": "pub const unsafe fn new(offset1: u8, offset2: u8) -> ChainedPics {",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/libraries/pic8259/plans.omg",
+              "anchor": "pub data PicOffsets"
+            }
+          ]
+        },
+        "102:new_contiguous": {
+          "anchor": "pub const unsafe fn new_contiguous(primary_offset: u8) -> ChainedPics {",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/libraries/pic8259/plans.omg",
+              "anchor": "pic_contiguous_offsets"
+            }
+          ]
+        },
+        "109:initialize": {
+          "anchor": "pub unsafe fn initialize(&mut self) {",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/libraries/pic8259/plans.omg",
+              "anchor": "pic_initialization_plan"
+            }
+          ]
+        },
+        "155:read_masks": {
+          "anchor": "pub unsafe fn read_masks(&mut self) -> [u8; 2] {",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/libraries/pic8259/plans.omg",
+              "anchor": "pic_read_masks_plan"
+            }
+          ]
+        },
+        "160:write_masks": {
+          "anchor": "pub unsafe fn write_masks(&mut self, mask1: u8, mask2: u8) {",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/libraries/pic8259/plans.omg",
+              "anchor": "pic_write_masks_plan"
+            }
+          ]
+        },
+        "166:disable": {
+          "anchor": "pub unsafe fn disable(&mut self) {",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/libraries/pic8259/plans.omg",
+              "anchor": "pic_disable_plan"
+            }
+          ]
+        },
+        "171:handles_interrupt": {
+          "anchor": "pub fn handles_interrupt(&self, interrupt_id: u8) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/libraries/pic8259/plans.omg",
+              "anchor": "pic_chain_handles_interrupt"
+            }
+          ]
+        },
+        "178:notify_end_of_interrupt": {
+          "anchor": "pub unsafe fn notify_end_of_interrupt(&mut self, interrupt_id: u8) {",
+          "disposition": "translated",
+          "reason": "Pure fact/decision or inert port recipe; actual I/O and mutable hardware require independently granted PortIo. Overflow differences and provider policy are documented in PORT.md.",
+          "targets": [
+            {
+              "path": "source/libraries/pic8259/plans.omg",
+              "anchor": "pic_eoi_plan"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/pic8259/plans.omg",
+          "anchor": "module plans;"
+        }
+      ]
+    }
+  }
+}
