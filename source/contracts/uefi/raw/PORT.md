@@ -9,6 +9,7 @@ source inventory, vectors, verification commands, and deviations.
 | Slice | Status and evidence |
 | --- | --- |
 | Scalars and pure scalar helpers | [Tested by Omega semantic evaluation](scalars.PORT.md) |
+| Complete boot/runtime/system table declarations | [Typechecked; semantic fixture tested; full plan reflection blocked](tables.PORT.md) |
 | TCG v1/v2 measured-boot representations | [Typechecked; upstream ABI vectors verified](tcg.PORT.md) |
 
 Stages apply to individual slices, not the entire upstream crate. The package

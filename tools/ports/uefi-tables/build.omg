@@ -1,0 +1,6 @@
+// Verification-only package; never a Cathedral boot dependency.
+machine build(builder: &mut Build) {
+    builder.application("cathedral-uefi-table-tests");
+    builder.freestanding = true;
+    builder.depend_as("cathedral_uefi_raw", Source::Path { location: "../../../source/contracts/uefi/raw" });
+}

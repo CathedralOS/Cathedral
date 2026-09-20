@@ -129,7 +129,7 @@ Cathedral's authority-bearing boot policy do not belong in this phase.
 - [x] **UEFI-001 — Port scalar foundations.** Status values, GUIDs, handles,
   revisions, time, capsules, memory types/attributes, common enums, and base
   aliases.  Add exact-value and representation vectors.
-- [ ] **UEFI-002 — Port table foundations.** Table header, system table,
+- [x] **UEFI-002 — Port table foundations.** Table header, system table,
   configuration table entries, and the complete boot-services and runtime-
   services table shapes in specification order.  Include function-slot and
   field-offset vectors; calling a slot remains a boundary concern.

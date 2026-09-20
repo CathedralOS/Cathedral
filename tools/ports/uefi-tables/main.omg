@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Cathedral fixtures for the pinned uefi-rs table translation.
+// These check inert constants; separate layout policies retain their blockers.
+// Numeric checks do not inspect object layout and grant no firmware authority.
+use cathedral_uefi_raw::tables::SYSTEM_TABLE_SIGNATURE;
+use cathedral_uefi_raw::tables::BOOT_SERVICES_SIGNATURE;
+use cathedral_uefi_raw::tables::RUNTIME_SERVICES_SIGNATURE;
+use cathedral_uefi_raw::tables::BOOTSERVICES_RAISE_TPL_SLOT;
+use cathedral_uefi_raw::tables::BOOTSERVICES_RESERVED_SLOT;
+use cathedral_uefi_raw::tables::BOOTSERVICES_CREATE_EVENT_EX_SLOT;
+use cathedral_uefi_raw::tables::RUNTIMESERVICES_GET_TIME_SLOT;
+use cathedral_uefi_raw::tables::RUNTIMESERVICES_QUERY_VARIABLE_INFO_SLOT;
+
+machine test_result() -> i32 {
+    transition SYSTEM_TABLE_SIGNATURE == 0x5453_5953_2049_4249
+        && BOOT_SERVICES_SIGNATURE == 0x5652_4553_544f_4f42
+        && RUNTIME_SERVICES_SIGNATURE == 0x5652_4553_544e_5552
+        && BOOTSERVICES_RAISE_TPL_SLOT == 0
+        && BOOTSERVICES_RESERVED_SLOT == 17
+        && BOOTSERVICES_CREATE_EVENT_EX_SLOT == 43
+        && RUNTIMESERVICES_GET_TIME_SLOT == 0
+        && RUNTIMESERVICES_QUERY_VARIABLE_INFO_SLOT == 13 {
+        true -> (0)
+        _ -> (1)
+    }
+}
+
+// Evaluates the actual Omega fixture, then proves the result is successful.
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

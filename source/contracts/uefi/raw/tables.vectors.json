@@ -1,0 +1,811 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "abi": "uefi-x86_64",
+    "pointer_bits": 64,
+    "endian": "little"
+  },
+  "provenance": {
+    "kind": "upstream",
+    "description": "Expected UEFI x86-64 C ABI geometry and values, transcribed from pinned Rust declarations and UEFI 2.11 sections 4.2\u20134.6. Cross-target Rust probe checks raw table geometry; no Omega observation has been made.",
+    "sources": [
+      "https://github.com/rust-osdev/uefi-rs/tree/c0facddf9ba42b74906a37fca2869e6cdbc8da6a/uefi-raw/src/table",
+      "https://uefi.org/specs/UEFI/2.11/04_EFI_System_Table.html",
+      "https://github.com/rust-osdev/uefi-rs/blob/c0facddf9ba42b74906a37fca2869e6cdbc8da6a/uefi/src/table/cfg.rs"
+    ]
+  },
+  "measurements": {
+    "Header.signature.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Header.revision.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "Header.size.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "Header.crc.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "Header.reserved.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "Header.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "Header.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "SystemTable.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "SystemTable.firmware_vendor.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "SystemTable.firmware_revision.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "SystemTable.stdin_handle.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "SystemTable.stdin.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "SystemTable.stdout_handle.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "SystemTable.stdout.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "SystemTable.stderr_handle.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "SystemTable.stderr.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "SystemTable.runtime_services.offset": {
+      "kind": "offset",
+      "value": 88
+    },
+    "SystemTable.boot_services.offset": {
+      "kind": "offset",
+      "value": 96
+    },
+    "SystemTable.number_of_configuration_table_entries.offset": {
+      "kind": "offset",
+      "value": 104
+    },
+    "SystemTable.configuration_table.offset": {
+      "kind": "offset",
+      "value": 112
+    },
+    "SystemTable.size": {
+      "kind": "size",
+      "value": 120
+    },
+    "SystemTable.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "ConfigurationTable.vendor_guid.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "ConfigurationTable.vendor_table.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "ConfigurationTable.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "ConfigurationTable.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "BootServices.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "BootServices.raise_tpl.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "BootServices.restore_tpl.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "BootServices.allocate_pages.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "BootServices.free_pages.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "BootServices.get_memory_map.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "BootServices.allocate_pool.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "BootServices.free_pool.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "BootServices.create_event.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "BootServices.set_timer.offset": {
+      "kind": "offset",
+      "value": 88
+    },
+    "BootServices.wait_for_event.offset": {
+      "kind": "offset",
+      "value": 96
+    },
+    "BootServices.signal_event.offset": {
+      "kind": "offset",
+      "value": 104
+    },
+    "BootServices.close_event.offset": {
+      "kind": "offset",
+      "value": 112
+    },
+    "BootServices.check_event.offset": {
+      "kind": "offset",
+      "value": 120
+    },
+    "BootServices.install_protocol_interface.offset": {
+      "kind": "offset",
+      "value": 128
+    },
+    "BootServices.reinstall_protocol_interface.offset": {
+      "kind": "offset",
+      "value": 136
+    },
+    "BootServices.uninstall_protocol_interface.offset": {
+      "kind": "offset",
+      "value": 144
+    },
+    "BootServices.handle_protocol.offset": {
+      "kind": "offset",
+      "value": 152
+    },
+    "BootServices.reserved.offset": {
+      "kind": "offset",
+      "value": 160
+    },
+    "BootServices.register_protocol_notify.offset": {
+      "kind": "offset",
+      "value": 168
+    },
+    "BootServices.locate_handle.offset": {
+      "kind": "offset",
+      "value": 176
+    },
+    "BootServices.locate_device_path.offset": {
+      "kind": "offset",
+      "value": 184
+    },
+    "BootServices.install_configuration_table.offset": {
+      "kind": "offset",
+      "value": 192
+    },
+    "BootServices.load_image.offset": {
+      "kind": "offset",
+      "value": 200
+    },
+    "BootServices.start_image.offset": {
+      "kind": "offset",
+      "value": 208
+    },
+    "BootServices.exit.offset": {
+      "kind": "offset",
+      "value": 216
+    },
+    "BootServices.unload_image.offset": {
+      "kind": "offset",
+      "value": 224
+    },
+    "BootServices.exit_boot_services.offset": {
+      "kind": "offset",
+      "value": 232
+    },
+    "BootServices.get_next_monotonic_count.offset": {
+      "kind": "offset",
+      "value": 240
+    },
+    "BootServices.stall.offset": {
+      "kind": "offset",
+      "value": 248
+    },
+    "BootServices.set_watchdog_timer.offset": {
+      "kind": "offset",
+      "value": 256
+    },
+    "BootServices.connect_controller.offset": {
+      "kind": "offset",
+      "value": 264
+    },
+    "BootServices.disconnect_controller.offset": {
+      "kind": "offset",
+      "value": 272
+    },
+    "BootServices.open_protocol.offset": {
+      "kind": "offset",
+      "value": 280
+    },
+    "BootServices.close_protocol.offset": {
+      "kind": "offset",
+      "value": 288
+    },
+    "BootServices.open_protocol_information.offset": {
+      "kind": "offset",
+      "value": 296
+    },
+    "BootServices.protocols_per_handle.offset": {
+      "kind": "offset",
+      "value": 304
+    },
+    "BootServices.locate_handle_buffer.offset": {
+      "kind": "offset",
+      "value": 312
+    },
+    "BootServices.locate_protocol.offset": {
+      "kind": "offset",
+      "value": 320
+    },
+    "BootServices.install_multiple_protocol_interfaces.offset": {
+      "kind": "offset",
+      "value": 328
+    },
+    "BootServices.uninstall_multiple_protocol_interfaces.offset": {
+      "kind": "offset",
+      "value": 336
+    },
+    "BootServices.calculate_crc32.offset": {
+      "kind": "offset",
+      "value": 344
+    },
+    "BootServices.copy_mem.offset": {
+      "kind": "offset",
+      "value": 352
+    },
+    "BootServices.set_mem.offset": {
+      "kind": "offset",
+      "value": 360
+    },
+    "BootServices.create_event_ex.offset": {
+      "kind": "offset",
+      "value": 368
+    },
+    "BootServices.size": {
+      "kind": "size",
+      "value": 376
+    },
+    "BootServices.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "BOOTSERVICES_RAISE_TPL_SLOT": {
+      "kind": "value",
+      "value": 0
+    },
+    "BOOTSERVICES_RESTORE_TPL_SLOT": {
+      "kind": "value",
+      "value": 1
+    },
+    "BOOTSERVICES_ALLOCATE_PAGES_SLOT": {
+      "kind": "value",
+      "value": 2
+    },
+    "BOOTSERVICES_FREE_PAGES_SLOT": {
+      "kind": "value",
+      "value": 3
+    },
+    "BOOTSERVICES_GET_MEMORY_MAP_SLOT": {
+      "kind": "value",
+      "value": 4
+    },
+    "BOOTSERVICES_ALLOCATE_POOL_SLOT": {
+      "kind": "value",
+      "value": 5
+    },
+    "BOOTSERVICES_FREE_POOL_SLOT": {
+      "kind": "value",
+      "value": 6
+    },
+    "BOOTSERVICES_CREATE_EVENT_SLOT": {
+      "kind": "value",
+      "value": 7
+    },
+    "BOOTSERVICES_SET_TIMER_SLOT": {
+      "kind": "value",
+      "value": 8
+    },
+    "BOOTSERVICES_WAIT_FOR_EVENT_SLOT": {
+      "kind": "value",
+      "value": 9
+    },
+    "BOOTSERVICES_SIGNAL_EVENT_SLOT": {
+      "kind": "value",
+      "value": 10
+    },
+    "BOOTSERVICES_CLOSE_EVENT_SLOT": {
+      "kind": "value",
+      "value": 11
+    },
+    "BOOTSERVICES_CHECK_EVENT_SLOT": {
+      "kind": "value",
+      "value": 12
+    },
+    "BOOTSERVICES_INSTALL_PROTOCOL_INTERFACE_SLOT": {
+      "kind": "value",
+      "value": 13
+    },
+    "BOOTSERVICES_REINSTALL_PROTOCOL_INTERFACE_SLOT": {
+      "kind": "value",
+      "value": 14
+    },
+    "BOOTSERVICES_UNINSTALL_PROTOCOL_INTERFACE_SLOT": {
+      "kind": "value",
+      "value": 15
+    },
+    "BOOTSERVICES_HANDLE_PROTOCOL_SLOT": {
+      "kind": "value",
+      "value": 16
+    },
+    "BOOTSERVICES_RESERVED_SLOT": {
+      "kind": "value",
+      "value": 17
+    },
+    "BOOTSERVICES_REGISTER_PROTOCOL_NOTIFY_SLOT": {
+      "kind": "value",
+      "value": 18
+    },
+    "BOOTSERVICES_LOCATE_HANDLE_SLOT": {
+      "kind": "value",
+      "value": 19
+    },
+    "BOOTSERVICES_LOCATE_DEVICE_PATH_SLOT": {
+      "kind": "value",
+      "value": 20
+    },
+    "BOOTSERVICES_INSTALL_CONFIGURATION_TABLE_SLOT": {
+      "kind": "value",
+      "value": 21
+    },
+    "BOOTSERVICES_LOAD_IMAGE_SLOT": {
+      "kind": "value",
+      "value": 22
+    },
+    "BOOTSERVICES_START_IMAGE_SLOT": {
+      "kind": "value",
+      "value": 23
+    },
+    "BOOTSERVICES_EXIT_SLOT": {
+      "kind": "value",
+      "value": 24
+    },
+    "BOOTSERVICES_UNLOAD_IMAGE_SLOT": {
+      "kind": "value",
+      "value": 25
+    },
+    "BOOTSERVICES_EXIT_BOOT_SERVICES_SLOT": {
+      "kind": "value",
+      "value": 26
+    },
+    "BOOTSERVICES_GET_NEXT_MONOTONIC_COUNT_SLOT": {
+      "kind": "value",
+      "value": 27
+    },
+    "BOOTSERVICES_STALL_SLOT": {
+      "kind": "value",
+      "value": 28
+    },
+    "BOOTSERVICES_SET_WATCHDOG_TIMER_SLOT": {
+      "kind": "value",
+      "value": 29
+    },
+    "BOOTSERVICES_CONNECT_CONTROLLER_SLOT": {
+      "kind": "value",
+      "value": 30
+    },
+    "BOOTSERVICES_DISCONNECT_CONTROLLER_SLOT": {
+      "kind": "value",
+      "value": 31
+    },
+    "BOOTSERVICES_OPEN_PROTOCOL_SLOT": {
+      "kind": "value",
+      "value": 32
+    },
+    "BOOTSERVICES_CLOSE_PROTOCOL_SLOT": {
+      "kind": "value",
+      "value": 33
+    },
+    "BOOTSERVICES_OPEN_PROTOCOL_INFORMATION_SLOT": {
+      "kind": "value",
+      "value": 34
+    },
+    "BOOTSERVICES_PROTOCOLS_PER_HANDLE_SLOT": {
+      "kind": "value",
+      "value": 35
+    },
+    "BOOTSERVICES_LOCATE_HANDLE_BUFFER_SLOT": {
+      "kind": "value",
+      "value": 36
+    },
+    "BOOTSERVICES_LOCATE_PROTOCOL_SLOT": {
+      "kind": "value",
+      "value": 37
+    },
+    "BOOTSERVICES_INSTALL_MULTIPLE_PROTOCOL_INTERFACES_SLOT": {
+      "kind": "value",
+      "value": 38
+    },
+    "BOOTSERVICES_UNINSTALL_MULTIPLE_PROTOCOL_INTERFACES_SLOT": {
+      "kind": "value",
+      "value": 39
+    },
+    "BOOTSERVICES_CALCULATE_CRC32_SLOT": {
+      "kind": "value",
+      "value": 40
+    },
+    "BOOTSERVICES_COPY_MEM_SLOT": {
+      "kind": "value",
+      "value": 41
+    },
+    "BOOTSERVICES_SET_MEM_SLOT": {
+      "kind": "value",
+      "value": 42
+    },
+    "BOOTSERVICES_CREATE_EVENT_EX_SLOT": {
+      "kind": "value",
+      "value": 43
+    },
+    "RuntimeServices.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "RuntimeServices.get_time.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "RuntimeServices.set_time.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "RuntimeServices.get_wakeup_time.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "RuntimeServices.set_wakeup_time.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "RuntimeServices.set_virtual_address_map.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "RuntimeServices.convert_pointer.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "RuntimeServices.get_variable.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "RuntimeServices.get_next_variable_name.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "RuntimeServices.set_variable.offset": {
+      "kind": "offset",
+      "value": 88
+    },
+    "RuntimeServices.get_next_high_monotonic_count.offset": {
+      "kind": "offset",
+      "value": 96
+    },
+    "RuntimeServices.reset_system.offset": {
+      "kind": "offset",
+      "value": 104
+    },
+    "RuntimeServices.update_capsule.offset": {
+      "kind": "offset",
+      "value": 112
+    },
+    "RuntimeServices.query_capsule_capabilities.offset": {
+      "kind": "offset",
+      "value": 120
+    },
+    "RuntimeServices.query_variable_info.offset": {
+      "kind": "offset",
+      "value": 128
+    },
+    "RuntimeServices.size": {
+      "kind": "size",
+      "value": 136
+    },
+    "RuntimeServices.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "RUNTIMESERVICES_GET_TIME_SLOT": {
+      "kind": "value",
+      "value": 0
+    },
+    "RUNTIMESERVICES_SET_TIME_SLOT": {
+      "kind": "value",
+      "value": 1
+    },
+    "RUNTIMESERVICES_GET_WAKEUP_TIME_SLOT": {
+      "kind": "value",
+      "value": 2
+    },
+    "RUNTIMESERVICES_SET_WAKEUP_TIME_SLOT": {
+      "kind": "value",
+      "value": 3
+    },
+    "RUNTIMESERVICES_SET_VIRTUAL_ADDRESS_MAP_SLOT": {
+      "kind": "value",
+      "value": 4
+    },
+    "RUNTIMESERVICES_CONVERT_POINTER_SLOT": {
+      "kind": "value",
+      "value": 5
+    },
+    "RUNTIMESERVICES_GET_VARIABLE_SLOT": {
+      "kind": "value",
+      "value": 6
+    },
+    "RUNTIMESERVICES_GET_NEXT_VARIABLE_NAME_SLOT": {
+      "kind": "value",
+      "value": 7
+    },
+    "RUNTIMESERVICES_SET_VARIABLE_SLOT": {
+      "kind": "value",
+      "value": 8
+    },
+    "RUNTIMESERVICES_GET_NEXT_HIGH_MONOTONIC_COUNT_SLOT": {
+      "kind": "value",
+      "value": 9
+    },
+    "RUNTIMESERVICES_RESET_SYSTEM_SLOT": {
+      "kind": "value",
+      "value": 10
+    },
+    "RUNTIMESERVICES_UPDATE_CAPSULE_SLOT": {
+      "kind": "value",
+      "value": 11
+    },
+    "RUNTIMESERVICES_QUERY_CAPSULE_CAPABILITIES_SLOT": {
+      "kind": "value",
+      "value": 12
+    },
+    "RUNTIMESERVICES_QUERY_VARIABLE_INFO_SLOT": {
+      "kind": "value",
+      "value": 13
+    },
+    "OpenProtocolInformationEntry.agent_handle.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "OpenProtocolInformationEntry.controller_handle.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "OpenProtocolInformationEntry.attributes.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "OpenProtocolInformationEntry.open_count.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "OpenProtocolInformationEntry.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "OpenProtocolInformationEntry.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "TimeCapabilities.resolution.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "TimeCapabilities.accuracy.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "TimeCapabilities.sets_to_zero.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "TimeCapabilities.size": {
+      "kind": "size",
+      "value": 12
+    },
+    "TimeCapabilities.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "PropertiesTable.version.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PropertiesTable.length.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "PropertiesTable.memory_protection.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "PropertiesTable.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "PropertiesTable.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "SYSTEM_TABLE_SIGNATURE": {
+      "kind": "value",
+      "value": 6076298535811760713
+    },
+    "BOOT_SERVICES_SIGNATURE": {
+      "kind": "value",
+      "value": 6220110259551162178
+    },
+    "RUNTIME_SERVICES_SIGNATURE": {
+      "kind": "value",
+      "value": 6220110259551098194
+    },
+    "TABLE_CRC32_POLYNOMIAL": {
+      "kind": "value",
+      "value": 79764919
+    },
+    "RESET_TYPE_COLD": {
+      "kind": "value",
+      "value": 0
+    },
+    "RESET_TYPE_WARM": {
+      "kind": "value",
+      "value": 1
+    },
+    "RESET_TYPE_SHUTDOWN": {
+      "kind": "value",
+      "value": 2
+    },
+    "RESET_TYPE_PLATFORM_SPECIFIC": {
+      "kind": "value",
+      "value": 3
+    },
+    "VARIABLE_ATTRIBUTES_NON_VOLATILE": {
+      "kind": "value",
+      "value": 1
+    },
+    "VARIABLE_ATTRIBUTES_BOOTSERVICE_ACCESS": {
+      "kind": "value",
+      "value": 2
+    },
+    "VARIABLE_ATTRIBUTES_RUNTIME_ACCESS": {
+      "kind": "value",
+      "value": 4
+    },
+    "VARIABLE_ATTRIBUTES_HARDWARE_ERROR_RECORD": {
+      "kind": "value",
+      "value": 8
+    },
+    "VARIABLE_ATTRIBUTES_AUTHENTICATED_WRITE_ACCESS": {
+      "kind": "value",
+      "value": 16
+    },
+    "VARIABLE_ATTRIBUTES_TIME_BASED_AUTHENTICATED_WRITE_ACCESS": {
+      "kind": "value",
+      "value": 32
+    },
+    "VARIABLE_ATTRIBUTES_APPEND_WRITE": {
+      "kind": "value",
+      "value": 64
+    },
+    "VARIABLE_ATTRIBUTES_ENHANCED_AUTHENTICATED_ACCESS": {
+      "kind": "value",
+      "value": 128
+    },
+    "MEMORY_PROTECTION_NON_EXECUTABLE_DATA": {
+      "kind": "value",
+      "value": 1
+    },
+    "ACPI_GUID.bytes": {
+      "kind": "bytes",
+      "value": "302d9deb882dd3119a160090273fc14d"
+    },
+    "ACPI2_GUID.bytes": {
+      "kind": "bytes",
+      "value": "71e86888f1e4d311bc220080c73c8881"
+    },
+    "SMBIOS_GUID.bytes": {
+      "kind": "bytes",
+      "value": "312d9deb882dd3119a160090273fc14d"
+    },
+    "SMBIOS3_GUID.bytes": {
+      "kind": "bytes",
+      "value": "4415fdf294972c4a992ee5bbcf20e394"
+    },
+    "ESRT_GUID.bytes": {
+      "kind": "bytes",
+      "value": "63a222b16136684f992978f8b0d62180"
+    },
+    "HAND_OFF_BLOCK_LIST_GUID.bytes": {
+      "kind": "bytes",
+      "value": "4cf23977d793d4119a3a0090273fc14d"
+    },
+    "MEMORY_TYPE_INFORMATION_GUID.bytes": {
+      "kind": "bytes",
+      "value": "9f04194c3741d34d9c108b97a83ffdfa"
+    },
+    "MEMORY_STATUS_CODE_RECORD_GUID.bytes": {
+      "kind": "bytes",
+      "value": "26c00c060d4cda4d8f41595fef00a502"
+    },
+    "MEMORY_ATTRIBUTES_GUID.bytes": {
+      "kind": "bytes",
+      "value": "1d91fadceb269f46a22038b7dc461220"
+    },
+    "IMAGE_SECURITY_DATABASE_GUID.bytes": {
+      "kind": "bytes",
+      "value": "cbb219d73a3d9645a3bcdad00e67656f"
+    },
+    "DXE_SERVICES_GUID.bytes": {
+      "kind": "bytes",
+      "value": "ba34ad05026f1442952e4da0398e2bb9"
+    },
+    "LZMA_COMPRESS_GUID.bytes": {
+      "kind": "bytes",
+      "value": "98584eee143959429d6edc7bd79403cf"
+    },
+    "TIANO_COMPRESS_GUID.bytes": {
+      "kind": "bytes",
+      "value": "ad8012a31e48b64195e8127f4c984779"
+    },
+    "DEBUG_IMAGE_INFO_GUID.bytes": {
+      "kind": "bytes",
+      "value": "772e1549da1a6447b7a27afefed95e8b"
+    },
+    "PROPERTIES_TABLE_GUID.bytes": {
+      "kind": "bytes",
+      "value": "a3ac0a88dc4a044a9079b747340825e5"
+    },
+    "VARIABLE_VENDOR_GLOBAL_VARIABLE.bytes": {
+      "kind": "bytes",
+      "value": "61dfe48bca93d211aa0d00e098032b8c"
+    },
+    "VARIABLE_VENDOR_IMAGE_SECURITY_DATABASE.bytes": {
+      "kind": "bytes",
+      "value": "cbb219d73a3d9645a3bcdad00e67656f"
+    }
+  }
+}

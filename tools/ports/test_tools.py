@@ -7,6 +7,12 @@ import tempfile
 import unittest
 import inventory
 import vectors
+import rust_layout
+
+
+class LlvmBytesTests(unittest.TestCase):
+    def test_hex_and_backslash_escapes(self):
+        self.assertEqual(rust_layout.decode_bytes(r'A\00\\\FF'), b'A\x00\\\xff')
 
 
 class InventoryTests(unittest.TestCase):
@@ -36,6 +42,7 @@ class InventoryTests(unittest.TestCase):
 
     def test_raw_const_pointer_is_not_a_declaration(self):
         self.assertEqual(inventory.rust_anchors('    value: *const u8,\n'), {})
+        self.assertEqual(inventory.rust_anchors('    value: *const ffi::c_void,\n'), {})
 
     def test_raw_identifier_field_is_inventoried(self):
         self.assertEqual(inventory.rust_anchors('pub r#type: u8,'),

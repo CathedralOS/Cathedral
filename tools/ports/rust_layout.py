@@ -11,7 +11,10 @@ import tempfile
 def decode_bytes(encoded):
     result = bytearray()
     while encoded:
-        if encoded.startswith('\\'):
+        if encoded.startswith('\\\\'):
+            result.append(92)
+            encoded = encoded[2:]
+        elif encoded.startswith('\\'):
             result.append(int(encoded[1:3], 16))
             encoded = encoded[3:]
         else:

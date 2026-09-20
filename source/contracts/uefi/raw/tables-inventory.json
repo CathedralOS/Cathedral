@@ -1,0 +1,2179 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/uefi-rs",
+    "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a",
+    "roots": [
+      "uefi-raw/src/table/header.rs",
+      "uefi-raw/src/table/system.rs",
+      "uefi-raw/src/table/configuration.rs",
+      "uefi-raw/src/table/boot.rs",
+      "uefi-raw/src/table/runtime.rs",
+      "uefi/src/table/cfg.rs"
+    ]
+  },
+  "files": {
+    "uefi-raw/src/table/boot.rs": {
+      "sha256": "974e65e75754522674a708849b81dfdbcfb23a72a7f33109b5bb4c587236df3d",
+      "disposition": "translated",
+      "symbols": {
+        "16:AllocateType": {
+          "anchor": "pub enum AllocateType: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub data AllocateType"
+            }
+          ]
+        },
+        "17:ANY_PAGES": {
+          "anchor": "ANY_PAGES = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const ALLOCATE_TYPE_ANY_PAGES:"
+            }
+          ]
+        },
+        "18:MAX_ADDRESS": {
+          "anchor": "MAX_ADDRESS = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const ALLOCATE_TYPE_MAX_ADDRESS:"
+            }
+          ]
+        },
+        "19:ADDRESS": {
+          "anchor": "ADDRESS = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const ALLOCATE_TYPE_ADDRESS:"
+            }
+          ]
+        },
+        "20:MAX_ALLOCATE_TYPE": {
+          "anchor": "MAX_ALLOCATE_TYPE = 3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const ALLOCATE_TYPE_MAX_ALLOCATE_TYPE:"
+            }
+          ]
+        },
+        "27:BootServices": {
+          "anchor": "pub struct BootServices {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data BootServices"
+            }
+          ]
+        },
+        "28:header": {
+          "anchor": "pub header: Header,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "31:raise_tpl": {
+          "anchor": "pub raise_tpl: unsafe extern \"efiapi\" fn(new_tpl: Tpl) -> Tpl,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "raise_tpl:"
+            }
+          ]
+        },
+        "32:restore_tpl": {
+          "anchor": "pub restore_tpl: unsafe extern \"efiapi\" fn(old_tpl: Tpl),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "restore_tpl:"
+            }
+          ]
+        },
+        "35:allocate_pages": {
+          "anchor": "pub allocate_pages: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "allocate_pages:"
+            }
+          ]
+        },
+        "41:free_pages": {
+          "anchor": "pub free_pages: unsafe extern \"efiapi\" fn(addr: PhysicalAddress, pages: usize) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "free_pages:"
+            }
+          ]
+        },
+        "42:get_memory_map": {
+          "anchor": "pub get_memory_map: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "get_memory_map:"
+            }
+          ]
+        },
+        "49:allocate_pool": {
+          "anchor": "pub allocate_pool: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "allocate_pool:"
+            }
+          ]
+        },
+        "54:free_pool": {
+          "anchor": "pub free_pool: unsafe extern \"efiapi\" fn(buffer: *mut u8) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "free_pool:"
+            }
+          ]
+        },
+        "57:create_event": {
+          "anchor": "pub create_event: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "create_event:"
+            }
+          ]
+        },
+        "64:set_timer": {
+          "anchor": "pub set_timer:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "set_timer:"
+            }
+          ]
+        },
+        "66:wait_for_event": {
+          "anchor": "pub wait_for_event: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "wait_for_event:"
+            }
+          ]
+        },
+        "71:signal_event": {
+          "anchor": "pub signal_event: unsafe extern \"efiapi\" fn(event: Event) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "signal_event:"
+            }
+          ]
+        },
+        "72:close_event": {
+          "anchor": "pub close_event: unsafe extern \"efiapi\" fn(event: Event) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "close_event:"
+            }
+          ]
+        },
+        "73:check_event": {
+          "anchor": "pub check_event: unsafe extern \"efiapi\" fn(event: Event) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "check_event:"
+            }
+          ]
+        },
+        "76:install_protocol_interface": {
+          "anchor": "pub install_protocol_interface: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "install_protocol_interface:"
+            }
+          ]
+        },
+        "82:reinstall_protocol_interface": {
+          "anchor": "pub reinstall_protocol_interface: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "reinstall_protocol_interface:"
+            }
+          ]
+        },
+        "88:uninstall_protocol_interface": {
+          "anchor": "pub uninstall_protocol_interface: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "uninstall_protocol_interface:"
+            }
+          ]
+        },
+        "93:handle_protocol": {
+          "anchor": "pub handle_protocol: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "handle_protocol:"
+            }
+          ]
+        },
+        "98:reserved": {
+          "anchor": "pub reserved: *mut c_void,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "reserved:"
+            }
+          ]
+        },
+        "99:register_protocol_notify": {
+          "anchor": "pub register_protocol_notify: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "register_protocol_notify:"
+            }
+          ]
+        },
+        "104:locate_handle": {
+          "anchor": "pub locate_handle: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "locate_handle:"
+            }
+          ]
+        },
+        "111:locate_device_path": {
+          "anchor": "pub locate_device_path: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "locate_device_path:"
+            }
+          ]
+        },
+        "116:install_configuration_table": {
+          "anchor": "pub install_configuration_table:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "install_configuration_table:"
+            }
+          ]
+        },
+        "120:load_image": {
+          "anchor": "pub load_image: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "load_image:"
+            }
+          ]
+        },
+        "128:start_image": {
+          "anchor": "pub start_image: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "start_image:"
+            }
+          ]
+        },
+        "133:exit": {
+          "anchor": "pub exit: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "exit:"
+            }
+          ]
+        },
+        "139:unload_image": {
+          "anchor": "pub unload_image: unsafe extern \"efiapi\" fn(image_handle: Handle) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "unload_image:"
+            }
+          ]
+        },
+        "140:exit_boot_services": {
+          "anchor": "pub exit_boot_services:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "exit_boot_services:"
+            }
+          ]
+        },
+        "144:get_next_monotonic_count": {
+          "anchor": "pub get_next_monotonic_count: unsafe extern \"efiapi\" fn(count: *mut u64) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "get_next_monotonic_count:"
+            }
+          ]
+        },
+        "145:stall": {
+          "anchor": "pub stall: unsafe extern \"efiapi\" fn(microseconds: usize) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "stall:"
+            }
+          ]
+        },
+        "146:set_watchdog_timer": {
+          "anchor": "pub set_watchdog_timer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "set_watchdog_timer:"
+            }
+          ]
+        },
+        "154:connect_controller": {
+          "anchor": "pub connect_controller: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "connect_controller:"
+            }
+          ]
+        },
+        "160:disconnect_controller": {
+          "anchor": "pub disconnect_controller: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "disconnect_controller:"
+            }
+          ]
+        },
+        "167:open_protocol": {
+          "anchor": "pub open_protocol: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "open_protocol:"
+            }
+          ]
+        },
+        "175:close_protocol": {
+          "anchor": "pub close_protocol: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "close_protocol:"
+            }
+          ]
+        },
+        "181:open_protocol_information": {
+          "anchor": "pub open_protocol_information: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "open_protocol_information:"
+            }
+          ]
+        },
+        "189:protocols_per_handle": {
+          "anchor": "pub protocols_per_handle: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "protocols_per_handle:"
+            }
+          ]
+        },
+        "194:locate_handle_buffer": {
+          "anchor": "pub locate_handle_buffer: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "locate_handle_buffer:"
+            }
+          ]
+        },
+        "201:locate_protocol": {
+          "anchor": "pub locate_protocol: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "locate_protocol:"
+            }
+          ]
+        },
+        "216:install_multiple_protocol_interfaces": {
+          "anchor": "pub install_multiple_protocol_interfaces:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "install_multiple_protocol_interfaces:"
+            }
+          ]
+        },
+        "228:uninstall_multiple_protocol_interfaces": {
+          "anchor": "pub uninstall_multiple_protocol_interfaces: unsafe extern \"C\" fn(handle: Handle, ...) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "uninstall_multiple_protocol_interfaces:"
+            }
+          ]
+        },
+        "231:calculate_crc32": {
+          "anchor": "pub calculate_crc32:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "calculate_crc32:"
+            }
+          ]
+        },
+        "235:copy_mem": {
+          "anchor": "pub copy_mem: unsafe extern \"efiapi\" fn(dest: *mut u8, src: *const u8, len: usize),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "copy_mem:"
+            }
+          ]
+        },
+        "236:set_mem": {
+          "anchor": "pub set_mem: unsafe extern \"efiapi\" fn(buffer: *mut u8, len: usize, value: u8),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "set_mem:"
+            }
+          ]
+        },
+        "239:create_event_ex": {
+          "anchor": "pub create_event_ex: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "create_event_ex:"
+            }
+          ]
+        },
+        "253:EventType": {
+          "anchor": "pub struct EventType: u32 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub data EventType"
+            }
+          ]
+        },
+        "256:TIMER": {
+          "anchor": "const TIMER = 0x8000_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const EVENT_TYPE_TIMER:"
+            }
+          ]
+        },
+        "260:RUNTIME": {
+          "anchor": "const RUNTIME = 0x4000_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const EVENT_TYPE_RUNTIME:"
+            }
+          ]
+        },
+        "265:NOTIFY_WAIT": {
+          "anchor": "const NOTIFY_WAIT = 0x0000_0100;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const EVENT_TYPE_NOTIFY_WAIT:"
+            }
+          ]
+        },
+        "269:NOTIFY_SIGNAL": {
+          "anchor": "const NOTIFY_SIGNAL = 0x0000_0200;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const EVENT_TYPE_NOTIFY_SIGNAL:"
+            }
+          ]
+        },
+        "276:SIGNAL_EXIT_BOOT_SERVICES": {
+          "anchor": "const SIGNAL_EXIT_BOOT_SERVICES = 0x0000_0201;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const EVENT_TYPE_SIGNAL_EXIT_BOOT_SERVICES:"
+            }
+          ]
+        },
+        "280:SIGNAL_VIRTUAL_ADDRESS_CHANGE": {
+          "anchor": "const SIGNAL_VIRTUAL_ADDRESS_CHANGE = 0x6000_0202;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const EVENT_TYPE_SIGNAL_VIRTUAL_ADDRESS_CHANGE:"
+            }
+          ]
+        },
+        "286:InterfaceType": {
+          "anchor": "pub enum InterfaceType: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub data InterfaceType"
+            }
+          ]
+        },
+        "288:NATIVE_INTERFACE": {
+          "anchor": "NATIVE_INTERFACE = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const INTERFACE_TYPE_NATIVE_INTERFACE:"
+            }
+          ]
+        },
+        "297:EventNotifyFn": {
+          "anchor": "pub type EventNotifyFn = unsafe extern \"efiapi\" fn(event: Event, context: *mut c_void);",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data EventNotifyFn"
+            }
+          ]
+        },
+        "303:MemoryAttribute": {
+          "anchor": "pub struct MemoryAttribute: u64 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub data MemoryAttribute"
+            }
+          ]
+        },
+        "305:UNCACHEABLE": {
+          "anchor": "const UNCACHEABLE = 0x1;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_UNCACHEABLE:"
+            }
+          ]
+        },
+        "307:WRITE_COMBINE": {
+          "anchor": "const WRITE_COMBINE = 0x2;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_WRITE_COMBINE:"
+            }
+          ]
+        },
+        "309:WRITE_THROUGH": {
+          "anchor": "const WRITE_THROUGH = 0x4;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_WRITE_THROUGH:"
+            }
+          ]
+        },
+        "311:WRITE_BACK": {
+          "anchor": "const WRITE_BACK = 0x8;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_WRITE_BACK:"
+            }
+          ]
+        },
+        "314:UNCACHABLE_EXPORTED": {
+          "anchor": "const UNCACHABLE_EXPORTED = 0x10;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_UNCACHABLE_EXPORTED:"
+            }
+          ]
+        },
+        "316:WRITE_PROTECT": {
+          "anchor": "const WRITE_PROTECT = 0x1000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_WRITE_PROTECT:"
+            }
+          ]
+        },
+        "318:READ_PROTECT": {
+          "anchor": "const READ_PROTECT = 0x2000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_READ_PROTECT:"
+            }
+          ]
+        },
+        "320:EXECUTE_PROTECT": {
+          "anchor": "const EXECUTE_PROTECT = 0x4000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_EXECUTE_PROTECT:"
+            }
+          ]
+        },
+        "322:NON_VOLATILE": {
+          "anchor": "const NON_VOLATILE = 0x8000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_NON_VOLATILE:"
+            }
+          ]
+        },
+        "324:MORE_RELIABLE": {
+          "anchor": "const MORE_RELIABLE = 0x10000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_MORE_RELIABLE:"
+            }
+          ]
+        },
+        "326:READ_ONLY": {
+          "anchor": "const READ_ONLY = 0x20000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_READ_ONLY:"
+            }
+          ]
+        },
+        "330:SPECIAL_PURPOSE": {
+          "anchor": "const SPECIAL_PURPOSE = 0x4_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_SPECIAL_PURPOSE:"
+            }
+          ]
+        },
+        "333:CPU_CRYPTO": {
+          "anchor": "const CPU_CRYPTO = 0x8_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_CPU_CRYPTO:"
+            }
+          ]
+        },
+        "338:HOT_PLUGGABLE": {
+          "anchor": "const HOT_PLUGGABLE = 0x10_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_HOT_PLUGGABLE:"
+            }
+          ]
+        },
+        "340:RUNTIME": {
+          "anchor": "const RUNTIME = 0x8000_0000_0000_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_RUNTIME:"
+            }
+          ]
+        },
+        "343:ISA_VALID": {
+          "anchor": "const ISA_VALID = 0x4000_0000_0000_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_ISA_VALID:"
+            }
+          ]
+        },
+        "351:ISA_MASK": {
+          "anchor": "const ISA_MASK = 0x0FFF_F000_0000_0000;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_ATTRIBUTE_ISA_MASK:"
+            }
+          ]
+        },
+        "375:MemoryDescriptor": {
+          "anchor": "pub struct MemoryDescriptor {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub data MemoryDescriptor"
+            }
+          ]
+        },
+        "377:ty": {
+          "anchor": "pub ty: MemoryType,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "ty:"
+            }
+          ]
+        },
+        "382:padding": {
+          "anchor": "pub padding: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "padding:"
+            }
+          ]
+        },
+        "385:phys_start": {
+          "anchor": "pub phys_start: PhysicalAddress,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "phys_start:"
+            }
+          ]
+        },
+        "387:virt_start": {
+          "anchor": "pub virt_start: VirtualAddress,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "virt_start:"
+            }
+          ]
+        },
+        "389:page_count": {
+          "anchor": "pub page_count: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "page_count:"
+            }
+          ]
+        },
+        "391:att": {
+          "anchor": "pub att: MemoryAttribute,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "att:"
+            }
+          ]
+        },
+        "395:_": {
+          "anchor": "const _: () = {",
+          "disposition": "omitted",
+          "reason": "Anonymous compile-time memory descriptor assertions are owned by scalars.vectors.json and scalar verification."
+        },
+        "408:VERSION": {
+          "anchor": "pub const VERSION: u32 = 1;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "MEMORY_DESCRIPTOR_VERSION:"
+            }
+          ]
+        },
+        "412:default": {
+          "anchor": "fn default() -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust Default constructor/derived traits are not raw ABI. Zero initialization does not establish a valid firmware table; no blanket Default is exported. Scalar defaults are documented by the scalar slice."
+        },
+        "431:MemoryType": {
+          "anchor": "pub enum MemoryType: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "MemoryType:"
+            }
+          ]
+        },
+        "433:RESERVED": {
+          "anchor": "RESERVED                =  0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_RESERVED:"
+            }
+          ]
+        },
+        "435:LOADER_CODE": {
+          "anchor": "LOADER_CODE             =  1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_LOADER_CODE:"
+            }
+          ]
+        },
+        "438:LOADER_DATA": {
+          "anchor": "LOADER_DATA             =  2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_LOADER_DATA:"
+            }
+          ]
+        },
+        "442:BOOT_SERVICES_CODE": {
+          "anchor": "BOOT_SERVICES_CODE      =  3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_BOOT_SERVICES_CODE:"
+            }
+          ]
+        },
+        "446:BOOT_SERVICES_DATA": {
+          "anchor": "BOOT_SERVICES_DATA      =  4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_BOOT_SERVICES_DATA:"
+            }
+          ]
+        },
+        "448:RUNTIME_SERVICES_CODE": {
+          "anchor": "RUNTIME_SERVICES_CODE   =  5,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_RUNTIME_SERVICES_CODE:"
+            }
+          ]
+        },
+        "450:RUNTIME_SERVICES_DATA": {
+          "anchor": "RUNTIME_SERVICES_DATA   =  6,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_RUNTIME_SERVICES_DATA:"
+            }
+          ]
+        },
+        "452:CONVENTIONAL": {
+          "anchor": "CONVENTIONAL            =  7,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_CONVENTIONAL:"
+            }
+          ]
+        },
+        "454:UNUSABLE": {
+          "anchor": "UNUSABLE                =  8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_UNUSABLE:"
+            }
+          ]
+        },
+        "457:ACPI_RECLAIM": {
+          "anchor": "ACPI_RECLAIM            =  9,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_ACPI_RECLAIM:"
+            }
+          ]
+        },
+        "459:ACPI_NON_VOLATILE": {
+          "anchor": "ACPI_NON_VOLATILE       = 10,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_ACPI_NON_VOLATILE:"
+            }
+          ]
+        },
+        "461:MMIO": {
+          "anchor": "MMIO                    = 11,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_MMIO:"
+            }
+          ]
+        },
+        "463:MMIO_PORT_SPACE": {
+          "anchor": "MMIO_PORT_SPACE         = 12,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_MMIO_PORT_SPACE:"
+            }
+          ]
+        },
+        "465:PAL_CODE": {
+          "anchor": "PAL_CODE                = 13,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_PAL_CODE:"
+            }
+          ]
+        },
+        "467:PERSISTENT_MEMORY": {
+          "anchor": "PERSISTENT_MEMORY       = 14,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_PERSISTENT_MEMORY:"
+            }
+          ]
+        },
+        "469:UNACCEPTED": {
+          "anchor": "UNACCEPTED              = 15,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_UNACCEPTED:"
+            }
+          ]
+        },
+        "472:MAX": {
+          "anchor": "MAX                     = 16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const MEMORY_TYPE_MAX:"
+            }
+          ]
+        },
+        "477:RESERVED_FOR_OEM": {
+          "anchor": "pub const RESERVED_FOR_OEM: RangeInclusive<u32> = 0x7000_0000..=0x7fff_ffff;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "MEMORY_TYPE_RESERVED_FOR_OEM_MIN:"
+            }
+          ]
+        },
+        "480:RESERVED_FOR_OS_LOADER": {
+          "anchor": "pub const RESERVED_FOR_OS_LOADER: RangeInclusive<u32> = 0x8000_0000..=0xffff_ffff;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "MEMORY_TYPE_RESERVED_FOR_OS_LOADER_MIN:"
+            }
+          ]
+        },
+        "487:custom": {
+          "anchor": "pub const fn custom(value: u32) -> Self {",
+          "disposition": "omitted",
+          "reason": "Scalar slice owns MemoryType::custom precondition and fixtures; this table-only slice introduces no allocation constructor."
+        },
+        "495:OpenProtocolInformationEntry": {
+          "anchor": "pub struct OpenProtocolInformationEntry {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data OpenProtocolInformationEntry"
+            }
+          ]
+        },
+        "496:agent_handle": {
+          "anchor": "pub agent_handle: Handle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "agent_handle:"
+            }
+          ]
+        },
+        "497:controller_handle": {
+          "anchor": "pub controller_handle: Handle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "controller_handle:"
+            }
+          ]
+        },
+        "498:attributes": {
+          "anchor": "pub attributes: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "attributes:"
+            }
+          ]
+        },
+        "499:open_count": {
+          "anchor": "pub open_count: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "open_count:"
+            }
+          ]
+        },
+        "512:Tpl": {
+          "anchor": "pub enum Tpl: usize => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub data Tpl"
+            }
+          ]
+        },
+        "514:APPLICATION": {
+          "anchor": "APPLICATION = 4,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const TPL_APPLICATION:"
+            }
+          ]
+        },
+        "516:CALLBACK": {
+          "anchor": "CALLBACK    = 8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const TPL_CALLBACK:"
+            }
+          ]
+        },
+        "520:NOTIFY": {
+          "anchor": "NOTIFY      = 16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const TPL_NOTIFY:"
+            }
+          ]
+        },
+        "524:HIGH_LEVEL": {
+          "anchor": "HIGH_LEVEL  = 31,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const TPL_HIGH_LEVEL:"
+            }
+          ]
+        },
+        "531:PAGE_SIZE": {
+          "anchor": "pub const PAGE_SIZE: usize = 4096;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "PAGE_SIZE:"
+            }
+          ]
+        },
+        "534:TimerDelay": {
+          "anchor": "pub enum TimerDelay: i32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub data TimerDelay"
+            }
+          ]
+        },
+        "535:CANCEL": {
+          "anchor": "CANCEL = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const TIMER_DELAY_CANCEL:"
+            }
+          ]
+        },
+        "536:PERIODIC": {
+          "anchor": "PERIODIC = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const TIMER_DELAY_PERIODIC:"
+            }
+          ]
+        },
+        "537:RELATIVE": {
+          "anchor": "RELATIVE = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/scalars.omg",
+              "anchor": "pub const TIMER_DELAY_RELATIVE:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/tables.omg",
+          "anchor": "module tables;"
+        }
+      ]
+    },
+    "uefi-raw/src/table/configuration.rs": {
+      "sha256": "3ead898b2c0c930ad594b8ca408c8620c028959867905493f876f2807e9dc097",
+      "disposition": "translated",
+      "symbols": {
+        "13:ConfigurationTable": {
+          "anchor": "pub struct ConfigurationTable {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data ConfigurationTable"
+            }
+          ]
+        },
+        "14:vendor_guid": {
+          "anchor": "pub vendor_guid: Guid,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "vendor_guid:"
+            }
+          ]
+        },
+        "15:vendor_table": {
+          "anchor": "pub vendor_table: *mut c_void,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "vendor_table:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/tables.omg",
+          "anchor": "module tables;"
+        }
+      ]
+    },
+    "uefi-raw/src/table/header.rs": {
+      "sha256": "1eb16456b68e08f68938d0bc81abea3985d065bd4ad1dbf04bde4326e5776c5f",
+      "disposition": "translated",
+      "symbols": {
+        "8:Header": {
+          "anchor": "pub struct Header {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data Header"
+            }
+          ]
+        },
+        "10:signature": {
+          "anchor": "pub signature: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "signature:"
+            }
+          ]
+        },
+        "12:revision": {
+          "anchor": "pub revision: Revision,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "revision:"
+            }
+          ]
+        },
+        "14:size": {
+          "anchor": "pub size: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "size:"
+            }
+          ]
+        },
+        "17:crc": {
+          "anchor": "pub crc: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "crc:"
+            }
+          ]
+        },
+        "19:reserved": {
+          "anchor": "pub reserved: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "reserved:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/tables.omg",
+          "anchor": "module tables;"
+        }
+      ]
+    },
+    "uefi-raw/src/table/runtime.rs": {
+      "sha256": "c1948496cf4e18413b86903290ef945efba3c60224b876395715fdf3621a494e",
+      "disposition": "translated",
+      "symbols": {
+        "19:RuntimeServices": {
+          "anchor": "pub struct RuntimeServices {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data RuntimeServices"
+            }
+          ]
+        },
+        "20:header": {
+          "anchor": "pub header: Header,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "21:get_time": {
+          "anchor": "pub get_time:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "get_time:"
+            }
+          ]
+        },
+        "23:set_time": {
+          "anchor": "pub set_time: unsafe extern \"efiapi\" fn(time: *const Time) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "set_time:"
+            }
+          ]
+        },
+        "24:get_wakeup_time": {
+          "anchor": "pub get_wakeup_time: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "get_wakeup_time:"
+            }
+          ]
+        },
+        "29:set_wakeup_time": {
+          "anchor": "pub set_wakeup_time: unsafe extern \"efiapi\" fn(enable: Boolean, time: *const Time) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "set_wakeup_time:"
+            }
+          ]
+        },
+        "30:set_virtual_address_map": {
+          "anchor": "pub set_virtual_address_map: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "set_virtual_address_map:"
+            }
+          ]
+        },
+        "36:convert_pointer": {
+          "anchor": "pub convert_pointer:",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "convert_pointer:"
+            }
+          ]
+        },
+        "38:get_variable": {
+          "anchor": "pub get_variable: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "get_variable:"
+            }
+          ]
+        },
+        "45:get_next_variable_name": {
+          "anchor": "pub get_next_variable_name: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "get_next_variable_name:"
+            }
+          ]
+        },
+        "50:set_variable": {
+          "anchor": "pub set_variable: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "set_variable:"
+            }
+          ]
+        },
+        "57:get_next_high_monotonic_count": {
+          "anchor": "pub get_next_high_monotonic_count: unsafe extern \"efiapi\" fn(high_count: *mut u32) -> Status,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "get_next_high_monotonic_count:"
+            }
+          ]
+        },
+        "58:reset_system": {
+          "anchor": "pub reset_system: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "reset_system:"
+            }
+          ]
+        },
+        "66:update_capsule": {
+          "anchor": "pub update_capsule: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "update_capsule:"
+            }
+          ]
+        },
+        "71:query_capsule_capabilities": {
+          "anchor": "pub query_capsule_capabilities: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "query_capsule_capabilities:"
+            }
+          ]
+        },
+        "79:query_variable_info": {
+          "anchor": "pub query_variable_info: unsafe extern \"efiapi\" fn(",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "query_variable_info:"
+            }
+          ]
+        },
+        "90:ResetType": {
+          "anchor": "pub enum ResetType: u32 => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data ResetType"
+            }
+          ]
+        },
+        "94:COLD": {
+          "anchor": "COLD = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const RESET_TYPE_COLD:"
+            }
+          ]
+        },
+        "100:WARM": {
+          "anchor": "WARM = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const RESET_TYPE_WARM:"
+            }
+          ]
+        },
+        "103:SHUTDOWN": {
+          "anchor": "SHUTDOWN = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const RESET_TYPE_SHUTDOWN:"
+            }
+          ]
+        },
+        "106:PLATFORM_SPECIFIC": {
+          "anchor": "PLATFORM_SPECIFIC = 3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const RESET_TYPE_PLATFORM_SPECIFIC:"
+            }
+          ]
+        },
+        "113:TimeCapabilities": {
+          "anchor": "pub struct TimeCapabilities {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data TimeCapabilities"
+            }
+          ]
+        },
+        "116:resolution": {
+          "anchor": "pub resolution: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "resolution:"
+            }
+          ]
+        },
+        "119:accuracy": {
+          "anchor": "pub accuracy: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "accuracy:"
+            }
+          ]
+        },
+        "123:sets_to_zero": {
+          "anchor": "pub sets_to_zero: Boolean,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "sets_to_zero:"
+            }
+          ]
+        },
+        "130:VariableAttributes": {
+          "anchor": "pub struct VariableAttributes: u32 {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data VariableAttributes"
+            }
+          ]
+        },
+        "132:NON_VOLATILE": {
+          "anchor": "const NON_VOLATILE = 0x01;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const VARIABLE_ATTRIBUTES_NON_VOLATILE:"
+            }
+          ]
+        },
+        "136:BOOTSERVICE_ACCESS": {
+          "anchor": "const BOOTSERVICE_ACCESS = 0x02;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const VARIABLE_ATTRIBUTES_BOOTSERVICE_ACCESS:"
+            }
+          ]
+        },
+        "140:RUNTIME_ACCESS": {
+          "anchor": "const RUNTIME_ACCESS = 0x04;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const VARIABLE_ATTRIBUTES_RUNTIME_ACCESS:"
+            }
+          ]
+        },
+        "144:HARDWARE_ERROR_RECORD": {
+          "anchor": "const HARDWARE_ERROR_RECORD = 0x08;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const VARIABLE_ATTRIBUTES_HARDWARE_ERROR_RECORD:"
+            }
+          ]
+        },
+        "147:AUTHENTICATED_WRITE_ACCESS": {
+          "anchor": "const AUTHENTICATED_WRITE_ACCESS = 0x10;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const VARIABLE_ATTRIBUTES_AUTHENTICATED_WRITE_ACCESS:"
+            }
+          ]
+        },
+        "151:TIME_BASED_AUTHENTICATED_WRITE_ACCESS": {
+          "anchor": "const TIME_BASED_AUTHENTICATED_WRITE_ACCESS = 0x20;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const VARIABLE_ATTRIBUTES_TIME_BASED_AUTHENTICATED_WRITE_ACCESS:"
+            }
+          ]
+        },
+        "157:APPEND_WRITE": {
+          "anchor": "const APPEND_WRITE = 0x40;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const VARIABLE_ATTRIBUTES_APPEND_WRITE:"
+            }
+          ]
+        },
+        "161:ENHANCED_AUTHENTICATED_ACCESS": {
+          "anchor": "const ENHANCED_AUTHENTICATED_ACCESS = 0x80;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const VARIABLE_ATTRIBUTES_ENHANCED_AUTHENTICATED_ACCESS:"
+            }
+          ]
+        },
+        "169:VariableVendor": {
+          "anchor": "pub enum VariableVendor: Guid => {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data VariableVendor"
+            }
+          ]
+        },
+        "171:GLOBAL_VARIABLE": {
+          "anchor": "GLOBAL_VARIABLE = guid!(\"8be4df61-93ca-11d2-aa0d-00e098032b8c\"),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const VARIABLE_VENDOR_GLOBAL_VARIABLE:"
+            }
+          ]
+        },
+        "174:IMAGE_SECURITY_DATABASE": {
+          "anchor": "IMAGE_SECURITY_DATABASE = guid!(\"d719b2cb-3d3a-4596-a3bc-dad00e67656f\"),",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const VARIABLE_VENDOR_IMAGE_SECURITY_DATABASE:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/tables.omg",
+          "anchor": "module tables;"
+        }
+      ]
+    },
+    "uefi-raw/src/table/system.rs": {
+      "sha256": "1a5f4649dc67ea3cc39e5ad3bab23dfc2600ff94060b2a6f2e5e10d566fad8db",
+      "disposition": "translated",
+      "symbols": {
+        "13:SystemTable": {
+          "anchor": "pub struct SystemTable {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data SystemTable"
+            }
+          ]
+        },
+        "14:header": {
+          "anchor": "pub header: Header,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "header:"
+            }
+          ]
+        },
+        "16:firmware_vendor": {
+          "anchor": "pub firmware_vendor: *const Char16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "firmware_vendor:"
+            }
+          ]
+        },
+        "17:firmware_revision": {
+          "anchor": "pub firmware_revision: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "firmware_revision:"
+            }
+          ]
+        },
+        "19:stdin_handle": {
+          "anchor": "pub stdin_handle: Handle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "stdin_handle:"
+            }
+          ]
+        },
+        "20:stdin": {
+          "anchor": "pub stdin: *mut SimpleTextInputProtocol,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "stdin:"
+            }
+          ]
+        },
+        "22:stdout_handle": {
+          "anchor": "pub stdout_handle: Handle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "stdout_handle:"
+            }
+          ]
+        },
+        "23:stdout": {
+          "anchor": "pub stdout: *mut SimpleTextOutputProtocol,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "stdout:"
+            }
+          ]
+        },
+        "25:stderr_handle": {
+          "anchor": "pub stderr_handle: Handle,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "stderr_handle:"
+            }
+          ]
+        },
+        "26:stderr": {
+          "anchor": "pub stderr: *mut SimpleTextOutputProtocol,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "stderr:"
+            }
+          ]
+        },
+        "28:runtime_services": {
+          "anchor": "pub runtime_services: *mut RuntimeServices,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "runtime_services:"
+            }
+          ]
+        },
+        "29:boot_services": {
+          "anchor": "pub boot_services: *mut BootServices,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "boot_services:"
+            }
+          ]
+        },
+        "31:number_of_configuration_table_entries": {
+          "anchor": "pub number_of_configuration_table_entries: usize,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "number_of_configuration_table_entries:"
+            }
+          ]
+        },
+        "32:configuration_table": {
+          "anchor": "pub configuration_table: *mut ConfigurationTable,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "configuration_table:"
+            }
+          ]
+        },
+        "36:SIGNATURE": {
+          "anchor": "pub const SIGNATURE: u64 = 0x5453_5953_2049_4249;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "SYSTEM_TABLE_SIGNATURE:"
+            }
+          ]
+        },
+        "45:default": {
+          "anchor": "fn default() -> Self {",
+          "disposition": "omitted",
+          "reason": "Rust Default constructor/derived traits are not raw ABI. Zero initialization does not establish a valid firmware table; no blanket Default is exported. Scalar defaults are documented by the scalar slice."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/tables.omg",
+          "anchor": "module tables;"
+        }
+      ]
+    },
+    "uefi/src/table/cfg.rs": {
+      "sha256": "632b9586ed03d238a3502590982b6278ce2feb31fef982997fa31c7e62e0a6fa",
+      "disposition": "translated",
+      "symbols": {
+        "25:ConfigTableEntry": {
+          "anchor": "pub struct ConfigTableEntry {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data ConfigurationTable"
+            }
+          ]
+        },
+        "27:guid": {
+          "anchor": "pub guid: Guid,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "vendor_guid:"
+            }
+          ]
+        },
+        "31:address": {
+          "anchor": "pub address: *const c_void,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "vendor_table:"
+            }
+          ]
+        },
+        "36:ACPI_GUID": {
+          "anchor": "pub const ACPI_GUID: Guid = guid!(\"eb9d2d30-2d88-11d3-9a16-0090273fc14d\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "ACPI_GUID:"
+            }
+          ]
+        },
+        "39:ACPI2_GUID": {
+          "anchor": "pub const ACPI2_GUID: Guid = guid!(\"8868e871-e4f1-11d3-bc22-0080c73c8881\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "ACPI2_GUID:"
+            }
+          ]
+        },
+        "42:SMBIOS_GUID": {
+          "anchor": "pub const SMBIOS_GUID: Guid = guid!(\"eb9d2d31-2d88-11d3-9a16-0090273fc14d\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "SMBIOS_GUID:"
+            }
+          ]
+        },
+        "45:SMBIOS3_GUID": {
+          "anchor": "pub const SMBIOS3_GUID: Guid = guid!(\"f2fd1544-9794-4a2c-992e-e5bbcf20e394\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "SMBIOS3_GUID:"
+            }
+          ]
+        },
+        "48:ESRT_GUID": {
+          "anchor": "pub const ESRT_GUID: Guid = guid!(\"b122a263-3661-4f68-9929-78f8b0d62180\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "ESRT_GUID:"
+            }
+          ]
+        },
+        "53:HAND_OFF_BLOCK_LIST_GUID": {
+          "anchor": "pub const HAND_OFF_BLOCK_LIST_GUID: Guid = guid!(\"7739f24c-93d7-11d4-9a3a-0090273fc14d\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "HAND_OFF_BLOCK_LIST_GUID:"
+            }
+          ]
+        },
+        "56:MEMORY_TYPE_INFORMATION_GUID": {
+          "anchor": "pub const MEMORY_TYPE_INFORMATION_GUID: Guid = guid!(\"4c19049f-4137-4dd3-9c10-8b97a83ffdfa\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "MEMORY_TYPE_INFORMATION_GUID:"
+            }
+          ]
+        },
+        "60:MEMORY_STATUS_CODE_RECORD_GUID": {
+          "anchor": "pub const MEMORY_STATUS_CODE_RECORD_GUID: Guid = guid!(\"060cc026-4c0d-4dda-8f41-595fef00a502\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "MEMORY_STATUS_CODE_RECORD_GUID:"
+            }
+          ]
+        },
+        "64:MEMORY_ATTRIBUTES_GUID": {
+          "anchor": "pub const MEMORY_ATTRIBUTES_GUID: Guid = guid!(\"dcfa911d-26eb-469f-a220-38b7dc461220\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "MEMORY_ATTRIBUTES_GUID:"
+            }
+          ]
+        },
+        "68:IMAGE_SECURITY_DATABASE_GUID": {
+          "anchor": "pub const IMAGE_SECURITY_DATABASE_GUID: Guid = guid!(\"d719b2cb-3d3a-4596-a3bc-dad00e67656f\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "IMAGE_SECURITY_DATABASE_GUID:"
+            }
+          ]
+        },
+        "71:DXE_SERVICES_GUID": {
+          "anchor": "pub const DXE_SERVICES_GUID: Guid = guid!(\"05ad34ba-6f02-4214-952e-4da0398e2bb9\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "DXE_SERVICES_GUID:"
+            }
+          ]
+        },
+        "74:LZMA_COMPRESS_GUID": {
+          "anchor": "pub const LZMA_COMPRESS_GUID: Guid = guid!(\"ee4e5898-3914-4259-9d6e-dc7bd79403cf\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "LZMA_COMPRESS_GUID:"
+            }
+          ]
+        },
+        "77:TIANO_COMPRESS_GUID": {
+          "anchor": "pub const TIANO_COMPRESS_GUID: Guid = guid!(\"a31280ad-481e-41b6-95e8-127f4c984779\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "TIANO_COMPRESS_GUID:"
+            }
+          ]
+        },
+        "80:DEBUG_IMAGE_INFO_GUID": {
+          "anchor": "pub const DEBUG_IMAGE_INFO_GUID: Guid = guid!(\"49152e77-1ada-4764-b7a2-7afefed95e8b\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "DEBUG_IMAGE_INFO_GUID:"
+            }
+          ]
+        },
+        "86:PROPERTIES_TABLE_GUID": {
+          "anchor": "pub const PROPERTIES_TABLE_GUID: Guid = guid!(\"880aaca3-4adc-4a04-9079-b747340825e5\");",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "PROPERTIES_TABLE_GUID:"
+            }
+          ]
+        },
+        "92:PropertiesTable": {
+          "anchor": "pub struct PropertiesTable {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data PropertiesTable"
+            }
+          ]
+        },
+        "96:version": {
+          "anchor": "pub version: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "version:"
+            }
+          ]
+        },
+        "100:length": {
+          "anchor": "pub length: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "length:"
+            }
+          ]
+        },
+        "102:memory_protection": {
+          "anchor": "pub memory_protection: MemoryProtectionAttribute,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "memory_protection:"
+            }
+          ]
+        },
+        "109:MemoryProtectionAttribute": {
+          "anchor": "pub struct MemoryProtectionAttribute: usize {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub data MemoryProtectionAttribute"
+            }
+          ]
+        },
+        "112:NON_EXECUTABLE_DATA": {
+          "anchor": "const NON_EXECUTABLE_DATA = 1;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "path": "source/contracts/uefi/raw/tables.omg",
+              "anchor": "pub const MEMORY_PROTECTION_NON_EXECUTABLE_DATA:"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/contracts/uefi/raw/tables.omg",
+          "anchor": "module tables;"
+        }
+      ]
+    }
+  }
+}

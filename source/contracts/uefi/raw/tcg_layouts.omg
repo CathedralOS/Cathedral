@@ -167,4 +167,3 @@ pub machine Tcg2ProtocolX64Layout::plan(schema: Schema) -> Plan
     entries[6] = FieldEntry { key: schema.fields[6].key, placement: FieldPlan::At { offset: 48 } };
     Plan { entries: entries, entry_count: 7, size_fixed: 56, size_is_dynamic: false, align: 8 }
 }
-

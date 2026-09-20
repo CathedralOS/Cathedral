@@ -1,0 +1,323 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) The uefi-rs contributors
+// Derived from https://github.com/rust-osdev/uefi-rs at
+// c0facddf9ba42b74906a37fca2869e6cdbc8da6a, uefi-raw/src/table/{header,system,
+// configuration,boot,runtime}.rs and uefi/src/table/cfg.rs.
+// Modified for Cathedral: Rust-to-Omega transcription, inert address slots,
+// explicit x86-64 layout expectations, and named scalar constants.
+// See tables.PORT.md and ../../../../THIRD_PARTY_NOTICES.md.
+// No field, GUID, handle, or layout plan grants firmware-call or memory authority.
+
+module tables;
+
+use scalars::Guid;
+use scalars::Handle;
+use revision::Revision;
+
+// X64 policies live in tables_layouts.omg; declarations alone do not select ABI.
+// PORT-BLOCKED[omega:layout-address-carrier]: layout materialization must support
+// inert addr fields; current authored Omega UEFI tables substitute u64 carriers.
+// tables_layouts.omg records the separate 45-field reflection-capacity blocker.
+
+pub data Header {
+    signature: u64;
+    revision: Revision;
+    size: u32;
+    crc: u32;
+    reserved: u32;
+}
+
+
+pub data SystemTable {
+    header: Header;
+    firmware_vendor: addr;
+    firmware_revision: u32;
+    stdin_handle: Handle;
+    stdin: addr;
+    stdout_handle: Handle;
+    stdout: addr;
+    stderr_handle: Handle;
+    stderr: addr;
+    runtime_services: addr;
+    boot_services: addr;
+    number_of_configuration_table_entries: u64;
+    configuration_table: addr;
+}
+
+
+pub data ConfigurationTable {
+    vendor_guid: Guid;
+    vendor_table: addr;
+}
+
+
+pub data BootServices {
+    header: Header;
+    // Upstream signature: unsafe extern "efiapi" fn(new_tpl: Tpl) -> Tpl
+    raise_tpl: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(old_tpl: Tpl)
+    restore_tpl: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( alloc_ty: AllocateType, mem_ty: MemoryType, count: usize, addr: *mut PhysicalAddress, ) -> Status
+    allocate_pages: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(addr: PhysicalAddress, pages: usize) -> Status
+    free_pages: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( size: *mut usize, map: *mut MemoryDescriptor, key: *mut usize, desc_size: *mut usize, desc_version: *mut u32, ) -> Status
+    get_memory_map: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( pool_type: MemoryType, size: usize, buffer: *mut *mut u8, ) -> Status
+    allocate_pool: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(buffer: *mut u8) -> Status
+    free_pool: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( ty: EventType, notify_tpl: Tpl, notify_func: Option<EventNotifyFn>, notify_ctx: *mut c_void, out_event: *mut Event, ) -> Status
+    create_event: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(event: Event, ty: TimerDelay, trigger_time: u64) -> Status
+    set_timer: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( number_of_events: usize, events: *const Event, out_index: *mut usize, ) -> Status
+    wait_for_event: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(event: Event) -> Status
+    signal_event: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(event: Event) -> Status
+    close_event: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(event: Event) -> Status
+    check_event: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( handle: *mut Handle, guid: *const Guid, interface_type: InterfaceType, interface: *const c_void, ) -> Status
+    install_protocol_interface: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, protocol: *const Guid, old_interface: *const c_void, new_interface: *const c_void, ) -> Status
+    reinstall_protocol_interface: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, protocol: *const Guid, interface: *const c_void, ) -> Status
+    uninstall_protocol_interface: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, proto: *const Guid, out_proto: *mut *mut c_void, ) -> Status
+    handle_protocol: addr;
+    // Upstream signature: *mut c_void
+    reserved: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( protocol: *const Guid, event: Event, registration: *mut *mut c_void, ) -> Status
+    register_protocol_notify: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( search_ty: i32, proto: *const Guid, key: *const c_void, buf_sz: *mut usize, buf: *mut Handle, ) -> Status
+    locate_handle: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( proto: *const Guid, device_path: *mut *const DevicePathProtocol, out_handle: *mut Handle, ) -> Status
+    locate_device_path: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(guid_entry: *const Guid, table_ptr: *const c_void) -> Status
+    install_configuration_table: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( boot_policy: Boolean, parent_image_handle: Handle, device_path: *const DevicePathProtocol, source_buffer: *const u8, source_size: usize, image_handle: *mut Handle, ) -> Status
+    load_image: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( image_handle: Handle, exit_data_size: *mut usize, exit_data: *mut *mut Char16, ) -> Status
+    start_image: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( image_handle: Handle, exit_status: Status, exit_data_size: usize, exit_data: *mut Char16, ) -> Status
+    exit: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(image_handle: Handle) -> Status
+    unload_image: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(image_handle: Handle, map_key: usize) -> Status
+    exit_boot_services: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(count: *mut u64) -> Status
+    get_next_monotonic_count: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(microseconds: usize) -> Status
+    stall: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( timeout: usize, watchdog_code: u64, data_size: usize, watchdog_data: *const u16, ) -> Status
+    set_watchdog_timer: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( controller: Handle, driver_image: *const Handle, remaining_device_path: *const DevicePathProtocol, recursive: Boolean, ) -> Status
+    connect_controller: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( controller: Handle, driver_image: Handle, child: Handle, ) -> Status
+    disconnect_controller: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, protocol: *const Guid, interface: *mut *mut c_void, agent_handle: Handle, controller_handle: Handle, attributes: u32, ) -> Status
+    open_protocol: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, protocol: *const Guid, agent_handle: Handle, controller_handle: Handle, ) -> Status
+    close_protocol: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, protocol: *const Guid, entry_buffer: *mut *mut OpenProtocolInformationEntry, entry_count: *mut usize, ) -> Status
+    open_protocol_information: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, protocol_buffer: *mut *mut *const Guid, protocol_buffer_count: *mut usize, ) -> Status
+    protocols_per_handle: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( search_ty: i32, proto: *const Guid, key: *const c_void, no_handles: *mut usize, buf: *mut *mut Handle, ) -> Status
+    locate_handle_buffer: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( proto: *const Guid, registration: *const c_void, out_proto: *mut *mut c_void, ) -> Status
+    locate_protocol: addr;
+    // Upstream signature: unsafe extern "C" fn(handle: *mut Handle, ...) -> Status
+    install_multiple_protocol_interfaces: addr;
+    // Upstream signature: unsafe extern "C" fn(handle: Handle, ...) -> Status
+    uninstall_multiple_protocol_interfaces: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(data: *const c_void, data_size: usize, crc32: *mut u32) -> Status
+    calculate_crc32: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(dest: *mut u8, src: *const u8, len: usize)
+    copy_mem: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(buffer: *mut u8, len: usize, value: u8)
+    set_mem: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( ty: EventType, notify_tpl: Tpl, notify_fn: Option<EventNotifyFn>, notify_ctx: *const c_void, event_group: *const Guid, out_event: *mut Event, ) -> Status
+    create_event_ex: addr;
+}
+
+pub const BOOTSERVICES_RAISE_TPL_SLOT: u64 = 0;
+pub const BOOTSERVICES_RESTORE_TPL_SLOT: u64 = 1;
+pub const BOOTSERVICES_ALLOCATE_PAGES_SLOT: u64 = 2;
+pub const BOOTSERVICES_FREE_PAGES_SLOT: u64 = 3;
+pub const BOOTSERVICES_GET_MEMORY_MAP_SLOT: u64 = 4;
+pub const BOOTSERVICES_ALLOCATE_POOL_SLOT: u64 = 5;
+pub const BOOTSERVICES_FREE_POOL_SLOT: u64 = 6;
+pub const BOOTSERVICES_CREATE_EVENT_SLOT: u64 = 7;
+pub const BOOTSERVICES_SET_TIMER_SLOT: u64 = 8;
+pub const BOOTSERVICES_WAIT_FOR_EVENT_SLOT: u64 = 9;
+pub const BOOTSERVICES_SIGNAL_EVENT_SLOT: u64 = 10;
+pub const BOOTSERVICES_CLOSE_EVENT_SLOT: u64 = 11;
+pub const BOOTSERVICES_CHECK_EVENT_SLOT: u64 = 12;
+pub const BOOTSERVICES_INSTALL_PROTOCOL_INTERFACE_SLOT: u64 = 13;
+pub const BOOTSERVICES_REINSTALL_PROTOCOL_INTERFACE_SLOT: u64 = 14;
+pub const BOOTSERVICES_UNINSTALL_PROTOCOL_INTERFACE_SLOT: u64 = 15;
+pub const BOOTSERVICES_HANDLE_PROTOCOL_SLOT: u64 = 16;
+pub const BOOTSERVICES_RESERVED_SLOT: u64 = 17;
+pub const BOOTSERVICES_REGISTER_PROTOCOL_NOTIFY_SLOT: u64 = 18;
+pub const BOOTSERVICES_LOCATE_HANDLE_SLOT: u64 = 19;
+pub const BOOTSERVICES_LOCATE_DEVICE_PATH_SLOT: u64 = 20;
+pub const BOOTSERVICES_INSTALL_CONFIGURATION_TABLE_SLOT: u64 = 21;
+pub const BOOTSERVICES_LOAD_IMAGE_SLOT: u64 = 22;
+pub const BOOTSERVICES_START_IMAGE_SLOT: u64 = 23;
+pub const BOOTSERVICES_EXIT_SLOT: u64 = 24;
+pub const BOOTSERVICES_UNLOAD_IMAGE_SLOT: u64 = 25;
+pub const BOOTSERVICES_EXIT_BOOT_SERVICES_SLOT: u64 = 26;
+pub const BOOTSERVICES_GET_NEXT_MONOTONIC_COUNT_SLOT: u64 = 27;
+pub const BOOTSERVICES_STALL_SLOT: u64 = 28;
+pub const BOOTSERVICES_SET_WATCHDOG_TIMER_SLOT: u64 = 29;
+pub const BOOTSERVICES_CONNECT_CONTROLLER_SLOT: u64 = 30;
+pub const BOOTSERVICES_DISCONNECT_CONTROLLER_SLOT: u64 = 31;
+pub const BOOTSERVICES_OPEN_PROTOCOL_SLOT: u64 = 32;
+pub const BOOTSERVICES_CLOSE_PROTOCOL_SLOT: u64 = 33;
+pub const BOOTSERVICES_OPEN_PROTOCOL_INFORMATION_SLOT: u64 = 34;
+pub const BOOTSERVICES_PROTOCOLS_PER_HANDLE_SLOT: u64 = 35;
+pub const BOOTSERVICES_LOCATE_HANDLE_BUFFER_SLOT: u64 = 36;
+pub const BOOTSERVICES_LOCATE_PROTOCOL_SLOT: u64 = 37;
+pub const BOOTSERVICES_INSTALL_MULTIPLE_PROTOCOL_INTERFACES_SLOT: u64 = 38;
+pub const BOOTSERVICES_UNINSTALL_MULTIPLE_PROTOCOL_INTERFACES_SLOT: u64 = 39;
+pub const BOOTSERVICES_CALCULATE_CRC32_SLOT: u64 = 40;
+pub const BOOTSERVICES_COPY_MEM_SLOT: u64 = 41;
+pub const BOOTSERVICES_SET_MEM_SLOT: u64 = 42;
+pub const BOOTSERVICES_CREATE_EVENT_EX_SLOT: u64 = 43;
+
+pub data RuntimeServices {
+    header: Header;
+    // Upstream signature: unsafe extern "efiapi" fn(time: *mut Time, capabilities: *mut TimeCapabilities) -> Status
+    get_time: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(time: *const Time) -> Status
+    set_time: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( enabled: *mut Boolean, pending: *mut Boolean, time: *mut Time, ) -> Status
+    get_wakeup_time: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(enable: Boolean, time: *const Time) -> Status
+    set_wakeup_time: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( map_size: usize, desc_size: usize, desc_version: u32, virtual_map: *const MemoryDescriptor, ) -> Status
+    set_virtual_address_map: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(debug_disposition: usize, address: *mut *mut c_void) -> Status
+    convert_pointer: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( variable_name: *const Char16, vendor_guid: *const Guid, attributes: *mut VariableAttributes, data_size: *mut usize, data: *mut u8, ) -> Status
+    get_variable: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( variable_name_size: *mut usize, variable_name: *mut u16, vendor_guid: *mut Guid, ) -> Status
+    get_next_variable_name: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( variable_name: *const Char16, vendor_guid: *const Guid, attributes: VariableAttributes, data_size: usize, data: *const u8, ) -> Status
+    set_variable: addr;
+    // Upstream signature: unsafe extern "efiapi" fn(high_count: *mut u32) -> Status
+    get_next_high_monotonic_count: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( rt: ResetType, status: Status, data_size: usize, data: *const u8, ) -> !
+    reset_system: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( capsule_header_array: *const *const CapsuleHeader, capsule_count: usize, scatter_gather_list: PhysicalAddress, ) -> Status
+    update_capsule: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( capsule_header_array: *const *const CapsuleHeader, capsule_count: usize, maximum_capsule_size: *mut u64, reset_type: *mut ResetType, ) -> Status
+    query_capsule_capabilities: addr;
+    // Upstream signature: unsafe extern "efiapi" fn( attributes: VariableAttributes, maximum_variable_storage_size: *mut u64, remaining_variable_storage_size: *mut u64, maximum_variable_size: *mut u64, ) -> Status
+    query_variable_info: addr;
+}
+
+pub const RUNTIMESERVICES_GET_TIME_SLOT: u64 = 0;
+pub const RUNTIMESERVICES_SET_TIME_SLOT: u64 = 1;
+pub const RUNTIMESERVICES_GET_WAKEUP_TIME_SLOT: u64 = 2;
+pub const RUNTIMESERVICES_SET_WAKEUP_TIME_SLOT: u64 = 3;
+pub const RUNTIMESERVICES_SET_VIRTUAL_ADDRESS_MAP_SLOT: u64 = 4;
+pub const RUNTIMESERVICES_CONVERT_POINTER_SLOT: u64 = 5;
+pub const RUNTIMESERVICES_GET_VARIABLE_SLOT: u64 = 6;
+pub const RUNTIMESERVICES_GET_NEXT_VARIABLE_NAME_SLOT: u64 = 7;
+pub const RUNTIMESERVICES_SET_VARIABLE_SLOT: u64 = 8;
+pub const RUNTIMESERVICES_GET_NEXT_HIGH_MONOTONIC_COUNT_SLOT: u64 = 9;
+pub const RUNTIMESERVICES_RESET_SYSTEM_SLOT: u64 = 10;
+pub const RUNTIMESERVICES_UPDATE_CAPSULE_SLOT: u64 = 11;
+pub const RUNTIMESERVICES_QUERY_CAPSULE_CAPABILITIES_SLOT: u64 = 12;
+pub const RUNTIMESERVICES_QUERY_VARIABLE_INFO_SLOT: u64 = 13;
+
+pub data OpenProtocolInformationEntry {
+    agent_handle: Handle;
+    controller_handle: Handle;
+    attributes: u32;
+    open_count: u32;
+}
+
+
+pub data TimeCapabilities {
+    resolution: u32;
+    accuracy: u32;
+    sets_to_zero: u8;
+}
+
+
+pub data PropertiesTable {
+    version: u32;
+    length: u32;
+    memory_protection: MemoryProtectionAttribute;
+}
+
+
+// EventNotifyFn records a callback address only. Upstream signature:
+// unsafe extern "efiapi" fn(event: Event, context: *mut c_void).
+// Callback registration, context custody, and calling-policy installation belong
+// to later admitted boundaries, never to this inert representation.
+pub data EventNotifyFn { raw: addr; }
+
+pub data ResetType [copy] { raw: u32; }
+pub data VariableAttributes [copy] { raw: u32; }
+pub data VariableVendor [copy] { raw: Guid; }
+pub data MemoryProtectionAttribute [copy] { raw: u64; }
+
+pub const SYSTEM_TABLE_SIGNATURE: u64 = 6076298535811760713;
+pub const BOOT_SERVICES_SIGNATURE: u64 = 6220110259551162178;
+pub const RUNTIME_SERVICES_SIGNATURE: u64 = 6220110259551098194;
+pub const TABLE_CRC32_POLYNOMIAL: u32 = 79764919;
+pub const RESET_TYPE_COLD: ResetType = ResetType { raw: 0 };
+pub const RESET_TYPE_WARM: ResetType = ResetType { raw: 1 };
+pub const RESET_TYPE_SHUTDOWN: ResetType = ResetType { raw: 2 };
+pub const RESET_TYPE_PLATFORM_SPECIFIC: ResetType = ResetType { raw: 3 };
+pub const VARIABLE_ATTRIBUTES_NON_VOLATILE: VariableAttributes = VariableAttributes { raw: 1 };
+pub const VARIABLE_ATTRIBUTES_BOOTSERVICE_ACCESS: VariableAttributes = VariableAttributes { raw: 2 };
+pub const VARIABLE_ATTRIBUTES_RUNTIME_ACCESS: VariableAttributes = VariableAttributes { raw: 4 };
+pub const VARIABLE_ATTRIBUTES_HARDWARE_ERROR_RECORD: VariableAttributes = VariableAttributes { raw: 8 };
+pub const VARIABLE_ATTRIBUTES_AUTHENTICATED_WRITE_ACCESS: VariableAttributes = VariableAttributes { raw: 16 };
+pub const VARIABLE_ATTRIBUTES_TIME_BASED_AUTHENTICATED_WRITE_ACCESS: VariableAttributes = VariableAttributes { raw: 32 };
+pub const VARIABLE_ATTRIBUTES_APPEND_WRITE: VariableAttributes = VariableAttributes { raw: 64 };
+pub const VARIABLE_ATTRIBUTES_ENHANCED_AUTHENTICATED_ACCESS: VariableAttributes = VariableAttributes { raw: 128 };
+pub const MEMORY_PROTECTION_NON_EXECUTABLE_DATA: MemoryProtectionAttribute = MemoryProtectionAttribute { raw: 1 };
+
+// Configuration GUIDs are inert identities, not grants to dereference tables.
+// eb9d2d30-2d88-11d3-9a16-0090273fc14d
+pub const ACPI_GUID: Guid = Guid { data1: 0xeb9d2d30, data2: 0x2d88, data3: 0x11d3, data4: [0x9a, 0x16, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+// 8868e871-e4f1-11d3-bc22-0080c73c8881
+pub const ACPI2_GUID: Guid = Guid { data1: 0x8868e871, data2: 0xe4f1, data3: 0x11d3, data4: [0xbc, 0x22, 0x00, 0x80, 0xc7, 0x3c, 0x88, 0x81] };
+// eb9d2d31-2d88-11d3-9a16-0090273fc14d
+pub const SMBIOS_GUID: Guid = Guid { data1: 0xeb9d2d31, data2: 0x2d88, data3: 0x11d3, data4: [0x9a, 0x16, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+// f2fd1544-9794-4a2c-992e-e5bbcf20e394
+pub const SMBIOS3_GUID: Guid = Guid { data1: 0xf2fd1544, data2: 0x9794, data3: 0x4a2c, data4: [0x99, 0x2e, 0xe5, 0xbb, 0xcf, 0x20, 0xe3, 0x94] };
+// b122a263-3661-4f68-9929-78f8b0d62180
+pub const ESRT_GUID: Guid = Guid { data1: 0xb122a263, data2: 0x3661, data3: 0x4f68, data4: [0x99, 0x29, 0x78, 0xf8, 0xb0, 0xd6, 0x21, 0x80] };
+// 7739f24c-93d7-11d4-9a3a-0090273fc14d
+pub const HAND_OFF_BLOCK_LIST_GUID: Guid = Guid { data1: 0x7739f24c, data2: 0x93d7, data3: 0x11d4, data4: [0x9a, 0x3a, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+// 4c19049f-4137-4dd3-9c10-8b97a83ffdfa
+pub const MEMORY_TYPE_INFORMATION_GUID: Guid = Guid { data1: 0x4c19049f, data2: 0x4137, data3: 0x4dd3, data4: [0x9c, 0x10, 0x8b, 0x97, 0xa8, 0x3f, 0xfd, 0xfa] };
+// 060cc026-4c0d-4dda-8f41-595fef00a502
+pub const MEMORY_STATUS_CODE_RECORD_GUID: Guid = Guid { data1: 0x060cc026, data2: 0x4c0d, data3: 0x4dda, data4: [0x8f, 0x41, 0x59, 0x5f, 0xef, 0x00, 0xa5, 0x02] };
+// dcfa911d-26eb-469f-a220-38b7dc461220
+pub const MEMORY_ATTRIBUTES_GUID: Guid = Guid { data1: 0xdcfa911d, data2: 0x26eb, data3: 0x469f, data4: [0xa2, 0x20, 0x38, 0xb7, 0xdc, 0x46, 0x12, 0x20] };
+// d719b2cb-3d3a-4596-a3bc-dad00e67656f
+pub const IMAGE_SECURITY_DATABASE_GUID: Guid = Guid { data1: 0xd719b2cb, data2: 0x3d3a, data3: 0x4596, data4: [0xa3, 0xbc, 0xda, 0xd0, 0x0e, 0x67, 0x65, 0x6f] };
+// 05ad34ba-6f02-4214-952e-4da0398e2bb9
+pub const DXE_SERVICES_GUID: Guid = Guid { data1: 0x05ad34ba, data2: 0x6f02, data3: 0x4214, data4: [0x95, 0x2e, 0x4d, 0xa0, 0x39, 0x8e, 0x2b, 0xb9] };
+// ee4e5898-3914-4259-9d6e-dc7bd79403cf
+pub const LZMA_COMPRESS_GUID: Guid = Guid { data1: 0xee4e5898, data2: 0x3914, data3: 0x4259, data4: [0x9d, 0x6e, 0xdc, 0x7b, 0xd7, 0x94, 0x03, 0xcf] };
+// a31280ad-481e-41b6-95e8-127f4c984779
+pub const TIANO_COMPRESS_GUID: Guid = Guid { data1: 0xa31280ad, data2: 0x481e, data3: 0x41b6, data4: [0x95, 0xe8, 0x12, 0x7f, 0x4c, 0x98, 0x47, 0x79] };
+// 49152e77-1ada-4764-b7a2-7afefed95e8b
+pub const DEBUG_IMAGE_INFO_GUID: Guid = Guid { data1: 0x49152e77, data2: 0x1ada, data3: 0x4764, data4: [0xb7, 0xa2, 0x7a, 0xfe, 0xfe, 0xd9, 0x5e, 0x8b] };
+// 880aaca3-4adc-4a04-9079-b747340825e5
+pub const PROPERTIES_TABLE_GUID: Guid = Guid { data1: 0x880aaca3, data2: 0x4adc, data3: 0x4a04, data4: [0x90, 0x79, 0xb7, 0x47, 0x34, 0x08, 0x25, 0xe5] };
+// 8be4df61-93ca-11d2-aa0d-00e098032b8c
+pub const VARIABLE_VENDOR_GLOBAL_VARIABLE: VariableVendor = VariableVendor { raw: Guid { data1: 0x8be4df61, data2: 0x93ca, data3: 0x11d2, data4: [0xaa, 0x0d, 0x00, 0xe0, 0x98, 0x03, 0x2b, 0x8c] } };
+// d719b2cb-3d3a-4596-a3bc-dad00e67656f
+pub const VARIABLE_VENDOR_IMAGE_SECURITY_DATABASE: VariableVendor = VariableVendor { raw: Guid { data1: 0xd719b2cb, data2: 0x3d3a, data3: 0x4596, data4: [0xa3, 0xbc, 0xda, 0xd0, 0x0e, 0x67, 0x65, 0x6f] } };
