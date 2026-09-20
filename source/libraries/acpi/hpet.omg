@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pinned acpi src/sdt/hpet.rs; HPET1.0a clarifies encoded timer count.
+module hpet;
+use headers::SdtResult;
+use headers::SIGNATURE_HPET;
+use parser::parse_sdt;
+use fixed_types::HpetTable;
+use fixed_types::HpetTableResult;
+use fixed_decode::decode_hpet_table;
+pub data PageProtection [copy] { case None; case Protected4K; case Protected64K; case Other; }
+pub data HpetInfo [copy] {
+    hardware_rev: u8; num_comparators: u8; comparator_count_encoded: u8;
+    main_counter_is_64bits: bool; legacy_irq_capable: bool; pci_vendor_id: u16;
+    base_address: u64; address_space: u8; hpet_number: u8; clock_tick_unit: u16;
+    page_protection: PageProtection; oem_attributes: u8;
+}
+pub machine parse_hpet(input: &[u8; 4096], length: u64) -> HpetTableResult {
+    let header: SdtResult = parse_sdt(input, length, SIGNATURE_HPET);
+    transition { header.error != 0 -> (HpetTableResult { error: header.error })
+        header.value.length < 56 -> (HpetTableResult { error: 5 })
+        header.value.revision != 1 -> (HpetTableResult { error: 4 }) _ -> decode(input, header) }
+    state decode(input: &[u8; 4096], header: SdtResult) -> HpetTableResult {
+        let result: HpetTableResult = decode_hpet_table(input, header.value.length as u64, 0, header.value);
+        result
+    }
+}
+pub machine page_protection(value: u8) -> PageProtection {
+    transition (value & 15) { 0 -> (PageProtection::None) 1 -> (PageProtection::Protected4K)
+        2 -> (PageProtection::Protected64K) _ -> (PageProtection::Other) }
+}
+pub machine hpet_info(value: HpetTable) -> HpetInfo {
+    let protection: PageProtection = page_protection(value.page_protection_and_oem);
+    let encoded: u8 = ((value.event_timer_block_id >> 8) & 31) as u8;
+    HpetInfo { hardware_rev: (value.event_timer_block_id & 255) as u8,
+        num_comparators: (encoded & 31) + 1, comparator_count_encoded: encoded,
+        main_counter_is_64bits: (value.event_timer_block_id & 8192) != 0,
+        legacy_irq_capable: (value.event_timer_block_id & 32768) != 0,
+        pci_vendor_id: ((value.event_timer_block_id >> 16) & 65535) as u16,
+        base_address: value.base_address.address, address_space: value.base_address.address_space,
+        hpet_number: value.hpet_number, clock_tick_unit: value.clock_tick_unit,
+        page_protection: protection, oem_attributes: (value.page_protection_and_oem >> 4) & 15 }
+}

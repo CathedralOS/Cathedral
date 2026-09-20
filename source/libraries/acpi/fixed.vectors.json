@@ -1,0 +1,963 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "measurements": {
+    "EntryHeader.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "EntryHeader.entry_type": {
+      "kind": "offset",
+      "value": 0
+    },
+    "EntryHeader.length": {
+      "kind": "offset",
+      "value": 1
+    },
+    "EntryHeader.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "Fadt._reserved": {
+      "kind": "offset",
+      "value": 44
+    },
+    "Fadt._reserved2": {
+      "kind": "offset",
+      "value": 111
+    },
+    "Fadt.acpi_disable": {
+      "kind": "offset",
+      "value": 53
+    },
+    "Fadt.acpi_enable": {
+      "kind": "offset",
+      "value": 52
+    },
+    "Fadt.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Fadt.arm_boot_arch": {
+      "kind": "offset",
+      "value": 129
+    },
+    "Fadt.c_state_control": {
+      "kind": "offset",
+      "value": 95
+    },
+    "Fadt.century": {
+      "kind": "offset",
+      "value": 108
+    },
+    "Fadt.day_alarm": {
+      "kind": "offset",
+      "value": 106
+    },
+    "Fadt.dsdt_address": {
+      "kind": "offset",
+      "value": 40
+    },
+    "Fadt.duty_offset": {
+      "kind": "offset",
+      "value": 104
+    },
+    "Fadt.duty_width": {
+      "kind": "offset",
+      "value": 105
+    },
+    "Fadt.fadt_minor_version": {
+      "kind": "offset",
+      "value": 131
+    },
+    "Fadt.firmware_ctrl": {
+      "kind": "offset",
+      "value": 36
+    },
+    "Fadt.flags": {
+      "kind": "offset",
+      "value": 112
+    },
+    "Fadt.flush_size": {
+      "kind": "offset",
+      "value": 100
+    },
+    "Fadt.flush_stride": {
+      "kind": "offset",
+      "value": 102
+    },
+    "Fadt.gpe0_block": {
+      "kind": "offset",
+      "value": 80
+    },
+    "Fadt.gpe0_block_length": {
+      "kind": "offset",
+      "value": 92
+    },
+    "Fadt.gpe1_base": {
+      "kind": "offset",
+      "value": 94
+    },
+    "Fadt.gpe1_block": {
+      "kind": "offset",
+      "value": 84
+    },
+    "Fadt.gpe1_block_length": {
+      "kind": "offset",
+      "value": 93
+    },
+    "Fadt.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Fadt.hypervisor_vendor_id": {
+      "kind": "offset",
+      "value": 268
+    },
+    "Fadt.iapc_boot_arch": {
+      "kind": "offset",
+      "value": 109
+    },
+    "Fadt.month_alarm": {
+      "kind": "offset",
+      "value": 107
+    },
+    "Fadt.pm1_control_length": {
+      "kind": "offset",
+      "value": 89
+    },
+    "Fadt.pm1_event_length": {
+      "kind": "offset",
+      "value": 88
+    },
+    "Fadt.pm1a_control_block": {
+      "kind": "offset",
+      "value": 64
+    },
+    "Fadt.pm1a_event_block": {
+      "kind": "offset",
+      "value": 56
+    },
+    "Fadt.pm1b_control_block": {
+      "kind": "offset",
+      "value": 68
+    },
+    "Fadt.pm1b_event_block": {
+      "kind": "offset",
+      "value": 60
+    },
+    "Fadt.pm2_control_block": {
+      "kind": "offset",
+      "value": 72
+    },
+    "Fadt.pm2_control_length": {
+      "kind": "offset",
+      "value": 90
+    },
+    "Fadt.pm_timer_block": {
+      "kind": "offset",
+      "value": 76
+    },
+    "Fadt.pm_timer_length": {
+      "kind": "offset",
+      "value": 91
+    },
+    "Fadt.preferred_pm_profile": {
+      "kind": "offset",
+      "value": 45
+    },
+    "Fadt.pstate_control": {
+      "kind": "offset",
+      "value": 55
+    },
+    "Fadt.reset_reg": {
+      "kind": "offset",
+      "value": 116
+    },
+    "Fadt.reset_value": {
+      "kind": "offset",
+      "value": 128
+    },
+    "Fadt.s4bios_req": {
+      "kind": "offset",
+      "value": 54
+    },
+    "Fadt.sci_interrupt": {
+      "kind": "offset",
+      "value": 46
+    },
+    "Fadt.size": {
+      "kind": "size",
+      "value": 276
+    },
+    "Fadt.sleep_control_reg": {
+      "kind": "offset",
+      "value": 244
+    },
+    "Fadt.sleep_status_reg": {
+      "kind": "offset",
+      "value": 256
+    },
+    "Fadt.smi_cmd_port": {
+      "kind": "offset",
+      "value": 48
+    },
+    "Fadt.worst_c2_latency": {
+      "kind": "offset",
+      "value": 96
+    },
+    "Fadt.worst_c3_latency": {
+      "kind": "offset",
+      "value": 98
+    },
+    "Fadt.x_dsdt_address": {
+      "kind": "offset",
+      "value": 140
+    },
+    "Fadt.x_firmware_ctrl": {
+      "kind": "offset",
+      "value": 132
+    },
+    "Fadt.x_gpe0_block": {
+      "kind": "offset",
+      "value": 220
+    },
+    "Fadt.x_gpe1_block": {
+      "kind": "offset",
+      "value": 232
+    },
+    "Fadt.x_pm1a_control_block": {
+      "kind": "offset",
+      "value": 172
+    },
+    "Fadt.x_pm1a_event_block": {
+      "kind": "offset",
+      "value": 148
+    },
+    "Fadt.x_pm1b_control_block": {
+      "kind": "offset",
+      "value": 184
+    },
+    "Fadt.x_pm1b_event_block": {
+      "kind": "offset",
+      "value": 160
+    },
+    "Fadt.x_pm2_control_block": {
+      "kind": "offset",
+      "value": 196
+    },
+    "Fadt.x_pm_timer_block": {
+      "kind": "offset",
+      "value": 208
+    },
+    "GicInterruptTranslationServiceEntry._reserved1": {
+      "kind": "offset",
+      "value": 2
+    },
+    "GicInterruptTranslationServiceEntry._reserved2": {
+      "kind": "offset",
+      "value": 16
+    },
+    "GicInterruptTranslationServiceEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "GicInterruptTranslationServiceEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "GicInterruptTranslationServiceEntry.id": {
+      "kind": "offset",
+      "value": 4
+    },
+    "GicInterruptTranslationServiceEntry.physical_base_address": {
+      "kind": "offset",
+      "value": 8
+    },
+    "GicInterruptTranslationServiceEntry.size": {
+      "kind": "size",
+      "value": 20
+    },
+    "GicMsiFrameEntry._reserved": {
+      "kind": "offset",
+      "value": 2
+    },
+    "GicMsiFrameEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "GicMsiFrameEntry.flags": {
+      "kind": "offset",
+      "value": 16
+    },
+    "GicMsiFrameEntry.frame_id": {
+      "kind": "offset",
+      "value": 4
+    },
+    "GicMsiFrameEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "GicMsiFrameEntry.physical_base_address": {
+      "kind": "offset",
+      "value": 8
+    },
+    "GicMsiFrameEntry.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "GicMsiFrameEntry.spi_base": {
+      "kind": "offset",
+      "value": 22
+    },
+    "GicMsiFrameEntry.spi_count": {
+      "kind": "offset",
+      "value": 20
+    },
+    "GicRedistributorEntry._reserved": {
+      "kind": "offset",
+      "value": 2
+    },
+    "GicRedistributorEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "GicRedistributorEntry.discovery_range_base_address": {
+      "kind": "offset",
+      "value": 4
+    },
+    "GicRedistributorEntry.discovery_range_length": {
+      "kind": "offset",
+      "value": 12
+    },
+    "GicRedistributorEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "GicRedistributorEntry.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "GiccEntry._reserved1": {
+      "kind": "offset",
+      "value": 2
+    },
+    "GiccEntry._reserved2": {
+      "kind": "offset",
+      "value": 77
+    },
+    "GiccEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "GiccEntry.cpu_interface_number": {
+      "kind": "offset",
+      "value": 4
+    },
+    "GiccEntry.flags": {
+      "kind": "offset",
+      "value": 12
+    },
+    "GiccEntry.gic_hypervisor_registers_address": {
+      "kind": "offset",
+      "value": 48
+    },
+    "GiccEntry.gic_registers_address": {
+      "kind": "offset",
+      "value": 32
+    },
+    "GiccEntry.gic_virtual_registers_address": {
+      "kind": "offset",
+      "value": 40
+    },
+    "GiccEntry.gicr_base_address": {
+      "kind": "offset",
+      "value": 60
+    },
+    "GiccEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "GiccEntry.mpidr": {
+      "kind": "offset",
+      "value": 68
+    },
+    "GiccEntry.parked_address": {
+      "kind": "offset",
+      "value": 24
+    },
+    "GiccEntry.parking_protocol_version": {
+      "kind": "offset",
+      "value": 16
+    },
+    "GiccEntry.performance_interrupt_gsiv": {
+      "kind": "offset",
+      "value": 20
+    },
+    "GiccEntry.processor_power_efficiency_class": {
+      "kind": "offset",
+      "value": 76
+    },
+    "GiccEntry.processor_uid": {
+      "kind": "offset",
+      "value": 8
+    },
+    "GiccEntry.size": {
+      "kind": "size",
+      "value": 82
+    },
+    "GiccEntry.spe_overflow_interrupt": {
+      "kind": "offset",
+      "value": 78
+    },
+    "GiccEntry.trbe_interrupt": {
+      "kind": "offset",
+      "value": 80
+    },
+    "GiccEntry.vgic_maintenance_interrupt": {
+      "kind": "offset",
+      "value": 56
+    },
+    "GicdEntry._reserved1": {
+      "kind": "offset",
+      "value": 2
+    },
+    "GicdEntry._reserved2": {
+      "kind": "offset",
+      "value": 21
+    },
+    "GicdEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "GicdEntry.gic_id": {
+      "kind": "offset",
+      "value": 4
+    },
+    "GicdEntry.gic_version": {
+      "kind": "offset",
+      "value": 20
+    },
+    "GicdEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "GicdEntry.physical_base_address": {
+      "kind": "offset",
+      "value": 8
+    },
+    "GicdEntry.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "GicdEntry.system_vector_base": {
+      "kind": "offset",
+      "value": 16
+    },
+    "HpetTable.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "HpetTable.base_address": {
+      "kind": "offset",
+      "value": 40
+    },
+    "HpetTable.clock_tick_unit": {
+      "kind": "offset",
+      "value": 53
+    },
+    "HpetTable.event_timer_block_id": {
+      "kind": "offset",
+      "value": 36
+    },
+    "HpetTable.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "HpetTable.hpet_number": {
+      "kind": "offset",
+      "value": 52
+    },
+    "HpetTable.page_protection_and_oem": {
+      "kind": "offset",
+      "value": 55
+    },
+    "HpetTable.size": {
+      "kind": "size",
+      "value": 56
+    },
+    "InterruptSourceOverrideEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "InterruptSourceOverrideEntry.bus": {
+      "kind": "offset",
+      "value": 2
+    },
+    "InterruptSourceOverrideEntry.flags": {
+      "kind": "offset",
+      "value": 8
+    },
+    "InterruptSourceOverrideEntry.global_system_interrupt": {
+      "kind": "offset",
+      "value": 4
+    },
+    "InterruptSourceOverrideEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "InterruptSourceOverrideEntry.irq": {
+      "kind": "offset",
+      "value": 3
+    },
+    "InterruptSourceOverrideEntry.size": {
+      "kind": "size",
+      "value": 10
+    },
+    "IoApicEntry._reserved": {
+      "kind": "offset",
+      "value": 3
+    },
+    "IoApicEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "IoApicEntry.global_system_interrupt_base": {
+      "kind": "offset",
+      "value": 8
+    },
+    "IoApicEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "IoApicEntry.io_apic_address": {
+      "kind": "offset",
+      "value": 4
+    },
+    "IoApicEntry.io_apic_id": {
+      "kind": "offset",
+      "value": 2
+    },
+    "IoApicEntry.size": {
+      "kind": "size",
+      "value": 12
+    },
+    "IoSapicEntry._reserved": {
+      "kind": "offset",
+      "value": 3
+    },
+    "IoSapicEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "IoSapicEntry.global_system_interrupt_base": {
+      "kind": "offset",
+      "value": 4
+    },
+    "IoSapicEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "IoSapicEntry.io_apic_id": {
+      "kind": "offset",
+      "value": 2
+    },
+    "IoSapicEntry.io_sapic_address": {
+      "kind": "offset",
+      "value": 8
+    },
+    "IoSapicEntry.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "LocalApicAddressOverrideEntry._reserved": {
+      "kind": "offset",
+      "value": 2
+    },
+    "LocalApicAddressOverrideEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "LocalApicAddressOverrideEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "LocalApicAddressOverrideEntry.local_apic_address": {
+      "kind": "offset",
+      "value": 4
+    },
+    "LocalApicAddressOverrideEntry.size": {
+      "kind": "size",
+      "value": 12
+    },
+    "LocalApicEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "LocalApicEntry.apic_id": {
+      "kind": "offset",
+      "value": 3
+    },
+    "LocalApicEntry.flags": {
+      "kind": "offset",
+      "value": 4
+    },
+    "LocalApicEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "LocalApicEntry.processor_id": {
+      "kind": "offset",
+      "value": 2
+    },
+    "LocalApicEntry.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "LocalApicNmiEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "LocalApicNmiEntry.flags": {
+      "kind": "offset",
+      "value": 3
+    },
+    "LocalApicNmiEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "LocalApicNmiEntry.nmi_line": {
+      "kind": "offset",
+      "value": 5
+    },
+    "LocalApicNmiEntry.processor_id": {
+      "kind": "offset",
+      "value": 2
+    },
+    "LocalApicNmiEntry.size": {
+      "kind": "size",
+      "value": 6
+    },
+    "LocalSapicEntry._reserved": {
+      "kind": "offset",
+      "value": 5
+    },
+    "LocalSapicEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "LocalSapicEntry.flags": {
+      "kind": "offset",
+      "value": 8
+    },
+    "LocalSapicEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "LocalSapicEntry.local_sapic_eid": {
+      "kind": "offset",
+      "value": 4
+    },
+    "LocalSapicEntry.local_sapic_id": {
+      "kind": "offset",
+      "value": 3
+    },
+    "LocalSapicEntry.processor_id": {
+      "kind": "offset",
+      "value": 2
+    },
+    "LocalSapicEntry.processor_uid": {
+      "kind": "offset",
+      "value": 12
+    },
+    "LocalSapicEntry.processor_uid_string": {
+      "kind": "offset",
+      "value": 16
+    },
+    "LocalSapicEntry.size": {
+      "kind": "size",
+      "value": 17
+    },
+    "LocalX2ApicEntry._reserved": {
+      "kind": "offset",
+      "value": 2
+    },
+    "LocalX2ApicEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "LocalX2ApicEntry.flags": {
+      "kind": "offset",
+      "value": 8
+    },
+    "LocalX2ApicEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "LocalX2ApicEntry.processor_uid": {
+      "kind": "offset",
+      "value": 12
+    },
+    "LocalX2ApicEntry.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "LocalX2ApicEntry.x2apic_id": {
+      "kind": "offset",
+      "value": 4
+    },
+    "Madt._pinned": {
+      "kind": "offset",
+      "value": 44
+    },
+    "Madt.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Madt.flags": {
+      "kind": "offset",
+      "value": 40
+    },
+    "Madt.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Madt.local_apic_address": {
+      "kind": "offset",
+      "value": 36
+    },
+    "Madt.size": {
+      "kind": "size",
+      "value": 44
+    },
+    "Mcfg._reserved": {
+      "kind": "offset",
+      "value": 36
+    },
+    "Mcfg.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "Mcfg.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "Mcfg.size": {
+      "kind": "size",
+      "value": 44
+    },
+    "McfgEntry._reserved": {
+      "kind": "offset",
+      "value": 12
+    },
+    "McfgEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "McfgEntry.base_address": {
+      "kind": "offset",
+      "value": 0
+    },
+    "McfgEntry.bus_number_end": {
+      "kind": "offset",
+      "value": 11
+    },
+    "McfgEntry.bus_number_start": {
+      "kind": "offset",
+      "value": 10
+    },
+    "McfgEntry.pci_segment_group": {
+      "kind": "offset",
+      "value": 8
+    },
+    "McfgEntry.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "MultiprocessorWakeupEntry._reserved": {
+      "kind": "offset",
+      "value": 4
+    },
+    "MultiprocessorWakeupEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "MultiprocessorWakeupEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "MultiprocessorWakeupEntry.mailbox_address": {
+      "kind": "offset",
+      "value": 8
+    },
+    "MultiprocessorWakeupEntry.mailbox_version": {
+      "kind": "offset",
+      "value": 2
+    },
+    "MultiprocessorWakeupEntry.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "MultiprocessorWakeupMailbox._reserved": {
+      "kind": "offset",
+      "value": 2
+    },
+    "MultiprocessorWakeupMailbox.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "MultiprocessorWakeupMailbox.apic_id": {
+      "kind": "offset",
+      "value": 4
+    },
+    "MultiprocessorWakeupMailbox.command": {
+      "kind": "offset",
+      "value": 0
+    },
+    "MultiprocessorWakeupMailbox.reserved_for_firmware": {
+      "kind": "offset",
+      "value": 2048
+    },
+    "MultiprocessorWakeupMailbox.reserved_for_os": {
+      "kind": "offset",
+      "value": 16
+    },
+    "MultiprocessorWakeupMailbox.size": {
+      "kind": "size",
+      "value": 4096
+    },
+    "MultiprocessorWakeupMailbox.wakeup_vector": {
+      "kind": "offset",
+      "value": 8
+    },
+    "NmiSourceEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "NmiSourceEntry.flags": {
+      "kind": "offset",
+      "value": 2
+    },
+    "NmiSourceEntry.global_system_interrupt": {
+      "kind": "offset",
+      "value": 4
+    },
+    "NmiSourceEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "NmiSourceEntry.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "PlatformInterruptSourceEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "PlatformInterruptSourceEntry.flags": {
+      "kind": "offset",
+      "value": 2
+    },
+    "PlatformInterruptSourceEntry.global_system_interrupt": {
+      "kind": "offset",
+      "value": 8
+    },
+    "PlatformInterruptSourceEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "PlatformInterruptSourceEntry.interrupt_type": {
+      "kind": "offset",
+      "value": 4
+    },
+    "PlatformInterruptSourceEntry.io_sapic_vector": {
+      "kind": "offset",
+      "value": 7
+    },
+    "PlatformInterruptSourceEntry.platform_interrupt_source_flags": {
+      "kind": "offset",
+      "value": 12
+    },
+    "PlatformInterruptSourceEntry.processor_eid": {
+      "kind": "offset",
+      "value": 6
+    },
+    "PlatformInterruptSourceEntry.processor_id": {
+      "kind": "offset",
+      "value": 5
+    },
+    "PlatformInterruptSourceEntry.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "RawGenericAddress.access_size": {
+      "kind": "offset",
+      "value": 3
+    },
+    "RawGenericAddress.address": {
+      "kind": "offset",
+      "value": 4
+    },
+    "RawGenericAddress.address_space": {
+      "kind": "offset",
+      "value": 0
+    },
+    "RawGenericAddress.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "RawGenericAddress.bit_offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "RawGenericAddress.bit_width": {
+      "kind": "offset",
+      "value": 1
+    },
+    "RawGenericAddress.size": {
+      "kind": "size",
+      "value": 12
+    },
+    "X2ApicNmiEntry._reserved": {
+      "kind": "offset",
+      "value": 9
+    },
+    "X2ApicNmiEntry.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "X2ApicNmiEntry.flags": {
+      "kind": "offset",
+      "value": 2
+    },
+    "X2ApicNmiEntry.header": {
+      "kind": "offset",
+      "value": 0
+    },
+    "X2ApicNmiEntry.nmi_line": {
+      "kind": "offset",
+      "value": 8
+    },
+    "X2ApicNmiEntry.processor_uid": {
+      "kind": "offset",
+      "value": 4
+    },
+    "X2ApicNmiEntry.size": {
+      "kind": "size",
+      "value": 12
+    }
+  },
+  "provenance": {
+    "description": "Exact pinned Rust field/representation declarations compiled as a minimal host-only layout probe, numeric facts cross-checked against ACPI6.6/HPET1.0a. No Omega native layout assertion.",
+    "kind": "upstream",
+    "sources": [
+      "https://github.com/rust-osdev/acpi/tree/257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+      "https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html",
+      "https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/software-developers-hpet-spec-1-0a.pdf"
+    ]
+  },
+  "target": {
+    "abi": "ACPI serialized packed records; host Rust declaration observation, not Omega ABI",
+    "endian": "little",
+    "pointer_bits": 64
+  }
+}

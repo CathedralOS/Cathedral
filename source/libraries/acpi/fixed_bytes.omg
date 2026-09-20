@@ -1,0 +1,54 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original bounded initialized-byte support for the fixed-table port.
+module fixed_bytes;
+use bytes::le32;
+use bytes::le64;
+pub data U8Result [copy] { error: u8; value: u8; }
+pub data U16Result [copy] { error: u8; value: u16; }
+pub data U32Result [copy] { error: u8; value: u32; }
+pub data U64Result [copy] { error: u8; value: u64; }
+pub data OptionalU16 [copy] { present: bool; value: u16; }
+pub data OptionalU64 [copy] { present: bool; value: u64; }
+pub machine read_u8(input: &[u8; 4096], length: u64, offset: u64) -> U8Result {
+    transition length <= 4096 && offset < length && offset < 4096 {
+        true -> (U8Result { value: input[offset] }) _ -> (U8Result { error: 2 })
+    }
+}
+pub machine read_u16(input: &[u8; 4096], length: u64, offset: u64) -> U16Result {
+    transition length <= 4096 && offset <= length && offset <= 4094 {
+        true -> extent(input, length, offset) _ -> (U16Result { error: 2 })
+    }
+    state extent(input: &[u8; 4096], length: u64, offset: u64) -> U16Result {
+        let next: u64 = offset + 1;
+        transition length - offset >= 2 && next < 4096 {
+            true -> decode(input, offset, next) _ -> (U16Result { error: 2 })
+        }
+    }
+    state decode(input: &[u8; 4096], offset: u64, next: u64) -> U16Result {
+        U16Result { value: (input[offset] as u16) | ((input[next] as u16) << 8) }
+    }
+}
+pub machine read_u32(input: &[u8; 4096], length: u64, offset: u64) -> U32Result {
+    transition length <= 4096 && offset <= length && offset <= 4092 {
+        true -> extent(input, length, offset) _ -> (U32Result { error: 2 })
+    }
+    state extent(input: &[u8; 4096], length: u64, offset: u64) -> U32Result {
+        transition length - offset >= 4 { true -> decode(input, offset) _ -> (U32Result { error: 2 }) }
+    }
+    state decode(input: &[u8; 4096], offset: u64) -> U32Result {
+        let value: u32 = le32(input, offset);
+        U32Result { value: value }
+    }
+}
+pub machine read_u64(input: &[u8; 4096], length: u64, offset: u64) -> U64Result {
+    transition length <= 4096 && offset <= length && offset <= 4088 {
+        true -> extent(input, length, offset) _ -> (U64Result { error: 2 })
+    }
+    state extent(input: &[u8; 4096], length: u64, offset: u64) -> U64Result {
+        transition length - offset >= 8 { true -> decode(input, offset) _ -> (U64Result { error: 2 }) }
+    }
+    state decode(input: &[u8; 4096], offset: u64) -> U64Result {
+        let value: u64 = le64(input, offset);
+        U64Result { value: value }
+    }
+}

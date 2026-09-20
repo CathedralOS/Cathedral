@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pinned acpi src/sdt/mcfg.rs. Explicit opt-in retains the partial-tail quirk.
+module mcfg;
+use headers::SdtResult;
+use headers::SIGNATURE_MCFG;
+use parser::parse_sdt;
+use fixed_types::Mcfg;
+use fixed_types::McfgResult;
+use fixed_types::McfgEntry;
+use fixed_types::McfgEntryResult;
+use fixed_decode::decode_mcfg;
+use fixed_decode::decode_mcfg_entry;
+pub data McfgView [copy] { error: u8; value: Mcfg; entry_count: u64; ignored_tail_bytes: u8; }
+pub machine parse_mcfg(input: &[u8; 4096], length: u64, allow_partial_tail: bool) -> McfgView {
+    let header: SdtResult = parse_sdt(input, length, SIGNATURE_MCFG);
+    transition { header.error != 0 -> (McfgView { error: header.error })
+        header.value.length < 44 -> (McfgView { error: 5 })
+        header.value.revision != 1 -> (McfgView { error: 4 }) _ -> shape(input, header, allow_partial_tail) }
+    state shape(input: &[u8; 4096], header: SdtResult, allow_partial_tail: bool) -> McfgView {
+        let payload: u32 = header.value.length - 44;
+        let tail: u8 = (payload & 15) as u8;
+        transition tail == 0 || allow_partial_tail {
+            true -> decode(input, header, payload, tail) _ -> (McfgView { error: 9 }) }
+    }
+    state decode(input: &[u8; 4096], header: SdtResult, payload: u32, tail: u8) -> McfgView {
+        let table: McfgResult = decode_mcfg(input, header.value.length as u64, 0, header.value);
+        McfgView { error: table.error, value: table.value, entry_count: (payload / 16) as u64, ignored_tail_bytes: tail }
+    }
+}
+pub machine mcfg_entry(input: &[u8; 4096], length: u64, allow_partial_tail: bool, index: u64) -> McfgEntryResult {
+    let table: McfgView = parse_mcfg(input, length, allow_partial_tail);
+    transition { table.error != 0 -> (McfgEntryResult { error: table.error })
+        index >= table.entry_count -> (McfgEntryResult { error: 10 })
+        index > 252 -> (McfgEntryResult { error: 10 }) _ -> decode(input, table, index) }
+    state decode(input: &[u8; 4096], table: McfgView, index: u64) -> McfgEntryResult {
+        let offset: u64 = 44 + index * 16;
+        let result: McfgEntryResult = decode_mcfg_entry(input, table.value.header.length as u64, offset);
+        transition { result.error != 0 -> (result)
+            result.value.bus_number_start > result.value.bus_number_end -> (McfgEntryResult { error: 13 }) _ -> (result) }
+    }
+}

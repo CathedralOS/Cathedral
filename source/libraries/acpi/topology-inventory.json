@@ -1,0 +1,617 @@
+{
+  "files": {
+    "src/platform/interrupt.rs": {
+      "disposition": "translated",
+      "note": "Partial API translation; every anchor classified below.",
+      "sha256": "c9a95f11b49535cd2baee66bdb55944870df284d3bc65f7a0e34416c5631c2bf",
+      "symbols": {
+        "16:crate::sdt::madt::{Polarity, TriggerMode};": {
+          "anchor": "pub use crate::sdt::madt::{Polarity, TriggerMode};",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "use madt::Polarity;",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "20:InterruptModel": {
+          "anchor": "pub enum InterruptModel<A: Allocator = Global> {",
+          "disposition": "omitted",
+          "reason": "Whole mapped/allocator aggregate and model-selection API replaced by explicit topology_header/topology_next stream. No full AcpiTables constructor or global InterruptModel identity is claimed."
+        },
+        "253:IoApic": {
+          "anchor": "pub struct IoApic {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data IoApic",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "254:id": {
+          "anchor": "pub id: u8,",
+          "disposition": "translated",
+          "note": "Owned inert field; local NMI additionally retains polarity/trigger facts the pin drops.",
+          "targets": [
+            {
+              "anchor": "id:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "256:address": {
+          "anchor": "pub address: u32,",
+          "disposition": "translated",
+          "note": "Owned inert field; local NMI additionally retains polarity/trigger facts the pin drops.",
+          "targets": [
+            {
+              "anchor": "address:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "258:global_system_interrupt_base": {
+          "anchor": "pub global_system_interrupt_base: u32,",
+          "disposition": "translated",
+          "note": "Owned inert field; local NMI additionally retains polarity/trigger facts the pin drops.",
+          "targets": [
+            {
+              "anchor": "global_system_interrupt_base:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "262:NmiLine": {
+          "anchor": "pub struct NmiLine {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data NmiLine",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "263:processor": {
+          "anchor": "pub processor: NmiProcessor,",
+          "disposition": "translated",
+          "note": "Owned inert field; local NMI additionally retains polarity/trigger facts the pin drops.",
+          "targets": [
+            {
+              "anchor": "processor:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "264:line": {
+          "anchor": "pub line: LocalInterruptLine,",
+          "disposition": "translated",
+          "note": "Owned inert field; local NMI additionally retains polarity/trigger facts the pin drops.",
+          "targets": [
+            {
+              "anchor": "line:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "270:LocalInterruptLine": {
+          "anchor": "pub enum LocalInterruptLine {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data LocalInterruptLine",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "276:NmiProcessor": {
+          "anchor": "pub enum NmiProcessor {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data NmiProcessor",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "286:InterruptSourceOverride": {
+          "anchor": "pub struct InterruptSourceOverride {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data InterruptSourceOverride",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "287:isa_source": {
+          "anchor": "pub isa_source: u8,",
+          "disposition": "translated",
+          "note": "Owned inert field; local NMI additionally retains polarity/trigger facts the pin drops.",
+          "targets": [
+            {
+              "anchor": "isa_source:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "288:global_system_interrupt": {
+          "anchor": "pub global_system_interrupt: u32,",
+          "disposition": "translated",
+          "note": "Owned inert field; local NMI additionally retains polarity/trigger facts the pin drops.",
+          "targets": [
+            {
+              "anchor": "global_system_interrupt:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "289:polarity": {
+          "anchor": "pub polarity: Polarity,",
+          "disposition": "translated",
+          "note": "Owned inert field; local NMI additionally retains polarity/trigger facts the pin drops.",
+          "targets": [
+            {
+              "anchor": "polarity:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "290:trigger_mode": {
+          "anchor": "pub trigger_mode: TriggerMode,",
+          "disposition": "translated",
+          "note": "Owned inert field; local NMI additionally retains polarity/trigger facts the pin drops.",
+          "targets": [
+            {
+              "anchor": "trigger_mode:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "296:NmiSource": {
+          "anchor": "pub struct NmiSource {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data NmiSource",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "297:global_system_interrupt": {
+          "anchor": "pub global_system_interrupt: u32,",
+          "disposition": "translated",
+          "note": "Owned inert field; local NMI additionally retains polarity/trigger facts the pin drops.",
+          "targets": [
+            {
+              "anchor": "global_system_interrupt:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "298:polarity": {
+          "anchor": "pub polarity: Polarity,",
+          "disposition": "translated",
+          "note": "Owned inert field; local NMI additionally retains polarity/trigger facts the pin drops.",
+          "targets": [
+            {
+              "anchor": "polarity:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "299:trigger_mode": {
+          "anchor": "pub trigger_mode: TriggerMode,",
+          "disposition": "translated",
+          "note": "Owned inert field; local NMI additionally retains polarity/trigger facts the pin drops.",
+          "targets": [
+            {
+              "anchor": "trigger_mode:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "303:Apic": {
+          "anchor": "pub struct Apic<A: Allocator = Global> {",
+          "disposition": "omitted",
+          "reason": "Whole mapped/allocator aggregate and model-selection API replaced by explicit topology_header/topology_next stream. No full AcpiTables constructor or global InterruptModel identity is claimed."
+        },
+        "304:local_apic_address": {
+          "anchor": "pub local_apic_address: u64,",
+          "disposition": "translated",
+          "note": "Initial header address plus separately ordered LocalApicAddress override events; not claimed final until consumer finishes stream.",
+          "targets": [
+            {
+              "anchor": "initial_local_apic_address",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "305:io_apics": {
+          "anchor": "pub io_apics: Vec<IoApic, A>,",
+          "disposition": "translated",
+          "note": "Ordered typed entries replace vectors; no entries silently lost. Collection/storage choice remains caller-owned.",
+          "targets": [
+            {
+              "anchor": "data TopologyFact",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "306:local_apic_nmi_lines": {
+          "anchor": "pub local_apic_nmi_lines: Vec<NmiLine, A>,",
+          "disposition": "translated",
+          "note": "Ordered typed entries replace vectors; no entries silently lost. Collection/storage choice remains caller-owned.",
+          "targets": [
+            {
+              "anchor": "data TopologyFact",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "307:interrupt_source_overrides": {
+          "anchor": "pub interrupt_source_overrides: Vec<InterruptSourceOverride, A>,",
+          "disposition": "translated",
+          "note": "Ordered typed entries replace vectors; no entries silently lost. Collection/storage choice remains caller-owned.",
+          "targets": [
+            {
+              "anchor": "data TopologyFact",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "308:nmi_sources": {
+          "anchor": "pub nmi_sources: Vec<NmiSource, A>,",
+          "disposition": "translated",
+          "note": "Ordered typed entries replace vectors; no entries silently lost. Collection/storage choice remains caller-owned.",
+          "targets": [
+            {
+              "anchor": "data TopologyFact",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "313:also_has_legacy_pics": {
+          "anchor": "pub also_has_legacy_pics: bool,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "also_has_legacy_pics:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "317:new": {
+          "anchor": "pub(crate) fn new(",
+          "disposition": "omitted",
+          "reason": "Whole mapped/allocator aggregate and model-selection API replaced by explicit topology_header/topology_next stream. No full AcpiTables constructor or global InterruptModel identity is claimed."
+        },
+        "32:new": {
+          "anchor": "pub fn new<H: Handler>(",
+          "disposition": "omitted",
+          "reason": "Whole mapped/allocator aggregate and model-selection API replaced by explicit topology_header/topology_next stream. No full AcpiTables constructor or global InterruptModel identity is claimed."
+        },
+        "40:new_in": {
+          "anchor": "pub fn new_in<H: Handler>(",
+          "disposition": "omitted",
+          "reason": "Whole mapped/allocator aggregate and model-selection API replaced by explicit topology_header/topology_next stream. No full AcpiTables constructor or global InterruptModel identity is claimed."
+        },
+        "77:from_apic_model_in": {
+          "anchor": "fn from_apic_model_in(",
+          "disposition": "translated",
+          "note": "Pure per-record extraction rewritten as ordered bounded stream. Allocator aggregate, first-CPU live-state inference, and model-selection side effects absent; GIC and unknown entries retained.",
+          "targets": [
+            {
+              "anchor": "machine topology_fact",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source map",
+          "path": "source/libraries/acpi/topology.PORT.md"
+        }
+      ]
+    },
+    "src/platform/mod.rs": {
+      "disposition": "translated",
+      "note": "Partial API translation; every anchor classified below.",
+      "sha256": "e49bb52792f164f1001a397bee489dc9dda8f3501681072a21396f4d276c87b5",
+      "symbols": {
+        "101:read_mode": {
+          "anchor": "pub fn read_mode(&self) -> Result<AcpiMode, AcpiError> {",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "120:enter_acpi_mode": {
+          "anchor": "pub fn enter_acpi_mode(&self) -> Result<(), AcpiError> {",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "155:wake_aps": {
+          "anchor": "pub unsafe fn wake_aps(&self, apic_id: u32, wakeup_vector: u64, timeout_loops: u64) -> Result<(), AcpiError> {",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "1:interrupt": {
+          "anchor": "pub mod interrupt;",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "201:ProcessorState": {
+          "anchor": "pub enum ProcessorState {",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "214:Processor": {
+          "anchor": "pub struct Processor {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data Processor",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "217:processor_uid": {
+          "anchor": "pub processor_uid: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "processor_uid:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "220:local_apic_id": {
+          "anchor": "pub local_apic_id: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "local_apic_id:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "223:state": {
+          "anchor": "pub state: ProcessorState,",
+          "disposition": "translated",
+          "note": "Firmware enabled/online-capable flags and explicit observed boot identity replace inferred runtime state or first-entry BSP assumptions.",
+          "targets": [
+            {
+              "anchor": "enabled:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "228:is_ap": {
+          "anchor": "pub is_ap: bool,",
+          "disposition": "translated",
+          "note": "Firmware enabled/online-capable flags and explicit observed boot identity replace inferred runtime state or first-entry BSP assumptions.",
+          "targets": [
+            {
+              "anchor": "boot_identity_known:",
+              "path": "source/libraries/acpi/topology.omg"
+            }
+          ]
+        },
+        "232:ProcessorInfo": {
+          "anchor": "pub struct ProcessorInfo<A: Allocator = Global> {",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "233:boot_processor": {
+          "anchor": "pub boot_processor: Processor,",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "235:application_processors": {
+          "anchor": "pub application_processors: Vec<Processor, A>,",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "239:new_in": {
+          "anchor": "pub(crate) fn new_in(boot_processor: Processor, application_processors: Vec<Processor, A>) -> Self {",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "246:PmTimer": {
+          "anchor": "pub struct PmTimer {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data PmTimer",
+              "path": "source/libraries/acpi/timers.omg"
+            }
+          ]
+        },
+        "248:base": {
+          "anchor": "pub base: GenericAddress,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "base:",
+              "path": "source/libraries/acpi/timers.omg"
+            }
+          ]
+        },
+        "250:supports_32bit": {
+          "anchor": "pub supports_32bit: bool,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "supports_32bit:",
+              "path": "source/libraries/acpi/timers.omg"
+            }
+          ]
+        },
+        "254:new": {
+          "anchor": "pub fn new(fadt: &Fadt) -> Result<Option<PmTimer>, AcpiError> {",
+          "disposition": "translated",
+          "note": "Pure PM timer description additionally honors primary hardware-reduced rule.",
+          "targets": [
+            {
+              "anchor": "machine pm_timer",
+              "path": "source/libraries/acpi/timers.omg"
+            }
+          ]
+        },
+        "263:AcpiMode": {
+          "anchor": "pub enum AcpiMode {",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "27:AcpiPlatform": {
+          "anchor": "pub struct AcpiPlatform<H: Handler, A: Allocator = Global> {",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "28:handler": {
+          "anchor": "pub handler: H,",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "29:tables": {
+          "anchor": "pub tables: AcpiTables<H>,",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "2:numa": {
+          "anchor": "pub mod numa;",
+          "disposition": "omitted",
+          "reason": "NUMA/SRAT/SLIT branch not included in queue003 CPU/controller/timer/PCI slice; whole inventory remains pending."
+        },
+        "30:power_profile": {
+          "anchor": "pub power_profile: PowerProfile,",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "31:interrupt_model": {
+          "anchor": "pub interrupt_model: InterruptModel<A>,",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "35:sci_interrupt": {
+          "anchor": "pub sci_interrupt: u16,",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "38:processor_info": {
+          "anchor": "pub processor_info: Option<ProcessorInfo<A>>,",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "39:pm_timer": {
+          "anchor": "pub pm_timer: Option<PmTimer>,",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "3:pci": {
+          "anchor": "pub mod pci;",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "40:registers": {
+          "anchor": "pub registers: Arc<FixedRegisters<H>>,",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "57:new": {
+          "anchor": "pub fn new(tables: AcpiTables<H>, handler: H) -> Result<Self, AcpiError> {",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "5:interrupt::InterruptModel;": {
+          "anchor": "pub use interrupt::InterruptModel;",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "63:new_in": {
+          "anchor": "pub fn new_in(tables: AcpiTables<H>, handler: H, allocator: A) -> Result<Self, AcpiError> {",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "6:pci::PciConfigRegions;": {
+          "anchor": "pub use pci::PciConfigRegions;",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        },
+        "84:initialize_events": {
+          "anchor": "pub fn initialize_events(&self) -> Result<(), AcpiError> {",
+          "disposition": "omitted",
+          "reason": "Live platform handler/mapped constructors, event/register operations, ACPI mode and AP wake effects, Rust allocator/module adapters or aggregate runtime-state API remain outside inert topology extraction. No behavior silently substituted with a successful stub."
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source map",
+          "path": "source/libraries/acpi/topology.PORT.md"
+        }
+      ]
+    },
+    "src/platform/pci.rs": {
+      "disposition": "translated",
+      "note": "Partial API translation; every anchor classified below.",
+      "sha256": "5ad4a415a5037a741a7312d950299640a83905d454ba0eb4d40925c47a90d0c0",
+      "symbols": {
+        "21:PciConfigRegions": {
+          "anchor": "pub struct PciConfigRegions<A: Allocator = Global> {",
+          "disposition": "omitted",
+          "reason": "Allocator-owned mapped-table constructor and container identity replaced by explicit bounded pci_region/find_address inputs; no AcpiTables handler, global allocator or mapped-memory authority is introduced."
+        },
+        "22:regions": {
+          "anchor": "pub regions: Vec<McfgEntry, A>,",
+          "disposition": "translated",
+          "note": "Explicit checked-count fixed input replaces allocator vector; regions obtained from checked pci_region.",
+          "targets": [
+            {
+              "anchor": "regions: &[PciConfigRegion; 253]",
+              "path": "source/libraries/acpi/pci_regions.omg"
+            }
+          ]
+        },
+        "26:new": {
+          "anchor": "pub fn new<H>(tables: &AcpiTables<H>) -> Result<PciConfigRegions<Global>, AcpiError>",
+          "disposition": "omitted",
+          "reason": "Allocator-owned mapped-table constructor and container identity replaced by explicit bounded pci_region/find_address inputs; no AcpiTables handler, global allocator or mapped-memory authority is introduced."
+        },
+        "35:new_in": {
+          "anchor": "pub fn new_in<H>(tables: &AcpiTables<H>, allocator: A) -> Result<PciConfigRegions<A>, AcpiError>",
+          "disposition": "omitted",
+          "reason": "Allocator-owned mapped-table constructor and container identity replaced by explicit bounded pci_region/find_address inputs; no AcpiTables handler, global allocator or mapped-memory authority is introduced."
+        },
+        "47:physical_address": {
+          "anchor": "pub fn physical_address(&self, segment_group_no: u16, bus: u8, device: u8, function: u8) -> Option<u64> {",
+          "disposition": "translated",
+          "note": "Checked bus0-relative ECAM numeric address; explicit field bounds/overflow/ambiguous-range errors. No pointer or MMIO authority.",
+          "targets": [
+            {
+              "anchor": "machine physical_address",
+              "path": "source/libraries/acpi/pci_regions.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source map",
+          "path": "source/libraries/acpi/topology.PORT.md"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "scope": "ACPI003 ordered inert descriptions and pure queries. Replaces allocator-owned aggregate topology with bounded per-record extraction. NUMA and live platform operations excluded; complete inventory retains them pending.",
+  "upstream": {
+    "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+    "roots": [
+      "src/platform/mod.rs",
+      "src/platform/interrupt.rs",
+      "src/platform/pci.rs"
+    ],
+    "url": "https://github.com/rust-osdev/acpi"
+  }
+}

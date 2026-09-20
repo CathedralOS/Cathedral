@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pinned acpi platform/pci.rs. Numeric descriptions grant no access.
+module pci_regions;
+use fixed_types::McfgEntry;
+use fixed_types::McfgEntryResult;
+use mcfg::McfgView;
+use mcfg::parse_mcfg;
+use mcfg::mcfg_entry;
+pub data PciConfigRegion [copy] { base_address: u64; segment: u16; first_bus: u8; last_bus: u8; }
+pub data PciRegionResult [copy] { error: u8; value: PciConfigRegion; }
+pub data PciAddressResult [copy] { error: u8; found: bool; address: u64; }
+pub machine pci_region(input: &[u8; 4096], length: u64, allow_partial_tail: bool, index: u64) -> PciRegionResult {
+    let entry: McfgEntryResult = mcfg_entry(input, length, allow_partial_tail, index);
+    PciRegionResult { error: entry.error, value: PciConfigRegion { base_address: entry.value.base_address, segment: entry.value.pci_segment_group, first_bus: entry.value.bus_number_start, last_bus: entry.value.bus_number_end } }
+}
+// PCI Firmware ECAM base is relative to bus0, even when first_bus is nonzero.
+// This corrects the pin's subtraction of first_bus. Result is a numeric fact.
+pub machine physical_address(region: PciConfigRegion, segment: u16, bus: u8, device: u8, function: u8) -> PciAddressResult {
+    transition { region.first_bus > region.last_bus -> (PciAddressResult { error: 13 })
+        device > 31 -> (PciAddressResult { error: 34 }) function > 7 -> (PciAddressResult { error: 35 })
+        segment != region.segment || bus < region.first_bus || bus > region.last_bus -> (PciAddressResult {})
+        _ -> offset(region.base_address, bus, device, function) }
+    state offset(base: u64, bus: u8, device: u8, function: u8) -> PciAddressResult {
+        let displacement: u64 = ((bus as u64) << 20) | (((device & 31) as u64) << 15) | (((function & 7) as u64) << 12);
+        transition base <= 18446744073709551615 - displacement {
+            true -> (PciAddressResult { found: true, address: base + displacement }) _ -> (PciAddressResult { error: 36 }) }
+    }
+}
+// An array-backed allocator-independent query: count is checked, all matching
+// regions are examined, and overlap is an explicit error rather than first-win.
+pub machine find_address(regions: &[PciConfigRegion; 253], count: u64, segment: u16, bus: u8, device: u8, function: u8) -> PciAddressResult {
+    transition { count > 253 -> (PciAddressResult { error: 1 }) device > 31 -> (PciAddressResult { error: 34 }) function > 7 -> (PciAddressResult { error: 35 }) _ -> bounded(regions, count, segment, bus, device, function) }
+    state bounded(regions: &[PciConfigRegion; 253], count: u64, segment: u16, bus: u8, device: u8, function: u8) -> PciAddressResult {
+        let result: PciAddressResult = scan(regions, count, 0, segment, bus, device, function, PciAddressResult {});
+        result
+    }
+}
+machine scan(regions: &[PciConfigRegion; 253], count: u64, index: u64, segment: u16, bus: u8, device: u8, function: u8, result: PciAddressResult)
+terminates by (index, count) -> Nat::BoundedDistance;
+-> PciAddressResult {
+    let next: PciAddressResult = step(regions, count, index, segment, bus, device, function, result);
+    transition index < count { true -> scan(regions, count, index + 1, segment, bus, device, function, next) _ -> (result) }
+}
+machine step(regions: &[PciConfigRegion; 253], count: u64, index: u64, segment: u16, bus: u8, device: u8, function: u8, prior: PciAddressResult) -> PciAddressResult {
+    transition index < count && index < 253 && prior.error == 0 {
+        true -> query(regions[index], segment, bus, device, function, prior) _ -> (prior) }
+    state query(region: PciConfigRegion, segment: u16, bus: u8, device: u8, function: u8, prior: PciAddressResult) -> PciAddressResult {
+        let next: PciAddressResult = physical_address(region, segment, bus, device, function);
+        transition { next.error != 0 -> (next) next.found && prior.found -> (PciAddressResult { error: 37 })
+            next.found -> (next) _ -> (prior) }
+    }
+}

@@ -281,10 +281,10 @@ eight-slot direct-buffer profile is explicit; asynchronous DMA is not modeled.
 - [x] **ACPI-001 — Port table headers and checksums.** RSDP, RSDT/XSDT, SDT
   headers, signatures, lengths, revisions, checksums, and strict bounded-input
   validation.
-- [ ] **ACPI-002 — Port fixed table parsers.** At minimum FADT, MADT, MCFG, HPET,
+- [x] **ACPI-002 — Port fixed table parsers.** At minimum FADT, MADT, MCFG, HPET,
   and the tables consumed by the first Cathedral hardware-discovery path.  Add
   valid and malformed byte fixtures.
-- [ ] **ACPI-003 — Port topology extraction.** Produce inert typed descriptions
+- [x] **ACPI-003 — Port topology extraction.** Produce inert typed descriptions
   of CPUs, interrupt controllers, timers, and PCI configuration regions.
   Discovery conveys facts, not MMIO or interrupt authority.
 - [ ] **ACPI-004 — Port AML syntax and namespace construction.** Keep parsing and
@@ -311,6 +311,17 @@ checks RSDP revisions 0/2 and SDT/root entries in a 4096-byte input profile,
 with strict lengths and checksums and raw OEM bytes. All 65 semantic scenarios
 and three body-mutating controls pass; 88 wire vectors and 65 pinned signatures
 are audited. Larger inputs, native layouts and firmware mapping are outside this slice.
+
+ACPI-002 evidence: [fixed parsers](source/libraries/acpi/fixed.PORT.md) cover GAS,
+FADT, all 17 pinned MADT entry kinds, MCFG and HPET. All 291 Omega scenarios and
+three body mutations pass; 236 compiled Rust declaration layout facts and 30
+pinned flag getter observations provide separate reference evidence.
+
+ACPI-003 evidence: [topology extraction](source/libraries/acpi/topology.PORT.md)
+passes 77 Omega scenarios and three body mutations. Ordered typed CPU/controller
+facts, timer descriptions and checked PCI-region queries retain unknown entries
+and separate observed boot identity from table order. ECAM uses bus-0-relative
+addressing. NUMA extraction, native execution and hardware activation remain open.
 
 ## Phase 5 — only after the corpus above is healthy
 

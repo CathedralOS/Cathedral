@@ -1,0 +1,3975 @@
+{
+  "format": "cathedral-acpi-fixed-cases-v1",
+  "provenance": "Original synthetic byte records. No firmware capture or upstream fixture content.",
+  "cases": [
+    {
+      "name": "gas_offset_0",
+      "bytes": "804003041032547698badcfe",
+      "body": [
+        "let result: RawGasResult = parse_gas(&input, 12, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address_space == 128",
+        "result.value.bit_width == 64",
+        "result.value.bit_offset == 3",
+        "result.value.access_size == 4",
+        "result.value.address == 18364758544493064720"
+      ]
+    },
+    {
+      "name": "gas_offset_4084",
+      "bytes": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000804003041032547698badcfe",
+      "body": [
+        "let result: RawGasResult = parse_gas(&input, 4096, 4084);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address_space == 128",
+        "result.value.bit_width == 64",
+        "result.value.bit_offset == 3",
+        "result.value.access_size == 4",
+        "result.value.address == 18364758544493064720"
+      ]
+    },
+    {
+      "name": "gas_bounds_11_0",
+      "bytes": "804003041032547698badcfe",
+      "body": [
+        "let result: RawGasResult = parse_gas(&input, 11, 0);"
+      ],
+      "checks": [
+        "result.error == 2"
+      ]
+    },
+    {
+      "name": "gas_bounds_4097_0",
+      "bytes": "804003041032547698badcfe",
+      "body": [
+        "let result: RawGasResult = parse_gas(&input, 4097, 0);"
+      ],
+      "checks": [
+        "result.error == 2"
+      ]
+    },
+    {
+      "name": "gas_bounds_12_1",
+      "bytes": "804003041032547698badcfe",
+      "body": [
+        "let result: RawGasResult = parse_gas(&input, 12, 1);"
+      ],
+      "checks": [
+        "result.error == 2"
+      ]
+    },
+    {
+      "name": "gas_bounds_4096_4085",
+      "bytes": "804003041032547698badcfe",
+      "body": [
+        "let result: RawGasResult = parse_gas(&input, 4096, 4085);"
+      ],
+      "checks": [
+        "result.error == 2"
+      ]
+    },
+    {
+      "name": "gas_bounds_12_18446744073709551615",
+      "bytes": "804003041032547698badcfe",
+      "body": [
+        "let result: RawGasResult = parse_gas(&input, 12, 18446744073709551615);"
+      ],
+      "checks": [
+        "result.error == 2"
+      ]
+    },
+    {
+      "name": "gas_space_0",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 0, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 0"
+      ]
+    },
+    {
+      "name": "gas_space_1",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 1, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 1"
+      ]
+    },
+    {
+      "name": "gas_space_2",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 2, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 2"
+      ]
+    },
+    {
+      "name": "gas_space_3",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 3, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 3"
+      ]
+    },
+    {
+      "name": "gas_space_4",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 4, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 4"
+      ]
+    },
+    {
+      "name": "gas_space_5",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 5, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 5"
+      ]
+    },
+    {
+      "name": "gas_space_6",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 6, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 6"
+      ]
+    },
+    {
+      "name": "gas_space_7",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 7, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 7"
+      ]
+    },
+    {
+      "name": "gas_space_8",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 8, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 8"
+      ]
+    },
+    {
+      "name": "gas_space_9",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 9, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 9"
+      ]
+    },
+    {
+      "name": "gas_space_10",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 10, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 10"
+      ]
+    },
+    {
+      "name": "gas_space_11",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 11, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 11"
+      ]
+    },
+    {
+      "name": "gas_space_12",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 12, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 11"
+      ]
+    },
+    {
+      "name": "gas_space_126",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 126, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 11"
+      ]
+    },
+    {
+      "name": "gas_space_127",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 127, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 127"
+      ]
+    },
+    {
+      "name": "gas_space_128",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 128, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 128"
+      ]
+    },
+    {
+      "name": "gas_space_191",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 191, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 191"
+      ]
+    },
+    {
+      "name": "gas_space_192",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 192, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 192"
+      ]
+    },
+    {
+      "name": "gas_space_255",
+      "bytes": "",
+      "body": [
+        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 255, address: 18446744073709551615 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 255"
+      ]
+    },
+    {
+      "name": "gas_access_0",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = standard_access_size(0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 0"
+      ]
+    },
+    {
+      "name": "gas_access_1",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = standard_access_size(1);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 1"
+      ]
+    },
+    {
+      "name": "gas_access_2",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = standard_access_size(2);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 2"
+      ]
+    },
+    {
+      "name": "gas_access_3",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = standard_access_size(3);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 3"
+      ]
+    },
+    {
+      "name": "gas_access_4",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = standard_access_size(4);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 4"
+      ]
+    },
+    {
+      "name": "gas_access_5",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = standard_access_size(5);"
+      ],
+      "checks": [
+        "result.error == 11"
+      ]
+    },
+    {
+      "name": "gas_access_255",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = standard_access_size(255);"
+      ],
+      "checks": [
+        "result.error == 11"
+      ]
+    },
+    {
+      "name": "gas_width_8_0_255",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 8, bit_offset: 0, access_size: 255 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 8"
+      ]
+    },
+    {
+      "name": "gas_width_16_0_4",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 16, bit_offset: 0, access_size: 4 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 16"
+      ]
+    },
+    {
+      "name": "gas_width_32_0_0",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 32, bit_offset: 0, access_size: 0 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 32"
+      ]
+    },
+    {
+      "name": "gas_width_64_0_1",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 64, bit_offset: 0, access_size: 1 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 64"
+      ]
+    },
+    {
+      "name": "gas_width_0_0_0",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 0, bit_offset: 0, access_size: 0 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 8"
+      ]
+    },
+    {
+      "name": "gas_width_7_1_0",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 7, bit_offset: 1, access_size: 0 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 8"
+      ]
+    },
+    {
+      "name": "gas_width_8_1_0",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 8, bit_offset: 1, access_size: 0 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 16"
+      ]
+    },
+    {
+      "name": "gas_width_15_1_0",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 15, bit_offset: 1, access_size: 0 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 16"
+      ]
+    },
+    {
+      "name": "gas_width_16_1_0",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 16, bit_offset: 1, access_size: 0 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 32"
+      ]
+    },
+    {
+      "name": "gas_width_31_1_0",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 31, bit_offset: 1, access_size: 0 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 32"
+      ]
+    },
+    {
+      "name": "gas_width_32_1_0",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 32, bit_offset: 1, access_size: 0 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 64"
+      ]
+    },
+    {
+      "name": "gas_width_255_255_0",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 255, bit_offset: 255, access_size: 0 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 64"
+      ]
+    },
+    {
+      "name": "gas_width_3_1_1",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 3, bit_offset: 1, access_size: 1 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 8"
+      ]
+    },
+    {
+      "name": "gas_width_3_1_2",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 3, bit_offset: 1, access_size: 2 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 16"
+      ]
+    },
+    {
+      "name": "gas_width_3_1_3",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 3, bit_offset: 1, access_size: 3 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 32"
+      ]
+    },
+    {
+      "name": "gas_width_3_1_4",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 3, bit_offset: 1, access_size: 4 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 64"
+      ]
+    },
+    {
+      "name": "gas_width_3_1_5",
+      "bytes": "",
+      "body": [
+        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 3, bit_offset: 1, access_size: 5 });"
+      ],
+      "checks": [
+        "result.error == 11",
+        "result.value == 0"
+      ]
+    },
+    {
+      "name": "gas_empty",
+      "bytes": "",
+      "body": [
+        "let empty: bool = gas_is_empty(RawGenericAddress {});",
+        "let occupied: bool = gas_is_empty(RawGenericAddress { access_size: 1 });"
+      ],
+      "checks": [
+        "empty",
+        "!occupied"
+      ]
+    },
+    {
+      "name": "fadt_revision_1",
+      "bytes": "464143507400000001fa4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 116);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.header.length == 116",
+        "result.value.has_reset == false",
+        "result.value.x_dsdt_address.present == false"
+      ]
+    },
+    {
+      "name": "fadt_short_revision_1",
+      "bytes": "464143507300000001fb4341544f53204f524947494e414c785634124341544c2143658700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 115);"
+      ],
+      "checks": [
+        "result.error == 5"
+      ]
+    },
+    {
+      "name": "fadt_revision_2",
+      "bytes": "464143508400000002e94341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 132);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.header.length == 132",
+        "result.value.has_reset == true",
+        "result.value.x_dsdt_address.present == false"
+      ]
+    },
+    {
+      "name": "fadt_short_revision_2",
+      "bytes": "464143508300000002ea4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 131);"
+      ],
+      "checks": [
+        "result.error == 5"
+      ]
+    },
+    {
+      "name": "fadt_revision_3",
+      "bytes": "46414350f400000003784341544f53204f524947494e414c785634124341544c2143658700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 244);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.header.length == 244",
+        "result.value.has_reset == true",
+        "result.value.x_dsdt_address.present == true"
+      ]
+    },
+    {
+      "name": "fadt_short_revision_3",
+      "bytes": "46414350f300000003794341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 243);"
+      ],
+      "checks": [
+        "result.error == 5"
+      ]
+    },
+    {
+      "name": "fadt_revision_4",
+      "bytes": "46414350f400000004774341544f53204f524947494e414c785634124341544c2143658700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 244);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.header.length == 244",
+        "result.value.has_reset == true",
+        "result.value.x_dsdt_address.present == true"
+      ]
+    },
+    {
+      "name": "fadt_short_revision_4",
+      "bytes": "46414350f300000004784341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 243);"
+      ],
+      "checks": [
+        "result.error == 5"
+      ]
+    },
+    {
+      "name": "fadt_revision_5",
+      "bytes": "464143500c010000055d4341544f53204f524947494e414c785634124341544c2143658700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 268);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.header.length == 268",
+        "result.value.has_reset == true",
+        "result.value.x_dsdt_address.present == true"
+      ]
+    },
+    {
+      "name": "fadt_short_revision_5",
+      "bytes": "464143500b010000055e4341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 267);"
+      ],
+      "checks": [
+        "result.error == 5"
+      ]
+    },
+    {
+      "name": "fadt_revision_6",
+      "bytes": "464143501401000006544341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 276);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.header.length == 276",
+        "result.value.has_reset == true",
+        "result.value.x_dsdt_address.present == true"
+      ]
+    },
+    {
+      "name": "fadt_short_revision_6",
+      "bytes": "464143501301000006554341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 275);"
+      ],
+      "checks": [
+        "result.error == 5"
+      ]
+    },
+    {
+      "name": "fadt_revision_255",
+      "bytes": "4641435018010000ff574341544f53204f524947494e414c785634124341544c2143658700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 280);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.header.length == 280",
+        "result.value.has_reset == true",
+        "result.value.x_dsdt_address.present == true"
+      ]
+    },
+    {
+      "name": "fadt_short_revision_255",
+      "bytes": "4641435017010000ff584341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 279);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "fadt_revision_zero",
+      "bytes": "4641435014010000005a4341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 276);"
+      ],
+      "checks": [
+        "result.error == 4"
+      ]
+    },
+    {
+      "name": "fadt_all_fields",
+      "bytes": "464143501401000006d84341544f53204f524947494e414c785634124341544c2143658704000080070000808a8d10801300008096999c9f2200008025000080280000802b0000802e000080310000803400008037000080babdc0c3c6c9cccf5280558058805b80dee1e4e7ea6d80f073000080012000032700000098badcfef97c80ff82000000000000808500000000000080012000032d00000098badcfe012000032e00000098badcfe012000032f00000098badcfe012000033000000098badcfe012000033100000098badcfe012000033200000098badcfe012000033300000098badcfe012000033400000098badcfe012000033500000098badcfe012000033600000098badcfea600000000000080",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 276);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.firmware_ctrl == 2147483652",
+        "result.value.dsdt_address == 2147483655",
+        "result.value.reserved == 138",
+        "result.value.preferred_pm_profile == 141",
+        "result.value.sci_interrupt == 32784",
+        "result.value.smi_cmd_port == 2147483667",
+        "result.value.acpi_enable == 150",
+        "result.value.acpi_disable == 153",
+        "result.value.s4bios_req == 156",
+        "result.value.pstate_control == 159",
+        "result.value.pm1a_event_block == 2147483682",
+        "result.value.pm1b_event_block == 2147483685",
+        "result.value.pm1a_control_block == 2147483688",
+        "result.value.pm1b_control_block == 2147483691",
+        "result.value.pm2_control_block == 2147483694",
+        "result.value.pm_timer_block == 2147483697",
+        "result.value.gpe0_block == 2147483700",
+        "result.value.gpe1_block == 2147483703",
+        "result.value.pm1_event_length == 186",
+        "result.value.pm1_control_length == 189",
+        "result.value.pm2_control_length == 192",
+        "result.value.pm_timer_length == 195",
+        "result.value.gpe0_block_length == 198",
+        "result.value.gpe1_block_length == 201",
+        "result.value.gpe1_base == 204",
+        "result.value.c_state_control == 207",
+        "result.value.worst_c2_latency == 32850",
+        "result.value.worst_c3_latency == 32853",
+        "result.value.flush_size == 32856",
+        "result.value.flush_stride == 32859",
+        "result.value.duty_offset == 222",
+        "result.value.duty_width == 225",
+        "result.value.day_alarm == 228",
+        "result.value.month_alarm == 231",
+        "result.value.century == 234",
+        "result.value.iapc_boot_arch == 32877",
+        "result.value.reserved2 == 240",
+        "result.value.flags == 2147483763",
+        "result.value.reset_reg.value.address_space == 1",
+        "result.value.reset_reg.value.bit_width == 32",
+        "result.value.reset_reg.value.bit_offset == 0",
+        "result.value.reset_reg.value.access_size == 3",
+        "result.value.reset_reg.value.address == 18364758542507835431",
+        "result.value.reset_reg.present == true",
+        "result.value.reset_value == 249",
+        "result.value.arm_boot_arch == 32892",
+        "result.value.fadt_minor_version == 255",
+        "result.value.x_firmware_ctrl.value == 9223372036854775938",
+        "result.value.x_firmware_ctrl.present == true",
+        "result.value.x_dsdt_address.value == 9223372036854775941",
+        "result.value.x_dsdt_address.present == true",
+        "result.value.x_pm1a_event_block.value.address_space == 1",
+        "result.value.x_pm1a_event_block.value.bit_width == 32",
+        "result.value.x_pm1a_event_block.value.bit_offset == 0",
+        "result.value.x_pm1a_event_block.value.access_size == 3",
+        "result.value.x_pm1a_event_block.value.address == 18364758542507835437",
+        "result.value.x_pm1a_event_block.present == true",
+        "result.value.x_pm1b_event_block.value.address_space == 1",
+        "result.value.x_pm1b_event_block.value.bit_width == 32",
+        "result.value.x_pm1b_event_block.value.bit_offset == 0",
+        "result.value.x_pm1b_event_block.value.access_size == 3",
+        "result.value.x_pm1b_event_block.value.address == 18364758542507835438",
+        "result.value.x_pm1b_event_block.present == true",
+        "result.value.x_pm1a_control_block.value.address_space == 1",
+        "result.value.x_pm1a_control_block.value.bit_width == 32",
+        "result.value.x_pm1a_control_block.value.bit_offset == 0",
+        "result.value.x_pm1a_control_block.value.access_size == 3",
+        "result.value.x_pm1a_control_block.value.address == 18364758542507835439",
+        "result.value.x_pm1a_control_block.present == true",
+        "result.value.x_pm1b_control_block.value.address_space == 1",
+        "result.value.x_pm1b_control_block.value.bit_width == 32",
+        "result.value.x_pm1b_control_block.value.bit_offset == 0",
+        "result.value.x_pm1b_control_block.value.access_size == 3",
+        "result.value.x_pm1b_control_block.value.address == 18364758542507835440",
+        "result.value.x_pm1b_control_block.present == true",
+        "result.value.x_pm2_control_block.value.address_space == 1",
+        "result.value.x_pm2_control_block.value.bit_width == 32",
+        "result.value.x_pm2_control_block.value.bit_offset == 0",
+        "result.value.x_pm2_control_block.value.access_size == 3",
+        "result.value.x_pm2_control_block.value.address == 18364758542507835441",
+        "result.value.x_pm2_control_block.present == true",
+        "result.value.x_pm_timer_block.value.address_space == 1",
+        "result.value.x_pm_timer_block.value.bit_width == 32",
+        "result.value.x_pm_timer_block.value.bit_offset == 0",
+        "result.value.x_pm_timer_block.value.access_size == 3",
+        "result.value.x_pm_timer_block.value.address == 18364758542507835442",
+        "result.value.x_pm_timer_block.present == true",
+        "result.value.x_gpe0_block.value.address_space == 1",
+        "result.value.x_gpe0_block.value.bit_width == 32",
+        "result.value.x_gpe0_block.value.bit_offset == 0",
+        "result.value.x_gpe0_block.value.access_size == 3",
+        "result.value.x_gpe0_block.value.address == 18364758542507835443",
+        "result.value.x_gpe0_block.present == true",
+        "result.value.x_gpe1_block.value.address_space == 1",
+        "result.value.x_gpe1_block.value.bit_width == 32",
+        "result.value.x_gpe1_block.value.bit_offset == 0",
+        "result.value.x_gpe1_block.value.access_size == 3",
+        "result.value.x_gpe1_block.value.address == 18364758542507835444",
+        "result.value.x_gpe1_block.present == true",
+        "result.value.sleep_control_reg.value.address_space == 1",
+        "result.value.sleep_control_reg.value.bit_width == 32",
+        "result.value.sleep_control_reg.value.bit_offset == 0",
+        "result.value.sleep_control_reg.value.access_size == 3",
+        "result.value.sleep_control_reg.value.address == 18364758542507835445",
+        "result.value.sleep_control_reg.present == true",
+        "result.value.sleep_status_reg.value.address_space == 1",
+        "result.value.sleep_status_reg.value.bit_width == 32",
+        "result.value.sleep_status_reg.value.bit_offset == 0",
+        "result.value.sleep_status_reg.value.access_size == 3",
+        "result.value.sleep_status_reg.value.address == 18364758542507835446",
+        "result.value.sleep_status_reg.present == true",
+        "result.value.hypervisor_vendor_id.value == 9223372036854775974",
+        "result.value.hypervisor_vendor_id.present == true"
+      ]
+    },
+    {
+      "name": "fadt_bad_checksum",
+      "bytes": "464143501401000006544341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 276);"
+      ],
+      "checks": [
+        "result.error == 6"
+      ]
+    },
+    {
+      "name": "fadt_bad_signature",
+      "bytes": "474143501401000006534341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 276);"
+      ],
+      "checks": [
+        "result.error == 3"
+      ]
+    },
+    {
+      "name": "fadt_truncated",
+      "bytes": "464143501401000006544341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 275);"
+      ],
+      "checks": [
+        "result.error == 2"
+      ]
+    },
+    {
+      "name": "fadt_capacity",
+      "bytes": "464143501401000006544341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "body": [
+        "let result: FadtResult = parse_fadt(&input, 4097);"
+      ],
+      "checks": [
+        "result.error == 1"
+      ]
+    },
+    {
+      "name": "hpet_bad_checksum",
+      "bytes": "4850455438000000011f4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000001",
+      "body": [
+        "let result: HpetTableResult = parse_hpet(&input, 56);"
+      ],
+      "checks": [
+        "result.error == 6"
+      ]
+    },
+    {
+      "name": "hpet_bad_signature",
+      "bytes": "4950455438000000011e4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000",
+      "body": [
+        "let result: HpetTableResult = parse_hpet(&input, 56);"
+      ],
+      "checks": [
+        "result.error == 3"
+      ]
+    },
+    {
+      "name": "hpet_truncated",
+      "bytes": "4850455438000000011f4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000",
+      "body": [
+        "let result: HpetTableResult = parse_hpet(&input, 55);"
+      ],
+      "checks": [
+        "result.error == 2"
+      ]
+    },
+    {
+      "name": "hpet_capacity",
+      "bytes": "4850455438000000011f4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000",
+      "body": [
+        "let result: HpetTableResult = parse_hpet(&input, 4097);"
+      ],
+      "checks": [
+        "result.error == 1"
+      ]
+    },
+    {
+      "name": "madt_bad_checksum",
+      "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000001",
+      "body": [
+        "let result: MadtResult = parse_madt(&input, 44);"
+      ],
+      "checks": [
+        "result.error == 6"
+      ]
+    },
+    {
+      "name": "madt_bad_signature",
+      "bytes": "405049432c00000001404341544f53204f524947494e414c785634124341544c214365870000000000000000",
+      "body": [
+        "let result: MadtResult = parse_madt(&input, 44);"
+      ],
+      "checks": [
+        "result.error == 3"
+      ]
+    },
+    {
+      "name": "madt_truncated",
+      "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
+      "body": [
+        "let result: MadtResult = parse_madt(&input, 43);"
+      ],
+      "checks": [
+        "result.error == 2"
+      ]
+    },
+    {
+      "name": "madt_capacity",
+      "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
+      "body": [
+        "let result: MadtResult = parse_madt(&input, 4097);"
+      ],
+      "checks": [
+        "result.error == 1"
+      ]
+    },
+    {
+      "name": "preferred_79",
+      "bytes": "",
+      "body": [
+        "let result: U64Result = preferred_address(OptionalU64 { present: false, value: 9 }, 7);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 7"
+      ]
+    },
+    {
+      "name": "preferred_80",
+      "bytes": "",
+      "body": [
+        "let result: U64Result = preferred_address(OptionalU64 { present: true, value: 9 }, 7);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 9"
+      ]
+    },
+    {
+      "name": "preferred_81",
+      "bytes": "",
+      "body": [
+        "let result: U64Result = preferred_address(OptionalU64 { present: true, value: 0 }, 7);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 7"
+      ]
+    },
+    {
+      "name": "preferred_82",
+      "bytes": "",
+      "body": [
+        "let result: U64Result = preferred_address(OptionalU64 { present: false, value: 0 }, 0);"
+      ],
+      "checks": [
+        "result.error == 12",
+        "result.value == 0"
+      ]
+    },
+    {
+      "name": "preferred_83",
+      "bytes": "",
+      "body": [
+        "let result: U64Result = preferred_address(OptionalU64 { present: true, value: 18446744073709551615 }, 7);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 18446744073709551615"
+      ]
+    },
+    {
+      "name": "register_width_0",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = select_register(OptionalRawGas {}, 1234, 0, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.bit_width == 0",
+        "result.value.address == 1234",
+        "result.value.address_space == 1"
+      ]
+    },
+    {
+      "name": "register_width_4",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = select_register(OptionalRawGas {}, 1234, 4, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.bit_width == 32",
+        "result.value.address == 1234",
+        "result.value.address_space == 1"
+      ]
+    },
+    {
+      "name": "register_width_31",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = select_register(OptionalRawGas {}, 1234, 31, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.bit_width == 248",
+        "result.value.address == 1234",
+        "result.value.address_space == 1"
+      ]
+    },
+    {
+      "name": "register_width_32",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = select_register(OptionalRawGas {}, 1234, 32, true);"
+      ],
+      "checks": [
+        "result.error == 11"
+      ]
+    },
+    {
+      "name": "register_width_255",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = select_register(OptionalRawGas {}, 1234, 255, true);"
+      ],
+      "checks": [
+        "result.error == 11"
+      ]
+    },
+    {
+      "name": "register_optional_zero",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = select_register(OptionalRawGas {}, 0, 4, false);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "!result.present"
+      ]
+    },
+    {
+      "name": "register_required_zero",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = select_register(OptionalRawGas {}, 0, 4, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present",
+        "result.value.address == 0"
+      ]
+    },
+    {
+      "name": "register_extended_1",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = select_register(OptionalRawGas { present: true, value: RawGenericAddress { address_space: 1, address: 18446744073709551615, bit_width: 64 } }, 1234, 255, false);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.bit_width == 64"
+      ]
+    },
+    {
+      "name": "register_extended_128",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = select_register(OptionalRawGas { present: true, value: RawGenericAddress { address_space: 128, address: 18446744073709551615, bit_width: 64 } }, 1234, 255, false);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.address == 18446744073709551615",
+        "result.value.bit_width == 64"
+      ]
+    },
+    {
+      "name": "register_extended_12",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = select_register(OptionalRawGas { present: true, value: RawGenericAddress { address_space: 12, address: 18446744073709551615, bit_width: 64 } }, 1234, 255, false);"
+      ],
+      "checks": [
+        "result.error == 11"
+      ]
+    },
+    {
+      "name": "timer_bad_length",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = pm_timer_block(Fadt { pm_timer_length: 8, x_pm_timer_block: OptionalRawGas { present: true, value: RawGenericAddress { address: 1234 } } });"
+      ],
+      "checks": [
+        "!result.present",
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "reset_register_absent",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = reset_register(Fadt {});"
+      ],
+      "checks": [
+        "!result.present"
+      ]
+    },
+    {
+      "name": "sleep_control_register_absent",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = sleep_control_register(Fadt {});"
+      ],
+      "checks": [
+        "!result.present"
+      ]
+    },
+    {
+      "name": "sleep_status_register_absent",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = sleep_status_register(Fadt {});"
+      ],
+      "checks": [
+        "!result.present"
+      ]
+    },
+    {
+      "name": "flag_supports_equivalent_to_wbinvd",
+      "bytes": "",
+      "body": [
+        "let set: bool = supports_equivalent_to_wbinvd(1);",
+        "let clear: bool = supports_equivalent_to_wbinvd(4294967294);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_wbinvd_flushes_all_caches",
+      "bytes": "",
+      "body": [
+        "let set: bool = wbinvd_flushes_all_caches(2);",
+        "let clear: bool = wbinvd_flushes_all_caches(4294967293);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_all_procs_support_c1_power_state",
+      "bytes": "",
+      "body": [
+        "let set: bool = all_procs_support_c1_power_state(4);",
+        "let clear: bool = all_procs_support_c1_power_state(4294967291);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_c2_configured_for_mp_system",
+      "bytes": "",
+      "body": [
+        "let set: bool = c2_configured_for_mp_system(8);",
+        "let clear: bool = c2_configured_for_mp_system(4294967287);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_power_button_is_control_method",
+      "bytes": "",
+      "body": [
+        "let set: bool = power_button_is_control_method(16);",
+        "let clear: bool = power_button_is_control_method(4294967279);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_sleep_button_is_control_method",
+      "bytes": "",
+      "body": [
+        "let set: bool = sleep_button_is_control_method(32);",
+        "let clear: bool = sleep_button_is_control_method(4294967263);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_no_rtc_wake_in_fixed_register_space",
+      "bytes": "",
+      "body": [
+        "let set: bool = no_rtc_wake_in_fixed_register_space(64);",
+        "let clear: bool = no_rtc_wake_in_fixed_register_space(4294967231);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_rtc_wakes_system_from_s4",
+      "bytes": "",
+      "body": [
+        "let set: bool = rtc_wakes_system_from_s4(128);",
+        "let clear: bool = rtc_wakes_system_from_s4(4294967167);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_pm_timer_is_32_bit",
+      "bytes": "",
+      "body": [
+        "let set: bool = pm_timer_is_32_bit(256);",
+        "let clear: bool = pm_timer_is_32_bit(4294967039);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_supports_docking",
+      "bytes": "",
+      "body": [
+        "let set: bool = supports_docking(512);",
+        "let clear: bool = supports_docking(4294966783);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_supports_system_reset_via_fadt",
+      "bytes": "",
+      "body": [
+        "let set: bool = supports_system_reset_via_fadt(1024);",
+        "let clear: bool = supports_system_reset_via_fadt(4294966271);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_case_is_sealed",
+      "bytes": "",
+      "body": [
+        "let set: bool = case_is_sealed(2048);",
+        "let clear: bool = case_is_sealed(4294965247);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_system_is_headless",
+      "bytes": "",
+      "body": [
+        "let set: bool = system_is_headless(4096);",
+        "let clear: bool = system_is_headless(4294963199);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_use_instr_after_write_to_slp_typx",
+      "bytes": "",
+      "body": [
+        "let set: bool = use_instr_after_write_to_slp_typx(8192);",
+        "let clear: bool = use_instr_after_write_to_slp_typx(4294959103);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_supports_pciexp_wake_in_pm1",
+      "bytes": "",
+      "body": [
+        "let set: bool = supports_pciexp_wake_in_pm1(16384);",
+        "let clear: bool = supports_pciexp_wake_in_pm1(4294950911);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_use_pm_or_hpet_for_monotonically_decreasing_timers",
+      "bytes": "",
+      "body": [
+        "let set: bool = use_pm_or_hpet_for_monotonically_decreasing_timers(32768);",
+        "let clear: bool = use_pm_or_hpet_for_monotonically_decreasing_timers(4294934527);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_rtc_sts_is_valid_after_wakeup_from_s4",
+      "bytes": "",
+      "body": [
+        "let set: bool = rtc_sts_is_valid_after_wakeup_from_s4(65536);",
+        "let clear: bool = rtc_sts_is_valid_after_wakeup_from_s4(4294901759);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_ospm_may_leave_gpe_wake_events_armed_before_s5",
+      "bytes": "",
+      "body": [
+        "let set: bool = ospm_may_leave_gpe_wake_events_armed_before_s5(131072);",
+        "let clear: bool = ospm_may_leave_gpe_wake_events_armed_before_s5(4294836223);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_lapics_must_use_cluster_model_for_logical_mode",
+      "bytes": "",
+      "body": [
+        "let set: bool = lapics_must_use_cluster_model_for_logical_mode(262144);",
+        "let clear: bool = lapics_must_use_cluster_model_for_logical_mode(4294705151);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_local_xapics_must_use_physical_destination_mode",
+      "bytes": "",
+      "body": [
+        "let set: bool = local_xapics_must_use_physical_destination_mode(524288);",
+        "let clear: bool = local_xapics_must_use_physical_destination_mode(4294443007);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_system_is_hw_reduced_acpi",
+      "bytes": "",
+      "body": [
+        "let set: bool = system_is_hw_reduced_acpi(1048576);",
+        "let clear: bool = system_is_hw_reduced_acpi(4293918719);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_no_benefit_to_s3",
+      "bytes": "",
+      "body": [
+        "let set: bool = no_benefit_to_s3(2097152);",
+        "let clear: bool = no_benefit_to_s3(4292870143);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_legacy_devices_are_accessible",
+      "bytes": "",
+      "body": [
+        "let set: bool = legacy_devices_are_accessible(1);",
+        "let clear: bool = legacy_devices_are_accessible(65534);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_motherboard_implements_8042",
+      "bytes": "",
+      "body": [
+        "let set: bool = motherboard_implements_8042(2);",
+        "let clear: bool = motherboard_implements_8042(65533);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_dont_probe_vga",
+      "bytes": "",
+      "body": [
+        "let set: bool = dont_probe_vga(4);",
+        "let clear: bool = dont_probe_vga(65531);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_dont_enable_msi",
+      "bytes": "",
+      "body": [
+        "let set: bool = dont_enable_msi(8);",
+        "let clear: bool = dont_enable_msi(65527);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_dont_enable_pcie_aspm",
+      "bytes": "",
+      "body": [
+        "let set: bool = dont_enable_pcie_aspm(16);",
+        "let clear: bool = dont_enable_pcie_aspm(65519);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_use_time_and_alarm_namespace_for_rtc",
+      "bytes": "",
+      "body": [
+        "let set: bool = use_time_and_alarm_namespace_for_rtc(32);",
+        "let clear: bool = use_time_and_alarm_namespace_for_rtc(65503);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_implements_psci",
+      "bytes": "",
+      "body": [
+        "let set: bool = implements_psci(1);",
+        "let clear: bool = implements_psci(65534);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "flag_use_hvc_as_psci_conduit",
+      "bytes": "",
+      "body": [
+        "let set: bool = use_hvc_as_psci_conduit(2);",
+        "let clear: bool = use_hvc_as_psci_conduit(65533);"
+      ],
+      "checks": [
+        "set",
+        "!clear"
+      ]
+    },
+    {
+      "name": "hpet_all_fields",
+      "bytes": "485045543800000001a24341544f53204f524947494e414c785634124341544c2143658704000080012000030200000098badcfe8a0d8090",
+      "body": [
+        "let result: HpetTableResult = parse_hpet(&input, 56);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.event_timer_block_id == 2147483652",
+        "result.value.base_address.address_space == 1",
+        "result.value.base_address.bit_width == 32",
+        "result.value.base_address.bit_offset == 0",
+        "result.value.base_address.access_size == 3",
+        "result.value.base_address.address == 18364758542507835394",
+        "result.value.hpet_number == 138",
+        "result.value.clock_tick_unit == 32781",
+        "result.value.page_protection_and_oem == 144"
+      ]
+    },
+    {
+      "name": "hpet_short",
+      "bytes": "485045543700000001204341544f53204f524947494e414c785634124341544c2143658700000000000000000000000000000000000000",
+      "body": [
+        "let result: HpetTableResult = parse_hpet(&input, 55);"
+      ],
+      "checks": [
+        "result.error == 5"
+      ]
+    },
+    {
+      "name": "hpet_revision",
+      "bytes": "4850455438000000021e4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000",
+      "body": [
+        "let result: HpetTableResult = parse_hpet(&input, 56);"
+      ],
+      "checks": [
+        "result.error == 4"
+      ]
+    },
+    {
+      "name": "hpet_count_0",
+      "bytes": "",
+      "body": [
+        "let result: HpetInfo = hpet_info(HpetTable { event_timer_block_id: 305438849, base_address: RawGenericAddress { address_space: 1, address: 18446744073709551615 }, hpet_number: 255, clock_tick_unit: 65535, page_protection_and_oem: 242 });"
+      ],
+      "checks": [
+        "result.num_comparators == 1",
+        "result.comparator_count_encoded == 0",
+        "result.hardware_rev == 129",
+        "result.main_counter_is_64bits",
+        "result.legacy_irq_capable",
+        "result.pci_vendor_id == 4660",
+        "result.base_address == 18446744073709551615",
+        "result.address_space == 1",
+        "result.hpet_number == 255",
+        "result.clock_tick_unit == 65535",
+        "result.oem_attributes == 15"
+      ]
+    },
+    {
+      "name": "hpet_count_2",
+      "bytes": "",
+      "body": [
+        "let result: HpetInfo = hpet_info(HpetTable { event_timer_block_id: 305439361, base_address: RawGenericAddress { address_space: 1, address: 18446744073709551615 }, hpet_number: 255, clock_tick_unit: 65535, page_protection_and_oem: 242 });"
+      ],
+      "checks": [
+        "result.num_comparators == 3",
+        "result.comparator_count_encoded == 2",
+        "result.hardware_rev == 129",
+        "result.main_counter_is_64bits",
+        "result.legacy_irq_capable",
+        "result.pci_vendor_id == 4660",
+        "result.base_address == 18446744073709551615",
+        "result.address_space == 1",
+        "result.hpet_number == 255",
+        "result.clock_tick_unit == 65535",
+        "result.oem_attributes == 15"
+      ]
+    },
+    {
+      "name": "hpet_count_31",
+      "bytes": "",
+      "body": [
+        "let result: HpetInfo = hpet_info(HpetTable { event_timer_block_id: 305446785, base_address: RawGenericAddress { address_space: 1, address: 18446744073709551615 }, hpet_number: 255, clock_tick_unit: 65535, page_protection_and_oem: 242 });"
+      ],
+      "checks": [
+        "result.num_comparators == 32",
+        "result.comparator_count_encoded == 31",
+        "result.hardware_rev == 129",
+        "result.main_counter_is_64bits",
+        "result.legacy_irq_capable",
+        "result.pci_vendor_id == 4660",
+        "result.base_address == 18446744073709551615",
+        "result.address_space == 1",
+        "result.hpet_number == 255",
+        "result.clock_tick_unit == 65535",
+        "result.oem_attributes == 15"
+      ]
+    },
+    {
+      "name": "mcfg_empty",
+      "bytes": "4d4346472c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 44, false);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 0"
+      ]
+    },
+    {
+      "name": "mcfg_entry",
+      "bytes": "4d4346473c00000001ca4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01",
+      "body": [
+        "let result: McfgEntryResult = mcfg_entry(&input, 60, false, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.base_address == 18364758544493064720",
+        "result.value.pci_segment_group == 4660",
+        "result.value.bus_number_start == 128",
+        "result.value.bus_number_end == 255",
+        "result.value.reserved == 32492971"
+      ]
+    },
+    {
+      "name": "mcfg_index",
+      "bytes": "4d4346473c00000001ca4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01",
+      "body": [
+        "let result: McfgEntryResult = mcfg_entry(&input, 60, false, 1);"
+      ],
+      "checks": [
+        "result.error == 10"
+      ]
+    },
+    {
+      "name": "mcfg_huge_index",
+      "bytes": "4d4346473c00000001ca4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01",
+      "body": [
+        "let result: McfgEntryResult = mcfg_entry(&input, 60, false, 18446744073709551615);"
+      ],
+      "checks": [
+        "result.error == 10"
+      ]
+    },
+    {
+      "name": "mcfg_inverted",
+      "bytes": "4d4346473c00000001ca4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe3412ff80abcdef01",
+      "body": [
+        "let result: McfgEntryResult = mcfg_entry(&input, 60, false, 0);"
+      ],
+      "checks": [
+        "result.error == 13"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_1",
+      "bytes": "4d4346473d00000001c94341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 61, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_1",
+      "bytes": "4d4346473d00000001c94341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 61, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 1"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_2",
+      "bytes": "4d4346473e00000001c84341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 62, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_2",
+      "bytes": "4d4346473e00000001c84341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 62, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 2"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_3",
+      "bytes": "4d4346473f00000001c74341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 63, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_3",
+      "bytes": "4d4346473f00000001c74341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 63, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 3"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_4",
+      "bytes": "4d4346474000000001c64341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 64, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_4",
+      "bytes": "4d4346474000000001c64341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 64, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 4"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_5",
+      "bytes": "4d4346474100000001c54341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 65, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_5",
+      "bytes": "4d4346474100000001c54341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 65, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 5"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_6",
+      "bytes": "4d4346474200000001c44341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 66, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_6",
+      "bytes": "4d4346474200000001c44341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 66, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 6"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_7",
+      "bytes": "4d4346474300000001c34341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 67, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_7",
+      "bytes": "4d4346474300000001c34341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 67, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 7"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_8",
+      "bytes": "4d4346474400000001c24341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 68, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_8",
+      "bytes": "4d4346474400000001c24341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 68, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 8"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_9",
+      "bytes": "4d4346474500000001c14341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 69, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_9",
+      "bytes": "4d4346474500000001c14341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 69, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_10",
+      "bytes": "4d4346474600000001c04341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 70, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_10",
+      "bytes": "4d4346474600000001c04341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 70, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 10"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_11",
+      "bytes": "4d4346474700000001bf4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 71, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_11",
+      "bytes": "4d4346474700000001bf4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 71, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 11"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_12",
+      "bytes": "4d4346474800000001be4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 72, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_12",
+      "bytes": "4d4346474800000001be4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 72, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 12"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_13",
+      "bytes": "4d4346474900000001bd4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 73, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_13",
+      "bytes": "4d4346474900000001bd4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 73, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 13"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_14",
+      "bytes": "4d4346474a00000001bc4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 74, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_14",
+      "bytes": "4d4346474a00000001bc4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 74, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 14"
+      ]
+    },
+    {
+      "name": "mcfg_tail_strict_15",
+      "bytes": "4d4346474b00000001bb4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 75, false);"
+      ],
+      "checks": [
+        "result.error == 9"
+      ]
+    },
+    {
+      "name": "mcfg_tail_quirk_15",
+      "bytes": "4d4346474b00000001bb4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000000000000000000000",
+      "body": [
+        "let result: McfgView = parse_mcfg(&input, 75, true);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.entry_count == 1",
+        "result.ignored_tail_bytes == 15"
+      ]
+    },
+    {
+      "name": "madt_LocalApicEntry",
+      "bytes": "415049433400000006954341544f53204f524947494e414c785634124341544c214365870000000000000000000884870a000080",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 52, 44);",
+        "let fields: bool = fields_LocalApicEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 52",
+        "fields"
+      ],
+      "variant": {
+        "record": "LocalApicEntry",
+        "checks": [
+          [
+            "processor_id",
+            132
+          ],
+          [
+            "apic_id",
+            135
+          ],
+          [
+            "flags",
+            2147483658
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_LocalApicEntry",
+      "bytes": "415049433300000006174341544f53204f524947494e414c785634124341544c214365870000000000000000000784870a0000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 51, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_IoApicEntry",
+      "bytes": "415049433800000006ff4341544f53204f524947494e414c785634124341544c214365870000000000000000010c84870a0000800d000080",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 56, 44);",
+        "let fields: bool = fields_IoApicEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 56",
+        "fields"
+      ],
+      "variant": {
+        "record": "IoApicEntry",
+        "checks": [
+          [
+            "io_apic_id",
+            132
+          ],
+          [
+            "reserved",
+            135
+          ],
+          [
+            "io_apic_address",
+            2147483658
+          ],
+          [
+            "global_system_interrupt_base",
+            2147483661
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_IoApicEntry",
+      "bytes": "415049433700000006814341544f53204f524947494e414c785634124341544c214365870000000000000000010b84870a0000800d0000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 55, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_InterruptSourceOverrideEntry",
+      "bytes": "415049433600000006024341544f53204f524947494e414c785634124341544c214365870000000000000000020a84870a0000800d80",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 54, 44);",
+        "let fields: bool = fields_InterruptSourceOverrideEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 54",
+        "fields"
+      ],
+      "variant": {
+        "record": "InterruptSourceOverrideEntry",
+        "checks": [
+          [
+            "bus",
+            132
+          ],
+          [
+            "irq",
+            135
+          ],
+          [
+            "global_system_interrupt",
+            2147483658
+          ],
+          [
+            "flags",
+            32781
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_InterruptSourceOverrideEntry",
+      "bytes": "415049433500000006844341544f53204f524947494e414c785634124341544c214365870000000000000000020984870a0000800d",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 53, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_NmiSourceEntry",
+      "bytes": "4150494334000000061c4341544f53204f524947494e414c785634124341544c2143658700000000000000000308048007000080",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 52, 44);",
+        "let fields: bool = fields_NmiSourceEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 52",
+        "fields"
+      ],
+      "variant": {
+        "record": "NmiSourceEntry",
+        "checks": [
+          [
+            "flags",
+            32772
+          ],
+          [
+            "global_system_interrupt",
+            2147483655
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_NmiSourceEntry",
+      "bytes": "4150494333000000069e4341544f53204f524947494e414c785634124341544c21436587000000000000000003070480070000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 51, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_LocalApicNmiEntry",
+      "bytes": "415049433200000006954341544f53204f524947494e414c785634124341544c21436587000000000000000004068407808a",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 50, 44);",
+        "let fields: bool = fields_LocalApicNmiEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 50",
+        "fields"
+      ],
+      "variant": {
+        "record": "LocalApicNmiEntry",
+        "checks": [
+          [
+            "processor_id",
+            132
+          ],
+          [
+            "flags",
+            32775
+          ],
+          [
+            "nmi_line",
+            138
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_LocalApicNmiEntry",
+      "bytes": "415049433100000006214341544f53204f524947494e414c785634124341544c2143658700000000000000000405840780",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 49, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_LocalApicAddressOverrideEntry",
+      "bytes": "415049433800000006124341544f53204f524947494e414c785634124341544c214365870000000000000000050c04800700000000000080",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 56, 44);",
+        "let fields: bool = fields_LocalApicAddressOverrideEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 56",
+        "fields"
+      ],
+      "variant": {
+        "record": "LocalApicAddressOverrideEntry",
+        "checks": [
+          [
+            "reserved",
+            32772
+          ],
+          [
+            "local_apic_address",
+            9223372036854775815
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_LocalApicAddressOverrideEntry",
+      "bytes": "415049433700000006944341544f53204f524947494e414c785634124341544c214365870000000000000000050b048007000000000000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 55, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_IoSapicEntry",
+      "bytes": "415049433c00000006f24341544f53204f524947494e414c785634124341544c214365870000000000000000061084870a0000800d00000000000080",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 60, 44);",
+        "let fields: bool = fields_IoSapicEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 60",
+        "fields"
+      ],
+      "variant": {
+        "record": "IoSapicEntry",
+        "checks": [
+          [
+            "io_apic_id",
+            132
+          ],
+          [
+            "reserved",
+            135
+          ],
+          [
+            "global_system_interrupt_base",
+            2147483658
+          ],
+          [
+            "io_sapic_address",
+            9223372036854775821
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_IoSapicEntry",
+      "bytes": "415049433b00000006744341544f53204f524947494e414c785634124341544c214365870000000000000000060f84870a0000800d000000000000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 59, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_LocalSapicEntry",
+      "bytes": "415049433d00000006394341544f53204f524947494e414c785634124341544c214365870000000000000000071184878a2d2e2f100000801300008096",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 61, 44);",
+        "let fields: bool = fields_LocalSapicEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 61",
+        "fields"
+      ],
+      "variant": {
+        "record": "LocalSapicEntry",
+        "checks": [
+          [
+            "processor_id",
+            132
+          ],
+          [
+            "local_sapic_id",
+            135
+          ],
+          [
+            "local_sapic_eid",
+            138
+          ],
+          [
+            "reserved[0]",
+            45
+          ],
+          [
+            "reserved[1]",
+            46
+          ],
+          [
+            "reserved[2]",
+            47
+          ],
+          [
+            "flags",
+            2147483664
+          ],
+          [
+            "processor_uid",
+            2147483667
+          ],
+          [
+            "processor_uid_string",
+            150
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_LocalSapicEntry",
+      "bytes": "415049433c00000006d14341544f53204f524947494e414c785634124341544c214365870000000000000000071084878a2d2e2f1000008013000080",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 60, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_PlatformInterruptSourceEntry",
+      "bytes": "415049433c00000006374341544f53204f524947494e414c785634124341544c21436587000000000000000008100480878a8d901300008016000080",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 60, 44);",
+        "let fields: bool = fields_PlatformInterruptSourceEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 60",
+        "fields"
+      ],
+      "variant": {
+        "record": "PlatformInterruptSourceEntry",
+        "checks": [
+          [
+            "flags",
+            32772
+          ],
+          [
+            "interrupt_type",
+            135
+          ],
+          [
+            "processor_id",
+            138
+          ],
+          [
+            "processor_eid",
+            141
+          ],
+          [
+            "io_sapic_vector",
+            144
+          ],
+          [
+            "global_system_interrupt",
+            2147483667
+          ],
+          [
+            "platform_interrupt_source_flags",
+            2147483670
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_PlatformInterruptSourceEntry",
+      "bytes": "415049433b00000006b94341544f53204f524947494e414c785634124341544c214365870000000000000000080f0480878a8d9013000080160000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 59, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_LocalX2ApicEntry",
+      "bytes": "415049433c00000006ef4341544f53204f524947494e414c785634124341544c21436587000000000000000009100480070000800a0000800d000080",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 60, 44);",
+        "let fields: bool = fields_LocalX2ApicEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 60",
+        "fields"
+      ],
+      "variant": {
+        "record": "LocalX2ApicEntry",
+        "checks": [
+          [
+            "reserved",
+            32772
+          ],
+          [
+            "x2apic_id",
+            2147483655
+          ],
+          [
+            "flags",
+            2147483658
+          ],
+          [
+            "processor_uid",
+            2147483661
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_LocalX2ApicEntry",
+      "bytes": "415049433b00000006714341544f53204f524947494e414c785634124341544c214365870000000000000000090f0480070000800a0000800d0000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 59, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_X2ApicNmiEntry",
+      "bytes": "415049433800000006f94341544f53204f524947494e414c785634124341544c2143658700000000000000000a0c0480070000808a2d2e2f",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 56, 44);",
+        "let fields: bool = fields_X2ApicNmiEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 56",
+        "fields"
+      ],
+      "variant": {
+        "record": "X2ApicNmiEntry",
+        "checks": [
+          [
+            "flags",
+            32772
+          ],
+          [
+            "processor_uid",
+            2147483655
+          ],
+          [
+            "nmi_line",
+            138
+          ],
+          [
+            "reserved[0]",
+            45
+          ],
+          [
+            "reserved[1]",
+            46
+          ],
+          [
+            "reserved[2]",
+            47
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_X2ApicNmiEntry",
+      "bytes": "4150494337000000062a4341544f53204f524947494e414c785634124341544c2143658700000000000000000a0b0480070000808a2d2e",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 55, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_GiccEntry",
+      "bytes": "415049437e000000062f4341544f53204f524947494e414c785634124341544c2143658700000000000000000b520480070000800a0000800d0000801000008013000080160000000000008019000000000000801c000000000000801f000000000000802200008025000000000000802800000000000080abae31803480",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 126, 44);",
+        "let fields: bool = fields_GiccEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 126",
+        "fields"
+      ],
+      "variant": {
+        "record": "GiccEntry",
+        "checks": [
+          [
+            "reserved1",
+            32772
+          ],
+          [
+            "cpu_interface_number",
+            2147483655
+          ],
+          [
+            "processor_uid",
+            2147483658
+          ],
+          [
+            "flags",
+            2147483661
+          ],
+          [
+            "parking_protocol_version",
+            2147483664
+          ],
+          [
+            "performance_interrupt_gsiv",
+            2147483667
+          ],
+          [
+            "parked_address",
+            9223372036854775830
+          ],
+          [
+            "gic_registers_address",
+            9223372036854775833
+          ],
+          [
+            "gic_virtual_registers_address",
+            9223372036854775836
+          ],
+          [
+            "gic_hypervisor_registers_address",
+            9223372036854775839
+          ],
+          [
+            "vgic_maintenance_interrupt",
+            2147483682
+          ],
+          [
+            "gicr_base_address",
+            9223372036854775845
+          ],
+          [
+            "mpidr",
+            9223372036854775848
+          ],
+          [
+            "processor_power_efficiency_class",
+            171
+          ],
+          [
+            "reserved2",
+            174
+          ],
+          [
+            "spe_overflow_interrupt",
+            32817
+          ],
+          [
+            "trbe_interrupt.value",
+            32820
+          ],
+          [
+            "trbe_interrupt.present",
+            true
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_GiccEntry",
+      "bytes": "415049437d00000006b14341544f53204f524947494e414c785634124341544c2143658700000000000000000b510480070000800a0000800d0000801000008013000080160000000000008019000000000000801c000000000000801f000000000000802200008025000000000000802800000000000080abae318034",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 125, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_GicdEntry",
+      "bytes": "415049434400000006804341544f53204f524947494e414c785634124341544c2143658700000000000000000c180480070000800a000000000000800d00008090434445",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 68, 44);",
+        "let fields: bool = fields_GicdEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 68",
+        "fields"
+      ],
+      "variant": {
+        "record": "GicdEntry",
+        "checks": [
+          [
+            "reserved1",
+            32772
+          ],
+          [
+            "gic_id",
+            2147483655
+          ],
+          [
+            "physical_base_address",
+            9223372036854775818
+          ],
+          [
+            "system_vector_base",
+            2147483661
+          ],
+          [
+            "gic_version",
+            144
+          ],
+          [
+            "reserved2[0]",
+            67
+          ],
+          [
+            "reserved2[1]",
+            68
+          ],
+          [
+            "reserved2[2]",
+            69
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_GicdEntry",
+      "bytes": "415049434300000006c74341544f53204f524947494e414c785634124341544c2143658700000000000000000c170480070000800a000000000000800d000080904344",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 67, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_GicMsiFrameEntry",
+      "bytes": "415049434400000006b84341544f53204f524947494e414c785634124341544c2143658700000000000000000d180480070000800a000000000000800d00008010801380",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 68, 44);",
+        "let fields: bool = fields_GicMsiFrameEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 68",
+        "fields"
+      ],
+      "variant": {
+        "record": "GicMsiFrameEntry",
+        "checks": [
+          [
+            "reserved",
+            32772
+          ],
+          [
+            "frame_id",
+            2147483655
+          ],
+          [
+            "physical_base_address",
+            9223372036854775818
+          ],
+          [
+            "flags",
+            2147483661
+          ],
+          [
+            "spi_count",
+            32784
+          ],
+          [
+            "spi_base",
+            32787
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_GicMsiFrameEntry",
+      "bytes": "4150494343000000063a4341544f53204f524947494e414c785634124341544c2143658700000000000000000d170480070000800a000000000000800d000080108013",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 67, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_GicRedistributorEntry",
+      "bytes": "415049433c00000006774341544f53204f524947494e414c785634124341544c2143658700000000000000000e10048007000000000000800a000080",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 60, 44);",
+        "let fields: bool = fields_GicRedistributorEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 60",
+        "fields"
+      ],
+      "variant": {
+        "record": "GicRedistributorEntry",
+        "checks": [
+          [
+            "reserved",
+            32772
+          ],
+          [
+            "discovery_range_base_address",
+            9223372036854775815
+          ],
+          [
+            "discovery_range_length",
+            2147483658
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_GicRedistributorEntry",
+      "bytes": "415049433b00000006f94341544f53204f524947494e414c785634124341544c2143658700000000000000000e0f048007000000000000800a0000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 59, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_GicInterruptTranslationServiceEntry",
+      "bytes": "415049434000000006e14341544f53204f524947494e414c785634124341544c2143658700000000000000000f140480070000800a000000000000800d000080",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 64, 44);",
+        "let fields: bool = fields_GicInterruptTranslationServiceEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 64",
+        "fields"
+      ],
+      "variant": {
+        "record": "GicInterruptTranslationServiceEntry",
+        "checks": [
+          [
+            "reserved1",
+            32772
+          ],
+          [
+            "id",
+            2147483655
+          ],
+          [
+            "physical_base_address",
+            9223372036854775818
+          ],
+          [
+            "reserved2",
+            2147483661
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_GicInterruptTranslationServiceEntry",
+      "bytes": "415049433f00000006634341544f53204f524947494e414c785634124341544c2143658700000000000000000f130480070000800a000000000000800d0000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 63, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_MultiprocessorWakeupEntry",
+      "bytes": "415049433c00000006754341544f53204f524947494e414c785634124341544c21436587000000000000000010100480070000800a00000000000080",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 60, 44);",
+        "let fields: bool = fields_MultiprocessorWakeupEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "!step.done",
+        "step.next_offset == 60",
+        "fields"
+      ],
+      "variant": {
+        "record": "MultiprocessorWakeupEntry",
+        "checks": [
+          [
+            "mailbox_version",
+            32772
+          ],
+          [
+            "reserved",
+            2147483655
+          ],
+          [
+            "mailbox_address",
+            9223372036854775818
+          ]
+        ]
+      }
+    },
+    {
+      "name": "madt_short_MultiprocessorWakeupEntry",
+      "bytes": "415049433b00000006f74341544f53204f524947494e414c785634124341544c214365870000000000000000100f0480070000800a000000000000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 59, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_zero",
+      "bytes": "415049432e00000001bd4341544f53204f524947494e414c785634124341544c2143658700000000000000008000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 46, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_one",
+      "bytes": "415049432e00000001bc4341544f53204f524947494e414c785634124341544c2143658700000000000000008001",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 46, 44);"
+      ],
+      "checks": [
+        "result.error == 14"
+      ]
+    },
+    {
+      "name": "madt_header_short",
+      "bytes": "415049432d00000001be4341544f53204f524947494e414c785634124341544c21436587000000000000000080",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 45, 44);"
+      ],
+      "checks": [
+        "result.error == 2"
+      ]
+    },
+    {
+      "name": "madt_overrun",
+      "bytes": "415049432e00000001ba4341544f53204f524947494e414c785634124341544c2143658700000000000000008003",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 46, 44);"
+      ],
+      "checks": [
+        "result.error == 2"
+      ]
+    },
+    {
+      "name": "madt_unknown",
+      "bytes": "415049432e00000001bb4341544f53204f524947494e414c785634124341544c2143658700000000000000008002",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 46, 44);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.next_offset == 46",
+        "!result.done"
+      ]
+    },
+    {
+      "name": "madt_cursor_44",
+      "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 44, 44);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.done"
+      ]
+    },
+    {
+      "name": "madt_cursor_43",
+      "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 44, 43);"
+      ],
+      "checks": [
+        "result.error == 10"
+      ]
+    },
+    {
+      "name": "madt_cursor_45",
+      "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 44, 45);"
+      ],
+      "checks": [
+        "result.error == 10"
+      ]
+    },
+    {
+      "name": "madt_cursor_18446744073709551615",
+      "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
+      "body": [
+        "let result: MadtStep = madt_next(&input, 44, 18446744073709551615);"
+      ],
+      "checks": [
+        "result.error == 10"
+      ]
+    },
+    {
+      "name": "madt_unknown_byte_2",
+      "bytes": "415049432f00000001ba4341544f53204f524947494e414c785634124341544c2143658700000000000000008003ff",
+      "body": [
+        "let result: U8Result = madt_entry_byte(&input, 47, 44, 2);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 255"
+      ]
+    },
+    {
+      "name": "madt_unknown_byte_3",
+      "bytes": "415049432f00000001ba4341544f53204f524947494e414c785634124341544c2143658700000000000000008003ff",
+      "body": [
+        "let result: U8Result = madt_entry_byte(&input, 47, 44, 3);"
+      ],
+      "checks": [
+        "result.error == 10"
+      ]
+    },
+    {
+      "name": "madt_unknown_byte_18446744073709551615",
+      "bytes": "415049432f00000001ba4341544f53204f524947494e414c785634124341544c2143658700000000000000008003ff",
+      "body": [
+        "let result: U8Result = madt_entry_byte(&input, 47, 44, 18446744073709551615);"
+      ],
+      "checks": [
+        "result.error == 10"
+      ]
+    },
+    {
+      "name": "madt_inti_0",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65520);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_inti_1",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65521);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_inti_2",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65522);"
+      ],
+      "checks": [
+        "result.error == 15"
+      ]
+    },
+    {
+      "name": "madt_inti_3",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65523);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_inti_4",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65524);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_inti_5",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65525);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_inti_6",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65526);"
+      ],
+      "checks": [
+        "result.error == 15"
+      ]
+    },
+    {
+      "name": "madt_inti_7",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65527);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_inti_8",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65528);"
+      ],
+      "checks": [
+        "result.error == 16"
+      ]
+    },
+    {
+      "name": "madt_inti_9",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65529);"
+      ],
+      "checks": [
+        "result.error == 16"
+      ]
+    },
+    {
+      "name": "madt_inti_10",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65530);"
+      ],
+      "checks": [
+        "result.error == 15"
+      ]
+    },
+    {
+      "name": "madt_inti_11",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65531);"
+      ],
+      "checks": [
+        "result.error == 16"
+      ]
+    },
+    {
+      "name": "madt_inti_12",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65532);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_inti_13",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65533);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_inti_14",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65534);"
+      ],
+      "checks": [
+        "result.error == 15"
+      ]
+    },
+    {
+      "name": "madt_inti_15",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(65535);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_wakeup_0",
+      "bytes": "",
+      "body": [
+        "let result: WakeupCommandResult = wakeup_command(0);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_wakeup_1",
+      "bytes": "",
+      "body": [
+        "let result: WakeupCommandResult = wakeup_command(1);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_wakeup_2",
+      "bytes": "",
+      "body": [
+        "let result: WakeupCommandResult = wakeup_command(2);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_wakeup_3",
+      "bytes": "",
+      "body": [
+        "let result: WakeupCommandResult = wakeup_command(3);"
+      ],
+      "checks": [
+        "result.error == 0"
+      ]
+    },
+    {
+      "name": "madt_wakeup_4",
+      "bytes": "",
+      "body": [
+        "let result: WakeupCommandResult = wakeup_command(4);"
+      ],
+      "checks": [
+        "result.error == 17"
+      ]
+    },
+    {
+      "name": "madt_wakeup_65535",
+      "bytes": "",
+      "body": [
+        "let result: WakeupCommandResult = wakeup_command(65535);"
+      ],
+      "checks": [
+        "result.error == 17"
+      ]
+    },
+    {
+      "name": "inti_values_0",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(0);",
+        "let p: u8 = polarity_code(result.polarity);",
+        "let t: u8 = trigger_code(result.trigger_mode);"
+      ],
+      "checks": [
+        "p == 0",
+        "t == 0"
+      ]
+    },
+    {
+      "name": "inti_values_1",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(1);",
+        "let p: u8 = polarity_code(result.polarity);",
+        "let t: u8 = trigger_code(result.trigger_mode);"
+      ],
+      "checks": [
+        "p == 1",
+        "t == 0"
+      ]
+    },
+    {
+      "name": "inti_values_3",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(3);",
+        "let p: u8 = polarity_code(result.polarity);",
+        "let t: u8 = trigger_code(result.trigger_mode);"
+      ],
+      "checks": [
+        "p == 3",
+        "t == 0"
+      ]
+    },
+    {
+      "name": "inti_values_4",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(4);",
+        "let p: u8 = polarity_code(result.polarity);",
+        "let t: u8 = trigger_code(result.trigger_mode);"
+      ],
+      "checks": [
+        "p == 0",
+        "t == 1"
+      ]
+    },
+    {
+      "name": "inti_values_5",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(5);",
+        "let p: u8 = polarity_code(result.polarity);",
+        "let t: u8 = trigger_code(result.trigger_mode);"
+      ],
+      "checks": [
+        "p == 1",
+        "t == 1"
+      ]
+    },
+    {
+      "name": "inti_values_7",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(7);",
+        "let p: u8 = polarity_code(result.polarity);",
+        "let t: u8 = trigger_code(result.trigger_mode);"
+      ],
+      "checks": [
+        "p == 3",
+        "t == 1"
+      ]
+    },
+    {
+      "name": "inti_values_12",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(12);",
+        "let p: u8 = polarity_code(result.polarity);",
+        "let t: u8 = trigger_code(result.trigger_mode);"
+      ],
+      "checks": [
+        "p == 0",
+        "t == 3"
+      ]
+    },
+    {
+      "name": "inti_values_13",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(13);",
+        "let p: u8 = polarity_code(result.polarity);",
+        "let t: u8 = trigger_code(result.trigger_mode);"
+      ],
+      "checks": [
+        "p == 1",
+        "t == 3"
+      ]
+    },
+    {
+      "name": "inti_values_15",
+      "bytes": "",
+      "body": [
+        "let result: IntiResult = parse_mps_inti_flags(15);",
+        "let p: u8 = polarity_code(result.polarity);",
+        "let t: u8 = trigger_code(result.trigger_mode);"
+      ],
+      "checks": [
+        "p == 3",
+        "t == 3"
+      ]
+    },
+    {
+      "name": "wakeup_value_0",
+      "bytes": "",
+      "body": [
+        "let result: WakeupCommandResult = wakeup_command(0);",
+        "let code: u16 = wake_code(result.value);"
+      ],
+      "checks": [
+        "code == 0"
+      ]
+    },
+    {
+      "name": "wakeup_value_1",
+      "bytes": "",
+      "body": [
+        "let result: WakeupCommandResult = wakeup_command(1);",
+        "let code: u16 = wake_code(result.value);"
+      ],
+      "checks": [
+        "code == 1"
+      ]
+    },
+    {
+      "name": "wakeup_value_2",
+      "bytes": "",
+      "body": [
+        "let result: WakeupCommandResult = wakeup_command(2);",
+        "let code: u16 = wake_code(result.value);"
+      ],
+      "checks": [
+        "code == 2"
+      ]
+    },
+    {
+      "name": "wakeup_value_3",
+      "bytes": "",
+      "body": [
+        "let result: WakeupCommandResult = wakeup_command(3);",
+        "let code: u16 = wake_code(result.value);"
+      ],
+      "checks": [
+        "code == 3"
+      ]
+    },
+    {
+      "name": "hpet_page_0",
+      "bytes": "",
+      "body": [
+        "let value: PageProtection = page_protection(0);",
+        "let code: u8 = page_code(value);"
+      ],
+      "checks": [
+        "code == 0"
+      ]
+    },
+    {
+      "name": "hpet_page_1",
+      "bytes": "",
+      "body": [
+        "let value: PageProtection = page_protection(1);",
+        "let code: u8 = page_code(value);"
+      ],
+      "checks": [
+        "code == 1"
+      ]
+    },
+    {
+      "name": "hpet_page_2",
+      "bytes": "",
+      "body": [
+        "let value: PageProtection = page_protection(2);",
+        "let code: u8 = page_code(value);"
+      ],
+      "checks": [
+        "code == 2"
+      ]
+    },
+    {
+      "name": "hpet_page_3",
+      "bytes": "",
+      "body": [
+        "let value: PageProtection = page_protection(3);",
+        "let code: u8 = page_code(value);"
+      ],
+      "checks": [
+        "code == 3"
+      ]
+    },
+    {
+      "name": "hpet_page_15",
+      "bytes": "",
+      "body": [
+        "let value: PageProtection = page_protection(15);",
+        "let code: u8 = page_code(value);"
+      ],
+      "checks": [
+        "code == 3"
+      ]
+    },
+    {
+      "name": "hpet_page_16",
+      "bytes": "",
+      "body": [
+        "let value: PageProtection = page_protection(16);",
+        "let code: u8 = page_code(value);"
+      ],
+      "checks": [
+        "code == 0"
+      ]
+    },
+    {
+      "name": "hpet_page_17",
+      "bytes": "",
+      "body": [
+        "let value: PageProtection = page_protection(17);",
+        "let code: u8 = page_code(value);"
+      ],
+      "checks": [
+        "code == 1"
+      ]
+    },
+    {
+      "name": "hpet_page_18",
+      "bytes": "",
+      "body": [
+        "let value: PageProtection = page_protection(18);",
+        "let code: u8 = page_code(value);"
+      ],
+      "checks": [
+        "code == 2"
+      ]
+    },
+    {
+      "name": "hpet_page_255",
+      "bytes": "",
+      "body": [
+        "let value: PageProtection = page_protection(255);",
+        "let code: u8 = page_code(value);"
+      ],
+      "checks": [
+        "code == 3"
+      ]
+    },
+    {
+      "name": "power_profile_0",
+      "bytes": "",
+      "body": [
+        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 0 });",
+        "let code: u8 = profile_code(value);"
+      ],
+      "checks": [
+        "code == 0"
+      ]
+    },
+    {
+      "name": "power_profile_1",
+      "bytes": "",
+      "body": [
+        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 1 });",
+        "let code: u8 = profile_code(value);"
+      ],
+      "checks": [
+        "code == 1"
+      ]
+    },
+    {
+      "name": "power_profile_2",
+      "bytes": "",
+      "body": [
+        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 2 });",
+        "let code: u8 = profile_code(value);"
+      ],
+      "checks": [
+        "code == 2"
+      ]
+    },
+    {
+      "name": "power_profile_3",
+      "bytes": "",
+      "body": [
+        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 3 });",
+        "let code: u8 = profile_code(value);"
+      ],
+      "checks": [
+        "code == 3"
+      ]
+    },
+    {
+      "name": "power_profile_4",
+      "bytes": "",
+      "body": [
+        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 4 });",
+        "let code: u8 = profile_code(value);"
+      ],
+      "checks": [
+        "code == 4"
+      ]
+    },
+    {
+      "name": "power_profile_5",
+      "bytes": "",
+      "body": [
+        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 5 });",
+        "let code: u8 = profile_code(value);"
+      ],
+      "checks": [
+        "code == 5"
+      ]
+    },
+    {
+      "name": "power_profile_6",
+      "bytes": "",
+      "body": [
+        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 6 });",
+        "let code: u8 = profile_code(value);"
+      ],
+      "checks": [
+        "code == 6"
+      ]
+    },
+    {
+      "name": "power_profile_7",
+      "bytes": "",
+      "body": [
+        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 7 });",
+        "let code: u8 = profile_code(value);"
+      ],
+      "checks": [
+        "code == 7"
+      ]
+    },
+    {
+      "name": "power_profile_8",
+      "bytes": "",
+      "body": [
+        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 8 });",
+        "let code: u8 = profile_code(value);"
+      ],
+      "checks": [
+        "code == 8"
+      ]
+    },
+    {
+      "name": "power_profile_9",
+      "bytes": "",
+      "body": [
+        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 9 });",
+        "let code: u8 = profile_code(value);"
+      ],
+      "checks": [
+        "code == 9"
+      ]
+    },
+    {
+      "name": "power_profile_255",
+      "bytes": "",
+      "body": [
+        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 255 });",
+        "let code: u8 = profile_code(value);"
+      ],
+      "checks": [
+        "code == 255"
+      ]
+    },
+    {
+      "name": "fadt_address_helpers",
+      "bytes": "",
+      "body": [
+        "let table: Fadt = Fadt { firmware_ctrl: 123, dsdt_address: 456, x_firmware_ctrl: OptionalU64 { present: true, value: 18446744073709551615 }, x_dsdt_address: OptionalU64 { present: true, value: 0 } };",
+        "let facs: U64Result = facs_address(table);",
+        "let dsdt: U64Result = dsdt_address(table);"
+      ],
+      "checks": [
+        "facs.error == 0",
+        "facs.value == 18446744073709551615",
+        "dsdt.error == 0",
+        "dsdt.value == 456"
+      ]
+    },
+    {
+      "name": "madt_8259_0",
+      "bytes": "",
+      "body": [
+        "let result: bool = supports_8259(Madt { flags: 0 });"
+      ],
+      "checks": [
+        "result == false"
+      ]
+    },
+    {
+      "name": "madt_8259_1",
+      "bytes": "",
+      "body": [
+        "let result: bool = supports_8259(Madt { flags: 1 });"
+      ],
+      "checks": [
+        "result == true"
+      ]
+    },
+    {
+      "name": "madt_8259_2",
+      "bytes": "",
+      "body": [
+        "let result: bool = supports_8259(Madt { flags: 2 });"
+      ],
+      "checks": [
+        "result == false"
+      ]
+    },
+    {
+      "name": "madt_8259_4294967295",
+      "bytes": "",
+      "body": [
+        "let result: bool = supports_8259(Madt { flags: 4294967295 });"
+      ],
+      "checks": [
+        "result == true"
+      ]
+    },
+    {
+      "name": "madt_gicc_legacy80",
+      "bytes": "415049437c00000005e84341544f53204f524947494e414c785634124341544c2143658700000000000000000b500480070000800a0000800d0000801000008013000080160000000000008019000000000000801c000000000000801f000000000000802200008025000000000000802800000000000080abae3180",
+      "body": [
+        "let step: MadtStep = madt_next(&input, 124, 44);",
+        "let fields: bool = fields_GiccEntry(step.entry);"
+      ],
+      "checks": [
+        "step.error == 0",
+        "fields"
+      ],
+      "variant": {
+        "record": "GiccEntry",
+        "checks": [
+          [
+            "reserved1",
+            32772
+          ],
+          [
+            "cpu_interface_number",
+            2147483655
+          ],
+          [
+            "processor_uid",
+            2147483658
+          ],
+          [
+            "flags",
+            2147483661
+          ],
+          [
+            "parking_protocol_version",
+            2147483664
+          ],
+          [
+            "performance_interrupt_gsiv",
+            2147483667
+          ],
+          [
+            "parked_address",
+            9223372036854775830
+          ],
+          [
+            "gic_registers_address",
+            9223372036854775833
+          ],
+          [
+            "gic_virtual_registers_address",
+            9223372036854775836
+          ],
+          [
+            "gic_hypervisor_registers_address",
+            9223372036854775839
+          ],
+          [
+            "vgic_maintenance_interrupt",
+            2147483682
+          ],
+          [
+            "gicr_base_address",
+            9223372036854775845
+          ],
+          [
+            "mpidr",
+            9223372036854775848
+          ],
+          [
+            "processor_power_efficiency_class",
+            171
+          ],
+          [
+            "reserved2",
+            174
+          ],
+          [
+            "spe_overflow_interrupt",
+            32817
+          ],
+          [
+            "trbe_interrupt.value",
+            0
+          ],
+          [
+            "trbe_interrupt.present",
+            false
+          ]
+        ]
+      }
+    },
+    {
+      "name": "mailbox_empty",
+      "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
+      "body": [
+        "let result: U64Result = get_mpwk_mailbox_addr(&input, 44);"
+      ],
+      "checks": [
+        "result.error == 18",
+        "result.value == 0"
+      ]
+    },
+    {
+      "name": "mailbox_direct",
+      "bytes": "415049433c00000001d74341544f53204f524947494e414c785634124341544c21436587000000000000000010100000000000001032547698badcfe",
+      "body": [
+        "let result: U64Result = get_mpwk_mailbox_addr(&input, 60);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 18364758544493064720"
+      ]
+    },
+    {
+      "name": "mailbox_after_unknown",
+      "bytes": "415049433e00000001534341544f53204f524947494e414c785634124341544c214365870000000000000000800210100000000000001032547698badcfe",
+      "body": [
+        "let result: U64Result = get_mpwk_mailbox_addr(&input, 62);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value == 18364758544493064720"
+      ]
+    },
+    {
+      "name": "mailbox_malformed",
+      "bytes": "415049433e00000001554341544f53204f524947494e414c785634124341544c214365870000000000000000800010100000000000001032547698badcfe",
+      "body": [
+        "let result: U64Result = get_mpwk_mailbox_addr(&input, 62);"
+      ],
+      "checks": [
+        "result.error == 14",
+        "result.value == 0"
+      ]
+    },
+    {
+      "name": "wrapper_pm1a_event_block",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = pm1a_event_block(Fadt { pm1a_event_block: 4096, pm1_event_length: 4 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present",
+        "result.value.address == 4096",
+        "result.value.bit_width == 32",
+        "result.value.address_space == 1"
+      ]
+    },
+    {
+      "name": "wrapper_pm1b_event_block",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = pm1b_event_block(Fadt { pm1b_event_block: 4097, pm1_event_length: 4 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present",
+        "result.value.address == 4097",
+        "result.value.bit_width == 32",
+        "result.value.address_space == 1"
+      ]
+    },
+    {
+      "name": "wrapper_pm1a_control_block",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = pm1a_control_block(Fadt { pm1a_control_block: 4098, pm1_control_length: 4 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present",
+        "result.value.address == 4098",
+        "result.value.bit_width == 32",
+        "result.value.address_space == 1"
+      ]
+    },
+    {
+      "name": "wrapper_pm1b_control_block",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = pm1b_control_block(Fadt { pm1b_control_block: 4099, pm1_control_length: 4 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present",
+        "result.value.address == 4099",
+        "result.value.bit_width == 32",
+        "result.value.address_space == 1"
+      ]
+    },
+    {
+      "name": "wrapper_pm2_control_block",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = pm2_control_block(Fadt { pm2_control_block: 4100, pm2_control_length: 4 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present",
+        "result.value.address == 4100",
+        "result.value.bit_width == 32",
+        "result.value.address_space == 1"
+      ]
+    },
+    {
+      "name": "wrapper_pm_timer_block",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = pm_timer_block(Fadt { pm_timer_block: 4101, pm_timer_length: 4 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present",
+        "result.value.address == 4101",
+        "result.value.bit_width == 32",
+        "result.value.address_space == 1"
+      ]
+    },
+    {
+      "name": "wrapper_gpe0_block",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = gpe0_block(Fadt { gpe0_block: 4102, gpe0_block_length: 4 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present",
+        "result.value.address == 4102",
+        "result.value.bit_width == 32",
+        "result.value.address_space == 1"
+      ]
+    },
+    {
+      "name": "wrapper_gpe1_block",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = gpe1_block(Fadt { gpe1_block: 4103, gpe1_block_length: 4 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present",
+        "result.value.address == 4103",
+        "result.value.bit_width == 32",
+        "result.value.address_space == 1"
+      ]
+    },
+    {
+      "name": "wrapper_reset_register",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = reset_register(Fadt { reset_reg: OptionalRawGas { present: true, value: RawGenericAddress { address_space: 128, address: 18446744073709551615, bit_width: 8 } } });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 128",
+        "result.value.bit_width == 8"
+      ]
+    },
+    {
+      "name": "wrapper_sleep_control_register",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = sleep_control_register(Fadt { sleep_control_reg: OptionalRawGas { present: true, value: RawGenericAddress { address_space: 128, address: 18446744073709551615, bit_width: 8 } } });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 128",
+        "result.value.bit_width == 8"
+      ]
+    },
+    {
+      "name": "wrapper_sleep_status_register",
+      "bytes": "",
+      "body": [
+        "let result: GasSelection = sleep_status_register(Fadt { sleep_status_reg: OptionalRawGas { present: true, value: RawGenericAddress { address_space: 128, address: 18446744073709551615, bit_width: 8 } } });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present",
+        "result.value.address == 18446744073709551615",
+        "result.value.address_space == 128",
+        "result.value.bit_width == 8"
+      ]
+    }
+  ]
+}

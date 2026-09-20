@@ -1,0 +1,3227 @@
+{
+  "files": {
+    "src/address.rs": {
+      "disposition": "translated",
+      "note": "Each source anchor separately classified; hardware/mapping operations explicitly omitted.",
+      "sha256": "38048355ffe9b7c956e3ebaf84effdadca7defffd70c07feb0587e1c85fbb20a",
+      "symbols": {
+        "118:standard_access_size": {
+          "anchor": "pub fn standard_access_size(&self) -> Result<StandardAccessSize, AcpiError> {",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "machine standard_access_size",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "11:RawGenericAddress": {
+          "anchor": "pub struct RawGenericAddress {",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "data RawGenericAddress",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "123:MappedGas": {
+          "anchor": "pub struct MappedGas<H: Handler> {",
+          "disposition": "omitted",
+          "reason": "Hardware ownership/mapping and volatile MMIO or I/O-port access are outside the pure initialized-byte library. A driver adapter needs explicit authority; no inert address becomes a pointer."
+        },
+        "12:address_space": {
+          "anchor": "pub address_space: u8,",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "address_space:",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "138:map_gas": {
+          "anchor": "pub unsafe fn map_gas(gas: GenericAddress, handler: H) -> Result<MappedGas<H>, AcpiError> {",
+          "disposition": "omitted",
+          "reason": "Hardware ownership/mapping and volatile MMIO or I/O-port access are outside the pure initialized-byte library. A driver adapter needs explicit authority; no inert address becomes a pointer."
+        },
+        "13:bit_width": {
+          "anchor": "pub bit_width: u8,",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "bit_width:",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "14:bit_offset": {
+          "anchor": "pub bit_offset: u8,",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "bit_offset:",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "154:read": {
+          "anchor": "pub fn read(&self) -> Result<u64, AcpiError> {",
+          "disposition": "omitted",
+          "reason": "Hardware ownership/mapping and volatile MMIO or I/O-port access are outside the pure initialized-byte library. A driver adapter needs explicit authority; no inert address becomes a pointer."
+        },
+        "15:access_size": {
+          "anchor": "pub access_size: u8,",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "access_size:",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "16:address": {
+          "anchor": "pub address: u64,",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "address:",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "188:write": {
+          "anchor": "pub fn write(&self, value: u64) -> Result<(), AcpiError> {",
+          "disposition": "omitted",
+          "reason": "Hardware ownership/mapping and volatile MMIO or I/O-port access are outside the pure initialized-byte library. A driver adapter needs explicit authority; no inert address becomes a pointer."
+        },
+        "20:is_empty": {
+          "anchor": "pub(crate) const fn is_empty(&self) -> bool {",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "machine gas_is_empty",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "227:gas_decode_access_bit_width": {
+          "anchor": "fn gas_decode_access_bit_width(gas: GenericAddress) -> Result<u8, AcpiError> {",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "machine gas_decode_access_bit_width",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "30:AddressSpace": {
+          "anchor": "pub enum AddressSpace {",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "ADDRESS_SYSTEM_MEMORY",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "57:StandardAccessSize": {
+          "anchor": "pub enum StandardAccessSize {",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "ACCESS_UNDEFINED",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "66:Error": {
+          "anchor": "type Error = AcpiError;",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "ERROR_GENERIC_ADDRESS",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "68:try_from": {
+          "anchor": "fn try_from(size: u8) -> Result<Self, Self::Error> {",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "machine standard_access_size",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "81:GenericAddress": {
+          "anchor": "pub struct GenericAddress {",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "data GenericAddress",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "82:address_space": {
+          "anchor": "pub address_space: AddressSpace,",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "address_space:",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "83:bit_width": {
+          "anchor": "pub bit_width: u8,",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "bit_width:",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "84:bit_offset": {
+          "anchor": "pub bit_offset: u8,",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "bit_offset:",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "85:access_size": {
+          "anchor": "pub access_size: u8,",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "access_size:",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "86:address": {
+          "anchor": "pub address: u64,",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "address:",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        },
+        "90:from_raw": {
+          "anchor": "pub fn from_raw(raw: RawGenericAddress) -> Result<GenericAddress, AcpiError> {",
+          "disposition": "translated",
+          "note": "Address/access enum identity uses explicit numeric carriers; primary corrections and access-width heuristic limitations are recorded in fixed.PORT.md.",
+          "targets": [
+            {
+              "anchor": "machine gas_from_raw",
+              "path": "source/libraries/acpi/gas.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source map",
+          "path": "source/libraries/acpi/fixed.PORT.md"
+        }
+      ]
+    },
+    "src/sdt/fadt.rs": {
+      "disposition": "translated",
+      "note": "Each source anchor separately classified; hardware/mapping operations explicitly omitted.",
+      "sha256": "3b213e82029458b0c4c2633b232f2e3f1b4f9f59c07c5ac201286fb54a7927b7",
+      "symbols": {
+        "100:reset_value": {
+          "anchor": "pub reset_value: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "reset_value:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "101:arm_boot_arch": {
+          "anchor": "pub arm_boot_arch: ArmBootArchFlags,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "arm_boot_arch:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "102:fadt_minor_version": {
+          "anchor": "pub fadt_minor_version: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "fadt_minor_version:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "103:x_firmware_ctrl": {
+          "anchor": "pub x_firmware_ctrl: ExtendedField<u64, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "x_firmware_ctrl:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "104:x_dsdt_address": {
+          "anchor": "pub x_dsdt_address: ExtendedField<u64, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "x_dsdt_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "105:x_pm1a_event_block": {
+          "anchor": "pub x_pm1a_event_block: ExtendedField<RawGenericAddress, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "x_pm1a_event_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "106:x_pm1b_event_block": {
+          "anchor": "pub x_pm1b_event_block: ExtendedField<RawGenericAddress, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "x_pm1b_event_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "107:x_pm1a_control_block": {
+          "anchor": "pub x_pm1a_control_block: ExtendedField<RawGenericAddress, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "x_pm1a_control_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "108:x_pm1b_control_block": {
+          "anchor": "pub x_pm1b_control_block: ExtendedField<RawGenericAddress, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "x_pm1b_control_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "109:x_pm2_control_block": {
+          "anchor": "pub x_pm2_control_block: ExtendedField<RawGenericAddress, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "x_pm2_control_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "10:PowerProfile": {
+          "anchor": "pub enum PowerProfile {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data PowerProfile",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "110:x_pm_timer_block": {
+          "anchor": "pub x_pm_timer_block: ExtendedField<RawGenericAddress, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "x_pm_timer_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "111:x_gpe0_block": {
+          "anchor": "pub x_gpe0_block: ExtendedField<RawGenericAddress, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "x_gpe0_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "112:x_gpe1_block": {
+          "anchor": "pub x_gpe1_block: ExtendedField<RawGenericAddress, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "x_gpe1_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "113:sleep_control_reg": {
+          "anchor": "pub sleep_control_reg: ExtendedField<RawGenericAddress, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "sleep_control_reg:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "114:sleep_status_reg": {
+          "anchor": "pub sleep_status_reg: ExtendedField<RawGenericAddress, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "sleep_status_reg:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "115:hypervisor_vendor_id": {
+          "anchor": "pub hypervisor_vendor_id: ExtendedField<u64, 2>,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "hypervisor_vendor_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "121:SIGNATURE": {
+          "anchor": "const SIGNATURE: Signature = Signature::FADT;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_FADT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "123:header": {
+          "anchor": "fn header(&self) -> &SdtHeader {",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "129:validate": {
+          "anchor": "pub fn validate(&self) -> Result<(), AcpiError> {",
+          "disposition": "translated",
+          "note": "Bounded signature/checksum/revision-length validation replaces unsafe native overlay validation.",
+          "targets": [
+            {
+              "anchor": "machine parse_fadt",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "133:facs_address": {
+          "anchor": "pub fn facs_address(&self) -> Result<usize, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine facs_address",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "145:dsdt_address": {
+          "anchor": "pub fn dsdt_address(&self) -> Result<usize, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine dsdt_address",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "157:power_profile": {
+          "anchor": "pub fn power_profile(&self) -> PowerProfile {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine power_profile",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "172:pm1a_event_block": {
+          "anchor": "pub fn pm1a_event_block(&self) -> Result<GenericAddress, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine pm1a_event_block",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "188:pm1b_event_block": {
+          "anchor": "pub fn pm1b_event_block(&self) -> Result<Option<GenericAddress>, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine pm1b_event_block",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "208:pm1a_control_block": {
+          "anchor": "pub fn pm1a_control_block(&self) -> Result<GenericAddress, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine pm1a_control_block",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "224:pm1b_control_block": {
+          "anchor": "pub fn pm1b_control_block(&self) -> Result<Option<GenericAddress>, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine pm1b_control_block",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "244:pm2_control_block": {
+          "anchor": "pub fn pm2_control_block(&self) -> Result<Option<GenericAddress>, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine pm2_control_block",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "266:pm_timer_block": {
+          "anchor": "pub fn pm_timer_block(&self) -> Result<Option<GenericAddress>, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine pm_timer_block",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "291:gpe0_block": {
+          "anchor": "pub fn gpe0_block(&self) -> Result<Option<GenericAddress>, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine gpe0_block",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "311:gpe1_block": {
+          "anchor": "pub fn gpe1_block(&self) -> Result<Option<GenericAddress>, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine gpe1_block",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "32:Fadt": {
+          "anchor": "pub struct Fadt {",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "data Fadt",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "331:reset_register": {
+          "anchor": "pub fn reset_register(&self) -> Result<GenericAddress, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine reset_register",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "335:sleep_control_register": {
+          "anchor": "pub fn sleep_control_register(&self) -> Result<Option<GenericAddress>, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine sleep_control_register",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "33:header": {
+          "anchor": "pub header: SdtHeader,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "343:sleep_status_register": {
+          "anchor": "pub fn sleep_status_register(&self) -> Result<Option<GenericAddress>, AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine sleep_status_register",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "353:FixedFeatureFlags": {
+          "anchor": "pub struct FixedFeatureFlags(u32);",
+          "disposition": "translated",
+          "note": "Explicit underlying carrier replaces Rust wrapper identity; every bit getter preserved.",
+          "targets": [
+            {
+              "anchor": "// FixedFeatureFlags represented",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "359:supports_equivalent_to_wbinvd": {
+          "anchor": "pub fn supports_equivalent_to_wbinvd(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine supports_equivalent_to_wbinvd",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "35:firmware_ctrl": {
+          "anchor": "pub firmware_ctrl: u32,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "firmware_ctrl:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "364:wbinvd_flushes_all_caches": {
+          "anchor": "pub fn wbinvd_flushes_all_caches(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine wbinvd_flushes_all_caches",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "369:all_procs_support_c1_power_state": {
+          "anchor": "pub fn all_procs_support_c1_power_state(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine all_procs_support_c1_power_state",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "36:dsdt_address": {
+          "anchor": "pub dsdt_address: u32,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "dsdt_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "374:c2_configured_for_mp_system": {
+          "anchor": "pub fn c2_configured_for_mp_system(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine c2_configured_for_mp_system",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "380:power_button_is_control_method": {
+          "anchor": "pub fn power_button_is_control_method(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine power_button_is_control_method",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "386:sleep_button_is_control_method": {
+          "anchor": "pub fn sleep_button_is_control_method(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine sleep_button_is_control_method",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "391:no_rtc_wake_in_fixed_register_space": {
+          "anchor": "pub fn no_rtc_wake_in_fixed_register_space(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine no_rtc_wake_in_fixed_register_space",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "396:rtc_wakes_system_from_s4": {
+          "anchor": "pub fn rtc_wakes_system_from_s4(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine rtc_wakes_system_from_s4",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "402:pm_timer_is_32_bit": {
+          "anchor": "pub fn pm_timer_is_32_bit(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine pm_timer_is_32_bit",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "407:supports_docking": {
+          "anchor": "pub fn supports_docking(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine supports_docking",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "412:supports_system_reset_via_fadt": {
+          "anchor": "pub fn supports_system_reset_via_fadt(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine supports_system_reset_via_fadt",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "417:case_is_sealed": {
+          "anchor": "pub fn case_is_sealed(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine case_is_sealed",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "41:preferred_pm_profile": {
+          "anchor": "pub preferred_pm_profile: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "preferred_pm_profile:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "422:system_is_headless": {
+          "anchor": "pub fn system_is_headless(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine system_is_headless",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "427:use_instr_after_write_to_slp_typx": {
+          "anchor": "pub fn use_instr_after_write_to_slp_typx(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine use_instr_after_write_to_slp_typx",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "432:supports_pciexp_wake_in_pm1": {
+          "anchor": "pub fn supports_pciexp_wake_in_pm1(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine supports_pciexp_wake_in_pm1",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "437:use_pm_or_hpet_for_monotonically_decreasing_timers": {
+          "anchor": "pub fn use_pm_or_hpet_for_monotonically_decreasing_timers(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine use_pm_or_hpet_for_monotonically_decreasing_timers",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "442:rtc_sts_is_valid_after_wakeup_from_s4": {
+          "anchor": "pub fn rtc_sts_is_valid_after_wakeup_from_s4(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine rtc_sts_is_valid_after_wakeup_from_s4",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "447:ospm_may_leave_gpe_wake_events_armed_before_s5": {
+          "anchor": "pub fn ospm_may_leave_gpe_wake_events_armed_before_s5(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine ospm_may_leave_gpe_wake_events_armed_before_s5",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "452:lapics_must_use_cluster_model_for_logical_mode": {
+          "anchor": "pub fn lapics_must_use_cluster_model_for_logical_mode(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine lapics_must_use_cluster_model_for_logical_mode",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "457:local_xapics_must_use_physical_destination_mode": {
+          "anchor": "pub fn local_xapics_must_use_physical_destination_mode(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine local_xapics_must_use_physical_destination_mode",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "462:system_is_hw_reduced_acpi": {
+          "anchor": "pub fn system_is_hw_reduced_acpi(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine system_is_hw_reduced_acpi",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "467:no_benefit_to_s3": {
+          "anchor": "pub fn no_benefit_to_s3(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine no_benefit_to_s3",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "46:sci_interrupt": {
+          "anchor": "pub sci_interrupt: u16,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "sci_interrupt:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "473:IaPcBootArchFlags": {
+          "anchor": "pub struct IaPcBootArchFlags(u16);",
+          "disposition": "translated",
+          "note": "Explicit underlying carrier replaces Rust wrapper identity; every bit getter preserved.",
+          "targets": [
+            {
+              "anchor": "// IaPcBootArchFlags represented",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "477:legacy_devices_are_accessible": {
+          "anchor": "pub fn legacy_devices_are_accessible(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine legacy_devices_are_accessible",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "482:motherboard_implements_8042": {
+          "anchor": "pub fn motherboard_implements_8042(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine motherboard_implements_8042",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "488:dont_probe_vga": {
+          "anchor": "pub fn dont_probe_vga(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine dont_probe_vga",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "493:dont_enable_msi": {
+          "anchor": "pub fn dont_enable_msi(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine dont_enable_msi",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "498:dont_enable_pcie_aspm": {
+          "anchor": "pub fn dont_enable_pcie_aspm(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine dont_enable_pcie_aspm",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "504:use_time_and_alarm_namespace_for_rtc": {
+          "anchor": "pub fn use_time_and_alarm_namespace_for_rtc(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine use_time_and_alarm_namespace_for_rtc",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "510:ArmBootArchFlags": {
+          "anchor": "pub struct ArmBootArchFlags(u16);",
+          "disposition": "translated",
+          "note": "Explicit underlying carrier replaces Rust wrapper identity; every bit getter preserved.",
+          "targets": [
+            {
+              "anchor": "// ArmBootArchFlags represented",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "514:implements_psci": {
+          "anchor": "pub fn implements_psci(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine implements_psci",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "519:use_hvc_as_psci_conduit": {
+          "anchor": "pub fn use_hvc_as_psci_conduit(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine use_hvc_as_psci_conduit",
+              "path": "source/libraries/acpi/fadt.omg"
+            }
+          ]
+        },
+        "62:smi_cmd_port": {
+          "anchor": "pub smi_cmd_port: u32,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "smi_cmd_port:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "63:acpi_enable": {
+          "anchor": "pub acpi_enable: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "acpi_enable:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "64:acpi_disable": {
+          "anchor": "pub acpi_disable: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "acpi_disable:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "65:s4bios_req": {
+          "anchor": "pub s4bios_req: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "s4bios_req:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "66:pstate_control": {
+          "anchor": "pub pstate_control: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "pstate_control:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "67:pm1a_event_block": {
+          "anchor": "pub pm1a_event_block: u32,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "pm1a_event_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "68:pm1b_event_block": {
+          "anchor": "pub pm1b_event_block: u32,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "pm1b_event_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "69:pm1a_control_block": {
+          "anchor": "pub pm1a_control_block: u32,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "pm1a_control_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "70:pm1b_control_block": {
+          "anchor": "pub pm1b_control_block: u32,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "pm1b_control_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "71:pm2_control_block": {
+          "anchor": "pub pm2_control_block: u32,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "pm2_control_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "72:pm_timer_block": {
+          "anchor": "pub pm_timer_block: u32,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "pm_timer_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "73:gpe0_block": {
+          "anchor": "pub gpe0_block: u32,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "gpe0_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "74:gpe1_block": {
+          "anchor": "pub gpe1_block: u32,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "gpe1_block:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "75:pm1_event_length": {
+          "anchor": "pub pm1_event_length: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "pm1_event_length:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "76:pm1_control_length": {
+          "anchor": "pub pm1_control_length: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "pm1_control_length:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "77:pm2_control_length": {
+          "anchor": "pub pm2_control_length: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "pm2_control_length:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "78:pm_timer_length": {
+          "anchor": "pub pm_timer_length: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "pm_timer_length:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "79:gpe0_block_length": {
+          "anchor": "pub gpe0_block_length: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "gpe0_block_length:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "80:gpe1_block_length": {
+          "anchor": "pub gpe1_block_length: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "gpe1_block_length:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "81:gpe1_base": {
+          "anchor": "pub gpe1_base: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "gpe1_base:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "82:c_state_control": {
+          "anchor": "pub c_state_control: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "c_state_control:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "85:worst_c2_latency": {
+          "anchor": "pub worst_c2_latency: u16,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "worst_c2_latency:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "88:worst_c3_latency": {
+          "anchor": "pub worst_c3_latency: u16,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "worst_c3_latency:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "89:flush_size": {
+          "anchor": "pub flush_size: u16,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "flush_size:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "90:flush_stride": {
+          "anchor": "pub flush_stride: u16,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "flush_stride:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "91:duty_offset": {
+          "anchor": "pub duty_offset: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "duty_offset:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "92:duty_width": {
+          "anchor": "pub duty_width: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "duty_width:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "93:day_alarm": {
+          "anchor": "pub day_alarm: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "day_alarm:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "94:month_alarm": {
+          "anchor": "pub month_alarm: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "month_alarm:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "95:century": {
+          "anchor": "pub century: u8,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "century:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "96:iapc_boot_arch": {
+          "anchor": "pub iapc_boot_arch: IaPcBootArchFlags,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "iapc_boot_arch:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "98:flags": {
+          "anchor": "pub flags: FixedFeatureFlags,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "99:reset_reg": {
+          "anchor": "pub reset_reg: RawGenericAddress,",
+          "disposition": "translated",
+          "note": "Owned decoded fields; optional extension requires revision and actual byte availability.",
+          "targets": [
+            {
+              "anchor": "reset_reg:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source map",
+          "path": "source/libraries/acpi/fixed.PORT.md"
+        }
+      ]
+    },
+    "src/sdt/hpet.rs": {
+      "disposition": "translated",
+      "note": "Each source anchor separately classified; hardware/mapping operations explicitly omitted.",
+      "sha256": "ad52bbf848ac167a26561838d2695579b780b174006d9b553f8b154e74e6aca5",
+      "symbols": {
+        "13:PageProtection": {
+          "anchor": "pub enum PageProtection {",
+          "disposition": "translated",
+          "note": "Encoded last-comparator index is corrected to count plus1; raw encoded value also retained.",
+          "targets": [
+            {
+              "anchor": "data PageProtection",
+              "path": "source/libraries/acpi/hpet.omg"
+            }
+          ]
+        },
+        "24:HpetInfo": {
+          "anchor": "pub struct HpetInfo {",
+          "disposition": "translated",
+          "note": "Encoded last-comparator index is corrected to count plus1; raw encoded value also retained.",
+          "targets": [
+            {
+              "anchor": "data HpetInfo",
+              "path": "source/libraries/acpi/hpet.omg"
+            }
+          ]
+        },
+        "25:hardware_rev": {
+          "anchor": "pub hardware_rev: u8,",
+          "disposition": "translated",
+          "note": "Encoded last-comparator index is corrected to count plus1; raw encoded value also retained.",
+          "targets": [
+            {
+              "anchor": "hardware_rev:",
+              "path": "source/libraries/acpi/hpet.omg"
+            }
+          ]
+        },
+        "26:num_comparators": {
+          "anchor": "pub num_comparators: u8,",
+          "disposition": "translated",
+          "note": "Encoded last-comparator index is corrected to count plus1; raw encoded value also retained.",
+          "targets": [
+            {
+              "anchor": "num_comparators:",
+              "path": "source/libraries/acpi/hpet.omg"
+            }
+          ]
+        },
+        "27:main_counter_is_64bits": {
+          "anchor": "pub main_counter_is_64bits: bool,",
+          "disposition": "translated",
+          "note": "Encoded last-comparator index is corrected to count plus1; raw encoded value also retained.",
+          "targets": [
+            {
+              "anchor": "main_counter_is_64bits:",
+              "path": "source/libraries/acpi/hpet.omg"
+            }
+          ]
+        },
+        "28:legacy_irq_capable": {
+          "anchor": "pub legacy_irq_capable: bool,",
+          "disposition": "translated",
+          "note": "Encoded last-comparator index is corrected to count plus1; raw encoded value also retained.",
+          "targets": [
+            {
+              "anchor": "legacy_irq_capable:",
+              "path": "source/libraries/acpi/hpet.omg"
+            }
+          ]
+        },
+        "29:pci_vendor_id": {
+          "anchor": "pub pci_vendor_id: u16,",
+          "disposition": "translated",
+          "note": "Encoded last-comparator index is corrected to count plus1; raw encoded value also retained.",
+          "targets": [
+            {
+              "anchor": "pci_vendor_id:",
+              "path": "source/libraries/acpi/hpet.omg"
+            }
+          ]
+        },
+        "30:base_address": {
+          "anchor": "pub base_address: usize,",
+          "disposition": "translated",
+          "note": "Encoded last-comparator index is corrected to count plus1; raw encoded value also retained.",
+          "targets": [
+            {
+              "anchor": "base_address:",
+              "path": "source/libraries/acpi/hpet.omg"
+            }
+          ]
+        },
+        "31:hpet_number": {
+          "anchor": "pub hpet_number: u8,",
+          "disposition": "translated",
+          "note": "Encoded last-comparator index is corrected to count plus1; raw encoded value also retained.",
+          "targets": [
+            {
+              "anchor": "hpet_number:",
+              "path": "source/libraries/acpi/hpet.omg"
+            }
+          ]
+        },
+        "33:clock_tick_unit": {
+          "anchor": "pub clock_tick_unit: u16,",
+          "disposition": "translated",
+          "note": "Encoded last-comparator index is corrected to count plus1; raw encoded value also retained.",
+          "targets": [
+            {
+              "anchor": "clock_tick_unit:",
+              "path": "source/libraries/acpi/hpet.omg"
+            }
+          ]
+        },
+        "34:page_protection": {
+          "anchor": "pub page_protection: PageProtection,",
+          "disposition": "translated",
+          "note": "Encoded last-comparator index is corrected to count plus1; raw encoded value also retained.",
+          "targets": [
+            {
+              "anchor": "page_protection:",
+              "path": "source/libraries/acpi/hpet.omg"
+            }
+          ]
+        },
+        "38:new": {
+          "anchor": "pub fn new<H>(tables: &AcpiTables<H>) -> Result<HpetInfo, AcpiError>",
+          "disposition": "omitted",
+          "reason": "Whole mapped AcpiTables lookup constructor needs separate table-discovery authority. Pure field extraction is implemented by hpet_info; do not equate that with the mapped constructor."
+        },
+        "71:HpetTable": {
+          "anchor": "pub struct HpetTable {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data HpetTable",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "72:header": {
+          "anchor": "pub header: SdtHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "73:event_timer_block_id": {
+          "anchor": "pub event_timer_block_id: u32,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "event_timer_block_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "74:base_address": {
+          "anchor": "pub base_address: RawGenericAddress,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "base_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "75:hpet_number": {
+          "anchor": "pub hpet_number: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "hpet_number:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "76:clock_tick_unit": {
+          "anchor": "pub clock_tick_unit: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "clock_tick_unit:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "78:page_protection_and_oem": {
+          "anchor": "pub page_protection_and_oem: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "page_protection_and_oem:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "82:SIGNATURE": {
+          "anchor": "const SIGNATURE: Signature = Signature::HPET;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_HPET",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "84:header": {
+          "anchor": "fn header(&self) -> &SdtHeader {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source map",
+          "path": "source/libraries/acpi/fixed.PORT.md"
+        }
+      ]
+    },
+    "src/sdt/madt.rs": {
+      "disposition": "translated",
+      "note": "Each source anchor separately classified; hardware/mapping operations explicitly omitted.",
+      "sha256": "4decb527324cd1aec925b20adc517d56f88ea80cc8c1cd50741a15b7da927ac0",
+      "symbols": {
+        "111:Item": {
+          "anchor": "type Item = MadtEntry<'a>;",
+          "disposition": "translated",
+          "note": "Explicit cursor step replaces borrowed iterator. Unknown records observable, length/typed-prefix checked, each successful nonterminal step progresses at least2 bytes.",
+          "targets": [
+            {
+              "anchor": "machine madt_next",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "113:next": {
+          "anchor": "fn next(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "note": "Explicit cursor step replaces borrowed iterator. Unknown records observable, length/typed-prefix checked, each successful nonterminal step progresses at least2 bytes.",
+          "targets": [
+            {
+              "anchor": "machine madt_next",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "15:MadtError": {
+          "anchor": "pub enum MadtError {",
+          "disposition": "translated",
+          "note": "Original inert error variants retained, including inactive wake timeout; parser APIs return the explicit documented numeric carrier.",
+          "targets": [
+            {
+              "anchor": "data MadtError",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "188:EntryHeader": {
+          "anchor": "pub struct EntryHeader {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data EntryHeader",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "189:entry_type": {
+          "anchor": "pub entry_type: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "entry_type:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "190:length": {
+          "anchor": "pub length: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "length:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "195:LocalApicEntry": {
+          "anchor": "pub struct LocalApicEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data LocalApicEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "196:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "197:processor_id": {
+          "anchor": "pub processor_id: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "processor_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "198:apic_id": {
+          "anchor": "pub apic_id: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "apic_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "199:flags": {
+          "anchor": "pub flags: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "204:IoApicEntry": {
+          "anchor": "pub struct IoApicEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data IoApicEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "205:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "206:io_apic_id": {
+          "anchor": "pub io_apic_id: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "io_apic_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "208:io_apic_address": {
+          "anchor": "pub io_apic_address: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "io_apic_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "209:global_system_interrupt_base": {
+          "anchor": "pub global_system_interrupt_base: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "global_system_interrupt_base:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "214:InterruptSourceOverrideEntry": {
+          "anchor": "pub struct InterruptSourceOverrideEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data InterruptSourceOverrideEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "215:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "216:bus": {
+          "anchor": "pub bus: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "bus:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "217:irq": {
+          "anchor": "pub irq: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "irq:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "218:global_system_interrupt": {
+          "anchor": "pub global_system_interrupt: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "global_system_interrupt:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "219:flags": {
+          "anchor": "pub flags: u16,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "224:NmiSourceEntry": {
+          "anchor": "pub struct NmiSourceEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data NmiSourceEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "225:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "226:flags": {
+          "anchor": "pub flags: u16,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "227:global_system_interrupt": {
+          "anchor": "pub global_system_interrupt: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "global_system_interrupt:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "232:LocalApicNmiEntry": {
+          "anchor": "pub struct LocalApicNmiEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data LocalApicNmiEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "233:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "234:processor_id": {
+          "anchor": "pub processor_id: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "processor_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "235:flags": {
+          "anchor": "pub flags: u16,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "236:nmi_line": {
+          "anchor": "pub nmi_line: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "nmi_line:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "241:LocalApicAddressOverrideEntry": {
+          "anchor": "pub struct LocalApicAddressOverrideEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data LocalApicAddressOverrideEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "242:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "244:local_apic_address": {
+          "anchor": "pub local_apic_address: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "local_apic_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "251:IoSapicEntry": {
+          "anchor": "pub struct IoSapicEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data IoSapicEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "252:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "253:io_apic_id": {
+          "anchor": "pub io_apic_id: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "io_apic_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "255:global_system_interrupt_base": {
+          "anchor": "pub global_system_interrupt_base: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "global_system_interrupt_base:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "256:io_sapic_address": {
+          "anchor": "pub io_sapic_address: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "io_sapic_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "261:LocalSapicEntry": {
+          "anchor": "pub struct LocalSapicEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data LocalSapicEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "262:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "263:processor_id": {
+          "anchor": "pub processor_id: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "processor_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "264:local_sapic_id": {
+          "anchor": "pub local_sapic_id: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "local_sapic_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "265:local_sapic_eid": {
+          "anchor": "pub local_sapic_eid: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "local_sapic_eid:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "267:flags": {
+          "anchor": "pub flags: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "268:processor_uid": {
+          "anchor": "pub processor_uid: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "processor_uid:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "274:processor_uid_string": {
+          "anchor": "pub processor_uid_string: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "processor_uid_string:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "279:PlatformInterruptSourceEntry": {
+          "anchor": "pub struct PlatformInterruptSourceEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data PlatformInterruptSourceEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "280:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "281:flags": {
+          "anchor": "pub flags: u16,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "282:interrupt_type": {
+          "anchor": "pub interrupt_type: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "interrupt_type:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "283:processor_id": {
+          "anchor": "pub processor_id: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "processor_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "284:processor_eid": {
+          "anchor": "pub processor_eid: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "processor_eid:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "285:io_sapic_vector": {
+          "anchor": "pub io_sapic_vector: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "io_sapic_vector:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "286:global_system_interrupt": {
+          "anchor": "pub global_system_interrupt: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "global_system_interrupt:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "287:platform_interrupt_source_flags": {
+          "anchor": "pub platform_interrupt_source_flags: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "platform_interrupt_source_flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "292:LocalX2ApicEntry": {
+          "anchor": "pub struct LocalX2ApicEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data LocalX2ApicEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "293:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "295:x2apic_id": {
+          "anchor": "pub x2apic_id: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "x2apic_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "296:flags": {
+          "anchor": "pub flags: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "297:processor_uid": {
+          "anchor": "pub processor_uid: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "processor_uid:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "302:X2ApicNmiEntry": {
+          "anchor": "pub struct X2ApicNmiEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data X2ApicNmiEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "303:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "304:flags": {
+          "anchor": "pub flags: u16,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "305:processor_uid": {
+          "anchor": "pub processor_uid: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "processor_uid:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "306:nmi_line": {
+          "anchor": "pub nmi_line: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "nmi_line:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "315:GiccEntry": {
+          "anchor": "pub struct GiccEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data GiccEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "316:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "318:cpu_interface_number": {
+          "anchor": "pub cpu_interface_number: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "cpu_interface_number:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "319:processor_uid": {
+          "anchor": "pub processor_uid: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "processor_uid:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "320:flags": {
+          "anchor": "pub flags: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "321:parking_protocol_version": {
+          "anchor": "pub parking_protocol_version: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "parking_protocol_version:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "322:performance_interrupt_gsiv": {
+          "anchor": "pub performance_interrupt_gsiv: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "performance_interrupt_gsiv:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "323:parked_address": {
+          "anchor": "pub parked_address: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "parked_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "324:gic_registers_address": {
+          "anchor": "pub gic_registers_address: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "gic_registers_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "325:gic_virtual_registers_address": {
+          "anchor": "pub gic_virtual_registers_address: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "gic_virtual_registers_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "326:gic_hypervisor_registers_address": {
+          "anchor": "pub gic_hypervisor_registers_address: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "gic_hypervisor_registers_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "327:vgic_maintenance_interrupt": {
+          "anchor": "pub vgic_maintenance_interrupt: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "vgic_maintenance_interrupt:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "328:gicr_base_address": {
+          "anchor": "pub gicr_base_address: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "gicr_base_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "329:mpidr": {
+          "anchor": "pub mpidr: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "mpidr:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "330:processor_power_efficiency_class": {
+          "anchor": "pub processor_power_efficiency_class: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "processor_power_efficiency_class:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "336:spe_overflow_interrupt": {
+          "anchor": "pub spe_overflow_interrupt: u16,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "spe_overflow_interrupt:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "337:trbe_interrupt": {
+          "anchor": "pub trbe_interrupt: ExtendedField<u16, 6>,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "trbe_interrupt:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "342:GicdEntry": {
+          "anchor": "pub struct GicdEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data GicdEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "343:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "345:gic_id": {
+          "anchor": "pub gic_id: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "gic_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "346:physical_base_address": {
+          "anchor": "pub physical_base_address: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "physical_base_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "347:system_vector_base": {
+          "anchor": "pub system_vector_base: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "system_vector_base:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "356:gic_version": {
+          "anchor": "pub gic_version: u8,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "gic_version:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "362:GicMsiFrameEntry": {
+          "anchor": "pub struct GicMsiFrameEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data GicMsiFrameEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "363:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "365:frame_id": {
+          "anchor": "pub frame_id: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "frame_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "366:physical_base_address": {
+          "anchor": "pub physical_base_address: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "physical_base_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "367:flags": {
+          "anchor": "pub flags: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "368:spi_count": {
+          "anchor": "pub spi_count: u16,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "spi_count:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "369:spi_base": {
+          "anchor": "pub spi_base: u16,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "spi_base:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "374:GicRedistributorEntry": {
+          "anchor": "pub struct GicRedistributorEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data GicRedistributorEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "375:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "377:discovery_range_base_address": {
+          "anchor": "pub discovery_range_base_address: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "discovery_range_base_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "378:discovery_range_length": {
+          "anchor": "pub discovery_range_length: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "discovery_range_length:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "383:GicInterruptTranslationServiceEntry": {
+          "anchor": "pub struct GicInterruptTranslationServiceEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data GicInterruptTranslationServiceEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "384:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "386:id": {
+          "anchor": "pub id: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "387:physical_base_address": {
+          "anchor": "pub physical_base_address: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "physical_base_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "393:MultiprocessorWakeupEntry": {
+          "anchor": "pub struct MultiprocessorWakeupEntry {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data MultiprocessorWakeupEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "394:header": {
+          "anchor": "pub header: EntryHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "395:mailbox_version": {
+          "anchor": "pub mailbox_version: u16,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "mailbox_version:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "397:mailbox_address": {
+          "anchor": "pub mailbox_address: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "mailbox_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "39:Madt": {
+          "anchor": "pub struct Madt {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data Madt",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "401:MpProtectedModeWakeupCommand": {
+          "anchor": "pub enum MpProtectedModeWakeupCommand {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data MpProtectedModeWakeupCommand",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "402:Noop": {
+          "anchor": "Noop = 0,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "case Noop",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "403:Wakeup": {
+          "anchor": "Wakeup = 1,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "case Wakeup",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "404:Sleep": {
+          "anchor": "Sleep = 2,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "case Sleep",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "405:AcceptPages": {
+          "anchor": "AcceptPages = 3,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "case AcceptPages",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "409:from": {
+          "anchor": "fn from(value: u16) -> Self {",
+          "disposition": "translated",
+          "note": "Unsupported wake command returns error17 instead of panic.",
+          "targets": [
+            {
+              "anchor": "machine wakeup_command",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "40:header": {
+          "anchor": "pub header: SdtHeader,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "41:local_apic_address": {
+          "anchor": "pub local_apic_address: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "local_apic_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "421:MultiprocessorWakeupMailbox": {
+          "anchor": "pub struct MultiprocessorWakeupMailbox {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "data MultiprocessorWakeupMailbox",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "422:command": {
+          "anchor": "pub command: u16,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "command:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "424:apic_id": {
+          "anchor": "pub apic_id: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "apic_id:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "425:wakeup_vector": {
+          "anchor": "pub wakeup_vector: u64,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "wakeup_vector:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "426:reserved_for_os": {
+          "anchor": "pub reserved_for_os: [u64; 254],",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "reserved_for_os:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "427:reserved_for_firmware": {
+          "anchor": "pub reserved_for_firmware: [u64; 256],",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "reserved_for_firmware:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "42:flags": {
+          "anchor": "pub flags: u32,",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "flags:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "432:Polarity": {
+          "anchor": "pub enum Polarity {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data Polarity",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "449:TriggerMode": {
+          "anchor": "pub enum TriggerMode {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data TriggerMode",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "455:parse_mps_inti_flags": {
+          "anchor": "pub fn parse_mps_inti_flags(flags: u16) -> Result<(Polarity, TriggerMode), AcpiError> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine parse_mps_inti_flags",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "47:SIGNATURE": {
+          "anchor": "const SIGNATURE: Signature = Signature::MADT;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_MADT",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "49:header": {
+          "anchor": "fn header(&self) -> &SdtHeader {",
+          "disposition": "translated",
+          "note": "Owned logical record, not a repr(C) overlay. Local SAPIC UID tail stays bounded raw bytes via madt_entry_byte; mailbox declaration grants no volatile access.",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "55:entries": {
+          "anchor": "pub fn entries(self: Pin<&Self>) -> MadtEntryIter<'_> {",
+          "disposition": "translated",
+          "note": "Explicit cursor step replaces borrowed iterator. Unknown records observable, length/typed-prefix checked, each successful nonterminal step progresses at least2 bytes.",
+          "targets": [
+            {
+              "anchor": "machine madt_next",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "64:supports_8259": {
+          "anchor": "pub fn supports_8259(&self) -> bool {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "machine supports_8259",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "68:get_mpwk_mailbox_addr": {
+          "anchor": "pub fn get_mpwk_mailbox_addr(self: Pin<&Self>) -> Result<u64, AcpiError> {",
+          "disposition": "translated",
+          "note": "Bounded pure scan returns numeric address only; no mailbox ownership or access.",
+          "targets": [
+            {
+              "anchor": "machine get_mpwk_mailbox_addr",
+              "path": "source/libraries/acpi/madt_search.omg"
+            }
+          ]
+        },
+        "79:MadtEntryIter": {
+          "anchor": "pub struct MadtEntryIter<'a> {",
+          "disposition": "translated",
+          "note": "Explicit cursor step replaces borrowed iterator. Unknown records observable, length/typed-prefix checked, each successful nonterminal step progresses at least2 bytes.",
+          "targets": [
+            {
+              "anchor": "machine madt_next",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        },
+        "90:MadtEntry": {
+          "anchor": "pub enum MadtEntry<'a> {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data MadtEntry",
+              "path": "source/libraries/acpi/madt.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source map",
+          "path": "source/libraries/acpi/fixed.PORT.md"
+        }
+      ]
+    },
+    "src/sdt/mcfg.rs": {
+      "disposition": "translated",
+      "note": "Each source anchor separately classified; hardware/mapping operations explicitly omitted.",
+      "sha256": "c33d9c34b0e270f5a7b3bf1817853aa07e7cb800030eace6447b915b4651900b",
+      "symbols": {
+        "16:SIGNATURE": {
+          "anchor": "const SIGNATURE: Signature = Signature::MCFG;",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "SIGNATURE_MCFG",
+              "path": "source/libraries/acpi/headers.omg"
+            }
+          ]
+        },
+        "18:header": {
+          "anchor": "fn header(&self) -> &SdtHeader {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "26:entries": {
+          "anchor": "pub fn entries(&self) -> &[McfgEntry] {",
+          "disposition": "translated",
+          "note": "Checked indexed access replaces borrowed trailing slice; partial-tail quirk explicit and reported.",
+          "targets": [
+            {
+              "anchor": "machine mcfg_entry",
+              "path": "source/libraries/acpi/mcfg.omg"
+            }
+          ]
+        },
+        "41:fmt": {
+          "anchor": "fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust Debug formatter omitted; owned records retain all wire data."
+        },
+        "48:McfgEntry": {
+          "anchor": "pub struct McfgEntry {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data McfgEntry",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "49:base_address": {
+          "anchor": "pub base_address: u64,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "base_address:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "50:pci_segment_group": {
+          "anchor": "pub pci_segment_group: u16,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "pci_segment_group:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "51:bus_number_start": {
+          "anchor": "pub bus_number_start: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "bus_number_start:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "52:bus_number_end": {
+          "anchor": "pub bus_number_end: u8,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "bus_number_end:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "8:Mcfg": {
+          "anchor": "pub struct Mcfg {",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "data Mcfg",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        },
+        "9:header": {
+          "anchor": "pub header: SdtHeader,",
+          "disposition": "translated",
+          "targets": [
+            {
+              "anchor": "header:",
+              "path": "source/libraries/acpi/fixed_types.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source map",
+          "path": "source/libraries/acpi/fixed.PORT.md"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "scope": "Bounded initialized-byte fixed-table/GAS parsing and pure helper slice; no mapping, register I/O, borrowed native overlays or firmware activation. See fixed.PORT.md.",
+  "upstream": {
+    "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+    "roots": [
+      "src/address.rs",
+      "src/sdt/fadt.rs",
+      "src/sdt/madt.rs",
+      "src/sdt/mcfg.rs",
+      "src/sdt/hpet.rs"
+    ],
+    "url": "https://github.com/rust-osdev/acpi"
+  }
+}

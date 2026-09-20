@@ -20,8 +20,8 @@ are not imported by these tools.
 
 The bounded header slice now has its own
 [scope and verification report](../../../source/libraries/acpi/headers.PORT.md).
-Its 108 translated anchors overlay the complete inventory; narrow-slice omissions
-stay local to `headers-inventory.json`.
+The cumulative header/fixed/topology slices overlay 435 translated anchors; narrow-slice omissions
+stay local to each slice inventory, leaving 1,146 whole-corpus anchors pending.
 
 ```sh
 python3 tools/ports/acpi/header_evidence.py --check
@@ -38,3 +38,40 @@ parser. This is semantic evaluation, without native execution or firmware access
 
 The helper prints the exact compiler binary hash. A passing metadata/vector check
 does not establish native layout or substitute for the semantic runner.
+
+Fixed-table/GAS translation and its deliberate pin deviations are recorded in
+[fixed.PORT.md](../../../source/libraries/acpi/fixed.PORT.md). The bounded profile
+covers FADT, all 17 pinned MADT entry variants, MCFG, HPET and GAS without mapping
+or register access. `fixed_generate.py` and `madt_generate.py` reproduce the
+pinned field/dispatch source. `fixed_model.py` compiles minimal pinned Rust
+declarations on the host; its 236 layout facts are not Omega native ABI results.
+The observation records the exact host Rust compiler and upstream source hashes.
+
+```sh
+python3 tools/ports/acpi/fixed_evidence.py --check
+python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi --require-transcribed source/libraries/acpi/fixed-inventory.json
+python3 tools/ports/vectors.py source/libraries/acpi/fixed.vectors.json
+python3 tools/ports/acpi/fixed_check.py --omega /tmp/cathedral-omega-eaa7993/release/omega
+```
+
+The 291 original fixed scenarios exercise actual Omega bodies with three
+body-mutating controls. Cases are grouped to fit the compiler's bounded semantic
+evaluator. This runner also source-checks every authored case; `--match TEXT`
+selects a focused semantic subset for diagnosis, and still runs the controls.
+
+The [topology slice](../../../source/libraries/acpi/topology.PORT.md) exposes
+ordered typed CPU/controller facts, timer descriptions, and checked numeric PCI
+region queries. It keeps observed bootstrap identity explicit, retains unknown
+entries and honors the hardware-reduced PM-timer rule. NUMA and live operations
+remain outside that slice.
+
+```sh
+python3 tools/ports/acpi/topology_evidence.py --check
+python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi --require-transcribed source/libraries/acpi/topology-inventory.json
+python3 tools/ports/acpi/topology_check.py --omega /tmp/cathedral-omega-eaa7993/release/omega
+```
+
+The 77 original topology scenarios use the same semantic-evaluation mechanism
+and three body-mutating controls. Current verification stages are stated in each
+PORT report. Native execution, firmware mapping and hardware integration are
+not inferred from any of these commands.

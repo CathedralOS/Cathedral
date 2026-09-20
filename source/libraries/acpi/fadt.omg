@@ -1,0 +1,124 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pinned acpi src/sdt/fadt.rs. Bounded bytes replace packed reference casts.
+// Address/register selection returns facts only; no access or firmware operation.
+module fadt;
+use headers::SdtResult;
+use headers::SIGNATURE_FADT;
+use parser::parse_sdt;
+use fixed_types::Fadt;
+use fixed_types::FadtResult;
+use fixed_decode::decode_fadt;
+use fixed_bytes::OptionalU64;
+use fixed_bytes::U64Result;
+use gas::RawGenericAddress;
+use gas::GenericAddress;
+use gas::GenericAddressResult;
+use gas::OptionalRawGas;
+use gas::GasSelection;
+use gas::gas_from_raw;
+pub data PowerProfile [copy] {
+    case Unspecified; case Desktop; case Mobile; case Workstation; case EnterpriseServer;
+    case SohoServer; case AppliancePc; case PerformanceServer; case Tablet; case Reserved(value: u8);
+}
+pub machine fadt_minimum_length(revision: u8) -> u32 {
+    transition { revision == 0 -> (0) revision == 1 -> (116) revision == 2 -> (132) revision <= 4 -> (244) revision == 5 -> (268) _ -> (276) }
+}
+pub machine parse_fadt(input: &[u8; 4096], length: u64) -> FadtResult {
+    let header: SdtResult = parse_sdt(input, length, SIGNATURE_FADT);
+    transition header.error == 0 { true -> shape(input, header) _ -> (FadtResult { error: header.error }) }
+    state shape(input: &[u8; 4096], header: SdtResult) -> FadtResult {
+        let minimum: u32 = fadt_minimum_length(header.value.revision);
+        transition { minimum == 0 -> (FadtResult { error: 4 })
+            header.value.length < minimum -> (FadtResult { error: 5 }) _ -> decode(input, header) }
+    }
+    state decode(input: &[u8; 4096], header: SdtResult) -> FadtResult {
+        let result: FadtResult = decode_fadt(input, header.value.length as u64, 0, header.value);
+        result
+    }
+}
+pub machine preferred_address(extended: OptionalU64, legacy: u32) -> U64Result {
+    transition { extended.present && extended.value != 0 -> (U64Result { value: extended.value })
+        legacy != 0 -> (U64Result { value: legacy as u64 }) _ -> (U64Result { error: 12 }) }
+}
+pub machine facs_address(value: Fadt) -> U64Result { preferred_address(value.x_firmware_ctrl, value.firmware_ctrl) }
+pub machine dsdt_address(value: Fadt) -> U64Result { preferred_address(value.x_dsdt_address, value.dsdt_address) }
+pub machine power_profile(value: Fadt) -> PowerProfile {
+    transition value.preferred_pm_profile {
+        0 -> (PowerProfile::Unspecified) 1 -> (PowerProfile::Desktop) 2 -> (PowerProfile::Mobile)
+        3 -> (PowerProfile::Workstation) 4 -> (PowerProfile::EnterpriseServer) 5 -> (PowerProfile::SohoServer)
+        6 -> (PowerProfile::AppliancePc) 7 -> (PowerProfile::PerformanceServer) 8 -> (PowerProfile::Tablet)
+        _ -> (PowerProfile::Reserved { value: value.preferred_pm_profile })
+    }
+}
+pub machine optional_generic(value: OptionalRawGas) -> GasSelection {
+    transition value.present { true -> decode(value.value) _ -> (GasSelection {}) }
+    state decode(value: RawGenericAddress) -> GasSelection {
+        let result: GenericAddressResult = gas_from_raw(value);
+        GasSelection { error: result.error, present: result.error == 0, value: result.value }
+    }
+}
+pub machine select_register(extended: OptionalRawGas, legacy: u32, length: u8, required: bool) -> GasSelection {
+    transition { extended.present && extended.value.address != 0 -> modern(extended)
+        !required && legacy == 0 -> (GasSelection {}) _ -> legacy_width(legacy, length) }
+    state modern(value: OptionalRawGas) -> GasSelection {
+        let result: GasSelection = optional_generic(value);
+        result
+    }
+    state legacy_width(address: u32, length: u8) -> GasSelection {
+        transition length <= 31 { true -> legacy_value(address, length) _ -> (GasSelection { error: 11 }) }
+    }
+    state legacy_value(address: u32, length: u8) -> GasSelection {
+        let width: u8 = ((length as u16) * 8) as u8;
+        GasSelection { present: true, value: GenericAddress { address_space: 1, bit_width: width, address: address as u64 } }
+    }
+}
+pub machine pm1a_event_block(value: Fadt) -> GasSelection { select_register(value.x_pm1a_event_block, value.pm1a_event_block, value.pm1_event_length, true) }
+pub machine pm1b_event_block(value: Fadt) -> GasSelection { select_register(value.x_pm1b_event_block, value.pm1b_event_block, value.pm1_event_length, false) }
+pub machine pm1a_control_block(value: Fadt) -> GasSelection { select_register(value.x_pm1a_control_block, value.pm1a_control_block, value.pm1_control_length, true) }
+pub machine pm1b_control_block(value: Fadt) -> GasSelection { select_register(value.x_pm1b_control_block, value.pm1b_control_block, value.pm1_control_length, false) }
+pub machine pm2_control_block(value: Fadt) -> GasSelection { select_register(value.x_pm2_control_block, value.pm2_control_block, value.pm2_control_length, false) }
+pub machine pm_timer_block(value: Fadt) -> GasSelection {
+    transition value.pm_timer_length == 4 { true -> select(value) _ -> (GasSelection {}) }
+    state select(value: Fadt) -> GasSelection {
+        let result: GasSelection = select_register(value.x_pm_timer_block, value.pm_timer_block, 4, false);
+        result
+    }
+}
+pub machine gpe0_block(value: Fadt) -> GasSelection { select_register(value.x_gpe0_block, value.gpe0_block, value.gpe0_block_length, false) }
+pub machine gpe1_block(value: Fadt) -> GasSelection { select_register(value.x_gpe1_block, value.gpe1_block, value.gpe1_block_length, false) }
+pub machine reset_register(value: Fadt) -> GasSelection { optional_generic(value.reset_reg) }
+pub machine sleep_control_register(value: Fadt) -> GasSelection { optional_generic(value.sleep_control_reg) }
+pub machine sleep_status_register(value: Fadt) -> GasSelection { optional_generic(value.sleep_status_reg) }
+// FixedFeatureFlags represented by its explicit underlying u32 carrier.
+pub machine supports_equivalent_to_wbinvd(flags: u32) -> bool { (flags & 1) != 0 }
+pub machine wbinvd_flushes_all_caches(flags: u32) -> bool { (flags & 2) != 0 }
+pub machine all_procs_support_c1_power_state(flags: u32) -> bool { (flags & 4) != 0 }
+pub machine c2_configured_for_mp_system(flags: u32) -> bool { (flags & 8) != 0 }
+pub machine power_button_is_control_method(flags: u32) -> bool { (flags & 16) != 0 }
+pub machine sleep_button_is_control_method(flags: u32) -> bool { (flags & 32) != 0 }
+pub machine no_rtc_wake_in_fixed_register_space(flags: u32) -> bool { (flags & 64) != 0 }
+pub machine rtc_wakes_system_from_s4(flags: u32) -> bool { (flags & 128) != 0 }
+pub machine pm_timer_is_32_bit(flags: u32) -> bool { (flags & 256) != 0 }
+pub machine supports_docking(flags: u32) -> bool { (flags & 512) != 0 }
+pub machine supports_system_reset_via_fadt(flags: u32) -> bool { (flags & 1024) != 0 }
+pub machine case_is_sealed(flags: u32) -> bool { (flags & 2048) != 0 }
+pub machine system_is_headless(flags: u32) -> bool { (flags & 4096) != 0 }
+pub machine use_instr_after_write_to_slp_typx(flags: u32) -> bool { (flags & 8192) != 0 }
+pub machine supports_pciexp_wake_in_pm1(flags: u32) -> bool { (flags & 16384) != 0 }
+pub machine use_pm_or_hpet_for_monotonically_decreasing_timers(flags: u32) -> bool { (flags & 32768) != 0 }
+pub machine rtc_sts_is_valid_after_wakeup_from_s4(flags: u32) -> bool { (flags & 65536) != 0 }
+pub machine ospm_may_leave_gpe_wake_events_armed_before_s5(flags: u32) -> bool { (flags & 131072) != 0 }
+pub machine lapics_must_use_cluster_model_for_logical_mode(flags: u32) -> bool { (flags & 262144) != 0 }
+pub machine local_xapics_must_use_physical_destination_mode(flags: u32) -> bool { (flags & 524288) != 0 }
+pub machine system_is_hw_reduced_acpi(flags: u32) -> bool { (flags & 1048576) != 0 }
+pub machine no_benefit_to_s3(flags: u32) -> bool { (flags & 2097152) != 0 }
+// IaPcBootArchFlags represented by its explicit underlying u16 carrier.
+pub machine legacy_devices_are_accessible(flags: u16) -> bool { (flags & 1) != 0 }
+pub machine motherboard_implements_8042(flags: u16) -> bool { (flags & 2) != 0 }
+pub machine dont_probe_vga(flags: u16) -> bool { (flags & 4) != 0 }
+pub machine dont_enable_msi(flags: u16) -> bool { (flags & 8) != 0 }
+pub machine dont_enable_pcie_aspm(flags: u16) -> bool { (flags & 16) != 0 }
+pub machine use_time_and_alarm_namespace_for_rtc(flags: u16) -> bool { (flags & 32) != 0 }
+// ArmBootArchFlags represented by its explicit underlying u16 carrier.
+pub machine implements_psci(flags: u16) -> bool { (flags & 1) != 0 }
+pub machine use_hvc_as_psci_conduit(flags: u16) -> bool { (flags & 2) != 0 }

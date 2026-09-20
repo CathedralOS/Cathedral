@@ -1,0 +1,132 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pinned acpi platform/{mod,interrupt}.rs pure descriptions.
+// No CPU state transition, interrupt programming or mapped address authority.
+module topology;
+use madt::MadtStep;
+use madt::MadtEntry;
+use madt::madt_next;
+use madt::parse_madt;
+use fixed_types::MadtResult;
+use madt::Polarity;
+use madt::TriggerMode;
+use madt::IntiResult;
+use madt::parse_mps_inti_flags;
+use fixed_types::LocalApicEntry;
+use fixed_types::LocalX2ApicEntry;
+use fixed_types::IoApicEntry;
+use fixed_types::InterruptSourceOverrideEntry;
+use fixed_types::NmiSourceEntry;
+use fixed_types::LocalApicNmiEntry;
+use fixed_types::X2ApicNmiEntry;
+use fixed_types::GiccEntry;
+use fixed_types::GicdEntry;
+use fixed_types::GicMsiFrameEntry;
+use fixed_types::GicRedistributorEntry;
+use fixed_types::GicInterruptTranslationServiceEntry;
+pub data ObservedBootApic [copy] { known: bool; id: u32; }
+pub data Processor [copy] {
+    processor_uid: u32; local_apic_id: u32; x2apic: bool;
+    enabled: bool; online_capable: bool; boot_identity_known: bool; is_boot_processor: bool;
+}
+pub data IoApic [copy] { id: u8; address: u32; global_system_interrupt_base: u32; }
+pub data InterruptSourceOverride [copy] { isa_source: u8; global_system_interrupt: u32; polarity: Polarity; trigger_mode: TriggerMode; }
+pub data NmiSource [copy] { global_system_interrupt: u32; polarity: Polarity; trigger_mode: TriggerMode; }
+pub data NmiProcessor [copy] { case All; case ProcessorUid(uid: u32); }
+pub data LocalInterruptLine [copy] { case Lint0; case Lint1; }
+pub data NmiLine [copy] { processor: NmiProcessor; line: LocalInterruptLine; polarity: Polarity; trigger_mode: TriggerMode; }
+pub data TopologyFact [copy] {
+    case End;
+    case Cpu(cpu: Processor);
+    case IoController(controller: IoApic);
+    case Override(interrupt_override: InterruptSourceOverride);
+    case GlobalNmi(global_nmi: NmiSource);
+    case LocalNmi(local_nmi: NmiLine);
+    case LocalApicAddress(local_apic_address: u64);
+    case WakeMailbox(mailbox_address: u64, mailbox_version: u16);
+    case GicCpu(gic_cpu: GiccEntry);
+    case GicDistributor(gic_distributor: GicdEntry);
+    case GicMsi(gic_msi: GicMsiFrameEntry);
+    case GicRedistributor(gic_redistributor: GicRedistributorEntry);
+    case GicTranslation(gic_translation: GicInterruptTranslationServiceEntry);
+    // SAPIC and unknown records retain the complete typed/raw entry description.
+    case Other(other_entry: MadtEntry);
+}
+pub data TopologyStep [copy] { error: u8; done: bool; source_offset: u64; next_offset: u64; fact: TopologyFact; }
+pub machine processor(uid: u32, apic: u32, flags: u32, x2apic: bool, boot: ObservedBootApic) -> Processor {
+    Processor { processor_uid: uid, local_apic_id: apic, x2apic: x2apic,
+        enabled: (flags & 1) != 0, online_capable: (flags & 2) != 0,
+        boot_identity_known: boot.known, is_boot_processor: boot.known && boot.id == apic }
+}
+pub machine topology_next(input: &[u8; 4096], length: u64, cursor: u64, boot: ObservedBootApic) -> TopologyStep {
+    let raw: MadtStep = madt_next(input, length, cursor);
+    transition { raw.error != 0 -> (TopologyStep { error: raw.error })
+        raw.done -> (TopologyStep { done: true, source_offset: raw.offset, next_offset: raw.next_offset })
+        _ -> dispatch(raw, boot) }
+    state dispatch(raw: MadtStep, boot: ObservedBootApic) -> TopologyStep {
+        let decoded: TopologyStep = topology_fact(raw.entry, boot);
+        TopologyStep { error: decoded.error, source_offset: raw.offset, next_offset: raw.next_offset, fact: decoded.fact }
+    }
+}
+pub machine topology_fact(entry: MadtEntry, boot: ObservedBootApic) -> TopologyStep {
+    transition entry {
+        MadtEntry::LocalApic { decoded_local_apic_entry } -> lapic(decoded_local_apic_entry, boot)
+        MadtEntry::LocalX2Apic { decoded_local_x2_apic_entry } -> x2apic(decoded_local_x2_apic_entry, boot)
+        MadtEntry::IoApic { decoded_io_apic_entry } -> (TopologyStep { fact: TopologyFact::IoController { controller: IoApic { id: decoded_io_apic_entry.io_apic_id, address: decoded_io_apic_entry.io_apic_address, global_system_interrupt_base: decoded_io_apic_entry.global_system_interrupt_base } } })
+        MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry } -> interrupt_override(decoded_interrupt_source_override_entry)
+        MadtEntry::NmiSource { decoded_nmi_source_entry } -> nmi(decoded_nmi_source_entry)
+        MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry } -> local_nmi(decoded_local_apic_nmi_entry)
+        MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry } -> x2_nmi(decoded_x2_apic_nmi_entry)
+        MadtEntry::LocalApicAddressOverride { decoded_local_apic_address_override_entry } -> (TopologyStep { fact: TopologyFact::LocalApicAddress { local_apic_address: decoded_local_apic_address_override_entry.local_apic_address } })
+        MadtEntry::MultiprocessorWakeup { decoded_multiprocessor_wakeup_entry } -> (TopologyStep { fact: TopologyFact::WakeMailbox { mailbox_address: decoded_multiprocessor_wakeup_entry.mailbox_address, mailbox_version: decoded_multiprocessor_wakeup_entry.mailbox_version } })
+        MadtEntry::Gicc { decoded_gicc_entry } -> (TopologyStep { fact: TopologyFact::GicCpu { gic_cpu: decoded_gicc_entry } })
+        MadtEntry::Gicd { decoded_gicd_entry } -> (TopologyStep { fact: TopologyFact::GicDistributor { gic_distributor: decoded_gicd_entry } })
+        MadtEntry::GicMsiFrame { decoded_gic_msi_frame_entry } -> (TopologyStep { fact: TopologyFact::GicMsi { gic_msi: decoded_gic_msi_frame_entry } })
+        MadtEntry::GicRedistributor { decoded_gic_redistributor_entry } -> (TopologyStep { fact: TopologyFact::GicRedistributor { gic_redistributor: decoded_gic_redistributor_entry } })
+        MadtEntry::GicInterruptTranslationService { decoded_gic_interrupt_translation_service_entry } -> (TopologyStep { fact: TopologyFact::GicTranslation { gic_translation: decoded_gic_interrupt_translation_service_entry } })
+        MadtEntry::End -> (TopologyStep { done: true })
+        _ -> (TopologyStep { fact: TopologyFact::Other { other_entry: entry } })
+    }
+    state lapic(value: LocalApicEntry, boot: ObservedBootApic) -> TopologyStep {
+        let cpu: Processor = processor(value.processor_id as u32, value.apic_id as u32, value.flags, false, boot);
+        TopologyStep { fact: TopologyFact::Cpu { cpu: cpu } }
+    }
+    state x2apic(value: LocalX2ApicEntry, boot: ObservedBootApic) -> TopologyStep {
+        let cpu: Processor = processor(value.processor_uid, value.x2apic_id, value.flags, true, boot);
+        TopologyStep { fact: TopologyFact::Cpu { cpu: cpu } }
+    }
+    state interrupt_override(value: InterruptSourceOverrideEntry) -> TopologyStep {
+        let flags: IntiResult = parse_mps_inti_flags(value.flags);
+        transition { value.bus != 0 -> (TopologyStep { error: 32 }) flags.error != 0 -> (TopologyStep { error: flags.error })
+            _ -> (TopologyStep { fact: TopologyFact::Override { interrupt_override: InterruptSourceOverride { isa_source: value.irq, global_system_interrupt: value.global_system_interrupt, polarity: flags.polarity, trigger_mode: flags.trigger_mode } } }) }
+    }
+    state nmi(value: NmiSourceEntry) -> TopologyStep {
+        let flags: IntiResult = parse_mps_inti_flags(value.flags);
+        TopologyStep { error: flags.error, fact: TopologyFact::GlobalNmi { global_nmi: NmiSource { global_system_interrupt: value.global_system_interrupt, polarity: flags.polarity, trigger_mode: flags.trigger_mode } } }
+    }
+    state local_nmi(value: LocalApicNmiEntry) -> TopologyStep {
+        let result: TopologyStep = nmi_line(value.processor_id == 255, value.processor_id as u32, value.nmi_line, value.flags);
+        result
+    }
+    state x2_nmi(value: X2ApicNmiEntry) -> TopologyStep {
+        let result: TopologyStep = nmi_line(value.processor_uid == 4294967295, value.processor_uid, value.nmi_line, value.flags);
+        result
+    }
+}
+machine nmi_line(all: bool, uid: u32, line: u8, raw_flags: u16) -> TopologyStep {
+    let flags: IntiResult = parse_mps_inti_flags(raw_flags);
+    transition { line > 1 -> (TopologyStep { error: 33 }) flags.error != 0 -> (TopologyStep { error: flags.error })
+        all -> target(NmiProcessor::All, line, flags) _ -> target(NmiProcessor::ProcessorUid { uid: uid }, line, flags) }
+    state target(processor: NmiProcessor, line: u8, flags: IntiResult) -> TopologyStep {
+        transition line { 0 -> (TopologyStep { fact: TopologyFact::LocalNmi { local_nmi: NmiLine { processor: processor, line: LocalInterruptLine::Lint0, polarity: flags.polarity, trigger_mode: flags.trigger_mode } } })
+            _ -> (TopologyStep { fact: TopologyFact::LocalNmi { local_nmi: NmiLine { processor: processor, line: LocalInterruptLine::Lint1, polarity: flags.polarity, trigger_mode: flags.trigger_mode } } }) }
+    }
+}
+
+// Table header facts precede the ordered entry stream. Later LocalApicAddress
+// facts are explicit overrides; this field is deliberately named initial.
+pub data TopologyHeader [copy] { error: u8; initial_local_apic_address: u64; also_has_legacy_pics: bool; revision: u8; }
+pub machine topology_header(input: &[u8; 4096], length: u64) -> TopologyHeader {
+    let table: MadtResult = parse_madt(input, length);
+    TopologyHeader { error: table.error, initial_local_apic_address: table.value.local_apic_address as u64,
+        also_has_legacy_pics: (table.value.flags & 1) != 0, revision: table.value.header.revision }
+}

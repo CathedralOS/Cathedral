@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pinned acpi platform/mod.rs PmTimer pure description.
+module timers;
+use fixed_types::Fadt;
+use fadt::pm_timer_block;
+use fadt::pm_timer_is_32_bit;
+use fadt::system_is_hw_reduced_acpi;
+use gas::GenericAddress;
+use gas::GasSelection;
+pub data PmTimer [copy] { base: GenericAddress; supports_32bit: bool; counter_bits: u8; }
+pub data PmTimerResult [copy] { error: u8; present: bool; hardware_reduced: bool; value: PmTimer; }
+pub machine pm_timer(value: Fadt) -> PmTimerResult {
+    let reduced: bool = system_is_hw_reduced_acpi(value.flags);
+    transition reduced { true -> (PmTimerResult { hardware_reduced: true }) _ -> describe(value) }
+    state describe(value: Fadt) -> PmTimerResult {
+        let wide: bool = pm_timer_is_32_bit(value.flags);
+        let selected: GasSelection = pm_timer_block(value);
+        transition { selected.error != 0 -> (PmTimerResult { error: selected.error })
+            !selected.present -> (PmTimerResult {}) wide -> (PmTimerResult { present: true, value: PmTimer { base: selected.value, supports_32bit: true, counter_bits: 32 } })
+            _ -> (PmTimerResult { present: true, value: PmTimer { base: selected.value, counter_bits: 24 } }) }
+    }
+}

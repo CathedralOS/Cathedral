@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pinned acpi Madt::get_mpwk_mailbox_addr. Returns inert numeric data.
+module madt_search;
+use madt::MadtStep;
+use madt::MadtEntry;
+use madt::madt_next;
+use fixed_bytes::U64Result;
+data SearchState [copy] { done: bool; error: u8; address: u64; cursor: u64; }
+pub machine get_mpwk_mailbox_addr(input: &[u8; 4096], length: u64) -> U64Result {
+    transition length <= 4096 { true -> bounded(input, length) _ -> (U64Result { error: 1 }) }
+    state bounded(input: &[u8; 4096], length: u64) -> U64Result {
+        let limit: u64 = length / 2 + 1;
+        let result: U64Result = scan(input, length, SearchState { cursor: 44 }, 0, limit);
+        result
+    }
+}
+// Each valid entry consumes at least2 bytes. After success/error, later bounded
+// iterations preserve the result without parsing or advancing again.
+machine scan(input: &[u8; 4096], length: u64, value: SearchState, index: u64, limit: u64)
+terminates by (index, limit) -> Nat::BoundedDistance;
+-> U64Result {
+    let next: SearchState = step(input, length, value);
+    transition index < limit {
+        true -> scan(input, length, next, index + 1, limit)
+        _ -> (U64Result { error: value.error, value: value.address })
+    }
+}
+machine step(input: &[u8; 4096], length: u64, value: SearchState) -> SearchState {
+    transition value.done { true -> (value) _ -> decode(input, length, value.cursor) }
+    state decode(input: &[u8; 4096], length: u64, cursor: u64) -> SearchState {
+        let next: MadtStep = madt_next(input, length, cursor);
+        transition { next.error != 0 -> (SearchState { done: true, error: next.error })
+            next.done -> (SearchState { done: true, error: 18 }) _ -> inspect(next) }
+    }
+    state inspect(value: MadtStep) -> SearchState {
+        transition value.entry {
+            MadtEntry::MultiprocessorWakeup { decoded_multiprocessor_wakeup_entry } -> (SearchState { done: true, address: decoded_multiprocessor_wakeup_entry.mailbox_address })
+            _ -> (SearchState { cursor: value.next_offset })
+        }
+    }
+}

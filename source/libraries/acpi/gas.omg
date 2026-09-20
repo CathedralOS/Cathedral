@@ -1,0 +1,85 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified acpi src/address.rs at 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Decoding/classification is inert data. MappedGas, volatile and I/O are absent.
+module gas;
+use fixed_bytes::U8Result;
+use fixed_bytes::U64Result;
+use fixed_bytes::read_u8;
+use fixed_bytes::read_u64;
+pub data RawGenericAddress [copy] { address_space: u8; bit_width: u8; bit_offset: u8; access_size: u8; address: u64; }
+pub data GenericAddress [copy] { address_space: u8; bit_width: u8; bit_offset: u8; access_size: u8; address: u64; }
+pub data RawGasResult [copy] { error: u8; value: RawGenericAddress; }
+pub data GenericAddressResult [copy] { error: u8; value: GenericAddress; }
+pub data OptionalRawGas [copy] { present: bool; value: RawGenericAddress; }
+pub data GasSelection [copy] { error: u8; present: bool; value: GenericAddress; }
+pub const ADDRESS_SYSTEM_MEMORY: u8 = 0;
+pub const ADDRESS_SYSTEM_IO: u8 = 1;
+pub const ADDRESS_PCI_CONFIG_SPACE: u8 = 2;
+pub const ADDRESS_EMBEDDED_CONTROLLER: u8 = 3;
+pub const ADDRESS_SMBUS: u8 = 4;
+pub const ADDRESS_SYSTEM_CMOS: u8 = 5;
+pub const ADDRESS_PCI_BAR_TARGET: u8 = 6;
+pub const ADDRESS_IPMI: u8 = 7;
+pub const ADDRESS_GENERAL_IO: u8 = 8;
+pub const ADDRESS_GENERIC_SERIAL_BUS: u8 = 9;
+pub const ADDRESS_PLATFORM_COMMUNICATIONS_CHANNEL: u8 = 10;
+pub const ADDRESS_PLATFORM_RUNTIME_MECHANISM: u8 = 11;
+pub const ADDRESS_FUNCTIONAL_FIXED_HARDWARE: u8 = 127;
+pub const ADDRESS_OEM_FIRST: u8 = 128;
+pub const ACCESS_UNDEFINED: u8 = 0;
+pub const ACCESS_BYTE: u8 = 1;
+pub const ACCESS_WORD: u8 = 2;
+pub const ACCESS_DWORD: u8 = 3;
+pub const ACCESS_QWORD: u8 = 4;
+pub const ERROR_GENERIC_ADDRESS: u8 = 11;
+pub machine gas_is_empty(value: RawGenericAddress) -> bool {
+    value.address_space == 0 && value.bit_width == 0 && value.bit_offset == 0 && value.access_size == 0 && value.address == 0
+}
+pub machine gas_from_raw(value: RawGenericAddress) -> GenericAddressResult {
+    transition value.address_space <= 11 || value.address_space == 127 || value.address_space >= 128 {
+        true -> (GenericAddressResult { value: GenericAddress { address_space: value.address_space,
+            bit_width: value.bit_width, bit_offset: value.bit_offset, access_size: value.access_size, address: value.address } })
+        _ -> (GenericAddressResult { error: 11 })
+    }
+}
+pub machine standard_access_size(value: u8) -> U8Result {
+    transition value <= 4 { true -> (U8Result { value: value }) _ -> (U8Result { error: 11 }) }
+}
+// Retains the pin's access-width heuristic. This is not a complete access plan:
+// no bit-field coverage, address-space legality, alignment or authority follows.
+pub machine gas_decode_access_bit_width(value: GenericAddress) -> U8Result {
+    let native_width: bool = value.bit_width == 8 || value.bit_width == 16 || value.bit_width == 32 || value.bit_width == 64;
+    transition { value.bit_offset == 0 && native_width -> (U8Result { value: value.bit_width })
+        value.access_size != 0 -> encoded(value.access_size) _ -> heuristic(value.bit_offset, value.bit_width) }
+    state encoded(value: u8) -> U8Result {
+        transition value { 1 -> (U8Result { value: 8 }) 2 -> (U8Result { value: 16 })
+            3 -> (U8Result { value: 32 }) 4 -> (U8Result { value: 64 }) _ -> (U8Result { error: 11 }) }
+    }
+    state heuristic(offset: u8, width: u8) -> U8Result {
+        // Wider addition fixes the pin's u8 overflow while preserving its clamp.
+        let total: u16 = (offset as u16) + (width as u16);
+        transition { total <= 8 -> (U8Result { value: 8 }) total <= 16 -> (U8Result { value: 16 })
+            total <= 32 -> (U8Result { value: 32 }) _ -> (U8Result { value: 64 }) }
+    }
+}
+pub machine parse_gas(input: &[u8; 4096], length: u64, offset: u64) -> RawGasResult {
+    transition length <= 4096 && offset <= length && offset <= 4084 {
+        true -> extent(input, length, offset) _ -> (RawGasResult { error: 2 })
+    }
+    state extent(input: &[u8; 4096], length: u64, offset: u64) -> RawGasResult {
+        transition length - offset >= 12 { true -> decode(input, length, offset) _ -> (RawGasResult { error: 2 }) }
+    }
+    state decode(input: &[u8; 4096], length: u64, offset: u64) -> RawGasResult {
+        let o1: u64 = offset + 1; let o2: u64 = offset + 2; let o3: u64 = offset + 3; let o4: u64 = offset + 4;
+        let space: U8Result = read_u8(input, length, offset);
+        let width: U8Result = read_u8(input, length, o1);
+        let bit_offset: U8Result = read_u8(input, length, o2);
+        let access: U8Result = read_u8(input, length, o3);
+        let address: U64Result = read_u64(input, length, o4);
+        transition space.error == 0 && width.error == 0 && bit_offset.error == 0 && access.error == 0 && address.error == 0 {
+            true -> (RawGasResult { value: RawGenericAddress { address_space: space.value, bit_width: width.value,
+                bit_offset: bit_offset.value, access_size: access.value, address: address.value } })
+            _ -> (RawGasResult { error: 2 })
+        }
+    }
+}

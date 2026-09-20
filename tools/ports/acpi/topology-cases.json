@@ -1,0 +1,1062 @@
+{
+  "format": "cathedral-acpi-topology-cases-v1",
+  "provenance": "Original synthetic initialized bytes and pure descriptions; no firmware capture.",
+  "cases": [
+    {
+      "name": "cpu_0_False_42",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 0, true, ObservedBootApic { known: false, id: 42 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == false",
+        "value.online_capable == false",
+        "value.boot_identity_known == false",
+        "value.is_boot_processor == false"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_0_True_42",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 0, true, ObservedBootApic { known: true, id: 42 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == false",
+        "value.online_capable == false",
+        "value.boot_identity_known == true",
+        "value.is_boot_processor == true"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_0_True_43",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 0, true, ObservedBootApic { known: true, id: 43 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == false",
+        "value.online_capable == false",
+        "value.boot_identity_known == true",
+        "value.is_boot_processor == false"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_1_False_42",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 1, true, ObservedBootApic { known: false, id: 42 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == true",
+        "value.online_capable == false",
+        "value.boot_identity_known == false",
+        "value.is_boot_processor == false"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_1_True_42",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 1, true, ObservedBootApic { known: true, id: 42 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == true",
+        "value.online_capable == false",
+        "value.boot_identity_known == true",
+        "value.is_boot_processor == true"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_1_True_43",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 1, true, ObservedBootApic { known: true, id: 43 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == true",
+        "value.online_capable == false",
+        "value.boot_identity_known == true",
+        "value.is_boot_processor == false"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_2_False_42",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 2, true, ObservedBootApic { known: false, id: 42 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == false",
+        "value.online_capable == true",
+        "value.boot_identity_known == false",
+        "value.is_boot_processor == false"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_2_True_42",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 2, true, ObservedBootApic { known: true, id: 42 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == false",
+        "value.online_capable == true",
+        "value.boot_identity_known == true",
+        "value.is_boot_processor == true"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_2_True_43",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 2, true, ObservedBootApic { known: true, id: 43 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == false",
+        "value.online_capable == true",
+        "value.boot_identity_known == true",
+        "value.is_boot_processor == false"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_3_False_42",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 3, true, ObservedBootApic { known: false, id: 42 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == true",
+        "value.online_capable == true",
+        "value.boot_identity_known == false",
+        "value.is_boot_processor == false"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_3_True_42",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 3, true, ObservedBootApic { known: true, id: 42 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == true",
+        "value.online_capable == true",
+        "value.boot_identity_known == true",
+        "value.is_boot_processor == true"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_3_True_43",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 3, true, ObservedBootApic { known: true, id: 43 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == true",
+        "value.online_capable == true",
+        "value.boot_identity_known == true",
+        "value.is_boot_processor == false"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_4294967295_False_42",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 4294967295, true, ObservedBootApic { known: false, id: 42 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == true",
+        "value.online_capable == true",
+        "value.boot_identity_known == false",
+        "value.is_boot_processor == false"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_4294967295_True_42",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 4294967295, true, ObservedBootApic { known: true, id: 42 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == true",
+        "value.online_capable == true",
+        "value.boot_identity_known == true",
+        "value.is_boot_processor == true"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "cpu_4294967295_True_43",
+      "body": [
+        "let value: Processor = processor(4294967295, 42, 4294967295, true, ObservedBootApic { known: true, id: 43 });"
+      ],
+      "checks": [
+        "value.processor_uid == 4294967295",
+        "value.local_apic_id == 42",
+        "value.x2apic",
+        "value.enabled == true",
+        "value.online_capable == true",
+        "value.boot_identity_known == true",
+        "value.is_boot_processor == false"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "fact_LocalApic",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::LocalApic { decoded_local_apic_entry: LocalApicEntry { processor_id: 3, apic_id: 42, flags: 3 } }, ObservedBootApic { known: true, id: 42 });",
+        "let fields: bool = check_fact_LocalApic(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_fact_LocalApic(fact: TopologyFact) -> bool { transition fact { TopologyFact::Cpu { cpu } -> (cpu.processor_uid == 3 && cpu.local_apic_id == 42 && !cpu.x2apic && cpu.enabled && cpu.online_capable && cpu.is_boot_processor) _ -> (false) } }"
+    },
+    {
+      "name": "fact_LocalX2Apic",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::LocalX2Apic { decoded_local_x2_apic_entry: LocalX2ApicEntry { processor_uid: 4294967295, x2apic_id: 42, flags: 1 } }, ObservedBootApic { known: true, id: 42 });",
+        "let fields: bool = check_fact_LocalX2Apic(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_fact_LocalX2Apic(fact: TopologyFact) -> bool { transition fact { TopologyFact::Cpu { cpu } -> (cpu.processor_uid == 4294967295 && cpu.x2apic && cpu.enabled && !cpu.online_capable && cpu.is_boot_processor) _ -> (false) } }"
+    },
+    {
+      "name": "fact_IoApic",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::IoApic { decoded_io_apic_entry: IoApicEntry { io_apic_id: 255, io_apic_address: 4294967295, global_system_interrupt_base: 0x12345678 } }, ObservedBootApic { known: true, id: 42 });",
+        "let fields: bool = check_fact_IoApic(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_fact_IoApic(fact: TopologyFact) -> bool { transition fact { TopologyFact::IoController { controller } -> (controller.id == 255 && controller.address == 4294967295 && controller.global_system_interrupt_base == 0x12345678) _ -> (false) } }"
+    },
+    {
+      "name": "fact_InterruptSourceOverride",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: InterruptSourceOverrideEntry { bus: 0, irq: 255, global_system_interrupt: 4294967295, flags: 15 } }, ObservedBootApic { known: true, id: 42 });",
+        "let fields: bool = check_fact_InterruptSourceOverride(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_fact_InterruptSourceOverride(fact: TopologyFact) -> bool { transition fact { TopologyFact::Override { interrupt_override } -> (interrupt_override.isa_source == 255 && interrupt_override.global_system_interrupt == 4294967295) _ -> (false) } }"
+    },
+    {
+      "name": "fact_NmiSource",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::NmiSource { decoded_nmi_source_entry: NmiSourceEntry { global_system_interrupt: 4294967295, flags: 15 } }, ObservedBootApic { known: true, id: 42 });",
+        "let fields: bool = check_fact_NmiSource(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_fact_NmiSource(fact: TopologyFact) -> bool { transition fact { TopologyFact::GlobalNmi { global_nmi } -> (global_nmi.global_system_interrupt == 4294967295) _ -> (false) } }"
+    },
+    {
+      "name": "fact_LocalApicAddressOverride",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::LocalApicAddressOverride { decoded_local_apic_address_override_entry: LocalApicAddressOverrideEntry { local_apic_address: 18446744073709551615 } }, ObservedBootApic { known: true, id: 42 });",
+        "let fields: bool = check_fact_LocalApicAddressOverride(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_fact_LocalApicAddressOverride(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalApicAddress { local_apic_address } -> (local_apic_address == 18446744073709551615) _ -> (false) } }"
+    },
+    {
+      "name": "fact_MultiprocessorWakeup",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::MultiprocessorWakeup { decoded_multiprocessor_wakeup_entry: MultiprocessorWakeupEntry { mailbox_address: 18446744073709551615, mailbox_version: 65535 } }, ObservedBootApic { known: true, id: 42 });",
+        "let fields: bool = check_fact_MultiprocessorWakeup(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_fact_MultiprocessorWakeup(fact: TopologyFact) -> bool { transition fact { TopologyFact::WakeMailbox { mailbox_address, mailbox_version } -> (mailbox_address == 18446744073709551615 && mailbox_version == 65535) _ -> (false) } }"
+    },
+    {
+      "name": "fact_Gicc",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::Gicc { decoded_gicc_entry: GiccEntry { processor_uid: 42, mpidr: 18446744073709551615 } }, ObservedBootApic { known: true, id: 42 });",
+        "let fields: bool = check_fact_Gicc(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_fact_Gicc(fact: TopologyFact) -> bool { transition fact { TopologyFact::GicCpu { gic_cpu } -> (gic_cpu.processor_uid == 42 && gic_cpu.mpidr == 18446744073709551615) _ -> (false) } }"
+    },
+    {
+      "name": "fact_Gicd",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::Gicd { decoded_gicd_entry: GicdEntry { gic_id: 42, physical_base_address: 18446744073709551615 } }, ObservedBootApic { known: true, id: 42 });",
+        "let fields: bool = check_fact_Gicd(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_fact_Gicd(fact: TopologyFact) -> bool { transition fact { TopologyFact::GicDistributor { gic_distributor } -> (gic_distributor.gic_id == 42 && gic_distributor.physical_base_address == 18446744073709551615) _ -> (false) } }"
+    },
+    {
+      "name": "fact_GicMsiFrame",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::GicMsiFrame { decoded_gic_msi_frame_entry: GicMsiFrameEntry { frame_id: 42, physical_base_address: 18446744073709551615 } }, ObservedBootApic { known: true, id: 42 });",
+        "let fields: bool = check_fact_GicMsiFrame(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_fact_GicMsiFrame(fact: TopologyFact) -> bool { transition fact { TopologyFact::GicMsi { gic_msi } -> (gic_msi.frame_id == 42 && gic_msi.physical_base_address == 18446744073709551615) _ -> (false) } }"
+    },
+    {
+      "name": "fact_GicRedistributor",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::GicRedistributor { decoded_gic_redistributor_entry: GicRedistributorEntry { discovery_range_base_address: 18446744073709551615, discovery_range_length: 4294967295 } }, ObservedBootApic { known: true, id: 42 });",
+        "let fields: bool = check_fact_GicRedistributor(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_fact_GicRedistributor(fact: TopologyFact) -> bool { transition fact { TopologyFact::GicRedistributor { gic_redistributor } -> (gic_redistributor.discovery_range_base_address == 18446744073709551615 && gic_redistributor.discovery_range_length == 4294967295) _ -> (false) } }"
+    },
+    {
+      "name": "fact_GicInterruptTranslationService",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::GicInterruptTranslationService { decoded_gic_interrupt_translation_service_entry: GicInterruptTranslationServiceEntry { id: 42, physical_base_address: 18446744073709551615 } }, ObservedBootApic { known: true, id: 42 });",
+        "let fields: bool = check_fact_GicInterruptTranslationService(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_fact_GicInterruptTranslationService(fact: TopologyFact) -> bool { transition fact { TopologyFact::GicTranslation { gic_translation } -> (gic_translation.id == 42 && gic_translation.physical_base_address == 18446744073709551615) _ -> (false) } }"
+    },
+    {
+      "name": "iso_flags_2",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: InterruptSourceOverrideEntry { flags: 2 } }, ObservedBootApic {});"
+      ],
+      "checks": [
+        "result.error == 15"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "iso_flags_8",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: InterruptSourceOverrideEntry { flags: 8 } }, ObservedBootApic {});"
+      ],
+      "checks": [
+        "result.error == 16"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "iso_flags_15",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: InterruptSourceOverrideEntry { flags: 15 } }, ObservedBootApic {});"
+      ],
+      "checks": [
+        "result.error == 0"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "iso_bus",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: InterruptSourceOverrideEntry { bus: 1 } }, ObservedBootApic {});"
+      ],
+      "checks": [
+        "result.error == 32"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "nmi_False_42_0",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: LocalApicNmiEntry { processor_id: 42, nmi_line: 0, flags: 15 } }, ObservedBootApic {});",
+        "let fields: bool = check_nmi_False_42_0(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_nmi_False_42_0(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_False_42_0(processor, line); result } }\nmachine check_target_nmi_False_42_0(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_False_42_0(line); transition processor { NmiProcessor::ProcessorUid { uid } -> (uid == 42 && correct_line) _ -> (false) } }\nmachine line_nmi_False_42_0(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint0 -> (true) _ -> (false) } }"
+    },
+    {
+      "name": "nmi_False_42_1",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: LocalApicNmiEntry { processor_id: 42, nmi_line: 1, flags: 15 } }, ObservedBootApic {});",
+        "let fields: bool = check_nmi_False_42_1(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_nmi_False_42_1(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_False_42_1(processor, line); result } }\nmachine check_target_nmi_False_42_1(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_False_42_1(line); transition processor { NmiProcessor::ProcessorUid { uid } -> (uid == 42 && correct_line) _ -> (false) } }\nmachine line_nmi_False_42_1(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint1 -> (true) _ -> (false) } }"
+    },
+    {
+      "name": "nmi_False_42_2",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: LocalApicNmiEntry { processor_id: 42, nmi_line: 2, flags: 15 } }, ObservedBootApic {});"
+      ],
+      "checks": [
+        "result.error == 33"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "nmi_False_255_0",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: LocalApicNmiEntry { processor_id: 255, nmi_line: 0, flags: 15 } }, ObservedBootApic {});",
+        "let fields: bool = check_nmi_False_255_0(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_nmi_False_255_0(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_False_255_0(processor, line); result } }\nmachine check_target_nmi_False_255_0(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_False_255_0(line); transition processor { NmiProcessor::All -> (correct_line) _ -> (false) } }\nmachine line_nmi_False_255_0(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint0 -> (true) _ -> (false) } }"
+    },
+    {
+      "name": "nmi_False_255_1",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: LocalApicNmiEntry { processor_id: 255, nmi_line: 1, flags: 15 } }, ObservedBootApic {});",
+        "let fields: bool = check_nmi_False_255_1(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_nmi_False_255_1(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_False_255_1(processor, line); result } }\nmachine check_target_nmi_False_255_1(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_False_255_1(line); transition processor { NmiProcessor::All -> (correct_line) _ -> (false) } }\nmachine line_nmi_False_255_1(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint1 -> (true) _ -> (false) } }"
+    },
+    {
+      "name": "nmi_False_255_2",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: LocalApicNmiEntry { processor_id: 255, nmi_line: 2, flags: 15 } }, ObservedBootApic {});"
+      ],
+      "checks": [
+        "result.error == 33"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "nmi_True_42_0",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: X2ApicNmiEntry { processor_uid: 42, nmi_line: 0, flags: 15 } }, ObservedBootApic {});",
+        "let fields: bool = check_nmi_True_42_0(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_nmi_True_42_0(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_True_42_0(processor, line); result } }\nmachine check_target_nmi_True_42_0(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_True_42_0(line); transition processor { NmiProcessor::ProcessorUid { uid } -> (uid == 42 && correct_line) _ -> (false) } }\nmachine line_nmi_True_42_0(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint0 -> (true) _ -> (false) } }"
+    },
+    {
+      "name": "nmi_True_42_1",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: X2ApicNmiEntry { processor_uid: 42, nmi_line: 1, flags: 15 } }, ObservedBootApic {});",
+        "let fields: bool = check_nmi_True_42_1(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_nmi_True_42_1(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_True_42_1(processor, line); result } }\nmachine check_target_nmi_True_42_1(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_True_42_1(line); transition processor { NmiProcessor::ProcessorUid { uid } -> (uid == 42 && correct_line) _ -> (false) } }\nmachine line_nmi_True_42_1(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint1 -> (true) _ -> (false) } }"
+    },
+    {
+      "name": "nmi_True_42_2",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: X2ApicNmiEntry { processor_uid: 42, nmi_line: 2, flags: 15 } }, ObservedBootApic {});"
+      ],
+      "checks": [
+        "result.error == 33"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "nmi_True_4294967295_0",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: X2ApicNmiEntry { processor_uid: 4294967295, nmi_line: 0, flags: 15 } }, ObservedBootApic {});",
+        "let fields: bool = check_nmi_True_4294967295_0(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_nmi_True_4294967295_0(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_True_4294967295_0(processor, line); result } }\nmachine check_target_nmi_True_4294967295_0(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_True_4294967295_0(line); transition processor { NmiProcessor::All -> (correct_line) _ -> (false) } }\nmachine line_nmi_True_4294967295_0(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint0 -> (true) _ -> (false) } }"
+    },
+    {
+      "name": "nmi_True_4294967295_1",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: X2ApicNmiEntry { processor_uid: 4294967295, nmi_line: 1, flags: 15 } }, ObservedBootApic {});",
+        "let fields: bool = check_nmi_True_4294967295_1(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "fields"
+      ],
+      "bytes": "",
+      "helper": "machine check_nmi_True_4294967295_1(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_True_4294967295_1(processor, line); result } }\nmachine check_target_nmi_True_4294967295_1(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_True_4294967295_1(line); transition processor { NmiProcessor::All -> (correct_line) _ -> (false) } }\nmachine line_nmi_True_4294967295_1(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint1 -> (true) _ -> (false) } }"
+    },
+    {
+      "name": "nmi_True_4294967295_2",
+      "body": [
+        "let result: TopologyStep = topology_fact(MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: X2ApicNmiEntry { processor_uid: 4294967295, nmi_line: 2, flags: 15 } }, ObservedBootApic {});"
+      ],
+      "checks": [
+        "result.error == 33"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ordered_cpu_pipeline",
+      "body": [
+        "let first: TopologyStep = topology_next(&input, 60, 44, ObservedBootApic { known: true, id: 42 });",
+        "let second: TopologyStep = topology_next(&input, 60, first.next_offset, ObservedBootApic { known: true, id: 42 });",
+        "let end: TopologyStep = topology_next(&input, 60, second.next_offset, ObservedBootApic {});",
+        "let a: bool = pipeline_cpu(first.fact, 41, false);",
+        "let b: bool = pipeline_cpu(second.fact, 42, true);"
+      ],
+      "checks": [
+        "first.error == 0",
+        "second.error == 0",
+        "first.source_offset == 44",
+        "second.source_offset == 52",
+        "end.done",
+        "a",
+        "b"
+      ],
+      "bytes": "415049433c00000001c34341544f53204f524947494e414c785634124341544c21436587000000000000000000080329010000000008042a01000000",
+      "helper": "machine pipeline_cpu(fact: TopologyFact, expected: u32, boot: bool) -> bool { transition fact { TopologyFact::Cpu { cpu } -> (cpu.local_apic_id == expected && cpu.is_boot_processor == boot) _ -> (false) } }"
+    },
+    {
+      "name": "topology_malformed",
+      "body": [
+        "let result: TopologyStep = topology_next(&input, 46, 44, ObservedBootApic {});"
+      ],
+      "checks": [
+        "result.error == 14"
+      ],
+      "bytes": "415049432e00000001bd4341544f53204f524947494e414c785634124341544c2143658700000000000000008000",
+      "helper": null
+    },
+    {
+      "name": "topology_unknown",
+      "body": [
+        "let result: TopologyStep = topology_next(&input, 46, 44, ObservedBootApic {});",
+        "let kept: bool = unknown_kept(result.fact);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.next_offset == 46",
+        "kept"
+      ],
+      "bytes": "415049432e00000001bb4341544f53204f524947494e414c785634124341544c2143658700000000000000008002",
+      "helper": "machine unknown_kept(fact: TopologyFact) -> bool { transition fact { TopologyFact::Other { other_entry } -> inspect(other_entry) _ -> (false) } state inspect(entry: MadtEntry) -> bool { let result: bool = raw_unknown(entry); result } }\nmachine raw_unknown(entry: MadtEntry) -> bool { transition entry { MadtEntry::Unknown { header } -> (header.entry_type == 128 && header.length == 2) _ -> (false) } }"
+    },
+    {
+      "name": "pm_timer_0",
+      "body": [
+        "let result: PmTimerResult = pm_timer(Fadt { flags: 0, pm_timer_length: 4, pm_timer_block: 4660 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present == true",
+        "result.hardware_reduced == false",
+        "result.value.base.address == 4660",
+        "result.value.counter_bits == 24"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "pm_timer_256",
+      "body": [
+        "let result: PmTimerResult = pm_timer(Fadt { flags: 256, pm_timer_length: 4, pm_timer_block: 4660 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present == true",
+        "result.hardware_reduced == false",
+        "result.value.base.address == 4660",
+        "result.value.counter_bits == 32"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "pm_timer_1048576",
+      "body": [
+        "let result: PmTimerResult = pm_timer(Fadt { flags: 1048576, pm_timer_length: 4, pm_timer_block: 4660 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present == false",
+        "result.hardware_reduced == true"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "pm_timer_1048832",
+      "body": [
+        "let result: PmTimerResult = pm_timer(Fadt { flags: 1048832, pm_timer_length: 4, pm_timer_block: 4660 });"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.present == false",
+        "result.hardware_reduced == true"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "pm_absent",
+      "body": [
+        "let result: PmTimerResult = pm_timer(Fadt {});"
+      ],
+      "checks": [
+        "!result.present",
+        "result.error == 0"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "pm_reduced_invalid_ignored",
+      "body": [
+        "let result: PmTimerResult = pm_timer(Fadt { flags: 1048576, pm_timer_length: 4, x_pm_timer_block: OptionalRawGas { present: true, value: RawGenericAddress { address_space: 12, address: 1234 } } });"
+      ],
+      "checks": [
+        "!result.present",
+        "result.error == 0",
+        "result.hardware_reduced"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "pm_invalid_gas",
+      "body": [
+        "let result: PmTimerResult = pm_timer(Fadt { pm_timer_length: 4, x_pm_timer_block: OptionalRawGas { present: true, value: RawGenericAddress { address_space: 12, address: 1234 } } });"
+      ],
+      "checks": [
+        "result.error == 11"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ecam_0_0_0",
+      "body": [
+        "let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 0, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.found",
+        "result.address == 2147483648"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ecam_128_0_0",
+      "body": [
+        "let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 128, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.found",
+        "result.address == 2281701376"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ecam_255_31_7",
+      "body": [
+        "let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 255, 31, 7);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.found",
+        "result.address == 2415915008"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ecam_1_32_0",
+      "body": [
+        "let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 1, 32, 0);"
+      ],
+      "checks": [
+        "result.error == 34"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ecam_1_0_8",
+      "body": [
+        "let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 1, 0, 8);"
+      ],
+      "checks": [
+        "result.error == 35"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ecam_nonzero_first",
+      "body": [
+        "let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 128, last_bus: 255 }, 4660, 128, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.address == 2281701376",
+        "result.found"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ecam_overflow_18446744073709551615_0",
+      "body": [
+        "let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 18446744073709551615, last_bus: 255 }, 0, 0, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.address == 18446744073709551615"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ecam_overflow_18446744073709551615_1",
+      "body": [
+        "let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 18446744073709551615, last_bus: 255 }, 0, 1, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 36"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ecam_overflow_18446744073708503039_1",
+      "body": [
+        "let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 18446744073708503039, last_bus: 255 }, 0, 1, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.address == 18446744073709551615"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ecam_no_region_1_128",
+      "body": [
+        "let result: PciAddressResult = physical_address(PciConfigRegion { first_bus: 128, last_bus: 200 }, 1, 128, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "!result.found"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ecam_no_region_0_127",
+      "body": [
+        "let result: PciAddressResult = physical_address(PciConfigRegion { first_bus: 128, last_bus: 200 }, 0, 127, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "!result.found"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "ecam_no_region_0_201",
+      "body": [
+        "let result: PciAddressResult = physical_address(PciConfigRegion { first_bus: 128, last_bus: 200 }, 0, 201, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "!result.found"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "regions_count_0",
+      "body": [
+        "let mut regions: [PciConfigRegion; 253];",
+        "regions[0] = PciConfigRegion { base_address: 2147483648, last_bus: 255 };",
+        "regions[1] = PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };",
+        "let result: PciAddressResult = find_address(&regions, 0, 0, 128, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "!result.found"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "regions_count_1",
+      "body": [
+        "let mut regions: [PciConfigRegion; 253];",
+        "regions[0] = PciConfigRegion { base_address: 2147483648, last_bus: 255 };",
+        "regions[1] = PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };",
+        "let result: PciAddressResult = find_address(&regions, 1, 0, 128, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.address == 2281701376",
+        "result.found"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "regions_count_2",
+      "body": [
+        "let mut regions: [PciConfigRegion; 253];",
+        "regions[0] = PciConfigRegion { base_address: 2147483648, last_bus: 255 };",
+        "regions[1] = PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };",
+        "let result: PciAddressResult = find_address(&regions, 2, 0, 128, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 37"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "regions_count_254",
+      "body": [
+        "let mut regions: [PciConfigRegion; 253];",
+        "regions[0] = PciConfigRegion { base_address: 2147483648, last_bus: 255 };",
+        "regions[1] = PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };",
+        "let result: PciAddressResult = find_address(&regions, 254, 0, 128, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 1"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "regions_disjoint",
+      "body": [
+        "let mut regions: [PciConfigRegion; 253];",
+        "regions[0] = PciConfigRegion { base_address: 2147483648, last_bus: 127 };",
+        "regions[1] = PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };",
+        "let result: PciAddressResult = find_address(&regions, 2, 0, 128, 0, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.address == 4429185024",
+        "result.found"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "region_bytes",
+      "body": [
+        "let result: PciRegionResult = pci_region(&input, 60, false, 0);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.value.base_address == 2147483648",
+        "result.value.segment == 4660",
+        "result.value.first_bus == 128",
+        "result.value.last_bus == 255"
+      ],
+      "bytes": "4d4346473c00000001ea4341544f53204f524947494e414c785634124341544c2143658700000000000000000000008000000000341280ff00000000",
+      "helper": null
+    },
+    {
+      "name": "topology_header_0",
+      "body": [
+        "let result: TopologyHeader = topology_header(&input, 44);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.initial_local_apic_address == 4276092928",
+        "result.revision == 6",
+        "result.also_has_legacy_pics == false"
+      ],
+      "bytes": "415049432c000000065c4341544f53204f524947494e414c785634124341544c214365870000e0fe00000000",
+      "helper": null
+    },
+    {
+      "name": "topology_header_1",
+      "body": [
+        "let result: TopologyHeader = topology_header(&input, 44);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.initial_local_apic_address == 4276092928",
+        "result.revision == 6",
+        "result.also_has_legacy_pics == true"
+      ],
+      "bytes": "415049432c000000065b4341544f53204f524947494e414c785634124341544c214365870000e0fe01000000",
+      "helper": null
+    },
+    {
+      "name": "topology_header_2",
+      "body": [
+        "let result: TopologyHeader = topology_header(&input, 44);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.initial_local_apic_address == 4276092928",
+        "result.revision == 6",
+        "result.also_has_legacy_pics == false"
+      ],
+      "bytes": "415049432c000000065a4341544f53204f524947494e414c785634124341544c214365870000e0fe02000000",
+      "helper": null
+    },
+    {
+      "name": "topology_header_3",
+      "body": [
+        "let result: TopologyHeader = topology_header(&input, 44);"
+      ],
+      "checks": [
+        "result.error == 0",
+        "result.initial_local_apic_address == 4276092928",
+        "result.revision == 6",
+        "result.also_has_legacy_pics == true"
+      ],
+      "bytes": "415049432c00000006594341544f53204f524947494e414c785634124341544c214365870000e0fe03000000",
+      "helper": null
+    },
+    {
+      "name": "empty_region_invalid_32_0",
+      "body": [
+        "let mut regions: [PciConfigRegion; 253];",
+        "let result: PciAddressResult = find_address(&regions, 0, 0, 0, 32, 0);"
+      ],
+      "checks": [
+        "result.error == 34"
+      ],
+      "bytes": "",
+      "helper": null
+    },
+    {
+      "name": "empty_region_invalid_0_8",
+      "body": [
+        "let mut regions: [PciConfigRegion; 253];",
+        "let result: PciAddressResult = find_address(&regions, 0, 0, 0, 0, 8);"
+      ],
+      "checks": [
+        "result.error == 35"
+      ],
+      "bytes": "",
+      "helper": null
+    }
+  ]
+}
