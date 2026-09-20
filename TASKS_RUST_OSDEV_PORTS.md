@@ -339,6 +339,12 @@ attenuation, complete transfer/page footprints, mediated versus placed lifetimes
 and teardown/rejection obligations. This is a specification milestone; no grants,
 provider integration or adapter execution tests are claimed.
 
+ACPI-005 partial evidence: [integer/byte helpers](source/libraries/acpi/interpreter/PORT.md)
+pass 150 Omega scenarios and three body controls, including five translated
+upstream object-test scenarios. Width-aware arithmetic, BCD, bit copying and
+bounded conversions preserve explicit primary-spec corrections. Method/context,
+namespace/target and generic object operations remain pending; the checkbox stays open.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

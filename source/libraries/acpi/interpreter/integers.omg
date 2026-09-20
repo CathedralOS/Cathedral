@@ -1,0 +1,108 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Derived from acpi/src/aml/mod.rs at 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Pure integer operations; no opcode stream, namespace writes or live services.
+module integers;
+pub data IntegerSize [copy] { case FourBytes; case EightBytes; }
+pub data Binary [copy] { case Add; case Subtract; case Multiply; case Divide; case Mod;
+    case ShiftLeft; case ShiftRight; case And; case Nand; case Or; case Nor; case Xor; }
+pub data Logical [copy] { case And; case Or; case Equal; case NotEqual; case Less;
+    case LessEqual; case Greater; case GreaterEqual; }
+pub data IntegerResult [copy] { error: u8; value: u64; remainder: u64; }
+pub const ERROR_DIVIDE_BY_ZERO: u8 = 1;
+pub const ERROR_INVALID_BCD: u8 = 2;
+pub const ERROR_OVERFLOW: u8 = 3;
+pub const ERROR_CAPACITY: u8 = 4;
+pub const ERROR_BOUNDS: u8 = 5;
+pub const ERROR_EMPTY: u8 = 6;
+pub const ERROR_ENCODING: u8 = 7;
+pub machine from_revision(revision: u8) -> IntegerSize {
+    transition revision >= 2 { true -> (IntegerSize::EightBytes) _ -> (IntegerSize::FourBytes) }
+}
+pub machine integer_bits(size: IntegerSize) -> u64 {
+    transition size { IntegerSize::FourBytes -> (32) IntegerSize::EightBytes -> (64) }
+}
+pub machine integer_mask(size: IntegerSize) -> u64 {
+    transition size { IntegerSize::FourBytes -> (4294967295) IntegerSize::EightBytes -> (18446744073709551615) }
+}
+pub machine normalize(size: IntegerSize, value: u64) -> u64 {
+    let mask: u64 = integer_mask(size); value & mask
+}
+pub machine binary(size: IntegerSize, op: Binary, left: u64, right: u64) -> IntegerResult {
+    let mask: u64 = integer_mask(size);
+    let bits: u64 = integer_bits(size);
+    let a: u64 = left & mask;
+    let b: u64 = right & mask;
+    let wa: u64 in Wrapping = a as u64 in Wrapping;
+    let wb: u64 in Wrapping = b as u64 in Wrapping;
+    transition op {
+        Binary::Add -> (IntegerResult { value: ((wa + wb) as u64) & mask })
+        Binary::Subtract -> (IntegerResult { value: ((wa - wb) as u64) & mask })
+        Binary::Multiply -> (IntegerResult { value: ((wa * wb) as u64) & mask })
+        Binary::And -> (IntegerResult { value: a & b })
+        Binary::Nand -> (IntegerResult { value: (~(a & b)) & mask })
+        Binary::Or -> (IntegerResult { value: a | b })
+        Binary::Nor -> (IntegerResult { value: (~(a | b)) & mask })
+        Binary::Xor -> (IntegerResult { value: a ^ b })
+        Binary::Divide -> divide(a, b)
+        Binary::Mod -> modulo(a, b)
+        Binary::ShiftLeft -> left_shift(a, b, bits, mask)
+        Binary::ShiftRight -> right_shift(a, b, bits)
+    }
+    state divide(a: u64, b: u64) -> IntegerResult {
+        transition b != 0 { true -> (IntegerResult { value: a / b, remainder: a % b }) _ -> (IntegerResult { error: 1 }) }
+    }
+    state modulo(a: u64, b: u64) -> IntegerResult {
+        transition b != 0 { true -> (IntegerResult { value: a % b }) _ -> (IntegerResult { error: 1 }) }
+    }
+    state left_shift(a: u64, b: u64, bits: u64, mask: u64) -> IntegerResult {
+        let wa: u64 in Wrapping = a as u64 in Wrapping;
+        let wb: u64 in Wrapping = b as u64 in Wrapping;
+        transition b < bits { true -> (IntegerResult { value: ((wa << wb) as u64) & mask }) _ -> (IntegerResult {}) }
+    }
+    state right_shift(a: u64, b: u64, bits: u64) -> IntegerResult {
+        transition b < bits && b < 64 { true -> (IntegerResult { value: a >> b }) _ -> (IntegerResult {}) }
+    }
+}
+pub machine bitwise_not(size: IntegerSize, value: u64) -> u64 {
+    let mask: u64 = integer_mask(size); (~value) & mask
+}
+pub machine logical_not(size: IntegerSize, value: u64) -> u64 {
+    let mask: u64 = integer_mask(size);
+    transition (value & mask) == 0 { true -> (mask) _ -> (0) }
+}
+pub machine logical(size: IntegerSize, op: Logical, left: u64, right: u64) -> u64 {
+    let mask: u64 = integer_mask(size);
+    let a: u64 = left & mask; let b: u64 = right & mask;
+    let result: bool = logical_bool(op, a, b);
+    transition result { true -> (mask) _ -> (0) }
+}
+machine logical_bool(op: Logical, a: u64, b: u64) -> bool {
+    transition op {
+        Logical::And -> (a != 0 && b != 0) Logical::Or -> (a != 0 || b != 0)
+        Logical::Equal -> (a == b) Logical::NotEqual -> (a != b)
+        Logical::Less -> (a < b) Logical::LessEqual -> (a <= b)
+        Logical::Greater -> (a > b) Logical::GreaterEqual -> (a >= b)
+    }
+}
+pub machine find_set_left(size: IntegerSize, value: u64) -> u64 {
+    let normalized: u64 = normalize(size, value);
+    let result: u64 = scan_bits(normalized, 0, 64, 0, false); result
+}
+pub machine find_set_right(size: IntegerSize, value: u64) -> u64 {
+    let normalized: u64 = normalize(size, value);
+    let result: u64 = scan_bits(normalized, 0, 64, 0, true); result
+}
+machine scan_bits(value: u64, index: u64, limit: u64, found: u64, first: bool)
+terminates by (index, limit) -> Nat::BoundedDistance;
+-> u64 {
+    let next: u64 = bit_step(value, index, found, first);
+    transition index < limit { true -> scan_bits(value, index + 1, limit, next, first) _ -> (found) }
+}
+machine bit_step(value: u64, index: u64, found: u64, first: bool) -> u64 {
+    transition index < 64 {
+        true -> inspect(value, index, found, first) _ -> (found)
+    }
+    state inspect(value: u64, index: u64, found: u64, first: bool) -> u64 {
+        transition ((value >> index) & 1) != 0 && (!first || found == 0) { true -> (index + 1) _ -> (found) }
+    }
+}

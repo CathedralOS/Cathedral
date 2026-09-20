@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pure semantics from pinned acpi/src/aml/mod.rs do_from_bcd/do_to_bcd.
+module bcd;
+use integers::IntegerSize;
+use integers::IntegerResult;
+use integers::normalize;
+use integers::integer_bits;
+pub machine from_bcd(size: IntegerSize, value: u64) -> IntegerResult {
+    let input: u64 = normalize(size, value);
+    let bits: u64 = integer_bits(size);
+    let result: IntegerResult = decode_scan(input, bits / 4, 0, IntegerResult {}); result
+}
+machine decode_scan(input: u64, limit: u64, index: u64, result: IntegerResult)
+terminates by (index, limit) -> Nat::BoundedDistance;
+-> IntegerResult {
+    let next: IntegerResult = decode_step(input, limit, index, result);
+    transition index < limit { true -> decode_scan(input, limit, index + 1, next) _ -> (result) }
+}
+machine decode_step(input: u64, limit: u64, index: u64, result: IntegerResult) -> IntegerResult {
+    transition result.error == 0 && index < limit && limit <= 16 {
+        true -> position(input, limit, index, result.value) _ -> (result)
+    }
+    state position(input: u64, limit: u64, index: u64, value: u64) -> IntegerResult {
+        let shift: u64 = (limit - index - 1) * 4;
+        transition shift < 64 { true -> digit(input, shift, value) _ -> (IntegerResult { error: 3 }) }
+    }
+    state digit(input: u64, shift: u64, value: u64) -> IntegerResult {
+        let digit: u64 = (input >> shift) & 15;
+        transition digit <= 9 { true -> accumulate(value, digit) _ -> (IntegerResult { error: 2 }) }
+    }
+    state accumulate(value: u64, digit: u64) -> IntegerResult {
+        transition value <= (18446744073709551615u64 - digit) / 10 {
+            true -> (IntegerResult { value: ((((value as u64 in Wrapping) * 10) + (digit as u64 in Wrapping)) as u64) })
+            _ -> (IntegerResult { error: 3 })
+        }
+    }
+}
+pub machine to_bcd(size: IntegerSize, value: u64) -> IntegerResult {
+    let input: u64 = normalize(size, value);
+    let maximum: u64 = bcd_maximum(size);
+    transition input <= maximum { true -> encode(input) _ -> (IntegerResult { error: 3 }) }
+    state encode(input: u64) -> IntegerResult {
+        let value: u64 = encode_scan(input, 0, 16, 0);
+        IntegerResult { value: value }
+    }
+}
+machine bcd_maximum(size: IntegerSize) -> u64 {
+    transition size { IntegerSize::FourBytes -> (99999999) IntegerSize::EightBytes -> (9999999999999999) }
+}
+machine encode_scan(input: u64, index: u64, limit: u64, value: u64)
+terminates by (index, limit) -> Nat::BoundedDistance;
+-> u64 {
+    let next: u64 = encode_step(input, index, value);
+    transition index < limit { true -> encode_scan(input / 10, index + 1, limit, next) _ -> (value) }
+}
+machine encode_step(input: u64, index: u64, value: u64) -> u64 {
+    transition index < 16 { true -> encode(input, index, value) _ -> (value) }
+    state encode(input: u64, index: u64, value: u64) -> u64 {
+        let digit: u64 in Wrapping = (input % 10) as u64 in Wrapping;
+        let shift: u64 in Wrapping = (index * 4) as u64 in Wrapping;
+        value | ((digit << shift) as u64)
+    }
+}

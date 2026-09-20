@@ -1,0 +1,121 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Pure bounded translation of acpi Object::to_integer/to_buffer and do_to_* / do_mid.
+module conversions;
+use integers::IntegerSize;
+use integers::IntegerResult;
+use integers::integer_bits;
+use buffer_fields::field_to_integer;
+pub data EmptyPolicy [copy] { case Reject; case PinnedZero; }
+pub machine buffer_to_integer(size: IntegerSize, input: &[u8; 256], length: u64, policy: EmptyPolicy) -> IntegerResult {
+    transition length <= 256 { true -> valid(size, input, length, policy) _ -> (IntegerResult { error: 4 }) }
+    state valid(size: IntegerSize, input: &[u8; 256], length: u64, policy: EmptyPolicy) -> IntegerResult {
+        let empty_ok: bool = allows_empty(policy);
+        transition length != 0 || empty_ok { true -> convert(size, input, length) _ -> (IntegerResult { error: 6 }) }
+    }
+    state convert(size: IntegerSize, input: &[u8; 256], length: u64) -> IntegerResult {
+        let result: IntegerResult = field_to_integer(size, input, length, 0, 64); result
+    }
+}
+machine allows_empty(policy: EmptyPolicy) -> bool {
+    transition policy { EmptyPolicy::Reject -> (false) EmptyPolicy::PinnedZero -> (true) }
+}
+pub machine integer_to_buffer(size: IntegerSize, value: u64, output: &mut [u8; 256]) -> IntegerResult {
+    let bits: u64 = integer_bits(size);
+    let result: u8 = integer_bytes(value, output, 0, bits / 8);
+    IntegerResult { value: bits / 8 }
+}
+machine integer_bytes(value: u64, output: &mut [u8; 256], index: u64, limit: u64)
+terminates by (index, limit) -> Nat::BoundedDistance;
+-> u8 {
+    _ = integer_byte(value, output, index, limit);
+    transition index < limit { true -> integer_bytes(value, output, index + 1, limit) _ -> (0) }
+}
+machine integer_byte(value: u64, output: &mut [u8; 256], index: u64, limit: u64) -> u8 {
+    transition index < limit && index < 8 { true -> write(value, output, index) _ -> (0) }
+    state write(value: u64, output: &mut [u8; 256], index: u64) -> u8 {
+        let shift: u64 = index * 8;
+        let shifted: u64 in Wrapping = (value as u64 in Wrapping) >> (shift as u64 in Wrapping);
+        output[index] = ((shifted as u64) & 255) as u8;
+        0
+    }
+}
+// Applies to buffer or validated string byte sequences. Returned value is result length.
+// Requested length may be u64::MAX; addition of index+requested is never formed.
+pub machine mid(input: &[u8; 256], length: u64, index: u64, requested: u64, output: &mut [u8; 256]) -> IntegerResult {
+    transition length <= 256 { true -> valid(input, length, index, requested, output) _ -> (IntegerResult { error: 4 }) }
+    state valid(input: &[u8; 256], length: u64, index: u64, requested: u64, output: &mut [u8; 256]) -> IntegerResult {
+        transition index < length { true -> extent(input, length, index, requested, output) _ -> (IntegerResult {}) }
+    }
+    state extent(input: &[u8; 256], length: u64, index: u64, requested: u64, output: &mut [u8; 256]) -> IntegerResult {
+        let available: u64 = length - index;
+        let count: u64 = minimum(available, requested);
+        let result: u8 = bytes_copy(input, index, output, 0, count);
+        IntegerResult { value: count }
+    }
+}
+machine minimum(a: u64, b: u64) -> u64 { transition a < b { true -> (a) _ -> (b) } }
+machine bytes_copy(input: &[u8; 256], start: u64, output: &mut [u8; 256], index: u64, limit: u64)
+terminates by (index, limit) -> Nat::BoundedDistance;
+-> u8 {
+    _ = byte_copy(input, start, output, index, limit);
+    transition index < limit { true -> bytes_copy(input, start, output, index + 1, limit) _ -> (0) }
+}
+machine byte_copy(input: &[u8; 256], start: u64, output: &mut [u8; 256], index: u64, limit: u64) -> u8 {
+    transition index < limit && start <= 256 { true -> bounded(input, start, output, index) _ -> (0) }
+    state bounded(input: &[u8; 256], start: u64, output: &mut [u8; 256], index: u64) -> u8 {
+        transition index < 256 - start && index < 256 { true -> write(input, start + index, output, index) _ -> (0) }
+    }
+    state write(input: &[u8; 256], source: u64, output: &mut [u8; 256], index: u64) -> u8 {
+        transition source < 256 && index < 256 { true -> store(input, source, output, index) _ -> (0) }
+    }
+    state store(input: &[u8; 256], source: u64, output: &mut [u8; 256], index: u64) -> u8 {
+        output[index] = input[source]; 0
+    }
+}
+// This API's String is an ASCII byte extent excluding its terminator.
+// NUL/non-ASCII within that extent rejects before mutation.
+pub machine string_to_buffer(input: &[u8; 256], length: u64, explicit: bool, output: &mut [u8; 256]) -> IntegerResult {
+    transition length <= 256 { true -> capacity(input, length, explicit, output) _ -> (IntegerResult { error: 4 }) }
+    state capacity(input: &[u8; 256], length: u64, explicit: bool, output: &mut [u8; 256]) -> IntegerResult {
+        transition !explicit || length < 256 { true -> validate(input, length, explicit, output) _ -> (IntegerResult { error: 4 }) }
+    }
+    state validate(input: &[u8; 256], length: u64, explicit: bool, output: &mut [u8; 256]) -> IntegerResult {
+        let check: IntegerResult = string_scan(input, 0, length, IntegerResult {});
+        transition check.error == 0 && check.value == length { true -> copy(input, length, explicit, output) _ -> (IntegerResult { error: 7 }) }
+    }
+    state copy(input: &[u8; 256], length: u64, explicit: bool, output: &mut [u8; 256]) -> IntegerResult {
+        let result: u8 = bytes_copy(input, 0, output, 0, length);
+        transition explicit && length != 0 && length < 256 { true -> terminate(output, length) _ -> (IntegerResult { value: length }) }
+    }
+    state terminate(output: &mut [u8; 256], length: u64) -> IntegerResult {
+        output[length] = 0; IntegerResult { value: length + 1 }
+    }
+}
+// Stops before NUL; does not include it in the logical String length.
+// Rejects non-ASCII before the stopping point; output untouched on error.
+pub machine buffer_to_string(input: &[u8; 256], length: u64, maximum: u64, output: &mut [u8; 256]) -> IntegerResult {
+    transition length <= 256 { true -> scan(input, length, maximum, output) _ -> (IntegerResult { error: 4 }) }
+    state scan(input: &[u8; 256], length: u64, maximum: u64, output: &mut [u8; 256]) -> IntegerResult {
+        let limit: u64 = minimum(length, maximum);
+        let checked: IntegerResult = string_scan(input, 0, limit, IntegerResult {});
+        transition checked.error == 0 { true -> copy(input, output, checked.value) _ -> (checked) }
+    }
+    state copy(input: &[u8; 256], output: &mut [u8; 256], count: u64) -> IntegerResult {
+        let result: u8 = bytes_copy(input, 0, output, 0, count); IntegerResult { value: count }
+    }
+}
+machine string_scan(input: &[u8; 256], index: u64, limit: u64, result: IntegerResult)
+terminates by (index, limit) -> Nat::BoundedDistance;
+-> IntegerResult {
+    let next: IntegerResult = string_step(input, index, limit, result);
+    transition index < limit { true -> string_scan(input, index + 1, limit, next) _ -> (result) }
+}
+machine string_step(input: &[u8; 256], index: u64, limit: u64, result: IntegerResult) -> IntegerResult {
+    transition result.error == 0 && result.remainder == 0 && index < limit && index < 256 {
+        true -> inspect(input[index], index) _ -> (result)
+    }
+    state inspect(byte: u8, index: u64) -> IntegerResult {
+        transition { byte == 0 -> (IntegerResult { value: index, remainder: 1 })
+            byte < 128 -> (IntegerResult { value: index + 1 }) _ -> (IntegerResult { error: 7 }) }
+    }
+}

@@ -1,0 +1,85 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Derived from acpi/src/aml/object.rs copy_bits/read_buffer_field at pinned commit.
+// Fixed initialized byte stores replace Vec, Arc, UnsafeCell and ObjectToken.
+module buffer_fields;
+use integers::IntegerSize;
+use integers::IntegerResult;
+use integers::integer_bits;
+// Beyond the declared source extent, bits are zero. No pointer is synthesized.
+pub machine source_bit(source: &[u8; 256], length: u64, start: u64, index: u64) -> u8 {
+    transition length <= 256 && start < 2048 { true -> bounded(source, length, start, index) _ -> (0) }
+    state bounded(source: &[u8; 256], length: u64, start: u64, index: u64) -> u8 {
+        transition index < 2048 && index < 2048 - start { true -> offset(source, length, start + index) _ -> (0) }
+    }
+    state offset(source: &[u8; 256], length: u64, offset: u64) -> u8 {
+        let byte: u64 = offset / 8; let bit: u64 = offset & 7;
+        transition byte < length && byte < 256 && bit < 8 { true -> ((source[byte] >> bit) & 1) _ -> (0) }
+    }
+}
+// All destination bounds are checked before the first write; error leaves it unchanged.
+// Source and destination are distinct borrows; overlapping copies are not this API.
+pub machine copy_bits(source: &[u8; 256], source_length: u64, source_start: u64,
+    destination: &mut [u8; 256], destination_length: u64, destination_start: u64, count: u64) -> u8 {
+    transition source_length <= 256 && destination_length <= 256 {
+        true -> bounded(source, source_length, source_start, destination, destination_length, destination_start, count)
+        _ -> (4)
+    }
+    state bounded(source: &[u8; 256], source_length: u64, source_start: u64,
+        destination: &mut [u8; 256], destination_length: u64, destination_start: u64, count: u64) -> u8 {
+        let bits: u64 = destination_length * 8;
+        transition destination_start <= bits { true -> range(source, source_length, source_start, destination, bits, destination_start, count) _ -> (5) }
+    }
+    state range(source: &[u8; 256], source_length: u64, source_start: u64,
+        destination: &mut [u8; 256], bits: u64, destination_start: u64, count: u64) -> u8 {
+        transition count <= bits - destination_start {
+            true -> copy(source, source_length, source_start, destination, destination_start, count) _ -> (5)
+        }
+    }
+    state copy(source: &[u8; 256], source_length: u64, source_start: u64,
+        destination: &mut [u8; 256], destination_start: u64, count: u64) -> u8 {
+        let result: u8 = copy_scan(source, source_length, source_start, destination, destination_start, 0, count); result
+    }
+}
+machine copy_scan(source: &[u8; 256], length: u64, start: u64, destination: &mut [u8; 256], destination_start: u64, index: u64, limit: u64)
+terminates by (index, limit) -> Nat::BoundedDistance;
+-> u8 {
+    _ = copy_step(source, length, start, destination, destination_start, index, limit);
+    transition index < limit { true -> copy_scan(source, length, start, destination, destination_start, index + 1, limit) _ -> (0) }
+}
+machine copy_step(source: &[u8; 256], length: u64, start: u64, destination: &mut [u8; 256], destination_start: u64, index: u64, limit: u64) -> u8 {
+    transition index < limit && destination_start < 2048 {
+        true -> bounded(source, length, start, destination, destination_start, index) _ -> (0)
+    }
+    state bounded(source: &[u8; 256], length: u64, start: u64, destination: &mut [u8; 256], destination_start: u64, index: u64) -> u8 {
+        transition index < 2048 && index < 2048 - destination_start { true -> write(source, length, start, destination, destination_start + index, index) _ -> (0) }
+    }
+    state write(source: &[u8; 256], length: u64, start: u64, destination: &mut [u8; 256], offset: u64, index: u64) -> u8 {
+        let byte: u64 = offset / 8; let shift: u64 = offset & 7;
+        let bit: u8 = source_bit(source, length, start, index);
+        transition byte < 256 && shift < 8 { true -> store(destination, byte, shift, bit) _ -> (0) }
+    }
+    state store(destination: &mut [u8; 256], byte: u64, shift: u64, bit: u8) -> u8 {
+        let mask: u8 in Wrapping = (1u8 as u8 in Wrapping) << (shift as u64 in Wrapping);
+        let value: u8 in Wrapping = (bit as u8 in Wrapping) << (shift as u64 in Wrapping);
+        destination[byte] = (destination[byte] & ~(mask as u8)) | (value as u8);
+        0
+    }
+}
+pub machine field_to_integer(size: IntegerSize, source: &[u8; 256], length: u64, start: u64, count: u64) -> IntegerResult {
+    let bits: u64 = integer_bits(size);
+    transition length <= 256 { true -> bounded(source, length, start, count, bits) _ -> (IntegerResult { error: 4 }) }
+    state bounded(source: &[u8; 256], length: u64, start: u64, count: u64, bits: u64) -> IntegerResult {
+        let result: u64 = field_scan(source, length, start, count, 0, bits, 0);
+        IntegerResult { value: result }
+    }
+}
+machine field_scan(source: &[u8; 256], length: u64, start: u64, count: u64, index: u64, limit: u64, value: u64)
+terminates by (index, limit) -> Nat::BoundedDistance;
+-> u64 {
+    let next: u64 = field_step(source, length, start, count, index, value);
+    transition index < limit { true -> field_scan(source, length, start, count, index + 1, limit, next) _ -> (value) }
+}
+machine field_step(source: &[u8; 256], length: u64, start: u64, count: u64, index: u64, value: u64) -> u64 {
+    let bit: u8 = source_bit(source, length, start, index);
+    transition index < count && index < 64 { true -> (value | (((bit as u64 in Wrapping) << (index as u64 in Wrapping)) as u64)) _ -> (value) }
+}

@@ -4,7 +4,7 @@
 
 **Stage: inventoried, 2026-09-20.** This milestone covers the complete pinned
 Rust corpus and test-scenario metadata. It does not claim an Omega translation,
-compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 435 translated header/fixed/topology anchors and 1,146
+compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 445 translated header/fixed/topology/helper anchors and 1,136
 pending anchors. Inventory completion and translation completion are different
 milestones. The bounded ACPI-001 slice is separately
 [tested by Omega semantic evaluation](headers.PORT.md): 65 original scenarios
@@ -16,7 +16,9 @@ checksums and RSDT/XSDT entries within its explicit 4096-byte input profile.
 Fixed tables and topology have separate scope/verification reports in
 [fixed.PORT.md](fixed.PORT.md) and [topology.PORT.md](topology.PORT.md).
 Those slices pass 291 and 77 original Omega semantic scenarios respectively,
-each with three body-mutating controls. AML remains separate queue work.
+each with three body-mutating controls. The [AML helper slice](interpreter/PORT.md)
+passes 150 integer/byte scenarios and three body controls; bytecode execution,
+methods and complete object/context behavior remain separate queue work.
 No production build root imports this directory. The libraries charter governs
 pure algorithms; firmware/physical-address facts convey no mapping authority.
 
@@ -54,7 +56,7 @@ translation must retain the origin of every imported dependency or fixture.
 - [inventory.json](inventory.json): all **52 Rust files, 1,581 lexical anchors**
   under `src/`, `tests/`, `tools/`, including the excluded no-allocation tool.
   Every anchor has partition labels, queue tasks and an implementation status.
-  The header/fixed/topology slices overlay only translated anchors; their narrow omissions do
+  The header/fixed/topology/helper slices overlay only translated anchors; their narrow omissions do
   not remove future work from this complete corpus.
 - [partitions.json](partitions.json): per-file SHA-256, categories, queue tasks,
   and observed allocation/concurrency/unsafe/host-I/O indicators.

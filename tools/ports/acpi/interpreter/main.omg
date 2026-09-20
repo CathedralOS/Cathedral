@@ -1,0 +1,1342 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Generated pinned pure-expression translations and original boundary tests.
+use interpreter::integers::IntegerSize;
+use interpreter::integers::IntegerResult;
+use interpreter::integers::Binary;
+use interpreter::integers::Logical;
+use interpreter::integers::from_revision;
+use interpreter::integers::integer_bits;
+use interpreter::integers::binary;
+use interpreter::integers::logical;
+use interpreter::integers::logical_not;
+use interpreter::integers::bitwise_not;
+use interpreter::integers::find_set_left;
+use interpreter::integers::find_set_right;
+use interpreter::bcd::from_bcd;
+use interpreter::bcd::to_bcd;
+use interpreter::buffer_fields::copy_bits;
+use interpreter::buffer_fields::field_to_integer;
+use interpreter::conversions::EmptyPolicy;
+use interpreter::conversions::buffer_to_integer;
+use interpreter::conversions::integer_to_buffer;
+use interpreter::conversions::mid;
+use interpreter::conversions::buffer_to_string;
+use interpreter::conversions::string_to_buffer;
+machine test_binary_32_Add_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Add, 23, 19);
+    result.error == 0 && result.value == 42
+}
+machine test_binary_32_Subtract_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Subtract, 23, 19);
+    result.error == 0 && result.value == 4
+}
+machine test_binary_32_Multiply_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Multiply, 23, 19);
+    result.error == 0 && result.value == 437
+}
+machine test_binary_32_Divide_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Divide, 23, 19);
+    result.error == 0 && result.value == 1 && result.remainder == 4
+}
+machine test_binary_32_Mod_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Mod, 23, 19);
+    result.error == 0 && result.value == 4
+}
+machine test_binary_32_And_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::And, 23, 19);
+    result.error == 0 && result.value == 19
+}
+machine test_binary_32_Nand_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Nand, 23, 19);
+    result.error == 0 && result.value == 4294967276
+}
+machine test_binary_32_Or_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Or, 23, 19);
+    result.error == 0 && result.value == 23
+}
+machine test_binary_32_Nor_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Nor, 23, 19);
+    result.error == 0 && result.value == 4294967272
+}
+machine test_binary_32_Xor_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Xor, 23, 19);
+    result.error == 0 && result.value == 4
+}
+machine test_binary_32_ShiftLeft_23_2() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::ShiftLeft, 23, 2);
+    result.error == 0 && result.value == 92
+}
+machine test_binary_32_ShiftRight_23_2() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::ShiftRight, 23, 2);
+    result.error == 0 && result.value == 5
+}
+machine test_binary_32_Add_4294967295_1() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Add, 4294967295, 1);
+    result.error == 0 && result.value == 0
+}
+machine test_binary_32_Subtract_0_1() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Subtract, 0, 1);
+    result.error == 0 && result.value == 4294967295
+}
+machine test_binary_32_Multiply_4294967295_2() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Multiply, 4294967295, 2);
+    result.error == 0 && result.value == 4294967294
+}
+machine test_binary_32_ShiftLeft_1_32() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::ShiftLeft, 1, 32);
+    result.error == 0 && result.value == 0
+}
+machine test_binary_32_ShiftRight_4294967295_32() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::ShiftRight, 4294967295, 32);
+    result.error == 0 && result.value == 0
+}
+machine test_binary_32_ShiftLeft_1_33() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::ShiftLeft, 1, 33);
+    result.error == 0 && result.value == 0
+}
+machine test_binary_32_ShiftRight_4294967295_4294967295() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::ShiftRight, 4294967295, 4294967295);
+    result.error == 0 && result.value == 0
+}
+machine test_binary_32_ShiftLeft_4294967295_1() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::ShiftLeft, 4294967295, 1);
+    result.error == 0 && result.value == 4294967294
+}
+machine test_zero_32_Divide() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Divide, 12, 0);
+    result.error == 1
+}
+machine test_zero_32_Mod() -> bool {
+    let result: IntegerResult = binary(IntegerSize::FourBytes, Binary::Mod, 12, 0);
+    result.error == 1
+}
+machine test_logical_32_And() -> bool {
+    let result: u64 = logical(IntegerSize::FourBytes, Logical::And, 12, 42);
+    result == 4294967295
+}
+machine test_logical_32_Or() -> bool {
+    let result: u64 = logical(IntegerSize::FourBytes, Logical::Or, 12, 42);
+    result == 4294967295
+}
+machine test_logical_32_Equal() -> bool {
+    let result: u64 = logical(IntegerSize::FourBytes, Logical::Equal, 12, 42);
+    result == 0
+}
+machine test_logical_32_NotEqual() -> bool {
+    let result: u64 = logical(IntegerSize::FourBytes, Logical::NotEqual, 12, 42);
+    result == 4294967295
+}
+machine test_logical_32_Less() -> bool {
+    let result: u64 = logical(IntegerSize::FourBytes, Logical::Less, 12, 42);
+    result == 4294967295
+}
+machine test_logical_32_LessEqual() -> bool {
+    let result: u64 = logical(IntegerSize::FourBytes, Logical::LessEqual, 12, 42);
+    result == 4294967295
+}
+machine test_logical_32_Greater() -> bool {
+    let result: u64 = logical(IntegerSize::FourBytes, Logical::Greater, 12, 42);
+    result == 0
+}
+machine test_logical_32_GreaterEqual() -> bool {
+    let result: u64 = logical(IntegerSize::FourBytes, Logical::GreaterEqual, 12, 42);
+    result == 0
+}
+machine test_unary_32_0() -> bool {
+    let a: u64 = bitwise_not(IntegerSize::FourBytes, 0);
+    let b: u64 = logical_not(IntegerSize::FourBytes, 0);
+    let c: u64 = find_set_left(IntegerSize::FourBytes, 0);
+    let d: u64 = find_set_right(IntegerSize::FourBytes, 0);
+    a == 4294967295 && b == 4294967295 && c == 0 && d == 0
+}
+machine test_unary_32_1() -> bool {
+    let a: u64 = bitwise_not(IntegerSize::FourBytes, 1);
+    let b: u64 = logical_not(IntegerSize::FourBytes, 1);
+    let c: u64 = find_set_left(IntegerSize::FourBytes, 1);
+    let d: u64 = find_set_right(IntegerSize::FourBytes, 1);
+    a == 4294967294 && b == 0 && c == 1 && d == 1
+}
+machine test_unary_32_2() -> bool {
+    let a: u64 = bitwise_not(IntegerSize::FourBytes, 2);
+    let b: u64 = logical_not(IntegerSize::FourBytes, 2);
+    let c: u64 = find_set_left(IntegerSize::FourBytes, 2);
+    let d: u64 = find_set_right(IntegerSize::FourBytes, 2);
+    a == 4294967293 && b == 0 && c == 2 && d == 2
+}
+machine test_unary_32_129() -> bool {
+    let a: u64 = bitwise_not(IntegerSize::FourBytes, 129);
+    let b: u64 = logical_not(IntegerSize::FourBytes, 129);
+    let c: u64 = find_set_left(IntegerSize::FourBytes, 129);
+    let d: u64 = find_set_right(IntegerSize::FourBytes, 129);
+    a == 4294967166 && b == 0 && c == 8 && d == 1
+}
+machine test_unary_32_2147483648() -> bool {
+    let a: u64 = bitwise_not(IntegerSize::FourBytes, 2147483648);
+    let b: u64 = logical_not(IntegerSize::FourBytes, 2147483648);
+    let c: u64 = find_set_left(IntegerSize::FourBytes, 2147483648);
+    let d: u64 = find_set_right(IntegerSize::FourBytes, 2147483648);
+    a == 2147483647 && b == 0 && c == 32 && d == 32
+}
+machine test_unary_32_4294967295() -> bool {
+    let a: u64 = bitwise_not(IntegerSize::FourBytes, 4294967295);
+    let b: u64 = logical_not(IntegerSize::FourBytes, 4294967295);
+    let c: u64 = find_set_left(IntegerSize::FourBytes, 4294967295);
+    let d: u64 = find_set_right(IntegerSize::FourBytes, 4294967295);
+    a == 0 && b == 0 && c == 32 && d == 1
+}
+machine test_bcd_32_0() -> bool {
+    let a: IntegerResult = to_bcd(IntegerSize::FourBytes, 0);
+    let b: IntegerResult = from_bcd(IntegerSize::FourBytes, 0);
+    a.error == 0 && b.error == 0 && a.value == 0 && b.value == 0
+}
+machine test_bcd_32_1() -> bool {
+    let a: IntegerResult = to_bcd(IntegerSize::FourBytes, 1);
+    let b: IntegerResult = from_bcd(IntegerSize::FourBytes, 1);
+    a.error == 0 && b.error == 0 && a.value == 1 && b.value == 1
+}
+machine test_bcd_32_123() -> bool {
+    let a: IntegerResult = to_bcd(IntegerSize::FourBytes, 123);
+    let b: IntegerResult = from_bcd(IntegerSize::FourBytes, 291);
+    a.error == 0 && b.error == 0 && a.value == 291 && b.value == 123
+}
+machine test_bcd_32_99999999() -> bool {
+    let a: IntegerResult = to_bcd(IntegerSize::FourBytes, 99999999);
+    let b: IntegerResult = from_bcd(IntegerSize::FourBytes, 2576980377);
+    a.error == 0 && b.error == 0 && a.value == 2576980377 && b.value == 99999999
+}
+machine test_bcd_overflow_32() -> bool {
+    let a: IntegerResult = to_bcd(IntegerSize::FourBytes, 100000000);
+    a.error == 3
+}
+machine test_bcd_invalid_32_10() -> bool {
+    let a: IntegerResult = from_bcd(IntegerSize::FourBytes, 10);
+    a.error == 2
+}
+machine test_bcd_invalid_32_31() -> bool {
+    let a: IntegerResult = from_bcd(IntegerSize::FourBytes, 31);
+    a.error == 2
+}
+machine test_bcd_invalid_32_2684354560() -> bool {
+    let a: IntegerResult = from_bcd(IntegerSize::FourBytes, 2684354560);
+    a.error == 2
+}
+machine test_binary_64_Add_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Add, 23, 19);
+    result.error == 0 && result.value == 42
+}
+machine test_binary_64_Subtract_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Subtract, 23, 19);
+    result.error == 0 && result.value == 4
+}
+machine test_binary_64_Multiply_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Multiply, 23, 19);
+    result.error == 0 && result.value == 437
+}
+machine test_binary_64_Divide_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Divide, 23, 19);
+    result.error == 0 && result.value == 1 && result.remainder == 4
+}
+machine test_binary_64_Mod_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Mod, 23, 19);
+    result.error == 0 && result.value == 4
+}
+machine test_binary_64_And_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::And, 23, 19);
+    result.error == 0 && result.value == 19
+}
+machine test_binary_64_Nand_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Nand, 23, 19);
+    result.error == 0 && result.value == 18446744073709551596
+}
+machine test_binary_64_Or_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Or, 23, 19);
+    result.error == 0 && result.value == 23
+}
+machine test_binary_64_Nor_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Nor, 23, 19);
+    result.error == 0 && result.value == 18446744073709551592
+}
+machine test_binary_64_Xor_23_19() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Xor, 23, 19);
+    result.error == 0 && result.value == 4
+}
+machine test_binary_64_ShiftLeft_23_2() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::ShiftLeft, 23, 2);
+    result.error == 0 && result.value == 92
+}
+machine test_binary_64_ShiftRight_23_2() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::ShiftRight, 23, 2);
+    result.error == 0 && result.value == 5
+}
+machine test_binary_64_Add_18446744073709551615_1() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Add, 18446744073709551615, 1);
+    result.error == 0 && result.value == 0
+}
+machine test_binary_64_Subtract_0_1() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Subtract, 0, 1);
+    result.error == 0 && result.value == 18446744073709551615
+}
+machine test_binary_64_Multiply_18446744073709551615_2() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Multiply, 18446744073709551615, 2);
+    result.error == 0 && result.value == 18446744073709551614
+}
+machine test_binary_64_ShiftLeft_1_64() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::ShiftLeft, 1, 64);
+    result.error == 0 && result.value == 0
+}
+machine test_binary_64_ShiftRight_18446744073709551615_64() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::ShiftRight, 18446744073709551615, 64);
+    result.error == 0 && result.value == 0
+}
+machine test_binary_64_ShiftLeft_1_65() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::ShiftLeft, 1, 65);
+    result.error == 0 && result.value == 0
+}
+machine test_binary_64_ShiftRight_18446744073709551615_18446744073709551615() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::ShiftRight, 18446744073709551615, 18446744073709551615);
+    result.error == 0 && result.value == 0
+}
+machine test_binary_64_ShiftLeft_18446744073709551615_1() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::ShiftLeft, 18446744073709551615, 1);
+    result.error == 0 && result.value == 18446744073709551614
+}
+machine test_zero_64_Divide() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Divide, 12, 0);
+    result.error == 1
+}
+machine test_zero_64_Mod() -> bool {
+    let result: IntegerResult = binary(IntegerSize::EightBytes, Binary::Mod, 12, 0);
+    result.error == 1
+}
+machine test_logical_64_And() -> bool {
+    let result: u64 = logical(IntegerSize::EightBytes, Logical::And, 12, 42);
+    result == 18446744073709551615
+}
+machine test_logical_64_Or() -> bool {
+    let result: u64 = logical(IntegerSize::EightBytes, Logical::Or, 12, 42);
+    result == 18446744073709551615
+}
+machine test_logical_64_Equal() -> bool {
+    let result: u64 = logical(IntegerSize::EightBytes, Logical::Equal, 12, 42);
+    result == 0
+}
+machine test_logical_64_NotEqual() -> bool {
+    let result: u64 = logical(IntegerSize::EightBytes, Logical::NotEqual, 12, 42);
+    result == 18446744073709551615
+}
+machine test_logical_64_Less() -> bool {
+    let result: u64 = logical(IntegerSize::EightBytes, Logical::Less, 12, 42);
+    result == 18446744073709551615
+}
+machine test_logical_64_LessEqual() -> bool {
+    let result: u64 = logical(IntegerSize::EightBytes, Logical::LessEqual, 12, 42);
+    result == 18446744073709551615
+}
+machine test_logical_64_Greater() -> bool {
+    let result: u64 = logical(IntegerSize::EightBytes, Logical::Greater, 12, 42);
+    result == 0
+}
+machine test_logical_64_GreaterEqual() -> bool {
+    let result: u64 = logical(IntegerSize::EightBytes, Logical::GreaterEqual, 12, 42);
+    result == 0
+}
+machine test_unary_64_0() -> bool {
+    let a: u64 = bitwise_not(IntegerSize::EightBytes, 0);
+    let b: u64 = logical_not(IntegerSize::EightBytes, 0);
+    let c: u64 = find_set_left(IntegerSize::EightBytes, 0);
+    let d: u64 = find_set_right(IntegerSize::EightBytes, 0);
+    a == 18446744073709551615 && b == 18446744073709551615 && c == 0 && d == 0
+}
+machine test_unary_64_1() -> bool {
+    let a: u64 = bitwise_not(IntegerSize::EightBytes, 1);
+    let b: u64 = logical_not(IntegerSize::EightBytes, 1);
+    let c: u64 = find_set_left(IntegerSize::EightBytes, 1);
+    let d: u64 = find_set_right(IntegerSize::EightBytes, 1);
+    a == 18446744073709551614 && b == 0 && c == 1 && d == 1
+}
+machine test_unary_64_2() -> bool {
+    let a: u64 = bitwise_not(IntegerSize::EightBytes, 2);
+    let b: u64 = logical_not(IntegerSize::EightBytes, 2);
+    let c: u64 = find_set_left(IntegerSize::EightBytes, 2);
+    let d: u64 = find_set_right(IntegerSize::EightBytes, 2);
+    a == 18446744073709551613 && b == 0 && c == 2 && d == 2
+}
+machine test_unary_64_129() -> bool {
+    let a: u64 = bitwise_not(IntegerSize::EightBytes, 129);
+    let b: u64 = logical_not(IntegerSize::EightBytes, 129);
+    let c: u64 = find_set_left(IntegerSize::EightBytes, 129);
+    let d: u64 = find_set_right(IntegerSize::EightBytes, 129);
+    a == 18446744073709551486 && b == 0 && c == 8 && d == 1
+}
+machine test_unary_64_9223372036854775808() -> bool {
+    let a: u64 = bitwise_not(IntegerSize::EightBytes, 9223372036854775808);
+    let b: u64 = logical_not(IntegerSize::EightBytes, 9223372036854775808);
+    let c: u64 = find_set_left(IntegerSize::EightBytes, 9223372036854775808);
+    let d: u64 = find_set_right(IntegerSize::EightBytes, 9223372036854775808);
+    a == 9223372036854775807 && b == 0 && c == 64 && d == 64
+}
+machine test_unary_64_18446744073709551615() -> bool {
+    let a: u64 = bitwise_not(IntegerSize::EightBytes, 18446744073709551615);
+    let b: u64 = logical_not(IntegerSize::EightBytes, 18446744073709551615);
+    let c: u64 = find_set_left(IntegerSize::EightBytes, 18446744073709551615);
+    let d: u64 = find_set_right(IntegerSize::EightBytes, 18446744073709551615);
+    a == 0 && b == 0 && c == 64 && d == 1
+}
+machine test_bcd_64_0() -> bool {
+    let a: IntegerResult = to_bcd(IntegerSize::EightBytes, 0);
+    let b: IntegerResult = from_bcd(IntegerSize::EightBytes, 0);
+    a.error == 0 && b.error == 0 && a.value == 0 && b.value == 0
+}
+machine test_bcd_64_1() -> bool {
+    let a: IntegerResult = to_bcd(IntegerSize::EightBytes, 1);
+    let b: IntegerResult = from_bcd(IntegerSize::EightBytes, 1);
+    a.error == 0 && b.error == 0 && a.value == 1 && b.value == 1
+}
+machine test_bcd_64_123() -> bool {
+    let a: IntegerResult = to_bcd(IntegerSize::EightBytes, 123);
+    let b: IntegerResult = from_bcd(IntegerSize::EightBytes, 291);
+    a.error == 0 && b.error == 0 && a.value == 291 && b.value == 123
+}
+machine test_bcd_64_9999999999999999() -> bool {
+    let a: IntegerResult = to_bcd(IntegerSize::EightBytes, 9999999999999999);
+    let b: IntegerResult = from_bcd(IntegerSize::EightBytes, 11068046444225730969);
+    a.error == 0 && b.error == 0 && a.value == 11068046444225730969 && b.value == 9999999999999999
+}
+machine test_bcd_overflow_64() -> bool {
+    let a: IntegerResult = to_bcd(IntegerSize::EightBytes, 10000000000000000);
+    a.error == 3
+}
+machine test_bcd_invalid_64_10() -> bool {
+    let a: IntegerResult = from_bcd(IntegerSize::EightBytes, 10);
+    a.error == 2
+}
+machine test_bcd_invalid_64_31() -> bool {
+    let a: IntegerResult = from_bcd(IntegerSize::EightBytes, 31);
+    a.error == 2
+}
+machine test_bcd_invalid_64_2684354560() -> bool {
+    let a: IntegerResult = from_bcd(IntegerSize::EightBytes, 2684354560);
+    a.error == 2
+}
+machine test_revision_0() -> bool {
+    let value: IntegerSize = from_revision(0);
+    let bits: u64 = integer_bits(value);
+    bits == 32
+}
+machine test_revision_1() -> bool {
+    let value: IntegerSize = from_revision(1);
+    let bits: u64 = integer_bits(value);
+    bits == 32
+}
+machine test_revision_2() -> bool {
+    let value: IntegerSize = from_revision(2);
+    let bits: u64 = integer_bits(value);
+    bits == 64
+}
+machine test_revision_255() -> bool {
+    let value: IntegerSize = from_revision(255);
+    let bits: u64 = integer_bits(value);
+    bits == 64
+}
+machine test_upstream_copy_bits() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 191;
+    source[1] = 247;
+    source[2] = 255;
+    source[3] = 255;
+    source[4] = 255;
+    let mut destination: [u8; 256];
+    destination[0] = 225;
+    let error: u8 = copy_bits(&source, 5, 0, &mut destination, 5, 2, 15);
+    error == 0 && destination[0] == 253 && destination[1] == 222 && destination[2] == 1 && destination[3] == 0 && destination[4] == 0
+}
+machine test_upstream_buffer_to_integer() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 171;
+    source[1] = 205;
+    source[2] = 239;
+    source[3] = 1;
+    source[4] = 255;
+    let result: IntegerResult = buffer_to_integer(IntegerSize::FourBytes, &source, 5, EmptyPolicy::PinnedZero);
+    result.error == 0 && result.value == 32492971
+}
+machine test_upstream_buffer_field_to_integer() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 255;
+    source[1] = 255;
+    source[2] = 255;
+    source[3] = 255;
+    source[4] = 255;
+    let result: IntegerResult = field_to_integer(IntegerSize::FourBytes, &source, 5, 5, 9);
+    result.error == 0 && result.value == 511
+}
+machine test_upstream_buffer_field_to_4_byte_integer() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 15;
+    source[4] = 240;
+    let result: IntegerResult = field_to_integer(IntegerSize::FourBytes, &source, 5, 4, 36);
+    result.error == 0 && result.value == 0
+}
+machine test_upstream_buffer_field_to_8_byte_integer() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 15;
+    source[4] = 240;
+    source[5] = 255;
+    let result: IntegerResult = field_to_integer(IntegerSize::EightBytes, &source, 6, 4, 36);
+    result.error == 0 && result.value == 64424509440
+}
+machine test_asl_to_integer_4022250974() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 222;
+    source[1] = 173;
+    source[2] = 190;
+    source[3] = 239;
+    let result: IntegerResult = buffer_to_integer(IntegerSize::EightBytes, &source, 4, EmptyPolicy::PinnedZero);
+    result.error == 0 && result.value == 4022250974
+}
+machine test_asl_to_integer_1() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 1;
+    let result: IntegerResult = buffer_to_integer(IntegerSize::EightBytes, &source, 1, EmptyPolicy::PinnedZero);
+    result.error == 0 && result.value == 1
+}
+machine test_asl_to_integer_0() -> bool {
+    let mut source: [u8; 256];
+    let result: IntegerResult = buffer_to_integer(IntegerSize::EightBytes, &source, 1, EmptyPolicy::PinnedZero);
+    result.error == 0 && result.value == 0
+}
+machine test_asl_to_integer_13743577360433589726() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 222;
+    source[1] = 173;
+    source[2] = 190;
+    source[3] = 239;
+    source[4] = 202;
+    source[5] = 254;
+    source[6] = 186;
+    source[7] = 190;
+    let result: IntegerResult = buffer_to_integer(IntegerSize::EightBytes, &source, 8, EmptyPolicy::PinnedZero);
+    result.error == 0 && result.value == 13743577360433589726
+}
+machine test_integer_to_buffer_32() -> bool {
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    output[6] = 99;
+    output[7] = 99;
+    output[8] = 99;
+    output[9] = 99;
+    let result: IntegerResult = integer_to_buffer(IntegerSize::FourBytes, 16045690984503098046, &mut output);
+    result.error == 0 && result.value == 4 && output[0] == 190 && output[1] == 186 && output[2] == 254 && output[3] == 202 && output[4] == 99
+}
+machine test_integer_to_buffer_64() -> bool {
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    output[6] = 99;
+    output[7] = 99;
+    output[8] = 99;
+    output[9] = 99;
+    let result: IntegerResult = integer_to_buffer(IntegerSize::EightBytes, 16045690984503098046, &mut output);
+    result.error == 0 && result.value == 8 && output[0] == 190 && output[1] == 186 && output[2] == 254 && output[3] == 202 && output[4] == 239 && output[5] == 190 && output[6] == 173 && output[7] == 222 && output[8] == 99
+}
+machine test_empty_Reject() -> bool {
+    let mut source: [u8; 256];
+    let result: IntegerResult = buffer_to_integer(IntegerSize::EightBytes, &source, 0, EmptyPolicy::Reject);
+    result.error == 6 && result.value == 0
+}
+machine test_empty_PinnedZero() -> bool {
+    let mut source: [u8; 256];
+    let result: IntegerResult = buffer_to_integer(IntegerSize::EightBytes, &source, 0, EmptyPolicy::PinnedZero);
+    result.error == 0 && result.value == 0
+}
+machine test_copy_zero_extend_0() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 129;
+    let mut output: [u8; 256];
+    output[0] = 255;
+    output[1] = 255;
+    output[2] = 255;
+    let error: u8 = copy_bits(&source, 1, 0, &mut output, 3, 3, 9);
+    error == 0 && output[0] == 15 && output[1] == 244 && output[2] == 255
+}
+machine test_copy_zero_extend_7() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 129;
+    let mut output: [u8; 256];
+    output[0] = 255;
+    output[1] = 255;
+    output[2] = 255;
+    let error: u8 = copy_bits(&source, 1, 7, &mut output, 3, 3, 9);
+    error == 0 && output[0] == 15 && output[1] == 240 && output[2] == 255
+}
+machine test_copy_zero_extend_8() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 129;
+    let mut output: [u8; 256];
+    output[0] = 255;
+    output[1] = 255;
+    output[2] = 255;
+    let error: u8 = copy_bits(&source, 1, 8, &mut output, 3, 3, 9);
+    error == 0 && output[0] == 7 && output[1] == 240 && output[2] == 255
+}
+machine test_copy_zero_extend_2047() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 129;
+    let mut output: [u8; 256];
+    output[0] = 255;
+    output[1] = 255;
+    output[2] = 255;
+    let error: u8 = copy_bits(&source, 1, 2047, &mut output, 3, 3, 9);
+    error == 0 && output[0] == 7 && output[1] == 240 && output[2] == 255
+}
+machine test_copy_zero_extend_2048() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 129;
+    let mut output: [u8; 256];
+    output[0] = 255;
+    output[1] = 255;
+    output[2] = 255;
+    let error: u8 = copy_bits(&source, 1, 2048, &mut output, 3, 3, 9);
+    error == 0 && output[0] == 7 && output[1] == 240 && output[2] == 255
+}
+machine test_copy_zero_extend_18446744073709551615() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 129;
+    let mut output: [u8; 256];
+    output[0] = 255;
+    output[1] = 255;
+    output[2] = 255;
+    let error: u8 = copy_bits(&source, 1, 18446744073709551615, &mut output, 3, 3, 9);
+    error == 0 && output[0] == 7 && output[1] == 240 && output[2] == 255
+}
+machine test_copy_bounds_257_1_0_1() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 255;
+    let mut output: [u8; 256];
+    output[0] = 81;
+    let error: u8 = copy_bits(&source, 257, 0, &mut output, 1, 0, 1);
+    error == 4 && output[0] == 81
+}
+machine test_copy_bounds_1_257_0_1() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 255;
+    let mut output: [u8; 256];
+    output[0] = 81;
+    let error: u8 = copy_bits(&source, 1, 0, &mut output, 257, 0, 1);
+    error == 4 && output[0] == 81
+}
+machine test_copy_bounds_1_1_8_1() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 255;
+    let mut output: [u8; 256];
+    output[0] = 81;
+    let error: u8 = copy_bits(&source, 1, 0, &mut output, 1, 8, 1);
+    error == 5 && output[0] == 81
+}
+machine test_copy_bounds_1_1_9_0() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 255;
+    let mut output: [u8; 256];
+    output[0] = 81;
+    let error: u8 = copy_bits(&source, 1, 0, &mut output, 1, 9, 0);
+    error == 5 && output[0] == 81
+}
+machine test_copy_bounds_1_1_0_18446744073709551615() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 255;
+    let mut output: [u8; 256];
+    output[0] = 81;
+    let error: u8 = copy_bits(&source, 1, 0, &mut output, 1, 0, 18446744073709551615);
+    error == 5 && output[0] == 81
+}
+machine test_copy_bounds_1_1_8_0() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 255;
+    let mut output: [u8; 256];
+    output[0] = 81;
+    let error: u8 = copy_bits(&source, 1, 0, &mut output, 1, 8, 0);
+    error == 0 && output[0] == 81
+}
+machine test_copy_bounds_1_0_0_0() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 255;
+    let mut output: [u8; 256];
+    output[0] = 81;
+    let error: u8 = copy_bits(&source, 1, 0, &mut output, 0, 0, 0);
+    error == 0 && output[0] == 81
+}
+machine test_mid_5_0_3() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 1;
+    source[1] = 2;
+    source[2] = 3;
+    source[3] = 4;
+    source[4] = 5;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = mid(&source, 5, 0, 3, &mut output);
+    result.error == 0 && result.value == 3 && output[0] == 1 && output[1] == 2 && output[2] == 3 && output[3] == 99
+}
+machine test_mid_5_3_10() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 1;
+    source[1] = 2;
+    source[2] = 3;
+    source[3] = 4;
+    source[4] = 5;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = mid(&source, 5, 3, 10, &mut output);
+    result.error == 0 && result.value == 2 && output[0] == 4 && output[1] == 5 && output[2] == 99
+}
+machine test_mid_5_3_18446744073709551615() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 1;
+    source[1] = 2;
+    source[2] = 3;
+    source[3] = 4;
+    source[4] = 5;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = mid(&source, 5, 3, 18446744073709551615, &mut output);
+    result.error == 0 && result.value == 2 && output[0] == 4 && output[1] == 5 && output[2] == 99
+}
+machine test_mid_5_5_1() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 1;
+    source[1] = 2;
+    source[2] = 3;
+    source[3] = 4;
+    source[4] = 5;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = mid(&source, 5, 5, 1, &mut output);
+    result.error == 0 && result.value == 0 && output[0] == 99
+}
+machine test_mid_5_18446744073709551615_1() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 1;
+    source[1] = 2;
+    source[2] = 3;
+    source[3] = 4;
+    source[4] = 5;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = mid(&source, 5, 18446744073709551615, 1, &mut output);
+    result.error == 0 && result.value == 0 && output[0] == 99
+}
+machine test_mid_0_0_1() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 1;
+    source[1] = 2;
+    source[2] = 3;
+    source[3] = 4;
+    source[4] = 5;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = mid(&source, 0, 0, 1, &mut output);
+    result.error == 0 && result.value == 0 && output[0] == 99
+}
+machine test_mid_5_1_0() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 1;
+    source[1] = 2;
+    source[2] = 3;
+    source[3] = 4;
+    source[4] = 5;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = mid(&source, 5, 1, 0, &mut output);
+    result.error == 0 && result.value == 0 && output[0] == 99
+}
+machine test_string_buffer_True_48656c6c6f() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 72;
+    source[1] = 101;
+    source[2] = 108;
+    source[3] = 108;
+    source[4] = 111;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    output[6] = 99;
+    output[7] = 99;
+    let result: IntegerResult = string_to_buffer(&source, 5, true, &mut output);
+    result.error == 0 && result.value == 6 && output[0] == 72 && output[1] == 101 && output[2] == 108 && output[3] == 108 && output[4] == 111 && output[5] == 0 && output[6] == 99
+}
+machine test_string_buffer_True_empty() -> bool {
+    let mut source: [u8; 256];
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    output[6] = 99;
+    output[7] = 99;
+    let result: IntegerResult = string_to_buffer(&source, 0, true, &mut output);
+    result.error == 0 && result.value == 0 && output[0] == 99
+}
+machine test_string_buffer_True_410042() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 65;
+    source[2] = 66;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    output[6] = 99;
+    output[7] = 99;
+    let result: IntegerResult = string_to_buffer(&source, 3, true, &mut output);
+    result.error == 7 && output[0] == 99
+}
+machine test_string_buffer_True_80() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 128;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    output[6] = 99;
+    output[7] = 99;
+    let result: IntegerResult = string_to_buffer(&source, 1, true, &mut output);
+    result.error == 7 && output[0] == 99
+}
+machine test_string_buffer_False_48656c6c6f() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 72;
+    source[1] = 101;
+    source[2] = 108;
+    source[3] = 108;
+    source[4] = 111;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    output[6] = 99;
+    output[7] = 99;
+    let result: IntegerResult = string_to_buffer(&source, 5, false, &mut output);
+    result.error == 0 && result.value == 5 && output[0] == 72 && output[1] == 101 && output[2] == 108 && output[3] == 108 && output[4] == 111 && output[5] == 99
+}
+machine test_string_buffer_False_empty() -> bool {
+    let mut source: [u8; 256];
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    output[6] = 99;
+    output[7] = 99;
+    let result: IntegerResult = string_to_buffer(&source, 0, false, &mut output);
+    result.error == 0 && result.value == 0 && output[0] == 99
+}
+machine test_string_buffer_False_410042() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 65;
+    source[2] = 66;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    output[6] = 99;
+    output[7] = 99;
+    let result: IntegerResult = string_to_buffer(&source, 3, false, &mut output);
+    result.error == 7 && output[0] == 99
+}
+machine test_string_buffer_False_80() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 128;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    output[6] = 99;
+    output[7] = 99;
+    let result: IntegerResult = string_to_buffer(&source, 1, false, &mut output);
+    result.error == 7 && output[0] == 99
+}
+machine test_buffer_string_4142005a_99() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 65;
+    source[1] = 66;
+    source[3] = 90;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = buffer_to_string(&source, 4, 99, &mut output);
+    result.error == 0 && result.value == 2 && output[0] == 65 && output[1] == 66 && output[2] == 99
+}
+machine test_buffer_string_41424344_2() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 65;
+    source[1] = 66;
+    source[2] = 67;
+    source[3] = 68;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = buffer_to_string(&source, 4, 2, &mut output);
+    result.error == 0 && result.value == 2 && output[0] == 65 && output[1] == 66 && output[2] == 99
+}
+machine test_buffer_string_empty_99() -> bool {
+    let mut source: [u8; 256];
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = buffer_to_string(&source, 0, 99, &mut output);
+    result.error == 0 && result.value == 0 && output[0] == 99
+}
+machine test_buffer_string_4180_99() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 65;
+    source[1] = 128;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = buffer_to_string(&source, 2, 99, &mut output);
+    result.error == 7 && output[0] == 99
+}
+machine test_buffer_string_0080_99() -> bool {
+    let mut source: [u8; 256];
+    source[1] = 128;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = buffer_to_string(&source, 2, 99, &mut output);
+    result.error == 0 && result.value == 0 && output[0] == 99
+}
+machine test_buffer_string_41_0() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 65;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    output[2] = 99;
+    output[3] = 99;
+    output[4] = 99;
+    output[5] = 99;
+    let result: IntegerResult = buffer_to_string(&source, 1, 0, &mut output);
+    result.error == 0 && result.value == 0 && output[0] == 99
+}
+machine test_capacity_mid() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 65;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    let result: IntegerResult = mid(&source, 257, 0, 1, &mut output);
+    result.error == 4 && output[0] == 99
+}
+machine test_capacity_string_to_buffer() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 65;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    let result: IntegerResult = string_to_buffer(&source, 257, false, &mut output);
+    result.error == 4 && output[0] == 99
+}
+machine test_capacity_buffer_to_string() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 65;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    let result: IntegerResult = buffer_to_string(&source, 257, 1, &mut output);
+    result.error == 4 && output[0] == 99
+}
+machine test_capacity_field() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 65;
+    let result: IntegerResult = field_to_integer(IntegerSize::EightBytes, &source, 257, 0, 1);
+    result.error == 4
+}
+machine test_capacity_integer() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 65;
+    let result: IntegerResult = buffer_to_integer(IntegerSize::EightBytes, &source, 257, EmptyPolicy::PinnedZero);
+    result.error == 4
+}
+machine test_capacity_terminator() -> bool {
+    let mut source: [u8; 256];
+    source[0] = 65;
+    source[1] = 65;
+    source[2] = 65;
+    source[3] = 65;
+    source[4] = 65;
+    source[5] = 65;
+    source[6] = 65;
+    source[7] = 65;
+    source[8] = 65;
+    source[9] = 65;
+    source[10] = 65;
+    source[11] = 65;
+    source[12] = 65;
+    source[13] = 65;
+    source[14] = 65;
+    source[15] = 65;
+    source[16] = 65;
+    source[17] = 65;
+    source[18] = 65;
+    source[19] = 65;
+    source[20] = 65;
+    source[21] = 65;
+    source[22] = 65;
+    source[23] = 65;
+    source[24] = 65;
+    source[25] = 65;
+    source[26] = 65;
+    source[27] = 65;
+    source[28] = 65;
+    source[29] = 65;
+    source[30] = 65;
+    source[31] = 65;
+    source[32] = 65;
+    source[33] = 65;
+    source[34] = 65;
+    source[35] = 65;
+    source[36] = 65;
+    source[37] = 65;
+    source[38] = 65;
+    source[39] = 65;
+    source[40] = 65;
+    source[41] = 65;
+    source[42] = 65;
+    source[43] = 65;
+    source[44] = 65;
+    source[45] = 65;
+    source[46] = 65;
+    source[47] = 65;
+    source[48] = 65;
+    source[49] = 65;
+    source[50] = 65;
+    source[51] = 65;
+    source[52] = 65;
+    source[53] = 65;
+    source[54] = 65;
+    source[55] = 65;
+    source[56] = 65;
+    source[57] = 65;
+    source[58] = 65;
+    source[59] = 65;
+    source[60] = 65;
+    source[61] = 65;
+    source[62] = 65;
+    source[63] = 65;
+    source[64] = 65;
+    source[65] = 65;
+    source[66] = 65;
+    source[67] = 65;
+    source[68] = 65;
+    source[69] = 65;
+    source[70] = 65;
+    source[71] = 65;
+    source[72] = 65;
+    source[73] = 65;
+    source[74] = 65;
+    source[75] = 65;
+    source[76] = 65;
+    source[77] = 65;
+    source[78] = 65;
+    source[79] = 65;
+    source[80] = 65;
+    source[81] = 65;
+    source[82] = 65;
+    source[83] = 65;
+    source[84] = 65;
+    source[85] = 65;
+    source[86] = 65;
+    source[87] = 65;
+    source[88] = 65;
+    source[89] = 65;
+    source[90] = 65;
+    source[91] = 65;
+    source[92] = 65;
+    source[93] = 65;
+    source[94] = 65;
+    source[95] = 65;
+    source[96] = 65;
+    source[97] = 65;
+    source[98] = 65;
+    source[99] = 65;
+    source[100] = 65;
+    source[101] = 65;
+    source[102] = 65;
+    source[103] = 65;
+    source[104] = 65;
+    source[105] = 65;
+    source[106] = 65;
+    source[107] = 65;
+    source[108] = 65;
+    source[109] = 65;
+    source[110] = 65;
+    source[111] = 65;
+    source[112] = 65;
+    source[113] = 65;
+    source[114] = 65;
+    source[115] = 65;
+    source[116] = 65;
+    source[117] = 65;
+    source[118] = 65;
+    source[119] = 65;
+    source[120] = 65;
+    source[121] = 65;
+    source[122] = 65;
+    source[123] = 65;
+    source[124] = 65;
+    source[125] = 65;
+    source[126] = 65;
+    source[127] = 65;
+    source[128] = 65;
+    source[129] = 65;
+    source[130] = 65;
+    source[131] = 65;
+    source[132] = 65;
+    source[133] = 65;
+    source[134] = 65;
+    source[135] = 65;
+    source[136] = 65;
+    source[137] = 65;
+    source[138] = 65;
+    source[139] = 65;
+    source[140] = 65;
+    source[141] = 65;
+    source[142] = 65;
+    source[143] = 65;
+    source[144] = 65;
+    source[145] = 65;
+    source[146] = 65;
+    source[147] = 65;
+    source[148] = 65;
+    source[149] = 65;
+    source[150] = 65;
+    source[151] = 65;
+    source[152] = 65;
+    source[153] = 65;
+    source[154] = 65;
+    source[155] = 65;
+    source[156] = 65;
+    source[157] = 65;
+    source[158] = 65;
+    source[159] = 65;
+    source[160] = 65;
+    source[161] = 65;
+    source[162] = 65;
+    source[163] = 65;
+    source[164] = 65;
+    source[165] = 65;
+    source[166] = 65;
+    source[167] = 65;
+    source[168] = 65;
+    source[169] = 65;
+    source[170] = 65;
+    source[171] = 65;
+    source[172] = 65;
+    source[173] = 65;
+    source[174] = 65;
+    source[175] = 65;
+    source[176] = 65;
+    source[177] = 65;
+    source[178] = 65;
+    source[179] = 65;
+    source[180] = 65;
+    source[181] = 65;
+    source[182] = 65;
+    source[183] = 65;
+    source[184] = 65;
+    source[185] = 65;
+    source[186] = 65;
+    source[187] = 65;
+    source[188] = 65;
+    source[189] = 65;
+    source[190] = 65;
+    source[191] = 65;
+    source[192] = 65;
+    source[193] = 65;
+    source[194] = 65;
+    source[195] = 65;
+    source[196] = 65;
+    source[197] = 65;
+    source[198] = 65;
+    source[199] = 65;
+    source[200] = 65;
+    source[201] = 65;
+    source[202] = 65;
+    source[203] = 65;
+    source[204] = 65;
+    source[205] = 65;
+    source[206] = 65;
+    source[207] = 65;
+    source[208] = 65;
+    source[209] = 65;
+    source[210] = 65;
+    source[211] = 65;
+    source[212] = 65;
+    source[213] = 65;
+    source[214] = 65;
+    source[215] = 65;
+    source[216] = 65;
+    source[217] = 65;
+    source[218] = 65;
+    source[219] = 65;
+    source[220] = 65;
+    source[221] = 65;
+    source[222] = 65;
+    source[223] = 65;
+    source[224] = 65;
+    source[225] = 65;
+    source[226] = 65;
+    source[227] = 65;
+    source[228] = 65;
+    source[229] = 65;
+    source[230] = 65;
+    source[231] = 65;
+    source[232] = 65;
+    source[233] = 65;
+    source[234] = 65;
+    source[235] = 65;
+    source[236] = 65;
+    source[237] = 65;
+    source[238] = 65;
+    source[239] = 65;
+    source[240] = 65;
+    source[241] = 65;
+    source[242] = 65;
+    source[243] = 65;
+    source[244] = 65;
+    source[245] = 65;
+    source[246] = 65;
+    source[247] = 65;
+    source[248] = 65;
+    source[249] = 65;
+    source[250] = 65;
+    source[251] = 65;
+    source[252] = 65;
+    source[253] = 65;
+    source[254] = 65;
+    source[255] = 65;
+    let mut output: [u8; 256];
+    output[0] = 99;
+    let result: IntegerResult = string_to_buffer(&source, 256, true, &mut output);
+    result.error == 4 && output[0] == 99
+}
+machine test_last_byte_copy() -> bool {
+    let mut source: [u8; 256];
+    let mut output: [u8; 256];
+    source[255] = 128;
+    output[255] = 1;
+    let error: u8 = copy_bits(&source, 256, 2047, &mut output, 256, 2047, 1);
+    error == 0 && output[255] == 129 && output[254] == 0
+}
+machine test_last_bit_field() -> bool {
+    let mut source: [u8; 256];
+    source[255] = 128;
+    let result: IntegerResult = field_to_integer(IntegerSize::EightBytes, &source, 256, 2047, 64);
+    result.error == 0 && result.value == 1
+}
+machine test_last_byte_mid() -> bool {
+    let mut source: [u8; 256];
+    let mut output: [u8; 256];
+    output[0] = 99;
+    output[1] = 99;
+    source[255] = 42;
+    let result: IntegerResult = mid(&source, 256, 255, 18446744073709551615, &mut output);
+    result.error == 0 && result.value == 1 && output[0] == 42 && output[1] == 99
+}
+machine test_asl_incdec() -> bool {
+    let a: IntegerResult = binary(IntegerSize::FourBytes, Binary::Add, 0, 1);
+    let b: IntegerResult = binary(IntegerSize::FourBytes, Binary::Add, a.value, 1);
+    let c: IntegerResult = binary(IntegerSize::FourBytes, Binary::Add, b.value, 1);
+    let y: u64 = c.value;
+    let x: IntegerResult = binary(IntegerSize::FourBytes, Binary::Subtract, c.value, 1);
+    x.value == 2 && y == 3
+}
+machine test_asl_logical_not() -> bool {
+    let result: u64 = logical_not(IntegerSize::FourBytes, 1);
+    result == 0
+}
+data Main {}
+machine Main::main(&mut self) {}

@@ -1,0 +1,5 @@
+machine build(builder: &mut Build) {
+    builder.application("cathedral-acpi-interpreter-tests");
+    builder.freestanding = true;
+    builder.depend_as("interpreter", Source::Path { location: "../../../../source/libraries/acpi/interpreter" });
+}

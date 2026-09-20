@@ -1646,19 +1646,23 @@
         },
         "3568:IntegerSize": {
           "anchor": "pub enum IntegerSize {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace"
           ],
           "queue_tasks": [
             "ACPI-004"
+          ],
+          "targets": [
+            {
+              "anchor": "pub data IntegerSize",
+              "path": "source/libraries/acpi/interpreter/integers.omg"
+            }
           ]
         },
         "3569:FourBytes": {
           "anchor": "FourBytes = 4,",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "aml_syntax_namespace",
@@ -1668,12 +1672,17 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "case FourBytes",
+              "path": "source/libraries/acpi/interpreter/integers.omg"
+            }
           ]
         },
         "3570:EightBytes": {
           "anchor": "EightBytes = 8,",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "aml_syntax_namespace",
@@ -1683,17 +1692,28 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "case EightBytes",
+              "path": "source/libraries/acpi/interpreter/integers.omg"
+            }
           ]
         },
         "3574:from_revision": {
           "anchor": "pub fn from_revision(revision: u8) -> IntegerSize {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_syntax_namespace"
           ],
           "queue_tasks": [
             "ACPI-004"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine from_revision",
+              "path": "source/libraries/acpi/interpreter/integers.omg"
+            }
           ]
         },
         "389:try_do_acquire_firmware_lock": {
@@ -3158,8 +3178,7 @@
         },
         "548:copy_bits": {
           "anchor": "pub(crate) fn copy_bits(",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3167,6 +3186,12 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine copy_bits",
+              "path": "source/libraries/acpi/interpreter/buffer_fields.omg"
+            }
           ]
         },
         "588:align_down": {
@@ -3197,8 +3222,7 @@
         },
         "612:test_copy_bits": {
           "anchor": "fn test_copy_bits() {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3206,12 +3230,17 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "machine test_upstream_copy_bits",
+              "path": "tools/ports/acpi/interpreter/main.omg"
+            }
           ]
         },
         "621:buffer_to_integer": {
           "anchor": "fn buffer_to_integer() {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3219,12 +3248,17 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "machine test_upstream_buffer_to_integer",
+              "path": "tools/ports/acpi/interpreter/main.omg"
+            }
           ]
         },
         "626:buffer_field_to_integer": {
           "anchor": "fn buffer_field_to_integer() {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3232,6 +3266,12 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "machine test_upstream_buffer_field_to_integer",
+              "path": "tools/ports/acpi/interpreter/main.omg"
+            }
           ]
         },
         "627:BUFFER": {
@@ -3249,8 +3289,7 @@
         },
         "635:buffer_field_to_4_byte_integer": {
           "anchor": "fn buffer_field_to_4_byte_integer() {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3258,6 +3297,12 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "machine test_upstream_buffer_field_to_4_byte_integer",
+              "path": "tools/ports/acpi/interpreter/main.omg"
+            }
           ]
         },
         "637:BUFFER": {
@@ -3275,8 +3320,7 @@
         },
         "649:buffer_field_to_8_byte_integer": {
           "anchor": "fn buffer_field_to_8_byte_integer() {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3284,6 +3328,12 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "machine test_upstream_buffer_field_to_8_byte_integer",
+              "path": "tools/ports/acpi/interpreter/main.omg"
+            }
           ]
         },
         "650:BUFFER": {
