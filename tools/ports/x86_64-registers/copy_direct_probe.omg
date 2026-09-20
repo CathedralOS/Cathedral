@@ -1,0 +1,9 @@
+// Reproducer: imported raw carrier is declared [copy] in x86_registers.omg.
+use x86_values::registers;
+use facts::x86_registers::SegmentSelector;
+data Main {}
+machine Main::main(&mut self) {
+    let value: SegmentSelector = SegmentSelector { raw: 0 };
+    let index: u16 = registers::selector_index(value);
+    let rpl: u8 = registers::selector_rpl(value);
+}

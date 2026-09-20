@@ -1,0 +1,733 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "pointer_bits": 64,
+    "endian": "little",
+    "abi": "x86 register numeric values; no aggregate ABI"
+  },
+  "provenance": {
+    "kind": "upstream",
+    "description": "177 actual pinned Rust value observations on host; 176 const-compatible facts independently asserted for x86_64-unknown-uefi. MXCSR Default body is host-observed only. MSR one-field private Rust carriers are inspected by test-only transmute, not adopted as foreign ABI. No Omega observation or hardware execution.",
+    "sources": [
+      "src/lib.rs",
+      "src/registers/control.rs",
+      "src/registers/debug.rs",
+      "src/registers/model_specific.rs",
+      "src/registers/mxcsr.rs",
+      "src/registers/rflags.rs",
+      "src/registers/segmentation.rs",
+      "src/registers/xcontrol.rs"
+    ],
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2"
+  },
+  "measurements": {
+    "CR0_FLAGS_PROTECTED_MODE_ENABLE": {
+      "kind": "value",
+      "value": 1
+    },
+    "CR0_FLAGS_MONITOR_COPROCESSOR": {
+      "kind": "value",
+      "value": 2
+    },
+    "CR0_FLAGS_EMULATE_COPROCESSOR": {
+      "kind": "value",
+      "value": 4
+    },
+    "CR0_FLAGS_TASK_SWITCHED": {
+      "kind": "value",
+      "value": 8
+    },
+    "CR0_FLAGS_EXTENSION_TYPE": {
+      "kind": "value",
+      "value": 16
+    },
+    "CR0_FLAGS_NUMERIC_ERROR": {
+      "kind": "value",
+      "value": 32
+    },
+    "CR0_FLAGS_WRITE_PROTECT": {
+      "kind": "value",
+      "value": 65536
+    },
+    "CR0_FLAGS_ALIGNMENT_MASK": {
+      "kind": "value",
+      "value": 262144
+    },
+    "CR0_FLAGS_NOT_WRITE_THROUGH": {
+      "kind": "value",
+      "value": 536870912
+    },
+    "CR0_FLAGS_CACHE_DISABLE": {
+      "kind": "value",
+      "value": 1073741824
+    },
+    "CR0_FLAGS_PAGING": {
+      "kind": "value",
+      "value": 2147483648
+    },
+    "CR3_FLAGS_PAGE_LEVEL_WRITETHROUGH": {
+      "kind": "value",
+      "value": 8
+    },
+    "CR3_FLAGS_PAGE_LEVEL_CACHE_DISABLE": {
+      "kind": "value",
+      "value": 16
+    },
+    "CR4_FLAGS_VIRTUAL_8086_MODE_EXTENSIONS": {
+      "kind": "value",
+      "value": 1
+    },
+    "CR4_FLAGS_PROTECTED_MODE_VIRTUAL_INTERRUPTS": {
+      "kind": "value",
+      "value": 2
+    },
+    "CR4_FLAGS_TIMESTAMP_DISABLE": {
+      "kind": "value",
+      "value": 4
+    },
+    "CR4_FLAGS_DEBUGGING_EXTENSIONS": {
+      "kind": "value",
+      "value": 8
+    },
+    "CR4_FLAGS_PAGE_SIZE_EXTENSION": {
+      "kind": "value",
+      "value": 16
+    },
+    "CR4_FLAGS_PHYSICAL_ADDRESS_EXTENSION": {
+      "kind": "value",
+      "value": 32
+    },
+    "CR4_FLAGS_MACHINE_CHECK_EXCEPTION": {
+      "kind": "value",
+      "value": 64
+    },
+    "CR4_FLAGS_PAGE_GLOBAL": {
+      "kind": "value",
+      "value": 128
+    },
+    "CR4_FLAGS_PERFORMANCE_MONITOR_COUNTER": {
+      "kind": "value",
+      "value": 256
+    },
+    "CR4_FLAGS_OSFXSR": {
+      "kind": "value",
+      "value": 512
+    },
+    "CR4_FLAGS_OSXMMEXCPT_ENABLE": {
+      "kind": "value",
+      "value": 1024
+    },
+    "CR4_FLAGS_USER_MODE_INSTRUCTION_PREVENTION": {
+      "kind": "value",
+      "value": 2048
+    },
+    "CR4_FLAGS_L5_PAGING": {
+      "kind": "value",
+      "value": 4096
+    },
+    "CR4_FLAGS_VIRTUAL_MACHINE_EXTENSIONS": {
+      "kind": "value",
+      "value": 8192
+    },
+    "CR4_FLAGS_SAFER_MODE_EXTENSIONS": {
+      "kind": "value",
+      "value": 16384
+    },
+    "CR4_FLAGS_FSGSBASE": {
+      "kind": "value",
+      "value": 65536
+    },
+    "CR4_FLAGS_PCID": {
+      "kind": "value",
+      "value": 131072
+    },
+    "CR4_FLAGS_OSXSAVE": {
+      "kind": "value",
+      "value": 262144
+    },
+    "CR4_FLAGS_KEY_LOCKER": {
+      "kind": "value",
+      "value": 524288
+    },
+    "CR4_FLAGS_SUPERVISOR_MODE_EXECUTION_PROTECTION": {
+      "kind": "value",
+      "value": 1048576
+    },
+    "CR4_FLAGS_SUPERVISOR_MODE_ACCESS_PREVENTION": {
+      "kind": "value",
+      "value": 2097152
+    },
+    "CR4_FLAGS_PROTECTION_KEY_USER": {
+      "kind": "value",
+      "value": 4194304
+    },
+    "CR4_FLAGS_CONTROL_FLOW_ENFORCEMENT": {
+      "kind": "value",
+      "value": 8388608
+    },
+    "CR4_FLAGS_PROTECTION_KEY_SUPERVISOR": {
+      "kind": "value",
+      "value": 16777216
+    },
+    "DR6_FLAGS_TRAP0": {
+      "kind": "value",
+      "value": 1
+    },
+    "DR6_FLAGS_TRAP1": {
+      "kind": "value",
+      "value": 2
+    },
+    "DR6_FLAGS_TRAP2": {
+      "kind": "value",
+      "value": 4
+    },
+    "DR6_FLAGS_TRAP3": {
+      "kind": "value",
+      "value": 8
+    },
+    "DR6_FLAGS_TRAP": {
+      "kind": "value",
+      "value": 15
+    },
+    "DR6_FLAGS_ACCESS_DETECTED": {
+      "kind": "value",
+      "value": 8192
+    },
+    "DR6_FLAGS_STEP": {
+      "kind": "value",
+      "value": 16384
+    },
+    "DR6_FLAGS_SWITCH": {
+      "kind": "value",
+      "value": 32768
+    },
+    "DR6_FLAGS_RTM": {
+      "kind": "value",
+      "value": 65536
+    },
+    "DR7_FLAGS_LOCAL_BREAKPOINT_0_ENABLE": {
+      "kind": "value",
+      "value": 1
+    },
+    "DR7_FLAGS_LOCAL_BREAKPOINT_1_ENABLE": {
+      "kind": "value",
+      "value": 4
+    },
+    "DR7_FLAGS_LOCAL_BREAKPOINT_2_ENABLE": {
+      "kind": "value",
+      "value": 16
+    },
+    "DR7_FLAGS_LOCAL_BREAKPOINT_3_ENABLE": {
+      "kind": "value",
+      "value": 64
+    },
+    "DR7_FLAGS_GLOBAL_BREAKPOINT_0_ENABLE": {
+      "kind": "value",
+      "value": 2
+    },
+    "DR7_FLAGS_GLOBAL_BREAKPOINT_1_ENABLE": {
+      "kind": "value",
+      "value": 8
+    },
+    "DR7_FLAGS_GLOBAL_BREAKPOINT_2_ENABLE": {
+      "kind": "value",
+      "value": 32
+    },
+    "DR7_FLAGS_GLOBAL_BREAKPOINT_3_ENABLE": {
+      "kind": "value",
+      "value": 128
+    },
+    "DR7_FLAGS_LOCAL_EXACT_BREAKPOINT_ENABLE": {
+      "kind": "value",
+      "value": 256
+    },
+    "DR7_FLAGS_GLOBAL_EXACT_BREAKPOINT_ENABLE": {
+      "kind": "value",
+      "value": 512
+    },
+    "DR7_FLAGS_RESTRICTED_TRANSACTIONAL_MEMORY": {
+      "kind": "value",
+      "value": 2048
+    },
+    "DR7_FLAGS_GENERAL_DETECT_ENABLE": {
+      "kind": "value",
+      "value": 8192
+    },
+    "EFER_FLAGS_SYSTEM_CALL_EXTENSIONS": {
+      "kind": "value",
+      "value": 1
+    },
+    "EFER_FLAGS_LONG_MODE_ENABLE": {
+      "kind": "value",
+      "value": 256
+    },
+    "EFER_FLAGS_LONG_MODE_ACTIVE": {
+      "kind": "value",
+      "value": 1024
+    },
+    "EFER_FLAGS_NO_EXECUTE_ENABLE": {
+      "kind": "value",
+      "value": 2048
+    },
+    "EFER_FLAGS_SECURE_VIRTUAL_MACHINE_ENABLE": {
+      "kind": "value",
+      "value": 4096
+    },
+    "EFER_FLAGS_LONG_MODE_SEGMENT_LIMIT_ENABLE": {
+      "kind": "value",
+      "value": 8192
+    },
+    "EFER_FLAGS_FAST_FXSAVE_FXRSTOR": {
+      "kind": "value",
+      "value": 16384
+    },
+    "EFER_FLAGS_TRANSLATION_CACHE_EXTENSION": {
+      "kind": "value",
+      "value": 32768
+    },
+    "CET_FLAGS_SS_ENABLE": {
+      "kind": "value",
+      "value": 1
+    },
+    "CET_FLAGS_SS_WRITE_ENABLE": {
+      "kind": "value",
+      "value": 2
+    },
+    "CET_FLAGS_IBT_ENABLE": {
+      "kind": "value",
+      "value": 4
+    },
+    "CET_FLAGS_IBT_LEGACY_ENABLE": {
+      "kind": "value",
+      "value": 8
+    },
+    "CET_FLAGS_IBT_NO_TRACK_ENABLE": {
+      "kind": "value",
+      "value": 16
+    },
+    "CET_FLAGS_IBT_LEGACY_SUPPRESS_ENABLE": {
+      "kind": "value",
+      "value": 32
+    },
+    "CET_FLAGS_IBT_SUPPRESS_ENABLE": {
+      "kind": "value",
+      "value": 1024
+    },
+    "CET_FLAGS_IBT_TRACKED": {
+      "kind": "value",
+      "value": 2048
+    },
+    "APIC_BASE_FLAGS_BSP": {
+      "kind": "value",
+      "value": 256
+    },
+    "APIC_BASE_FLAGS_X2APIC_ENABLE": {
+      "kind": "value",
+      "value": 1024
+    },
+    "APIC_BASE_FLAGS_LAPIC_ENABLE": {
+      "kind": "value",
+      "value": 2048
+    },
+    "MX_CSR_INVALID_OPERATION": {
+      "kind": "value",
+      "value": 1
+    },
+    "MX_CSR_DENORMAL": {
+      "kind": "value",
+      "value": 2
+    },
+    "MX_CSR_DIVIDE_BY_ZERO": {
+      "kind": "value",
+      "value": 4
+    },
+    "MX_CSR_OVERFLOW": {
+      "kind": "value",
+      "value": 8
+    },
+    "MX_CSR_UNDERFLOW": {
+      "kind": "value",
+      "value": 16
+    },
+    "MX_CSR_PRECISION": {
+      "kind": "value",
+      "value": 32
+    },
+    "MX_CSR_DENORMALS_ARE_ZEROS": {
+      "kind": "value",
+      "value": 64
+    },
+    "MX_CSR_INVALID_OPERATION_MASK": {
+      "kind": "value",
+      "value": 128
+    },
+    "MX_CSR_DENORMAL_MASK": {
+      "kind": "value",
+      "value": 256
+    },
+    "MX_CSR_DIVIDE_BY_ZERO_MASK": {
+      "kind": "value",
+      "value": 512
+    },
+    "MX_CSR_OVERFLOW_MASK": {
+      "kind": "value",
+      "value": 1024
+    },
+    "MX_CSR_UNDERFLOW_MASK": {
+      "kind": "value",
+      "value": 2048
+    },
+    "MX_CSR_PRECISION_MASK": {
+      "kind": "value",
+      "value": 4096
+    },
+    "MX_CSR_ROUNDING_CONTROL_NEGATIVE": {
+      "kind": "value",
+      "value": 8192
+    },
+    "MX_CSR_ROUNDING_CONTROL_POSITIVE": {
+      "kind": "value",
+      "value": 16384
+    },
+    "MX_CSR_ROUNDING_CONTROL_ZERO": {
+      "kind": "value",
+      "value": 24576
+    },
+    "MX_CSR_FLUSH_TO_ZERO": {
+      "kind": "value",
+      "value": 32768
+    },
+    "RFLAGS_ID": {
+      "kind": "value",
+      "value": 2097152
+    },
+    "RFLAGS_VIRTUAL_INTERRUPT_PENDING": {
+      "kind": "value",
+      "value": 1048576
+    },
+    "RFLAGS_VIRTUAL_INTERRUPT": {
+      "kind": "value",
+      "value": 524288
+    },
+    "RFLAGS_ALIGNMENT_CHECK": {
+      "kind": "value",
+      "value": 262144
+    },
+    "RFLAGS_VIRTUAL_8086_MODE": {
+      "kind": "value",
+      "value": 131072
+    },
+    "RFLAGS_RESUME_FLAG": {
+      "kind": "value",
+      "value": 65536
+    },
+    "RFLAGS_NESTED_TASK": {
+      "kind": "value",
+      "value": 16384
+    },
+    "RFLAGS_IOPL_HIGH": {
+      "kind": "value",
+      "value": 8192
+    },
+    "RFLAGS_IOPL_LOW": {
+      "kind": "value",
+      "value": 4096
+    },
+    "RFLAGS_OVERFLOW_FLAG": {
+      "kind": "value",
+      "value": 2048
+    },
+    "RFLAGS_DIRECTION_FLAG": {
+      "kind": "value",
+      "value": 1024
+    },
+    "RFLAGS_INTERRUPT_FLAG": {
+      "kind": "value",
+      "value": 512
+    },
+    "RFLAGS_TRAP_FLAG": {
+      "kind": "value",
+      "value": 256
+    },
+    "RFLAGS_SIGN_FLAG": {
+      "kind": "value",
+      "value": 128
+    },
+    "RFLAGS_ZERO_FLAG": {
+      "kind": "value",
+      "value": 64
+    },
+    "RFLAGS_AUXILIARY_CARRY_FLAG": {
+      "kind": "value",
+      "value": 16
+    },
+    "RFLAGS_PARITY_FLAG": {
+      "kind": "value",
+      "value": 4
+    },
+    "RFLAGS_CARRY_FLAG": {
+      "kind": "value",
+      "value": 1
+    },
+    "XCR0_FLAGS_X87": {
+      "kind": "value",
+      "value": 1
+    },
+    "XCR0_FLAGS_SSE": {
+      "kind": "value",
+      "value": 2
+    },
+    "XCR0_FLAGS_AVX": {
+      "kind": "value",
+      "value": 4
+    },
+    "XCR0_FLAGS_BNDREG": {
+      "kind": "value",
+      "value": 8
+    },
+    "XCR0_FLAGS_BNDCSR": {
+      "kind": "value",
+      "value": 16
+    },
+    "XCR0_FLAGS_OPMASK": {
+      "kind": "value",
+      "value": 32
+    },
+    "XCR0_FLAGS_ZMM_HI256": {
+      "kind": "value",
+      "value": 64
+    },
+    "XCR0_FLAGS_HI16_ZMM": {
+      "kind": "value",
+      "value": 128
+    },
+    "XCR0_FLAGS_MPK": {
+      "kind": "value",
+      "value": 512
+    },
+    "XCR0_FLAGS_LWP": {
+      "kind": "value",
+      "value": 4611686018427387904
+    },
+    "EFER_MSR": {
+      "kind": "value",
+      "value": 3221225600
+    },
+    "FS_BASE_MSR": {
+      "kind": "value",
+      "value": 3221225728
+    },
+    "GS_BASE_MSR": {
+      "kind": "value",
+      "value": 3221225729
+    },
+    "KERNEL_GS_BASE_MSR": {
+      "kind": "value",
+      "value": 3221225730
+    },
+    "STAR_MSR": {
+      "kind": "value",
+      "value": 3221225601
+    },
+    "LSTAR_MSR": {
+      "kind": "value",
+      "value": 3221225602
+    },
+    "SFMASK_MSR": {
+      "kind": "value",
+      "value": 3221225604
+    },
+    "UCET_MSR": {
+      "kind": "value",
+      "value": 1696
+    },
+    "SCET_MSR": {
+      "kind": "value",
+      "value": 1698
+    },
+    "APIC_BASE_MSR": {
+      "kind": "value",
+      "value": 27
+    },
+    "CR0_FLAGS_KNOWN_BITS": {
+      "kind": "value",
+      "value": 3758424127
+    },
+    "CR3_FLAGS_KNOWN_BITS": {
+      "kind": "value",
+      "value": 24
+    },
+    "CR4_FLAGS_KNOWN_BITS": {
+      "kind": "value",
+      "value": 33521663
+    },
+    "DR6_FLAGS_KNOWN_BITS": {
+      "kind": "value",
+      "value": 122895
+    },
+    "DR7_FLAGS_KNOWN_BITS": {
+      "kind": "value",
+      "value": 11263
+    },
+    "EFER_FLAGS_KNOWN_BITS": {
+      "kind": "value",
+      "value": 64769
+    },
+    "CET_FLAGS_KNOWN_BITS": {
+      "kind": "value",
+      "value": 3135
+    },
+    "APIC_BASE_FLAGS_KNOWN_BITS": {
+      "kind": "value",
+      "value": 3328
+    },
+    "MX_CSR_KNOWN_BITS": {
+      "kind": "value",
+      "value": 65535
+    },
+    "RFLAGS_KNOWN_BITS": {
+      "kind": "value",
+      "value": 4161493
+    },
+    "XCR0_FLAGS_KNOWN_BITS": {
+      "kind": "value",
+      "value": 4611686018427388671
+    },
+    "PRIVILEGE_LEVEL_RING0": {
+      "kind": "value",
+      "value": 0
+    },
+    "PRIVILEGE_LEVEL_RING1": {
+      "kind": "value",
+      "value": 1
+    },
+    "PRIVILEGE_LEVEL_RING2": {
+      "kind": "value",
+      "value": 2
+    },
+    "PRIVILEGE_LEVEL_RING3": {
+      "kind": "value",
+      "value": 3
+    },
+    "PRIORITY_CLASS_CLASS1": {
+      "kind": "value",
+      "value": 1
+    },
+    "PRIORITY_CLASS_CLASS2": {
+      "kind": "value",
+      "value": 2
+    },
+    "PRIORITY_CLASS_CLASS3": {
+      "kind": "value",
+      "value": 3
+    },
+    "PRIORITY_CLASS_CLASS4": {
+      "kind": "value",
+      "value": 4
+    },
+    "PRIORITY_CLASS_CLASS5": {
+      "kind": "value",
+      "value": 5
+    },
+    "PRIORITY_CLASS_CLASS6": {
+      "kind": "value",
+      "value": 6
+    },
+    "PRIORITY_CLASS_CLASS7": {
+      "kind": "value",
+      "value": 7
+    },
+    "PRIORITY_CLASS_CLASS8": {
+      "kind": "value",
+      "value": 8
+    },
+    "PRIORITY_CLASS_CLASS9": {
+      "kind": "value",
+      "value": 9
+    },
+    "PRIORITY_CLASS_CLASS10": {
+      "kind": "value",
+      "value": 10
+    },
+    "PRIORITY_CLASS_CLASS11": {
+      "kind": "value",
+      "value": 11
+    },
+    "PRIORITY_CLASS_CLASS12": {
+      "kind": "value",
+      "value": 12
+    },
+    "PRIORITY_CLASS_CLASS13": {
+      "kind": "value",
+      "value": 13
+    },
+    "PRIORITY_CLASS_CLASS14": {
+      "kind": "value",
+      "value": 14
+    },
+    "PRIORITY_CLASS_CLASS15": {
+      "kind": "value",
+      "value": 15
+    },
+    "DEBUG_ADDRESS_REGISTER_NUMBER_DR0": {
+      "kind": "value",
+      "value": 0
+    },
+    "DEBUG_ADDRESS_REGISTER_NUMBER_DR1": {
+      "kind": "value",
+      "value": 1
+    },
+    "DEBUG_ADDRESS_REGISTER_NUMBER_DR2": {
+      "kind": "value",
+      "value": 2
+    },
+    "DEBUG_ADDRESS_REGISTER_NUMBER_DR3": {
+      "kind": "value",
+      "value": 3
+    },
+    "BREAKPOINT_CONDITION_INSTRUCTION_EXECUTION": {
+      "kind": "value",
+      "value": 0
+    },
+    "BREAKPOINT_CONDITION_DATA_WRITES": {
+      "kind": "value",
+      "value": 1
+    },
+    "BREAKPOINT_CONDITION_IO_READS_WRITES": {
+      "kind": "value",
+      "value": 2
+    },
+    "BREAKPOINT_CONDITION_DATA_READS_WRITES": {
+      "kind": "value",
+      "value": 3
+    },
+    "BREAKPOINT_SIZE_LENGTH1B": {
+      "kind": "value",
+      "value": 0
+    },
+    "BREAKPOINT_SIZE_LENGTH2B": {
+      "kind": "value",
+      "value": 1
+    },
+    "BREAKPOINT_SIZE_LENGTH8B": {
+      "kind": "value",
+      "value": 2
+    },
+    "BREAKPOINT_SIZE_LENGTH4B": {
+      "kind": "value",
+      "value": 3
+    },
+    "SEGMENT_SELECTOR_NULL": {
+      "kind": "value",
+      "value": 0
+    },
+    "DR7_VALID_BITS": {
+      "kind": "value",
+      "value": 4294913023
+    },
+    "MXCSR_RESET_BITS": {
+      "kind": "value",
+      "value": 8064
+    }
+  }
+}

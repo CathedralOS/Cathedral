@@ -1,0 +1,220 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified x86_64 register translation at cc35c876d3badb57df54a66e22f7768a52be95f2.
+// See x86_registers.PORT.md. Raw bits only; no CPU validity or authority.
+module x86_registers;
+use local_apic;
+
+pub data Cr0Flags [copy] { raw: u64; }
+pub const CR0_FLAGS_PROTECTED_MODE_ENABLE: Cr0Flags = Cr0Flags { raw: 1 };
+pub const CR0_FLAGS_MONITOR_COPROCESSOR: Cr0Flags = Cr0Flags { raw: 2 };
+pub const CR0_FLAGS_EMULATE_COPROCESSOR: Cr0Flags = Cr0Flags { raw: 4 };
+pub const CR0_FLAGS_TASK_SWITCHED: Cr0Flags = Cr0Flags { raw: 8 };
+pub const CR0_FLAGS_EXTENSION_TYPE: Cr0Flags = Cr0Flags { raw: 16 };
+pub const CR0_FLAGS_NUMERIC_ERROR: Cr0Flags = Cr0Flags { raw: 32 };
+pub const CR0_FLAGS_WRITE_PROTECT: Cr0Flags = Cr0Flags { raw: 65536 };
+pub const CR0_FLAGS_ALIGNMENT_MASK: Cr0Flags = Cr0Flags { raw: 262144 };
+pub const CR0_FLAGS_NOT_WRITE_THROUGH: Cr0Flags = Cr0Flags { raw: 536870912 };
+pub const CR0_FLAGS_CACHE_DISABLE: Cr0Flags = Cr0Flags { raw: 1073741824 };
+pub const CR0_FLAGS_PAGING: Cr0Flags = Cr0Flags { raw: 2147483648 };
+pub const CR0_FLAGS_KNOWN_BITS: u64 = 3758424127;
+
+pub data Cr3Flags [copy] { raw: u64; }
+pub const CR3_FLAGS_PAGE_LEVEL_WRITETHROUGH: Cr3Flags = Cr3Flags { raw: 8 };
+pub const CR3_FLAGS_PAGE_LEVEL_CACHE_DISABLE: Cr3Flags = Cr3Flags { raw: 16 };
+pub const CR3_FLAGS_KNOWN_BITS: u64 = 24;
+
+pub data Cr4Flags [copy] { raw: u64; }
+pub const CR4_FLAGS_VIRTUAL_8086_MODE_EXTENSIONS: Cr4Flags = Cr4Flags { raw: 1 };
+pub const CR4_FLAGS_PROTECTED_MODE_VIRTUAL_INTERRUPTS: Cr4Flags = Cr4Flags { raw: 2 };
+pub const CR4_FLAGS_TIMESTAMP_DISABLE: Cr4Flags = Cr4Flags { raw: 4 };
+pub const CR4_FLAGS_DEBUGGING_EXTENSIONS: Cr4Flags = Cr4Flags { raw: 8 };
+pub const CR4_FLAGS_PAGE_SIZE_EXTENSION: Cr4Flags = Cr4Flags { raw: 16 };
+pub const CR4_FLAGS_PHYSICAL_ADDRESS_EXTENSION: Cr4Flags = Cr4Flags { raw: 32 };
+pub const CR4_FLAGS_MACHINE_CHECK_EXCEPTION: Cr4Flags = Cr4Flags { raw: 64 };
+pub const CR4_FLAGS_PAGE_GLOBAL: Cr4Flags = Cr4Flags { raw: 128 };
+pub const CR4_FLAGS_PERFORMANCE_MONITOR_COUNTER: Cr4Flags = Cr4Flags { raw: 256 };
+pub const CR4_FLAGS_OSFXSR: Cr4Flags = Cr4Flags { raw: 512 };
+pub const CR4_FLAGS_OSXMMEXCPT_ENABLE: Cr4Flags = Cr4Flags { raw: 1024 };
+pub const CR4_FLAGS_USER_MODE_INSTRUCTION_PREVENTION: Cr4Flags = Cr4Flags { raw: 2048 };
+pub const CR4_FLAGS_L5_PAGING: Cr4Flags = Cr4Flags { raw: 4096 };
+pub const CR4_FLAGS_VIRTUAL_MACHINE_EXTENSIONS: Cr4Flags = Cr4Flags { raw: 8192 };
+pub const CR4_FLAGS_SAFER_MODE_EXTENSIONS: Cr4Flags = Cr4Flags { raw: 16384 };
+pub const CR4_FLAGS_FSGSBASE: Cr4Flags = Cr4Flags { raw: 65536 };
+pub const CR4_FLAGS_PCID: Cr4Flags = Cr4Flags { raw: 131072 };
+pub const CR4_FLAGS_OSXSAVE: Cr4Flags = Cr4Flags { raw: 262144 };
+pub const CR4_FLAGS_KEY_LOCKER: Cr4Flags = Cr4Flags { raw: 524288 };
+pub const CR4_FLAGS_SUPERVISOR_MODE_EXECUTION_PROTECTION: Cr4Flags = Cr4Flags { raw: 1048576 };
+pub const CR4_FLAGS_SUPERVISOR_MODE_ACCESS_PREVENTION: Cr4Flags = Cr4Flags { raw: 2097152 };
+pub const CR4_FLAGS_PROTECTION_KEY_USER: Cr4Flags = Cr4Flags { raw: 4194304 };
+pub const CR4_FLAGS_CONTROL_FLOW_ENFORCEMENT: Cr4Flags = Cr4Flags { raw: 8388608 };
+pub const CR4_FLAGS_PROTECTION_KEY_SUPERVISOR: Cr4Flags = Cr4Flags { raw: 16777216 };
+pub const CR4_FLAGS_KNOWN_BITS: u64 = 33521663;
+
+pub data Dr6Flags [copy] { raw: u64; }
+pub const DR6_FLAGS_TRAP0: Dr6Flags = Dr6Flags { raw: 1 };
+pub const DR6_FLAGS_TRAP1: Dr6Flags = Dr6Flags { raw: 2 };
+pub const DR6_FLAGS_TRAP2: Dr6Flags = Dr6Flags { raw: 4 };
+pub const DR6_FLAGS_TRAP3: Dr6Flags = Dr6Flags { raw: 8 };
+pub const DR6_FLAGS_TRAP: Dr6Flags = Dr6Flags { raw: 15 };
+pub const DR6_FLAGS_ACCESS_DETECTED: Dr6Flags = Dr6Flags { raw: 8192 };
+pub const DR6_FLAGS_STEP: Dr6Flags = Dr6Flags { raw: 16384 };
+pub const DR6_FLAGS_SWITCH: Dr6Flags = Dr6Flags { raw: 32768 };
+pub const DR6_FLAGS_RTM: Dr6Flags = Dr6Flags { raw: 65536 };
+pub const DR6_FLAGS_KNOWN_BITS: u64 = 122895;
+
+pub data Dr7Flags [copy] { raw: u64; }
+pub const DR7_FLAGS_LOCAL_BREAKPOINT_0_ENABLE: Dr7Flags = Dr7Flags { raw: 1 };
+pub const DR7_FLAGS_LOCAL_BREAKPOINT_1_ENABLE: Dr7Flags = Dr7Flags { raw: 4 };
+pub const DR7_FLAGS_LOCAL_BREAKPOINT_2_ENABLE: Dr7Flags = Dr7Flags { raw: 16 };
+pub const DR7_FLAGS_LOCAL_BREAKPOINT_3_ENABLE: Dr7Flags = Dr7Flags { raw: 64 };
+pub const DR7_FLAGS_GLOBAL_BREAKPOINT_0_ENABLE: Dr7Flags = Dr7Flags { raw: 2 };
+pub const DR7_FLAGS_GLOBAL_BREAKPOINT_1_ENABLE: Dr7Flags = Dr7Flags { raw: 8 };
+pub const DR7_FLAGS_GLOBAL_BREAKPOINT_2_ENABLE: Dr7Flags = Dr7Flags { raw: 32 };
+pub const DR7_FLAGS_GLOBAL_BREAKPOINT_3_ENABLE: Dr7Flags = Dr7Flags { raw: 128 };
+pub const DR7_FLAGS_LOCAL_EXACT_BREAKPOINT_ENABLE: Dr7Flags = Dr7Flags { raw: 256 };
+pub const DR7_FLAGS_GLOBAL_EXACT_BREAKPOINT_ENABLE: Dr7Flags = Dr7Flags { raw: 512 };
+pub const DR7_FLAGS_RESTRICTED_TRANSACTIONAL_MEMORY: Dr7Flags = Dr7Flags { raw: 2048 };
+pub const DR7_FLAGS_GENERAL_DETECT_ENABLE: Dr7Flags = Dr7Flags { raw: 8192 };
+pub const DR7_FLAGS_KNOWN_BITS: u64 = 11263;
+
+pub data EferFlags [copy] { raw: u64; }
+pub const EFER_FLAGS_SYSTEM_CALL_EXTENSIONS: EferFlags = EferFlags { raw: 1 };
+pub const EFER_FLAGS_LONG_MODE_ENABLE: EferFlags = EferFlags { raw: 256 };
+pub const EFER_FLAGS_LONG_MODE_ACTIVE: EferFlags = EferFlags { raw: 1024 };
+pub const EFER_FLAGS_NO_EXECUTE_ENABLE: EferFlags = EferFlags { raw: 2048 };
+pub const EFER_FLAGS_SECURE_VIRTUAL_MACHINE_ENABLE: EferFlags = EferFlags { raw: 4096 };
+pub const EFER_FLAGS_LONG_MODE_SEGMENT_LIMIT_ENABLE: EferFlags = EferFlags { raw: 8192 };
+pub const EFER_FLAGS_FAST_FXSAVE_FXRSTOR: EferFlags = EferFlags { raw: 16384 };
+pub const EFER_FLAGS_TRANSLATION_CACHE_EXTENSION: EferFlags = EferFlags { raw: 32768 };
+pub const EFER_FLAGS_KNOWN_BITS: u64 = 64769;
+
+pub data CetFlags [copy] { raw: u64; }
+pub const CET_FLAGS_SS_ENABLE: CetFlags = CetFlags { raw: 1 };
+pub const CET_FLAGS_SS_WRITE_ENABLE: CetFlags = CetFlags { raw: 2 };
+pub const CET_FLAGS_IBT_ENABLE: CetFlags = CetFlags { raw: 4 };
+pub const CET_FLAGS_IBT_LEGACY_ENABLE: CetFlags = CetFlags { raw: 8 };
+pub const CET_FLAGS_IBT_NO_TRACK_ENABLE: CetFlags = CetFlags { raw: 16 };
+pub const CET_FLAGS_IBT_LEGACY_SUPPRESS_ENABLE: CetFlags = CetFlags { raw: 32 };
+pub const CET_FLAGS_IBT_SUPPRESS_ENABLE: CetFlags = CetFlags { raw: 1024 };
+pub const CET_FLAGS_IBT_TRACKED: CetFlags = CetFlags { raw: 2048 };
+pub const CET_FLAGS_KNOWN_BITS: u64 = 3135;
+
+pub data ApicBaseFlags [copy] { raw: u64; }
+pub const APIC_BASE_FLAGS_BSP: ApicBaseFlags = ApicBaseFlags { raw: (1 as u64) << IA32_APIC_BASE_BSP_BIT };
+pub const APIC_BASE_FLAGS_X2APIC_ENABLE: ApicBaseFlags = ApicBaseFlags { raw: (1 as u64) << IA32_APIC_BASE_X2APIC_ENABLE_BIT };
+pub const APIC_BASE_FLAGS_LAPIC_ENABLE: ApicBaseFlags = ApicBaseFlags { raw: (1 as u64) << IA32_APIC_BASE_GLOBAL_ENABLE_BIT };
+pub const APIC_BASE_FLAGS_KNOWN_BITS: u64 = 3328;
+
+pub data MxCsr [copy] { raw: u32; }
+pub const MX_CSR_INVALID_OPERATION: MxCsr = MxCsr { raw: 1 };
+pub const MX_CSR_DENORMAL: MxCsr = MxCsr { raw: 2 };
+pub const MX_CSR_DIVIDE_BY_ZERO: MxCsr = MxCsr { raw: 4 };
+pub const MX_CSR_OVERFLOW: MxCsr = MxCsr { raw: 8 };
+pub const MX_CSR_UNDERFLOW: MxCsr = MxCsr { raw: 16 };
+pub const MX_CSR_PRECISION: MxCsr = MxCsr { raw: 32 };
+pub const MX_CSR_DENORMALS_ARE_ZEROS: MxCsr = MxCsr { raw: 64 };
+pub const MX_CSR_INVALID_OPERATION_MASK: MxCsr = MxCsr { raw: 128 };
+pub const MX_CSR_DENORMAL_MASK: MxCsr = MxCsr { raw: 256 };
+pub const MX_CSR_DIVIDE_BY_ZERO_MASK: MxCsr = MxCsr { raw: 512 };
+pub const MX_CSR_OVERFLOW_MASK: MxCsr = MxCsr { raw: 1024 };
+pub const MX_CSR_UNDERFLOW_MASK: MxCsr = MxCsr { raw: 2048 };
+pub const MX_CSR_PRECISION_MASK: MxCsr = MxCsr { raw: 4096 };
+pub const MX_CSR_ROUNDING_CONTROL_NEGATIVE: MxCsr = MxCsr { raw: 8192 };
+pub const MX_CSR_ROUNDING_CONTROL_POSITIVE: MxCsr = MxCsr { raw: 16384 };
+pub const MX_CSR_ROUNDING_CONTROL_ZERO: MxCsr = MxCsr { raw: 24576 };
+pub const MX_CSR_FLUSH_TO_ZERO: MxCsr = MxCsr { raw: 32768 };
+pub const MX_CSR_KNOWN_BITS: u32 = 65535;
+
+pub data RFlags [copy] { raw: u64; }
+pub const RFLAGS_ID: RFlags = RFlags { raw: 2097152 };
+pub const RFLAGS_VIRTUAL_INTERRUPT_PENDING: RFlags = RFlags { raw: 1048576 };
+pub const RFLAGS_VIRTUAL_INTERRUPT: RFlags = RFlags { raw: 524288 };
+pub const RFLAGS_ALIGNMENT_CHECK: RFlags = RFlags { raw: 262144 };
+pub const RFLAGS_VIRTUAL_8086_MODE: RFlags = RFlags { raw: 131072 };
+pub const RFLAGS_RESUME_FLAG: RFlags = RFlags { raw: 65536 };
+pub const RFLAGS_NESTED_TASK: RFlags = RFlags { raw: 16384 };
+pub const RFLAGS_IOPL_HIGH: RFlags = RFlags { raw: 8192 };
+pub const RFLAGS_IOPL_LOW: RFlags = RFlags { raw: 4096 };
+pub const RFLAGS_OVERFLOW_FLAG: RFlags = RFlags { raw: 2048 };
+pub const RFLAGS_DIRECTION_FLAG: RFlags = RFlags { raw: 1024 };
+pub const RFLAGS_INTERRUPT_FLAG: RFlags = RFlags { raw: 512 };
+pub const RFLAGS_TRAP_FLAG: RFlags = RFlags { raw: 256 };
+pub const RFLAGS_SIGN_FLAG: RFlags = RFlags { raw: 128 };
+pub const RFLAGS_ZERO_FLAG: RFlags = RFlags { raw: 64 };
+pub const RFLAGS_AUXILIARY_CARRY_FLAG: RFlags = RFlags { raw: 16 };
+pub const RFLAGS_PARITY_FLAG: RFlags = RFlags { raw: 4 };
+pub const RFLAGS_CARRY_FLAG: RFlags = RFlags { raw: 1 };
+pub const RFLAGS_KNOWN_BITS: u64 = 4161493;
+
+pub data XCr0Flags [copy] { raw: u64; }
+pub const XCR0_FLAGS_X87: XCr0Flags = XCr0Flags { raw: 1 };
+pub const XCR0_FLAGS_SSE: XCr0Flags = XCr0Flags { raw: 2 };
+pub const XCR0_FLAGS_AVX: XCr0Flags = XCr0Flags { raw: 4 };
+pub const XCR0_FLAGS_BNDREG: XCr0Flags = XCr0Flags { raw: 8 };
+pub const XCR0_FLAGS_BNDCSR: XCr0Flags = XCr0Flags { raw: 16 };
+pub const XCR0_FLAGS_OPMASK: XCr0Flags = XCr0Flags { raw: 32 };
+pub const XCR0_FLAGS_ZMM_HI256: XCr0Flags = XCr0Flags { raw: 64 };
+pub const XCR0_FLAGS_HI16_ZMM: XCr0Flags = XCr0Flags { raw: 128 };
+pub const XCR0_FLAGS_MPK: XCr0Flags = XCr0Flags { raw: 512 };
+pub const XCR0_FLAGS_LWP: XCr0Flags = XCr0Flags { raw: 4611686018427387904 };
+pub const XCR0_FLAGS_KNOWN_BITS: u64 = 4611686018427388671;
+
+pub data PrivilegeLevel [copy] { raw: u8; }
+pub const PRIVILEGE_LEVEL_RING0: PrivilegeLevel = PrivilegeLevel { raw: 0 };
+pub const PRIVILEGE_LEVEL_RING1: PrivilegeLevel = PrivilegeLevel { raw: 1 };
+pub const PRIVILEGE_LEVEL_RING2: PrivilegeLevel = PrivilegeLevel { raw: 2 };
+pub const PRIVILEGE_LEVEL_RING3: PrivilegeLevel = PrivilegeLevel { raw: 3 };
+
+pub data PriorityClass [copy] { raw: u8; }
+pub const PRIORITY_CLASS_CLASS1: PriorityClass = PriorityClass { raw: 1 };
+pub const PRIORITY_CLASS_CLASS2: PriorityClass = PriorityClass { raw: 2 };
+pub const PRIORITY_CLASS_CLASS3: PriorityClass = PriorityClass { raw: 3 };
+pub const PRIORITY_CLASS_CLASS4: PriorityClass = PriorityClass { raw: 4 };
+pub const PRIORITY_CLASS_CLASS5: PriorityClass = PriorityClass { raw: 5 };
+pub const PRIORITY_CLASS_CLASS6: PriorityClass = PriorityClass { raw: 6 };
+pub const PRIORITY_CLASS_CLASS7: PriorityClass = PriorityClass { raw: 7 };
+pub const PRIORITY_CLASS_CLASS8: PriorityClass = PriorityClass { raw: 8 };
+pub const PRIORITY_CLASS_CLASS9: PriorityClass = PriorityClass { raw: 9 };
+pub const PRIORITY_CLASS_CLASS10: PriorityClass = PriorityClass { raw: 10 };
+pub const PRIORITY_CLASS_CLASS11: PriorityClass = PriorityClass { raw: 11 };
+pub const PRIORITY_CLASS_CLASS12: PriorityClass = PriorityClass { raw: 12 };
+pub const PRIORITY_CLASS_CLASS13: PriorityClass = PriorityClass { raw: 13 };
+pub const PRIORITY_CLASS_CLASS14: PriorityClass = PriorityClass { raw: 14 };
+pub const PRIORITY_CLASS_CLASS15: PriorityClass = PriorityClass { raw: 15 };
+
+pub data DebugAddressRegisterNumber [copy] { raw: u8; }
+pub const DEBUG_ADDRESS_REGISTER_NUMBER_DR0: DebugAddressRegisterNumber = DebugAddressRegisterNumber { raw: 0 };
+pub const DEBUG_ADDRESS_REGISTER_NUMBER_DR1: DebugAddressRegisterNumber = DebugAddressRegisterNumber { raw: 1 };
+pub const DEBUG_ADDRESS_REGISTER_NUMBER_DR2: DebugAddressRegisterNumber = DebugAddressRegisterNumber { raw: 2 };
+pub const DEBUG_ADDRESS_REGISTER_NUMBER_DR3: DebugAddressRegisterNumber = DebugAddressRegisterNumber { raw: 3 };
+
+pub data BreakpointCondition [copy] { raw: u8; }
+pub const BREAKPOINT_CONDITION_INSTRUCTION_EXECUTION: BreakpointCondition = BreakpointCondition { raw: 0 };
+pub const BREAKPOINT_CONDITION_DATA_WRITES: BreakpointCondition = BreakpointCondition { raw: 1 };
+pub const BREAKPOINT_CONDITION_IO_READS_WRITES: BreakpointCondition = BreakpointCondition { raw: 2 };
+pub const BREAKPOINT_CONDITION_DATA_READS_WRITES: BreakpointCondition = BreakpointCondition { raw: 3 };
+
+pub data BreakpointSize [copy] { raw: u8; }
+pub const BREAKPOINT_SIZE_LENGTH1B: BreakpointSize = BreakpointSize { raw: 0 };
+pub const BREAKPOINT_SIZE_LENGTH2B: BreakpointSize = BreakpointSize { raw: 1 };
+pub const BREAKPOINT_SIZE_LENGTH8B: BreakpointSize = BreakpointSize { raw: 2 };
+pub const BREAKPOINT_SIZE_LENGTH4B: BreakpointSize = BreakpointSize { raw: 3 };
+
+pub data SegmentSelector [copy] { raw: u16; }
+pub const SEGMENT_SELECTOR_NULL: SegmentSelector = SegmentSelector { raw: 0 };
+pub data Msr [copy] { raw: u32; }
+pub data Dr7Bits [copy] { raw: u64; }
+
+pub const EFER_MSR: Msr = Msr { raw: 3221225600 };
+pub const FS_BASE_MSR: Msr = Msr { raw: 3221225728 };
+pub const GS_BASE_MSR: Msr = Msr { raw: 3221225729 };
+pub const KERNEL_GS_BASE_MSR: Msr = Msr { raw: 3221225730 };
+pub const STAR_MSR: Msr = Msr { raw: 3221225601 };
+pub const LSTAR_MSR: Msr = Msr { raw: 3221225602 };
+pub const SFMASK_MSR: Msr = Msr { raw: 3221225604 };
+pub const UCET_MSR: Msr = Msr { raw: 1696 };
+pub const SCET_MSR: Msr = Msr { raw: 1698 };
+pub const APIC_BASE_MSR: Msr = Msr { raw: IA32_APIC_BASE_MSR };
+
+pub const MXCSR_RESET_BITS: u32 = 8064;
+pub const DR7_VALID_BITS: u64 = 4294913023;

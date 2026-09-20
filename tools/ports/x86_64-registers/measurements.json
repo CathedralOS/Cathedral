@@ -1,0 +1,710 @@
+{
+  "CR0_FLAGS_PROTECTED_MODE_ENABLE": {
+    "expression": "x86_64::registers::control::Cr0Flags::PROTECTED_MODE_ENABLE.bits()",
+    "value": 1
+  },
+  "CR0_FLAGS_MONITOR_COPROCESSOR": {
+    "expression": "x86_64::registers::control::Cr0Flags::MONITOR_COPROCESSOR.bits()",
+    "value": 2
+  },
+  "CR0_FLAGS_EMULATE_COPROCESSOR": {
+    "expression": "x86_64::registers::control::Cr0Flags::EMULATE_COPROCESSOR.bits()",
+    "value": 4
+  },
+  "CR0_FLAGS_TASK_SWITCHED": {
+    "expression": "x86_64::registers::control::Cr0Flags::TASK_SWITCHED.bits()",
+    "value": 8
+  },
+  "CR0_FLAGS_EXTENSION_TYPE": {
+    "expression": "x86_64::registers::control::Cr0Flags::EXTENSION_TYPE.bits()",
+    "value": 16
+  },
+  "CR0_FLAGS_NUMERIC_ERROR": {
+    "expression": "x86_64::registers::control::Cr0Flags::NUMERIC_ERROR.bits()",
+    "value": 32
+  },
+  "CR0_FLAGS_WRITE_PROTECT": {
+    "expression": "x86_64::registers::control::Cr0Flags::WRITE_PROTECT.bits()",
+    "value": 65536
+  },
+  "CR0_FLAGS_ALIGNMENT_MASK": {
+    "expression": "x86_64::registers::control::Cr0Flags::ALIGNMENT_MASK.bits()",
+    "value": 262144
+  },
+  "CR0_FLAGS_NOT_WRITE_THROUGH": {
+    "expression": "x86_64::registers::control::Cr0Flags::NOT_WRITE_THROUGH.bits()",
+    "value": 536870912
+  },
+  "CR0_FLAGS_CACHE_DISABLE": {
+    "expression": "x86_64::registers::control::Cr0Flags::CACHE_DISABLE.bits()",
+    "value": 1073741824
+  },
+  "CR0_FLAGS_PAGING": {
+    "expression": "x86_64::registers::control::Cr0Flags::PAGING.bits()",
+    "value": 2147483648
+  },
+  "CR3_FLAGS_PAGE_LEVEL_WRITETHROUGH": {
+    "expression": "x86_64::registers::control::Cr3Flags::PAGE_LEVEL_WRITETHROUGH.bits()",
+    "value": 8
+  },
+  "CR3_FLAGS_PAGE_LEVEL_CACHE_DISABLE": {
+    "expression": "x86_64::registers::control::Cr3Flags::PAGE_LEVEL_CACHE_DISABLE.bits()",
+    "value": 16
+  },
+  "CR4_FLAGS_VIRTUAL_8086_MODE_EXTENSIONS": {
+    "expression": "x86_64::registers::control::Cr4Flags::VIRTUAL_8086_MODE_EXTENSIONS.bits()",
+    "value": 1
+  },
+  "CR4_FLAGS_PROTECTED_MODE_VIRTUAL_INTERRUPTS": {
+    "expression": "x86_64::registers::control::Cr4Flags::PROTECTED_MODE_VIRTUAL_INTERRUPTS.bits()",
+    "value": 2
+  },
+  "CR4_FLAGS_TIMESTAMP_DISABLE": {
+    "expression": "x86_64::registers::control::Cr4Flags::TIMESTAMP_DISABLE.bits()",
+    "value": 4
+  },
+  "CR4_FLAGS_DEBUGGING_EXTENSIONS": {
+    "expression": "x86_64::registers::control::Cr4Flags::DEBUGGING_EXTENSIONS.bits()",
+    "value": 8
+  },
+  "CR4_FLAGS_PAGE_SIZE_EXTENSION": {
+    "expression": "x86_64::registers::control::Cr4Flags::PAGE_SIZE_EXTENSION.bits()",
+    "value": 16
+  },
+  "CR4_FLAGS_PHYSICAL_ADDRESS_EXTENSION": {
+    "expression": "x86_64::registers::control::Cr4Flags::PHYSICAL_ADDRESS_EXTENSION.bits()",
+    "value": 32
+  },
+  "CR4_FLAGS_MACHINE_CHECK_EXCEPTION": {
+    "expression": "x86_64::registers::control::Cr4Flags::MACHINE_CHECK_EXCEPTION.bits()",
+    "value": 64
+  },
+  "CR4_FLAGS_PAGE_GLOBAL": {
+    "expression": "x86_64::registers::control::Cr4Flags::PAGE_GLOBAL.bits()",
+    "value": 128
+  },
+  "CR4_FLAGS_PERFORMANCE_MONITOR_COUNTER": {
+    "expression": "x86_64::registers::control::Cr4Flags::PERFORMANCE_MONITOR_COUNTER.bits()",
+    "value": 256
+  },
+  "CR4_FLAGS_OSFXSR": {
+    "expression": "x86_64::registers::control::Cr4Flags::OSFXSR.bits()",
+    "value": 512
+  },
+  "CR4_FLAGS_OSXMMEXCPT_ENABLE": {
+    "expression": "x86_64::registers::control::Cr4Flags::OSXMMEXCPT_ENABLE.bits()",
+    "value": 1024
+  },
+  "CR4_FLAGS_USER_MODE_INSTRUCTION_PREVENTION": {
+    "expression": "x86_64::registers::control::Cr4Flags::USER_MODE_INSTRUCTION_PREVENTION.bits()",
+    "value": 2048
+  },
+  "CR4_FLAGS_L5_PAGING": {
+    "expression": "x86_64::registers::control::Cr4Flags::L5_PAGING.bits()",
+    "value": 4096
+  },
+  "CR4_FLAGS_VIRTUAL_MACHINE_EXTENSIONS": {
+    "expression": "x86_64::registers::control::Cr4Flags::VIRTUAL_MACHINE_EXTENSIONS.bits()",
+    "value": 8192
+  },
+  "CR4_FLAGS_SAFER_MODE_EXTENSIONS": {
+    "expression": "x86_64::registers::control::Cr4Flags::SAFER_MODE_EXTENSIONS.bits()",
+    "value": 16384
+  },
+  "CR4_FLAGS_FSGSBASE": {
+    "expression": "x86_64::registers::control::Cr4Flags::FSGSBASE.bits()",
+    "value": 65536
+  },
+  "CR4_FLAGS_PCID": {
+    "expression": "x86_64::registers::control::Cr4Flags::PCID.bits()",
+    "value": 131072
+  },
+  "CR4_FLAGS_OSXSAVE": {
+    "expression": "x86_64::registers::control::Cr4Flags::OSXSAVE.bits()",
+    "value": 262144
+  },
+  "CR4_FLAGS_KEY_LOCKER": {
+    "expression": "x86_64::registers::control::Cr4Flags::KEY_LOCKER.bits()",
+    "value": 524288
+  },
+  "CR4_FLAGS_SUPERVISOR_MODE_EXECUTION_PROTECTION": {
+    "expression": "x86_64::registers::control::Cr4Flags::SUPERVISOR_MODE_EXECUTION_PROTECTION.bits()",
+    "value": 1048576
+  },
+  "CR4_FLAGS_SUPERVISOR_MODE_ACCESS_PREVENTION": {
+    "expression": "x86_64::registers::control::Cr4Flags::SUPERVISOR_MODE_ACCESS_PREVENTION.bits()",
+    "value": 2097152
+  },
+  "CR4_FLAGS_PROTECTION_KEY_USER": {
+    "expression": "x86_64::registers::control::Cr4Flags::PROTECTION_KEY_USER.bits()",
+    "value": 4194304
+  },
+  "CR4_FLAGS_CONTROL_FLOW_ENFORCEMENT": {
+    "expression": "x86_64::registers::control::Cr4Flags::CONTROL_FLOW_ENFORCEMENT.bits()",
+    "value": 8388608
+  },
+  "CR4_FLAGS_PROTECTION_KEY_SUPERVISOR": {
+    "expression": "x86_64::registers::control::Cr4Flags::PROTECTION_KEY_SUPERVISOR.bits()",
+    "value": 16777216
+  },
+  "DR6_FLAGS_TRAP0": {
+    "expression": "x86_64::registers::debug::Dr6Flags::TRAP0.bits()",
+    "value": 1
+  },
+  "DR6_FLAGS_TRAP1": {
+    "expression": "x86_64::registers::debug::Dr6Flags::TRAP1.bits()",
+    "value": 2
+  },
+  "DR6_FLAGS_TRAP2": {
+    "expression": "x86_64::registers::debug::Dr6Flags::TRAP2.bits()",
+    "value": 4
+  },
+  "DR6_FLAGS_TRAP3": {
+    "expression": "x86_64::registers::debug::Dr6Flags::TRAP3.bits()",
+    "value": 8
+  },
+  "DR6_FLAGS_TRAP": {
+    "expression": "x86_64::registers::debug::Dr6Flags::TRAP.bits()",
+    "value": 15
+  },
+  "DR6_FLAGS_ACCESS_DETECTED": {
+    "expression": "x86_64::registers::debug::Dr6Flags::ACCESS_DETECTED.bits()",
+    "value": 8192
+  },
+  "DR6_FLAGS_STEP": {
+    "expression": "x86_64::registers::debug::Dr6Flags::STEP.bits()",
+    "value": 16384
+  },
+  "DR6_FLAGS_SWITCH": {
+    "expression": "x86_64::registers::debug::Dr6Flags::SWITCH.bits()",
+    "value": 32768
+  },
+  "DR6_FLAGS_RTM": {
+    "expression": "x86_64::registers::debug::Dr6Flags::RTM.bits()",
+    "value": 65536
+  },
+  "DR7_FLAGS_LOCAL_BREAKPOINT_0_ENABLE": {
+    "expression": "x86_64::registers::debug::Dr7Flags::LOCAL_BREAKPOINT_0_ENABLE.bits()",
+    "value": 1
+  },
+  "DR7_FLAGS_LOCAL_BREAKPOINT_1_ENABLE": {
+    "expression": "x86_64::registers::debug::Dr7Flags::LOCAL_BREAKPOINT_1_ENABLE.bits()",
+    "value": 4
+  },
+  "DR7_FLAGS_LOCAL_BREAKPOINT_2_ENABLE": {
+    "expression": "x86_64::registers::debug::Dr7Flags::LOCAL_BREAKPOINT_2_ENABLE.bits()",
+    "value": 16
+  },
+  "DR7_FLAGS_LOCAL_BREAKPOINT_3_ENABLE": {
+    "expression": "x86_64::registers::debug::Dr7Flags::LOCAL_BREAKPOINT_3_ENABLE.bits()",
+    "value": 64
+  },
+  "DR7_FLAGS_GLOBAL_BREAKPOINT_0_ENABLE": {
+    "expression": "x86_64::registers::debug::Dr7Flags::GLOBAL_BREAKPOINT_0_ENABLE.bits()",
+    "value": 2
+  },
+  "DR7_FLAGS_GLOBAL_BREAKPOINT_1_ENABLE": {
+    "expression": "x86_64::registers::debug::Dr7Flags::GLOBAL_BREAKPOINT_1_ENABLE.bits()",
+    "value": 8
+  },
+  "DR7_FLAGS_GLOBAL_BREAKPOINT_2_ENABLE": {
+    "expression": "x86_64::registers::debug::Dr7Flags::GLOBAL_BREAKPOINT_2_ENABLE.bits()",
+    "value": 32
+  },
+  "DR7_FLAGS_GLOBAL_BREAKPOINT_3_ENABLE": {
+    "expression": "x86_64::registers::debug::Dr7Flags::GLOBAL_BREAKPOINT_3_ENABLE.bits()",
+    "value": 128
+  },
+  "DR7_FLAGS_LOCAL_EXACT_BREAKPOINT_ENABLE": {
+    "expression": "x86_64::registers::debug::Dr7Flags::LOCAL_EXACT_BREAKPOINT_ENABLE.bits()",
+    "value": 256
+  },
+  "DR7_FLAGS_GLOBAL_EXACT_BREAKPOINT_ENABLE": {
+    "expression": "x86_64::registers::debug::Dr7Flags::GLOBAL_EXACT_BREAKPOINT_ENABLE.bits()",
+    "value": 512
+  },
+  "DR7_FLAGS_RESTRICTED_TRANSACTIONAL_MEMORY": {
+    "expression": "x86_64::registers::debug::Dr7Flags::RESTRICTED_TRANSACTIONAL_MEMORY.bits()",
+    "value": 2048
+  },
+  "DR7_FLAGS_GENERAL_DETECT_ENABLE": {
+    "expression": "x86_64::registers::debug::Dr7Flags::GENERAL_DETECT_ENABLE.bits()",
+    "value": 8192
+  },
+  "EFER_FLAGS_SYSTEM_CALL_EXTENSIONS": {
+    "expression": "x86_64::registers::model_specific::EferFlags::SYSTEM_CALL_EXTENSIONS.bits()",
+    "value": 1
+  },
+  "EFER_FLAGS_LONG_MODE_ENABLE": {
+    "expression": "x86_64::registers::model_specific::EferFlags::LONG_MODE_ENABLE.bits()",
+    "value": 256
+  },
+  "EFER_FLAGS_LONG_MODE_ACTIVE": {
+    "expression": "x86_64::registers::model_specific::EferFlags::LONG_MODE_ACTIVE.bits()",
+    "value": 1024
+  },
+  "EFER_FLAGS_NO_EXECUTE_ENABLE": {
+    "expression": "x86_64::registers::model_specific::EferFlags::NO_EXECUTE_ENABLE.bits()",
+    "value": 2048
+  },
+  "EFER_FLAGS_SECURE_VIRTUAL_MACHINE_ENABLE": {
+    "expression": "x86_64::registers::model_specific::EferFlags::SECURE_VIRTUAL_MACHINE_ENABLE.bits()",
+    "value": 4096
+  },
+  "EFER_FLAGS_LONG_MODE_SEGMENT_LIMIT_ENABLE": {
+    "expression": "x86_64::registers::model_specific::EferFlags::LONG_MODE_SEGMENT_LIMIT_ENABLE.bits()",
+    "value": 8192
+  },
+  "EFER_FLAGS_FAST_FXSAVE_FXRSTOR": {
+    "expression": "x86_64::registers::model_specific::EferFlags::FAST_FXSAVE_FXRSTOR.bits()",
+    "value": 16384
+  },
+  "EFER_FLAGS_TRANSLATION_CACHE_EXTENSION": {
+    "expression": "x86_64::registers::model_specific::EferFlags::TRANSLATION_CACHE_EXTENSION.bits()",
+    "value": 32768
+  },
+  "CET_FLAGS_SS_ENABLE": {
+    "expression": "x86_64::registers::model_specific::CetFlags::SS_ENABLE.bits()",
+    "value": 1
+  },
+  "CET_FLAGS_SS_WRITE_ENABLE": {
+    "expression": "x86_64::registers::model_specific::CetFlags::SS_WRITE_ENABLE.bits()",
+    "value": 2
+  },
+  "CET_FLAGS_IBT_ENABLE": {
+    "expression": "x86_64::registers::model_specific::CetFlags::IBT_ENABLE.bits()",
+    "value": 4
+  },
+  "CET_FLAGS_IBT_LEGACY_ENABLE": {
+    "expression": "x86_64::registers::model_specific::CetFlags::IBT_LEGACY_ENABLE.bits()",
+    "value": 8
+  },
+  "CET_FLAGS_IBT_NO_TRACK_ENABLE": {
+    "expression": "x86_64::registers::model_specific::CetFlags::IBT_NO_TRACK_ENABLE.bits()",
+    "value": 16
+  },
+  "CET_FLAGS_IBT_LEGACY_SUPPRESS_ENABLE": {
+    "expression": "x86_64::registers::model_specific::CetFlags::IBT_LEGACY_SUPPRESS_ENABLE.bits()",
+    "value": 32
+  },
+  "CET_FLAGS_IBT_SUPPRESS_ENABLE": {
+    "expression": "x86_64::registers::model_specific::CetFlags::IBT_SUPPRESS_ENABLE.bits()",
+    "value": 1024
+  },
+  "CET_FLAGS_IBT_TRACKED": {
+    "expression": "x86_64::registers::model_specific::CetFlags::IBT_TRACKED.bits()",
+    "value": 2048
+  },
+  "APIC_BASE_FLAGS_BSP": {
+    "expression": "x86_64::registers::model_specific::ApicBaseFlags::BSP.bits()",
+    "value": 256
+  },
+  "APIC_BASE_FLAGS_X2APIC_ENABLE": {
+    "expression": "x86_64::registers::model_specific::ApicBaseFlags::X2APIC_ENABLE.bits()",
+    "value": 1024
+  },
+  "APIC_BASE_FLAGS_LAPIC_ENABLE": {
+    "expression": "x86_64::registers::model_specific::ApicBaseFlags::LAPIC_ENABLE.bits()",
+    "value": 2048
+  },
+  "MX_CSR_INVALID_OPERATION": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::INVALID_OPERATION.bits()",
+    "value": 1
+  },
+  "MX_CSR_DENORMAL": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::DENORMAL.bits()",
+    "value": 2
+  },
+  "MX_CSR_DIVIDE_BY_ZERO": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::DIVIDE_BY_ZERO.bits()",
+    "value": 4
+  },
+  "MX_CSR_OVERFLOW": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::OVERFLOW.bits()",
+    "value": 8
+  },
+  "MX_CSR_UNDERFLOW": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::UNDERFLOW.bits()",
+    "value": 16
+  },
+  "MX_CSR_PRECISION": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::PRECISION.bits()",
+    "value": 32
+  },
+  "MX_CSR_DENORMALS_ARE_ZEROS": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::DENORMALS_ARE_ZEROS.bits()",
+    "value": 64
+  },
+  "MX_CSR_INVALID_OPERATION_MASK": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::INVALID_OPERATION_MASK.bits()",
+    "value": 128
+  },
+  "MX_CSR_DENORMAL_MASK": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::DENORMAL_MASK.bits()",
+    "value": 256
+  },
+  "MX_CSR_DIVIDE_BY_ZERO_MASK": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::DIVIDE_BY_ZERO_MASK.bits()",
+    "value": 512
+  },
+  "MX_CSR_OVERFLOW_MASK": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::OVERFLOW_MASK.bits()",
+    "value": 1024
+  },
+  "MX_CSR_UNDERFLOW_MASK": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::UNDERFLOW_MASK.bits()",
+    "value": 2048
+  },
+  "MX_CSR_PRECISION_MASK": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::PRECISION_MASK.bits()",
+    "value": 4096
+  },
+  "MX_CSR_ROUNDING_CONTROL_NEGATIVE": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::ROUNDING_CONTROL_NEGATIVE.bits()",
+    "value": 8192
+  },
+  "MX_CSR_ROUNDING_CONTROL_POSITIVE": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::ROUNDING_CONTROL_POSITIVE.bits()",
+    "value": 16384
+  },
+  "MX_CSR_ROUNDING_CONTROL_ZERO": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::ROUNDING_CONTROL_ZERO.bits()",
+    "value": 24576
+  },
+  "MX_CSR_FLUSH_TO_ZERO": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::FLUSH_TO_ZERO.bits()",
+    "value": 32768
+  },
+  "RFLAGS_ID": {
+    "expression": "x86_64::registers::rflags::RFlags::ID.bits()",
+    "value": 2097152
+  },
+  "RFLAGS_VIRTUAL_INTERRUPT_PENDING": {
+    "expression": "x86_64::registers::rflags::RFlags::VIRTUAL_INTERRUPT_PENDING.bits()",
+    "value": 1048576
+  },
+  "RFLAGS_VIRTUAL_INTERRUPT": {
+    "expression": "x86_64::registers::rflags::RFlags::VIRTUAL_INTERRUPT.bits()",
+    "value": 524288
+  },
+  "RFLAGS_ALIGNMENT_CHECK": {
+    "expression": "x86_64::registers::rflags::RFlags::ALIGNMENT_CHECK.bits()",
+    "value": 262144
+  },
+  "RFLAGS_VIRTUAL_8086_MODE": {
+    "expression": "x86_64::registers::rflags::RFlags::VIRTUAL_8086_MODE.bits()",
+    "value": 131072
+  },
+  "RFLAGS_RESUME_FLAG": {
+    "expression": "x86_64::registers::rflags::RFlags::RESUME_FLAG.bits()",
+    "value": 65536
+  },
+  "RFLAGS_NESTED_TASK": {
+    "expression": "x86_64::registers::rflags::RFlags::NESTED_TASK.bits()",
+    "value": 16384
+  },
+  "RFLAGS_IOPL_HIGH": {
+    "expression": "x86_64::registers::rflags::RFlags::IOPL_HIGH.bits()",
+    "value": 8192
+  },
+  "RFLAGS_IOPL_LOW": {
+    "expression": "x86_64::registers::rflags::RFlags::IOPL_LOW.bits()",
+    "value": 4096
+  },
+  "RFLAGS_OVERFLOW_FLAG": {
+    "expression": "x86_64::registers::rflags::RFlags::OVERFLOW_FLAG.bits()",
+    "value": 2048
+  },
+  "RFLAGS_DIRECTION_FLAG": {
+    "expression": "x86_64::registers::rflags::RFlags::DIRECTION_FLAG.bits()",
+    "value": 1024
+  },
+  "RFLAGS_INTERRUPT_FLAG": {
+    "expression": "x86_64::registers::rflags::RFlags::INTERRUPT_FLAG.bits()",
+    "value": 512
+  },
+  "RFLAGS_TRAP_FLAG": {
+    "expression": "x86_64::registers::rflags::RFlags::TRAP_FLAG.bits()",
+    "value": 256
+  },
+  "RFLAGS_SIGN_FLAG": {
+    "expression": "x86_64::registers::rflags::RFlags::SIGN_FLAG.bits()",
+    "value": 128
+  },
+  "RFLAGS_ZERO_FLAG": {
+    "expression": "x86_64::registers::rflags::RFlags::ZERO_FLAG.bits()",
+    "value": 64
+  },
+  "RFLAGS_AUXILIARY_CARRY_FLAG": {
+    "expression": "x86_64::registers::rflags::RFlags::AUXILIARY_CARRY_FLAG.bits()",
+    "value": 16
+  },
+  "RFLAGS_PARITY_FLAG": {
+    "expression": "x86_64::registers::rflags::RFlags::PARITY_FLAG.bits()",
+    "value": 4
+  },
+  "RFLAGS_CARRY_FLAG": {
+    "expression": "x86_64::registers::rflags::RFlags::CARRY_FLAG.bits()",
+    "value": 1
+  },
+  "XCR0_FLAGS_X87": {
+    "expression": "x86_64::registers::xcontrol::XCr0Flags::X87.bits()",
+    "value": 1
+  },
+  "XCR0_FLAGS_SSE": {
+    "expression": "x86_64::registers::xcontrol::XCr0Flags::SSE.bits()",
+    "value": 2
+  },
+  "XCR0_FLAGS_AVX": {
+    "expression": "x86_64::registers::xcontrol::XCr0Flags::AVX.bits()",
+    "value": 4
+  },
+  "XCR0_FLAGS_BNDREG": {
+    "expression": "x86_64::registers::xcontrol::XCr0Flags::BNDREG.bits()",
+    "value": 8
+  },
+  "XCR0_FLAGS_BNDCSR": {
+    "expression": "x86_64::registers::xcontrol::XCr0Flags::BNDCSR.bits()",
+    "value": 16
+  },
+  "XCR0_FLAGS_OPMASK": {
+    "expression": "x86_64::registers::xcontrol::XCr0Flags::OPMASK.bits()",
+    "value": 32
+  },
+  "XCR0_FLAGS_ZMM_HI256": {
+    "expression": "x86_64::registers::xcontrol::XCr0Flags::ZMM_HI256.bits()",
+    "value": 64
+  },
+  "XCR0_FLAGS_HI16_ZMM": {
+    "expression": "x86_64::registers::xcontrol::XCr0Flags::HI16_ZMM.bits()",
+    "value": 128
+  },
+  "XCR0_FLAGS_MPK": {
+    "expression": "x86_64::registers::xcontrol::XCr0Flags::MPK.bits()",
+    "value": 512
+  },
+  "XCR0_FLAGS_LWP": {
+    "expression": "x86_64::registers::xcontrol::XCr0Flags::LWP.bits()",
+    "value": 4611686018427387904
+  },
+  "EFER_MSR": {
+    "expression": "unsafe { core::mem::transmute::<x86_64::registers::model_specific::Msr, u32>(x86_64::registers::model_specific::Efer::MSR) }",
+    "value": 3221225600
+  },
+  "FS_BASE_MSR": {
+    "expression": "unsafe { core::mem::transmute::<x86_64::registers::model_specific::Msr, u32>(x86_64::registers::model_specific::FsBase::MSR) }",
+    "value": 3221225728
+  },
+  "GS_BASE_MSR": {
+    "expression": "unsafe { core::mem::transmute::<x86_64::registers::model_specific::Msr, u32>(x86_64::registers::model_specific::GsBase::MSR) }",
+    "value": 3221225729
+  },
+  "KERNEL_GS_BASE_MSR": {
+    "expression": "unsafe { core::mem::transmute::<x86_64::registers::model_specific::Msr, u32>(x86_64::registers::model_specific::KernelGsBase::MSR) }",
+    "value": 3221225730
+  },
+  "STAR_MSR": {
+    "expression": "unsafe { core::mem::transmute::<x86_64::registers::model_specific::Msr, u32>(x86_64::registers::model_specific::Star::MSR) }",
+    "value": 3221225601
+  },
+  "LSTAR_MSR": {
+    "expression": "unsafe { core::mem::transmute::<x86_64::registers::model_specific::Msr, u32>(x86_64::registers::model_specific::LStar::MSR) }",
+    "value": 3221225602
+  },
+  "SFMASK_MSR": {
+    "expression": "unsafe { core::mem::transmute::<x86_64::registers::model_specific::Msr, u32>(x86_64::registers::model_specific::SFMask::MSR) }",
+    "value": 3221225604
+  },
+  "UCET_MSR": {
+    "expression": "unsafe { core::mem::transmute::<x86_64::registers::model_specific::Msr, u32>(x86_64::registers::model_specific::UCet::MSR) }",
+    "value": 1696
+  },
+  "SCET_MSR": {
+    "expression": "unsafe { core::mem::transmute::<x86_64::registers::model_specific::Msr, u32>(x86_64::registers::model_specific::SCet::MSR) }",
+    "value": 1698
+  },
+  "APIC_BASE_MSR": {
+    "expression": "unsafe { core::mem::transmute::<x86_64::registers::model_specific::Msr, u32>(x86_64::registers::model_specific::ApicBase::MSR) }",
+    "value": 27
+  },
+  "CR0_FLAGS_KNOWN_BITS": {
+    "expression": "x86_64::registers::control::Cr0Flags::all().bits()",
+    "value": 3758424127
+  },
+  "CR3_FLAGS_KNOWN_BITS": {
+    "expression": "x86_64::registers::control::Cr3Flags::all().bits()",
+    "value": 24
+  },
+  "CR4_FLAGS_KNOWN_BITS": {
+    "expression": "x86_64::registers::control::Cr4Flags::all().bits()",
+    "value": 33521663
+  },
+  "DR6_FLAGS_KNOWN_BITS": {
+    "expression": "x86_64::registers::debug::Dr6Flags::all().bits()",
+    "value": 122895
+  },
+  "DR7_FLAGS_KNOWN_BITS": {
+    "expression": "x86_64::registers::debug::Dr7Flags::all().bits()",
+    "value": 11263
+  },
+  "EFER_FLAGS_KNOWN_BITS": {
+    "expression": "x86_64::registers::model_specific::EferFlags::all().bits()",
+    "value": 64769
+  },
+  "CET_FLAGS_KNOWN_BITS": {
+    "expression": "x86_64::registers::model_specific::CetFlags::all().bits()",
+    "value": 3135
+  },
+  "APIC_BASE_FLAGS_KNOWN_BITS": {
+    "expression": "x86_64::registers::model_specific::ApicBaseFlags::all().bits()",
+    "value": 3328
+  },
+  "MX_CSR_KNOWN_BITS": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::all().bits()",
+    "value": 65535
+  },
+  "RFLAGS_KNOWN_BITS": {
+    "expression": "x86_64::registers::rflags::RFlags::all().bits()",
+    "value": 4161493
+  },
+  "XCR0_FLAGS_KNOWN_BITS": {
+    "expression": "x86_64::registers::xcontrol::XCr0Flags::all().bits()",
+    "value": 4611686018427388671
+  },
+  "PRIVILEGE_LEVEL_RING0": {
+    "expression": "x86_64::PrivilegeLevel::Ring0 as u8",
+    "value": 0
+  },
+  "PRIVILEGE_LEVEL_RING1": {
+    "expression": "x86_64::PrivilegeLevel::Ring1 as u8",
+    "value": 1
+  },
+  "PRIVILEGE_LEVEL_RING2": {
+    "expression": "x86_64::PrivilegeLevel::Ring2 as u8",
+    "value": 2
+  },
+  "PRIVILEGE_LEVEL_RING3": {
+    "expression": "x86_64::PrivilegeLevel::Ring3 as u8",
+    "value": 3
+  },
+  "PRIORITY_CLASS_CLASS1": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass1 as u8",
+    "value": 1
+  },
+  "PRIORITY_CLASS_CLASS2": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass2 as u8",
+    "value": 2
+  },
+  "PRIORITY_CLASS_CLASS3": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass3 as u8",
+    "value": 3
+  },
+  "PRIORITY_CLASS_CLASS4": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass4 as u8",
+    "value": 4
+  },
+  "PRIORITY_CLASS_CLASS5": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass5 as u8",
+    "value": 5
+  },
+  "PRIORITY_CLASS_CLASS6": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass6 as u8",
+    "value": 6
+  },
+  "PRIORITY_CLASS_CLASS7": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass7 as u8",
+    "value": 7
+  },
+  "PRIORITY_CLASS_CLASS8": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass8 as u8",
+    "value": 8
+  },
+  "PRIORITY_CLASS_CLASS9": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass9 as u8",
+    "value": 9
+  },
+  "PRIORITY_CLASS_CLASS10": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass10 as u8",
+    "value": 10
+  },
+  "PRIORITY_CLASS_CLASS11": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass11 as u8",
+    "value": 11
+  },
+  "PRIORITY_CLASS_CLASS12": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass12 as u8",
+    "value": 12
+  },
+  "PRIORITY_CLASS_CLASS13": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass13 as u8",
+    "value": 13
+  },
+  "PRIORITY_CLASS_CLASS14": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass14 as u8",
+    "value": 14
+  },
+  "PRIORITY_CLASS_CLASS15": {
+    "expression": "x86_64::registers::control::PriorityClass::PriorityClass15 as u8",
+    "value": 15
+  },
+  "DEBUG_ADDRESS_REGISTER_NUMBER_DR0": {
+    "expression": "x86_64::registers::debug::DebugAddressRegisterNumber::Dr0 as u8",
+    "value": 0
+  },
+  "DEBUG_ADDRESS_REGISTER_NUMBER_DR1": {
+    "expression": "x86_64::registers::debug::DebugAddressRegisterNumber::Dr1 as u8",
+    "value": 1
+  },
+  "DEBUG_ADDRESS_REGISTER_NUMBER_DR2": {
+    "expression": "x86_64::registers::debug::DebugAddressRegisterNumber::Dr2 as u8",
+    "value": 2
+  },
+  "DEBUG_ADDRESS_REGISTER_NUMBER_DR3": {
+    "expression": "x86_64::registers::debug::DebugAddressRegisterNumber::Dr3 as u8",
+    "value": 3
+  },
+  "BREAKPOINT_CONDITION_INSTRUCTION_EXECUTION": {
+    "expression": "x86_64::registers::debug::BreakpointCondition::InstructionExecution as u8",
+    "value": 0
+  },
+  "BREAKPOINT_CONDITION_DATA_WRITES": {
+    "expression": "x86_64::registers::debug::BreakpointCondition::DataWrites as u8",
+    "value": 1
+  },
+  "BREAKPOINT_CONDITION_IO_READS_WRITES": {
+    "expression": "x86_64::registers::debug::BreakpointCondition::IoReadsWrites as u8",
+    "value": 2
+  },
+  "BREAKPOINT_CONDITION_DATA_READS_WRITES": {
+    "expression": "x86_64::registers::debug::BreakpointCondition::DataReadsWrites as u8",
+    "value": 3
+  },
+  "BREAKPOINT_SIZE_LENGTH1B": {
+    "expression": "x86_64::registers::debug::BreakpointSize::Length1B as u8",
+    "value": 0
+  },
+  "BREAKPOINT_SIZE_LENGTH2B": {
+    "expression": "x86_64::registers::debug::BreakpointSize::Length2B as u8",
+    "value": 1
+  },
+  "BREAKPOINT_SIZE_LENGTH8B": {
+    "expression": "x86_64::registers::debug::BreakpointSize::Length8B as u8",
+    "value": 2
+  },
+  "BREAKPOINT_SIZE_LENGTH4B": {
+    "expression": "x86_64::registers::debug::BreakpointSize::Length4B as u8",
+    "value": 3
+  },
+  "SEGMENT_SELECTOR_NULL": {
+    "expression": "x86_64::registers::segmentation::SegmentSelector::NULL.0",
+    "value": 0
+  },
+  "DR7_VALID_BITS": {
+    "expression": "x86_64::registers::debug::Dr7Value::from_bits_truncate(u64::MAX).bits()",
+    "value": 4294913023
+  },
+  "MXCSR_RESET_BITS": {
+    "expression": "x86_64::registers::mxcsr::MxCsr::default().bits()",
+    "value": 8064
+  }
+}

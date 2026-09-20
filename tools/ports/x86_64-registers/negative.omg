@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Authored tests execute actual translated pure register bodies; no instructions.
+use x86_values::registers;
+use facts::x86_registers;
+use facts::x86_registers::Dr7Flags;
+use facts::x86_registers::Dr7Bits;
+use facts::x86_registers::SegmentSelector;
+use values;
+
+machine code_cases() -> bool {
+    registers::privilege_from_u16(0).valid && registers::privilege_from_u16(3).valid &&
+    !registers::privilege_from_u16(4).valid && registers::privilege_from_u16(65535).raw == 65535 &&
+    !registers::priority_class_valid(0) && registers::priority_class_valid(1) &&
+    registers::priority_class_valid(15) && !registers::priority_class_valid(16) &&
+    registers::debug_register_number_valid(0) && registers::debug_register_number_valid(3) &&
+    !registers::debug_register_number_valid(4) &&
+    registers::breakpoint_condition_valid(3) && !registers::breakpoint_condition_valid(4) &&
+    registers::breakpoint_size_bits_valid(0) && !registers::breakpoint_size_bits_valid(0xffffffffffffffff) &&
+    registers::breakpoint_size_from_bytes(1).raw == 0 && registers::breakpoint_size_from_bytes(2).raw == 1 &&
+    registers::breakpoint_size_from_bytes(8).raw == 2 && registers::breakpoint_size_from_bytes(4).raw == 3 &&
+    !registers::breakpoint_size_from_bytes(0).valid && !registers::breakpoint_size_from_bytes(3).valid &&
+    registers::breakpoint_size_from_bytes(0xffffffffffffffff).raw == 0xffffffffffffffff &&
+    registers::msr_new(0xffffffff).raw == 0xffffffff && registers::mxcsr_default().raw == 0x1f80
+}
+machine selector_cases() -> bool {
+    let top: SegmentSelector = registers::selector_new(8191, 3);
+    let ldt: SegmentSelector = SegmentSelector { raw: 0xffff };
+    top.raw == 0xfffb && registers::selector_index(top) == 8191 && registers::selector_rpl(top) == 3 &&
+    registers::selector_input_valid(0, 0) && !registers::selector_input_valid(8192, 0) &&
+    !registers::selector_input_valid(1, 4) && registers::selector_new(0, 0).raw == 0 &&
+    registers::selector_set_rpl(ldt, 0).raw == 0xfffc &&
+    registers::selector_index(ldt) == 8191 && registers::selector_rpl(ldt) == 3
+}
+machine dr7_cases() -> bool {
+    let base: Dr7Bits = Dr7Bits { raw: 0x12342bff };
+    let flags: Dr7Flags = Dr7Flags { raw: 3 };
+    registers::dr6_trap(0).raw == 1 && registers::dr6_trap(3).raw == 8 &&
+    registers::dr7_local_enable(3).raw == 64 && registers::dr7_global_enable(3).raw == 128 &&
+    registers::dr7_bits_valid(0) && registers::dr7_bits_valid(0xffff2bff) &&
+    !registers::dr7_bits_valid(0x400) && !registers::dr7_bits_valid(0x100000000) &&
+    registers::dr7_from_bits_truncate(0xffffffffffffffff).raw == 0xffff2bff &&
+    registers::dr7_flags(base).raw == 0x2bff &&
+    registers::dr7_remove_flags(base, flags).raw == 0x12342bfc &&
+    registers::dr7_toggle_flags(base, flags).raw == 0x12342bfc &&
+    registers::dr7_insert_flags(Dr7Bits { raw: 0x12342bfc }, flags).raw == 0x12342bff &&
+    registers::dr7_set_flags(base, flags, false).raw == 0x12342bfc &&
+    registers::dr7_set_flags(base, flags, true).raw == 0x12342bff &&
+    registers::dr7_size(registers::dr7_set_size(base, 0, 2), 0) == 3 &&
+    registers::dr7_condition(registers::dr7_set_condition(base, 3, 3), 3) == 3
+}
+machine star_cases() -> bool {
+    let good: registers::StarPlan = registers::star_plan(0x23, 0x1b, 8, 16);
+    good.error == 0 && good.bits == 0x0013000800000000 &&
+    registers::star_sysret_base(good.bits) == 0x13 && registers::star_syscall_base(good.bits) == 8 &&
+    registers::star_pack_raw(65535, 65535) == 0xffffffff00000000 &&
+    registers::star_sysret_base(0xffffffffffffffff) == 65535 &&
+    registers::star_syscall_base(0xffffffffffffffff) == 65535 &&
+    registers::star_plan(0, 0, 8, 16).error == 1 &&
+    registers::star_plan(0x23, 0x1b, 8, 8).error == 2 &&
+    registers::star_plan(0x20, 0x18, 8, 16).error == 3 &&
+    registers::star_plan(0x23, 0x1b, 11, 19).error == 4 &&
+    registers::star_plan(11, 3, 8, 16).error == 5 &&
+    registers::star_plan(65535, 65527, 65520, 65528).error == 0 &&
+    registers::star_plan(65535, 65527, 65520, 65528).bits == 0xffeffff000000000
+}
+machine test_result() -> i32 {
+    transition values::constants_match() && values::debug_matrix() && code_cases() && selector_cases() && dr7_cases() && star_cases() {
+        true -> (0)
+        _ -> (1)
+    }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

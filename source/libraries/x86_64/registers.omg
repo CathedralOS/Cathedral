@@ -1,0 +1,140 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pure x86_64 register algorithms at cc35c876d3badb57df54a66e22f7768a52be95f2.
+// See source/drivers/facts/x86_registers.PORT.md. No instruction or live CPU state.
+module registers;
+use facts::x86_registers;
+
+pub data RegisterCodeResult [copy] { valid: bool; raw: u64; }
+pub data StarPlan [copy] { error: u8; bits: u64; }
+pub const STAR_OK: u8 = 0;
+pub const STAR_SYSRET_OFFSET: u8 = 1;
+pub const STAR_SYSCALL_OFFSET: u8 = 2;
+pub const STAR_SYSRET_PRIVILEGE: u8 = 3;
+pub const STAR_SYSCALL_PRIVILEGE: u8 = 4;
+// Local checked correction: upstream comparisons permit ss_sysret=3, then
+// subtraction of8 underflows. Reject that candidate before forming its base.
+pub const STAR_SYSRET_BASE_UNDERFLOW: u8 = 5;
+
+pub machine privilege_from_u16(value: u16) -> RegisterCodeResult {
+    RegisterCodeResult { valid: value <= 3, raw: value as u64 }
+}
+pub machine priority_class_valid(value: u8) -> bool { value >= 1 && value <= 15 }
+pub machine debug_register_number_valid(value: u8) -> bool { value <= 3 }
+pub machine breakpoint_condition_valid(value: u64) -> bool { value <= 3 }
+pub machine breakpoint_size_bits_valid(value: u64) -> bool { value <= 3 }
+pub machine breakpoint_size_from_bytes(value: u64) -> RegisterCodeResult {
+    transition value {
+        1 -> (RegisterCodeResult { valid: true, raw: 0 })
+        2 -> (RegisterCodeResult { valid: true, raw: 1 })
+        8 -> (RegisterCodeResult { valid: true, raw: 2 })
+        4 -> (RegisterCodeResult { valid: true, raw: 3 })
+        _ -> (RegisterCodeResult { valid: false, raw: value })
+    }
+}
+pub machine selector_input_valid(index: u16, rpl: u8) -> bool { index <= 8191 && rpl <= 3 }
+// Upstream wraps excessive indices in u16. This checked constructor admits
+// only the complete13-bit index; raw selector construction still preserves bits.
+pub machine selector_new(index: u16 [0..=8191], rpl: u8 [0..=3]) -> x86_registers::SegmentSelector {
+    x86_registers::SegmentSelector { raw: (index << 3) | (rpl as u16) }
+}
+pub machine selector_index(value: x86_registers::SegmentSelector) -> u16 { value.raw >> 3 }
+pub machine selector_rpl(value: x86_registers::SegmentSelector) -> u8 { (value.raw & 3) as u8 }
+pub machine selector_set_rpl(value: x86_registers::SegmentSelector, rpl: u8 [0..=3]) -> x86_registers::SegmentSelector {
+    x86_registers::SegmentSelector { raw: (value.raw & 65532) | (rpl as u16) }
+}
+pub machine msr_new(index: u32) -> x86_registers::Msr { x86_registers::Msr { raw: index } }
+pub machine mxcsr_default() -> x86_registers::MxCsr { x86_registers::MxCsr { raw: x86_registers::MXCSR_RESET_BITS } }
+
+pub machine dr6_trap(number: u8 [0..=3]) -> x86_registers::Dr6Flags {
+    let one: u64 = 1;
+    x86_registers::Dr6Flags { raw: one << number }
+}
+pub machine dr7_local_enable(number: u8 [0..=3]) -> x86_registers::Dr7Flags {
+    let one: u64 = 1;
+    x86_registers::Dr7Flags { raw: one << (number * 2) }
+}
+pub machine dr7_global_enable(number: u8 [0..=3]) -> x86_registers::Dr7Flags {
+    let one: u64 = 1;
+    x86_registers::Dr7Flags { raw: one << (number * 2 + 1) }
+}
+pub machine dr7_bits_valid(bits: u64) -> bool { (bits & ~x86_registers::DR7_VALID_BITS) == 0 }
+pub machine dr7_from_bits_truncate(bits: u64) -> x86_registers::Dr7Bits {
+    x86_registers::Dr7Bits { raw: bits & x86_registers::DR7_VALID_BITS }
+}
+pub machine dr7_flags(value: x86_registers::Dr7Bits) -> x86_registers::Dr7Flags {
+    x86_registers::Dr7Flags { raw: value.raw & x86_registers::DR7_FLAGS_KNOWN_BITS }
+}
+pub machine dr7_insert_flags(value: x86_registers::Dr7Bits, flags: x86_registers::Dr7Flags) -> x86_registers::Dr7Bits {
+    x86_registers::Dr7Bits { raw: value.raw | flags.raw }
+}
+pub machine dr7_remove_flags(value: x86_registers::Dr7Bits, flags: x86_registers::Dr7Flags) -> x86_registers::Dr7Bits {
+    x86_registers::Dr7Bits { raw: value.raw & ~flags.raw }
+}
+pub machine dr7_toggle_flags(value: x86_registers::Dr7Bits, flags: x86_registers::Dr7Flags) -> x86_registers::Dr7Bits {
+    x86_registers::Dr7Bits { raw: value.raw ^ flags.raw }
+}
+pub machine dr7_set_flags(value: x86_registers::Dr7Bits, flags: x86_registers::Dr7Flags, enabled: bool) -> x86_registers::Dr7Bits {
+    transition enabled {
+        true -> (x86_registers::Dr7Bits { raw: value.raw | flags.raw })
+        _ -> (x86_registers::Dr7Bits { raw: value.raw & ~flags.raw })
+    }
+}
+pub machine dr7_condition(value: x86_registers::Dr7Bits, number: u8 [0..=3]) -> u8 {
+    ((value.raw >> (16 + 4 * number)) & 3) as u8
+}
+pub machine dr7_size(value: x86_registers::Dr7Bits, number: u8 [0..=3]) -> u8 {
+    ((value.raw >> (18 + 4 * number)) & 3) as u8
+}
+pub machine dr7_set_condition(value: x86_registers::Dr7Bits, number: u8 [0..=3], condition: u8 [0..=3]) -> x86_registers::Dr7Bits {
+    let shift: u8 = 16 + 4 * number;
+    let mask: u64 = 3;
+    x86_registers::Dr7Bits { raw: (value.raw & ~(mask << shift)) | ((condition as u64) << shift) }
+}
+pub machine dr7_set_size(value: x86_registers::Dr7Bits, number: u8 [0..=3], size: u8 [0..=3]) -> x86_registers::Dr7Bits {
+    let shift: u8 = 18 + 4 * number;
+    let mask: u64 = 3;
+    x86_registers::Dr7Bits { raw: (value.raw & ~(mask << shift)) | ((size as u64) << shift) }
+}
+
+// The raw STAR payload exposes only the two16-bit fields; it does not assert
+// that selectors name valid descriptors, that features exist, or permit WRMSR.
+pub machine star_pack_raw(sysret_base: u16, syscall_base: u16) -> u64 {
+    ((sysret_base as u64) << 48) | ((syscall_base as u64) << 32)
+}
+pub machine star_sysret_base(bits: u64) -> u16 { ((bits >> 48) & 65535) as u16 }
+pub machine star_syscall_base(bits: u64) -> u16 { ((bits >> 32) & 65535) as u16 }
+pub machine star_plan(cs_sysret: u16, ss_sysret: u16, cs_syscall: u16, ss_syscall: u16) -> StarPlan {
+    transition (cs_sysret as i32) - 16 == (ss_sysret as i32) - 8 {
+        true -> syscall_offset(ss_sysret, cs_syscall, ss_syscall)
+        _ -> (StarPlan { error: STAR_SYSRET_OFFSET, bits: 0 })
+    }
+    state syscall_offset(ss_sysret: u16, cs_syscall: u16, ss_syscall: u16) {
+        transition (cs_syscall as i32) == (ss_syscall as i32) - 8 {
+            true -> sysret_privilege(ss_sysret, cs_syscall, ss_syscall)
+            _ -> (StarPlan { error: STAR_SYSCALL_OFFSET, bits: 0 })
+        }
+    }
+    state sysret_privilege(ss_sysret: u16, cs_syscall: u16, ss_syscall: u16) {
+        transition (ss_sysret & 3) == 3 {
+            true -> syscall_privilege(ss_sysret, cs_syscall, ss_syscall)
+            _ -> (StarPlan { error: STAR_SYSRET_PRIVILEGE, bits: 0 })
+        }
+    }
+    state syscall_privilege(ss_sysret: u16, cs_syscall: u16, ss_syscall: u16) {
+        transition (ss_syscall & 3) == 0 {
+            true -> check_base(ss_sysret, cs_syscall)
+            _ -> (StarPlan { error: STAR_SYSCALL_PRIVILEGE, bits: 0 })
+        }
+    }
+    state check_base(ss_sysret: u16, cs_syscall: u16) {
+        transition ss_sysret >= 8 {
+            true -> encode(ss_sysret, cs_syscall)
+            _ -> (StarPlan { error: STAR_SYSRET_BASE_UNDERFLOW, bits: 0 })
+        }
+    }
+    state encode(ss_sysret: u16, cs_syscall: u16)
+    requires ss_sysret >= 8;
+    {
+        StarPlan { error: STAR_OK, bits: (((ss_sysret - 8) as u64) << 48) | ((cs_syscall as u64) << 32) }
+    }
+}

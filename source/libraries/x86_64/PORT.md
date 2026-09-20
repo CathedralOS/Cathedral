@@ -8,7 +8,8 @@ record initial source triage; subsequent implementation and execution evidence
 belong to separately audited slices. No baseline count is a native ABI or
 production-integration claim.
 
-Completed slices: [tested numeric address algorithms](addresses.PORT.md). Reviewed 2026-09-20 against
+Completed slices: [tested numeric address algorithms](addresses.PORT.md) and
+[tested register facts and transformations](../../drivers/facts/x86_registers.PORT.md). Reviewed 2026-09-20 against
 Cathedral `77544518fc947973a5607f28b278aca2e2ffa462` and
 Omega `eaa7993a23623cd8fabf45350340479c5c9c7879`. X86-001/002 are implementation work,
 not language blockers merely because their code has not yet been authored.

@@ -1,0 +1,290 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Generated independent numeric expectations; tests real fact bindings/helpers.
+module values;
+use facts::x86_registers;
+use x86_values::registers;
+machine constants_match_0() -> bool {
+    x86_registers::CR0_FLAGS_PROTECTED_MODE_ENABLE.raw == 1 &&
+    x86_registers::CR0_FLAGS_MONITOR_COPROCESSOR.raw == 2 &&
+    x86_registers::CR0_FLAGS_EMULATE_COPROCESSOR.raw == 4 &&
+    x86_registers::CR0_FLAGS_TASK_SWITCHED.raw == 8 &&
+    x86_registers::CR0_FLAGS_EXTENSION_TYPE.raw == 16 &&
+    x86_registers::CR0_FLAGS_NUMERIC_ERROR.raw == 32 &&
+    x86_registers::CR0_FLAGS_WRITE_PROTECT.raw == 65536 &&
+    x86_registers::CR0_FLAGS_ALIGNMENT_MASK.raw == 262144 &&
+    x86_registers::CR0_FLAGS_NOT_WRITE_THROUGH.raw == 536870912 &&
+    x86_registers::CR0_FLAGS_CACHE_DISABLE.raw == 1073741824 &&
+    x86_registers::CR0_FLAGS_PAGING.raw == 2147483648 &&
+    x86_registers::CR3_FLAGS_PAGE_LEVEL_WRITETHROUGH.raw == 8
+}
+machine constants_match_1() -> bool {
+    x86_registers::CR3_FLAGS_PAGE_LEVEL_CACHE_DISABLE.raw == 16 &&
+    x86_registers::CR4_FLAGS_VIRTUAL_8086_MODE_EXTENSIONS.raw == 1 &&
+    x86_registers::CR4_FLAGS_PROTECTED_MODE_VIRTUAL_INTERRUPTS.raw == 2 &&
+    x86_registers::CR4_FLAGS_TIMESTAMP_DISABLE.raw == 4 &&
+    x86_registers::CR4_FLAGS_DEBUGGING_EXTENSIONS.raw == 8 &&
+    x86_registers::CR4_FLAGS_PAGE_SIZE_EXTENSION.raw == 16 &&
+    x86_registers::CR4_FLAGS_PHYSICAL_ADDRESS_EXTENSION.raw == 32 &&
+    x86_registers::CR4_FLAGS_MACHINE_CHECK_EXCEPTION.raw == 64 &&
+    x86_registers::CR4_FLAGS_PAGE_GLOBAL.raw == 128 &&
+    x86_registers::CR4_FLAGS_PERFORMANCE_MONITOR_COUNTER.raw == 256 &&
+    x86_registers::CR4_FLAGS_OSFXSR.raw == 512 &&
+    x86_registers::CR4_FLAGS_OSXMMEXCPT_ENABLE.raw == 1024
+}
+machine constants_match_2() -> bool {
+    x86_registers::CR4_FLAGS_USER_MODE_INSTRUCTION_PREVENTION.raw == 2048 &&
+    x86_registers::CR4_FLAGS_L5_PAGING.raw == 4096 &&
+    x86_registers::CR4_FLAGS_VIRTUAL_MACHINE_EXTENSIONS.raw == 8192 &&
+    x86_registers::CR4_FLAGS_SAFER_MODE_EXTENSIONS.raw == 16384 &&
+    x86_registers::CR4_FLAGS_FSGSBASE.raw == 65536 &&
+    x86_registers::CR4_FLAGS_PCID.raw == 131072 &&
+    x86_registers::CR4_FLAGS_OSXSAVE.raw == 262144 &&
+    x86_registers::CR4_FLAGS_KEY_LOCKER.raw == 524288 &&
+    x86_registers::CR4_FLAGS_SUPERVISOR_MODE_EXECUTION_PROTECTION.raw == 1048576 &&
+    x86_registers::CR4_FLAGS_SUPERVISOR_MODE_ACCESS_PREVENTION.raw == 2097152 &&
+    x86_registers::CR4_FLAGS_PROTECTION_KEY_USER.raw == 4194304 &&
+    x86_registers::CR4_FLAGS_CONTROL_FLOW_ENFORCEMENT.raw == 8388608
+}
+machine constants_match_3() -> bool {
+    x86_registers::CR4_FLAGS_PROTECTION_KEY_SUPERVISOR.raw == 16777216 &&
+    x86_registers::DR6_FLAGS_TRAP0.raw == 1 &&
+    x86_registers::DR6_FLAGS_TRAP1.raw == 2 &&
+    x86_registers::DR6_FLAGS_TRAP2.raw == 4 &&
+    x86_registers::DR6_FLAGS_TRAP3.raw == 8 &&
+    x86_registers::DR6_FLAGS_TRAP.raw == 15 &&
+    x86_registers::DR6_FLAGS_ACCESS_DETECTED.raw == 8192 &&
+    x86_registers::DR6_FLAGS_STEP.raw == 16384 &&
+    x86_registers::DR6_FLAGS_SWITCH.raw == 32768 &&
+    x86_registers::DR6_FLAGS_RTM.raw == 65536 &&
+    x86_registers::DR7_FLAGS_LOCAL_BREAKPOINT_0_ENABLE.raw == 1 &&
+    x86_registers::DR7_FLAGS_LOCAL_BREAKPOINT_1_ENABLE.raw == 4
+}
+machine constants_match_4() -> bool {
+    x86_registers::DR7_FLAGS_LOCAL_BREAKPOINT_2_ENABLE.raw == 16 &&
+    x86_registers::DR7_FLAGS_LOCAL_BREAKPOINT_3_ENABLE.raw == 64 &&
+    x86_registers::DR7_FLAGS_GLOBAL_BREAKPOINT_0_ENABLE.raw == 2 &&
+    x86_registers::DR7_FLAGS_GLOBAL_BREAKPOINT_1_ENABLE.raw == 8 &&
+    x86_registers::DR7_FLAGS_GLOBAL_BREAKPOINT_2_ENABLE.raw == 32 &&
+    x86_registers::DR7_FLAGS_GLOBAL_BREAKPOINT_3_ENABLE.raw == 128 &&
+    x86_registers::DR7_FLAGS_LOCAL_EXACT_BREAKPOINT_ENABLE.raw == 256 &&
+    x86_registers::DR7_FLAGS_GLOBAL_EXACT_BREAKPOINT_ENABLE.raw == 512 &&
+    x86_registers::DR7_FLAGS_RESTRICTED_TRANSACTIONAL_MEMORY.raw == 2048 &&
+    x86_registers::DR7_FLAGS_GENERAL_DETECT_ENABLE.raw == 8192 &&
+    x86_registers::EFER_FLAGS_SYSTEM_CALL_EXTENSIONS.raw == 1 &&
+    x86_registers::EFER_FLAGS_LONG_MODE_ENABLE.raw == 256
+}
+machine constants_match_5() -> bool {
+    x86_registers::EFER_FLAGS_LONG_MODE_ACTIVE.raw == 1024 &&
+    x86_registers::EFER_FLAGS_NO_EXECUTE_ENABLE.raw == 2048 &&
+    x86_registers::EFER_FLAGS_SECURE_VIRTUAL_MACHINE_ENABLE.raw == 4096 &&
+    x86_registers::EFER_FLAGS_LONG_MODE_SEGMENT_LIMIT_ENABLE.raw == 8192 &&
+    x86_registers::EFER_FLAGS_FAST_FXSAVE_FXRSTOR.raw == 16384 &&
+    x86_registers::EFER_FLAGS_TRANSLATION_CACHE_EXTENSION.raw == 32768 &&
+    x86_registers::CET_FLAGS_SS_ENABLE.raw == 1 &&
+    x86_registers::CET_FLAGS_SS_WRITE_ENABLE.raw == 2 &&
+    x86_registers::CET_FLAGS_IBT_ENABLE.raw == 4 &&
+    x86_registers::CET_FLAGS_IBT_LEGACY_ENABLE.raw == 8 &&
+    x86_registers::CET_FLAGS_IBT_NO_TRACK_ENABLE.raw == 16 &&
+    x86_registers::CET_FLAGS_IBT_LEGACY_SUPPRESS_ENABLE.raw == 32
+}
+machine constants_match_6() -> bool {
+    x86_registers::CET_FLAGS_IBT_SUPPRESS_ENABLE.raw == 1024 &&
+    x86_registers::CET_FLAGS_IBT_TRACKED.raw == 2048 &&
+    x86_registers::APIC_BASE_FLAGS_BSP.raw == 256 &&
+    x86_registers::APIC_BASE_FLAGS_X2APIC_ENABLE.raw == 1024 &&
+    x86_registers::APIC_BASE_FLAGS_LAPIC_ENABLE.raw == 2048 &&
+    x86_registers::MX_CSR_INVALID_OPERATION.raw == 1 &&
+    x86_registers::MX_CSR_DENORMAL.raw == 2 &&
+    x86_registers::MX_CSR_DIVIDE_BY_ZERO.raw == 4 &&
+    x86_registers::MX_CSR_OVERFLOW.raw == 8 &&
+    x86_registers::MX_CSR_UNDERFLOW.raw == 16 &&
+    x86_registers::MX_CSR_PRECISION.raw == 32 &&
+    x86_registers::MX_CSR_DENORMALS_ARE_ZEROS.raw == 64
+}
+machine constants_match_7() -> bool {
+    x86_registers::MX_CSR_INVALID_OPERATION_MASK.raw == 128 &&
+    x86_registers::MX_CSR_DENORMAL_MASK.raw == 256 &&
+    x86_registers::MX_CSR_DIVIDE_BY_ZERO_MASK.raw == 512 &&
+    x86_registers::MX_CSR_OVERFLOW_MASK.raw == 1024 &&
+    x86_registers::MX_CSR_UNDERFLOW_MASK.raw == 2048 &&
+    x86_registers::MX_CSR_PRECISION_MASK.raw == 4096 &&
+    x86_registers::MX_CSR_ROUNDING_CONTROL_NEGATIVE.raw == 8192 &&
+    x86_registers::MX_CSR_ROUNDING_CONTROL_POSITIVE.raw == 16384 &&
+    x86_registers::MX_CSR_ROUNDING_CONTROL_ZERO.raw == 24576 &&
+    x86_registers::MX_CSR_FLUSH_TO_ZERO.raw == 32768 &&
+    x86_registers::RFLAGS_ID.raw == 2097152 &&
+    x86_registers::RFLAGS_VIRTUAL_INTERRUPT_PENDING.raw == 1048576
+}
+machine constants_match_8() -> bool {
+    x86_registers::RFLAGS_VIRTUAL_INTERRUPT.raw == 524288 &&
+    x86_registers::RFLAGS_ALIGNMENT_CHECK.raw == 262144 &&
+    x86_registers::RFLAGS_VIRTUAL_8086_MODE.raw == 131072 &&
+    x86_registers::RFLAGS_RESUME_FLAG.raw == 65536 &&
+    x86_registers::RFLAGS_NESTED_TASK.raw == 16384 &&
+    x86_registers::RFLAGS_IOPL_HIGH.raw == 8192 &&
+    x86_registers::RFLAGS_IOPL_LOW.raw == 4096 &&
+    x86_registers::RFLAGS_OVERFLOW_FLAG.raw == 2048 &&
+    x86_registers::RFLAGS_DIRECTION_FLAG.raw == 1024 &&
+    x86_registers::RFLAGS_INTERRUPT_FLAG.raw == 512 &&
+    x86_registers::RFLAGS_TRAP_FLAG.raw == 256 &&
+    x86_registers::RFLAGS_SIGN_FLAG.raw == 128
+}
+machine constants_match_9() -> bool {
+    x86_registers::RFLAGS_ZERO_FLAG.raw == 64 &&
+    x86_registers::RFLAGS_AUXILIARY_CARRY_FLAG.raw == 16 &&
+    x86_registers::RFLAGS_PARITY_FLAG.raw == 4 &&
+    x86_registers::RFLAGS_CARRY_FLAG.raw == 1 &&
+    x86_registers::XCR0_FLAGS_X87.raw == 1 &&
+    x86_registers::XCR0_FLAGS_SSE.raw == 2 &&
+    x86_registers::XCR0_FLAGS_AVX.raw == 4 &&
+    x86_registers::XCR0_FLAGS_BNDREG.raw == 8 &&
+    x86_registers::XCR0_FLAGS_BNDCSR.raw == 16 &&
+    x86_registers::XCR0_FLAGS_OPMASK.raw == 32 &&
+    x86_registers::XCR0_FLAGS_ZMM_HI256.raw == 64 &&
+    x86_registers::XCR0_FLAGS_HI16_ZMM.raw == 128
+}
+machine constants_match_10() -> bool {
+    x86_registers::XCR0_FLAGS_MPK.raw == 512 &&
+    x86_registers::XCR0_FLAGS_LWP.raw == 4611686018427387904 &&
+    x86_registers::EFER_MSR.raw == 3221225600 &&
+    x86_registers::FS_BASE_MSR.raw == 3221225728 &&
+    x86_registers::GS_BASE_MSR.raw == 3221225729 &&
+    x86_registers::KERNEL_GS_BASE_MSR.raw == 3221225730 &&
+    x86_registers::STAR_MSR.raw == 3221225601 &&
+    x86_registers::LSTAR_MSR.raw == 3221225602 &&
+    x86_registers::SFMASK_MSR.raw == 3221225604 &&
+    x86_registers::UCET_MSR.raw == 1696 &&
+    x86_registers::SCET_MSR.raw == 1698 &&
+    x86_registers::APIC_BASE_MSR.raw == 27
+}
+machine constants_match_11() -> bool {
+    x86_registers::CR0_FLAGS_KNOWN_BITS == 3758424127 &&
+    x86_registers::CR3_FLAGS_KNOWN_BITS == 24 &&
+    x86_registers::CR4_FLAGS_KNOWN_BITS == 33521663 &&
+    x86_registers::DR6_FLAGS_KNOWN_BITS == 122895 &&
+    x86_registers::DR7_FLAGS_KNOWN_BITS == 11263 &&
+    x86_registers::EFER_FLAGS_KNOWN_BITS == 64769 &&
+    x86_registers::CET_FLAGS_KNOWN_BITS == 3135 &&
+    x86_registers::APIC_BASE_FLAGS_KNOWN_BITS == 3328 &&
+    x86_registers::MX_CSR_KNOWN_BITS == 65535 &&
+    x86_registers::RFLAGS_KNOWN_BITS == 4161493 &&
+    x86_registers::XCR0_FLAGS_KNOWN_BITS == 4611686018427388671 &&
+    x86_registers::PRIVILEGE_LEVEL_RING0.raw == 0
+}
+machine constants_match_12() -> bool {
+    x86_registers::PRIVILEGE_LEVEL_RING1.raw == 1 &&
+    x86_registers::PRIVILEGE_LEVEL_RING2.raw == 2 &&
+    x86_registers::PRIVILEGE_LEVEL_RING3.raw == 3 &&
+    x86_registers::PRIORITY_CLASS_CLASS1.raw == 1 &&
+    x86_registers::PRIORITY_CLASS_CLASS2.raw == 2 &&
+    x86_registers::PRIORITY_CLASS_CLASS3.raw == 3 &&
+    x86_registers::PRIORITY_CLASS_CLASS4.raw == 4 &&
+    x86_registers::PRIORITY_CLASS_CLASS5.raw == 5 &&
+    x86_registers::PRIORITY_CLASS_CLASS6.raw == 6 &&
+    x86_registers::PRIORITY_CLASS_CLASS7.raw == 7 &&
+    x86_registers::PRIORITY_CLASS_CLASS8.raw == 8 &&
+    x86_registers::PRIORITY_CLASS_CLASS9.raw == 9
+}
+machine constants_match_13() -> bool {
+    x86_registers::PRIORITY_CLASS_CLASS10.raw == 10 &&
+    x86_registers::PRIORITY_CLASS_CLASS11.raw == 11 &&
+    x86_registers::PRIORITY_CLASS_CLASS12.raw == 12 &&
+    x86_registers::PRIORITY_CLASS_CLASS13.raw == 13 &&
+    x86_registers::PRIORITY_CLASS_CLASS14.raw == 14 &&
+    x86_registers::PRIORITY_CLASS_CLASS15.raw == 15 &&
+    x86_registers::DEBUG_ADDRESS_REGISTER_NUMBER_DR0.raw == 0 &&
+    x86_registers::DEBUG_ADDRESS_REGISTER_NUMBER_DR1.raw == 1 &&
+    x86_registers::DEBUG_ADDRESS_REGISTER_NUMBER_DR2.raw == 2 &&
+    x86_registers::DEBUG_ADDRESS_REGISTER_NUMBER_DR3.raw == 3 &&
+    x86_registers::BREAKPOINT_CONDITION_INSTRUCTION_EXECUTION.raw == 0 &&
+    x86_registers::BREAKPOINT_CONDITION_DATA_WRITES.raw == 1
+}
+machine constants_match_14() -> bool {
+    x86_registers::BREAKPOINT_CONDITION_IO_READS_WRITES.raw == 2 &&
+    x86_registers::BREAKPOINT_CONDITION_DATA_READS_WRITES.raw == 3 &&
+    x86_registers::BREAKPOINT_SIZE_LENGTH1B.raw == 0 &&
+    x86_registers::BREAKPOINT_SIZE_LENGTH2B.raw == 1 &&
+    x86_registers::BREAKPOINT_SIZE_LENGTH8B.raw == 2 &&
+    x86_registers::BREAKPOINT_SIZE_LENGTH4B.raw == 3 &&
+    x86_registers::SEGMENT_SELECTOR_NULL.raw == 0 &&
+    x86_registers::DR7_VALID_BITS == 4294913023 &&
+    x86_registers::MXCSR_RESET_BITS == 8064
+}
+pub machine constants_match() -> bool { constants_match_0() && constants_match_1() && constants_match_2() && constants_match_3() && constants_match_4() && constants_match_5() && constants_match_6() && constants_match_7() && constants_match_8() && constants_match_9() && constants_match_10() && constants_match_11() && constants_match_12() && constants_match_13() && constants_match_14() }
+machine debug_matrix_0() -> bool {
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 0), 0, 0).raw == 305146879 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 0), 0, 1).raw == 305409023 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 0), 0, 2).raw == 305671167 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 0), 0, 3).raw == 305933311 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 1), 0, 0).raw == 305212415 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 1), 0, 1).raw == 305474559 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 1), 0, 2).raw == 305736703 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 1), 0, 3).raw == 305998847 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 2), 0, 0).raw == 305277951 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 2), 0, 1).raw == 305540095 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 2), 0, 2).raw == 305802239 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 2), 0, 3).raw == 306064383
+}
+machine debug_matrix_1() -> bool {
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 3), 0, 0).raw == 305343487 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 3), 0, 1).raw == 305605631 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 3), 0, 2).raw == 305867775 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 0, 3), 0, 3).raw == 306129919 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 0), 1, 0).raw == 302263295 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 0), 1, 1).raw == 306457599 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 0), 1, 2).raw == 310651903 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 0), 1, 3).raw == 314846207 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 1), 1, 0).raw == 303311871 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 1), 1, 1).raw == 307506175 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 1), 1, 2).raw == 311700479 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 1), 1, 3).raw == 315894783
+}
+machine debug_matrix_2() -> bool {
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 2), 1, 0).raw == 304360447 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 2), 1, 1).raw == 308554751 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 2), 1, 2).raw == 312749055 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 2), 1, 3).raw == 316943359 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 3), 1, 0).raw == 305409023 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 3), 1, 1).raw == 309603327 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 3), 1, 2).raw == 313797631 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 1, 3), 1, 3).raw == 317991935 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 0), 2, 0).raw == 271854591 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 0), 2, 1).raw == 338963455 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 0), 2, 2).raw == 406072319 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 0), 2, 3).raw == 473181183
+}
+machine debug_matrix_3() -> bool {
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 1), 2, 0).raw == 288631807 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 1), 2, 1).raw == 355740671 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 1), 2, 2).raw == 422849535 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 1), 2, 3).raw == 489958399 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 2), 2, 0).raw == 305409023 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 2), 2, 1).raw == 372517887 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 2), 2, 2).raw == 439626751 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 2), 2, 3).raw == 506735615 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 3), 2, 0).raw == 322186239 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 3), 2, 1).raw == 389295103 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 3), 2, 2).raw == 456403967 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 2, 3), 2, 3).raw == 523512831
+}
+machine debug_matrix_4() -> bool {
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 0), 3, 0).raw == 36973567 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 0), 3, 1).raw == 1110715391 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 0), 3, 2).raw == 2184457215 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 0), 3, 3).raw == 3258199039 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 1), 3, 0).raw == 305409023 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 1), 3, 1).raw == 1379150847 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 1), 3, 2).raw == 2452892671 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 1), 3, 3).raw == 3526634495 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 2), 3, 0).raw == 573844479 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 2), 3, 1).raw == 1647586303 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 2), 3, 2).raw == 2721328127 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 2), 3, 3).raw == 3795069951
+}
+machine debug_matrix_5() -> bool {
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 3), 3, 0).raw == 842279935 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 3), 3, 1).raw == 1916021759 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 3), 3, 2).raw == 2989763583 &&
+    registers::dr7_set_size(registers::dr7_set_condition(x86_registers::Dr7Bits { raw: 305409023 }, 3, 3), 3, 3).raw == 4063505407
+}
+pub machine debug_matrix() -> bool { debug_matrix_0() && debug_matrix_1() && debug_matrix_2() && debug_matrix_3() && debug_matrix_4() && debug_matrix_5() }

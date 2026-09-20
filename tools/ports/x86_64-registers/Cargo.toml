@@ -1,0 +1,6 @@
+[package]
+name = "cathedral-x86-register-reference"
+version = "0.0.0"
+edition = "2021"
+[dependencies]
+x86_64 = { path = "../../../reference_code/rust-osdev/x86_64", default-features = false }

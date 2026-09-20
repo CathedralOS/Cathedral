@@ -1,0 +1,1547 @@
+{
+  "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+  "files": [
+    "src/lib.rs",
+    "src/registers/control.rs",
+    "src/registers/debug.rs",
+    "src/registers/model_specific.rs",
+    "src/registers/mxcsr.rs",
+    "src/registers/rflags.rs",
+    "src/registers/segmentation.rs",
+    "src/registers/xcontrol.rs"
+  ],
+  "flags": [
+    {
+      "name": "Cr0Flags",
+      "width": "u64",
+      "members": [
+        {
+          "name": "CR0_FLAGS_PROTECTED_MODE_ENABLE",
+          "type": "Cr0Flags",
+          "width": "u64",
+          "value": 1,
+          "path": "src/registers/control.rs",
+          "line": 16,
+          "rust": "x86_64::registers::control::Cr0Flags::PROTECTED_MODE_ENABLE.bits()",
+          "source_name": "PROTECTED_MODE_ENABLE"
+        },
+        {
+          "name": "CR0_FLAGS_MONITOR_COPROCESSOR",
+          "type": "Cr0Flags",
+          "width": "u64",
+          "value": 2,
+          "path": "src/registers/control.rs",
+          "line": 21,
+          "rust": "x86_64::registers::control::Cr0Flags::MONITOR_COPROCESSOR.bits()",
+          "source_name": "MONITOR_COPROCESSOR"
+        },
+        {
+          "name": "CR0_FLAGS_EMULATE_COPROCESSOR",
+          "type": "Cr0Flags",
+          "width": "u64",
+          "value": 4,
+          "path": "src/registers/control.rs",
+          "line": 23,
+          "rust": "x86_64::registers::control::Cr0Flags::EMULATE_COPROCESSOR.bits()",
+          "source_name": "EMULATE_COPROCESSOR"
+        },
+        {
+          "name": "CR0_FLAGS_TASK_SWITCHED",
+          "type": "Cr0Flags",
+          "width": "u64",
+          "value": 8,
+          "path": "src/registers/control.rs",
+          "line": 27,
+          "rust": "x86_64::registers::control::Cr0Flags::TASK_SWITCHED.bits()",
+          "source_name": "TASK_SWITCHED"
+        },
+        {
+          "name": "CR0_FLAGS_EXTENSION_TYPE",
+          "type": "Cr0Flags",
+          "width": "u64",
+          "value": 16,
+          "path": "src/registers/control.rs",
+          "line": 31,
+          "rust": "x86_64::registers::control::Cr0Flags::EXTENSION_TYPE.bits()",
+          "source_name": "EXTENSION_TYPE"
+        },
+        {
+          "name": "CR0_FLAGS_NUMERIC_ERROR",
+          "type": "Cr0Flags",
+          "width": "u64",
+          "value": 32,
+          "path": "src/registers/control.rs",
+          "line": 33,
+          "rust": "x86_64::registers::control::Cr0Flags::NUMERIC_ERROR.bits()",
+          "source_name": "NUMERIC_ERROR"
+        },
+        {
+          "name": "CR0_FLAGS_WRITE_PROTECT",
+          "type": "Cr0Flags",
+          "width": "u64",
+          "value": 65536,
+          "path": "src/registers/control.rs",
+          "line": 37,
+          "rust": "x86_64::registers::control::Cr0Flags::WRITE_PROTECT.bits()",
+          "source_name": "WRITE_PROTECT"
+        },
+        {
+          "name": "CR0_FLAGS_ALIGNMENT_MASK",
+          "type": "Cr0Flags",
+          "width": "u64",
+          "value": 262144,
+          "path": "src/registers/control.rs",
+          "line": 39,
+          "rust": "x86_64::registers::control::Cr0Flags::ALIGNMENT_MASK.bits()",
+          "source_name": "ALIGNMENT_MASK"
+        },
+        {
+          "name": "CR0_FLAGS_NOT_WRITE_THROUGH",
+          "type": "Cr0Flags",
+          "width": "u64",
+          "value": 536870912,
+          "path": "src/registers/control.rs",
+          "line": 44,
+          "rust": "x86_64::registers::control::Cr0Flags::NOT_WRITE_THROUGH.bits()",
+          "source_name": "NOT_WRITE_THROUGH"
+        },
+        {
+          "name": "CR0_FLAGS_CACHE_DISABLE",
+          "type": "Cr0Flags",
+          "width": "u64",
+          "value": 1073741824,
+          "path": "src/registers/control.rs",
+          "line": 46,
+          "rust": "x86_64::registers::control::Cr0Flags::CACHE_DISABLE.bits()",
+          "source_name": "CACHE_DISABLE"
+        },
+        {
+          "name": "CR0_FLAGS_PAGING",
+          "type": "Cr0Flags",
+          "width": "u64",
+          "value": 2147483648,
+          "path": "src/registers/control.rs",
+          "line": 50,
+          "rust": "x86_64::registers::control::Cr0Flags::PAGING.bits()",
+          "source_name": "PAGING"
+        }
+      ],
+      "known_bits": 3758424127,
+      "path": "src/registers/control.rs"
+    },
+    {
+      "name": "Cr3Flags",
+      "width": "u64",
+      "members": [
+        {
+          "name": "CR3_FLAGS_PAGE_LEVEL_WRITETHROUGH",
+          "type": "Cr3Flags",
+          "width": "u64",
+          "value": 8,
+          "path": "src/registers/control.rs",
+          "line": 71,
+          "rust": "x86_64::registers::control::Cr3Flags::PAGE_LEVEL_WRITETHROUGH.bits()",
+          "source_name": "PAGE_LEVEL_WRITETHROUGH"
+        },
+        {
+          "name": "CR3_FLAGS_PAGE_LEVEL_CACHE_DISABLE",
+          "type": "Cr3Flags",
+          "width": "u64",
+          "value": 16,
+          "path": "src/registers/control.rs",
+          "line": 73,
+          "rust": "x86_64::registers::control::Cr3Flags::PAGE_LEVEL_CACHE_DISABLE.bits()",
+          "source_name": "PAGE_LEVEL_CACHE_DISABLE"
+        }
+      ],
+      "known_bits": 24,
+      "path": "src/registers/control.rs"
+    },
+    {
+      "name": "Cr4Flags",
+      "width": "u64",
+      "members": [
+        {
+          "name": "CR4_FLAGS_VIRTUAL_8086_MODE_EXTENSIONS",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 1,
+          "path": "src/registers/control.rs",
+          "line": 89,
+          "rust": "x86_64::registers::control::Cr4Flags::VIRTUAL_8086_MODE_EXTENSIONS.bits()",
+          "source_name": "VIRTUAL_8086_MODE_EXTENSIONS"
+        },
+        {
+          "name": "CR4_FLAGS_PROTECTED_MODE_VIRTUAL_INTERRUPTS",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 2,
+          "path": "src/registers/control.rs",
+          "line": 91,
+          "rust": "x86_64::registers::control::Cr4Flags::PROTECTED_MODE_VIRTUAL_INTERRUPTS.bits()",
+          "source_name": "PROTECTED_MODE_VIRTUAL_INTERRUPTS"
+        },
+        {
+          "name": "CR4_FLAGS_TIMESTAMP_DISABLE",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 4,
+          "path": "src/registers/control.rs",
+          "line": 93,
+          "rust": "x86_64::registers::control::Cr4Flags::TIMESTAMP_DISABLE.bits()",
+          "source_name": "TIMESTAMP_DISABLE"
+        },
+        {
+          "name": "CR4_FLAGS_DEBUGGING_EXTENSIONS",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 8,
+          "path": "src/registers/control.rs",
+          "line": 96,
+          "rust": "x86_64::registers::control::Cr4Flags::DEBUGGING_EXTENSIONS.bits()",
+          "source_name": "DEBUGGING_EXTENSIONS"
+        },
+        {
+          "name": "CR4_FLAGS_PAGE_SIZE_EXTENSION",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 16,
+          "path": "src/registers/control.rs",
+          "line": 100,
+          "rust": "x86_64::registers::control::Cr4Flags::PAGE_SIZE_EXTENSION.bits()",
+          "source_name": "PAGE_SIZE_EXTENSION"
+        },
+        {
+          "name": "CR4_FLAGS_PHYSICAL_ADDRESS_EXTENSION",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 32,
+          "path": "src/registers/control.rs",
+          "line": 102,
+          "rust": "x86_64::registers::control::Cr4Flags::PHYSICAL_ADDRESS_EXTENSION.bits()",
+          "source_name": "PHYSICAL_ADDRESS_EXTENSION"
+        },
+        {
+          "name": "CR4_FLAGS_MACHINE_CHECK_EXCEPTION",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 64,
+          "path": "src/registers/control.rs",
+          "line": 104,
+          "rust": "x86_64::registers::control::Cr4Flags::MACHINE_CHECK_EXCEPTION.bits()",
+          "source_name": "MACHINE_CHECK_EXCEPTION"
+        },
+        {
+          "name": "CR4_FLAGS_PAGE_GLOBAL",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 128,
+          "path": "src/registers/control.rs",
+          "line": 107,
+          "rust": "x86_64::registers::control::Cr4Flags::PAGE_GLOBAL.bits()",
+          "source_name": "PAGE_GLOBAL"
+        },
+        {
+          "name": "CR4_FLAGS_PERFORMANCE_MONITOR_COUNTER",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 256,
+          "path": "src/registers/control.rs",
+          "line": 109,
+          "rust": "x86_64::registers::control::Cr4Flags::PERFORMANCE_MONITOR_COUNTER.bits()",
+          "source_name": "PERFORMANCE_MONITOR_COUNTER"
+        },
+        {
+          "name": "CR4_FLAGS_OSFXSR",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 512,
+          "path": "src/registers/control.rs",
+          "line": 112,
+          "rust": "x86_64::registers::control::Cr4Flags::OSFXSR.bits()",
+          "source_name": "OSFXSR"
+        },
+        {
+          "name": "CR4_FLAGS_OSXMMEXCPT_ENABLE",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 1024,
+          "path": "src/registers/control.rs",
+          "line": 115,
+          "rust": "x86_64::registers::control::Cr4Flags::OSXMMEXCPT_ENABLE.bits()",
+          "source_name": "OSXMMEXCPT_ENABLE"
+        },
+        {
+          "name": "CR4_FLAGS_USER_MODE_INSTRUCTION_PREVENTION",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 2048,
+          "path": "src/registers/control.rs",
+          "line": 118,
+          "rust": "x86_64::registers::control::Cr4Flags::USER_MODE_INSTRUCTION_PREVENTION.bits()",
+          "source_name": "USER_MODE_INSTRUCTION_PREVENTION"
+        },
+        {
+          "name": "CR4_FLAGS_L5_PAGING",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 4096,
+          "path": "src/registers/control.rs",
+          "line": 120,
+          "rust": "x86_64::registers::control::Cr4Flags::L5_PAGING.bits()",
+          "source_name": "L5_PAGING"
+        },
+        {
+          "name": "CR4_FLAGS_VIRTUAL_MACHINE_EXTENSIONS",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 8192,
+          "path": "src/registers/control.rs",
+          "line": 122,
+          "rust": "x86_64::registers::control::Cr4Flags::VIRTUAL_MACHINE_EXTENSIONS.bits()",
+          "source_name": "VIRTUAL_MACHINE_EXTENSIONS"
+        },
+        {
+          "name": "CR4_FLAGS_SAFER_MODE_EXTENSIONS",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 16384,
+          "path": "src/registers/control.rs",
+          "line": 124,
+          "rust": "x86_64::registers::control::Cr4Flags::SAFER_MODE_EXTENSIONS.bits()",
+          "source_name": "SAFER_MODE_EXTENSIONS"
+        },
+        {
+          "name": "CR4_FLAGS_FSGSBASE",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 65536,
+          "path": "src/registers/control.rs",
+          "line": 127,
+          "rust": "x86_64::registers::control::Cr4Flags::FSGSBASE.bits()",
+          "source_name": "FSGSBASE"
+        },
+        {
+          "name": "CR4_FLAGS_PCID",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 131072,
+          "path": "src/registers/control.rs",
+          "line": 129,
+          "rust": "x86_64::registers::control::Cr4Flags::PCID.bits()",
+          "source_name": "PCID"
+        },
+        {
+          "name": "CR4_FLAGS_OSXSAVE",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 262144,
+          "path": "src/registers/control.rs",
+          "line": 131,
+          "rust": "x86_64::registers::control::Cr4Flags::OSXSAVE.bits()",
+          "source_name": "OSXSAVE"
+        },
+        {
+          "name": "CR4_FLAGS_KEY_LOCKER",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 524288,
+          "path": "src/registers/control.rs",
+          "line": 137,
+          "rust": "x86_64::registers::control::Cr4Flags::KEY_LOCKER.bits()",
+          "source_name": "KEY_LOCKER"
+        },
+        {
+          "name": "CR4_FLAGS_SUPERVISOR_MODE_EXECUTION_PROTECTION",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 1048576,
+          "path": "src/registers/control.rs",
+          "line": 140,
+          "rust": "x86_64::registers::control::Cr4Flags::SUPERVISOR_MODE_EXECUTION_PROTECTION.bits()",
+          "source_name": "SUPERVISOR_MODE_EXECUTION_PROTECTION"
+        },
+        {
+          "name": "CR4_FLAGS_SUPERVISOR_MODE_ACCESS_PREVENTION",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 2097152,
+          "path": "src/registers/control.rs",
+          "line": 143,
+          "rust": "x86_64::registers::control::Cr4Flags::SUPERVISOR_MODE_ACCESS_PREVENTION.bits()",
+          "source_name": "SUPERVISOR_MODE_ACCESS_PREVENTION"
+        },
+        {
+          "name": "CR4_FLAGS_PROTECTION_KEY_USER",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 4194304,
+          "path": "src/registers/control.rs",
+          "line": 148,
+          "rust": "x86_64::registers::control::Cr4Flags::PROTECTION_KEY_USER.bits()",
+          "source_name": "PROTECTION_KEY_USER"
+        },
+        {
+          "name": "CR4_FLAGS_CONTROL_FLOW_ENFORCEMENT",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 8388608,
+          "path": "src/registers/control.rs",
+          "line": 153,
+          "rust": "x86_64::registers::control::Cr4Flags::CONTROL_FLOW_ENFORCEMENT.bits()",
+          "source_name": "CONTROL_FLOW_ENFORCEMENT"
+        },
+        {
+          "name": "CR4_FLAGS_PROTECTION_KEY_SUPERVISOR",
+          "type": "Cr4Flags",
+          "width": "u64",
+          "value": 16777216,
+          "path": "src/registers/control.rs",
+          "line": 158,
+          "rust": "x86_64::registers::control::Cr4Flags::PROTECTION_KEY_SUPERVISOR.bits()",
+          "source_name": "PROTECTION_KEY_SUPERVISOR"
+        }
+      ],
+      "known_bits": 33521663,
+      "path": "src/registers/control.rs"
+    },
+    {
+      "name": "Dr6Flags",
+      "width": "u64",
+      "members": [
+        {
+          "name": "DR6_FLAGS_TRAP0",
+          "type": "Dr6Flags",
+          "width": "u64",
+          "value": 1,
+          "path": "src/registers/debug.rs",
+          "line": 116,
+          "rust": "x86_64::registers::debug::Dr6Flags::TRAP0.bits()",
+          "source_name": "TRAP0"
+        },
+        {
+          "name": "DR6_FLAGS_TRAP1",
+          "type": "Dr6Flags",
+          "width": "u64",
+          "value": 2,
+          "path": "src/registers/debug.rs",
+          "line": 119,
+          "rust": "x86_64::registers::debug::Dr6Flags::TRAP1.bits()",
+          "source_name": "TRAP1"
+        },
+        {
+          "name": "DR6_FLAGS_TRAP2",
+          "type": "Dr6Flags",
+          "width": "u64",
+          "value": 4,
+          "path": "src/registers/debug.rs",
+          "line": 122,
+          "rust": "x86_64::registers::debug::Dr6Flags::TRAP2.bits()",
+          "source_name": "TRAP2"
+        },
+        {
+          "name": "DR6_FLAGS_TRAP3",
+          "type": "Dr6Flags",
+          "width": "u64",
+          "value": 8,
+          "path": "src/registers/debug.rs",
+          "line": 125,
+          "rust": "x86_64::registers::debug::Dr6Flags::TRAP3.bits()",
+          "source_name": "TRAP3"
+        },
+        {
+          "name": "DR6_FLAGS_TRAP",
+          "type": "Dr6Flags",
+          "width": "u64",
+          "value": 15,
+          "path": "src/registers/debug.rs",
+          "line": 128,
+          "rust": "x86_64::registers::debug::Dr6Flags::TRAP.bits()",
+          "source_name": "TRAP"
+        },
+        {
+          "name": "DR6_FLAGS_ACCESS_DETECTED",
+          "type": "Dr6Flags",
+          "width": "u64",
+          "value": 8192,
+          "path": "src/registers/debug.rs",
+          "line": 133,
+          "rust": "x86_64::registers::debug::Dr6Flags::ACCESS_DETECTED.bits()",
+          "source_name": "ACCESS_DETECTED"
+        },
+        {
+          "name": "DR6_FLAGS_STEP",
+          "type": "Dr6Flags",
+          "width": "u64",
+          "value": 16384,
+          "path": "src/registers/debug.rs",
+          "line": 138,
+          "rust": "x86_64::registers::debug::Dr6Flags::STEP.bits()",
+          "source_name": "STEP"
+        },
+        {
+          "name": "DR6_FLAGS_SWITCH",
+          "type": "Dr6Flags",
+          "width": "u64",
+          "value": 32768,
+          "path": "src/registers/debug.rs",
+          "line": 143,
+          "rust": "x86_64::registers::debug::Dr6Flags::SWITCH.bits()",
+          "source_name": "SWITCH"
+        },
+        {
+          "name": "DR6_FLAGS_RTM",
+          "type": "Dr6Flags",
+          "width": "u64",
+          "value": 65536,
+          "path": "src/registers/debug.rs",
+          "line": 149,
+          "rust": "x86_64::registers::debug::Dr6Flags::RTM.bits()",
+          "source_name": "RTM"
+        }
+      ],
+      "known_bits": 122895,
+      "path": "src/registers/debug.rs"
+    },
+    {
+      "name": "Dr7Flags",
+      "width": "u64",
+      "members": [
+        {
+          "name": "DR7_FLAGS_LOCAL_BREAKPOINT_0_ENABLE",
+          "type": "Dr7Flags",
+          "width": "u64",
+          "value": 1,
+          "path": "src/registers/debug.rs",
+          "line": 171,
+          "rust": "x86_64::registers::debug::Dr7Flags::LOCAL_BREAKPOINT_0_ENABLE.bits()",
+          "source_name": "LOCAL_BREAKPOINT_0_ENABLE"
+        },
+        {
+          "name": "DR7_FLAGS_LOCAL_BREAKPOINT_1_ENABLE",
+          "type": "Dr7Flags",
+          "width": "u64",
+          "value": 4,
+          "path": "src/registers/debug.rs",
+          "line": 174,
+          "rust": "x86_64::registers::debug::Dr7Flags::LOCAL_BREAKPOINT_1_ENABLE.bits()",
+          "source_name": "LOCAL_BREAKPOINT_1_ENABLE"
+        },
+        {
+          "name": "DR7_FLAGS_LOCAL_BREAKPOINT_2_ENABLE",
+          "type": "Dr7Flags",
+          "width": "u64",
+          "value": 16,
+          "path": "src/registers/debug.rs",
+          "line": 177,
+          "rust": "x86_64::registers::debug::Dr7Flags::LOCAL_BREAKPOINT_2_ENABLE.bits()",
+          "source_name": "LOCAL_BREAKPOINT_2_ENABLE"
+        },
+        {
+          "name": "DR7_FLAGS_LOCAL_BREAKPOINT_3_ENABLE",
+          "type": "Dr7Flags",
+          "width": "u64",
+          "value": 64,
+          "path": "src/registers/debug.rs",
+          "line": 180,
+          "rust": "x86_64::registers::debug::Dr7Flags::LOCAL_BREAKPOINT_3_ENABLE.bits()",
+          "source_name": "LOCAL_BREAKPOINT_3_ENABLE"
+        },
+        {
+          "name": "DR7_FLAGS_GLOBAL_BREAKPOINT_0_ENABLE",
+          "type": "Dr7Flags",
+          "width": "u64",
+          "value": 2,
+          "path": "src/registers/debug.rs",
+          "line": 183,
+          "rust": "x86_64::registers::debug::Dr7Flags::GLOBAL_BREAKPOINT_0_ENABLE.bits()",
+          "source_name": "GLOBAL_BREAKPOINT_0_ENABLE"
+        },
+        {
+          "name": "DR7_FLAGS_GLOBAL_BREAKPOINT_1_ENABLE",
+          "type": "Dr7Flags",
+          "width": "u64",
+          "value": 8,
+          "path": "src/registers/debug.rs",
+          "line": 186,
+          "rust": "x86_64::registers::debug::Dr7Flags::GLOBAL_BREAKPOINT_1_ENABLE.bits()",
+          "source_name": "GLOBAL_BREAKPOINT_1_ENABLE"
+        },
+        {
+          "name": "DR7_FLAGS_GLOBAL_BREAKPOINT_2_ENABLE",
+          "type": "Dr7Flags",
+          "width": "u64",
+          "value": 32,
+          "path": "src/registers/debug.rs",
+          "line": 189,
+          "rust": "x86_64::registers::debug::Dr7Flags::GLOBAL_BREAKPOINT_2_ENABLE.bits()",
+          "source_name": "GLOBAL_BREAKPOINT_2_ENABLE"
+        },
+        {
+          "name": "DR7_FLAGS_GLOBAL_BREAKPOINT_3_ENABLE",
+          "type": "Dr7Flags",
+          "width": "u64",
+          "value": 128,
+          "path": "src/registers/debug.rs",
+          "line": 192,
+          "rust": "x86_64::registers::debug::Dr7Flags::GLOBAL_BREAKPOINT_3_ENABLE.bits()",
+          "source_name": "GLOBAL_BREAKPOINT_3_ENABLE"
+        },
+        {
+          "name": "DR7_FLAGS_LOCAL_EXACT_BREAKPOINT_ENABLE",
+          "type": "Dr7Flags",
+          "width": "u64",
+          "value": 256,
+          "path": "src/registers/debug.rs",
+          "line": 197,
+          "rust": "x86_64::registers::debug::Dr7Flags::LOCAL_EXACT_BREAKPOINT_ENABLE.bits()",
+          "source_name": "LOCAL_EXACT_BREAKPOINT_ENABLE"
+        },
+        {
+          "name": "DR7_FLAGS_GLOBAL_EXACT_BREAKPOINT_ENABLE",
+          "type": "Dr7Flags",
+          "width": "u64",
+          "value": 512,
+          "path": "src/registers/debug.rs",
+          "line": 202,
+          "rust": "x86_64::registers::debug::Dr7Flags::GLOBAL_EXACT_BREAKPOINT_ENABLE.bits()",
+          "source_name": "GLOBAL_EXACT_BREAKPOINT_ENABLE"
+        },
+        {
+          "name": "DR7_FLAGS_RESTRICTED_TRANSACTIONAL_MEMORY",
+          "type": "Dr7Flags",
+          "width": "u64",
+          "value": 2048,
+          "path": "src/registers/debug.rs",
+          "line": 207,
+          "rust": "x86_64::registers::debug::Dr7Flags::RESTRICTED_TRANSACTIONAL_MEMORY.bits()",
+          "source_name": "RESTRICTED_TRANSACTIONAL_MEMORY"
+        },
+        {
+          "name": "DR7_FLAGS_GENERAL_DETECT_ENABLE",
+          "type": "Dr7Flags",
+          "width": "u64",
+          "value": 8192,
+          "path": "src/registers/debug.rs",
+          "line": 212,
+          "rust": "x86_64::registers::debug::Dr7Flags::GENERAL_DETECT_ENABLE.bits()",
+          "source_name": "GENERAL_DETECT_ENABLE"
+        }
+      ],
+      "known_bits": 11263,
+      "path": "src/registers/debug.rs"
+    },
+    {
+      "name": "EferFlags",
+      "width": "u64",
+      "members": [
+        {
+          "name": "EFER_FLAGS_SYSTEM_CALL_EXTENSIONS",
+          "type": "EferFlags",
+          "width": "u64",
+          "value": 1,
+          "path": "src/registers/model_specific.rs",
+          "line": 133,
+          "rust": "x86_64::registers::model_specific::EferFlags::SYSTEM_CALL_EXTENSIONS.bits()",
+          "source_name": "SYSTEM_CALL_EXTENSIONS"
+        },
+        {
+          "name": "EFER_FLAGS_LONG_MODE_ENABLE",
+          "type": "EferFlags",
+          "width": "u64",
+          "value": 256,
+          "path": "src/registers/model_specific.rs",
+          "line": 135,
+          "rust": "x86_64::registers::model_specific::EferFlags::LONG_MODE_ENABLE.bits()",
+          "source_name": "LONG_MODE_ENABLE"
+        },
+        {
+          "name": "EFER_FLAGS_LONG_MODE_ACTIVE",
+          "type": "EferFlags",
+          "width": "u64",
+          "value": 1024,
+          "path": "src/registers/model_specific.rs",
+          "line": 137,
+          "rust": "x86_64::registers::model_specific::EferFlags::LONG_MODE_ACTIVE.bits()",
+          "source_name": "LONG_MODE_ACTIVE"
+        },
+        {
+          "name": "EFER_FLAGS_NO_EXECUTE_ENABLE",
+          "type": "EferFlags",
+          "width": "u64",
+          "value": 2048,
+          "path": "src/registers/model_specific.rs",
+          "line": 139,
+          "rust": "x86_64::registers::model_specific::EferFlags::NO_EXECUTE_ENABLE.bits()",
+          "source_name": "NO_EXECUTE_ENABLE"
+        },
+        {
+          "name": "EFER_FLAGS_SECURE_VIRTUAL_MACHINE_ENABLE",
+          "type": "EferFlags",
+          "width": "u64",
+          "value": 4096,
+          "path": "src/registers/model_specific.rs",
+          "line": 141,
+          "rust": "x86_64::registers::model_specific::EferFlags::SECURE_VIRTUAL_MACHINE_ENABLE.bits()",
+          "source_name": "SECURE_VIRTUAL_MACHINE_ENABLE"
+        },
+        {
+          "name": "EFER_FLAGS_LONG_MODE_SEGMENT_LIMIT_ENABLE",
+          "type": "EferFlags",
+          "width": "u64",
+          "value": 8192,
+          "path": "src/registers/model_specific.rs",
+          "line": 143,
+          "rust": "x86_64::registers::model_specific::EferFlags::LONG_MODE_SEGMENT_LIMIT_ENABLE.bits()",
+          "source_name": "LONG_MODE_SEGMENT_LIMIT_ENABLE"
+        },
+        {
+          "name": "EFER_FLAGS_FAST_FXSAVE_FXRSTOR",
+          "type": "EferFlags",
+          "width": "u64",
+          "value": 16384,
+          "path": "src/registers/model_specific.rs",
+          "line": 145,
+          "rust": "x86_64::registers::model_specific::EferFlags::FAST_FXSAVE_FXRSTOR.bits()",
+          "source_name": "FAST_FXSAVE_FXRSTOR"
+        },
+        {
+          "name": "EFER_FLAGS_TRANSLATION_CACHE_EXTENSION",
+          "type": "EferFlags",
+          "width": "u64",
+          "value": 32768,
+          "path": "src/registers/model_specific.rs",
+          "line": 147,
+          "rust": "x86_64::registers::model_specific::EferFlags::TRANSLATION_CACHE_EXTENSION.bits()",
+          "source_name": "TRANSLATION_CACHE_EXTENSION"
+        }
+      ],
+      "known_bits": 64769,
+      "path": "src/registers/model_specific.rs"
+    },
+    {
+      "name": "CetFlags",
+      "width": "u64",
+      "members": [
+        {
+          "name": "CET_FLAGS_SS_ENABLE",
+          "type": "CetFlags",
+          "width": "u64",
+          "value": 1,
+          "path": "src/registers/model_specific.rs",
+          "line": 158,
+          "rust": "x86_64::registers::model_specific::CetFlags::SS_ENABLE.bits()",
+          "source_name": "SS_ENABLE"
+        },
+        {
+          "name": "CET_FLAGS_SS_WRITE_ENABLE",
+          "type": "CetFlags",
+          "width": "u64",
+          "value": 2,
+          "path": "src/registers/model_specific.rs",
+          "line": 160,
+          "rust": "x86_64::registers::model_specific::CetFlags::SS_WRITE_ENABLE.bits()",
+          "source_name": "SS_WRITE_ENABLE"
+        },
+        {
+          "name": "CET_FLAGS_IBT_ENABLE",
+          "type": "CetFlags",
+          "width": "u64",
+          "value": 4,
+          "path": "src/registers/model_specific.rs",
+          "line": 162,
+          "rust": "x86_64::registers::model_specific::CetFlags::IBT_ENABLE.bits()",
+          "source_name": "IBT_ENABLE"
+        },
+        {
+          "name": "CET_FLAGS_IBT_LEGACY_ENABLE",
+          "type": "CetFlags",
+          "width": "u64",
+          "value": 8,
+          "path": "src/registers/model_specific.rs",
+          "line": 164,
+          "rust": "x86_64::registers::model_specific::CetFlags::IBT_LEGACY_ENABLE.bits()",
+          "source_name": "IBT_LEGACY_ENABLE"
+        },
+        {
+          "name": "CET_FLAGS_IBT_NO_TRACK_ENABLE",
+          "type": "CetFlags",
+          "width": "u64",
+          "value": 16,
+          "path": "src/registers/model_specific.rs",
+          "line": 166,
+          "rust": "x86_64::registers::model_specific::CetFlags::IBT_NO_TRACK_ENABLE.bits()",
+          "source_name": "IBT_NO_TRACK_ENABLE"
+        },
+        {
+          "name": "CET_FLAGS_IBT_LEGACY_SUPPRESS_ENABLE",
+          "type": "CetFlags",
+          "width": "u64",
+          "value": 32,
+          "path": "src/registers/model_specific.rs",
+          "line": 168,
+          "rust": "x86_64::registers::model_specific::CetFlags::IBT_LEGACY_SUPPRESS_ENABLE.bits()",
+          "source_name": "IBT_LEGACY_SUPPRESS_ENABLE"
+        },
+        {
+          "name": "CET_FLAGS_IBT_SUPPRESS_ENABLE",
+          "type": "CetFlags",
+          "width": "u64",
+          "value": 1024,
+          "path": "src/registers/model_specific.rs",
+          "line": 170,
+          "rust": "x86_64::registers::model_specific::CetFlags::IBT_SUPPRESS_ENABLE.bits()",
+          "source_name": "IBT_SUPPRESS_ENABLE"
+        },
+        {
+          "name": "CET_FLAGS_IBT_TRACKED",
+          "type": "CetFlags",
+          "width": "u64",
+          "value": 2048,
+          "path": "src/registers/model_specific.rs",
+          "line": 172,
+          "rust": "x86_64::registers::model_specific::CetFlags::IBT_TRACKED.bits()",
+          "source_name": "IBT_TRACKED"
+        }
+      ],
+      "known_bits": 3135,
+      "path": "src/registers/model_specific.rs"
+    },
+    {
+      "name": "ApicBaseFlags",
+      "width": "u64",
+      "members": [
+        {
+          "name": "APIC_BASE_FLAGS_BSP",
+          "type": "ApicBaseFlags",
+          "width": "u64",
+          "value": 256,
+          "path": "src/registers/model_specific.rs",
+          "line": 183,
+          "rust": "x86_64::registers::model_specific::ApicBaseFlags::BSP.bits()",
+          "source_name": "BSP"
+        },
+        {
+          "name": "APIC_BASE_FLAGS_X2APIC_ENABLE",
+          "type": "ApicBaseFlags",
+          "width": "u64",
+          "value": 1024,
+          "path": "src/registers/model_specific.rs",
+          "line": 187,
+          "rust": "x86_64::registers::model_specific::ApicBaseFlags::X2APIC_ENABLE.bits()",
+          "source_name": "X2APIC_ENABLE"
+        },
+        {
+          "name": "APIC_BASE_FLAGS_LAPIC_ENABLE",
+          "type": "ApicBaseFlags",
+          "width": "u64",
+          "value": 2048,
+          "path": "src/registers/model_specific.rs",
+          "line": 189,
+          "rust": "x86_64::registers::model_specific::ApicBaseFlags::LAPIC_ENABLE.bits()",
+          "source_name": "LAPIC_ENABLE"
+        }
+      ],
+      "known_bits": 3328,
+      "path": "src/registers/model_specific.rs"
+    },
+    {
+      "name": "MxCsr",
+      "width": "u32",
+      "members": [
+        {
+          "name": "MX_CSR_INVALID_OPERATION",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 1,
+          "path": "src/registers/mxcsr.rs",
+          "line": 14,
+          "rust": "x86_64::registers::mxcsr::MxCsr::INVALID_OPERATION.bits()",
+          "source_name": "INVALID_OPERATION"
+        },
+        {
+          "name": "MX_CSR_DENORMAL",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 2,
+          "path": "src/registers/mxcsr.rs",
+          "line": 16,
+          "rust": "x86_64::registers::mxcsr::MxCsr::DENORMAL.bits()",
+          "source_name": "DENORMAL"
+        },
+        {
+          "name": "MX_CSR_DIVIDE_BY_ZERO",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 4,
+          "path": "src/registers/mxcsr.rs",
+          "line": 18,
+          "rust": "x86_64::registers::mxcsr::MxCsr::DIVIDE_BY_ZERO.bits()",
+          "source_name": "DIVIDE_BY_ZERO"
+        },
+        {
+          "name": "MX_CSR_OVERFLOW",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 8,
+          "path": "src/registers/mxcsr.rs",
+          "line": 20,
+          "rust": "x86_64::registers::mxcsr::MxCsr::OVERFLOW.bits()",
+          "source_name": "OVERFLOW"
+        },
+        {
+          "name": "MX_CSR_UNDERFLOW",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 16,
+          "path": "src/registers/mxcsr.rs",
+          "line": 22,
+          "rust": "x86_64::registers::mxcsr::MxCsr::UNDERFLOW.bits()",
+          "source_name": "UNDERFLOW"
+        },
+        {
+          "name": "MX_CSR_PRECISION",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 32,
+          "path": "src/registers/mxcsr.rs",
+          "line": 24,
+          "rust": "x86_64::registers::mxcsr::MxCsr::PRECISION.bits()",
+          "source_name": "PRECISION"
+        },
+        {
+          "name": "MX_CSR_DENORMALS_ARE_ZEROS",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 64,
+          "path": "src/registers/mxcsr.rs",
+          "line": 26,
+          "rust": "x86_64::registers::mxcsr::MxCsr::DENORMALS_ARE_ZEROS.bits()",
+          "source_name": "DENORMALS_ARE_ZEROS"
+        },
+        {
+          "name": "MX_CSR_INVALID_OPERATION_MASK",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 128,
+          "path": "src/registers/mxcsr.rs",
+          "line": 28,
+          "rust": "x86_64::registers::mxcsr::MxCsr::INVALID_OPERATION_MASK.bits()",
+          "source_name": "INVALID_OPERATION_MASK"
+        },
+        {
+          "name": "MX_CSR_DENORMAL_MASK",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 256,
+          "path": "src/registers/mxcsr.rs",
+          "line": 30,
+          "rust": "x86_64::registers::mxcsr::MxCsr::DENORMAL_MASK.bits()",
+          "source_name": "DENORMAL_MASK"
+        },
+        {
+          "name": "MX_CSR_DIVIDE_BY_ZERO_MASK",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 512,
+          "path": "src/registers/mxcsr.rs",
+          "line": 32,
+          "rust": "x86_64::registers::mxcsr::MxCsr::DIVIDE_BY_ZERO_MASK.bits()",
+          "source_name": "DIVIDE_BY_ZERO_MASK"
+        },
+        {
+          "name": "MX_CSR_OVERFLOW_MASK",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 1024,
+          "path": "src/registers/mxcsr.rs",
+          "line": 34,
+          "rust": "x86_64::registers::mxcsr::MxCsr::OVERFLOW_MASK.bits()",
+          "source_name": "OVERFLOW_MASK"
+        },
+        {
+          "name": "MX_CSR_UNDERFLOW_MASK",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 2048,
+          "path": "src/registers/mxcsr.rs",
+          "line": 36,
+          "rust": "x86_64::registers::mxcsr::MxCsr::UNDERFLOW_MASK.bits()",
+          "source_name": "UNDERFLOW_MASK"
+        },
+        {
+          "name": "MX_CSR_PRECISION_MASK",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 4096,
+          "path": "src/registers/mxcsr.rs",
+          "line": 38,
+          "rust": "x86_64::registers::mxcsr::MxCsr::PRECISION_MASK.bits()",
+          "source_name": "PRECISION_MASK"
+        },
+        {
+          "name": "MX_CSR_ROUNDING_CONTROL_NEGATIVE",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 8192,
+          "path": "src/registers/mxcsr.rs",
+          "line": 40,
+          "rust": "x86_64::registers::mxcsr::MxCsr::ROUNDING_CONTROL_NEGATIVE.bits()",
+          "source_name": "ROUNDING_CONTROL_NEGATIVE"
+        },
+        {
+          "name": "MX_CSR_ROUNDING_CONTROL_POSITIVE",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 16384,
+          "path": "src/registers/mxcsr.rs",
+          "line": 42,
+          "rust": "x86_64::registers::mxcsr::MxCsr::ROUNDING_CONTROL_POSITIVE.bits()",
+          "source_name": "ROUNDING_CONTROL_POSITIVE"
+        },
+        {
+          "name": "MX_CSR_ROUNDING_CONTROL_ZERO",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 24576,
+          "path": "src/registers/mxcsr.rs",
+          "line": 44,
+          "rust": "x86_64::registers::mxcsr::MxCsr::ROUNDING_CONTROL_ZERO.bits()",
+          "source_name": "ROUNDING_CONTROL_ZERO"
+        },
+        {
+          "name": "MX_CSR_FLUSH_TO_ZERO",
+          "type": "MxCsr",
+          "width": "u32",
+          "value": 32768,
+          "path": "src/registers/mxcsr.rs",
+          "line": 46,
+          "rust": "x86_64::registers::mxcsr::MxCsr::FLUSH_TO_ZERO.bits()",
+          "source_name": "FLUSH_TO_ZERO"
+        }
+      ],
+      "known_bits": 65535,
+      "path": "src/registers/mxcsr.rs"
+    },
+    {
+      "name": "RFlags",
+      "width": "u64",
+      "members": [
+        {
+          "name": "RFLAGS_ID",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 2097152,
+          "path": "src/registers/rflags.rs",
+          "line": 16,
+          "rust": "x86_64::registers::rflags::RFlags::ID.bits()",
+          "source_name": "ID"
+        },
+        {
+          "name": "RFLAGS_VIRTUAL_INTERRUPT_PENDING",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 1048576,
+          "path": "src/registers/rflags.rs",
+          "line": 21,
+          "rust": "x86_64::registers::rflags::RFlags::VIRTUAL_INTERRUPT_PENDING.bits()",
+          "source_name": "VIRTUAL_INTERRUPT_PENDING"
+        },
+        {
+          "name": "RFLAGS_VIRTUAL_INTERRUPT",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 524288,
+          "path": "src/registers/rflags.rs",
+          "line": 26,
+          "rust": "x86_64::registers::rflags::RFlags::VIRTUAL_INTERRUPT.bits()",
+          "source_name": "VIRTUAL_INTERRUPT"
+        },
+        {
+          "name": "RFLAGS_ALIGNMENT_CHECK",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 262144,
+          "path": "src/registers/rflags.rs",
+          "line": 28,
+          "rust": "x86_64::registers::rflags::RFlags::ALIGNMENT_CHECK.bits()",
+          "source_name": "ALIGNMENT_CHECK"
+        },
+        {
+          "name": "RFLAGS_VIRTUAL_8086_MODE",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 131072,
+          "path": "src/registers/rflags.rs",
+          "line": 30,
+          "rust": "x86_64::registers::rflags::RFlags::VIRTUAL_8086_MODE.bits()",
+          "source_name": "VIRTUAL_8086_MODE"
+        },
+        {
+          "name": "RFLAGS_RESUME_FLAG",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 65536,
+          "path": "src/registers/rflags.rs",
+          "line": 32,
+          "rust": "x86_64::registers::rflags::RFlags::RESUME_FLAG.bits()",
+          "source_name": "RESUME_FLAG"
+        },
+        {
+          "name": "RFLAGS_NESTED_TASK",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 16384,
+          "path": "src/registers/rflags.rs",
+          "line": 34,
+          "rust": "x86_64::registers::rflags::RFlags::NESTED_TASK.bits()",
+          "source_name": "NESTED_TASK"
+        },
+        {
+          "name": "RFLAGS_IOPL_HIGH",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 8192,
+          "path": "src/registers/rflags.rs",
+          "line": 38,
+          "rust": "x86_64::registers::rflags::RFlags::IOPL_HIGH.bits()",
+          "source_name": "IOPL_HIGH"
+        },
+        {
+          "name": "RFLAGS_IOPL_LOW",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 4096,
+          "path": "src/registers/rflags.rs",
+          "line": 42,
+          "rust": "x86_64::registers::rflags::RFlags::IOPL_LOW.bits()",
+          "source_name": "IOPL_LOW"
+        },
+        {
+          "name": "RFLAGS_OVERFLOW_FLAG",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 2048,
+          "path": "src/registers/rflags.rs",
+          "line": 45,
+          "rust": "x86_64::registers::rflags::RFlags::OVERFLOW_FLAG.bits()",
+          "source_name": "OVERFLOW_FLAG"
+        },
+        {
+          "name": "RFLAGS_DIRECTION_FLAG",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 1024,
+          "path": "src/registers/rflags.rs",
+          "line": 47,
+          "rust": "x86_64::registers::rflags::RFlags::DIRECTION_FLAG.bits()",
+          "source_name": "DIRECTION_FLAG"
+        },
+        {
+          "name": "RFLAGS_INTERRUPT_FLAG",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 512,
+          "path": "src/registers/rflags.rs",
+          "line": 49,
+          "rust": "x86_64::registers::rflags::RFlags::INTERRUPT_FLAG.bits()",
+          "source_name": "INTERRUPT_FLAG"
+        },
+        {
+          "name": "RFLAGS_TRAP_FLAG",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 256,
+          "path": "src/registers/rflags.rs",
+          "line": 51,
+          "rust": "x86_64::registers::rflags::RFlags::TRAP_FLAG.bits()",
+          "source_name": "TRAP_FLAG"
+        },
+        {
+          "name": "RFLAGS_SIGN_FLAG",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 128,
+          "path": "src/registers/rflags.rs",
+          "line": 53,
+          "rust": "x86_64::registers::rflags::RFlags::SIGN_FLAG.bits()",
+          "source_name": "SIGN_FLAG"
+        },
+        {
+          "name": "RFLAGS_ZERO_FLAG",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 64,
+          "path": "src/registers/rflags.rs",
+          "line": 55,
+          "rust": "x86_64::registers::rflags::RFlags::ZERO_FLAG.bits()",
+          "source_name": "ZERO_FLAG"
+        },
+        {
+          "name": "RFLAGS_AUXILIARY_CARRY_FLAG",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 16,
+          "path": "src/registers/rflags.rs",
+          "line": 58,
+          "rust": "x86_64::registers::rflags::RFlags::AUXILIARY_CARRY_FLAG.bits()",
+          "source_name": "AUXILIARY_CARRY_FLAG"
+        },
+        {
+          "name": "RFLAGS_PARITY_FLAG",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 4,
+          "path": "src/registers/rflags.rs",
+          "line": 60,
+          "rust": "x86_64::registers::rflags::RFlags::PARITY_FLAG.bits()",
+          "source_name": "PARITY_FLAG"
+        },
+        {
+          "name": "RFLAGS_CARRY_FLAG",
+          "type": "RFlags",
+          "width": "u64",
+          "value": 1,
+          "path": "src/registers/rflags.rs",
+          "line": 63,
+          "rust": "x86_64::registers::rflags::RFlags::CARRY_FLAG.bits()",
+          "source_name": "CARRY_FLAG"
+        }
+      ],
+      "known_bits": 4161493,
+      "path": "src/registers/rflags.rs"
+    },
+    {
+      "name": "XCr0Flags",
+      "width": "u64",
+      "members": [
+        {
+          "name": "XCR0_FLAGS_X87",
+          "type": "XCr0Flags",
+          "width": "u64",
+          "value": 1,
+          "path": "src/registers/xcontrol.rs",
+          "line": 20,
+          "rust": "x86_64::registers::xcontrol::XCr0Flags::X87.bits()",
+          "source_name": "X87"
+        },
+        {
+          "name": "XCR0_FLAGS_SSE",
+          "type": "XCr0Flags",
+          "width": "u64",
+          "value": 2,
+          "path": "src/registers/xcontrol.rs",
+          "line": 25,
+          "rust": "x86_64::registers::xcontrol::XCr0Flags::SSE.bits()",
+          "source_name": "SSE"
+        },
+        {
+          "name": "XCR0_FLAGS_AVX",
+          "type": "XCr0Flags",
+          "width": "u64",
+          "value": 4,
+          "path": "src/registers/xcontrol.rs",
+          "line": 28,
+          "rust": "x86_64::registers::xcontrol::XCr0Flags::AVX.bits()",
+          "source_name": "AVX"
+        },
+        {
+          "name": "XCR0_FLAGS_BNDREG",
+          "type": "XCr0Flags",
+          "width": "u64",
+          "value": 8,
+          "path": "src/registers/xcontrol.rs",
+          "line": 31,
+          "rust": "x86_64::registers::xcontrol::XCr0Flags::BNDREG.bits()",
+          "source_name": "BNDREG"
+        },
+        {
+          "name": "XCR0_FLAGS_BNDCSR",
+          "type": "XCr0Flags",
+          "width": "u64",
+          "value": 16,
+          "path": "src/registers/xcontrol.rs",
+          "line": 34,
+          "rust": "x86_64::registers::xcontrol::XCr0Flags::BNDCSR.bits()",
+          "source_name": "BNDCSR"
+        },
+        {
+          "name": "XCR0_FLAGS_OPMASK",
+          "type": "XCr0Flags",
+          "width": "u64",
+          "value": 32,
+          "path": "src/registers/xcontrol.rs",
+          "line": 37,
+          "rust": "x86_64::registers::xcontrol::XCr0Flags::OPMASK.bits()",
+          "source_name": "OPMASK"
+        },
+        {
+          "name": "XCR0_FLAGS_ZMM_HI256",
+          "type": "XCr0Flags",
+          "width": "u64",
+          "value": 64,
+          "path": "src/registers/xcontrol.rs",
+          "line": 40,
+          "rust": "x86_64::registers::xcontrol::XCr0Flags::ZMM_HI256.bits()",
+          "source_name": "ZMM_HI256"
+        },
+        {
+          "name": "XCR0_FLAGS_HI16_ZMM",
+          "type": "XCr0Flags",
+          "width": "u64",
+          "value": 128,
+          "path": "src/registers/xcontrol.rs",
+          "line": 43,
+          "rust": "x86_64::registers::xcontrol::XCr0Flags::HI16_ZMM.bits()",
+          "source_name": "HI16_ZMM"
+        },
+        {
+          "name": "XCR0_FLAGS_MPK",
+          "type": "XCr0Flags",
+          "width": "u64",
+          "value": 512,
+          "path": "src/registers/xcontrol.rs",
+          "line": 46,
+          "rust": "x86_64::registers::xcontrol::XCr0Flags::MPK.bits()",
+          "source_name": "MPK"
+        },
+        {
+          "name": "XCR0_FLAGS_LWP",
+          "type": "XCr0Flags",
+          "width": "u64",
+          "value": 4611686018427387904,
+          "path": "src/registers/xcontrol.rs",
+          "line": 49,
+          "rust": "x86_64::registers::xcontrol::XCr0Flags::LWP.bits()",
+          "source_name": "LWP"
+        }
+      ],
+      "known_bits": 4611686018427388671,
+      "path": "src/registers/xcontrol.rs"
+    }
+  ],
+  "enums": {
+    "PrivilegeLevel": [
+      "u8",
+      [
+        [
+          "RING0",
+          0
+        ],
+        [
+          "RING1",
+          1
+        ],
+        [
+          "RING2",
+          2
+        ],
+        [
+          "RING3",
+          3
+        ]
+      ]
+    ],
+    "PriorityClass": [
+      "u8",
+      [
+        [
+          "CLASS1",
+          1
+        ],
+        [
+          "CLASS2",
+          2
+        ],
+        [
+          "CLASS3",
+          3
+        ],
+        [
+          "CLASS4",
+          4
+        ],
+        [
+          "CLASS5",
+          5
+        ],
+        [
+          "CLASS6",
+          6
+        ],
+        [
+          "CLASS7",
+          7
+        ],
+        [
+          "CLASS8",
+          8
+        ],
+        [
+          "CLASS9",
+          9
+        ],
+        [
+          "CLASS10",
+          10
+        ],
+        [
+          "CLASS11",
+          11
+        ],
+        [
+          "CLASS12",
+          12
+        ],
+        [
+          "CLASS13",
+          13
+        ],
+        [
+          "CLASS14",
+          14
+        ],
+        [
+          "CLASS15",
+          15
+        ]
+      ]
+    ],
+    "DebugAddressRegisterNumber": [
+      "u8",
+      [
+        [
+          "DR0",
+          0
+        ],
+        [
+          "DR1",
+          1
+        ],
+        [
+          "DR2",
+          2
+        ],
+        [
+          "DR3",
+          3
+        ]
+      ]
+    ],
+    "BreakpointCondition": [
+      "u8",
+      [
+        [
+          "INSTRUCTION_EXECUTION",
+          0
+        ],
+        [
+          "DATA_WRITES",
+          1
+        ],
+        [
+          "IO_READS_WRITES",
+          2
+        ],
+        [
+          "DATA_READS_WRITES",
+          3
+        ]
+      ]
+    ],
+    "BreakpointSize": [
+      "u8",
+      [
+        [
+          "LENGTH1B",
+          0
+        ],
+        [
+          "LENGTH2B",
+          1
+        ],
+        [
+          "LENGTH8B",
+          2
+        ],
+        [
+          "LENGTH4B",
+          3
+        ]
+      ]
+    ]
+  },
+  "msrs": [
+    {
+      "name": "EFER_MSR",
+      "owner": "Efer",
+      "value": 3221225600,
+      "path": "src/registers/model_specific.rs",
+      "line": 79
+    },
+    {
+      "name": "FS_BASE_MSR",
+      "owner": "FsBase",
+      "value": 3221225728,
+      "path": "src/registers/model_specific.rs",
+      "line": 84
+    },
+    {
+      "name": "GS_BASE_MSR",
+      "owner": "GsBase",
+      "value": 3221225729,
+      "path": "src/registers/model_specific.rs",
+      "line": 89
+    },
+    {
+      "name": "KERNEL_GS_BASE_MSR",
+      "owner": "KernelGsBase",
+      "value": 3221225730,
+      "path": "src/registers/model_specific.rs",
+      "line": 94
+    },
+    {
+      "name": "STAR_MSR",
+      "owner": "Star",
+      "value": 3221225601,
+      "path": "src/registers/model_specific.rs",
+      "line": 99
+    },
+    {
+      "name": "LSTAR_MSR",
+      "owner": "LStar",
+      "value": 3221225602,
+      "path": "src/registers/model_specific.rs",
+      "line": 104
+    },
+    {
+      "name": "SFMASK_MSR",
+      "owner": "SFMask",
+      "value": 3221225604,
+      "path": "src/registers/model_specific.rs",
+      "line": 109
+    },
+    {
+      "name": "UCET_MSR",
+      "owner": "UCet",
+      "value": 1696,
+      "path": "src/registers/model_specific.rs",
+      "line": 114
+    },
+    {
+      "name": "SCET_MSR",
+      "owner": "SCet",
+      "value": 1698,
+      "path": "src/registers/model_specific.rs",
+      "line": 119
+    },
+    {
+      "name": "APIC_BASE_MSR",
+      "owner": "ApicBase",
+      "value": 27,
+      "path": "src/registers/model_specific.rs",
+      "line": 124
+    }
+  ],
+  "dr7_valid_bits": 4294913023
+}
