@@ -1,0 +1,476 @@
+[
+  {
+    "upstream": "spec::registers::IER::DATA_READY",
+    "name": "IER_DATA_READY",
+    "value": 1,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::IER::THR_EMPTY",
+    "name": "IER_THR_EMPTY",
+    "value": 2,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::IER::RECEIVER_LINE_STATUS",
+    "name": "IER_RECEIVER_LINE_STATUS",
+    "value": 4,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::IER::MODEM_STATUS",
+    "name": "IER_MODEM_STATUS",
+    "value": 8,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::IER::_RESERVED0",
+    "name": "IER__RESERVED0",
+    "value": 16,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::IER::_RESERVED1",
+    "name": "IER__RESERVED1",
+    "value": 32,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::IER::DMA_RX_END",
+    "name": "IER_DMA_RX_END",
+    "value": 64,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::IER::DMA_TX_END",
+    "name": "IER_DMA_TX_END",
+    "value": 128,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::ISR::INTERRUPT_STATUS",
+    "name": "ISR_INTERRUPT_STATUS",
+    "value": 1,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::ISR::IIC_0",
+    "name": "ISR_IIC_0",
+    "value": 2,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::ISR::IIC_1",
+    "name": "ISR_IIC_1",
+    "value": 4,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::ISR::IIC_2",
+    "name": "ISR_IIC_2",
+    "value": 8,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::ISR::DMA_RX_END",
+    "name": "ISR_DMA_RX_END",
+    "value": 16,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::ISR::DMA_TX_END",
+    "name": "ISR_DMA_TX_END",
+    "value": 32,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::ISR::FIFOS_ENABLED0",
+    "name": "ISR_FIFOS_ENABLED0",
+    "value": 64,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::ISR::FIFOS_ENABLED1",
+    "name": "ISR_FIFOS_ENABLED1",
+    "value": 128,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::FCR::FIFO_ENABLE",
+    "name": "FCR_FIFO_ENABLE",
+    "value": 1,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::FCR::RX_FIFO_RESET",
+    "name": "FCR_RX_FIFO_RESET",
+    "value": 2,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::FCR::TX_FIFO_RESET",
+    "name": "FCR_TX_FIFO_RESET",
+    "value": 4,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::FCR::DMA_MODE",
+    "name": "FCR_DMA_MODE",
+    "value": 8,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::FCR::ENABLE_DMA_END",
+    "name": "FCR_ENABLE_DMA_END",
+    "value": 16,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::FCR::_RESERVED0",
+    "name": "FCR__RESERVED0",
+    "value": 32,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::FCR::RX_FIFO_TRIGGER_LEVEL0",
+    "name": "FCR_RX_FIFO_TRIGGER_LEVEL0",
+    "value": 64,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::FCR::RX_FIFO_TRIGGER_LEVEL1",
+    "name": "FCR_RX_FIFO_TRIGGER_LEVEL1",
+    "value": 128,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LCR::WORD_LENGTH0",
+    "name": "LCR_WORD_LENGTH0",
+    "value": 1,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LCR::WORD_LENGTH1",
+    "name": "LCR_WORD_LENGTH1",
+    "value": 2,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LCR::MORE_STOP_BITS",
+    "name": "LCR_MORE_STOP_BITS",
+    "value": 4,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LCR::PARITY0",
+    "name": "LCR_PARITY0",
+    "value": 8,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LCR::PARITY1",
+    "name": "LCR_PARITY1",
+    "value": 16,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LCR::PARITY2",
+    "name": "LCR_PARITY2",
+    "value": 32,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LCR::SET_BREAK",
+    "name": "LCR_SET_BREAK",
+    "value": 64,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LCR::DLAB",
+    "name": "LCR_DLAB",
+    "value": 128,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MCR::DTR",
+    "name": "MCR_DTR",
+    "value": 1,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MCR::RTS",
+    "name": "MCR_RTS",
+    "value": 2,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MCR::OUT_1",
+    "name": "MCR_OUT_1",
+    "value": 4,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MCR::OUT_2_INT_ENABLE",
+    "name": "MCR_OUT_2_INT_ENABLE",
+    "value": 8,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MCR::LOOP_BACK",
+    "name": "MCR_LOOP_BACK",
+    "value": 16,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MCR::_RESERVED0",
+    "name": "MCR__RESERVED0",
+    "value": 32,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MCR::_RESERVED1",
+    "name": "MCR__RESERVED1",
+    "value": 64,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MCR::_RESERVED2",
+    "name": "MCR__RESERVED2",
+    "value": 128,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LSR::DATA_READY",
+    "name": "LSR_DATA_READY",
+    "value": 1,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LSR::OVERRUN_ERROR",
+    "name": "LSR_OVERRUN_ERROR",
+    "value": 2,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LSR::PARITY_ERROR",
+    "name": "LSR_PARITY_ERROR",
+    "value": 4,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LSR::FRAMING_ERROR",
+    "name": "LSR_FRAMING_ERROR",
+    "value": 8,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LSR::BREAK_INTERRUPT",
+    "name": "LSR_BREAK_INTERRUPT",
+    "value": 16,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LSR::THR_EMPTY",
+    "name": "LSR_THR_EMPTY",
+    "value": 32,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LSR::TRANSMITTER_EMPTY",
+    "name": "LSR_TRANSMIT_EMPTY",
+    "value": 64,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::LSR::FIFO_DATA_ERROR",
+    "name": "LSR_FIFO_DATA_ERROR",
+    "value": 128,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MSR::DELTA_CTS",
+    "name": "MSR_DELTA_CTS",
+    "value": 1,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MSR::DELTA_DSR",
+    "name": "MSR_DELTA_DSR",
+    "value": 2,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MSR::TRAILING_EDGE_RI",
+    "name": "MSR_TRAILING_EDGE_RI",
+    "value": 4,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MSR::DELTA_CD",
+    "name": "MSR_DELTA_CD",
+    "value": 8,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MSR::CTS",
+    "name": "MSR_CTS",
+    "value": 16,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MSR::DSR",
+    "name": "MSR_DSR",
+    "value": 32,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MSR::RI",
+    "name": "MSR_RI",
+    "value": 64,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::MSR::CD",
+    "name": "MSR_CD",
+    "value": 128,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::PSD::PDF0",
+    "name": "PSD_PDF0",
+    "value": 1,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::PSD::PDF1",
+    "name": "PSD_PDF1",
+    "value": 2,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::PSD::PDF2",
+    "name": "PSD_PDF2",
+    "value": 4,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::PSD::PDF3",
+    "name": "PSD_PDF3",
+    "value": 8,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::PSD::_RESERVED0",
+    "name": "PSD__RESERVED0",
+    "value": 16,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::PSD::_RESERVED1",
+    "name": "PSD__RESERVED1",
+    "value": 32,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::PSD::_RESERVED2",
+    "name": "PSD__RESERVED2",
+    "value": 64,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::PSD::_RESERVED3",
+    "name": "PSD__RESERVED3",
+    "value": 128,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::CLK_FREQUENCY_HZ",
+    "name": "CLK_FREQUENCY_HZ",
+    "value": 1843200,
+    "type": "u32"
+  },
+  {
+    "upstream": "spec::FIFO_SIZE",
+    "name": "FIFO_SIZE",
+    "value": 16,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::NUM_REGISTERS",
+    "name": "NUM_REGISTERS",
+    "value": 8,
+    "type": "u8"
+  },
+  {
+    "upstream": "spec::registers::offsets::ISR",
+    "name": "REG_INTERRUPT_STATUS",
+    "value": 2,
+    "type": "u16"
+  },
+  {
+    "upstream": "spec::registers::offsets::PSD",
+    "name": "REG_PRESCALER",
+    "value": 6,
+    "type": "u16"
+  },
+  {
+    "upstream": "spec::registers::offsets::DATA",
+    "name": "REG_DATA",
+    "value": 0,
+    "type": "u16"
+  },
+  {
+    "upstream": "spec::registers::offsets::IER",
+    "name": "REG_INTERRUPT_ENABLE",
+    "value": 1,
+    "type": "u16"
+  },
+  {
+    "upstream": "spec::registers::offsets::FCR",
+    "name": "REG_FIFO_CONTROL",
+    "value": 2,
+    "type": "u16"
+  },
+  {
+    "upstream": "spec::registers::offsets::LCR",
+    "name": "REG_LINE_CONTROL",
+    "value": 3,
+    "type": "u16"
+  },
+  {
+    "upstream": "spec::registers::offsets::MCR",
+    "name": "REG_MODEM_CONTROL",
+    "value": 4,
+    "type": "u16"
+  },
+  {
+    "upstream": "spec::registers::offsets::LSR",
+    "name": "REG_LINE_STATUS",
+    "value": 5,
+    "type": "u16"
+  },
+  {
+    "upstream": "spec::registers::offsets::MSR",
+    "name": "REG_MODEM_STATUS",
+    "value": 6,
+    "type": "u16"
+  },
+  {
+    "upstream": "spec::registers::offsets::SPR",
+    "name": "REG_SCRATCH",
+    "value": 7,
+    "type": "u16"
+  },
+  {
+    "upstream": "spec::registers::offsets::DLL",
+    "name": "REG_DIVISOR_LOW",
+    "value": 0,
+    "type": "u16"
+  },
+  {
+    "upstream": "spec::registers::offsets::DLM",
+    "name": "REG_DIVISOR_HIGH",
+    "value": 1,
+    "type": "u16"
+  }
+]

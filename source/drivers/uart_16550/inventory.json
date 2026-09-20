@@ -1,0 +1,3176 @@
+{
+  "files": {
+    "src/backend/mmio.rs": {
+      "disposition": "translated",
+      "reason": "Complete audit; pure facts/plans/tests mapped and live IO/Rust-specific integration omissions explicitly justified.",
+      "sha256": "fd7d7e99702d674ec346fcac2f54e961f87aaea7c423e3aec1b7383e769f84d7",
+      "symbols": {
+        "100:MmioBackend": {
+          "anchor": "pub struct MmioBackend {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "102:base_address": {
+          "anchor": "pub(crate) base_address: MmioAddress,",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "103:stride": {
+          "anchor": "pub(crate) stride: NonZeroU8,",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "109:Address": {
+          "anchor": "type Address = MmioAddress;",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "112:base": {
+          "anchor": "fn base(&self) -> Self::Address {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "117:stride": {
+          "anchor": "fn stride(&self) -> NonZeroU8 {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "122:_read_register": {
+          "anchor": "unsafe fn _read_register(&mut self, address: MmioAddress) -> u8 {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "135:_write_register": {
+          "anchor": "unsafe fn _write_register(&mut self, address: MmioAddress, value: u8) {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "14:MmioAddress": {
+          "anchor": "pub struct MmioAddress(pub(crate) NonNull<u8>);",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "26:add_offset": {
+          "anchor": "fn add_offset(self, offset: u8) -> Self {",
+          "disposition": "translated",
+          "reason": "Checked register geometry only; dereference, PortIo instructions, MMIO custody and effects remain explicit access boundaries.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine register_offset("
+            }
+          ]
+        },
+        "42:arch": {
+          "anchor": "mod arch {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "50:mmio_read_register": {
+          "anchor": "pub unsafe fn mmio_read_register(address: MmioAddress) -> u8 {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "68:mmio_read_register": {
+          "anchor": "pub unsafe fn mmio_read_register(address: MmioAddress) -> u8 {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "76:mmio_write_register": {
+          "anchor": "pub unsafe fn mmio_write_register(address: MmioAddress, value: u8) {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "92:mmio_write_register": {
+          "anchor": "pub unsafe fn mmio_write_register(address: MmioAddress, value: u8) {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/drivers/uart_16550/BOUNDARIES.md",
+          "anchor": "# UART access boundaries"
+        }
+      ]
+    },
+    "src/backend/mod.rs": {
+      "disposition": "translated",
+      "reason": "Complete audit; pure facts/plans/tests mapped and live IO/Rust-specific integration omissions explicitly justified.",
+      "sha256": "f7ea35189ec94a2f85a5a8854d8ed446ecc1527d76e4d3731a411e69f82db2a0",
+      "symbols": {
+        "10:mmio": {
+          "anchor": "mod mmio;",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "111:base": {
+          "anchor": "fn base(&self) -> Self::Address;",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "118:stride": {
+          "anchor": "fn stride(&self) -> NonZeroU8;",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "12:pio": {
+          "anchor": "mod pio;",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "135:_read_register": {
+          "anchor": "unsafe fn _read_register(&mut self, address: Self::Address) -> u8;",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "14:mmio::{MmioAddress, MmioBackend};": {
+          "anchor": "pub use mmio::{MmioAddress, MmioBackend};",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "151:_write_register": {
+          "anchor": "unsafe fn _write_register(&mut self, address: Self::Address, value: u8);",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "16:pio::{PioBackend, PortIoAddress};": {
+          "anchor": "pub use pio::{PioBackend, PortIoAddress};",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "22:private": {
+          "anchor": "mod private {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "23:Sealed": {
+          "anchor": "pub trait Sealed {}",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "34:RegisterAddress": {
+          "anchor": "pub trait RegisterAddress: Copy + Clone + Debug + Sized + private::Sealed {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "36:add_offset": {
+          "anchor": "fn add_offset(self, offset: u8) -> Self;",
+          "disposition": "translated",
+          "reason": "Checked register geometry only; dereference, PortIo instructions, MMIO custody and effects remain explicit access boundaries.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine register_offset("
+            }
+          ]
+        },
+        "40:assert_offset": {
+          "anchor": "fn assert_offset(offset: u8) {",
+          "disposition": "translated",
+          "reason": "Checked register geometry only; dereference, PortIo instructions, MMIO custody and effects remain explicit access boundaries.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine register_offset("
+            }
+          ]
+        },
+        "53:Backend": {
+          "anchor": "pub trait Backend: Send + private::Sealed {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "55:Address": {
+          "anchor": "type Address: RegisterAddress;",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "74:read": {
+          "anchor": "unsafe fn read(&mut self, offset: u8) -> u8 {",
+          "disposition": "translated",
+          "reason": "Checked register geometry only; dereference, PortIo instructions, MMIO custody and effects remain explicit access boundaries.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine register_offset("
+            }
+          ]
+        },
+        "98:write": {
+          "anchor": "unsafe fn write(&mut self, offset: u8, value: u8) {",
+          "disposition": "translated",
+          "reason": "Checked register geometry only; dereference, PortIo instructions, MMIO custody and effects remain explicit access boundaries.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine register_offset("
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/drivers/uart_16550/BOUNDARIES.md",
+          "anchor": "# UART access boundaries"
+        }
+      ]
+    },
+    "src/backend/pio.rs": {
+      "disposition": "translated",
+      "reason": "Complete audit; pure facts/plans/tests mapped and live IO/Rust-specific integration omissions explicitly justified.",
+      "sha256": "c10b4fcc4e690a88d8c668df377a9207ae9a39a636cb6f822a92a5a5c9451099",
+      "symbols": {
+        "12:PortIoAddress": {
+          "anchor": "pub struct PortIoAddress(pub(crate) u16);",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "16:add_offset": {
+          "anchor": "fn add_offset(self, offset: u8) -> Self {",
+          "disposition": "translated",
+          "reason": "Checked register geometry only; dereference, PortIo instructions, MMIO custody and effects remain explicit access boundaries.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine register_offset("
+            }
+          ]
+        },
+        "26:PioBackend": {
+          "anchor": "pub struct PioBackend(pub(crate) PortIoAddress );",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "31:Address": {
+          "anchor": "type Address = PortIoAddress;",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "34:base": {
+          "anchor": "fn base(&self) -> Self::Address {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "39:stride": {
+          "anchor": "fn stride(&self) -> NonZeroU8 {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "46:_read_register": {
+          "anchor": "unsafe fn _read_register(&mut self, port: PortIoAddress) -> u8 {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        },
+        "72:_write_register": {
+          "anchor": "unsafe fn _write_register(&mut self, port: PortIoAddress, value: u8) {",
+          "disposition": "omitted",
+          "reason": "Rust backend/address wrapper or executable IO boundary; no ambient authority-bearing replacement. Constructor geometry and register request plans cover the pure obligations; see BOUNDARIES.md."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/drivers/uart_16550/BOUNDARIES.md",
+          "anchor": "# UART access boundaries"
+        }
+      ]
+    },
+    "src/config.rs": {
+      "disposition": "translated",
+      "reason": "Complete audit; pure facts/plans/tests mapped and live IO/Rust-specific integration omissions explicitly justified.",
+      "sha256": "72c5cdc83adcd70d8a0c5343093b937f26513c1f17e4e5c144fed5d949c9ec78",
+      "symbols": {
+        "115:Config": {
+          "anchor": "pub struct Config {",
+          "disposition": "translated",
+          "reason": "Config retains fields via integer bit encodings; optional values carry explicit presence/enabled bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data Config"
+            }
+          ]
+        },
+        "118:interrupts": {
+          "anchor": "pub interrupts: IER,",
+          "disposition": "translated",
+          "reason": "Config retains fields via integer bit encodings; optional values carry explicit presence/enabled bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data Config"
+            }
+          ]
+        },
+        "120:frequency": {
+          "anchor": "pub frequency: u32,",
+          "disposition": "translated",
+          "reason": "Config retains fields via integer bit encodings; optional values carry explicit presence/enabled bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data Config"
+            }
+          ]
+        },
+        "127:prescaler_division_factor": {
+          "anchor": "pub prescaler_division_factor: Option<u32>,",
+          "disposition": "translated",
+          "reason": "Config retains fields via integer bit encodings; optional values carry explicit presence/enabled bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data Config"
+            }
+          ]
+        },
+        "139:fifo_trigger_level": {
+          "anchor": "pub fifo_trigger_level: Option<FifoTriggerLevel>,",
+          "disposition": "translated",
+          "reason": "Config retains fields via integer bit encodings; optional values carry explicit presence/enabled bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data Config"
+            }
+          ]
+        },
+        "143:baud_rate": {
+          "anchor": "pub baud_rate: BaudRate,",
+          "disposition": "translated",
+          "reason": "Config retains fields via integer bit encodings; optional values carry explicit presence/enabled bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data Config"
+            }
+          ]
+        },
+        "145:data_bits": {
+          "anchor": "pub data_bits: WordLength,",
+          "disposition": "translated",
+          "reason": "Config retains fields via integer bit encodings; optional values carry explicit presence/enabled bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data Config"
+            }
+          ]
+        },
+        "151:extra_stop_bits": {
+          "anchor": "pub extra_stop_bits: bool,",
+          "disposition": "translated",
+          "reason": "Config retains fields via integer bit encodings; optional values carry explicit presence/enabled bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data Config"
+            }
+          ]
+        },
+        "153:parity": {
+          "anchor": "pub parity: Parity,",
+          "disposition": "translated",
+          "reason": "Config retains fields via integer bit encodings; optional values carry explicit presence/enabled bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data Config"
+            }
+          ]
+        },
+        "159:check_cts_before_sending": {
+          "anchor": "pub check_cts_before_sending: bool,",
+          "disposition": "translated",
+          "reason": "Config retains fields via integer bit encodings; optional values carry explicit presence/enabled bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data Config"
+            }
+          ]
+        },
+        "172:DEFAULT": {
+          "anchor": "pub const DEFAULT: Self = Self {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine default_config("
+            }
+          ]
+        },
+        "189:default": {
+          "anchor": "fn default() -> Self {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine default_config("
+            }
+          ]
+        },
+        "21:BaudRate": {
+          "anchor": "pub enum BaudRate {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/baud.omg",
+              "anchor": "pub data BaudRate"
+            }
+          ]
+        },
+        "48:to_integer": {
+          "anchor": "pub const fn to_integer(self) -> u32 {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/baud.omg",
+              "anchor": "machine baud_to_integer("
+            }
+          ]
+        },
+        "67:from_integer": {
+          "anchor": "pub const fn from_integer(value: u32) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/baud.omg",
+              "anchor": "machine baud_from_integer("
+            }
+          ]
+        },
+        "86:partial_cmp": {
+          "anchor": "fn partial_cmp(&self, other: &Self) -> Option<Ordering> {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine baud_compare("
+            }
+          ]
+        },
+        "92:cmp": {
+          "anchor": "fn cmp(&self, other: &Self) -> Ordering {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine baud_compare("
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/drivers/uart_16550/BOUNDARIES.md",
+          "anchor": "# UART access boundaries"
+        }
+      ]
+    },
+    "src/embedded_io.rs": {
+      "disposition": "translated",
+      "reason": "Complete audit; pure facts/plans/tests mapped and live IO/Rust-specific integration omissions explicitly justified.",
+      "sha256": "8b475d4a4ea9c986574cf50c959c4ee27e9a17b23c0c608a7d3f13027069212d",
+      "symbols": {
+        "12:Error": {
+          "anchor": "type Error = Infallible;",
+          "disposition": "omitted",
+          "reason": "Rust embedded-io traits/live polling adapter excluded; exact repetition/no-op flush behavior recorded in BOUNDARIES.md; no progress guarantee invented."
+        },
+        "16:write": {
+          "anchor": "fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {",
+          "disposition": "omitted",
+          "reason": "Rust embedded-io traits/live polling adapter excluded; exact repetition/no-op flush behavior recorded in BOUNDARIES.md; no progress guarantee invented."
+        },
+        "30:flush": {
+          "anchor": "fn flush(&mut self) -> Result<(), Self::Error> {",
+          "disposition": "omitted",
+          "reason": "Rust embedded-io traits/live polling adapter excluded; exact repetition/no-op flush behavior recorded in BOUNDARIES.md; no progress guarantee invented."
+        },
+        "36:write_ready": {
+          "anchor": "fn write_ready(&mut self) -> Result<bool, Self::Error> {",
+          "disposition": "omitted",
+          "reason": "Rust embedded-io traits/live polling adapter excluded; exact repetition/no-op flush behavior recorded in BOUNDARIES.md; no progress guarantee invented."
+        },
+        "44:read": {
+          "anchor": "fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {",
+          "disposition": "omitted",
+          "reason": "Rust embedded-io traits/live polling adapter excluded; exact repetition/no-op flush behavior recorded in BOUNDARIES.md; no progress guarantee invented."
+        },
+        "59:read_ready": {
+          "anchor": "fn read_ready(&mut self) -> Result<bool, Self::Error> {",
+          "disposition": "omitted",
+          "reason": "Rust embedded-io traits/live polling adapter excluded; exact repetition/no-op flush behavior recorded in BOUNDARIES.md; no progress guarantee invented."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/drivers/uart_16550/BOUNDARIES.md",
+          "anchor": "# UART access boundaries"
+        }
+      ]
+    },
+    "src/error.rs": {
+      "disposition": "translated",
+      "reason": "Complete audit; pure facts/plans/tests mapped and live IO/Rust-specific integration omissions explicitly justified.",
+      "sha256": "faa04a1b6be23370c4951f349e70f321b1f4973c20b568f694e0a9ec669c7121",
+      "symbols": {
+        "109:InitError": {
+          "anchor": "pub enum InitError {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data InitError"
+            }
+          ]
+        },
+        "118:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "131:source": {
+          "anchor": "fn source(&self) -> Option<&(dyn Error + 'static)> {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "141:ByteReceiveError": {
+          "anchor": "pub struct ByteReceiveError;",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data ByteReceiveError"
+            }
+          ]
+        },
+        "144:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "153:ByteSendError": {
+          "anchor": "pub enum ByteSendError {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data ByteSendError"
+            }
+          ]
+        },
+        "165:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "182:RemoteReadyToReceiveError": {
+          "anchor": "pub enum RemoteReadyToReceiveError {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data RemoteReadyToReceiveError"
+            }
+          ]
+        },
+        "18:InvalidAddressError": {
+          "anchor": "pub enum InvalidAddressError<A: RegisterAddress> {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data InvalidAddressError"
+            }
+          ]
+        },
+        "195:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "32:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "51:LoopbackError": {
+          "anchor": "pub enum LoopbackError {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data LoopbackError"
+            }
+          ]
+        },
+        "74:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "98:source": {
+          "anchor": "fn source(&self) -> Option<&(dyn Error + 'static)> {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/drivers/uart_16550/BOUNDARIES.md",
+          "anchor": "# UART access boundaries"
+        }
+      ]
+    },
+    "src/lib.rs": {
+      "disposition": "translated",
+      "reason": "Complete audit; pure facts/plans/tests mapped and live IO/Rust-specific integration omissions explicitly justified.",
+      "sha256": "37fba68b2da54864dfedfd9614e6228e2723300f2d9d06a2fcee74ba82cb351c",
+      "symbols": {
+        "1006:ConfigRegisterDump": {
+          "anchor": "pub struct ConfigRegisterDump {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data ConfigRegisterDump"
+            }
+          ]
+        },
+        "1008:ier": {
+          "anchor": "pub ier: IER,",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data ConfigRegisterDump"
+            }
+          ]
+        },
+        "1010:isr": {
+          "anchor": "pub isr: ISR,",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data ConfigRegisterDump"
+            }
+          ]
+        },
+        "1012:lcr": {
+          "anchor": "pub lcr: LCR,",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data ConfigRegisterDump"
+            }
+          ]
+        },
+        "1014:mcr": {
+          "anchor": "pub mcr: MCR,",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data ConfigRegisterDump"
+            }
+          ]
+        },
+        "1016:lsr": {
+          "anchor": "pub lsr: LSR,",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data ConfigRegisterDump"
+            }
+          ]
+        },
+        "1018:msr": {
+          "anchor": "pub msr: MSR,",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data ConfigRegisterDump"
+            }
+          ]
+        },
+        "1020:spr": {
+          "anchor": "pub spr: SPR,",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data ConfigRegisterDump"
+            }
+          ]
+        },
+        "1022:dll": {
+          "anchor": "pub dll: DLL,",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data ConfigRegisterDump"
+            }
+          ]
+        },
+        "1024:dlm": {
+          "anchor": "pub dlm: DLM,",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "pub data ConfigRegisterDump"
+            }
+          ]
+        },
+        "1033:divisor": {
+          "anchor": "pub const fn divisor(&self) -> u16 {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine dump_divisor("
+            }
+          ]
+        },
+        "1044:baud_rate": {
+          "anchor": "pub fn baud_rate(&self, config: &Config) -> BaudRate {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine dump_baud_rate("
+            }
+          ]
+        },
+        "1057:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "1062:constructors": {
+          "anchor": "fn constructors() {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_constructors"
+            }
+          ]
+        },
+        "1111:is_send": {
+          "anchor": "fn is_send() {",
+          "disposition": "omitted",
+          "reason": "Live driver ownership, polling/stream loops or Rust Send API omitted; pure requests/decisions are translated and explicit IO/lifecycle semantics are recorded in BOUNDARIES.md."
+        },
+        "1112:accept": {
+          "anchor": "fn accept<T: Send>() {}",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "1122:mmio_dummy": {
+          "anchor": "fn mmio_dummy() {",
+          "disposition": "translated",
+          "reason": "Adapts divisor3 and stride1/4 offset expectations to request plans; no volatile RAM/device emulator execution claimed.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_plans"
+            }
+          ]
+        },
+        "1130:STRIDE": {
+          "anchor": "const STRIDE: usize = 1;",
+          "disposition": "translated",
+          "reason": "Adapts divisor3 and stride1/4 offset expectations to request plans; no volatile RAM/device emulator execution claimed.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_plans"
+            }
+          ]
+        },
+        "1153:STRIDE": {
+          "anchor": "const STRIDE: usize = 4;",
+          "disposition": "translated",
+          "reason": "Adapts divisor3 and stride1/4 offset expectations to request plans; no volatile RAM/device emulator execution claimed.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_plans"
+            }
+          ]
+        },
+        "170:crate::config::*;": {
+          "anchor": "pub use crate::config::*;",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "171:crate::error::*;": {
+          "anchor": "pub use crate::error::*;",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "172:crate::tty::*;": {
+          "anchor": "pub use crate::tty::*;",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "184:backend": {
+          "anchor": "pub mod backend;",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "185:spec": {
+          "anchor": "pub mod spec;",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "187:config": {
+          "anchor": "mod config;",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "189:embedded_io": {
+          "anchor": "mod embedded_io;",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "190:error": {
+          "anchor": "mod error;",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "191:tty": {
+          "anchor": "mod tty;",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "303:Uart16550": {
+          "anchor": "pub struct Uart16550<B: Backend> {",
+          "disposition": "omitted",
+          "reason": "Live driver ownership, polling/stream loops or Rust Send API omitted; pure requests/decisions are translated and explicit IO/lifecycle semantics are recorded in BOUNDARIES.md."
+        },
+        "322:new_port": {
+          "anchor": "pub unsafe fn new_port(base_port: u16) -> Result<Self, InvalidAddressError<PortIoAddress>> {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine valid_port_base("
+            }
+          ]
+        },
+        "354:new_mmio": {
+          "anchor": "pub unsafe fn new_mmio(",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine valid_mmio_base("
+            }
+          ]
+        },
+        "392:check_present": {
+          "anchor": "pub fn check_present(&mut self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/plans.omg",
+              "anchor": "machine init_step("
+            }
+          ]
+        },
+        "438:init": {
+          "anchor": "pub fn init(&mut self, config: Config) -> Result<(), InitError> {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/plans.omg",
+              "anchor": "machine init_step("
+            }
+          ]
+        },
+        "565:test_loopback": {
+          "anchor": "pub fn test_loopback(&mut self) -> Result<(), LoopbackError> {",
+          "disposition": "omitted",
+          "reason": "Live loopback deliberately omitted; exact protocol, test byte/message and cleanup/infinite-wait limitations recorded in BOUNDARIES.md."
+        },
+        "567:TEST_BYTE": {
+          "anchor": "const TEST_BYTE: u8 = 0x42;",
+          "disposition": "omitted",
+          "reason": "Live loopback deliberately omitted; exact protocol, test byte/message and cleanup/infinite-wait limitations recorded in BOUNDARIES.md."
+        },
+        "569:TEST_MESSAGE": {
+          "anchor": "const TEST_MESSAGE: [u8; FIFO_SIZE] = *b\"hello world!1337\";",
+          "disposition": "omitted",
+          "reason": "Live loopback deliberately omitted; exact protocol, test byte/message and cleanup/infinite-wait limitations recorded in BOUNDARIES.md."
+        },
+        "646:check_connected": {
+          "anchor": "pub fn check_connected(&mut self) -> Result<(), RemoteReadyToReceiveError> {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine check_connected("
+            }
+          ]
+        },
+        "683:ready_to_receive": {
+          "anchor": "pub fn ready_to_receive(&mut self) -> Result<(), ByteReceiveError> {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine ready_to_receive("
+            }
+          ]
+        },
+        "702:ready_to_send": {
+          "anchor": "pub fn ready_to_send(&mut self) -> Result<(), ByteSendError> {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine ready_to_send("
+            }
+          ]
+        },
+        "733:try_receive_byte": {
+          "anchor": "pub fn try_receive_byte(&mut self) -> Result<u8, ByteReceiveError> {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/plans.omg",
+              "anchor": "machine receive_byte("
+            }
+          ]
+        },
+        "746:try_send_byte": {
+          "anchor": "pub fn try_send_byte(&mut self, byte: u8) -> Result<(), ByteSendError> {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine try_send_error("
+            }
+          ]
+        },
+        "762:receive_bytes": {
+          "anchor": "pub fn receive_bytes(&mut self, buffer: &mut [u8]) -> usize {",
+          "disposition": "omitted",
+          "reason": "Live driver ownership, polling/stream loops or Rust Send API omitted; pure requests/decisions are translated and explicit IO/lifecycle semantics are recorded in BOUNDARIES.md."
+        },
+        "780:send_bytes": {
+          "anchor": "pub fn send_bytes(&mut self, buffer: &[u8]) -> usize {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine send_count("
+            }
+          ]
+        },
+        "813:receive_bytes_exact": {
+          "anchor": "pub fn receive_bytes_exact(&mut self, buffer: &mut [u8]) {",
+          "disposition": "omitted",
+          "reason": "Live driver ownership, polling/stream loops or Rust Send API omitted; pure requests/decisions are translated and explicit IO/lifecycle semantics are recorded in BOUNDARIES.md."
+        },
+        "831:send_bytes_exact": {
+          "anchor": "pub fn send_bytes_exact(&mut self, bytes: &[u8]) {",
+          "disposition": "omitted",
+          "reason": "Live driver ownership, polling/stream loops or Rust Send API omitted; pure requests/decisions are translated and explicit IO/lifecycle semantics are recorded in BOUNDARIES.md."
+        },
+        "848:ier": {
+          "anchor": "pub fn ier(&mut self) -> IER {",
+          "disposition": "translated",
+          "reason": "Literal byte read request; bank and side effects remain executor obligations.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/plans.omg",
+              "anchor": "machine register_read("
+            }
+          ]
+        },
+        "861:isr": {
+          "anchor": "pub fn isr(&mut self) -> ISR {",
+          "disposition": "translated",
+          "reason": "Literal byte read request; bank and side effects remain executor obligations.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/plans.omg",
+              "anchor": "machine register_read("
+            }
+          ]
+        },
+        "868:lcr": {
+          "anchor": "pub fn lcr(&mut self) -> LCR {",
+          "disposition": "translated",
+          "reason": "Literal byte read request; bank and side effects remain executor obligations.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/plans.omg",
+              "anchor": "machine register_read("
+            }
+          ]
+        },
+        "875:mcr": {
+          "anchor": "pub fn mcr(&mut self) -> MCR {",
+          "disposition": "translated",
+          "reason": "Literal byte read request; bank and side effects remain executor obligations.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/plans.omg",
+              "anchor": "machine register_read("
+            }
+          ]
+        },
+        "888:lsr": {
+          "anchor": "pub fn lsr(&mut self) -> LSR {",
+          "disposition": "translated",
+          "reason": "Literal byte read request; bank and side effects remain executor obligations.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/plans.omg",
+              "anchor": "machine register_read("
+            }
+          ]
+        },
+        "900:msr": {
+          "anchor": "pub fn msr(&mut self) -> MSR {",
+          "disposition": "translated",
+          "reason": "Literal byte read request; bank and side effects remain executor obligations.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/plans.omg",
+              "anchor": "machine register_read("
+            }
+          ]
+        },
+        "907:spr": {
+          "anchor": "pub fn spr(&mut self) -> SPR {",
+          "disposition": "translated",
+          "reason": "Literal byte read request; bank and side effects remain executor obligations.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/plans.omg",
+              "anchor": "machine register_read("
+            }
+          ]
+        },
+        "918:dll_dlm": {
+          "anchor": "pub fn dll_dlm(&mut self) -> (DLL, DLM) {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/plans.omg",
+              "anchor": "machine divisor_step("
+            }
+          ]
+        },
+        "943:configure_fcr": {
+          "anchor": "unsafe fn configure_fcr(&mut self) {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine configured_fcr("
+            }
+          ]
+        },
+        "970:config": {
+          "anchor": "pub const fn config(&self) -> (&Config, &B) {",
+          "disposition": "omitted",
+          "reason": "Live driver ownership, polling/stream loops or Rust Send API omitted; pure requests/decisions are translated and explicit IO/lifecycle semantics are recorded in BOUNDARIES.md."
+        },
+        "980:config_register_dump": {
+          "anchor": "pub fn config_register_dump(&mut self) -> ConfigRegisterDump {",
+          "disposition": "translated",
+          "reason": "Pure constructor predicate/request or decision only; live reads/writes remain the explicit boundary in BOUNDARIES.md.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/plans.omg",
+              "anchor": "machine dump_step("
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/drivers/uart_16550/BOUNDARIES.md",
+          "anchor": "# UART access boundaries"
+        }
+      ]
+    },
+    "src/spec.rs": {
+      "disposition": "translated",
+      "reason": "Complete audit; pure facts/plans/tests mapped and live IO/Rust-specific integration omissions explicitly justified.",
+      "sha256": "2d658ea367381bb82815bd991e2f12a9035e13d090ef1d18077428d1b57c8ec5",
+      "symbols": {
+        "1001:DLL": {
+          "anchor": "pub type DLL = u8;",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "ConfigRegisterDump"
+            }
+          ]
+        },
+        "1008:DLM": {
+          "anchor": "pub type DLM = u8;",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "ConfigRegisterDump"
+            }
+          ]
+        },
+        "1015:Divisor": {
+          "anchor": "pub enum Divisor {",
+          "disposition": "translated",
+          "reason": "All89 Rust enum ordinals preserved; never confuse an ordinal with the divisor named in its variant.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/enum_ordinals.omg",
+              "anchor": "module enum_ordinals"
+            }
+          ]
+        },
+        "10:crate::spec::errors::*;": {
+          "anchor": "pub use crate::spec::errors::*;",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "1117:PSD": {
+          "anchor": "pub struct PSD: u8 {",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "ConfigRegisterDump"
+            }
+          ]
+        },
+        "1119:PDF0": {
+          "anchor": "const PDF0 = 1 << 0;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const PSD_PDF0"
+            }
+          ]
+        },
+        "1121:PDF1": {
+          "anchor": "const PDF1 = 1 << 1;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const PSD_PDF1"
+            }
+          ]
+        },
+        "1123:PDF2": {
+          "anchor": "const PDF2 = 1 << 2;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const PSD_PDF2"
+            }
+          ]
+        },
+        "1125:PDF3": {
+          "anchor": "const PDF3 = 1 << 3;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const PSD_PDF3"
+            }
+          ]
+        },
+        "1127:_RESERVED0": {
+          "anchor": "const _RESERVED0 = 1 << 4;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const PSD__RESERVED0"
+            }
+          ]
+        },
+        "1129:_RESERVED1": {
+          "anchor": "const _RESERVED1 = 1 << 5;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const PSD__RESERVED1"
+            }
+          ]
+        },
+        "1131:_RESERVED2": {
+          "anchor": "const _RESERVED2 = 1 << 6;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const PSD__RESERVED2"
+            }
+          ]
+        },
+        "1133:_RESERVED3": {
+          "anchor": "const _RESERVED3 = 1 << 7;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const PSD__RESERVED3"
+            }
+          ]
+        },
+        "1140:pdf": {
+          "anchor": "pub const fn pdf(self) -> u8 {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine pdf("
+            }
+          ]
+        },
+        "1146:set_pdf": {
+          "anchor": "pub const fn set_pdf(self, pdf: u8) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine set_pdf("
+            }
+          ]
+        },
+        "1157:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "1166:test_calc_baud_rate": {
+          "anchor": "fn test_calc_baud_rate() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_baud"
+            }
+          ]
+        },
+        "1186:test_calc_frequency": {
+          "anchor": "fn test_calc_frequency() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_baud"
+            }
+          ]
+        },
+        "1198:test_calc_divisor": {
+          "anchor": "fn test_calc_divisor() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_baud"
+            }
+          ]
+        },
+        "121:calc_frequency": {
+          "anchor": "pub fn calc_frequency(baud_rate: u32, divisor: u32, prescaler_division_factor: Option<u32>) -> u32 {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine calc_frequency("
+            }
+          ]
+        },
+        "1220:fcr_trigger_level_roundtrip_one": {
+          "anchor": "fn fcr_trigger_level_roundtrip_one() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1236:fcr_trigger_level_roundtrip_four": {
+          "anchor": "fn fcr_trigger_level_roundtrip_four() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1243:fcr_trigger_level_roundtrip_eight": {
+          "anchor": "fn fcr_trigger_level_roundtrip_eight() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1254:fcr_trigger_level_roundtrip_fourteen": {
+          "anchor": "fn fcr_trigger_level_roundtrip_fourteen() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1266:fcr_trigger_level_preserves_other_bits": {
+          "anchor": "fn fcr_trigger_level_preserves_other_bits() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1282:lcr_word_length_roundtrip_five": {
+          "anchor": "fn lcr_word_length_roundtrip_five() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1289:lcr_word_length_roundtrip_six": {
+          "anchor": "fn lcr_word_length_roundtrip_six() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1296:lcr_word_length_roundtrip_seven": {
+          "anchor": "fn lcr_word_length_roundtrip_seven() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1303:lcr_word_length_roundtrip_eight": {
+          "anchor": "fn lcr_word_length_roundtrip_eight() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1311:lcr_word_length_preserves_other_bits": {
+          "anchor": "fn lcr_word_length_preserves_other_bits() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1326:lcr_set_word_length_twice_no_stale_bits": {
+          "anchor": "fn lcr_set_word_length_twice_no_stale_bits() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1340:lcr_parity_roundtrip_disabled": {
+          "anchor": "fn lcr_parity_roundtrip_disabled() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1352:lcr_parity_roundtrip_odd": {
+          "anchor": "fn lcr_parity_roundtrip_odd() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "135:calc_divisor": {
+          "anchor": "pub fn calc_divisor(",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine calc_divisor("
+            }
+          ]
+        },
+        "1360:lcr_parity_roundtrip_even": {
+          "anchor": "fn lcr_parity_roundtrip_even() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1368:lcr_parity_roundtrip_forced1": {
+          "anchor": "fn lcr_parity_roundtrip_forced1() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1376:lcr_parity_roundtrip_forced0": {
+          "anchor": "fn lcr_parity_roundtrip_forced0() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1385:lcr_parity_preserves_other_bits": {
+          "anchor": "fn lcr_parity_preserves_other_bits() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "13:CLK_FREQUENCY_HZ": {
+          "anchor": "pub const CLK_FREQUENCY_HZ: u32 = 1_843_200;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const CLK_FREQUENCY_HZ"
+            }
+          ]
+        },
+        "1404:lcr_set_parity_twice_no_stale_bits": {
+          "anchor": "fn lcr_set_parity_twice_no_stale_bits() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1426:psd_pdf_roundtrip_zero": {
+          "anchor": "fn psd_pdf_roundtrip_zero() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1432:psd_pdf_roundtrip_max_nibble": {
+          "anchor": "fn psd_pdf_roundtrip_max_nibble() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1439:psd_set_pdf_preserves_reserved_bits": {
+          "anchor": "fn psd_set_pdf_preserves_reserved_bits() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1453:psd_set_pdf_twice_no_stale_bits": {
+          "anchor": "fn psd_set_pdf_twice_no_stale_bits() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1466:interrupt_type_no_interrupt_when_bit0_set": {
+          "anchor": "fn interrupt_type_no_interrupt_when_bit0_set() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_interrupt"
+            }
+          ]
+        },
+        "1475:interrupt_type_all_variants": {
+          "anchor": "fn interrupt_type_all_variants() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_interrupt"
+            }
+          ]
+        },
+        "1498:interrupt_type_ignores_high_nibble": {
+          "anchor": "fn interrupt_type_ignores_high_nibble() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_interrupt"
+            }
+          ]
+        },
+        "1508:interrupt_type_priority_ordering": {
+          "anchor": "fn interrupt_type_priority_ordering() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_interrupt"
+            }
+          ]
+        },
+        "1530:isr_interrupt_type_delegates_correctly": {
+          "anchor": "fn isr_interrupt_type_delegates_correctly() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_interrupt"
+            }
+          ]
+        },
+        "1541:parity_from_raw_bits_all_variants": {
+          "anchor": "fn parity_from_raw_bits_all_variants() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1551:parity_from_raw_bits_any_even_is_disabled": {
+          "anchor": "fn parity_from_raw_bits_any_even_is_disabled() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1560:parity_from_raw_bits_masks_high_bits": {
+          "anchor": "fn parity_from_raw_bits_masks_high_bits() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1567:parity_raw_bits_roundtrip": {
+          "anchor": "fn parity_raw_bits_roundtrip() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1581:fifo_trigger_level_raw_bits_roundtrip": {
+          "anchor": "fn fifo_trigger_level_raw_bits_roundtrip() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1594:fifo_trigger_level_from_raw_bits_masks_high_bits": {
+          "anchor": "fn fifo_trigger_level_from_raw_bits_masks_high_bits() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1607:fcr_set_trigger_level_twice_no_stale_bits": {
+          "anchor": "fn fcr_set_trigger_level_twice_no_stale_bits() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1621:word_length_raw_bits_roundtrip": {
+          "anchor": "fn word_length_raw_bits_roundtrip() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1634:word_length_integer_roundtrip": {
+          "anchor": "fn word_length_integer_roundtrip() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1643:word_length_from_integer_out_of_range_fallback": {
+          "anchor": "fn word_length_from_integer_out_of_range_fallback() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1655:lsr_has_error_false_when_clean": {
+          "anchor": "fn lsr_has_error_false_when_clean() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "1663:lsr_has_error_true_for_each_error_flag": {
+          "anchor": "fn lsr_has_error_true_for_each_error_flag() {",
+          "disposition": "translated",
+          "reason": "Upstream test cases adapted to raw-byte helpers; final evaluator assertion has a behavior-mutating negative control.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_bits"
+            }
+          ]
+        },
+        "170:registers": {
+          "anchor": "pub mod registers {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "174:offsets": {
+          "anchor": "pub mod offsets {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "179:DATA": {
+          "anchor": "pub const DATA: usize = 0;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const REG_DATA"
+            }
+          ]
+        },
+        "182:IER": {
+          "anchor": "pub const IER: usize = 1;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const REG_INTERRUPT_ENABLE"
+            }
+          ]
+        },
+        "187:ISR": {
+          "anchor": "pub const ISR: usize = 2;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const REG_INTERRUPT_STATUS"
+            }
+          ]
+        },
+        "18:FIFO_SIZE": {
+          "anchor": "pub const FIFO_SIZE: usize = 16;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const FIFO_SIZE"
+            }
+          ]
+        },
+        "192:FCR": {
+          "anchor": "pub const FCR: usize = 2;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const REG_FIFO_CONTROL"
+            }
+          ]
+        },
+        "195:LCR": {
+          "anchor": "pub const LCR: usize = 3;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const REG_LINE_CONTROL"
+            }
+          ]
+        },
+        "198:MCR": {
+          "anchor": "pub const MCR: usize = 4;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const REG_MODEM_CONTROL"
+            }
+          ]
+        },
+        "201:LSR": {
+          "anchor": "pub const LSR: usize = 5;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const REG_LINE_STATUS"
+            }
+          ]
+        },
+        "204:MSR": {
+          "anchor": "pub const MSR: usize = 6;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const REG_MODEM_STATUS"
+            }
+          ]
+        },
+        "207:SPR": {
+          "anchor": "pub const SPR: usize = 7;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const REG_SCRATCH"
+            }
+          ]
+        },
+        "214:DLL": {
+          "anchor": "pub const DLL: usize = 0;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const REG_DIVISOR_LOW"
+            }
+          ]
+        },
+        "219:DLM": {
+          "anchor": "pub const DLM: usize = 1;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const REG_DIVISOR_HIGH"
+            }
+          ]
+        },
+        "225:PSD": {
+          "anchor": "pub const PSD: usize = 6;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const REG_PRESCALER"
+            }
+          ]
+        },
+        "229:DATA": {
+          "anchor": "pub type DATA = u8;",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "ConfigRegisterDump"
+            }
+          ]
+        },
+        "23:NUM_REGISTERS": {
+          "anchor": "pub const NUM_REGISTERS: usize = 8;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const NUM_REGISTERS"
+            }
+          ]
+        },
+        "240:IER": {
+          "anchor": "pub struct IER: u8 {",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "ConfigRegisterDump"
+            }
+          ]
+        },
+        "244:DATA_READY": {
+          "anchor": "const DATA_READY = 1 << 0;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const IER_DATA_READY"
+            }
+          ]
+        },
+        "248:THR_EMPTY": {
+          "anchor": "const THR_EMPTY = 1 << 1;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const IER_THR_EMPTY"
+            }
+          ]
+        },
+        "252:RECEIVER_LINE_STATUS": {
+          "anchor": "const RECEIVER_LINE_STATUS = 1 << 2;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const IER_RECEIVER_LINE_STATUS"
+            }
+          ]
+        },
+        "256:MODEM_STATUS": {
+          "anchor": "const MODEM_STATUS = 1 << 3;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const IER_MODEM_STATUS"
+            }
+          ]
+        },
+        "258:_RESERVED0": {
+          "anchor": "const _RESERVED0 = 1 << 4;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const IER__RESERVED0"
+            }
+          ]
+        },
+        "25:errors": {
+          "anchor": "mod errors {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "260:_RESERVED1": {
+          "anchor": "const _RESERVED1 = 1 << 5;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const IER__RESERVED1"
+            }
+          ]
+        },
+        "263:DMA_RX_END": {
+          "anchor": "const DMA_RX_END = 1 << 6;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const IER_DMA_RX_END"
+            }
+          ]
+        },
+        "266:DMA_TX_END": {
+          "anchor": "const DMA_TX_END = 1 << 7;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const IER_DMA_TX_END"
+            }
+          ]
+        },
+        "276:ISR": {
+          "anchor": "pub struct ISR: u8 {",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "ConfigRegisterDump"
+            }
+          ]
+        },
+        "283:INTERRUPT_STATUS": {
+          "anchor": "const INTERRUPT_STATUS = 1 << 0;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const ISR_INTERRUPT_STATUS"
+            }
+          ]
+        },
+        "285:IIC_0": {
+          "anchor": "const IIC_0 = 1 << 1;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const ISR_IIC_0"
+            }
+          ]
+        },
+        "287:IIC_1": {
+          "anchor": "const IIC_1 = 1 << 2;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const ISR_IIC_1"
+            }
+          ]
+        },
+        "289:IIC_2": {
+          "anchor": "const IIC_2 = 1 << 3;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const ISR_IIC_2"
+            }
+          ]
+        },
+        "296:DMA_RX_END": {
+          "anchor": "const DMA_RX_END = 1 << 4;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const ISR_DMA_RX_END"
+            }
+          ]
+        },
+        "302:DMA_TX_END": {
+          "anchor": "const DMA_TX_END = 1 << 5;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const ISR_DMA_TX_END"
+            }
+          ]
+        },
+        "306:FIFOS_ENABLED0": {
+          "anchor": "const FIFOS_ENABLED0 = 1 << 6;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const ISR_FIFOS_ENABLED0"
+            }
+          ]
+        },
+        "310:FIFOS_ENABLED1": {
+          "anchor": "const FIFOS_ENABLED1 = 1 << 7;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const ISR_FIFOS_ENABLED1"
+            }
+          ]
+        },
+        "321:interrupt_type": {
+          "anchor": "pub fn interrupt_type(self) -> Option<InterruptType> {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine interrupt_type("
+            }
+          ]
+        },
+        "327:has_pending_interrupt": {
+          "anchor": "pub const fn has_pending_interrupt(self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine has_pending_interrupt("
+            }
+          ]
+        },
+        "337:InterruptType": {
+          "anchor": "pub enum InterruptType {",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "interrupt_type"
+            }
+          ]
+        },
+        "34:NonIntegerBaudRateError": {
+          "anchor": "pub struct NonIntegerBaudRateError {",
+          "disposition": "translated",
+          "reason": "Error input payload preserved; optional prescaler uses explicit presence plus value.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data NonIntegerBaudRateError"
+            }
+          ]
+        },
+        "36:frequency": {
+          "anchor": "pub frequency: u32,",
+          "disposition": "translated",
+          "reason": "Error input payload preserved; optional prescaler uses explicit presence plus value.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data NonIntegerBaudRateError"
+            }
+          ]
+        },
+        "38:divisor": {
+          "anchor": "pub divisor: u32,",
+          "disposition": "translated",
+          "reason": "Error input payload preserved; optional prescaler uses explicit presence plus value.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data NonIntegerBaudRateError"
+            }
+          ]
+        },
+        "40:prescaler_division_factor": {
+          "anchor": "pub prescaler_division_factor: Option<u32>,",
+          "disposition": "translated",
+          "reason": "Error input payload preserved; optional prescaler uses explicit presence plus value.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data NonIntegerBaudRateError"
+            }
+          ]
+        },
+        "410:priority": {
+          "anchor": "pub const fn priority(self) -> u8 {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine interrupt_priority("
+            }
+          ]
+        },
+        "428:from_bits": {
+          "anchor": "pub fn from_bits(isr_bits: u8) -> Option<Self> {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine interrupt_type("
+            }
+          ]
+        },
+        "44:fmt": {
+          "anchor": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "461:FCR": {
+          "anchor": "pub struct FCR: u8 {",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "ConfigRegisterDump"
+            }
+          ]
+        },
+        "468:FIFO_ENABLE": {
+          "anchor": "const FIFO_ENABLE = 1 << 0;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const FCR_FIFO_ENABLE"
+            }
+          ]
+        },
+        "474:RX_FIFO_RESET": {
+          "anchor": "const RX_FIFO_RESET = 1 << 1;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const FCR_RX_FIFO_RESET"
+            }
+          ]
+        },
+        "481:TX_FIFO_RESET": {
+          "anchor": "const TX_FIFO_RESET = 1 << 2;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const FCR_TX_FIFO_RESET"
+            }
+          ]
+        },
+        "495:DMA_MODE": {
+          "anchor": "const DMA_MODE = 1 << 3;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const FCR_DMA_MODE"
+            }
+          ]
+        },
+        "502:ENABLE_DMA_END": {
+          "anchor": "const ENABLE_DMA_END = 1 << 4;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const FCR_ENABLE_DMA_END"
+            }
+          ]
+        },
+        "504:_RESERVED0": {
+          "anchor": "const _RESERVED0 = 1 << 5;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const FCR__RESERVED0"
+            }
+          ]
+        },
+        "506:RX_FIFO_TRIGGER_LEVEL0": {
+          "anchor": "const RX_FIFO_TRIGGER_LEVEL0 = 1 << 6;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const FCR_RX_FIFO_TRIGGER_LEVEL0"
+            }
+          ]
+        },
+        "508:RX_FIFO_TRIGGER_LEVEL1": {
+          "anchor": "const RX_FIFO_TRIGGER_LEVEL1 = 1 << 7;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const FCR_RX_FIFO_TRIGGER_LEVEL1"
+            }
+          ]
+        },
+        "515:fifo_trigger_level": {
+          "anchor": "pub const fn fifo_trigger_level(self) -> FifoTriggerLevel {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine fifo_trigger_level("
+            }
+          ]
+        },
+        "522:set_fifo_trigger_level": {
+          "anchor": "pub const fn set_fifo_trigger_level(self, value: FifoTriggerLevel) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine set_fifo_trigger_level("
+            }
+          ]
+        },
+        "545:FifoTriggerLevel": {
+          "anchor": "pub enum FifoTriggerLevel {",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "fifo_from_raw_bits"
+            }
+          ]
+        },
+        "566:from_raw_bits": {
+          "anchor": "pub const fn from_raw_bits(bits: u8) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine fifo_from_raw_bits("
+            }
+          ]
+        },
+        "582:to_raw_bits": {
+          "anchor": "pub const fn to_raw_bits(self) -> u8 {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine fifo_to_raw_bits("
+            }
+          ]
+        },
+        "598:LCR": {
+          "anchor": "pub struct LCR: u8 {",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "ConfigRegisterDump"
+            }
+          ]
+        },
+        "600:WORD_LENGTH0": {
+          "anchor": "const WORD_LENGTH0 = 1 << 0;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LCR_WORD_LENGTH0"
+            }
+          ]
+        },
+        "602:WORD_LENGTH1": {
+          "anchor": "const WORD_LENGTH1 = 1 << 1;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LCR_WORD_LENGTH1"
+            }
+          ]
+        },
+        "606:MORE_STOP_BITS": {
+          "anchor": "const MORE_STOP_BITS = 1 << 2;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LCR_MORE_STOP_BITS"
+            }
+          ]
+        },
+        "608:PARITY0": {
+          "anchor": "const PARITY0 = 1 << 3;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LCR_PARITY0"
+            }
+          ]
+        },
+        "60:NonIntegerDivisorError": {
+          "anchor": "pub struct NonIntegerDivisorError {",
+          "disposition": "translated",
+          "reason": "Error input payload preserved; optional prescaler uses explicit presence plus value.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data NonIntegerDivisorError"
+            }
+          ]
+        },
+        "610:PARITY1": {
+          "anchor": "const PARITY1 = 1 << 4;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LCR_PARITY1"
+            }
+          ]
+        },
+        "612:PARITY2": {
+          "anchor": "const PARITY2 = 1 << 5;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LCR_PARITY2"
+            }
+          ]
+        },
+        "621:SET_BREAK": {
+          "anchor": "const SET_BREAK = 1 << 6;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LCR_SET_BREAK"
+            }
+          ]
+        },
+        "626:DLAB": {
+          "anchor": "const DLAB = 1 << 7;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LCR_DLAB"
+            }
+          ]
+        },
+        "62:frequency": {
+          "anchor": "pub frequency: u32,",
+          "disposition": "translated",
+          "reason": "Error input payload preserved; optional prescaler uses explicit presence plus value.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data NonIntegerDivisorError"
+            }
+          ]
+        },
+        "633:word_length": {
+          "anchor": "pub const fn word_length(self) -> WordLength {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine word_length("
+            }
+          ]
+        },
+        "640:set_word_length": {
+          "anchor": "pub const fn set_word_length(self, value: WordLength) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine set_word_length("
+            }
+          ]
+        },
+        "649:parity": {
+          "anchor": "pub const fn parity(self) -> Parity {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine parity("
+            }
+          ]
+        },
+        "64:baud_rate": {
+          "anchor": "pub baud_rate: u32,",
+          "disposition": "translated",
+          "reason": "Error input payload preserved; optional prescaler uses explicit presence plus value.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data NonIntegerDivisorError"
+            }
+          ]
+        },
+        "656:set_parity": {
+          "anchor": "pub const fn set_parity(self, value: Parity) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine set_parity("
+            }
+          ]
+        },
+        "66:prescaler_division_factor": {
+          "anchor": "pub prescaler_division_factor: Option<u32>,",
+          "disposition": "translated",
+          "reason": "Error input payload preserved; optional prescaler uses explicit presence plus value.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data NonIntegerDivisorError"
+            }
+          ]
+        },
+        "670:WordLength": {
+          "anchor": "pub enum WordLength {",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "word_from_raw_bits"
+            }
+          ]
+        },
+        "688:from_raw_bits": {
+          "anchor": "pub const fn from_raw_bits(bits: u8) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine word_from_raw_bits("
+            }
+          ]
+        },
+        "704:to_raw_bits": {
+          "anchor": "pub const fn to_raw_bits(self) -> u8 {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine word_to_raw_bits("
+            }
+          ]
+        },
+        "70:fmt": {
+          "anchor": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "718:from_integer": {
+          "anchor": "pub const fn from_integer(value: u8) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine word_from_integer("
+            }
+          ]
+        },
+        "730:to_integer": {
+          "anchor": "pub const fn to_integer(self) -> u32 {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine word_to_integer("
+            }
+          ]
+        },
+        "747:Parity": {
+          "anchor": "pub enum Parity {",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "parity_from_raw_bits"
+            }
+          ]
+        },
+        "767:from_raw_bits": {
+          "anchor": "pub const fn from_raw_bits(bits: u8) -> Self {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine parity_from_raw_bits("
+            }
+          ]
+        },
+        "789:to_raw_bits": {
+          "anchor": "pub const fn to_raw_bits(self) -> u8 {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine parity_to_raw_bits("
+            }
+          ]
+        },
+        "807:MCR": {
+          "anchor": "pub struct MCR: u8 {",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "ConfigRegisterDump"
+            }
+          ]
+        },
+        "815:DTR": {
+          "anchor": "const DTR = 1 << 0;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MCR_DTR"
+            }
+          ]
+        },
+        "820:RTS": {
+          "anchor": "const RTS = 1 << 1;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MCR_RTS"
+            }
+          ]
+        },
+        "823:OUT_1": {
+          "anchor": "const OUT_1 = 1 << 2;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MCR_OUT_1"
+            }
+          ]
+        },
+        "832:OUT_2_INT_ENABLE": {
+          "anchor": "const OUT_2_INT_ENABLE = 1 << 3;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MCR_OUT_2_INT_ENABLE"
+            }
+          ]
+        },
+        "838:LOOP_BACK": {
+          "anchor": "const LOOP_BACK = 1 << 4;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MCR_LOOP_BACK"
+            }
+          ]
+        },
+        "840:_RESERVED0": {
+          "anchor": "const _RESERVED0 = 1 << 5;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MCR__RESERVED0"
+            }
+          ]
+        },
+        "842:_RESERVED1": {
+          "anchor": "const _RESERVED1 = 1 << 6;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MCR__RESERVED1"
+            }
+          ]
+        },
+        "844:_RESERVED2": {
+          "anchor": "const _RESERVED2 = 1 << 7;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MCR__RESERVED2"
+            }
+          ]
+        },
+        "856:LSR": {
+          "anchor": "pub struct LSR: u8 {",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "ConfigRegisterDump"
+            }
+          ]
+        },
+        "861:DATA_READY": {
+          "anchor": "const DATA_READY = 1 << 0;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LSR_DATA_READY"
+            }
+          ]
+        },
+        "869:OVERRUN_ERROR": {
+          "anchor": "const OVERRUN_ERROR = 1 << 1;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LSR_OVERRUN_ERROR"
+            }
+          ]
+        },
+        "875:PARITY_ERROR": {
+          "anchor": "const PARITY_ERROR = 1 << 2;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LSR_PARITY_ERROR"
+            }
+          ]
+        },
+        "881:FRAMING_ERROR": {
+          "anchor": "const FRAMING_ERROR = 1 << 3;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LSR_FRAMING_ERROR"
+            }
+          ]
+        },
+        "891:BREAK_INTERRUPT": {
+          "anchor": "const BREAK_INTERRUPT = 1 << 4;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LSR_BREAK_INTERRUPT"
+            }
+          ]
+        },
+        "904:THR_EMPTY": {
+          "anchor": "const THR_EMPTY = 1 << 5;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LSR_THR_EMPTY"
+            }
+          ]
+        },
+        "90:calc_baud_rate": {
+          "anchor": "pub fn calc_baud_rate(",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine calc_baud_rate("
+            }
+          ]
+        },
+        "914:TRANSMITTER_EMPTY": {
+          "anchor": "const TRANSMITTER_EMPTY = 1 << 6;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LSR_TRANSMIT_EMPTY"
+            }
+          ]
+        },
+        "925:FIFO_DATA_ERROR": {
+          "anchor": "const FIFO_DATA_ERROR = 1 << 7;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const LSR_FIFO_DATA_ERROR"
+            }
+          ]
+        },
+        "935:has_error": {
+          "anchor": "pub const fn has_error(self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine has_error("
+            }
+          ]
+        },
+        "953:MSR": {
+          "anchor": "pub struct MSR: u8 {",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "ConfigRegisterDump"
+            }
+          ]
+        },
+        "957:DELTA_CTS": {
+          "anchor": "const DELTA_CTS = 1 << 0;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MSR_DELTA_CTS"
+            }
+          ]
+        },
+        "961:DELTA_DSR": {
+          "anchor": "const DELTA_DSR = 1 << 1;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MSR_DELTA_DSR"
+            }
+          ]
+        },
+        "964:TRAILING_EDGE_RI": {
+          "anchor": "const TRAILING_EDGE_RI = 1 << 2;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MSR_TRAILING_EDGE_RI"
+            }
+          ]
+        },
+        "967:DELTA_CD": {
+          "anchor": "const DELTA_CD = 1 << 3;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MSR_DELTA_CD"
+            }
+          ]
+        },
+        "972:CTS": {
+          "anchor": "const CTS = 1 << 4;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MSR_CTS"
+            }
+          ]
+        },
+        "977:DSR": {
+          "anchor": "const DSR = 1 << 5;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MSR_DSR"
+            }
+          ]
+        },
+        "979:RI": {
+          "anchor": "const RI = 1 << 6;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MSR_RI"
+            }
+          ]
+        },
+        "984:CD": {
+          "anchor": "const CD = 1 << 7;",
+          "disposition": "translated",
+          "reason": "Reconciled with existing fact owner; independent compiled upstream value verification.",
+          "targets": [
+            {
+              "path": "source/drivers/facts/uart_16550.omg",
+              "anchor": "pub const MSR_CD"
+            }
+          ]
+        },
+        "994:SPR": {
+          "anchor": "pub type SPR = u8;",
+          "disposition": "translated",
+          "reason": "Register aliases/bitflags are raw u8; logical variants use documented encoded values, preserving unknown register bits.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "ConfigRegisterDump"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "path": "source/drivers/uart_16550/BOUNDARIES.md",
+          "anchor": "# UART access boundaries"
+        }
+      ]
+    },
+    "src/tty.rs": {
+      "disposition": "translated",
+      "reason": "Complete audit; pure facts/plans/tests mapped and live IO/Rust-specific integration omissions explicitly justified.",
+      "sha256": "f87fd429834b85a41ecc78a9bd0b9afd42be0fb77c7e905cc3c19e4e3d60155a",
+      "symbols": {
+        "117:Uart16550Tty": {
+          "anchor": "pub struct Uart16550Tty<B: Backend>(Uart16550<B>);",
+          "disposition": "omitted",
+          "reason": "Live TTY driver constructor/borrow wrapper omitted; initialization/loopback needs the explicit access and lifecycle boundaries in BOUNDARIES.md."
+        },
+        "136:new_port": {
+          "anchor": "pub unsafe fn new_port(",
+          "disposition": "omitted",
+          "reason": "Live TTY driver constructor/borrow wrapper omitted; initialization/loopback needs the explicit access and lifecycle boundaries in BOUNDARIES.md."
+        },
+        "171:new_mmio": {
+          "anchor": "pub unsafe fn new_mmio(",
+          "disposition": "omitted",
+          "reason": "Live TTY driver constructor/borrow wrapper omitted; initialization/loopback needs the explicit access and lifecycle boundaries in BOUNDARIES.md."
+        },
+        "191:inner": {
+          "anchor": "pub const fn inner(&self) -> &Uart16550<B> {",
+          "disposition": "omitted",
+          "reason": "Live TTY driver constructor/borrow wrapper omitted; initialization/loopback needs the explicit access and lifecycle boundaries in BOUNDARIES.md."
+        },
+        "196:inner_mut": {
+          "anchor": "pub const fn inner_mut(&mut self) -> &mut Uart16550<B> {",
+          "disposition": "omitted",
+          "reason": "Live TTY driver constructor/borrow wrapper omitted; initialization/loopback needs the explicit access and lifecycle boundaries in BOUNDARIES.md."
+        },
+        "202:write_str": {
+          "anchor": "fn write_str(&mut self, s: &str) -> fmt::Result {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/pure.omg",
+              "anchor": "machine tty_byte("
+            }
+          ]
+        },
+        "25:Uart16550TtyError": {
+          "anchor": "pub enum Uart16550TtyError<A: RegisterAddress> {",
+          "disposition": "translated",
+          "reason": "Pure value/decision translation; no hardware authority.",
+          "targets": [
+            {
+              "path": "source/drivers/uart_16550/errors.omg",
+              "anchor": "pub data Uart16550TtyError"
+            }
+          ]
+        },
+        "35:fmt": {
+          "anchor": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        },
+        "51:source": {
+          "anchor": "fn source(&self) -> Option<&(dyn Error + 'static)> {",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/drivers/uart_16550/BOUNDARIES.md",
+          "anchor": "# UART access boundaries"
+        }
+      ]
+    },
+    "tests/api.rs": {
+      "disposition": "translated",
+      "reason": "Complete audit; pure facts/plans/tests mapped and live IO/Rust-specific integration omissions explicitly justified.",
+      "sha256": "601b278ab4503708c0f2cd7baf123bb482fd8fa81f11471d998d568ce3197869",
+      "symbols": {
+        "12:test_public_api": {
+          "anchor": "fn test_public_api() {",
+          "disposition": "translated",
+          "reason": "Constructor predicates are callable and tested; no public ambient driver/backend object is recreated.",
+          "targets": [
+            {
+              "path": "tools/ports/uart_16550/main.omg",
+              "anchor": "machine test_constructors"
+            }
+          ]
+        },
+        "13:consume": {
+          "anchor": "fn consume(_device: Uart16550<impl Backend>) {}",
+          "disposition": "omitted",
+          "reason": "Rust namespace, formatting/error-framework or trait-glue only; no hardware fact/algorithm omitted."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/drivers/uart_16550/BOUNDARIES.md",
+          "anchor": "# UART access boundaries"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "653455f17e92c67a67e44b4c4b6eaba22411e57b",
+    "roots": [
+      "src",
+      "tests/api.rs"
+    ],
+    "url": "https://github.com/rust-osdev/uart_16550"
+  }
+}

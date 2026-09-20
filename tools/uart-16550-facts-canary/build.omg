@@ -1,5 +1,6 @@
-// Isolated pure-fact frontier for Cathedral's first UART register map.
-
-machine build(b: &mut Build) {
-    b.depend("facts", path("facts"));
+// Isolated pure-fact frontier; run.sh supplies the facts source path.
+machine build(builder: &mut Build) {
+    builder.application("cathedral-uart-16550-facts-canary");
+    builder.freestanding = true;
+    builder.depend_as("facts", Source::Path { location: "facts" });
 }

@@ -1,9 +1,24 @@
 // Compile-only acceptance root that makes the UART constants visible in the
 // typed artifact without performing hardware access.
 
-use facts::uart_16550;
+use facts::uart_16550::COM1;
+use facts::uart_16550::FCR_ENABLE_CLEAR;
+use facts::uart_16550::LCR_8N1;
+use facts::uart_16550::LCR_DLAB;
+use facts::uart_16550::LSR_DATA_READY;
+use facts::uart_16550::LSR_THR_EMPTY;
+use facts::uart_16550::MCR_DTR_RTS_OUT2;
+use facts::uart_16550::REG_DATA;
+use facts::uart_16550::REG_DIVISOR_HIGH;
+use facts::uart_16550::REG_DIVISOR_LOW;
+use facts::uart_16550::REG_FIFO_CONTROL;
+use facts::uart_16550::REG_INTERRUPT_ENABLE;
+use facts::uart_16550::REG_LINE_CONTROL;
+use facts::uart_16550::REG_LINE_STATUS;
+use facts::uart_16550::REG_MODEM_CONTROL;
+use facts::uart_16550::REG_SCRATCH;
 
-data Uart16550FactSnapshot {
+data Uart16550FactSnapshot [copy] {
     com1: u16;
     data_offset: u16;
     interrupt_enable_offset: u16;
@@ -43,8 +58,27 @@ machine uart_16550_fact_snapshot() -> Uart16550FactSnapshot {
     }
 }
 
-data Main {
+machine fact_result() -> i32 {
+    let snapshot: Uart16550FactSnapshot = uart_16550_fact_snapshot();
+    transition snapshot.com1 == 1016 &&
+        snapshot.data_offset == 0 &&
+        snapshot.interrupt_enable_offset == 1 &&
+        snapshot.divisor_low_offset == 0 &&
+        snapshot.divisor_high_offset == 1 &&
+        snapshot.fifo_control_offset == 2 &&
+        snapshot.line_control_offset == 3 &&
+        snapshot.modem_control_offset == 4 &&
+        snapshot.line_status_offset == 5 &&
+        snapshot.scratch_offset == 7 &&
+        snapshot.lcr_dlab == 128 &&
+        snapshot.lcr_8n1 == 3 &&
+        snapshot.lsr_data_ready == 1 &&
+        snapshot.lsr_thr_empty == 32 &&
+        snapshot.fcr_enable_clear == 199 &&
+        snapshot.mcr_dtr_rts_out2 == 11 { true -> (0) _ -> (1) }
 }
+const FACT_RESULT: i32 = fact_result();
+machine require_facts(value: i32) requires value == 0; {}
+data Main {}
 
-machine Main::main(&mut self) {
-}
+machine Main::main(&mut self) { require_facts(FACT_RESULT); }

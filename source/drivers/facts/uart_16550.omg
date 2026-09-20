@@ -12,6 +12,8 @@
 // are byte-wide, at (port base + offset). DLAB (LCR bit 7) banks offsets 0/1
 // between data/IER and the baud-divisor latch.
 
+module uart_16550;
+
 // Standard PC COM-port I/O bases.
 pub const COM1: u16 = 0x3F8;
 pub const COM2: u16 = 0x2F8;
@@ -45,3 +47,72 @@ pub const FCR_ENABLE_CLEAR: u8 = 0xC7;
 // Modem Control (MCR): DTR + RTS + OUT2 (OUT2 gates the shared IRQ line — a
 // classic "why won't my serial IRQ fire" quirk if left clear).
 pub const MCR_DTR_RTS_OUT2: u8 = 0x0B;
+
+// Additive UART-000 audit against uart_16550 653455f17e92c67a67e44b4c4b6eaba22411e57b.
+// SPDX-License-Identifier for additions: MIT OR Apache-2.0; see ../uart_16550/PORT.md.
+// DMA-end and PSD encodings below are pinned extension facts, not universal 16550 features.
+pub const IER_DATA_READY: u8 = 0x1;
+pub const IER_THR_EMPTY: u8 = 0x2;
+pub const IER_RECEIVER_LINE_STATUS: u8 = 0x4;
+pub const IER_MODEM_STATUS: u8 = 0x8;
+pub const IER__RESERVED0: u8 = 0x10;
+pub const IER__RESERVED1: u8 = 0x20;
+pub const IER_DMA_RX_END: u8 = 0x40;
+pub const IER_DMA_TX_END: u8 = 0x80;
+pub const ISR_INTERRUPT_STATUS: u8 = 0x1;
+pub const ISR_IIC_0: u8 = 0x2;
+pub const ISR_IIC_1: u8 = 0x4;
+pub const ISR_IIC_2: u8 = 0x8;
+pub const ISR_DMA_RX_END: u8 = 0x10;
+pub const ISR_DMA_TX_END: u8 = 0x20;
+pub const ISR_FIFOS_ENABLED0: u8 = 0x40;
+pub const ISR_FIFOS_ENABLED1: u8 = 0x80;
+pub const FCR_FIFO_ENABLE: u8 = 0x1;
+pub const FCR_RX_FIFO_RESET: u8 = 0x2;
+pub const FCR_TX_FIFO_RESET: u8 = 0x4;
+pub const FCR_DMA_MODE: u8 = 0x8;
+pub const FCR_ENABLE_DMA_END: u8 = 0x10;
+pub const FCR__RESERVED0: u8 = 0x20;
+pub const FCR_RX_FIFO_TRIGGER_LEVEL0: u8 = 0x40;
+pub const FCR_RX_FIFO_TRIGGER_LEVEL1: u8 = 0x80;
+pub const LCR_WORD_LENGTH0: u8 = 0x1;
+pub const LCR_WORD_LENGTH1: u8 = 0x2;
+pub const LCR_MORE_STOP_BITS: u8 = 0x4;
+pub const LCR_PARITY0: u8 = 0x8;
+pub const LCR_PARITY1: u8 = 0x10;
+pub const LCR_PARITY2: u8 = 0x20;
+pub const LCR_SET_BREAK: u8 = 0x40;
+pub const MCR_DTR: u8 = 0x1;
+pub const MCR_RTS: u8 = 0x2;
+pub const MCR_OUT_1: u8 = 0x4;
+pub const MCR_OUT_2_INT_ENABLE: u8 = 0x8;
+pub const MCR_LOOP_BACK: u8 = 0x10;
+pub const MCR__RESERVED0: u8 = 0x20;
+pub const MCR__RESERVED1: u8 = 0x40;
+pub const MCR__RESERVED2: u8 = 0x80;
+pub const LSR_OVERRUN_ERROR: u8 = 0x2;
+pub const LSR_PARITY_ERROR: u8 = 0x4;
+pub const LSR_FRAMING_ERROR: u8 = 0x8;
+pub const LSR_BREAK_INTERRUPT: u8 = 0x10;
+pub const LSR_FIFO_DATA_ERROR: u8 = 0x80;
+pub const MSR_DELTA_CTS: u8 = 0x1;
+pub const MSR_DELTA_DSR: u8 = 0x2;
+pub const MSR_TRAILING_EDGE_RI: u8 = 0x4;
+pub const MSR_DELTA_CD: u8 = 0x8;
+pub const MSR_CTS: u8 = 0x10;
+pub const MSR_DSR: u8 = 0x20;
+pub const MSR_RI: u8 = 0x40;
+pub const MSR_CD: u8 = 0x80;
+pub const PSD_PDF0: u8 = 0x1;
+pub const PSD_PDF1: u8 = 0x2;
+pub const PSD_PDF2: u8 = 0x4;
+pub const PSD_PDF3: u8 = 0x8;
+pub const PSD__RESERVED0: u8 = 0x10;
+pub const PSD__RESERVED1: u8 = 0x20;
+pub const PSD__RESERVED2: u8 = 0x40;
+pub const PSD__RESERVED3: u8 = 0x80;
+pub const CLK_FREQUENCY_HZ: u32 = 0x1c2000;
+pub const FIFO_SIZE: u8 = 0x10;
+pub const NUM_REGISTERS: u8 = 0x8;
+pub const REG_INTERRUPT_STATUS: u16 = 0x2;
+pub const REG_PRESCALER: u16 = 0x6;

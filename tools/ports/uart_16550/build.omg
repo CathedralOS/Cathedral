@@ -1,0 +1,6 @@
+machine build(builder: &mut Build) {
+    builder.application("cathedral-uart-16550-tests");
+    builder.freestanding = true;
+    builder.depend_as("uart", Source::Path { location: "../../../source/drivers/uart_16550" });
+    builder.depend_as("facts", Source::Path { location: "../../../source/drivers/facts" });
+}

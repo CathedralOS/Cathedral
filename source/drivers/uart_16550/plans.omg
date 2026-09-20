@@ -1,0 +1,89 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified plans from uart_16550 at the pin in PORT.md. No hardware executor.
+module plans;
+use pure::Config;
+use pure::configured_lcr;
+use pure::configured_fcr;
+use facts::uart_16550::REG_LINE_CONTROL;
+use facts::uart_16550::REG_LINE_STATUS;
+use facts::uart_16550::REG_DATA;
+use facts::uart_16550::REG_INTERRUPT_ENABLE;
+use facts::uart_16550::REG_FIFO_CONTROL;
+use facts::uart_16550::REG_MODEM_CONTROL;
+use facts::uart_16550::REG_MODEM_STATUS;
+use facts::uart_16550::REG_SCRATCH;
+use facts::uart_16550::LCR_DLAB;
+use facts::uart_16550::LSR_TRANSMIT_EMPTY;
+use facts::uart_16550::MCR_DTR_RTS_OUT2;
+
+// Request descriptors only. Read/write require separately granted PortIo or
+// placed MMIO extent/access authority. A plan does not implement that boundary.
+// kind:0 complete,1 write,2 read/discard,3 read/expect exact,4 poll(mask!=0).
+// Reads may clear status; consumers must preserve order and not prefetch them.
+pub data RegisterAction [copy] { kind: u8; offset: u16; value: u8; }
+pub machine init_step(config: Config, divisor: u16, step: u8) -> RegisterAction {
+    transition step {
+        0 -> (RegisterAction { kind: 1, offset: REG_SCRATCH, value: 0x42 })
+        1 -> (RegisterAction { kind: 3, offset: REG_SCRATCH, value: 0x42 })
+        2 -> (RegisterAction { kind: 1, offset: REG_SCRATCH, value: 0x73 })
+        3 -> (RegisterAction { kind: 3, offset: REG_SCRATCH, value: 0x73 })
+        4 -> (RegisterAction { kind: 1, offset: REG_LINE_CONTROL })
+        5 -> (RegisterAction { kind: 1, offset: REG_INTERRUPT_ENABLE })
+        6 -> (RegisterAction { kind: 1, offset: REG_LINE_CONTROL, value: LCR_DLAB })
+        7 -> (RegisterAction { kind: 1, offset: REG_DATA, value: (divisor & 255) as u8 })
+        8 -> (RegisterAction { kind: 1, offset: REG_INTERRUPT_ENABLE, value: (divisor >> 8) as u8 })
+        9 -> (RegisterAction { kind: 1, offset: REG_LINE_CONTROL })
+        10 -> (RegisterAction { kind: 1, offset: REG_LINE_CONTROL, value: configured_lcr(config) })
+        11 -> (RegisterAction { kind: 1, offset: REG_FIFO_CONTROL, value: configured_fcr(config) })
+        12 -> (RegisterAction { kind: 1, offset: REG_MODEM_CONTROL, value: MCR_DTR_RTS_OUT2 })
+        13 -> (RegisterAction { kind: 4, offset: REG_LINE_STATUS, value: LSR_TRANSMIT_EMPTY })
+        14 -> (RegisterAction { kind: 2, offset: REG_LINE_STATUS })
+        15 -> (RegisterAction { kind: 2, offset: REG_MODEM_STATUS })
+        16 -> (RegisterAction { kind: 1, offset: REG_INTERRUPT_ENABLE, value: config.interrupts })
+        _ -> (RegisterAction {})
+    }
+}
+// Response decision:0 advance,1 retry,2 mismatch. Poll retries need a caller
+// work budget; upstream spins indefinitely, Cathedral's boot path is bounded.
+pub machine action_response(action: RegisterAction, observed: u8) -> u8 {
+    let guard_0: bool = action.kind == 3 && observed != action.value;
+    let guard_1: bool = action.kind == 4 && (observed & action.value) == 0;
+    transition { guard_0 -> (2)
+        guard_1 -> (1) _ -> (0) }
+}
+// Divisor snapshot: read old LCR first, then select bank, read low/high, restore
+// the exact old LCR (including an already-set DLAB), never clear it blindly.
+pub machine divisor_step(step: u8, old_lcr: u8) -> RegisterAction {
+    transition step {
+        0 -> (RegisterAction { kind: 2, offset: REG_LINE_CONTROL })
+        1 -> (RegisterAction { kind: 1, offset: REG_LINE_CONTROL, value: old_lcr | LCR_DLAB })
+        2 -> (RegisterAction { kind: 2, offset: REG_DATA })
+        3 -> (RegisterAction { kind: 2, offset: REG_INTERRUPT_ENABLE })
+        4 -> (RegisterAction { kind: 1, offset: REG_LINE_CONTROL, value: old_lcr })
+        _ -> (RegisterAction {})
+    }
+}
+// Literal register reads for ier/isr/lcr/mcr/lsr/msr/spr. Divisor slots are
+// intentionally handled by divisor_step because their bank is not interchangeable.
+pub machine register_read(offset: u16) -> RegisterAction requires offset < 8; {
+    RegisterAction { kind: 2, offset: offset }
+}
+pub machine transmit_byte(value: u8) -> RegisterAction {
+    RegisterAction { kind: 1, offset: REG_DATA, value: value }
+}
+pub machine receive_byte() -> RegisterAction { RegisterAction { kind: 2, offset: REG_DATA } }
+// Snapshot request sequence following divisor_step: IER,IIR,LCR,MCR,LSR,MSR,SCR.
+pub machine dump_step(step: u8) -> RegisterAction {
+    transition step < 7 { true -> (RegisterAction { kind: 2, offset: (step as u16) + 1 }) _ -> (RegisterAction {}) }
+}
+// A send attempt reads LSR, then MCR only when capacity exists and CTS checking
+// is configured, then MSR only outside loopback. No eager side-effecting reads.
+pub machine send_probe(step: u8, check_cts: bool, lsr: u8, mcr: u8) -> RegisterAction {
+    let guard_0: bool = step == 0;
+    let guard_1: bool = step == 1 && check_cts && (lsr & 32) != 0;
+    let guard_2: bool = step == 2 && check_cts && (lsr & 32) != 0 && (mcr & 16) == 0;
+    transition { guard_0 -> (RegisterAction { kind: 2, offset: REG_LINE_STATUS })
+        guard_1 -> (RegisterAction { kind: 2, offset: REG_MODEM_CONTROL })
+        guard_2 -> (RegisterAction { kind: 2, offset: REG_MODEM_STATUS })
+        _ -> (RegisterAction {}) }
+}

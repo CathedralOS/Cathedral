@@ -1,0 +1,175 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified translation of uart_16550 653455f17e92c67a67e44b4c4b6eaba22411e57b.
+// Pure values and decisions only. PORT.md records API changes and boundary contracts.
+module pure;
+use facts::uart_16550::CLK_FREQUENCY_HZ;
+use facts::uart_16550::FIFO_SIZE;
+use facts::uart_16550::LSR_DATA_READY;
+use facts::uart_16550::LSR_THR_EMPTY;
+use facts::uart_16550::LSR_TRANSMIT_EMPTY;
+use facts::uart_16550::LCR_DLAB;
+use facts::uart_16550::MCR_DTR_RTS_OUT2;
+
+// Error codes: 0 success, 1 zero input, 2 invalid prescaler, 3 arithmetic
+// overflow, 4 noninteger result, 5 divisor outside u16. All input retained by caller.
+pub data Calculation [copy] { value: u32; error: u8; }
+pub data Config [copy] {
+    interrupts: u8;
+    frequency: u32;
+    has_prescaler: bool;
+    prescaler: u32;
+    fifo_enabled: bool;
+    fifo_trigger_bits: u8;
+    baud_rate: u32;
+    word_length_bits: u8;
+    extra_stop_bits: bool;
+    parity_bits: u8;
+    check_cts_before_sending: bool;
+}
+pub data ConfigRegisterDump [copy] {
+    ier: u8; isr: u8; lcr: u8; mcr: u8; lsr: u8; msr: u8; spr: u8; dll: u8; dlm: u8;
+}
+pub machine default_config() -> Config {
+    Config { frequency: CLK_FREQUENCY_HZ, fifo_enabled: true, fifo_trigger_bits: 3,
+             baud_rate: 9600, word_length_bits: 3 }
+}
+pub machine baud_compare(left: u32, right: u32) -> i32 {
+    let guard_0: bool = left < right;
+    let guard_1: bool = left > right;
+    transition { guard_0 -> (-1) guard_1 -> (1) _ -> (0) }
+}
+pub machine effective_prescaler(present: bool, value: u32) -> u32 {
+    transition present { true -> (value) _ -> (0) }
+}
+pub machine calc_baud_rate(frequency: u32, divisor: u32, present: bool, prescaler: u32) -> Calculation {
+    let psd: u32 = effective_prescaler(present, prescaler);
+    let guard_0: bool = frequency == 0 || divisor == 0;
+    let guard_1: bool = psd > 15;
+    transition { guard_0 -> (Calculation { error: 1 })
+        guard_1 -> (Calculation { error: 2 })
+        _ -> denominator(frequency, divisor, psd)
+    }
+    state denominator(frequency: u32, divisor: u32, psd: u32) -> Calculation {
+        let denominator: u64 = 16 * (((psd as u64) & 15) + 1) * (divisor as u64);
+        transition denominator > 0xffff_ffff { true -> (Calculation { error: 3 })
+            _ -> divide(frequency, denominator)
+        }
+    }
+    state divide(frequency: u32, denominator: u64) -> Calculation {
+        transition ((frequency as u64) % denominator) == 0 {
+            true -> (Calculation { value: (((frequency as u64) / denominator) & 0xffff_ffff) as u32 })
+            _ -> (Calculation { error: 4 })
+        }
+    }
+}
+pub machine calc_divisor(frequency: u32, baud_rate: u32, present: bool, prescaler: u32) -> Calculation {
+    let result: Calculation = calc_baud_rate(frequency, baud_rate, present, prescaler);
+    transition result.error == 0 && result.value > 65535 {
+        true -> (Calculation { error: 5 }) _ -> (result)
+    }
+}
+pub machine calc_frequency(baud_rate: u32, divisor: u32, present: bool, prescaler: u32) -> Calculation {
+    let psd: u32 = effective_prescaler(present, prescaler);
+    let guard_0: bool = baud_rate == 0 || divisor == 0;
+    let guard_1: bool = psd > 15;
+    transition { guard_0 -> (Calculation { error: 1 })
+        guard_1 -> (Calculation { error: 2 }) _ -> denominator(baud_rate, divisor, psd)
+    }
+    state denominator(baud_rate: u32, divisor: u32, psd: u32) -> Calculation {
+        let denominator: u64 = 16 * (((psd as u64) & 15) + 1) * (divisor as u64);
+        transition denominator > 0xffff_ffff { true -> (Calculation { error: 3 }) _ -> multiply(baud_rate, denominator) }
+    }
+    state multiply(baud_rate: u32, denominator: u64) -> Calculation {
+        let result: u64 = (baud_rate as u64) * denominator;
+        transition result > 0xffff_ffff { true -> (Calculation { error: 3 }) _ -> (Calculation { value: result as u32 }) }
+    }
+}
+pub machine dump_divisor(value: ConfigRegisterDump) -> u16 { ((value.dlm as u16) << 8) | (value.dll as u16) }
+pub machine dump_baud_rate(value: ConfigRegisterDump, config: Config) -> Calculation {
+    let divisor: u16 = dump_divisor(value);
+    calc_baud_rate(config.frequency, divisor as u32, config.has_prescaler, config.prescaler)
+}
+// Encoded helper values are register bit patterns, not Rust enum ordinals.
+pub machine fifo_from_raw_bits(value: u8) -> u8 { value & 3 }
+pub machine fifo_to_raw_bits(value: u8) -> u8 { value & 3 }
+pub machine fifo_trigger_level(value: u8) -> u8 { (value >> 6) & 3 }
+pub machine set_fifo_trigger_level(value: u8, level: u8) -> u8 { (value & 0x3f) | ((level & 3) << 6) }
+pub machine word_from_raw_bits(value: u8) -> u8 { value & 3 }
+pub machine word_to_raw_bits(value: u8) -> u8 { value & 3 }
+pub machine word_length(value: u8) -> u8 { value & 3 }
+pub machine set_word_length(value: u8, word: u8) -> u8 { (value & 0xfc) | (word & 3) }
+pub machine word_from_integer(value: u8) -> u8 {
+    transition value { 5 -> (0) 6 -> (1) 7 -> (2) _ -> (3) }
+}
+pub machine word_to_integer(value: u8) -> u32 { ((value & 3) as u32) + 5 }
+pub machine parity_from_raw_bits(value: u8) -> u8 {
+    transition (value & 1) == 0 { true -> (0) _ -> (value & 7) }
+}
+pub machine parity_to_raw_bits(value: u8) -> u8 { parity_from_raw_bits(value) }
+pub machine parity(value: u8) -> u8 { parity_from_raw_bits(value >> 3) }
+pub machine set_parity(value: u8, parity_bits: u8) -> u8 { (value & 0xc7) | ((parity_from_raw_bits(parity_bits) & 7) << 3) }
+pub machine pdf(value: u8) -> u8 { value & 15 }
+pub machine set_pdf(value: u8, factor: u8) -> u8 { (value & 0xf0) | (factor & 15) }
+pub machine has_error(value: u8) -> bool { (value & 0x9e) != 0 }
+pub machine has_pending_interrupt(value: u8) -> bool { (value & 1) == 0 }
+// 255 means no/unknown interrupt; remaining values are upstream IIC encodings.
+pub machine interrupt_type(value: u8) -> u8 {
+    transition (value & 1) != 0 || (value & 15) == 8 { true -> (255) _ -> ((value >> 1) & 7) }
+}
+pub machine interrupt_priority(value: u8) -> u8 {
+    transition value { 3 -> (1) 2 -> (2) 6 -> (2) 1 -> (3) 0 -> (4) 7 -> (5) 5 -> (6) _ -> (255) }
+}
+// Constructor predicates return geometry only; neither creates a live UART.
+pub machine valid_port_base(base: u16) -> bool { base <= 65528 }
+pub machine valid_mmio_stride(stride: u8) -> bool {
+    transition stride { 1 -> (true) 2 -> (true) 4 -> (true) 8 -> (true)
+        16 -> (true) 32 -> (true) 64 -> (true) 128 -> (true) _ -> (false) }
+}
+pub machine valid_mmio_base(base: u64, stride: u8) -> bool {
+    base != 0 && valid_mmio_stride(stride) && base <= (0xffff_ffff_ffff_ffff - 7 * (stride as u64))
+}
+pub data RegisterOffset [copy] { valid: bool; bytes: u8; }
+pub machine register_offset(index: u8, stride: u8) -> RegisterOffset {
+    let bytes: u16 = (index as u16) * (stride as u16);
+    transition index < 8 && stride != 0 && bytes <= 255 {
+        true -> (RegisterOffset { valid: true, bytes: bytes as u8 }) _ -> (RegisterOffset {})
+    }
+}
+pub machine ready_to_receive(lsr: u8) -> bool { (lsr & LSR_DATA_READY) != 0 }
+// 0 ready, 1 no capacity, 2 remote CTS false. Input snapshots alone grant no IO.
+pub machine ready_to_send(lsr: u8, mcr: u8, msr: u8, check_cts: bool) -> u8 {
+    let guard_0: bool = (lsr & LSR_THR_EMPTY) == 0;
+    let guard_1: bool = check_cts && (mcr & 16) == 0 && (msr & 16) == 0;
+    transition { guard_0 -> (1)
+        guard_1 -> (2) _ -> (0) }
+}
+pub machine check_connected(msr: u8) -> u8 {
+    let guard_0: bool = (msr & 32) == 0;
+    let guard_1: bool = (msr & 16) == 0;
+    transition { guard_0 -> (1) guard_1 -> (2) _ -> (0) }
+}
+pub machine send_count(length: u64, fifo_enabled: bool, readiness: u8) -> u8 {
+    let guard_0: bool = length == 0 || readiness != 0;
+    let guard_1: bool = !fifo_enabled;
+    let guard_2: bool = length > (FIFO_SIZE as u64);
+    transition { guard_0 -> (0) guard_1 -> (1)
+        guard_2 -> (FIFO_SIZE) _ -> ((length & 255) as u8) }
+}
+// Upstream try_send_byte collapses CTS rejection into NoCapacity via send_bytes.
+pub machine try_send_error(readiness: u8) -> u8 { transition readiness == 0 { true -> (0) _ -> (1) } }
+pub data TtyBytes [copy] { bytes: [u8; 3]; length: u8; }
+pub machine tty_byte(value: u8) -> TtyBytes {
+    transition value { 8 -> (TtyBytes { bytes: [8, 32, 8], length: 3 })
+        127 -> (TtyBytes { bytes: [8, 32, 8], length: 3 })
+        10 -> (TtyBytes { bytes: [13, 10, 0], length: 2 })
+        _ -> (TtyBytes { bytes: [value, 0, 0], length: 1 }) }
+}
+pub machine configured_lcr(config: Config) -> u8 {
+    transition config.extra_stop_bits {
+        true -> (set_parity(set_word_length(4, config.word_length_bits), config.parity_bits))
+        _ -> (set_parity(set_word_length(0, config.word_length_bits), config.parity_bits))
+    }
+}
+pub machine configured_fcr(config: Config) -> u8 {
+    transition config.fifo_enabled { true -> (set_fifo_trigger_level(7, config.fifo_trigger_bits)) _ -> (6) }
+}

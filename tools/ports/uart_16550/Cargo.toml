@@ -1,0 +1,8 @@
+[package]
+name = "cathedral-uart-16550-probe"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+uart_16550 = { path = "../../../reference_code/rust-osdev/uart_16550" }

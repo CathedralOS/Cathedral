@@ -1,0 +1,7 @@
+use uart::baud;
+use uart::errors;
+use uart::enum_ordinals;
+use uart::pure;
+use uart::plans;
+data Main {}
+machine Main::main(&mut self) {}

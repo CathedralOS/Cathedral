@@ -1,0 +1,691 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "abi": "uart-register-values-and-rust-enum-identities",
+    "pointer_bits": 64,
+    "endian": "little"
+  },
+  "provenance": {
+    "kind": "upstream",
+    "revision": "653455f17e92c67a67e44b4c4b6eaba22411e57b",
+    "sources": [
+      "src/spec.rs"
+    ],
+    "description": "Independently compiled pinned Rust constants and enum ordinals; no device IO or Omega representation observation.",
+    "rustc": "rustc 1.94.0-nightly (f6a07efc8 2026-01-16)"
+  },
+  "measurements": {
+    "IER_DATA_READY": {
+      "kind": "value",
+      "value": 1
+    },
+    "IER_THR_EMPTY": {
+      "kind": "value",
+      "value": 2
+    },
+    "IER_RECEIVER_LINE_STATUS": {
+      "kind": "value",
+      "value": 4
+    },
+    "IER_MODEM_STATUS": {
+      "kind": "value",
+      "value": 8
+    },
+    "IER__RESERVED0": {
+      "kind": "value",
+      "value": 16
+    },
+    "IER__RESERVED1": {
+      "kind": "value",
+      "value": 32
+    },
+    "IER_DMA_RX_END": {
+      "kind": "value",
+      "value": 64
+    },
+    "IER_DMA_TX_END": {
+      "kind": "value",
+      "value": 128
+    },
+    "ISR_INTERRUPT_STATUS": {
+      "kind": "value",
+      "value": 1
+    },
+    "ISR_IIC_0": {
+      "kind": "value",
+      "value": 2
+    },
+    "ISR_IIC_1": {
+      "kind": "value",
+      "value": 4
+    },
+    "ISR_IIC_2": {
+      "kind": "value",
+      "value": 8
+    },
+    "ISR_DMA_RX_END": {
+      "kind": "value",
+      "value": 16
+    },
+    "ISR_DMA_TX_END": {
+      "kind": "value",
+      "value": 32
+    },
+    "ISR_FIFOS_ENABLED0": {
+      "kind": "value",
+      "value": 64
+    },
+    "ISR_FIFOS_ENABLED1": {
+      "kind": "value",
+      "value": 128
+    },
+    "FCR_FIFO_ENABLE": {
+      "kind": "value",
+      "value": 1
+    },
+    "FCR_RX_FIFO_RESET": {
+      "kind": "value",
+      "value": 2
+    },
+    "FCR_TX_FIFO_RESET": {
+      "kind": "value",
+      "value": 4
+    },
+    "FCR_DMA_MODE": {
+      "kind": "value",
+      "value": 8
+    },
+    "FCR_ENABLE_DMA_END": {
+      "kind": "value",
+      "value": 16
+    },
+    "FCR__RESERVED0": {
+      "kind": "value",
+      "value": 32
+    },
+    "FCR_RX_FIFO_TRIGGER_LEVEL0": {
+      "kind": "value",
+      "value": 64
+    },
+    "FCR_RX_FIFO_TRIGGER_LEVEL1": {
+      "kind": "value",
+      "value": 128
+    },
+    "LCR_WORD_LENGTH0": {
+      "kind": "value",
+      "value": 1
+    },
+    "LCR_WORD_LENGTH1": {
+      "kind": "value",
+      "value": 2
+    },
+    "LCR_MORE_STOP_BITS": {
+      "kind": "value",
+      "value": 4
+    },
+    "LCR_PARITY0": {
+      "kind": "value",
+      "value": 8
+    },
+    "LCR_PARITY1": {
+      "kind": "value",
+      "value": 16
+    },
+    "LCR_PARITY2": {
+      "kind": "value",
+      "value": 32
+    },
+    "LCR_SET_BREAK": {
+      "kind": "value",
+      "value": 64
+    },
+    "LCR_DLAB": {
+      "kind": "value",
+      "value": 128
+    },
+    "MCR_DTR": {
+      "kind": "value",
+      "value": 1
+    },
+    "MCR_RTS": {
+      "kind": "value",
+      "value": 2
+    },
+    "MCR_OUT_1": {
+      "kind": "value",
+      "value": 4
+    },
+    "MCR_OUT_2_INT_ENABLE": {
+      "kind": "value",
+      "value": 8
+    },
+    "MCR_LOOP_BACK": {
+      "kind": "value",
+      "value": 16
+    },
+    "MCR__RESERVED0": {
+      "kind": "value",
+      "value": 32
+    },
+    "MCR__RESERVED1": {
+      "kind": "value",
+      "value": 64
+    },
+    "MCR__RESERVED2": {
+      "kind": "value",
+      "value": 128
+    },
+    "LSR_DATA_READY": {
+      "kind": "value",
+      "value": 1
+    },
+    "LSR_OVERRUN_ERROR": {
+      "kind": "value",
+      "value": 2
+    },
+    "LSR_PARITY_ERROR": {
+      "kind": "value",
+      "value": 4
+    },
+    "LSR_FRAMING_ERROR": {
+      "kind": "value",
+      "value": 8
+    },
+    "LSR_BREAK_INTERRUPT": {
+      "kind": "value",
+      "value": 16
+    },
+    "LSR_THR_EMPTY": {
+      "kind": "value",
+      "value": 32
+    },
+    "LSR_TRANSMIT_EMPTY": {
+      "kind": "value",
+      "value": 64
+    },
+    "LSR_FIFO_DATA_ERROR": {
+      "kind": "value",
+      "value": 128
+    },
+    "MSR_DELTA_CTS": {
+      "kind": "value",
+      "value": 1
+    },
+    "MSR_DELTA_DSR": {
+      "kind": "value",
+      "value": 2
+    },
+    "MSR_TRAILING_EDGE_RI": {
+      "kind": "value",
+      "value": 4
+    },
+    "MSR_DELTA_CD": {
+      "kind": "value",
+      "value": 8
+    },
+    "MSR_CTS": {
+      "kind": "value",
+      "value": 16
+    },
+    "MSR_DSR": {
+      "kind": "value",
+      "value": 32
+    },
+    "MSR_RI": {
+      "kind": "value",
+      "value": 64
+    },
+    "MSR_CD": {
+      "kind": "value",
+      "value": 128
+    },
+    "PSD_PDF0": {
+      "kind": "value",
+      "value": 1
+    },
+    "PSD_PDF1": {
+      "kind": "value",
+      "value": 2
+    },
+    "PSD_PDF2": {
+      "kind": "value",
+      "value": 4
+    },
+    "PSD_PDF3": {
+      "kind": "value",
+      "value": 8
+    },
+    "PSD__RESERVED0": {
+      "kind": "value",
+      "value": 16
+    },
+    "PSD__RESERVED1": {
+      "kind": "value",
+      "value": 32
+    },
+    "PSD__RESERVED2": {
+      "kind": "value",
+      "value": 64
+    },
+    "PSD__RESERVED3": {
+      "kind": "value",
+      "value": 128
+    },
+    "CLK_FREQUENCY_HZ": {
+      "kind": "value",
+      "value": 1843200
+    },
+    "FIFO_SIZE": {
+      "kind": "value",
+      "value": 16
+    },
+    "NUM_REGISTERS": {
+      "kind": "value",
+      "value": 8
+    },
+    "REG_INTERRUPT_STATUS": {
+      "kind": "value",
+      "value": 2
+    },
+    "REG_PRESCALER": {
+      "kind": "value",
+      "value": 6
+    },
+    "DIVISOR1": {
+      "kind": "value",
+      "value": 0
+    },
+    "DIVISOR2": {
+      "kind": "value",
+      "value": 1
+    },
+    "DIVISOR3": {
+      "kind": "value",
+      "value": 2
+    },
+    "DIVISOR4": {
+      "kind": "value",
+      "value": 3
+    },
+    "DIVISOR5": {
+      "kind": "value",
+      "value": 4
+    },
+    "DIVISOR6": {
+      "kind": "value",
+      "value": 5
+    },
+    "DIVISOR8": {
+      "kind": "value",
+      "value": 6
+    },
+    "DIVISOR9": {
+      "kind": "value",
+      "value": 7
+    },
+    "DIVISOR10": {
+      "kind": "value",
+      "value": 8
+    },
+    "DIVISOR12": {
+      "kind": "value",
+      "value": 9
+    },
+    "DIVISOR15": {
+      "kind": "value",
+      "value": 10
+    },
+    "DIVISOR16": {
+      "kind": "value",
+      "value": 11
+    },
+    "DIVISOR18": {
+      "kind": "value",
+      "value": 12
+    },
+    "DIVISOR20": {
+      "kind": "value",
+      "value": 13
+    },
+    "DIVISOR24": {
+      "kind": "value",
+      "value": 14
+    },
+    "DIVISOR25": {
+      "kind": "value",
+      "value": 15
+    },
+    "DIVISOR30": {
+      "kind": "value",
+      "value": 16
+    },
+    "DIVISOR32": {
+      "kind": "value",
+      "value": 17
+    },
+    "DIVISOR36": {
+      "kind": "value",
+      "value": 18
+    },
+    "DIVISOR40": {
+      "kind": "value",
+      "value": 19
+    },
+    "DIVISOR45": {
+      "kind": "value",
+      "value": 20
+    },
+    "DIVISOR48": {
+      "kind": "value",
+      "value": 21
+    },
+    "DIVISOR50": {
+      "kind": "value",
+      "value": 22
+    },
+    "DIVISOR60": {
+      "kind": "value",
+      "value": 23
+    },
+    "DIVISOR64": {
+      "kind": "value",
+      "value": 24
+    },
+    "DIVISOR72": {
+      "kind": "value",
+      "value": 25
+    },
+    "DIVISOR75": {
+      "kind": "value",
+      "value": 26
+    },
+    "DIVISOR80": {
+      "kind": "value",
+      "value": 27
+    },
+    "DIVISOR90": {
+      "kind": "value",
+      "value": 28
+    },
+    "DIVISOR96": {
+      "kind": "value",
+      "value": 29
+    },
+    "DIVISOR100": {
+      "kind": "value",
+      "value": 30
+    },
+    "DIVISOR120": {
+      "kind": "value",
+      "value": 31
+    },
+    "DIVISOR128": {
+      "kind": "value",
+      "value": 32
+    },
+    "DIVISOR144": {
+      "kind": "value",
+      "value": 33
+    },
+    "DIVISOR150": {
+      "kind": "value",
+      "value": 34
+    },
+    "DIVISOR160": {
+      "kind": "value",
+      "value": 35
+    },
+    "DIVISOR180": {
+      "kind": "value",
+      "value": 36
+    },
+    "DIVISOR192": {
+      "kind": "value",
+      "value": 37
+    },
+    "DIVISOR200": {
+      "kind": "value",
+      "value": 38
+    },
+    "DIVISOR225": {
+      "kind": "value",
+      "value": 39
+    },
+    "DIVISOR240": {
+      "kind": "value",
+      "value": 40
+    },
+    "DIVISOR256": {
+      "kind": "value",
+      "value": 41
+    },
+    "DIVISOR288": {
+      "kind": "value",
+      "value": 42
+    },
+    "DIVISOR300": {
+      "kind": "value",
+      "value": 43
+    },
+    "DIVISOR320": {
+      "kind": "value",
+      "value": 44
+    },
+    "DIVISOR360": {
+      "kind": "value",
+      "value": 45
+    },
+    "DIVISOR384": {
+      "kind": "value",
+      "value": 46
+    },
+    "DIVISOR400": {
+      "kind": "value",
+      "value": 47
+    },
+    "DIVISOR450": {
+      "kind": "value",
+      "value": 48
+    },
+    "DIVISOR480": {
+      "kind": "value",
+      "value": 49
+    },
+    "DIVISOR512": {
+      "kind": "value",
+      "value": 50
+    },
+    "DIVISOR576": {
+      "kind": "value",
+      "value": 51
+    },
+    "DIVISOR600": {
+      "kind": "value",
+      "value": 52
+    },
+    "DIVISOR640": {
+      "kind": "value",
+      "value": 53
+    },
+    "DIVISOR720": {
+      "kind": "value",
+      "value": 54
+    },
+    "DIVISOR768": {
+      "kind": "value",
+      "value": 55
+    },
+    "DIVISOR800": {
+      "kind": "value",
+      "value": 56
+    },
+    "DIVISOR900": {
+      "kind": "value",
+      "value": 57
+    },
+    "DIVISOR960": {
+      "kind": "value",
+      "value": 58
+    },
+    "DIVISOR1152": {
+      "kind": "value",
+      "value": 59
+    },
+    "DIVISOR1200": {
+      "kind": "value",
+      "value": 60
+    },
+    "DIVISOR1280": {
+      "kind": "value",
+      "value": 61
+    },
+    "DIVISOR1440": {
+      "kind": "value",
+      "value": 62
+    },
+    "DIVISOR1536": {
+      "kind": "value",
+      "value": 63
+    },
+    "DIVISOR1600": {
+      "kind": "value",
+      "value": 64
+    },
+    "DIVISOR1800": {
+      "kind": "value",
+      "value": 65
+    },
+    "DIVISOR1920": {
+      "kind": "value",
+      "value": 66
+    },
+    "DIVISOR2304": {
+      "kind": "value",
+      "value": 67
+    },
+    "DIVISOR2400": {
+      "kind": "value",
+      "value": 68
+    },
+    "DIVISOR2560": {
+      "kind": "value",
+      "value": 69
+    },
+    "DIVISOR2880": {
+      "kind": "value",
+      "value": 70
+    },
+    "DIVISOR3200": {
+      "kind": "value",
+      "value": 71
+    },
+    "DIVISOR3600": {
+      "kind": "value",
+      "value": 72
+    },
+    "DIVISOR3840": {
+      "kind": "value",
+      "value": 73
+    },
+    "DIVISOR4608": {
+      "kind": "value",
+      "value": 74
+    },
+    "DIVISOR4800": {
+      "kind": "value",
+      "value": 75
+    },
+    "DIVISOR5760": {
+      "kind": "value",
+      "value": 76
+    },
+    "DIVISOR6400": {
+      "kind": "value",
+      "value": 77
+    },
+    "DIVISOR7200": {
+      "kind": "value",
+      "value": 78
+    },
+    "DIVISOR7680": {
+      "kind": "value",
+      "value": 79
+    },
+    "DIVISOR9600": {
+      "kind": "value",
+      "value": 80
+    },
+    "DIVISOR11520": {
+      "kind": "value",
+      "value": 81
+    },
+    "DIVISOR12800": {
+      "kind": "value",
+      "value": 82
+    },
+    "DIVISOR14400": {
+      "kind": "value",
+      "value": 83
+    },
+    "DIVISOR19200": {
+      "kind": "value",
+      "value": 84
+    },
+    "DIVISOR23040": {
+      "kind": "value",
+      "value": 85
+    },
+    "DIVISOR28800": {
+      "kind": "value",
+      "value": 86
+    },
+    "DIVISOR38400": {
+      "kind": "value",
+      "value": 87
+    },
+    "DIVISOR57600": {
+      "kind": "value",
+      "value": 88
+    },
+    "REG_DATA": {
+      "kind": "value",
+      "value": 0
+    },
+    "REG_INTERRUPT_ENABLE": {
+      "kind": "value",
+      "value": 1
+    },
+    "REG_FIFO_CONTROL": {
+      "kind": "value",
+      "value": 2
+    },
+    "REG_LINE_CONTROL": {
+      "kind": "value",
+      "value": 3
+    },
+    "REG_MODEM_CONTROL": {
+      "kind": "value",
+      "value": 4
+    },
+    "REG_LINE_STATUS": {
+      "kind": "value",
+      "value": 5
+    },
+    "REG_MODEM_STATUS": {
+      "kind": "value",
+      "value": 6
+    },
+    "REG_SCRATCH": {
+      "kind": "value",
+      "value": 7
+    },
+    "REG_DIVISOR_LOW": {
+      "kind": "value",
+      "value": 0
+    },
+    "REG_DIVISOR_HIGH": {
+      "kind": "value",
+      "value": 1
+    }
+  }
+}

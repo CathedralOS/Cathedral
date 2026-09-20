@@ -1,0 +1,4 @@
+machine build(builder: &mut Build) {
+    builder.package("cathedral-uart-16550");
+    builder.depend_as("facts", Source::Path { location: "../facts" });
+}

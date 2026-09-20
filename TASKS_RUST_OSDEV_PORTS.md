@@ -174,7 +174,7 @@ projection, union/tail and native-boundary limitations remain recorded there.
   extended-capability facts.  Keep byte parsing pure; config-space access is an
   unresolved authority seam.  Add malformed-list, alignment, and overflow
   tests.
-- [ ] **UART-000 — Audit `uart_16550` against existing facts.** Do not duplicate
+- [x] **UART-000 — Audit `uart_16550` against existing facts.** Do not duplicate
   `source/drivers/facts/uart_16550.omg`.  Add omissions and upstream tests, then
   map constructor/read/write behavior into pure plans plus explicit port-I/O
   boundaries.
@@ -196,6 +196,11 @@ PCI-000 evidence: [PCI port record](source/libraries/pci/PORT.md), complete
 six-file inventory, pinned in-memory Rust witnesses, and ten Omega semantic
 behavior groups with ten body-mutating negative controls. Configuration access
 remains an explicit authority seam.
+
+UART-000 evidence: [UART audit](source/drivers/uart_16550/PORT.md), additive
+existing facts, 168 pinned values/ordinals, 45 Rust tests, translated Omega
+behavior and body-mutating controls. The existing fact canary passes; live
+port-I/O/MMIO and polling remain explicit owner boundaries.
 
 ## Phase 3 — VirtIO protocol corpus
 

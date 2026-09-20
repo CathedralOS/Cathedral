@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Pinned error payloads, translated as inert values; no Rust Error/Display framework.
+module errors;
+pub data NonIntegerBaudRateError [copy] { frequency: u32; divisor: u32; has_prescaler: bool; prescaler: u32; }
+pub data NonIntegerDivisorError [copy] { frequency: u32; baud_rate: u32; has_prescaler: bool; prescaler: u32; }
+pub data InvalidAddressError [copy] {
+    case InvalidBaseAddress(base: u64);
+    case InvalidStride(stride: u8);
+}
+pub data ByteReceiveError [copy] {}
+pub data ByteSendError [copy] { case NoCapacity; case RemoteNotClearToSend; }
+pub data RemoteReadyToReceiveError [copy] { case NoRemoteConnectedNoDSR; case NoRemoteConnectedNoCD; case RemoteNotClearToSend; }
+pub data LoopbackError [copy] {
+    case SendError(error: ByteSendError);
+    case UnexpectedLoopbackByte(expected: u8, actual: u8);
+    case UnexpectedLoopbackMsg(expected: [u8; 16], actual: [u8; 16]);
+}
+pub data InitError [copy] { case DeviceNotPresent; case InvalidBaudRate(error: NonIntegerDivisorError); }
+pub data Uart16550TtyError [copy] { case AddressError(error: InvalidAddressError); case InitError(error: InitError); case TestError(error: LoopbackError); }
