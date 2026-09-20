@@ -1,0 +1,134 @@
+// Independently authored inert UEFI producer/consumer fixtures, UEFI-010.
+// Numerical slot tokens are fixture IDs, never native addresses or authority.
+module table_images;
+use cathedral_uefi_raw::tables::BOOT_SERVICES_SIGNATURE;
+use cathedral_uefi_raw::tables::BOOTSERVICES_STALL_SLOT;
+use cathedral_uefi_raw::tables::BOOTSERVICES_GET_NEXT_MONOTONIC_COUNT_SLOT;
+
+pub const BOOT_IMAGE_SIZE: u64 = 376;
+pub const MOCK_STALL_TOKEN: u64 = 0xcafe0001;
+pub const MOCK_MONOTONIC_TOKEN: u64 = 0xcafe0002;
+pub data BootServicesImage [copy] { bytes: [u8; 376]; }
+
+pub machine read_u32_le(bytes: [u8; 4]) -> u32 {
+    (bytes[0] as u32) | ((bytes[1] as u32) << 8) |
+    ((bytes[2] as u32) << 16) | ((bytes[3] as u32) << 24)
+}
+pub machine read_u64_le(bytes: [u8; 8]) -> u64 {
+    let low: u32 = read_u32_le([bytes[0],bytes[1],bytes[2],bytes[3]]);
+    let high: u32 = read_u32_le([bytes[4],bytes[5],bytes[6],bytes[7]]);
+    (low as u64) | ((high as u64) << 32)
+}
+pub machine encode_u32_le(value: u32) -> [u8; 4] {
+    [(value & 255) as u8, ((value >> 8) & 255) as u8,
+     ((value >> 16) & 255) as u8, ((value >> 24) & 255) as u8]
+}
+pub machine encode_u64_le(value: u64) -> [u8; 8] {
+    [(value & 255) as u8, ((value >> 8) & 255) as u8,
+     ((value >> 16) & 255) as u8, ((value >> 24) & 255) as u8,
+     ((value >> 32) & 255) as u8, ((value >> 40) & 255) as u8,
+     ((value >> 48) & 255) as u8, ((value >> 56) & 255) as u8]
+}
+// Produces all 44 slot positions. Unimplemented and reserved positions stay zero.
+pub machine produce_boot_image() -> BootServicesImage {
+    let mut image: BootServicesImage;
+    let encoded1: [u8; 8] = encode_u64_le(BOOT_SERVICES_SIGNATURE);
+    image.bytes[0] = encoded1[0];
+    image.bytes[1] = encoded1[1];
+    image.bytes[2] = encoded1[2];
+    image.bytes[3] = encoded1[3];
+    image.bytes[4] = encoded1[4];
+    image.bytes[5] = encoded1[5];
+    image.bytes[6] = encoded1[6];
+    image.bytes[7] = encoded1[7];
+    let encoded2: [u8; 4] = encode_u32_le(0x00020064);
+    image.bytes[8] = encoded2[0];
+    image.bytes[9] = encoded2[1];
+    image.bytes[10] = encoded2[2];
+    image.bytes[11] = encoded2[3];
+    let encoded3: [u8; 4] = encode_u32_le(376);
+    image.bytes[12] = encoded3[0];
+    image.bytes[13] = encoded3[1];
+    image.bytes[14] = encoded3[2];
+    image.bytes[15] = encoded3[3];
+    let encoded4: [u8; 8] = encode_u64_le(MOCK_STALL_TOKEN);
+    image.bytes[248] = encoded4[0];
+    image.bytes[249] = encoded4[1];
+    image.bytes[250] = encoded4[2];
+    image.bytes[251] = encoded4[3];
+    image.bytes[252] = encoded4[4];
+    image.bytes[253] = encoded4[5];
+    image.bytes[254] = encoded4[6];
+    image.bytes[255] = encoded4[7];
+    let encoded5: [u8; 8] = encode_u64_le(MOCK_MONOTONIC_TOKEN);
+    image.bytes[240] = encoded5[0];
+    image.bytes[241] = encoded5[1];
+    image.bytes[242] = encoded5[2];
+    image.bytes[243] = encoded5[3];
+    image.bytes[244] = encoded5[4];
+    image.bytes[245] = encoded5[5];
+    image.bytes[246] = encoded5[6];
+    image.bytes[247] = encoded5[7];
+    // Exact fixed-image checksum, independently generated with Python zlib.
+    let checksum: u32 = 472562399;
+    let encoded6: [u8; 4] = encode_u32_le(checksum);
+    image.bytes[16] = encoded6[0];
+    image.bytes[17] = encoded6[1];
+    image.bytes[18] = encoded6[2];
+    image.bytes[19] = encoded6[3];
+    image
+}
+
+// Checks this fixture's header fields only, not a general firmware admission.
+// The golden-image test independently checks every byte and its CRC.
+pub machine mock_header_matches(image: &BootServicesImage) -> bool {
+    let signature: u64 = read_u64_le([image.bytes[0],image.bytes[1],image.bytes[2],image.bytes[3],image.bytes[4],image.bytes[5],image.bytes[6],image.bytes[7]]);
+    let revision: u32 = read_u32_le([image.bytes[8],image.bytes[9],image.bytes[10],image.bytes[11]]);
+    let size: u32 = read_u32_le([image.bytes[12],image.bytes[13],image.bytes[14],image.bytes[15]]);
+    let checksum: u32 = read_u32_le([image.bytes[16],image.bytes[17],image.bytes[18],image.bytes[19]]);
+    let reserved: u32 = read_u32_le([image.bytes[20],image.bytes[21],image.bytes[22],image.bytes[23]]);
+    signature == BOOT_SERVICES_SIGNATURE && revision == 0x20064 && size == 376 &&
+    checksum == 472562399 && reserved == 0
+}
+pub machine read_boot_slot(image: &BootServicesImage, slot: u64) -> u64
+requires slot < 44;
+{
+    let offset: u64 = 24 + slot * 8;
+    let i1: u64 = offset + 1;
+    let i2: u64 = offset + 2;
+    let i3: u64 = offset + 3;
+    let i4: u64 = offset + 4;
+    let i5: u64 = offset + 5;
+    let i6: u64 = offset + 6;
+    let i7: u64 = offset + 7;
+    transition offset < 376 && i1 < 376 && i2 < 376 && i3 < 376 && i4 < 376 && i5 < 376 && i6 < 376 && i7 < 376 {
+        true -> (((image.bytes[offset] as u64) << 0) | ((image.bytes[i1] as u64) << 8) | ((image.bytes[i2] as u64) << 16) | ((image.bytes[i3] as u64) << 24) | ((image.bytes[i4] as u64) << 32) | ((image.bytes[i5] as u64) << 40) | ((image.bytes[i6] as u64) << 48) | ((image.bytes[i7] as u64) << 56))
+        _ -> (0)
+    }
+}
+
+// Checked Omega mocks. Tokens dispatch only inside this fixture model.
+// PORT-BLOCKED[omega:callback-field-materialization]: native table slots need
+// private callback field destinations; current realization supports one direct parameter.
+pub machine mock_stall(microseconds: u64) -> u64 {
+    transition microseconds <= 1000000 {
+        true -> (0)
+        _ -> (0x8000000000000002)
+    }
+}
+pub machine consume_mock_stall(image: &BootServicesImage, microseconds: u64) -> u64 {
+    let valid: bool = mock_header_matches(image);
+    let slot: u64 = read_boot_slot(image, BOOTSERVICES_STALL_SLOT);
+    let result: u64 = mock_stall(microseconds);
+    transition valid && slot == MOCK_STALL_TOKEN {
+        true -> (result)
+        _ -> (0x8000000000000003)
+    }
+}
+pub data MockMonotonicResult [copy] { status: u64; next_value: u64; }
+pub machine mock_get_next_monotonic_count(value: u64) -> MockMonotonicResult {
+    transition value < 0xffffffffffffffff {
+        true -> (MockMonotonicResult { status: 0, next_value: value + 1 })
+        _ -> (MockMonotonicResult { status: 0x8000000000000009, next_value: value })
+    }
+}

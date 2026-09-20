@@ -19,6 +19,7 @@ inventory and records fresh-compiler verification and unresolved consumers.
 | Shell protocol remainder | [Raw declarations typechecked; complete 46-field plan reflection blocked](shell.PORT.md) |
 | HII protocols, IFR, and helpers | [Semantic helpers tested; fixed carriers checked; typed unions and runtime tails blocked](hii.PORT.md) |
 | Network representations and helpers | [Semantic helpers tested; fixed plans checked; tail/projection/capacity gaps recorded](network.PORT.md) |
+| Producer/consumer byte images | [Pure fixed-image model tested; native ABI compatibility blocked](../../../libraries/uefi/table_images.PORT.md) |
 | TCG v1/v2 measured-boot representations | [Typechecked; upstream ABI vectors verified](tcg.PORT.md) |
 
 Stages apply to individual slices, not the entire upstream crate. The package

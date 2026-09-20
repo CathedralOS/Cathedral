@@ -1,0 +1,28 @@
+use cathedral_uefi::table_images;
+use golden;
+machine test_result() -> i32 {
+    let mut image: table_images::BootServicesImage = table_images::produce_boot_image();
+    let valid: bool = golden::matches(&image) && table_images::mock_header_matches(&image) &&
+        table_images::read_boot_slot(&image, 0) == 0 &&
+        table_images::read_boot_slot(&image, 17) == 0 &&
+        table_images::read_boot_slot(&image, 28) == 0xcafe0001 &&
+        table_images::read_boot_slot(&image, 27) == 0xcafe0002 &&
+        table_images::read_boot_slot(&image, 43) == 0 &&
+        table_images::consume_mock_stall(&image, 0) == 0 &&
+        table_images::consume_mock_stall(&image, 1000000) == 0 &&
+        table_images::consume_mock_stall(&image, 1000001) == 0x8000000000000002;
+    image.bytes[0] = 0;
+    let bad_header: bool = !table_images::mock_header_matches(&image) &&
+        table_images::consume_mock_stall(&image, 0) == 0x8000000000000003;
+    let first: table_images::MockMonotonicResult = table_images::mock_get_next_monotonic_count(41);
+    let next: bool = first.status == 0 && first.next_value == 42;
+    let exhausted: table_images::MockMonotonicResult = table_images::mock_get_next_monotonic_count(0xffffffffffffffff);
+    transition valid && bad_header && next && exhausted.status == 0x8000000000000009 && exhausted.next_value == 0xffffffffffffffff {
+        true -> (0)
+        _ -> (1)
+    }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

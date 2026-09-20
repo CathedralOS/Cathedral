@@ -1,0 +1,5 @@
+machine length(bytes: &[u8]) -> u64 { bytes.len }
+const LENGTH: u64 = length("123456789");
+machine require_length(value: u64) requires value == 9; {}
+data Main {}
+machine Main::main(&mut self) { require_length(LENGTH); }

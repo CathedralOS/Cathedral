@@ -157,6 +157,9 @@ Cathedral's authority-bearing boot policy do not belong in this phase.
   and mock service functions usable by both an Omega-authored UEFI producer and
   a Cathedral consumer.  Tests must demonstrate identical raw layouts; they do
   not grant service authority or perform `ExitBootServices` integration.
+  **BLOCKED native leg:** the [tested fixed-image model](source/libraries/uefi/table_images.PORT.md)
+  compares all 376 bytes and exercises pure mocks; complete native table
+  reflection and private callback field materialization remain Omega gaps.
 
 Phase 1 evidence: the isolated [raw corpus](source/contracts/uefi/raw/PORT.md)
 records status per slice. Scalar helper tests execute in Omega's semantic

@@ -1,0 +1,454 @@
+// Complete fixed-image byte oracle; checks grouped to keep expression size bounded.
+module golden;
+use cathedral_uefi::table_images::BootServicesImage;
+machine chunk0(image: &BootServicesImage) -> bool {
+    image.bytes[0] == 66 &&
+    image.bytes[1] == 79 &&
+    image.bytes[2] == 79 &&
+    image.bytes[3] == 84 &&
+    image.bytes[4] == 83 &&
+    image.bytes[5] == 69 &&
+    image.bytes[6] == 82 &&
+    image.bytes[7] == 86 &&
+    image.bytes[8] == 100 &&
+    image.bytes[9] == 0 &&
+    image.bytes[10] == 2 &&
+    image.bytes[11] == 0 &&
+    image.bytes[12] == 120 &&
+    image.bytes[13] == 1 &&
+    image.bytes[14] == 0 &&
+    image.bytes[15] == 0
+}
+machine chunk16(image: &BootServicesImage) -> bool {
+    image.bytes[16] == 223 &&
+    image.bytes[17] == 186 &&
+    image.bytes[18] == 42 &&
+    image.bytes[19] == 28 &&
+    image.bytes[20] == 0 &&
+    image.bytes[21] == 0 &&
+    image.bytes[22] == 0 &&
+    image.bytes[23] == 0 &&
+    image.bytes[24] == 0 &&
+    image.bytes[25] == 0 &&
+    image.bytes[26] == 0 &&
+    image.bytes[27] == 0 &&
+    image.bytes[28] == 0 &&
+    image.bytes[29] == 0 &&
+    image.bytes[30] == 0 &&
+    image.bytes[31] == 0
+}
+machine chunk32(image: &BootServicesImage) -> bool {
+    image.bytes[32] == 0 &&
+    image.bytes[33] == 0 &&
+    image.bytes[34] == 0 &&
+    image.bytes[35] == 0 &&
+    image.bytes[36] == 0 &&
+    image.bytes[37] == 0 &&
+    image.bytes[38] == 0 &&
+    image.bytes[39] == 0 &&
+    image.bytes[40] == 0 &&
+    image.bytes[41] == 0 &&
+    image.bytes[42] == 0 &&
+    image.bytes[43] == 0 &&
+    image.bytes[44] == 0 &&
+    image.bytes[45] == 0 &&
+    image.bytes[46] == 0 &&
+    image.bytes[47] == 0
+}
+machine chunk48(image: &BootServicesImage) -> bool {
+    image.bytes[48] == 0 &&
+    image.bytes[49] == 0 &&
+    image.bytes[50] == 0 &&
+    image.bytes[51] == 0 &&
+    image.bytes[52] == 0 &&
+    image.bytes[53] == 0 &&
+    image.bytes[54] == 0 &&
+    image.bytes[55] == 0 &&
+    image.bytes[56] == 0 &&
+    image.bytes[57] == 0 &&
+    image.bytes[58] == 0 &&
+    image.bytes[59] == 0 &&
+    image.bytes[60] == 0 &&
+    image.bytes[61] == 0 &&
+    image.bytes[62] == 0 &&
+    image.bytes[63] == 0
+}
+machine chunk64(image: &BootServicesImage) -> bool {
+    image.bytes[64] == 0 &&
+    image.bytes[65] == 0 &&
+    image.bytes[66] == 0 &&
+    image.bytes[67] == 0 &&
+    image.bytes[68] == 0 &&
+    image.bytes[69] == 0 &&
+    image.bytes[70] == 0 &&
+    image.bytes[71] == 0 &&
+    image.bytes[72] == 0 &&
+    image.bytes[73] == 0 &&
+    image.bytes[74] == 0 &&
+    image.bytes[75] == 0 &&
+    image.bytes[76] == 0 &&
+    image.bytes[77] == 0 &&
+    image.bytes[78] == 0 &&
+    image.bytes[79] == 0
+}
+machine chunk80(image: &BootServicesImage) -> bool {
+    image.bytes[80] == 0 &&
+    image.bytes[81] == 0 &&
+    image.bytes[82] == 0 &&
+    image.bytes[83] == 0 &&
+    image.bytes[84] == 0 &&
+    image.bytes[85] == 0 &&
+    image.bytes[86] == 0 &&
+    image.bytes[87] == 0 &&
+    image.bytes[88] == 0 &&
+    image.bytes[89] == 0 &&
+    image.bytes[90] == 0 &&
+    image.bytes[91] == 0 &&
+    image.bytes[92] == 0 &&
+    image.bytes[93] == 0 &&
+    image.bytes[94] == 0 &&
+    image.bytes[95] == 0
+}
+machine chunk96(image: &BootServicesImage) -> bool {
+    image.bytes[96] == 0 &&
+    image.bytes[97] == 0 &&
+    image.bytes[98] == 0 &&
+    image.bytes[99] == 0 &&
+    image.bytes[100] == 0 &&
+    image.bytes[101] == 0 &&
+    image.bytes[102] == 0 &&
+    image.bytes[103] == 0 &&
+    image.bytes[104] == 0 &&
+    image.bytes[105] == 0 &&
+    image.bytes[106] == 0 &&
+    image.bytes[107] == 0 &&
+    image.bytes[108] == 0 &&
+    image.bytes[109] == 0 &&
+    image.bytes[110] == 0 &&
+    image.bytes[111] == 0
+}
+machine chunk112(image: &BootServicesImage) -> bool {
+    image.bytes[112] == 0 &&
+    image.bytes[113] == 0 &&
+    image.bytes[114] == 0 &&
+    image.bytes[115] == 0 &&
+    image.bytes[116] == 0 &&
+    image.bytes[117] == 0 &&
+    image.bytes[118] == 0 &&
+    image.bytes[119] == 0 &&
+    image.bytes[120] == 0 &&
+    image.bytes[121] == 0 &&
+    image.bytes[122] == 0 &&
+    image.bytes[123] == 0 &&
+    image.bytes[124] == 0 &&
+    image.bytes[125] == 0 &&
+    image.bytes[126] == 0 &&
+    image.bytes[127] == 0
+}
+machine chunk128(image: &BootServicesImage) -> bool {
+    image.bytes[128] == 0 &&
+    image.bytes[129] == 0 &&
+    image.bytes[130] == 0 &&
+    image.bytes[131] == 0 &&
+    image.bytes[132] == 0 &&
+    image.bytes[133] == 0 &&
+    image.bytes[134] == 0 &&
+    image.bytes[135] == 0 &&
+    image.bytes[136] == 0 &&
+    image.bytes[137] == 0 &&
+    image.bytes[138] == 0 &&
+    image.bytes[139] == 0 &&
+    image.bytes[140] == 0 &&
+    image.bytes[141] == 0 &&
+    image.bytes[142] == 0 &&
+    image.bytes[143] == 0
+}
+machine chunk144(image: &BootServicesImage) -> bool {
+    image.bytes[144] == 0 &&
+    image.bytes[145] == 0 &&
+    image.bytes[146] == 0 &&
+    image.bytes[147] == 0 &&
+    image.bytes[148] == 0 &&
+    image.bytes[149] == 0 &&
+    image.bytes[150] == 0 &&
+    image.bytes[151] == 0 &&
+    image.bytes[152] == 0 &&
+    image.bytes[153] == 0 &&
+    image.bytes[154] == 0 &&
+    image.bytes[155] == 0 &&
+    image.bytes[156] == 0 &&
+    image.bytes[157] == 0 &&
+    image.bytes[158] == 0 &&
+    image.bytes[159] == 0
+}
+machine chunk160(image: &BootServicesImage) -> bool {
+    image.bytes[160] == 0 &&
+    image.bytes[161] == 0 &&
+    image.bytes[162] == 0 &&
+    image.bytes[163] == 0 &&
+    image.bytes[164] == 0 &&
+    image.bytes[165] == 0 &&
+    image.bytes[166] == 0 &&
+    image.bytes[167] == 0 &&
+    image.bytes[168] == 0 &&
+    image.bytes[169] == 0 &&
+    image.bytes[170] == 0 &&
+    image.bytes[171] == 0 &&
+    image.bytes[172] == 0 &&
+    image.bytes[173] == 0 &&
+    image.bytes[174] == 0 &&
+    image.bytes[175] == 0
+}
+machine chunk176(image: &BootServicesImage) -> bool {
+    image.bytes[176] == 0 &&
+    image.bytes[177] == 0 &&
+    image.bytes[178] == 0 &&
+    image.bytes[179] == 0 &&
+    image.bytes[180] == 0 &&
+    image.bytes[181] == 0 &&
+    image.bytes[182] == 0 &&
+    image.bytes[183] == 0 &&
+    image.bytes[184] == 0 &&
+    image.bytes[185] == 0 &&
+    image.bytes[186] == 0 &&
+    image.bytes[187] == 0 &&
+    image.bytes[188] == 0 &&
+    image.bytes[189] == 0 &&
+    image.bytes[190] == 0 &&
+    image.bytes[191] == 0
+}
+machine chunk192(image: &BootServicesImage) -> bool {
+    image.bytes[192] == 0 &&
+    image.bytes[193] == 0 &&
+    image.bytes[194] == 0 &&
+    image.bytes[195] == 0 &&
+    image.bytes[196] == 0 &&
+    image.bytes[197] == 0 &&
+    image.bytes[198] == 0 &&
+    image.bytes[199] == 0 &&
+    image.bytes[200] == 0 &&
+    image.bytes[201] == 0 &&
+    image.bytes[202] == 0 &&
+    image.bytes[203] == 0 &&
+    image.bytes[204] == 0 &&
+    image.bytes[205] == 0 &&
+    image.bytes[206] == 0 &&
+    image.bytes[207] == 0
+}
+machine chunk208(image: &BootServicesImage) -> bool {
+    image.bytes[208] == 0 &&
+    image.bytes[209] == 0 &&
+    image.bytes[210] == 0 &&
+    image.bytes[211] == 0 &&
+    image.bytes[212] == 0 &&
+    image.bytes[213] == 0 &&
+    image.bytes[214] == 0 &&
+    image.bytes[215] == 0 &&
+    image.bytes[216] == 0 &&
+    image.bytes[217] == 0 &&
+    image.bytes[218] == 0 &&
+    image.bytes[219] == 0 &&
+    image.bytes[220] == 0 &&
+    image.bytes[221] == 0 &&
+    image.bytes[222] == 0 &&
+    image.bytes[223] == 0
+}
+machine chunk224(image: &BootServicesImage) -> bool {
+    image.bytes[224] == 0 &&
+    image.bytes[225] == 0 &&
+    image.bytes[226] == 0 &&
+    image.bytes[227] == 0 &&
+    image.bytes[228] == 0 &&
+    image.bytes[229] == 0 &&
+    image.bytes[230] == 0 &&
+    image.bytes[231] == 0 &&
+    image.bytes[232] == 0 &&
+    image.bytes[233] == 0 &&
+    image.bytes[234] == 0 &&
+    image.bytes[235] == 0 &&
+    image.bytes[236] == 0 &&
+    image.bytes[237] == 0 &&
+    image.bytes[238] == 0 &&
+    image.bytes[239] == 0
+}
+machine chunk240(image: &BootServicesImage) -> bool {
+    image.bytes[240] == 2 &&
+    image.bytes[241] == 0 &&
+    image.bytes[242] == 254 &&
+    image.bytes[243] == 202 &&
+    image.bytes[244] == 0 &&
+    image.bytes[245] == 0 &&
+    image.bytes[246] == 0 &&
+    image.bytes[247] == 0 &&
+    image.bytes[248] == 1 &&
+    image.bytes[249] == 0 &&
+    image.bytes[250] == 254 &&
+    image.bytes[251] == 202 &&
+    image.bytes[252] == 0 &&
+    image.bytes[253] == 0 &&
+    image.bytes[254] == 0 &&
+    image.bytes[255] == 0
+}
+machine chunk256(image: &BootServicesImage) -> bool {
+    image.bytes[256] == 0 &&
+    image.bytes[257] == 0 &&
+    image.bytes[258] == 0 &&
+    image.bytes[259] == 0 &&
+    image.bytes[260] == 0 &&
+    image.bytes[261] == 0 &&
+    image.bytes[262] == 0 &&
+    image.bytes[263] == 0 &&
+    image.bytes[264] == 0 &&
+    image.bytes[265] == 0 &&
+    image.bytes[266] == 0 &&
+    image.bytes[267] == 0 &&
+    image.bytes[268] == 0 &&
+    image.bytes[269] == 0 &&
+    image.bytes[270] == 0 &&
+    image.bytes[271] == 0
+}
+machine chunk272(image: &BootServicesImage) -> bool {
+    image.bytes[272] == 0 &&
+    image.bytes[273] == 0 &&
+    image.bytes[274] == 0 &&
+    image.bytes[275] == 0 &&
+    image.bytes[276] == 0 &&
+    image.bytes[277] == 0 &&
+    image.bytes[278] == 0 &&
+    image.bytes[279] == 0 &&
+    image.bytes[280] == 0 &&
+    image.bytes[281] == 0 &&
+    image.bytes[282] == 0 &&
+    image.bytes[283] == 0 &&
+    image.bytes[284] == 0 &&
+    image.bytes[285] == 0 &&
+    image.bytes[286] == 0 &&
+    image.bytes[287] == 0
+}
+machine chunk288(image: &BootServicesImage) -> bool {
+    image.bytes[288] == 0 &&
+    image.bytes[289] == 0 &&
+    image.bytes[290] == 0 &&
+    image.bytes[291] == 0 &&
+    image.bytes[292] == 0 &&
+    image.bytes[293] == 0 &&
+    image.bytes[294] == 0 &&
+    image.bytes[295] == 0 &&
+    image.bytes[296] == 0 &&
+    image.bytes[297] == 0 &&
+    image.bytes[298] == 0 &&
+    image.bytes[299] == 0 &&
+    image.bytes[300] == 0 &&
+    image.bytes[301] == 0 &&
+    image.bytes[302] == 0 &&
+    image.bytes[303] == 0
+}
+machine chunk304(image: &BootServicesImage) -> bool {
+    image.bytes[304] == 0 &&
+    image.bytes[305] == 0 &&
+    image.bytes[306] == 0 &&
+    image.bytes[307] == 0 &&
+    image.bytes[308] == 0 &&
+    image.bytes[309] == 0 &&
+    image.bytes[310] == 0 &&
+    image.bytes[311] == 0 &&
+    image.bytes[312] == 0 &&
+    image.bytes[313] == 0 &&
+    image.bytes[314] == 0 &&
+    image.bytes[315] == 0 &&
+    image.bytes[316] == 0 &&
+    image.bytes[317] == 0 &&
+    image.bytes[318] == 0 &&
+    image.bytes[319] == 0
+}
+machine chunk320(image: &BootServicesImage) -> bool {
+    image.bytes[320] == 0 &&
+    image.bytes[321] == 0 &&
+    image.bytes[322] == 0 &&
+    image.bytes[323] == 0 &&
+    image.bytes[324] == 0 &&
+    image.bytes[325] == 0 &&
+    image.bytes[326] == 0 &&
+    image.bytes[327] == 0 &&
+    image.bytes[328] == 0 &&
+    image.bytes[329] == 0 &&
+    image.bytes[330] == 0 &&
+    image.bytes[331] == 0 &&
+    image.bytes[332] == 0 &&
+    image.bytes[333] == 0 &&
+    image.bytes[334] == 0 &&
+    image.bytes[335] == 0
+}
+machine chunk336(image: &BootServicesImage) -> bool {
+    image.bytes[336] == 0 &&
+    image.bytes[337] == 0 &&
+    image.bytes[338] == 0 &&
+    image.bytes[339] == 0 &&
+    image.bytes[340] == 0 &&
+    image.bytes[341] == 0 &&
+    image.bytes[342] == 0 &&
+    image.bytes[343] == 0 &&
+    image.bytes[344] == 0 &&
+    image.bytes[345] == 0 &&
+    image.bytes[346] == 0 &&
+    image.bytes[347] == 0 &&
+    image.bytes[348] == 0 &&
+    image.bytes[349] == 0 &&
+    image.bytes[350] == 0 &&
+    image.bytes[351] == 0
+}
+machine chunk352(image: &BootServicesImage) -> bool {
+    image.bytes[352] == 0 &&
+    image.bytes[353] == 0 &&
+    image.bytes[354] == 0 &&
+    image.bytes[355] == 0 &&
+    image.bytes[356] == 0 &&
+    image.bytes[357] == 0 &&
+    image.bytes[358] == 0 &&
+    image.bytes[359] == 0 &&
+    image.bytes[360] == 0 &&
+    image.bytes[361] == 0 &&
+    image.bytes[362] == 0 &&
+    image.bytes[363] == 0 &&
+    image.bytes[364] == 0 &&
+    image.bytes[365] == 0 &&
+    image.bytes[366] == 0 &&
+    image.bytes[367] == 0
+}
+machine chunk368(image: &BootServicesImage) -> bool {
+    image.bytes[368] == 0 &&
+    image.bytes[369] == 0 &&
+    image.bytes[370] == 0 &&
+    image.bytes[371] == 0 &&
+    image.bytes[372] == 0 &&
+    image.bytes[373] == 0 &&
+    image.bytes[374] == 0 &&
+    image.bytes[375] == 0
+}
+pub machine matches(image: &BootServicesImage) -> bool {
+    let part0: bool = chunk0(image);
+    let part16: bool = chunk16(image);
+    let part32: bool = chunk32(image);
+    let part48: bool = chunk48(image);
+    let part64: bool = chunk64(image);
+    let part80: bool = chunk80(image);
+    let part96: bool = chunk96(image);
+    let part112: bool = chunk112(image);
+    let part128: bool = chunk128(image);
+    let part144: bool = chunk144(image);
+    let part160: bool = chunk160(image);
+    let part176: bool = chunk176(image);
+    let part192: bool = chunk192(image);
+    let part208: bool = chunk208(image);
+    let part224: bool = chunk224(image);
+    let part240: bool = chunk240(image);
+    let part256: bool = chunk256(image);
+    let part272: bool = chunk272(image);
+    let part288: bool = chunk288(image);
+    let part304: bool = chunk304(image);
+    let part320: bool = chunk320(image);
+    let part336: bool = chunk336(image);
+    let part352: bool = chunk352(image);
+    let part368: bool = chunk368(image);
+    part0 && part16 && part32 && part48 && part64 && part80 && part96 && part112 && part128 && part144 && part160 && part176 && part192 && part208 && part224 && part240 && part256 && part272 && part288 && part304 && part320 && part336 && part352 && part368
+}
