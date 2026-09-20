@@ -1,0 +1,4551 @@
+{
+  "format": "cathedral-port-vectors-v1",
+  "target": {
+    "pointer_bits": 64,
+    "endian": "little",
+    "abi": "UEFI x86-64"
+  },
+  "provenance": {
+    "kind": "upstream",
+    "description": "Pinned Rust measurements from aarch64-apple-darwin, each numeric fact and GUID byte independently asserted by Rust const evaluation for x86_64-unknown-uefi. No Omega inspection or execution.",
+    "sources": [
+      "uefi-raw/src/protocol/hii/mod.rs",
+      "uefi-raw/src/protocol/hii/config.rs",
+      "uefi-raw/src/protocol/hii/database.rs",
+      "uefi-raw/src/protocol/hii/font.rs",
+      "uefi-raw/src/protocol/hii/form_browser.rs",
+      "uefi-raw/src/protocol/hii/ifr.rs",
+      "uefi-raw/src/protocol/hii/image.rs",
+      "uefi-raw/src/protocol/hii/popup.rs",
+      "uefi-raw/src/protocol/hii/string.rs"
+    ],
+    "revision": "c0facddf9ba42b74906a37fca2869e6cdbc8da6a",
+    "rustc": "rustc 1.94.0-nightly (f6a07efc8 2026-01-16)"
+  },
+  "measurements": {
+    "hii::HiiPackageHeader.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii::HiiPackageHeader.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii::HiiPackageHeader.length_and_type.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii::HiiPackageHeader.data.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii::HiiPackageListHeader.size": {
+      "kind": "size",
+      "value": 20
+    },
+    "hii::HiiPackageListHeader.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii::HiiPackageListHeader.package_list_guid.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii::HiiPackageListHeader.package_length.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "hii::Key.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii::Key.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "hii::Modifier.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii::Modifier.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "hii::KeyDescriptor.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "hii::KeyDescriptor.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii::KeyDescriptor.key.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii::KeyDescriptor.unicode.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii::KeyDescriptor.shifted_unicode.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "hii::KeyDescriptor.alt_gr_unicode.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii::KeyDescriptor.shifted_alt_gr_unicode.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "hii::KeyDescriptor.modifier.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "hii::KeyDescriptor.affected_attribute.offset": {
+      "kind": "offset",
+      "value": 14
+    },
+    "hii::HiiTime.size": {
+      "kind": "size",
+      "value": 3
+    },
+    "hii::HiiTime.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii::HiiTime.hour.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii::HiiTime.minute.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "hii::HiiTime.second.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii::HiiDate.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii::HiiDate.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii::HiiDate.year.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii::HiiDate.month.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii::HiiDate.day.offset": {
+      "kind": "offset",
+      "value": 3
+    },
+    "hii::HiiRef.size": {
+      "kind": "size",
+      "value": 22
+    },
+    "hii::HiiRef.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii::HiiRef.question_id.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii::HiiRef.form_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii::HiiRef.guid.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii::HiiRef.string_id.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "hii::HiiFormPackageHdr.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii::HiiFormPackageHdr.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii::HiiFormPackageHdr.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii::HiiHandle.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "hii::HiiHandle.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii::QuestionId.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii::QuestionId.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "hii::ImageId.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii::ImageId.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "hii::StringId.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii::StringId.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "hii::FormId.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii::FormId.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "hii::VarstoreId.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii::VarstoreId.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "hii::AnimationId.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii::AnimationId.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "hii::DefaultId.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii::DefaultId.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "hii_config::ConfigKeywordHandlerProtocol.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "hii_config::ConfigKeywordHandlerProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_config::ConfigKeywordHandlerProtocol.set_data.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_config::ConfigKeywordHandlerProtocol.get_data.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_config::BrowserAction.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "hii_config::BrowserAction.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_config::HiiConfigAccessProtocol.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "hii_config::HiiConfigAccessProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_config::HiiConfigAccessProtocol.extract_config.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_config::HiiConfigAccessProtocol.route_config.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_config::HiiConfigAccessProtocol.callback.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "hii_config::HiiConfigRoutingProtocol.size": {
+      "kind": "size",
+      "value": 48
+    },
+    "hii_config::HiiConfigRoutingProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_config::HiiConfigRoutingProtocol.extract_config.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_config::HiiConfigRoutingProtocol.export_config.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_config::HiiConfigRoutingProtocol.route_config.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "hii_config::HiiConfigRoutingProtocol.block_to_config.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "hii_config::HiiConfigRoutingProtocol.config_to_block.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "hii_config::HiiConfigRoutingProtocol.get_alt_cfg.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "hii_database::HiiKeyboardLayout.size": {
+      "kind": "size",
+      "value": 23
+    },
+    "hii_database::HiiKeyboardLayout.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_database::HiiKeyboardLayout.layout_length.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_database::HiiKeyboardLayout.guid.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_database::HiiKeyboardLayout.layout_descriptor_string_offset.offset": {
+      "kind": "offset",
+      "value": 18
+    },
+    "hii_database::HiiKeyboardLayout.descriptor_count.offset": {
+      "kind": "offset",
+      "value": 22
+    },
+    "hii_database::HiiKeyboardLayout.descriptors.offset": {
+      "kind": "offset",
+      "value": 23
+    },
+    "hii_database::HiiDatabaseNotifyType.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "hii_database::HiiDatabaseNotifyType.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_database::HiiDatabaseProtocol.size": {
+      "kind": "size",
+      "value": 88
+    },
+    "hii_database::HiiDatabaseProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_database::HiiDatabaseProtocol.new_package_list.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_database::HiiDatabaseProtocol.remove_package_list.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_database::HiiDatabaseProtocol.update_package_list.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "hii_database::HiiDatabaseProtocol.list_package_lists.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "hii_database::HiiDatabaseProtocol.export_package_lists.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "hii_database::HiiDatabaseProtocol.register_package_notify.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "hii_database::HiiDatabaseProtocol.unregister_package_notify.offset": {
+      "kind": "offset",
+      "value": 48
+    },
+    "hii_database::HiiDatabaseProtocol.find_keyboard_layouts.offset": {
+      "kind": "offset",
+      "value": 56
+    },
+    "hii_database::HiiDatabaseProtocol.get_keyboard_layout.offset": {
+      "kind": "offset",
+      "value": 64
+    },
+    "hii_database::HiiDatabaseProtocol.set_keyboard_layout.offset": {
+      "kind": "offset",
+      "value": 72
+    },
+    "hii_database::HiiDatabaseProtocol.get_package_list_handle.offset": {
+      "kind": "offset",
+      "value": 80
+    },
+    "hii_database::HiiDatabaseNotifyFn.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "hii_database::HiiDatabaseNotifyFn.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_font::HiiGlyphInfo.size": {
+      "kind": "size",
+      "value": 10
+    },
+    "hii_font::HiiGlyphInfo.alignment": {
+      "kind": "alignment",
+      "value": 2
+    },
+    "hii_font::HiiGlyphInfo.width.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_font::HiiGlyphInfo.height.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_font::HiiGlyphInfo.offset_x.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_font::HiiGlyphInfo.offset_y.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "hii_font::HiiGlyphInfo.advance_x.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_font::FontInfoMask.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_font::FontInfoMask.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "hii_font::HiiFontStyle.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_font::HiiFontStyle.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "hii_font::FontInfo.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "hii_font::FontInfo.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "hii_font::FontInfo.font_style.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_font::FontInfo.font_size.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_font::FontInfo.font_name.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "hii_font::FontDisplayInfo.size": {
+      "kind": "size",
+      "value": 20
+    },
+    "hii_font::FontDisplayInfo.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "hii_font::FontDisplayInfo.foreground_color.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_font::FontDisplayInfo.background_color.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_font::FontDisplayInfo.font_mask_info.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_font::FontDisplayInfo.font_info.offset": {
+      "kind": "offset",
+      "value": 12
+    },
+    "hii_font::HiiOutFlags.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_font::HiiOutFlags.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "hii_font::HiiRowInfo.size": {
+      "kind": "size",
+      "value": 40
+    },
+    "hii_font::HiiRowInfo.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_font::HiiRowInfo.start_index.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_font::HiiRowInfo.end_index.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_font::HiiRowInfo.line_height.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "hii_font::HiiRowInfo.line_width.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "hii_font::HiiRowInfo.baseline_offset.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "hii_font::HiiFontProtocol.size": {
+      "kind": "size",
+      "value": 32
+    },
+    "hii_font::HiiFontProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_font::HiiFontProtocol.string_to_image.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_font::HiiFontProtocol.string_id_to_image.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_font::HiiFontProtocol.get_glyph.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "hii_font::HiiFontProtocol.get_font_info.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "hii_font::HiiFontExProtocol.size": {
+      "kind": "size",
+      "value": 40
+    },
+    "hii_font::HiiFontExProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_font::HiiFontExProtocol.string_to_image_ex.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_font::HiiFontExProtocol.string_id_to_image_ex.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_font::HiiFontExProtocol.get_glyph_ex.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "hii_font::HiiFontExProtocol.get_font_info_ex.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "hii_font::HiiFontExProtocol.get_glyph_info.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "hii_font::FontHandle.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "hii_font::FontHandle.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_form_browser::ScreenDescriptor.size": {
+      "kind": "size",
+      "value": 32
+    },
+    "hii_form_browser::ScreenDescriptor.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_form_browser::ScreenDescriptor.left_column.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_form_browser::ScreenDescriptor.right_column.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_form_browser::ScreenDescriptor.top_row.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "hii_form_browser::ScreenDescriptor.bottom_row.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "hii_form_browser::BrowserActionRequest.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "hii_form_browser::BrowserActionRequest.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_form_browser::FormBrowser2Protocol.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "hii_form_browser::FormBrowser2Protocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_form_browser::FormBrowser2Protocol.send_form.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_form_browser::FormBrowser2Protocol.browser_callback.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_ifr::IfrType.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrType.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrTypeValueWireStorage.size": {
+      "kind": "size",
+      "value": 22
+    },
+    "hii_ifr::IfrTypeValueWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrTypeValueWireStorage.u8.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrTypeValueWireStorage.u16.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrTypeValueWireStorage.u32.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrTypeValueWireStorage.u64.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrTypeValueWireStorage.b.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrTypeValueWireStorage.time.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrTypeValueWireStorage.date.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrTypeValueWireStorage.string.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrTypeValueWireStorage.hii_ref.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrOpcode.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrOpcode.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrOpHeader.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrOpHeader.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrOpHeader.opcode.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrOpHeader.length_and_scope.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "hii_ifr::IfrStatementHeader.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_ifr::IfrStatementHeader.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrStatementHeader.prompt.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrStatementHeader.help.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::VarstoreInfoWireStorage.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::VarstoreInfoWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::VarstoreInfoWireStorage.var_name.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::VarstoreInfoWireStorage.var_offset.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrQuestionFlags.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrQuestionFlags.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrQuestionHeaderWireStorage.size": {
+      "kind": "size",
+      "value": 11
+    },
+    "hii_ifr::IfrQuestionHeaderWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrQuestionHeaderWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrQuestionHeaderWireStorage.question_id.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrQuestionHeaderWireStorage.varstore_id.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "hii_ifr::IfrQuestionHeaderWireStorage.varstore_info.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_ifr::IfrQuestionHeaderWireStorage.flags.offset": {
+      "kind": "offset",
+      "value": 10
+    },
+    "hii_ifr::IfrActionWireStorage.size": {
+      "kind": "size",
+      "value": 15
+    },
+    "hii_ifr::IfrActionWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrActionWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrActionWireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrActionWireStorage.question_config.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrAction1WireStorage.size": {
+      "kind": "size",
+      "value": 13
+    },
+    "hii_ifr::IfrAction1WireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrAction1WireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrAction1WireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrAnimation.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_ifr::IfrAnimation.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrAnimation.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrAnimation.id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrAdd.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrAdd.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrAdd.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrAnd.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrAnd.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrAnd.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrBitwiseAnd.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrBitwiseAnd.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrBitwiseAnd.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrBitwiseNot.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrBitwiseNot.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrBitwiseNot.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrBitwiseOr.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrBitwiseOr.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrBitwiseOr.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrCatenate.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrCatenate.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrCatenate.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrCheckboxFlags.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrCheckboxFlags.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrCheckboxWireStorage.size": {
+      "kind": "size",
+      "value": 14
+    },
+    "hii_ifr::IfrCheckboxWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrCheckboxWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrCheckboxWireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrCheckboxWireStorage.flags.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrConditional.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrConditional.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrConditional.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrDateFlags.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrDateFlags.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrDateStorage.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrDateStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrDateWireStorage.size": {
+      "kind": "size",
+      "value": 14
+    },
+    "hii_ifr::IfrDateWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrDateWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrDateWireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrDateWireStorage.flags.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrDefaultWireStorage.size": {
+      "kind": "size",
+      "value": 27
+    },
+    "hii_ifr::IfrDefaultWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrDefaultWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrDefaultWireStorage.default_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrDefaultWireStorage.r#type.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrDefaultWireStorage.value.offset": {
+      "kind": "offset",
+      "value": 5
+    },
+    "hii_ifr::IfrDefault2.size": {
+      "kind": "size",
+      "value": 5
+    },
+    "hii_ifr::IfrDefault2.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrDefault2.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrDefault2.default_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrDefault2.r#type.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrDefaultStore.size": {
+      "kind": "size",
+      "value": 6
+    },
+    "hii_ifr::IfrDefaultStore.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrDefaultStore.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrDefaultStore.default_name.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrDefaultStore.default_id.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrDisableIf.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrDisableIf.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrDisableIf.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrDivide.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrDivide.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrDivide.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrDup.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrDup.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrDup.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrEnd.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrEnd.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrEnd.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrEqual.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrEqual.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrEqual.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrEqIdId.size": {
+      "kind": "size",
+      "value": 6
+    },
+    "hii_ifr::IfrEqIdId.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrEqIdId.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrEqIdId.question_id1.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrEqIdId.question_id2.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrEqIdValList.size": {
+      "kind": "size",
+      "value": 6
+    },
+    "hii_ifr::IfrEqIdValList.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrEqIdValList.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrEqIdValList.question_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrEqIdValList.list_length.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrEqIdValList.value_list.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "hii_ifr::IfrEqIdVal.size": {
+      "kind": "size",
+      "value": 6
+    },
+    "hii_ifr::IfrEqIdVal.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrEqIdVal.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrEqIdVal.question_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrEqIdVal.value.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrFalse.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrFalse.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrFalse.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrFindFormat.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrFindFormat.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrFind.size": {
+      "kind": "size",
+      "value": 3
+    },
+    "hii_ifr::IfrFind.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrFind.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrFind.format.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrForm.size": {
+      "kind": "size",
+      "value": 6
+    },
+    "hii_ifr::IfrForm.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrForm.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrForm.form_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrForm.form_title.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrFormMapMethod.size": {
+      "kind": "size",
+      "value": 18
+    },
+    "hii_ifr::IfrFormMapMethod.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrFormMapMethod.method_title.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrFormMapMethod.method_identifier.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrFormMap.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_ifr::IfrFormMap.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrFormMap.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrFormMap.form_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrFormMap.methods.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrFormSet.size": {
+      "kind": "size",
+      "value": 23
+    },
+    "hii_ifr::IfrFormSet.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrFormSet.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrFormSet.guid.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrFormSet.formset_title.offset": {
+      "kind": "offset",
+      "value": 18
+    },
+    "hii_ifr::IfrFormSet.help.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "hii_ifr::IfrFormSet.flags.offset": {
+      "kind": "offset",
+      "value": 22
+    },
+    "hii_ifr::IfrFormSet.class_guid.offset": {
+      "kind": "offset",
+      "value": 23
+    },
+    "hii_ifr::IfrGetWireStorage.size": {
+      "kind": "size",
+      "value": 7
+    },
+    "hii_ifr::IfrGetWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrGetWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrGetWireStorage.varstore_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrGetWireStorage.varstore_info.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrGetWireStorage.varstore_type.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "hii_ifr::IfrGrayOutIf.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrGrayOutIf.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrGrayOutIf.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrGreaterEqual.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrGreaterEqual.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrGreaterEqual.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrGreaterThan.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrGreaterThan.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrGreaterThan.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrGuid.size": {
+      "kind": "size",
+      "value": 18
+    },
+    "hii_ifr::IfrGuid.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrGuid.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrGuid.guid.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrImage.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_ifr::IfrImage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrImage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrImage.id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrInconsistentIf.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_ifr::IfrInconsistentIf.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrInconsistentIf.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrInconsistentIf.error.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrLength.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrLength.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrLength.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrLessEqual.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrLessEqual.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrLessEqual.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrLessThan.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrLessThan.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrLessThan.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrLocked.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrLocked.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrLocked.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrMap.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrMap.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrMap.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrMatch.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrMatch.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrMatch.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrMatch2.size": {
+      "kind": "size",
+      "value": 18
+    },
+    "hii_ifr::IfrMatch2.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrMatch2.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrMatch2.syntax_type.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrMid.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrMid.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrMid.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrModalTag.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrModalTag.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrModalTag.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrModulo.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrModulo.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrModulo.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrMultiply.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrMultiply.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrMultiply.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNot.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrNot.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrNot.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNotEqual.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrNotEqual.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrNotEqual.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNoSubmitIf.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_ifr::IfrNoSubmitIf.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrNoSubmitIf.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNoSubmitIf.error.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrNumericU8.size": {
+      "kind": "size",
+      "value": 3
+    },
+    "hii_ifr::IfrNumericU8.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericU8.min_value.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNumericU8.max_value.offset": {
+      "kind": "offset",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericU8.step.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrNumericU16.size": {
+      "kind": "size",
+      "value": 6
+    },
+    "hii_ifr::IfrNumericU16.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericU16.min_value.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNumericU16.max_value.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrNumericU16.step.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrNumericU32.size": {
+      "kind": "size",
+      "value": 12
+    },
+    "hii_ifr::IfrNumericU32.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericU32.min_value.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNumericU32.max_value.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrNumericU32.step.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_ifr::IfrNumericU64.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "hii_ifr::IfrNumericU64.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericU64.min_value.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNumericU64.max_value.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_ifr::IfrNumericU64.step.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "hii_ifr::IfrNumericDataWireStorage.size": {
+      "kind": "size",
+      "value": 24
+    },
+    "hii_ifr::IfrNumericDataWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericDataWireStorage.u8.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNumericDataWireStorage.u16.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNumericDataWireStorage.u32.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNumericDataWireStorage.u64.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNumericSize.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericSize.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericDisplay.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericDisplay.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericFlags.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericFlags.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericWireStorage.size": {
+      "kind": "size",
+      "value": 38
+    },
+    "hii_ifr::IfrNumericWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrNumericWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrNumericWireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrNumericWireStorage.flags.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrNumericWireStorage.data.offset": {
+      "kind": "offset",
+      "value": 14
+    },
+    "hii_ifr::IfrOne.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrOne.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrOne.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrOnes.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrOnes.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrOnes.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrOneOfWireStorage.size": {
+      "kind": "size",
+      "value": 38
+    },
+    "hii_ifr::IfrOneOfWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrOneOfWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrOneOfWireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrOneOfWireStorage.flags.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrOneOfWireStorage.data.offset": {
+      "kind": "offset",
+      "value": 14
+    },
+    "hii_ifr::IfrOptionFlags.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrOptionFlags.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrOneOfOptionWireStorage.size": {
+      "kind": "size",
+      "value": 28
+    },
+    "hii_ifr::IfrOneOfOptionWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrOneOfOptionWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrOneOfOptionWireStorage.option.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrOneOfOptionWireStorage.flags.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrOneOfOptionWireStorage.r#type.offset": {
+      "kind": "offset",
+      "value": 5
+    },
+    "hii_ifr::IfrOneOfOptionWireStorage.value.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "hii_ifr::IfrOr.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrOr.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrOr.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrOrderedListFlags.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrOrderedListFlags.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrOrderedListWireStorage.size": {
+      "kind": "size",
+      "value": 15
+    },
+    "hii_ifr::IfrOrderedListWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrOrderedListWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrOrderedListWireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrOrderedListWireStorage.max_containers.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrOrderedListWireStorage.flags.offset": {
+      "kind": "offset",
+      "value": 14
+    },
+    "hii_ifr::IfrPasswordWireStorage.size": {
+      "kind": "size",
+      "value": 17
+    },
+    "hii_ifr::IfrPasswordWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrPasswordWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrPasswordWireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrPasswordWireStorage.min_size.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrPasswordWireStorage.max_size.offset": {
+      "kind": "offset",
+      "value": 15
+    },
+    "hii_ifr::IfrQuestionRef1.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_ifr::IfrQuestionRef1.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrQuestionRef1.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrQuestionRef1.question_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrQuestionRef2.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrQuestionRef2.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrQuestionRef2.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrQuestionRef3.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrQuestionRef3.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrQuestionRef3.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrQuestionRef32.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_ifr::IfrQuestionRef32.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrQuestionRef32.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrQuestionRef32.device_path.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrQuestionRef33.size": {
+      "kind": "size",
+      "value": 20
+    },
+    "hii_ifr::IfrQuestionRef33.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrQuestionRef33.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrQuestionRef33.device_path.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrQuestionRef33.guid.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrRead.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrRead.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrRead.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrRefWireStorage.size": {
+      "kind": "size",
+      "value": 15
+    },
+    "hii_ifr::IfrRefWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrRefWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrRefWireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrRefWireStorage.form_id.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrRef2WireStorage.size": {
+      "kind": "size",
+      "value": 17
+    },
+    "hii_ifr::IfrRef2WireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrRef2WireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrRef2WireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrRef2WireStorage.form_id.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrRef2WireStorage.question_id.offset": {
+      "kind": "offset",
+      "value": 15
+    },
+    "hii_ifr::IfrRef3WireStorage.size": {
+      "kind": "size",
+      "value": 33
+    },
+    "hii_ifr::IfrRef3WireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrRef3WireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrRef3WireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrRef3WireStorage.form_id.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrRef3WireStorage.question_id.offset": {
+      "kind": "offset",
+      "value": 15
+    },
+    "hii_ifr::IfrRef3WireStorage.formset_id.offset": {
+      "kind": "offset",
+      "value": 17
+    },
+    "hii_ifr::IfrRef4WireStorage.size": {
+      "kind": "size",
+      "value": 35
+    },
+    "hii_ifr::IfrRef4WireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrRef4WireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrRef4WireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrRef4WireStorage.form_id.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrRef4WireStorage.question_id.offset": {
+      "kind": "offset",
+      "value": 15
+    },
+    "hii_ifr::IfrRef4WireStorage.formset_id.offset": {
+      "kind": "offset",
+      "value": 17
+    },
+    "hii_ifr::IfrRef4WireStorage.device_path.offset": {
+      "kind": "offset",
+      "value": 33
+    },
+    "hii_ifr::IfrRef5WireStorage.size": {
+      "kind": "size",
+      "value": 13
+    },
+    "hii_ifr::IfrRef5WireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrRef5WireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrRef5WireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrRefresh.size": {
+      "kind": "size",
+      "value": 3
+    },
+    "hii_ifr::IfrRefresh.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrRefresh.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrRefresh.refresh_interval.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrRefreshId.size": {
+      "kind": "size",
+      "value": 18
+    },
+    "hii_ifr::IfrRefreshId.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrRefreshId.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrRefreshId.refresh_event_group_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrResetButton.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "hii_ifr::IfrResetButton.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrResetButton.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrResetButton.statement.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrResetButton.default_id.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "hii_ifr::IfrRule.size": {
+      "kind": "size",
+      "value": 3
+    },
+    "hii_ifr::IfrRule.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrRule.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrRule.rule_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrRuleRef.size": {
+      "kind": "size",
+      "value": 3
+    },
+    "hii_ifr::IfrRuleRef.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrRuleRef.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrRuleRef.rule_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrSecurity.size": {
+      "kind": "size",
+      "value": 18
+    },
+    "hii_ifr::IfrSecurity.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrSecurity.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrSecurity.permissions.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrSetWireStorage.size": {
+      "kind": "size",
+      "value": 7
+    },
+    "hii_ifr::IfrSetWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrSetWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrSetWireStorage.varstore_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrSetWireStorage.varstore_info.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrSetWireStorage.varstore_type.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "hii_ifr::IfrShiftLeft.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrShiftLeft.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrShiftLeft.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrShiftRight.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrShiftRight.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrShiftRight.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrSpan.size": {
+      "kind": "size",
+      "value": 3
+    },
+    "hii_ifr::IfrSpan.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrSpan.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrSpan.flags.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrStringFlags.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrStringFlags.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrStringWireStorage.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "hii_ifr::IfrStringWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrStringWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrStringWireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrStringWireStorage.min_size.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrStringWireStorage.max_size.offset": {
+      "kind": "offset",
+      "value": 14
+    },
+    "hii_ifr::IfrStringWireStorage.flags.offset": {
+      "kind": "offset",
+      "value": 15
+    },
+    "hii_ifr::IfrStringRef1.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_ifr::IfrStringRef1.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrStringRef1.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrStringRef1.string_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrStringRef2.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrStringRef2.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrStringRef2.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrSubtitleFlags.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrSubtitleFlags.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrSubtitle.size": {
+      "kind": "size",
+      "value": 7
+    },
+    "hii_ifr::IfrSubtitle.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrSubtitle.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrSubtitle.statement.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrSubtitle.flags.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "hii_ifr::IfrSubtract.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrSubtract.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrSubtract.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrSuppressIf.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrSuppressIf.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrSuppressIf.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrText.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "hii_ifr::IfrText.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrText.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrText.statement.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrText.text_two.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "hii_ifr::IfrThis.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrThis.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrThis.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrTimeFlags.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrTimeFlags.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrTimeStorage.size": {
+      "kind": "size",
+      "value": 1
+    },
+    "hii_ifr::IfrTimeStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrTimeWireStorage.size": {
+      "kind": "size",
+      "value": 14
+    },
+    "hii_ifr::IfrTimeWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrTimeWireStorage.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrTimeWireStorage.question.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrTimeWireStorage.flags.offset": {
+      "kind": "offset",
+      "value": 13
+    },
+    "hii_ifr::IfrToken.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrToken.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrToken.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrToBoolean.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrToBoolean.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrToBoolean.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrToLower.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrToLower.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrToLower.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrToString.size": {
+      "kind": "size",
+      "value": 3
+    },
+    "hii_ifr::IfrToString.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrToString.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrToString.format.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrToUint.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrToUint.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrToUint.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrToUpper.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrToUpper.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrToUpper.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrTrue.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrTrue.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrTrue.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrUint8.size": {
+      "kind": "size",
+      "value": 3
+    },
+    "hii_ifr::IfrUint8.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrUint8.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrUint8.value.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrUint16.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_ifr::IfrUint16.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrUint16.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrUint16.value.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrUint32.size": {
+      "kind": "size",
+      "value": 6
+    },
+    "hii_ifr::IfrUint32.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrUint32.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrUint32.value.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrUint64.size": {
+      "kind": "size",
+      "value": 10
+    },
+    "hii_ifr::IfrUint64.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrUint64.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrUint64.value.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrUndefined.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrUndefined.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrUndefined.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrValue.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrValue.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrValue.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrVarstore.size": {
+      "kind": "size",
+      "value": 22
+    },
+    "hii_ifr::IfrVarstore.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrVarstore.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrVarstore.guid.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrVarstore.varstore_id.offset": {
+      "kind": "offset",
+      "value": 18
+    },
+    "hii_ifr::IfrVarstore.size.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "hii_ifr::IfrVarstore.name.offset": {
+      "kind": "offset",
+      "value": 22
+    },
+    "hii_ifr::IfrVarstoreNameValue.size": {
+      "kind": "size",
+      "value": 20
+    },
+    "hii_ifr::IfrVarstoreNameValue.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrVarstoreNameValue.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrVarstoreNameValue.varstore_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrVarstoreNameValue.guid.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrVarstoreEfi.size": {
+      "kind": "size",
+      "value": 26
+    },
+    "hii_ifr::IfrVarstoreEfi.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrVarstoreEfi.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrVarstoreEfi.varstore_id.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrVarstoreEfi.guid.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrVarstoreEfi.attributes.offset": {
+      "kind": "offset",
+      "value": 20
+    },
+    "hii_ifr::IfrVarstoreEfi.size.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "hii_ifr::IfrVarstoreEfi.name.offset": {
+      "kind": "offset",
+      "value": 26
+    },
+    "hii_ifr::IfrVarstoreDevice.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_ifr::IfrVarstoreDevice.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrVarstoreDevice.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrVarstoreDevice.device_path.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrVersion.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrVersion.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrVersion.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrWarningIf.size": {
+      "kind": "size",
+      "value": 5
+    },
+    "hii_ifr::IfrWarningIf.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrWarningIf.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrWarningIf.warning.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_ifr::IfrWarningIf.timeout.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_ifr::IfrWrite.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrWrite.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrWrite.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_ifr::IfrZero.size": {
+      "kind": "size",
+      "value": 2
+    },
+    "hii_ifr::IfrZero.alignment": {
+      "kind": "alignment",
+      "value": 1
+    },
+    "hii_ifr::IfrZero.header.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_image::HiiDrawFlags.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_image::HiiDrawFlags.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "hii_image::ImageInputFlags.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_image::ImageInputFlags.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "hii_image::ImageInput.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "hii_image::ImageInput.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_image::ImageInput.flags.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_image::ImageInput.width.offset": {
+      "kind": "offset",
+      "value": 4
+    },
+    "hii_image::ImageInput.height.offset": {
+      "kind": "offset",
+      "value": 6
+    },
+    "hii_image::ImageInput.bitmap.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_image::ImageOutputDestWireStorage.size": {
+      "kind": "size",
+      "value": 8
+    },
+    "hii_image::ImageOutputDestWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_image::ImageOutputDestWireStorage.bitmap.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_image::ImageOutputDestWireStorage.screen.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_image::ImageOutputWireStorage.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "hii_image::ImageOutputWireStorage.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_image::ImageOutputWireStorage.width.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_image::ImageOutputWireStorage.height.offset": {
+      "kind": "offset",
+      "value": 2
+    },
+    "hii_image::ImageOutputWireStorage.image.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_image::HiiImageProtocol.size": {
+      "kind": "size",
+      "value": 40
+    },
+    "hii_image::HiiImageProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_image::HiiImageProtocol.new_image.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_image::HiiImageProtocol.get_image.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_image::HiiImageProtocol.set_image.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "hii_image::HiiImageProtocol.draw_image.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "hii_image::HiiImageProtocol.draw_image_id.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "hii_image::HiiImageExProtocol.size": {
+      "kind": "size",
+      "value": 48
+    },
+    "hii_image::HiiImageExProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_image::HiiImageExProtocol.new_image_ex.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_image::HiiImageExProtocol.get_image_ex.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_image::HiiImageExProtocol.set_image_ex.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "hii_image::HiiImageExProtocol.draw_image_ex.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "hii_image::HiiImageExProtocol.draw_image_id_ex.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "hii_image::HiiImageExProtocol.get_image_info.offset": {
+      "kind": "offset",
+      "value": 40
+    },
+    "hii_popup::HiiPopupStyle.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_popup::HiiPopupStyle.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "hii_popup::HiiPopupType.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_popup::HiiPopupType.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "hii_popup::HiiPopupSelection.size": {
+      "kind": "size",
+      "value": 4
+    },
+    "hii_popup::HiiPopupSelection.alignment": {
+      "kind": "alignment",
+      "value": 4
+    },
+    "hii_popup::HiiPopupProtocol.size": {
+      "kind": "size",
+      "value": 16
+    },
+    "hii_popup::HiiPopupProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_popup::HiiPopupProtocol.revision.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_popup::HiiPopupProtocol.create_popup.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_string::HiiStringProtocol.size": {
+      "kind": "size",
+      "value": 40
+    },
+    "hii_string::HiiStringProtocol.alignment": {
+      "kind": "alignment",
+      "value": 8
+    },
+    "hii_string::HiiStringProtocol.new_string.offset": {
+      "kind": "offset",
+      "value": 0
+    },
+    "hii_string::HiiStringProtocol.get_string.offset": {
+      "kind": "offset",
+      "value": 8
+    },
+    "hii_string::HiiStringProtocol.set_string.offset": {
+      "kind": "offset",
+      "value": 16
+    },
+    "hii_string::HiiStringProtocol.get_languages.offset": {
+      "kind": "offset",
+      "value": 24
+    },
+    "hii_string::HiiStringProtocol.get_secondary_languages.offset": {
+      "kind": "offset",
+      "value": 32
+    },
+    "hii::KEY_LCTRL": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii::KEY_A0": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii::KEY_LALT": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii::KEY_SPACEBAR": {
+      "kind": "value",
+      "value": 3
+    },
+    "hii::KEY_A2": {
+      "kind": "value",
+      "value": 4
+    },
+    "hii::KEY_A3": {
+      "kind": "value",
+      "value": 5
+    },
+    "hii::KEY_A4": {
+      "kind": "value",
+      "value": 6
+    },
+    "hii::KEY_RCTRL": {
+      "kind": "value",
+      "value": 7
+    },
+    "hii::KEY_LEFT_ARROW": {
+      "kind": "value",
+      "value": 8
+    },
+    "hii::KEY_DOWN_ARROW": {
+      "kind": "value",
+      "value": 9
+    },
+    "hii::KEY_RIGHT_ARROW": {
+      "kind": "value",
+      "value": 10
+    },
+    "hii::KEY_ZERO": {
+      "kind": "value",
+      "value": 11
+    },
+    "hii::KEY_PERIOD": {
+      "kind": "value",
+      "value": 12
+    },
+    "hii::KEY_ENTER": {
+      "kind": "value",
+      "value": 13
+    },
+    "hii::KEY_LSHIFT": {
+      "kind": "value",
+      "value": 14
+    },
+    "hii::KEY_B0": {
+      "kind": "value",
+      "value": 15
+    },
+    "hii::KEY_B1": {
+      "kind": "value",
+      "value": 16
+    },
+    "hii::KEY_B2": {
+      "kind": "value",
+      "value": 17
+    },
+    "hii::KEY_B3": {
+      "kind": "value",
+      "value": 18
+    },
+    "hii::KEY_B4": {
+      "kind": "value",
+      "value": 19
+    },
+    "hii::KEY_B5": {
+      "kind": "value",
+      "value": 20
+    },
+    "hii::KEY_B6": {
+      "kind": "value",
+      "value": 21
+    },
+    "hii::KEY_B7": {
+      "kind": "value",
+      "value": 22
+    },
+    "hii::KEY_B8": {
+      "kind": "value",
+      "value": 23
+    },
+    "hii::KEY_B9": {
+      "kind": "value",
+      "value": 24
+    },
+    "hii::KEY_B10": {
+      "kind": "value",
+      "value": 25
+    },
+    "hii::KEY_RSHIFT": {
+      "kind": "value",
+      "value": 26
+    },
+    "hii::KEY_UP_ARROW": {
+      "kind": "value",
+      "value": 27
+    },
+    "hii::KEY_ONE": {
+      "kind": "value",
+      "value": 28
+    },
+    "hii::KEY_TWO": {
+      "kind": "value",
+      "value": 29
+    },
+    "hii::KEY_THREE": {
+      "kind": "value",
+      "value": 30
+    },
+    "hii::KEY_CAPS_LOCK": {
+      "kind": "value",
+      "value": 31
+    },
+    "hii::KEY_C1": {
+      "kind": "value",
+      "value": 32
+    },
+    "hii::KEY_C2": {
+      "kind": "value",
+      "value": 33
+    },
+    "hii::KEY_C3": {
+      "kind": "value",
+      "value": 34
+    },
+    "hii::KEY_C4": {
+      "kind": "value",
+      "value": 35
+    },
+    "hii::KEY_C5": {
+      "kind": "value",
+      "value": 36
+    },
+    "hii::KEY_C6": {
+      "kind": "value",
+      "value": 37
+    },
+    "hii::KEY_C7": {
+      "kind": "value",
+      "value": 38
+    },
+    "hii::KEY_C8": {
+      "kind": "value",
+      "value": 39
+    },
+    "hii::KEY_C9": {
+      "kind": "value",
+      "value": 40
+    },
+    "hii::KEY_C10": {
+      "kind": "value",
+      "value": 41
+    },
+    "hii::KEY_C11": {
+      "kind": "value",
+      "value": 42
+    },
+    "hii::KEY_C12": {
+      "kind": "value",
+      "value": 43
+    },
+    "hii::KEY_FOUR": {
+      "kind": "value",
+      "value": 44
+    },
+    "hii::KEY_FIVE": {
+      "kind": "value",
+      "value": 45
+    },
+    "hii::KEY_SIX": {
+      "kind": "value",
+      "value": 46
+    },
+    "hii::KEY_PLUS": {
+      "kind": "value",
+      "value": 47
+    },
+    "hii::KEY_TAB": {
+      "kind": "value",
+      "value": 48
+    },
+    "hii::KEY_D1": {
+      "kind": "value",
+      "value": 49
+    },
+    "hii::KEY_D2": {
+      "kind": "value",
+      "value": 50
+    },
+    "hii::KEY_D3": {
+      "kind": "value",
+      "value": 51
+    },
+    "hii::KEY_D4": {
+      "kind": "value",
+      "value": 52
+    },
+    "hii::KEY_D5": {
+      "kind": "value",
+      "value": 53
+    },
+    "hii::KEY_D6": {
+      "kind": "value",
+      "value": 54
+    },
+    "hii::KEY_D7": {
+      "kind": "value",
+      "value": 55
+    },
+    "hii::KEY_D8": {
+      "kind": "value",
+      "value": 56
+    },
+    "hii::KEY_D9": {
+      "kind": "value",
+      "value": 57
+    },
+    "hii::KEY_D10": {
+      "kind": "value",
+      "value": 58
+    },
+    "hii::KEY_D11": {
+      "kind": "value",
+      "value": 59
+    },
+    "hii::KEY_D12": {
+      "kind": "value",
+      "value": 60
+    },
+    "hii::KEY_D13": {
+      "kind": "value",
+      "value": 61
+    },
+    "hii::KEY_DEL": {
+      "kind": "value",
+      "value": 62
+    },
+    "hii::KEY_END": {
+      "kind": "value",
+      "value": 63
+    },
+    "hii::KEY_PG_DN": {
+      "kind": "value",
+      "value": 64
+    },
+    "hii::KEY_SEVEN": {
+      "kind": "value",
+      "value": 65
+    },
+    "hii::KEY_EIGHT": {
+      "kind": "value",
+      "value": 66
+    },
+    "hii::KEY_NINE": {
+      "kind": "value",
+      "value": 67
+    },
+    "hii::KEY_E0": {
+      "kind": "value",
+      "value": 68
+    },
+    "hii::KEY_E1": {
+      "kind": "value",
+      "value": 69
+    },
+    "hii::KEY_E2": {
+      "kind": "value",
+      "value": 70
+    },
+    "hii::KEY_E3": {
+      "kind": "value",
+      "value": 71
+    },
+    "hii::KEY_E4": {
+      "kind": "value",
+      "value": 72
+    },
+    "hii::KEY_E5": {
+      "kind": "value",
+      "value": 73
+    },
+    "hii::KEY_E6": {
+      "kind": "value",
+      "value": 74
+    },
+    "hii::KEY_E7": {
+      "kind": "value",
+      "value": 75
+    },
+    "hii::KEY_E8": {
+      "kind": "value",
+      "value": 76
+    },
+    "hii::KEY_E9": {
+      "kind": "value",
+      "value": 77
+    },
+    "hii::KEY_E10": {
+      "kind": "value",
+      "value": 78
+    },
+    "hii::KEY_E11": {
+      "kind": "value",
+      "value": 79
+    },
+    "hii::KEY_E12": {
+      "kind": "value",
+      "value": 80
+    },
+    "hii::KEY_BACK_SPACE": {
+      "kind": "value",
+      "value": 81
+    },
+    "hii::KEY_INS": {
+      "kind": "value",
+      "value": 82
+    },
+    "hii::KEY_HOME": {
+      "kind": "value",
+      "value": 83
+    },
+    "hii::KEY_PG_UP": {
+      "kind": "value",
+      "value": 84
+    },
+    "hii::KEY_NLCK": {
+      "kind": "value",
+      "value": 85
+    },
+    "hii::KEY_SLASH": {
+      "kind": "value",
+      "value": 86
+    },
+    "hii::KEY_ASTERISK": {
+      "kind": "value",
+      "value": 87
+    },
+    "hii::KEY_MINUS": {
+      "kind": "value",
+      "value": 88
+    },
+    "hii::KEY_ESC": {
+      "kind": "value",
+      "value": 89
+    },
+    "hii::KEY_F1": {
+      "kind": "value",
+      "value": 90
+    },
+    "hii::KEY_F2": {
+      "kind": "value",
+      "value": 91
+    },
+    "hii::KEY_F3": {
+      "kind": "value",
+      "value": 92
+    },
+    "hii::KEY_F4": {
+      "kind": "value",
+      "value": 93
+    },
+    "hii::KEY_F5": {
+      "kind": "value",
+      "value": 94
+    },
+    "hii::KEY_F6": {
+      "kind": "value",
+      "value": 95
+    },
+    "hii::KEY_F7": {
+      "kind": "value",
+      "value": 96
+    },
+    "hii::KEY_F8": {
+      "kind": "value",
+      "value": 97
+    },
+    "hii::KEY_F9": {
+      "kind": "value",
+      "value": 98
+    },
+    "hii::KEY_F10": {
+      "kind": "value",
+      "value": 99
+    },
+    "hii::KEY_F11": {
+      "kind": "value",
+      "value": 100
+    },
+    "hii::KEY_F12": {
+      "kind": "value",
+      "value": 101
+    },
+    "hii::KEY_PRINT": {
+      "kind": "value",
+      "value": 102
+    },
+    "hii::KEY_SLCK": {
+      "kind": "value",
+      "value": 103
+    },
+    "hii::KEY_PAUSE": {
+      "kind": "value",
+      "value": 104
+    },
+    "hii::KEY_INTL0": {
+      "kind": "value",
+      "value": 105
+    },
+    "hii::KEY_INTL1": {
+      "kind": "value",
+      "value": 106
+    },
+    "hii::KEY_INTL2": {
+      "kind": "value",
+      "value": 107
+    },
+    "hii::KEY_INTL3": {
+      "kind": "value",
+      "value": 108
+    },
+    "hii::KEY_INTL4": {
+      "kind": "value",
+      "value": 109
+    },
+    "hii::KEY_INTL5": {
+      "kind": "value",
+      "value": 110
+    },
+    "hii::KEY_INTL6": {
+      "kind": "value",
+      "value": 111
+    },
+    "hii::KEY_INTL7": {
+      "kind": "value",
+      "value": 112
+    },
+    "hii::KEY_INTL8": {
+      "kind": "value",
+      "value": 113
+    },
+    "hii::KEY_INTL9": {
+      "kind": "value",
+      "value": 114
+    },
+    "hii::MODIFIER_NULL": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii::MODIFIER_LEFT_CONTROL": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii::MODIFIER_RIGHT_CONTROL": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii::MODIFIER_LEFT_ALT": {
+      "kind": "value",
+      "value": 3
+    },
+    "hii::MODIFIER_RIGHT_ALT": {
+      "kind": "value",
+      "value": 4
+    },
+    "hii::MODIFIER_ALT_GR": {
+      "kind": "value",
+      "value": 5
+    },
+    "hii::MODIFIER_INSERT": {
+      "kind": "value",
+      "value": 6
+    },
+    "hii::MODIFIER_DELETE": {
+      "kind": "value",
+      "value": 7
+    },
+    "hii::MODIFIER_PAGE_DOWN": {
+      "kind": "value",
+      "value": 8
+    },
+    "hii::MODIFIER_PAGE_UP": {
+      "kind": "value",
+      "value": 9
+    },
+    "hii::MODIFIER_HOME": {
+      "kind": "value",
+      "value": 10
+    },
+    "hii::MODIFIER_END": {
+      "kind": "value",
+      "value": 11
+    },
+    "hii::MODIFIER_LEFT_SHIFT": {
+      "kind": "value",
+      "value": 12
+    },
+    "hii::MODIFIER_RIGHT_SHIFT": {
+      "kind": "value",
+      "value": 13
+    },
+    "hii::MODIFIER_CAPS_LOCK": {
+      "kind": "value",
+      "value": 14
+    },
+    "hii::MODIFIER_NUM_LOCK": {
+      "kind": "value",
+      "value": 15
+    },
+    "hii::MODIFIER_LEFT_ARROW": {
+      "kind": "value",
+      "value": 16
+    },
+    "hii::MODIFIER_RIGHT_ARROW": {
+      "kind": "value",
+      "value": 17
+    },
+    "hii::MODIFIER_DOWN_ARROW": {
+      "kind": "value",
+      "value": 18
+    },
+    "hii::MODIFIER_UP_ARROW": {
+      "kind": "value",
+      "value": 19
+    },
+    "hii::MODIFIER_NS_KEY": {
+      "kind": "value",
+      "value": 20
+    },
+    "hii::MODIFIER_NS_KEY_DEPENDENCY": {
+      "kind": "value",
+      "value": 21
+    },
+    "hii::MODIFIER_FUNCTION_KEY_ONE": {
+      "kind": "value",
+      "value": 22
+    },
+    "hii::MODIFIER_FUNCTION_KEY_TWO": {
+      "kind": "value",
+      "value": 23
+    },
+    "hii::MODIFIER_FUNCTION_KEY_THREE": {
+      "kind": "value",
+      "value": 24
+    },
+    "hii::MODIFIER_FUNCTION_KEY_FOUR": {
+      "kind": "value",
+      "value": 25
+    },
+    "hii::MODIFIER_FUNCTION_KEY_FIVE": {
+      "kind": "value",
+      "value": 26
+    },
+    "hii::MODIFIER_FUNCTION_KEY_SIX": {
+      "kind": "value",
+      "value": 27
+    },
+    "hii::MODIFIER_FUNCTION_KEY_SEVEN": {
+      "kind": "value",
+      "value": 28
+    },
+    "hii::MODIFIER_FUNCTION_KEY_EIGHT": {
+      "kind": "value",
+      "value": 29
+    },
+    "hii::MODIFIER_FUNCTION_KEY_NINE": {
+      "kind": "value",
+      "value": 30
+    },
+    "hii::MODIFIER_FUNCTION_KEY_TEN": {
+      "kind": "value",
+      "value": 31
+    },
+    "hii::MODIFIER_FUNCTION_KEY_ELEVEN": {
+      "kind": "value",
+      "value": 32
+    },
+    "hii::MODIFIER_FUNCTION_KEY_TWELVE": {
+      "kind": "value",
+      "value": 33
+    },
+    "hii::MODIFIER_PRINT": {
+      "kind": "value",
+      "value": 34
+    },
+    "hii::MODIFIER_SYS_REQUEST": {
+      "kind": "value",
+      "value": 35
+    },
+    "hii::MODIFIER_SCROLL_LOCK": {
+      "kind": "value",
+      "value": 36
+    },
+    "hii::MODIFIER_PAUSE": {
+      "kind": "value",
+      "value": 37
+    },
+    "hii::MODIFIER_BREAK": {
+      "kind": "value",
+      "value": 38
+    },
+    "hii::MODIFIER_LEFT_LOGO": {
+      "kind": "value",
+      "value": 39
+    },
+    "hii::MODIFIER_RIGHT_LOGO": {
+      "kind": "value",
+      "value": 40
+    },
+    "hii::MODIFIER_MENU": {
+      "kind": "value",
+      "value": 41
+    },
+    "hii_config::BROWSER_ACTION_CHANGING": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_config::BROWSER_ACTION_CHANGED": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_config::BROWSER_ACTION_RETRIEVE": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_config::BROWSER_ACTION_FORM_OPEN": {
+      "kind": "value",
+      "value": 3
+    },
+    "hii_config::BROWSER_ACTION_FORM_CLOSE": {
+      "kind": "value",
+      "value": 4
+    },
+    "hii_config::BROWSER_ACTION_SUBMITTED": {
+      "kind": "value",
+      "value": 5
+    },
+    "hii_config::BROWSER_ACTION_DEFAULT_STANDARD": {
+      "kind": "value",
+      "value": 4096
+    },
+    "hii_config::BROWSER_ACTION_DEFAULT_MANUFACTURING": {
+      "kind": "value",
+      "value": 4097
+    },
+    "hii_config::BROWSER_ACTION_DEFAULT_SAFE": {
+      "kind": "value",
+      "value": 4098
+    },
+    "hii_config::BROWSER_ACTION_DEFAULT_PLATFORM": {
+      "kind": "value",
+      "value": 8192
+    },
+    "hii_config::BROWSER_ACTION_DEFAULT_HARDWARE": {
+      "kind": "value",
+      "value": 12288
+    },
+    "hii_config::BROWSER_ACTION_DEFAULT_FIRMWARE": {
+      "kind": "value",
+      "value": 16384
+    },
+    "hii_config::CONFIG_KEYWORD_HANDLER_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "d5ad8b0ab803194db1287b8f0edaa596"
+    },
+    "hii_config::HII_CONFIG_ACCESS_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "06470d33a0f24f4ea369b66fa8d54385"
+    },
+    "hii_config::HII_CONFIG_ROUTING_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "d7727e5850cc794f8209ca291fc1a10f"
+    },
+    "hii_database::HII_DATABASE_NOTIFY_TYPE_NEW_PACK": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_database::HII_DATABASE_NOTIFY_TYPE_REMOVE_PACK": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_database::HII_DATABASE_NOTIFY_TYPE_EXPORT_PACK": {
+      "kind": "value",
+      "value": 4
+    },
+    "hii_database::HII_DATABASE_NOTIFY_TYPE_ADD_PACK": {
+      "kind": "value",
+      "value": 8
+    },
+    "hii_database::HII_DATABASE_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "72c19fefb2a19346b3276d32fc416042"
+    },
+    "hii_font::FONT_INFO_MASK_SYS_FONT": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_font::FONT_INFO_MASK_SYS_SIZE": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_font::FONT_INFO_MASK_SYS_STYLE": {
+      "kind": "value",
+      "value": 4
+    },
+    "hii_font::FONT_INFO_MASK_SYS_FORE_COLOR": {
+      "kind": "value",
+      "value": 16
+    },
+    "hii_font::FONT_INFO_MASK_SYS_BACK_COLOR": {
+      "kind": "value",
+      "value": 32
+    },
+    "hii_font::FONT_INFO_MASK_RESIZE": {
+      "kind": "value",
+      "value": 4096
+    },
+    "hii_font::FONT_INFO_MASK_RESTYLE": {
+      "kind": "value",
+      "value": 8192
+    },
+    "hii_font::FONT_INFO_MASK_ANY_FONT": {
+      "kind": "value",
+      "value": 65536
+    },
+    "hii_font::FONT_INFO_MASK_ANY_SIZE": {
+      "kind": "value",
+      "value": 131072
+    },
+    "hii_font::FONT_INFO_MASK_ANY_STYLE": {
+      "kind": "value",
+      "value": 262144
+    },
+    "hii_font::HII_FONT_STYLE_BOLD": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_font::HII_FONT_STYLE_ITALIC": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_font::HII_FONT_STYLE_EMBOSS": {
+      "kind": "value",
+      "value": 65536
+    },
+    "hii_font::HII_FONT_STYLE_OUTLINE": {
+      "kind": "value",
+      "value": 131072
+    },
+    "hii_font::HII_FONT_STYLE_SHADOW": {
+      "kind": "value",
+      "value": 262144
+    },
+    "hii_font::HII_FONT_STYLE_UNDERLINE": {
+      "kind": "value",
+      "value": 524288
+    },
+    "hii_font::HII_FONT_STYLE_DBL_UNDER": {
+      "kind": "value",
+      "value": 1048576
+    },
+    "hii_font::HII_OUT_FLAGS_CLIP": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_font::HII_OUT_FLAGS_WRAP": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_font::HII_OUT_FLAGS_CLIP_CLEAN_Y": {
+      "kind": "value",
+      "value": 4
+    },
+    "hii_font::HII_OUT_FLAGS_CLIP_CLEAN_X": {
+      "kind": "value",
+      "value": 8
+    },
+    "hii_font::HII_OUT_FLAGS_TRANSPARENT": {
+      "kind": "value",
+      "value": 16
+    },
+    "hii_font::HII_OUT_FLAGS_IGNORE_IF_NO_GLYPH": {
+      "kind": "value",
+      "value": 32
+    },
+    "hii_font::HII_OUT_FLAGS_IGNORE_LINE_BREAK": {
+      "kind": "value",
+      "value": 64
+    },
+    "hii_font::HII_OUT_FLAGS_DIRECT_TO_SCREEN": {
+      "kind": "value",
+      "value": 128
+    },
+    "hii_font::HII_FONT_STYLE_NORMAL": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_font::HII_FONT_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "7547cae95786fc4797e77ed65a084324"
+    },
+    "hii_font::HII_FONT_EX_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "75689e8435dbf84db41ec8f33718073f"
+    },
+    "hii_form_browser::BROWSER_ACTION_REQUEST_NONE": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_form_browser::BROWSER_ACTION_REQUEST_RESET": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_form_browser::BROWSER_ACTION_REQUEST_SUBMIT": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_form_browser::BROWSER_ACTION_REQUEST_EXIT": {
+      "kind": "value",
+      "value": 3
+    },
+    "hii_form_browser::BROWSER_ACTION_REQUEST_FORM_SUBMIT_EXIT": {
+      "kind": "value",
+      "value": 4
+    },
+    "hii_form_browser::BROWSER_ACTION_REQUEST_FORM_DISCARD_EXIT": {
+      "kind": "value",
+      "value": 5
+    },
+    "hii_form_browser::BROWSER_ACTION_REQUEST_FORM_APPLY": {
+      "kind": "value",
+      "value": 6
+    },
+    "hii_form_browser::BROWSER_ACTION_REQUEST_FORM_DISCARD": {
+      "kind": "value",
+      "value": 7
+    },
+    "hii_form_browser::BROWSER_ACTION_REQUEST_RECONNECT": {
+      "kind": "value",
+      "value": 8
+    },
+    "hii_form_browser::BROWSER_ACTION_REQUEST_QUESTION_APPLY": {
+      "kind": "value",
+      "value": 9
+    },
+    "hii_form_browser::FORM_BROWSER2_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "60c3d4b9fbbc9b4f929853c136982258"
+    },
+    "hii_ifr::IFR_TYPE_NUM_SIZE_8": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_ifr::IFR_TYPE_NUM_SIZE_16": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_ifr::IFR_TYPE_NUM_SIZE_32": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_ifr::IFR_TYPE_NUM_SIZE_64": {
+      "kind": "value",
+      "value": 3
+    },
+    "hii_ifr::IFR_TYPE_BOOLEAN": {
+      "kind": "value",
+      "value": 4
+    },
+    "hii_ifr::IFR_TYPE_TIME": {
+      "kind": "value",
+      "value": 5
+    },
+    "hii_ifr::IFR_TYPE_DATE": {
+      "kind": "value",
+      "value": 6
+    },
+    "hii_ifr::IFR_TYPE_STRING": {
+      "kind": "value",
+      "value": 7
+    },
+    "hii_ifr::IFR_TYPE_OTHER": {
+      "kind": "value",
+      "value": 8
+    },
+    "hii_ifr::IFR_TYPE_UNDEFINED": {
+      "kind": "value",
+      "value": 9
+    },
+    "hii_ifr::IFR_TYPE_ACTION": {
+      "kind": "value",
+      "value": 10
+    },
+    "hii_ifr::IFR_TYPE_BUFFER": {
+      "kind": "value",
+      "value": 11
+    },
+    "hii_ifr::IFR_TYPE_REF": {
+      "kind": "value",
+      "value": 12
+    },
+    "hii_ifr::IFR_OPCODE_FORM": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_ifr::IFR_OPCODE_SUBTITLE": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_ifr::IFR_OPCODE_TEXT": {
+      "kind": "value",
+      "value": 3
+    },
+    "hii_ifr::IFR_OPCODE_IMAGE": {
+      "kind": "value",
+      "value": 4
+    },
+    "hii_ifr::IFR_OPCODE_ONE_OF": {
+      "kind": "value",
+      "value": 5
+    },
+    "hii_ifr::IFR_OPCODE_CHECKBOX": {
+      "kind": "value",
+      "value": 6
+    },
+    "hii_ifr::IFR_OPCODE_NUMERIC": {
+      "kind": "value",
+      "value": 7
+    },
+    "hii_ifr::IFR_OPCODE_PASSWORD": {
+      "kind": "value",
+      "value": 8
+    },
+    "hii_ifr::IFR_OPCODE_ONE_OF_OPTION": {
+      "kind": "value",
+      "value": 9
+    },
+    "hii_ifr::IFR_OPCODE_SUPPRESS_IF": {
+      "kind": "value",
+      "value": 10
+    },
+    "hii_ifr::IFR_OPCODE_LOCKED": {
+      "kind": "value",
+      "value": 11
+    },
+    "hii_ifr::IFR_OPCODE_ACTION": {
+      "kind": "value",
+      "value": 12
+    },
+    "hii_ifr::IFR_OPCODE_RESET_BUTTON": {
+      "kind": "value",
+      "value": 13
+    },
+    "hii_ifr::IFR_OPCODE_FORM_SET": {
+      "kind": "value",
+      "value": 14
+    },
+    "hii_ifr::IFR_OPCODE_REF": {
+      "kind": "value",
+      "value": 15
+    },
+    "hii_ifr::IFR_OPCODE_NO_SUBMIT_IF": {
+      "kind": "value",
+      "value": 16
+    },
+    "hii_ifr::IFR_OPCODE_INCONSISTENT_IF": {
+      "kind": "value",
+      "value": 17
+    },
+    "hii_ifr::IFR_OPCODE_EQ_ID_VAL": {
+      "kind": "value",
+      "value": 18
+    },
+    "hii_ifr::IFR_OPCODE_EQ_ID_ID": {
+      "kind": "value",
+      "value": 19
+    },
+    "hii_ifr::IFR_OPCODE_EQ_ID_VAL_LIST": {
+      "kind": "value",
+      "value": 20
+    },
+    "hii_ifr::IFR_OPCODE_AND": {
+      "kind": "value",
+      "value": 21
+    },
+    "hii_ifr::IFR_OPCODE_OR": {
+      "kind": "value",
+      "value": 22
+    },
+    "hii_ifr::IFR_OPCODE_NOT": {
+      "kind": "value",
+      "value": 23
+    },
+    "hii_ifr::IFR_OPCODE_RULE": {
+      "kind": "value",
+      "value": 24
+    },
+    "hii_ifr::IFR_OPCODE_GRAY_OUT_IF": {
+      "kind": "value",
+      "value": 25
+    },
+    "hii_ifr::IFR_OPCODE_DATE": {
+      "kind": "value",
+      "value": 26
+    },
+    "hii_ifr::IFR_OPCODE_TIME": {
+      "kind": "value",
+      "value": 27
+    },
+    "hii_ifr::IFR_OPCODE_STRING": {
+      "kind": "value",
+      "value": 28
+    },
+    "hii_ifr::IFR_OPCODE_REFRESH": {
+      "kind": "value",
+      "value": 29
+    },
+    "hii_ifr::IFR_OPCODE_DISABLE_IF": {
+      "kind": "value",
+      "value": 30
+    },
+    "hii_ifr::IFR_OPCODE_ANIMATION": {
+      "kind": "value",
+      "value": 31
+    },
+    "hii_ifr::IFR_OPCODE_TO_LOWER": {
+      "kind": "value",
+      "value": 32
+    },
+    "hii_ifr::IFR_OPCODE_TO_UPPER": {
+      "kind": "value",
+      "value": 33
+    },
+    "hii_ifr::IFR_OPCODE_MAP": {
+      "kind": "value",
+      "value": 34
+    },
+    "hii_ifr::IFR_OPCODE_ORDERED_LIST": {
+      "kind": "value",
+      "value": 35
+    },
+    "hii_ifr::IFR_OPCODE_VARSTORE": {
+      "kind": "value",
+      "value": 36
+    },
+    "hii_ifr::IFR_OPCODE_VARSTORE_NAME_VALUE": {
+      "kind": "value",
+      "value": 37
+    },
+    "hii_ifr::IFR_OPCODE_VARSTORE_EFI": {
+      "kind": "value",
+      "value": 38
+    },
+    "hii_ifr::IFR_OPCODE_VARSTORE_DEVICE": {
+      "kind": "value",
+      "value": 39
+    },
+    "hii_ifr::IFR_OPCODE_VERSION": {
+      "kind": "value",
+      "value": 40
+    },
+    "hii_ifr::IFR_OPCODE_END": {
+      "kind": "value",
+      "value": 41
+    },
+    "hii_ifr::IFR_OPCODE_MATCH": {
+      "kind": "value",
+      "value": 42
+    },
+    "hii_ifr::IFR_OPCODE_GET": {
+      "kind": "value",
+      "value": 43
+    },
+    "hii_ifr::IFR_OPCODE_SET": {
+      "kind": "value",
+      "value": 44
+    },
+    "hii_ifr::IFR_OPCODE_READ": {
+      "kind": "value",
+      "value": 45
+    },
+    "hii_ifr::IFR_OPCODE_WRITE": {
+      "kind": "value",
+      "value": 46
+    },
+    "hii_ifr::IFR_OPCODE_EQUAL": {
+      "kind": "value",
+      "value": 47
+    },
+    "hii_ifr::IFR_OPCODE_NOT_EQUAL": {
+      "kind": "value",
+      "value": 48
+    },
+    "hii_ifr::IFR_OPCODE_GREATER_THAN": {
+      "kind": "value",
+      "value": 49
+    },
+    "hii_ifr::IFR_OPCODE_GREATER_EQUAL": {
+      "kind": "value",
+      "value": 50
+    },
+    "hii_ifr::IFR_OPCODE_LESS_THAN": {
+      "kind": "value",
+      "value": 51
+    },
+    "hii_ifr::IFR_OPCODE_LESS_EQUAL": {
+      "kind": "value",
+      "value": 52
+    },
+    "hii_ifr::IFR_OPCODE_BITWISE_AND": {
+      "kind": "value",
+      "value": 53
+    },
+    "hii_ifr::IFR_OPCODE_BITWISE_OR": {
+      "kind": "value",
+      "value": 54
+    },
+    "hii_ifr::IFR_OPCODE_BITWISE_NOT": {
+      "kind": "value",
+      "value": 55
+    },
+    "hii_ifr::IFR_OPCODE_SHIFT_LEFT": {
+      "kind": "value",
+      "value": 56
+    },
+    "hii_ifr::IFR_OPCODE_SHIFT_RIGHT": {
+      "kind": "value",
+      "value": 57
+    },
+    "hii_ifr::IFR_OPCODE_ADD": {
+      "kind": "value",
+      "value": 58
+    },
+    "hii_ifr::IFR_OPCODE_SUBTRACT": {
+      "kind": "value",
+      "value": 59
+    },
+    "hii_ifr::IFR_OPCODE_MULTIPLY": {
+      "kind": "value",
+      "value": 60
+    },
+    "hii_ifr::IFR_OPCODE_DIVIDE": {
+      "kind": "value",
+      "value": 61
+    },
+    "hii_ifr::IFR_OPCODE_MODULO": {
+      "kind": "value",
+      "value": 62
+    },
+    "hii_ifr::IFR_OPCODE_RULE_REF": {
+      "kind": "value",
+      "value": 63
+    },
+    "hii_ifr::IFR_OPCODE_QUESTION_REF1": {
+      "kind": "value",
+      "value": 64
+    },
+    "hii_ifr::IFR_OPCODE_QUESTION_REF2": {
+      "kind": "value",
+      "value": 65
+    },
+    "hii_ifr::IFR_OPCODE_UINT8": {
+      "kind": "value",
+      "value": 66
+    },
+    "hii_ifr::IFR_OPCODE_UINT16": {
+      "kind": "value",
+      "value": 67
+    },
+    "hii_ifr::IFR_OPCODE_UINT32": {
+      "kind": "value",
+      "value": 68
+    },
+    "hii_ifr::IFR_OPCODE_UINT64": {
+      "kind": "value",
+      "value": 69
+    },
+    "hii_ifr::IFR_OPCODE_TRUE": {
+      "kind": "value",
+      "value": 70
+    },
+    "hii_ifr::IFR_OPCODE_FALSE": {
+      "kind": "value",
+      "value": 71
+    },
+    "hii_ifr::IFR_OPCODE_TO_UINT": {
+      "kind": "value",
+      "value": 72
+    },
+    "hii_ifr::IFR_OPCODE_TO_STRING": {
+      "kind": "value",
+      "value": 73
+    },
+    "hii_ifr::IFR_OPCODE_TO_BOOLEAN": {
+      "kind": "value",
+      "value": 74
+    },
+    "hii_ifr::IFR_OPCODE_MID": {
+      "kind": "value",
+      "value": 75
+    },
+    "hii_ifr::IFR_OPCODE_FIND": {
+      "kind": "value",
+      "value": 76
+    },
+    "hii_ifr::IFR_OPCODE_TOKEN": {
+      "kind": "value",
+      "value": 77
+    },
+    "hii_ifr::IFR_OPCODE_STRING_REF1": {
+      "kind": "value",
+      "value": 78
+    },
+    "hii_ifr::IFR_OPCODE_STRING_REF2": {
+      "kind": "value",
+      "value": 79
+    },
+    "hii_ifr::IFR_OPCODE_CONDITIONAL": {
+      "kind": "value",
+      "value": 80
+    },
+    "hii_ifr::IFR_OPCODE_QUESTION_REF3": {
+      "kind": "value",
+      "value": 81
+    },
+    "hii_ifr::IFR_OPCODE_ZERO": {
+      "kind": "value",
+      "value": 82
+    },
+    "hii_ifr::IFR_OPCODE_ONE": {
+      "kind": "value",
+      "value": 83
+    },
+    "hii_ifr::IFR_OPCODE_ONES": {
+      "kind": "value",
+      "value": 84
+    },
+    "hii_ifr::IFR_OPCODE_UNDEFINED": {
+      "kind": "value",
+      "value": 85
+    },
+    "hii_ifr::IFR_OPCODE_LENGTH": {
+      "kind": "value",
+      "value": 86
+    },
+    "hii_ifr::IFR_OPCODE_DUP": {
+      "kind": "value",
+      "value": 87
+    },
+    "hii_ifr::IFR_OPCODE_THIS": {
+      "kind": "value",
+      "value": 88
+    },
+    "hii_ifr::IFR_OPCODE_SPAN": {
+      "kind": "value",
+      "value": 89
+    },
+    "hii_ifr::IFR_OPCODE_VALUE": {
+      "kind": "value",
+      "value": 90
+    },
+    "hii_ifr::IFR_OPCODE_DEFAULT": {
+      "kind": "value",
+      "value": 91
+    },
+    "hii_ifr::IFR_OPCODE_DEFAULTSTORE": {
+      "kind": "value",
+      "value": 92
+    },
+    "hii_ifr::IFR_OPCODE_FORM_MAP": {
+      "kind": "value",
+      "value": 93
+    },
+    "hii_ifr::IFR_OPCODE_CATENATE": {
+      "kind": "value",
+      "value": 94
+    },
+    "hii_ifr::IFR_OPCODE_GUID": {
+      "kind": "value",
+      "value": 95
+    },
+    "hii_ifr::IFR_OPCODE_SECURITY": {
+      "kind": "value",
+      "value": 96
+    },
+    "hii_ifr::IFR_OPCODE_MODAL_TAG": {
+      "kind": "value",
+      "value": 97
+    },
+    "hii_ifr::IFR_OPCODE_REFRESH_ID": {
+      "kind": "value",
+      "value": 98
+    },
+    "hii_ifr::IFR_OPCODE_WARNING_IF": {
+      "kind": "value",
+      "value": 99
+    },
+    "hii_ifr::IFR_OPCODE_MATCH2": {
+      "kind": "value",
+      "value": 100
+    },
+    "hii_ifr::IFR_QUESTION_FLAGS_READ_ONLY": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_ifr::IFR_QUESTION_FLAGS_CALLBACK": {
+      "kind": "value",
+      "value": 4
+    },
+    "hii_ifr::IFR_QUESTION_FLAGS_RESET_REQUIRED": {
+      "kind": "value",
+      "value": 16
+    },
+    "hii_ifr::IFR_QUESTION_FLAGS_REST_STYLE": {
+      "kind": "value",
+      "value": 32
+    },
+    "hii_ifr::IFR_QUESTION_FLAGS_RECONNECT_REQUIRED": {
+      "kind": "value",
+      "value": 64
+    },
+    "hii_ifr::IFR_QUESTION_FLAGS_OPTIONS_ONLY": {
+      "kind": "value",
+      "value": 128
+    },
+    "hii_ifr::IFR_CHECKBOX_FLAGS_DEFAULT": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_ifr::IFR_CHECKBOX_FLAGS_DEFAULT_MFG": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_ifr::IFR_DATE_FLAGS_YEAR_SUPPRESS": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_ifr::IFR_DATE_FLAGS_MONTH_SUPPRESS": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_ifr::IFR_DATE_FLAGS_DAY_SUPPRESS": {
+      "kind": "value",
+      "value": 4
+    },
+    "hii_ifr::IFR_DATE_FLAGS_STORAGE": {
+      "kind": "value",
+      "value": 48
+    },
+    "hii_ifr::IFR_DATE_STORAGE_NORMAL": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_ifr::IFR_DATE_STORAGE_TIME": {
+      "kind": "value",
+      "value": 16
+    },
+    "hii_ifr::IFR_DATE_STORAGE_WAKEUP": {
+      "kind": "value",
+      "value": 32
+    },
+    "hii_ifr::IFR_FIND_FORMAT_SENSITIVE": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_ifr::IFR_FIND_FORMAT_INSENSITIVE": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_ifr::IFR_NUMERIC_SIZE_SIZE_1": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_ifr::IFR_NUMERIC_SIZE_SIZE_2": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_ifr::IFR_NUMERIC_SIZE_SIZE_4": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_ifr::IFR_NUMERIC_SIZE_SIZE_8": {
+      "kind": "value",
+      "value": 3
+    },
+    "hii_ifr::IFR_NUMERIC_DISPLAY_INT_DEC": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_ifr::IFR_NUMERIC_DISPLAY_UINT_DEC": {
+      "kind": "value",
+      "value": 16
+    },
+    "hii_ifr::IFR_NUMERIC_DISPLAY_UINT_HEX": {
+      "kind": "value",
+      "value": 32
+    },
+    "hii_ifr::IFR_OPTION_FLAGS_DEFAULT": {
+      "kind": "value",
+      "value": 16
+    },
+    "hii_ifr::IFR_OPTION_FLAGS_DEFAULT_MFG": {
+      "kind": "value",
+      "value": 32
+    },
+    "hii_ifr::IFR_ORDERED_LIST_FLAGS_UNIQUE_SET": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_ifr::IFR_ORDERED_LIST_FLAGS_NO_EMPTY_SET": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_ifr::IFR_STRING_FLAGS_MULTI_LINE": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_ifr::IFR_SUBTITLE_FLAGS_HORIZONTAL": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_ifr::IFR_TIME_FLAGS_HOUR_SUPPRESS": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_ifr::IFR_TIME_FLAGS_MINUTE_SUPPRESS": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_ifr::IFR_TIME_FLAGS_SECOND_SUPPRESS": {
+      "kind": "value",
+      "value": 4
+    },
+    "hii_ifr::IFR_TIME_FLAGS_STORAGE": {
+      "kind": "value",
+      "value": 48
+    },
+    "hii_ifr::IFR_TIME_STORAGE_NORMAL": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_ifr::IFR_TIME_STORAGE_TIME": {
+      "kind": "value",
+      "value": 16
+    },
+    "hii_ifr::IFR_TIME_STORAGE_WAKEUP": {
+      "kind": "value",
+      "value": 32
+    },
+    "hii_ifr::IFR_NUMERIC_FLAGS_SIZE_MASK": {
+      "kind": "value",
+      "value": 3
+    },
+    "hii_ifr::IFR_NUMERIC_FLAGS_DISPLAY_MASK": {
+      "kind": "value",
+      "value": 48
+    },
+    "hii_image::HII_DRAW_FLAGS_CLIP": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_image::HII_DRAW_FLAGS_FORCE_TRANS": {
+      "kind": "value",
+      "value": 16
+    },
+    "hii_image::HII_DRAW_FLAGS_FORCE_OPAQUE": {
+      "kind": "value",
+      "value": 32
+    },
+    "hii_image::HII_DRAW_FLAGS_TRANSPARENT": {
+      "kind": "value",
+      "value": 48
+    },
+    "hii_image::HII_DRAW_FLAGS_DIRECT_TO_SCREEN": {
+      "kind": "value",
+      "value": 128
+    },
+    "hii_image::IMAGE_INPUT_FLAGS_TRANSPARENT": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_image::HII_DRAW_FLAGS_DEFAULT": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_image::HII_IMAGE_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "6a40a631df6b464eb2a2ebaa89c40920"
+    },
+    "hii_image::HII_IMAGE_EX_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "e641121a198fa941bc0ee8ef39e06546"
+    },
+    "hii_popup::HII_POPUP_STYLE_INFO": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_popup::HII_POPUP_STYLE_WARNING": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_popup::HII_POPUP_STYLE_ERROR": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_popup::HII_POPUP_TYPE_OK": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_popup::HII_POPUP_TYPE_OK_CANCEL": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_popup::HII_POPUP_TYPE_YES_NO": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_popup::HII_POPUP_TYPE_YES_NO_CANCEL": {
+      "kind": "value",
+      "value": 3
+    },
+    "hii_popup::HII_POPUP_SELECTION_OK": {
+      "kind": "value",
+      "value": 0
+    },
+    "hii_popup::HII_POPUP_SELECTION_CANCEL": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_popup::HII_POPUP_SELECTION_YES": {
+      "kind": "value",
+      "value": 2
+    },
+    "hii_popup::HII_POPUP_SELECTION_NO": {
+      "kind": "value",
+      "value": 3
+    },
+    "hii_popup::HII_POPUP_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "c0ed11435460d4469e40893ea952fccc"
+    },
+    "hii_popup::HII_POPUP_PROTOCOL_REVISION": {
+      "kind": "value",
+      "value": 1
+    },
+    "hii_string::HII_STRING_PROTOCOL_GUID": {
+      "kind": "bytes",
+      "value": "7469d90faa23dc4cb9cb98d17750322a"
+    }
+  }
+}

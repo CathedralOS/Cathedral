@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified rust-osdev/uefi-rs translation at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
+// See hii.PORT.md. Inert carriers; pointer/slot bits confer no authority.
+module hii_popup;
+use scalars;
+use console;
+
+// Upstream: uefi_raw::protocol::hii::popup::HiiPopupStyle
+pub data HiiPopupStyle [copy] {
+    raw: u32;
+}
+
+// Upstream: uefi_raw::protocol::hii::popup::HiiPopupType
+pub data HiiPopupType [copy] {
+    raw: u32;
+}
+
+// Upstream: uefi_raw::protocol::hii::popup::HiiPopupSelection
+pub data HiiPopupSelection [copy] {
+    raw: u32;
+}
+
+// Upstream: uefi_raw::protocol::hii::popup::HiiPopupProtocol
+pub data HiiPopupProtocol [copy] {
+    revision: u64;
+    create_popup: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, popup_style: HiiPopupStyle, popup_type: HiiPopupType, hii_handle: HiiHandle, message: StringId, user_selection: *mut HiiPopupSelection, ) -> Status
+}
+
+pub const HII_POPUP_STYLE_INFO: HiiPopupStyle = HiiPopupStyle { raw: 0 };
+pub const HII_POPUP_STYLE_WARNING: HiiPopupStyle = HiiPopupStyle { raw: 1 };
+pub const HII_POPUP_STYLE_ERROR: HiiPopupStyle = HiiPopupStyle { raw: 2 };
+pub const HII_POPUP_TYPE_OK: HiiPopupType = HiiPopupType { raw: 0 };
+pub const HII_POPUP_TYPE_OK_CANCEL: HiiPopupType = HiiPopupType { raw: 1 };
+pub const HII_POPUP_TYPE_YES_NO: HiiPopupType = HiiPopupType { raw: 2 };
+pub const HII_POPUP_TYPE_YES_NO_CANCEL: HiiPopupType = HiiPopupType { raw: 3 };
+pub const HII_POPUP_SELECTION_OK: HiiPopupSelection = HiiPopupSelection { raw: 0 };
+pub const HII_POPUP_SELECTION_CANCEL: HiiPopupSelection = HiiPopupSelection { raw: 1 };
+pub const HII_POPUP_SELECTION_YES: HiiPopupSelection = HiiPopupSelection { raw: 2 };
+pub const HII_POPUP_SELECTION_NO: HiiPopupSelection = HiiPopupSelection { raw: 3 };
+pub const HII_POPUP_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x4311edc0, data2: 0x6054, data3: 0x46d4, data4: [0x9e, 0x40, 0x89, 0x3e, 0xa9, 0x52, 0xfc, 0xcc] };
+pub const HII_POPUP_PROTOCOL_REVISION: u64 = 1;

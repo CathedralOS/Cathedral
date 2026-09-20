@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Executes pure Omega helper bodies in semantic evaluation, never firmware.
+use cathedral_uefi::hii_helpers;
+use cathedral_uefi_raw::hii_ifr;
+
+machine flag_cases() -> bool {
+    hii_helpers::ifr_date_storage(hii_ifr::IfrDateFlags { raw: 0 }).raw == 0 &&
+    hii_helpers::ifr_date_storage(hii_ifr::IfrDateFlags { raw: 0x17 }).raw == 0x10 &&
+    hii_helpers::ifr_date_storage(hii_ifr::IfrDateFlags { raw: 255 }).raw == 0x30 &&
+    hii_helpers::ifr_time_storage(hii_ifr::IfrTimeFlags { raw: 0x27 }).raw == 0x20 &&
+    hii_helpers::ifr_time_storage(hii_ifr::IfrTimeFlags { raw: 255 }).raw == 0x30 &&
+    hii_helpers::ifr_numeric_size(hii_ifr::IfrNumericFlags { raw: 0 }).raw == 0 &&
+    hii_helpers::ifr_numeric_size(hii_ifr::IfrNumericFlags { raw: 0x23 }).raw == 3 &&
+    hii_helpers::ifr_numeric_size(hii_ifr::IfrNumericFlags { raw: 255 }).raw == 3 &&
+    hii_helpers::ifr_numeric_display(hii_ifr::IfrNumericFlags { raw: 0x13 }).raw == 0x10 &&
+    hii_helpers::ifr_numeric_display(hii_ifr::IfrNumericFlags { raw: 255 }).raw == 0x30
+}
+machine package_cases() -> bool {
+    hii_helpers::hii_package_length(0xdf000004) == 4 &&
+    hii_helpers::hii_package_type(0xdf000004) == 0xdf &&
+    hii_helpers::hii_package_length(0xffffffff) == 0x00ffffff &&
+    hii_helpers::hii_package_type(0xffffffff) == 255 &&
+    !hii_helpers::hii_package_fits(0, 0) &&
+    !hii_helpers::hii_package_fits(3, 4) &&
+    !hii_helpers::hii_package_fits(4, 3) &&
+    hii_helpers::hii_package_fits(4, 4) &&
+    !hii_helpers::hii_package_fits(0xffffffff, 0x00fffffe) &&
+    hii_helpers::hii_package_fits(0xffffffff, 0x00ffffff) &&
+    hii_helpers::hii_package_fits(0xffffffff, 0xffffffffffffffff)
+}
+machine opcode_cases() -> bool {
+    hii_helpers::ifr_op_length(0x82) == 2 &&
+    hii_helpers::ifr_op_has_scope(0x82) &&
+    hii_helpers::ifr_op_length(255) == 127 &&
+    !hii_helpers::ifr_op_has_scope(127) &&
+    !hii_helpers::ifr_op_fits(0x80, 100) &&
+    !hii_helpers::ifr_op_fits(0x81, 100) &&
+    !hii_helpers::ifr_op_fits(0x82, 1) &&
+    hii_helpers::ifr_op_fits(0x82, 2) &&
+    !hii_helpers::ifr_op_fits(255, 126) &&
+    hii_helpers::ifr_op_fits(255, 127)
+}
+machine test_result() -> i32 {
+    transition flag_cases() && package_cases() && opcode_cases() {
+        true -> (0)
+        _ -> (1)
+    }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

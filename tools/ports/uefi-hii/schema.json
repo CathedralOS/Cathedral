@@ -1,0 +1,3993 @@
+[
+  {
+    "module": "hii",
+    "name": "HiiPackageHeader",
+    "upstream": "uefi_raw::protocol::hii::HiiPackageHeader",
+    "fields": [
+      [
+        "length_and_type",
+        "u32",
+        "length_and_type"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": [
+      "data"
+    ]
+  },
+  {
+    "module": "hii",
+    "name": "HiiPackageListHeader",
+    "upstream": "uefi_raw::protocol::hii::HiiPackageListHeader",
+    "fields": [
+      [
+        "package_list_guid",
+        "scalars::Guid",
+        "package_list_guid"
+      ],
+      [
+        "package_length",
+        "u32",
+        "package_length"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "Key",
+    "upstream": "uefi_raw::protocol::hii::Key",
+    "fields": [
+      [
+        "raw",
+        "u32",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "Modifier",
+    "upstream": "uefi_raw::protocol::hii::Modifier",
+    "fields": [
+      [
+        "raw",
+        "u16",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "KeyDescriptor",
+    "upstream": "uefi_raw::protocol::hii::KeyDescriptor",
+    "fields": [
+      [
+        "key",
+        "Key",
+        "key"
+      ],
+      [
+        "unicode",
+        "u16",
+        "unicode"
+      ],
+      [
+        "shifted_unicode",
+        "u16",
+        "shifted_unicode"
+      ],
+      [
+        "alt_gr_unicode",
+        "u16",
+        "alt_gr_unicode"
+      ],
+      [
+        "shifted_alt_gr_unicode",
+        "u16",
+        "shifted_alt_gr_unicode"
+      ],
+      [
+        "modifier",
+        "u16",
+        "modifier"
+      ],
+      [
+        "affected_attribute",
+        "u16",
+        "affected_attribute"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "HiiTime",
+    "upstream": "uefi_raw::protocol::hii::HiiTime",
+    "fields": [
+      [
+        "hour",
+        "u8",
+        "hour"
+      ],
+      [
+        "minute",
+        "u8",
+        "minute"
+      ],
+      [
+        "second",
+        "u8",
+        "second"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "HiiDate",
+    "upstream": "uefi_raw::protocol::hii::HiiDate",
+    "fields": [
+      [
+        "year",
+        "u16",
+        "year"
+      ],
+      [
+        "month",
+        "u8",
+        "month"
+      ],
+      [
+        "day",
+        "u8",
+        "day"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "HiiRef",
+    "upstream": "uefi_raw::protocol::hii::HiiRef",
+    "fields": [
+      [
+        "question_id",
+        "u16",
+        "question_id"
+      ],
+      [
+        "form_id",
+        "u16",
+        "form_id"
+      ],
+      [
+        "guid",
+        "scalars::Guid",
+        "guid"
+      ],
+      [
+        "string_id",
+        "u16",
+        "string_id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "HiiFormPackageHdr",
+    "upstream": "uefi_raw::protocol::hii::HiiFormPackageHdr",
+    "fields": [
+      [
+        "header",
+        "HiiPackageHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "HiiHandle",
+    "upstream": "uefi_raw::protocol::hii::HiiHandle",
+    "fields": [
+      [
+        "raw",
+        "addr",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "QuestionId",
+    "upstream": "uefi_raw::protocol::hii::QuestionId",
+    "fields": [
+      [
+        "raw",
+        "u16",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "ImageId",
+    "upstream": "uefi_raw::protocol::hii::ImageId",
+    "fields": [
+      [
+        "raw",
+        "u16",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "StringId",
+    "upstream": "uefi_raw::protocol::hii::StringId",
+    "fields": [
+      [
+        "raw",
+        "u16",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "FormId",
+    "upstream": "uefi_raw::protocol::hii::FormId",
+    "fields": [
+      [
+        "raw",
+        "u16",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "VarstoreId",
+    "upstream": "uefi_raw::protocol::hii::VarstoreId",
+    "fields": [
+      [
+        "raw",
+        "u16",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "AnimationId",
+    "upstream": "uefi_raw::protocol::hii::AnimationId",
+    "fields": [
+      [
+        "raw",
+        "u16",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii",
+    "name": "DefaultId",
+    "upstream": "uefi_raw::protocol::hii::DefaultId",
+    "fields": [
+      [
+        "raw",
+        "u16",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_config",
+    "name": "ConfigKeywordHandlerProtocol",
+    "upstream": "uefi_raw::protocol::hii::config::ConfigKeywordHandlerProtocol",
+    "fields": [
+      [
+        "set_data",
+        "addr",
+        "set_data"
+      ],
+      [
+        "get_data",
+        "addr",
+        "get_data"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_config",
+    "name": "BrowserAction",
+    "upstream": "uefi_raw::protocol::hii::config::BrowserAction",
+    "fields": [
+      [
+        "raw",
+        "u64",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_config",
+    "name": "HiiConfigAccessProtocol",
+    "upstream": "uefi_raw::protocol::hii::config::HiiConfigAccessProtocol",
+    "fields": [
+      [
+        "extract_config",
+        "addr",
+        "extract_config"
+      ],
+      [
+        "route_config",
+        "addr",
+        "route_config"
+      ],
+      [
+        "callback",
+        "addr",
+        "callback"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_config",
+    "name": "HiiConfigRoutingProtocol",
+    "upstream": "uefi_raw::protocol::hii::config::HiiConfigRoutingProtocol",
+    "fields": [
+      [
+        "extract_config",
+        "addr",
+        "extract_config"
+      ],
+      [
+        "export_config",
+        "addr",
+        "export_config"
+      ],
+      [
+        "route_config",
+        "addr",
+        "route_config"
+      ],
+      [
+        "block_to_config",
+        "addr",
+        "block_to_config"
+      ],
+      [
+        "config_to_block",
+        "addr",
+        "config_to_block"
+      ],
+      [
+        "get_alt_cfg",
+        "addr",
+        "get_alt_cfg"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_database",
+    "name": "HiiKeyboardLayout",
+    "upstream": "uefi_raw::protocol::hii::database::HiiKeyboardLayout",
+    "fields": [
+      [
+        "layout_length",
+        "u16",
+        "layout_length"
+      ],
+      [
+        "guid",
+        "scalars::Guid",
+        "guid"
+      ],
+      [
+        "layout_descriptor_string_offset",
+        "u32",
+        "layout_descriptor_string_offset"
+      ],
+      [
+        "descriptor_count",
+        "u8",
+        "descriptor_count"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": [
+      "descriptors"
+    ]
+  },
+  {
+    "module": "hii_database",
+    "name": "HiiDatabaseNotifyType",
+    "upstream": "uefi_raw::protocol::hii::database::HiiDatabaseNotifyType",
+    "fields": [
+      [
+        "raw",
+        "u64",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_database",
+    "name": "HiiDatabaseProtocol",
+    "upstream": "uefi_raw::protocol::hii::database::HiiDatabaseProtocol",
+    "fields": [
+      [
+        "new_package_list",
+        "addr",
+        "new_package_list"
+      ],
+      [
+        "remove_package_list",
+        "addr",
+        "remove_package_list"
+      ],
+      [
+        "update_package_list",
+        "addr",
+        "update_package_list"
+      ],
+      [
+        "list_package_lists",
+        "addr",
+        "list_package_lists"
+      ],
+      [
+        "export_package_lists",
+        "addr",
+        "export_package_lists"
+      ],
+      [
+        "register_package_notify",
+        "addr",
+        "register_package_notify"
+      ],
+      [
+        "unregister_package_notify",
+        "addr",
+        "unregister_package_notify"
+      ],
+      [
+        "find_keyboard_layouts",
+        "addr",
+        "find_keyboard_layouts"
+      ],
+      [
+        "get_keyboard_layout",
+        "addr",
+        "get_keyboard_layout"
+      ],
+      [
+        "set_keyboard_layout",
+        "addr",
+        "set_keyboard_layout"
+      ],
+      [
+        "get_package_list_handle",
+        "addr",
+        "get_package_list_handle"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_database",
+    "name": "HiiDatabaseNotifyFn",
+    "upstream": "uefi_raw::protocol::hii::database::HiiDatabaseNotifyFn",
+    "fields": [
+      [
+        "raw",
+        "addr",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_font",
+    "name": "HiiGlyphInfo",
+    "upstream": "uefi_raw::protocol::hii::font::HiiGlyphInfo",
+    "fields": [
+      [
+        "width",
+        "u16",
+        "width"
+      ],
+      [
+        "height",
+        "u16",
+        "height"
+      ],
+      [
+        "offset_x",
+        "i16",
+        "offset_x"
+      ],
+      [
+        "offset_y",
+        "i16",
+        "offset_y"
+      ],
+      [
+        "advance_x",
+        "i16",
+        "advance_x"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_font",
+    "name": "FontInfoMask",
+    "upstream": "uefi_raw::protocol::hii::font::FontInfoMask",
+    "fields": [
+      [
+        "raw",
+        "u32",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_font",
+    "name": "HiiFontStyle",
+    "upstream": "uefi_raw::protocol::hii::font::HiiFontStyle",
+    "fields": [
+      [
+        "raw",
+        "u32",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_font",
+    "name": "FontInfo",
+    "upstream": "uefi_raw::protocol::hii::font::FontInfo",
+    "fields": [
+      [
+        "font_style",
+        "HiiFontStyle",
+        "font_style"
+      ],
+      [
+        "font_size",
+        "u16",
+        "font_size"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": [
+      "font_name"
+    ]
+  },
+  {
+    "module": "hii_font",
+    "name": "FontDisplayInfo",
+    "upstream": "uefi_raw::protocol::hii::font::FontDisplayInfo",
+    "fields": [
+      [
+        "foreground_color",
+        "console::GraphicsOutputBltPixel",
+        "foreground_color"
+      ],
+      [
+        "background_color",
+        "console::GraphicsOutputBltPixel",
+        "background_color"
+      ],
+      [
+        "font_mask_info",
+        "FontInfoMask",
+        "font_mask_info"
+      ],
+      [
+        "font_info",
+        "FontInfo",
+        "font_info"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_font",
+    "name": "HiiOutFlags",
+    "upstream": "uefi_raw::protocol::hii::font::HiiOutFlags",
+    "fields": [
+      [
+        "raw",
+        "u32",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_font",
+    "name": "HiiRowInfo",
+    "upstream": "uefi_raw::protocol::hii::font::HiiRowInfo",
+    "fields": [
+      [
+        "start_index",
+        "u64",
+        "start_index"
+      ],
+      [
+        "end_index",
+        "u64",
+        "end_index"
+      ],
+      [
+        "line_height",
+        "u64",
+        "line_height"
+      ],
+      [
+        "line_width",
+        "u64",
+        "line_width"
+      ],
+      [
+        "baseline_offset",
+        "u64",
+        "baseline_offset"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_font",
+    "name": "HiiFontProtocol",
+    "upstream": "uefi_raw::protocol::hii::font::HiiFontProtocol",
+    "fields": [
+      [
+        "string_to_image",
+        "addr",
+        "string_to_image"
+      ],
+      [
+        "string_id_to_image",
+        "addr",
+        "string_id_to_image"
+      ],
+      [
+        "get_glyph",
+        "addr",
+        "get_glyph"
+      ],
+      [
+        "get_font_info",
+        "addr",
+        "get_font_info"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_font",
+    "name": "HiiFontExProtocol",
+    "upstream": "uefi_raw::protocol::hii::font::HiiFontExProtocol",
+    "fields": [
+      [
+        "string_to_image_ex",
+        "addr",
+        "string_to_image_ex"
+      ],
+      [
+        "string_id_to_image_ex",
+        "addr",
+        "string_id_to_image_ex"
+      ],
+      [
+        "get_glyph_ex",
+        "addr",
+        "get_glyph_ex"
+      ],
+      [
+        "get_font_info_ex",
+        "addr",
+        "get_font_info_ex"
+      ],
+      [
+        "get_glyph_info",
+        "addr",
+        "get_glyph_info"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_font",
+    "name": "FontHandle",
+    "upstream": "uefi_raw::protocol::hii::font::FontHandle",
+    "fields": [
+      [
+        "raw",
+        "addr",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_form_browser",
+    "name": "ScreenDescriptor",
+    "upstream": "uefi_raw::protocol::hii::form_browser::ScreenDescriptor",
+    "fields": [
+      [
+        "left_column",
+        "u64",
+        "left_column"
+      ],
+      [
+        "right_column",
+        "u64",
+        "right_column"
+      ],
+      [
+        "top_row",
+        "u64",
+        "top_row"
+      ],
+      [
+        "bottom_row",
+        "u64",
+        "bottom_row"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_form_browser",
+    "name": "BrowserActionRequest",
+    "upstream": "uefi_raw::protocol::hii::form_browser::BrowserActionRequest",
+    "fields": [
+      [
+        "raw",
+        "u64",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_form_browser",
+    "name": "FormBrowser2Protocol",
+    "upstream": "uefi_raw::protocol::hii::form_browser::FormBrowser2Protocol",
+    "fields": [
+      [
+        "send_form",
+        "addr",
+        "send_form"
+      ],
+      [
+        "browser_callback",
+        "addr",
+        "browser_callback"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrType",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrType",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrTypeValueWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrTypeValue",
+    "fields": [
+      [
+        "bytes",
+        "[u8; 22]",
+        "bytes"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": true,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrOpcode",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrOpcode",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrOpHeader",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrOpHeader",
+    "fields": [
+      [
+        "opcode",
+        "IfrOpcode",
+        "opcode"
+      ],
+      [
+        "length_and_scope",
+        "u8",
+        "length_and_scope"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrStatementHeader",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrStatementHeader",
+    "fields": [
+      [
+        "prompt",
+        "u16",
+        "prompt"
+      ],
+      [
+        "help",
+        "u16",
+        "help"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "VarstoreInfoWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::VarstoreInfo",
+    "fields": [
+      [
+        "bytes",
+        "[u8; 2]",
+        "bytes"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": true,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrQuestionFlags",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrQuestionFlags",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrQuestionHeaderWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrQuestionHeader",
+    "fields": [
+      [
+        "header",
+        "IfrStatementHeader",
+        "header"
+      ],
+      [
+        "question_id",
+        "u16",
+        "question_id"
+      ],
+      [
+        "varstore_id",
+        "u16",
+        "varstore_id"
+      ],
+      [
+        "varstore_info_storage",
+        "VarstoreInfoWireStorage",
+        "varstore_info"
+      ],
+      [
+        "flags",
+        "IfrQuestionFlags",
+        "flags"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrActionWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrAction",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "question_config",
+        "u16",
+        "question_config"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrAction1WireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrAction1",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrAnimation",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrAnimation",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "id",
+        "u16",
+        "id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrAdd",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrAdd",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrAnd",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrAnd",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrBitwiseAnd",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrBitwiseAnd",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrBitwiseNot",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrBitwiseNot",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrBitwiseOr",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrBitwiseOr",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrCatenate",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrCatenate",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrCheckboxFlags",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrCheckboxFlags",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrCheckboxWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrCheckbox",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "flags",
+        "IfrCheckboxFlags",
+        "flags"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrConditional",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrConditional",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrDateFlags",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrDateFlags",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrDateStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrDateStorage",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrDateWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrDate",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "flags",
+        "IfrDateFlags",
+        "flags"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrDefaultWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrDefault",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "default_id",
+        "u16",
+        "default_id"
+      ],
+      [
+        "type_code",
+        "IfrType",
+        "r#type"
+      ],
+      [
+        "value_storage",
+        "IfrTypeValueWireStorage",
+        "value"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrDefault2",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrDefault2",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "default_id",
+        "u16",
+        "default_id"
+      ],
+      [
+        "type_code",
+        "IfrType",
+        "r#type"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrDefaultStore",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrDefaultStore",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "default_name",
+        "u16",
+        "default_name"
+      ],
+      [
+        "default_id",
+        "u16",
+        "default_id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrDisableIf",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrDisableIf",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrDivide",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrDivide",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrDup",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrDup",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrEnd",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrEnd",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrEqual",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrEqual",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrEqIdId",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrEqIdId",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_id1",
+        "u16",
+        "question_id1"
+      ],
+      [
+        "question_id2",
+        "u16",
+        "question_id2"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrEqIdValList",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrEqIdValList",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_id",
+        "u16",
+        "question_id"
+      ],
+      [
+        "list_length",
+        "u16",
+        "list_length"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": [
+      "value_list"
+    ]
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrEqIdVal",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrEqIdVal",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_id",
+        "u16",
+        "question_id"
+      ],
+      [
+        "value",
+        "u16",
+        "value"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrFalse",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrFalse",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrFindFormat",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrFindFormat",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrFind",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrFind",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "format",
+        "IfrFindFormat",
+        "format"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrForm",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrForm",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "form_id",
+        "u16",
+        "form_id"
+      ],
+      [
+        "form_title",
+        "u16",
+        "form_title"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrFormMapMethod",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrFormMapMethod",
+    "fields": [
+      [
+        "method_title",
+        "u16",
+        "method_title"
+      ],
+      [
+        "method_identifier",
+        "scalars::Guid",
+        "method_identifier"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrFormMap",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrFormMap",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "form_id",
+        "u16",
+        "form_id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": [
+      "methods"
+    ]
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrFormSet",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrFormSet",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "guid",
+        "scalars::Guid",
+        "guid"
+      ],
+      [
+        "formset_title",
+        "u16",
+        "formset_title"
+      ],
+      [
+        "help",
+        "u16",
+        "help"
+      ],
+      [
+        "flags",
+        "u8",
+        "flags"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": [
+      "class_guid"
+    ]
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrGetWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrGet",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "varstore_id",
+        "u16",
+        "varstore_id"
+      ],
+      [
+        "varstore_info_storage",
+        "VarstoreInfoWireStorage",
+        "varstore_info"
+      ],
+      [
+        "varstore_type",
+        "IfrType",
+        "varstore_type"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrGrayOutIf",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrGrayOutIf",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrGreaterEqual",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrGreaterEqual",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrGreaterThan",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrGreaterThan",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrGuid",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrGuid",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "guid",
+        "scalars::Guid",
+        "guid"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrImage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrImage",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "id",
+        "u16",
+        "id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrInconsistentIf",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrInconsistentIf",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "error",
+        "u16",
+        "error"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrLength",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrLength",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrLessEqual",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrLessEqual",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrLessThan",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrLessThan",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrLocked",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrLocked",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrMap",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrMap",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrMatch",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrMatch",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrMatch2",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrMatch2",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "syntax_type",
+        "scalars::Guid",
+        "syntax_type"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrMid",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrMid",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrModalTag",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrModalTag",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrModulo",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrModulo",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrMultiply",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrMultiply",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrNot",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrNot",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrNotEqual",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrNotEqual",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrNoSubmitIf",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrNoSubmitIf",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "error",
+        "u16",
+        "error"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrNumericU8",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrNumericU8",
+    "fields": [
+      [
+        "min_value",
+        "u8",
+        "min_value"
+      ],
+      [
+        "max_value",
+        "u8",
+        "max_value"
+      ],
+      [
+        "step",
+        "u8",
+        "step"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrNumericU16",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrNumericU16",
+    "fields": [
+      [
+        "min_value",
+        "u16",
+        "min_value"
+      ],
+      [
+        "max_value",
+        "u16",
+        "max_value"
+      ],
+      [
+        "step",
+        "u16",
+        "step"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrNumericU32",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrNumericU32",
+    "fields": [
+      [
+        "min_value",
+        "u32",
+        "min_value"
+      ],
+      [
+        "max_value",
+        "u32",
+        "max_value"
+      ],
+      [
+        "step",
+        "u32",
+        "step"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrNumericU64",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrNumericU64",
+    "fields": [
+      [
+        "min_value",
+        "u64",
+        "min_value"
+      ],
+      [
+        "max_value",
+        "u64",
+        "max_value"
+      ],
+      [
+        "step",
+        "u64",
+        "step"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrNumericDataWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrNumericData",
+    "fields": [
+      [
+        "bytes",
+        "[u8; 24]",
+        "bytes"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": true,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrNumericSize",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrNumericSize",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrNumericDisplay",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrNumericDisplay",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrNumericFlags",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrNumericFlags",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrNumericWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrNumeric",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "flags",
+        "IfrNumericFlags",
+        "flags"
+      ],
+      [
+        "data_storage",
+        "IfrNumericDataWireStorage",
+        "data"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrOne",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrOne",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrOnes",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrOnes",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrOneOfWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrOneOf",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "flags",
+        "IfrNumericFlags",
+        "flags"
+      ],
+      [
+        "data_storage",
+        "IfrNumericDataWireStorage",
+        "data"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrOptionFlags",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrOptionFlags",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrOneOfOptionWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrOneOfOption",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "option",
+        "u16",
+        "option"
+      ],
+      [
+        "flags",
+        "IfrOptionFlags",
+        "flags"
+      ],
+      [
+        "type_code",
+        "IfrType",
+        "r#type"
+      ],
+      [
+        "value_storage",
+        "IfrTypeValueWireStorage",
+        "value"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrOr",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrOr",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrOrderedListFlags",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrOrderedListFlags",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrOrderedListWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrOrderedList",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "max_containers",
+        "u8",
+        "max_containers"
+      ],
+      [
+        "flags",
+        "IfrOrderedListFlags",
+        "flags"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrPasswordWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrPassword",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "min_size",
+        "u16",
+        "min_size"
+      ],
+      [
+        "max_size",
+        "u16",
+        "max_size"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrQuestionRef1",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrQuestionRef1",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_id",
+        "u16",
+        "question_id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrQuestionRef2",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrQuestionRef2",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrQuestionRef3",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrQuestionRef3",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrQuestionRef32",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrQuestionRef32",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "device_path",
+        "u16",
+        "device_path"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrQuestionRef33",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrQuestionRef33",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "device_path",
+        "u16",
+        "device_path"
+      ],
+      [
+        "guid",
+        "scalars::Guid",
+        "guid"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrRead",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrRead",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrRefWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrRef",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "form_id",
+        "u16",
+        "form_id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrRef2WireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrRef2",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "form_id",
+        "u16",
+        "form_id"
+      ],
+      [
+        "question_id",
+        "u16",
+        "question_id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrRef3WireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrRef3",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "form_id",
+        "u16",
+        "form_id"
+      ],
+      [
+        "question_id",
+        "u16",
+        "question_id"
+      ],
+      [
+        "formset_id",
+        "scalars::Guid",
+        "formset_id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrRef4WireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrRef4",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "form_id",
+        "u16",
+        "form_id"
+      ],
+      [
+        "question_id",
+        "u16",
+        "question_id"
+      ],
+      [
+        "formset_id",
+        "scalars::Guid",
+        "formset_id"
+      ],
+      [
+        "device_path",
+        "u16",
+        "device_path"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrRef5WireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrRef5",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrRefresh",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrRefresh",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "refresh_interval",
+        "u8",
+        "refresh_interval"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrRefreshId",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrRefreshId",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "refresh_event_group_id",
+        "scalars::Guid",
+        "refresh_event_group_id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrResetButton",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrResetButton",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "statement",
+        "IfrStatementHeader",
+        "statement"
+      ],
+      [
+        "default_id",
+        "u16",
+        "default_id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrRule",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrRule",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "rule_id",
+        "u8",
+        "rule_id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrRuleRef",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrRuleRef",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "rule_id",
+        "u8",
+        "rule_id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrSecurity",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrSecurity",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "permissions",
+        "scalars::Guid",
+        "permissions"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrSetWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrSet",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "varstore_id",
+        "u16",
+        "varstore_id"
+      ],
+      [
+        "varstore_info_storage",
+        "VarstoreInfoWireStorage",
+        "varstore_info"
+      ],
+      [
+        "varstore_type",
+        "IfrType",
+        "varstore_type"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrShiftLeft",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrShiftLeft",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrShiftRight",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrShiftRight",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrSpan",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrSpan",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "flags",
+        "u8",
+        "flags"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrStringFlags",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrStringFlags",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrStringWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrString",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "min_size",
+        "u8",
+        "min_size"
+      ],
+      [
+        "max_size",
+        "u8",
+        "max_size"
+      ],
+      [
+        "flags",
+        "IfrStringFlags",
+        "flags"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrStringRef1",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrStringRef1",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "string_id",
+        "u16",
+        "string_id"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrStringRef2",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrStringRef2",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrSubtitleFlags",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrSubtitleFlags",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrSubtitle",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrSubtitle",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "statement",
+        "IfrStatementHeader",
+        "statement"
+      ],
+      [
+        "flags",
+        "IfrSubtitleFlags",
+        "flags"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrSubtract",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrSubtract",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrSuppressIf",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrSuppressIf",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrText",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrText",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "statement",
+        "IfrStatementHeader",
+        "statement"
+      ],
+      [
+        "text_two",
+        "u16",
+        "text_two"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrThis",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrThis",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrTimeFlags",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrTimeFlags",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrTimeStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrTimeStorage",
+    "fields": [
+      [
+        "raw",
+        "u8",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrTimeWireStorage",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrTime",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "question_storage",
+        "IfrQuestionHeaderWireStorage",
+        "question"
+      ],
+      [
+        "flags",
+        "IfrTimeFlags",
+        "flags"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrToken",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrToken",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrToBoolean",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrToBoolean",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrToLower",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrToLower",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrToString",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrToString",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "format",
+        "u8",
+        "format"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrToUint",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrToUint",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrToUpper",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrToUpper",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrTrue",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrTrue",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrUint8",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrUint8",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "value",
+        "u8",
+        "value"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrUint16",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrUint16",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "value",
+        "u16",
+        "value"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrUint32",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrUint32",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "value",
+        "u32",
+        "value"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrUint64",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrUint64",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "value",
+        "u64",
+        "value"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrUndefined",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrUndefined",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrValue",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrValue",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrVarstore",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrVarstore",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "guid",
+        "scalars::Guid",
+        "guid"
+      ],
+      [
+        "varstore_id",
+        "u16",
+        "varstore_id"
+      ],
+      [
+        "size",
+        "u16",
+        "size"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": [
+      "name"
+    ]
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrVarstoreNameValue",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrVarstoreNameValue",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "varstore_id",
+        "u16",
+        "varstore_id"
+      ],
+      [
+        "guid",
+        "scalars::Guid",
+        "guid"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrVarstoreEfi",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrVarstoreEfi",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "varstore_id",
+        "u16",
+        "varstore_id"
+      ],
+      [
+        "guid",
+        "scalars::Guid",
+        "guid"
+      ],
+      [
+        "attributes",
+        "u32",
+        "attributes"
+      ],
+      [
+        "size",
+        "u16",
+        "size"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": [
+      "name"
+    ]
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrVarstoreDevice",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrVarstoreDevice",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "device_path",
+        "u16",
+        "device_path"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrVersion",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrVersion",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrWarningIf",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrWarningIf",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ],
+      [
+        "warning",
+        "u16",
+        "warning"
+      ],
+      [
+        "timeout",
+        "u8",
+        "timeout"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrWrite",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrWrite",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_ifr",
+    "name": "IfrZero",
+    "upstream": "uefi_raw::protocol::hii::ifr::IfrZero",
+    "fields": [
+      [
+        "header",
+        "IfrOpHeader",
+        "header"
+      ]
+    ],
+    "packed": true,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_image",
+    "name": "HiiDrawFlags",
+    "upstream": "uefi_raw::protocol::hii::image::HiiDrawFlags",
+    "fields": [
+      [
+        "raw",
+        "u32",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_image",
+    "name": "ImageInputFlags",
+    "upstream": "uefi_raw::protocol::hii::image::ImageInputFlags",
+    "fields": [
+      [
+        "raw",
+        "u32",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_image",
+    "name": "ImageInput",
+    "upstream": "uefi_raw::protocol::hii::image::ImageInput",
+    "fields": [
+      [
+        "flags",
+        "ImageInputFlags",
+        "flags"
+      ],
+      [
+        "width",
+        "u16",
+        "width"
+      ],
+      [
+        "height",
+        "u16",
+        "height"
+      ],
+      [
+        "bitmap",
+        "addr",
+        "bitmap"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_image",
+    "name": "ImageOutputDestWireStorage",
+    "upstream": "uefi_raw::protocol::hii::image::ImageOutputDest",
+    "fields": [
+      [
+        "bytes",
+        "[u8; 8]",
+        "bytes"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": true,
+    "union_storage": true,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_image",
+    "name": "ImageOutputWireStorage",
+    "upstream": "uefi_raw::protocol::hii::image::ImageOutput",
+    "fields": [
+      [
+        "width",
+        "u16",
+        "width"
+      ],
+      [
+        "height",
+        "u16",
+        "height"
+      ],
+      [
+        "image_storage",
+        "ImageOutputDestWireStorage",
+        "image"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": true,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_image",
+    "name": "HiiImageProtocol",
+    "upstream": "uefi_raw::protocol::hii::image::HiiImageProtocol",
+    "fields": [
+      [
+        "new_image",
+        "addr",
+        "new_image"
+      ],
+      [
+        "get_image",
+        "addr",
+        "get_image"
+      ],
+      [
+        "set_image",
+        "addr",
+        "set_image"
+      ],
+      [
+        "draw_image",
+        "addr",
+        "draw_image"
+      ],
+      [
+        "draw_image_id",
+        "addr",
+        "draw_image_id"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_image",
+    "name": "HiiImageExProtocol",
+    "upstream": "uefi_raw::protocol::hii::image::HiiImageExProtocol",
+    "fields": [
+      [
+        "new_image_ex",
+        "addr",
+        "new_image_ex"
+      ],
+      [
+        "get_image_ex",
+        "addr",
+        "get_image_ex"
+      ],
+      [
+        "set_image_ex",
+        "addr",
+        "set_image_ex"
+      ],
+      [
+        "draw_image_ex",
+        "addr",
+        "draw_image_ex"
+      ],
+      [
+        "draw_image_id_ex",
+        "addr",
+        "draw_image_id_ex"
+      ],
+      [
+        "get_image_info",
+        "addr",
+        "get_image_info"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_popup",
+    "name": "HiiPopupStyle",
+    "upstream": "uefi_raw::protocol::hii::popup::HiiPopupStyle",
+    "fields": [
+      [
+        "raw",
+        "u32",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_popup",
+    "name": "HiiPopupType",
+    "upstream": "uefi_raw::protocol::hii::popup::HiiPopupType",
+    "fields": [
+      [
+        "raw",
+        "u32",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_popup",
+    "name": "HiiPopupSelection",
+    "upstream": "uefi_raw::protocol::hii::popup::HiiPopupSelection",
+    "fields": [
+      [
+        "raw",
+        "u32",
+        "raw"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_popup",
+    "name": "HiiPopupProtocol",
+    "upstream": "uefi_raw::protocol::hii::popup::HiiPopupProtocol",
+    "fields": [
+      [
+        "revision",
+        "u64",
+        "revision"
+      ],
+      [
+        "create_popup",
+        "addr",
+        "create_popup"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  },
+  {
+    "module": "hii_string",
+    "name": "HiiStringProtocol",
+    "upstream": "uefi_raw::protocol::hii::string::HiiStringProtocol",
+    "fields": [
+      [
+        "new_string",
+        "addr",
+        "new_string"
+      ],
+      [
+        "get_string",
+        "addr",
+        "get_string"
+      ],
+      [
+        "set_string",
+        "addr",
+        "set_string"
+      ],
+      [
+        "get_languages",
+        "addr",
+        "get_languages"
+      ],
+      [
+        "get_secondary_languages",
+        "addr",
+        "get_secondary_languages"
+      ]
+    ],
+    "packed": false,
+    "overlay_storage": false,
+    "union_storage": false,
+    "tail_fields": []
+  }
+]

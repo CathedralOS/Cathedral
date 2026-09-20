@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified rust-osdev/uefi-rs translation at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
+// See hii.PORT.md. Inert carriers; pointer/slot bits confer no authority.
+module hii_form_browser;
+use scalars;
+use console;
+
+// Upstream: uefi_raw::protocol::hii::form_browser::ScreenDescriptor
+pub data ScreenDescriptor [copy] {
+    left_column: u64;
+    right_column: u64;
+    top_row: u64;
+    bottom_row: u64;
+}
+
+// Upstream: uefi_raw::protocol::hii::form_browser::BrowserActionRequest
+pub data BrowserActionRequest [copy] {
+    raw: u64;
+}
+
+// Upstream: uefi_raw::protocol::hii::form_browser::FormBrowser2Protocol
+pub data FormBrowser2Protocol [copy] {
+    send_form: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, handles: *const HiiHandle, handle_count: usize, formset_guid: *const Guid, form_id: FormId, screen_dimensions: *const ScreenDescriptor, action_request: *mut BrowserActionRequest, ) -> Status
+    browser_callback: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, results_data_size: *mut usize, results_data: *mut Char16, retrieve_data: Boolean, variable_guid: *const Guid, variable_name: *const Char16, ) -> Status
+}
+
+pub const BROWSER_ACTION_REQUEST_NONE: BrowserActionRequest = BrowserActionRequest { raw: 0 };
+pub const BROWSER_ACTION_REQUEST_RESET: BrowserActionRequest = BrowserActionRequest { raw: 1 };
+pub const BROWSER_ACTION_REQUEST_SUBMIT: BrowserActionRequest = BrowserActionRequest { raw: 2 };
+pub const BROWSER_ACTION_REQUEST_EXIT: BrowserActionRequest = BrowserActionRequest { raw: 3 };
+pub const BROWSER_ACTION_REQUEST_FORM_SUBMIT_EXIT: BrowserActionRequest = BrowserActionRequest { raw: 4 };
+pub const BROWSER_ACTION_REQUEST_FORM_DISCARD_EXIT: BrowserActionRequest = BrowserActionRequest { raw: 5 };
+pub const BROWSER_ACTION_REQUEST_FORM_APPLY: BrowserActionRequest = BrowserActionRequest { raw: 6 };
+pub const BROWSER_ACTION_REQUEST_FORM_DISCARD: BrowserActionRequest = BrowserActionRequest { raw: 7 };
+pub const BROWSER_ACTION_REQUEST_RECONNECT: BrowserActionRequest = BrowserActionRequest { raw: 8 };
+pub const BROWSER_ACTION_REQUEST_QUESTION_APPLY: BrowserActionRequest = BrowserActionRequest { raw: 9 };
+pub const FORM_BROWSER2_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0xb9d4c360, data2: 0xbcfb, data3: 0x4f9b, data4: [0x92, 0x98, 0x53, 0xc1, 0x36, 0x98, 0x22, 0x58] };

@@ -1,0 +1,8 @@
+// PORT-BLOCKED[omega:plan-laid-public-fields]: preserve public field visibility through selected layout views.
+use cathedral_uefi_raw::hii::HiiDate;
+use cathedral_uefi_raw::hii_layouts::HiiDateX64Layout;
+data Main { date: HiiDateX64Layout<HiiDate>; }
+machine Main::main(&mut self) -> i32 {
+    self.date.year = 2026;
+    transition self.date.year == 2026 { true -> (0) _ -> (1) }
+}

@@ -1,0 +1,59 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified rust-osdev/uefi-rs translation at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
+// See hii.PORT.md. Inert carriers; pointer/slot bits confer no authority.
+module hii_database;
+use scalars;
+use console;
+
+// Upstream: uefi_raw::protocol::hii::database::HiiKeyboardLayout
+// Required packed layout: alignment 1, no inter-field padding.
+pub data HiiKeyboardLayout [copy] {
+    layout_length: u16;
+    guid: scalars::Guid;
+    layout_descriptor_string_offset: u32;
+    descriptor_count: u8;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing descriptors ([KeyDescriptor; 0]) requires bounded runtime shape.
+}
+
+// Upstream: uefi_raw::protocol::hii::database::HiiDatabaseNotifyType
+pub data HiiDatabaseNotifyType [copy] {
+    raw: u64;
+}
+
+// Upstream: uefi_raw::protocol::hii::database::HiiDatabaseProtocol
+pub data HiiDatabaseProtocol [copy] {
+    new_package_list: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: *const HiiPackageListHeader, driver_handle: Handle, handle: *mut HiiHandle, ) -> Status
+    remove_package_list: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, handle: HiiHandle) -> Status
+    update_package_list: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, handle: HiiHandle, package_list: *const HiiPackageListHeader, ) -> Status
+    list_package_lists: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_type: u8, package_guid: *const Guid, handle_buffer_length: *mut usize, handle: *mut HiiHandle, ) -> Status
+    export_package_lists: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, handle: HiiHandle, buffer_size: *mut usize, buffer: *mut HiiPackageListHeader, ) -> Status
+    register_package_notify: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_type: u8, package_guid: *const Guid, package_notify_fn: HiiDatabaseNotifyFn, notify_type: HiiDatabaseNotifyType, notify_handle: *mut Handle, ) -> Status
+    unregister_package_notify: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, notification_handle: Handle) -> Status
+    find_keyboard_layouts: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, key_guid_buffer_length: *mut u16, key_guid_buffer: *mut Guid, ) -> Status
+    get_keyboard_layout: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, key_guid: *const Guid, keyboard_layout_length: *mut u16, keyboard_layout: *mut HiiKeyboardLayout, ) -> Status
+    set_keyboard_layout: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, key_guid: *const Guid) -> Status
+    get_package_list_handle: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list_handle: HiiHandle, driver_handle: *mut Handle, ) -> Status
+}
+
+// Upstream: uefi_raw::protocol::hii::database::HiiDatabaseNotifyFn
+pub data HiiDatabaseNotifyFn [copy] {
+    raw: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( package_type: u8, package_guid: *const Guid, package: *const HiiPackageHeader, handle: HiiHandle, notify_type: HiiDatabaseNotifyType, ) -> Status
+}
+
+pub const HII_DATABASE_NOTIFY_TYPE_NEW_PACK: HiiDatabaseNotifyType = HiiDatabaseNotifyType { raw: 1 };
+pub const HII_DATABASE_NOTIFY_TYPE_REMOVE_PACK: HiiDatabaseNotifyType = HiiDatabaseNotifyType { raw: 2 };
+pub const HII_DATABASE_NOTIFY_TYPE_EXPORT_PACK: HiiDatabaseNotifyType = HiiDatabaseNotifyType { raw: 4 };
+pub const HII_DATABASE_NOTIFY_TYPE_ADD_PACK: HiiDatabaseNotifyType = HiiDatabaseNotifyType { raw: 8 };
+pub const HII_DATABASE_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0xef9fc172, data2: 0xa1b2, data3: 0x4693, data4: [0xb3, 0x27, 0x6d, 0x32, 0xfc, 0x41, 0x60, 0x42] };

@@ -14,6 +14,7 @@ source inventory, vectors, verification commands, and deviations.
 | Display, PCI/USB, and machine protocols | [Typechecked; 325 upstream representation vectors verified](machine.PORT.md) |
 | Storage and firmware volume/management | [Typechecked; semantic constants tested; 681 representation vectors verified](storage.PORT.md) |
 | Shell protocol remainder | [Raw declarations typechecked; complete 46-field plan reflection blocked](shell.PORT.md) |
+| HII protocols, IFR, and helpers | [Semantic helpers tested; fixed carriers checked; typed unions and runtime tails blocked](hii.PORT.md) |
 | TCG v1/v2 measured-boot representations | [Typechecked; upstream ABI vectors verified](tcg.PORT.md) |
 
 Stages apply to individual slices, not the entire upstream crate. The package

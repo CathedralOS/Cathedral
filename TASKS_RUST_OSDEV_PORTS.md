@@ -144,7 +144,7 @@ Cathedral's authority-bearing boot policy do not belong in this phase.
 - [ ] **UEFI-006 — Port network protocols.** SNP, PXE, DHCPv4, IPv4/config,
   TCPv4, HTTP, and TLS representations.  This is ABI transcription only, not a
   Cathedral network stack.
-- [ ] **UEFI-007 — Port HII protocols.** HII database, forms/IFR, strings,
+- [x] **UEFI-007 — Port HII protocols.** HII database, forms/IFR, strings,
   fonts, images, popup, browser, and configuration representations.  Split this
   into multiple commits if needed, retaining a complete source map.
 - [x] **UEFI-008 — Port measured-boot protocols.** TCG v1/v2 raw structures,

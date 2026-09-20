@@ -1,0 +1,272 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified rust-osdev/uefi-rs translation at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
+// See hii.PORT.md. Inert carriers; pointer/slot bits confer no authority.
+module hii;
+use scalars;
+use console;
+
+// Upstream: uefi_raw::protocol::hii::HiiPackageHeader
+// Required packed layout: alignment 1, no inter-field padding.
+pub data HiiPackageHeader [copy] {
+    length_and_type: u32;
+    // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing data ([u8; 0]) requires bounded runtime shape.
+}
+
+// Upstream: uefi_raw::protocol::hii::HiiPackageListHeader
+// Required packed layout: alignment 1, no inter-field padding.
+pub data HiiPackageListHeader [copy] {
+    package_list_guid: scalars::Guid;
+    package_length: u32;
+}
+
+// Upstream: uefi_raw::protocol::hii::Key
+pub data Key [copy] {
+    raw: u32;
+}
+
+// Upstream: uefi_raw::protocol::hii::Modifier
+pub data Modifier [copy] {
+    raw: u16;
+}
+
+// Upstream: uefi_raw::protocol::hii::KeyDescriptor
+// Required packed layout: alignment 1, no inter-field padding.
+pub data KeyDescriptor [copy] {
+    key: Key;
+    unicode: u16;
+    shifted_unicode: u16;
+    alt_gr_unicode: u16;
+    shifted_alt_gr_unicode: u16;
+    modifier: u16;
+    affected_attribute: u16;
+}
+
+// Upstream: uefi_raw::protocol::hii::HiiTime
+// Required packed layout: alignment 1, no inter-field padding.
+pub data HiiTime [copy] {
+    hour: u8;
+    minute: u8;
+    second: u8;
+}
+
+// Upstream: uefi_raw::protocol::hii::HiiDate
+// Required packed layout: alignment 1, no inter-field padding.
+pub data HiiDate [copy] {
+    year: u16;
+    month: u8;
+    day: u8;
+}
+
+// Upstream: uefi_raw::protocol::hii::HiiRef
+// Required packed layout: alignment 1, no inter-field padding.
+pub data HiiRef [copy] {
+    question_id: u16;
+    form_id: u16;
+    guid: scalars::Guid;
+    string_id: u16;
+}
+
+// Upstream: uefi_raw::protocol::hii::HiiFormPackageHdr
+// Required packed layout: alignment 1, no inter-field padding.
+pub data HiiFormPackageHdr [copy] {
+    header: HiiPackageHeader;
+}
+
+// Upstream: uefi_raw::protocol::hii::HiiHandle
+pub data HiiHandle [copy] {
+    raw: addr;
+    // Foreign carrier: *mut core::ffi::c_void
+}
+
+// Upstream: uefi_raw::protocol::hii::QuestionId
+pub data QuestionId [copy] {
+    raw: u16;
+}
+
+// Upstream: uefi_raw::protocol::hii::ImageId
+pub data ImageId [copy] {
+    raw: u16;
+}
+
+// Upstream: uefi_raw::protocol::hii::StringId
+pub data StringId [copy] {
+    raw: u16;
+}
+
+// Upstream: uefi_raw::protocol::hii::FormId
+pub data FormId [copy] {
+    raw: u16;
+}
+
+// Upstream: uefi_raw::protocol::hii::VarstoreId
+pub data VarstoreId [copy] {
+    raw: u16;
+}
+
+// Upstream: uefi_raw::protocol::hii::AnimationId
+pub data AnimationId [copy] {
+    raw: u16;
+}
+
+// Upstream: uefi_raw::protocol::hii::DefaultId
+pub data DefaultId [copy] {
+    raw: u16;
+}
+
+pub const KEY_LCTRL: Key = Key { raw: 0 };
+pub const KEY_A0: Key = Key { raw: 1 };
+pub const KEY_LALT: Key = Key { raw: 2 };
+pub const KEY_SPACEBAR: Key = Key { raw: 3 };
+pub const KEY_A2: Key = Key { raw: 4 };
+pub const KEY_A3: Key = Key { raw: 5 };
+pub const KEY_A4: Key = Key { raw: 6 };
+pub const KEY_RCTRL: Key = Key { raw: 7 };
+pub const KEY_LEFT_ARROW: Key = Key { raw: 8 };
+pub const KEY_DOWN_ARROW: Key = Key { raw: 9 };
+pub const KEY_RIGHT_ARROW: Key = Key { raw: 10 };
+pub const KEY_ZERO: Key = Key { raw: 11 };
+pub const KEY_PERIOD: Key = Key { raw: 12 };
+pub const KEY_ENTER: Key = Key { raw: 13 };
+pub const KEY_LSHIFT: Key = Key { raw: 14 };
+pub const KEY_B0: Key = Key { raw: 15 };
+pub const KEY_B1: Key = Key { raw: 16 };
+pub const KEY_B2: Key = Key { raw: 17 };
+pub const KEY_B3: Key = Key { raw: 18 };
+pub const KEY_B4: Key = Key { raw: 19 };
+pub const KEY_B5: Key = Key { raw: 20 };
+pub const KEY_B6: Key = Key { raw: 21 };
+pub const KEY_B7: Key = Key { raw: 22 };
+pub const KEY_B8: Key = Key { raw: 23 };
+pub const KEY_B9: Key = Key { raw: 24 };
+pub const KEY_B10: Key = Key { raw: 25 };
+pub const KEY_RSHIFT: Key = Key { raw: 26 };
+pub const KEY_UP_ARROW: Key = Key { raw: 27 };
+pub const KEY_ONE: Key = Key { raw: 28 };
+pub const KEY_TWO: Key = Key { raw: 29 };
+pub const KEY_THREE: Key = Key { raw: 30 };
+pub const KEY_CAPS_LOCK: Key = Key { raw: 31 };
+pub const KEY_C1: Key = Key { raw: 32 };
+pub const KEY_C2: Key = Key { raw: 33 };
+pub const KEY_C3: Key = Key { raw: 34 };
+pub const KEY_C4: Key = Key { raw: 35 };
+pub const KEY_C5: Key = Key { raw: 36 };
+pub const KEY_C6: Key = Key { raw: 37 };
+pub const KEY_C7: Key = Key { raw: 38 };
+pub const KEY_C8: Key = Key { raw: 39 };
+pub const KEY_C9: Key = Key { raw: 40 };
+pub const KEY_C10: Key = Key { raw: 41 };
+pub const KEY_C11: Key = Key { raw: 42 };
+pub const KEY_C12: Key = Key { raw: 43 };
+pub const KEY_FOUR: Key = Key { raw: 44 };
+pub const KEY_FIVE: Key = Key { raw: 45 };
+pub const KEY_SIX: Key = Key { raw: 46 };
+pub const KEY_PLUS: Key = Key { raw: 47 };
+pub const KEY_TAB: Key = Key { raw: 48 };
+pub const KEY_D1: Key = Key { raw: 49 };
+pub const KEY_D2: Key = Key { raw: 50 };
+pub const KEY_D3: Key = Key { raw: 51 };
+pub const KEY_D4: Key = Key { raw: 52 };
+pub const KEY_D5: Key = Key { raw: 53 };
+pub const KEY_D6: Key = Key { raw: 54 };
+pub const KEY_D7: Key = Key { raw: 55 };
+pub const KEY_D8: Key = Key { raw: 56 };
+pub const KEY_D9: Key = Key { raw: 57 };
+pub const KEY_D10: Key = Key { raw: 58 };
+pub const KEY_D11: Key = Key { raw: 59 };
+pub const KEY_D12: Key = Key { raw: 60 };
+pub const KEY_D13: Key = Key { raw: 61 };
+pub const KEY_DEL: Key = Key { raw: 62 };
+pub const KEY_END: Key = Key { raw: 63 };
+pub const KEY_PG_DN: Key = Key { raw: 64 };
+pub const KEY_SEVEN: Key = Key { raw: 65 };
+pub const KEY_EIGHT: Key = Key { raw: 66 };
+pub const KEY_NINE: Key = Key { raw: 67 };
+pub const KEY_E0: Key = Key { raw: 68 };
+pub const KEY_E1: Key = Key { raw: 69 };
+pub const KEY_E2: Key = Key { raw: 70 };
+pub const KEY_E3: Key = Key { raw: 71 };
+pub const KEY_E4: Key = Key { raw: 72 };
+pub const KEY_E5: Key = Key { raw: 73 };
+pub const KEY_E6: Key = Key { raw: 74 };
+pub const KEY_E7: Key = Key { raw: 75 };
+pub const KEY_E8: Key = Key { raw: 76 };
+pub const KEY_E9: Key = Key { raw: 77 };
+pub const KEY_E10: Key = Key { raw: 78 };
+pub const KEY_E11: Key = Key { raw: 79 };
+pub const KEY_E12: Key = Key { raw: 80 };
+pub const KEY_BACK_SPACE: Key = Key { raw: 81 };
+pub const KEY_INS: Key = Key { raw: 82 };
+pub const KEY_HOME: Key = Key { raw: 83 };
+pub const KEY_PG_UP: Key = Key { raw: 84 };
+pub const KEY_NLCK: Key = Key { raw: 85 };
+pub const KEY_SLASH: Key = Key { raw: 86 };
+pub const KEY_ASTERISK: Key = Key { raw: 87 };
+pub const KEY_MINUS: Key = Key { raw: 88 };
+pub const KEY_ESC: Key = Key { raw: 89 };
+pub const KEY_F1: Key = Key { raw: 90 };
+pub const KEY_F2: Key = Key { raw: 91 };
+pub const KEY_F3: Key = Key { raw: 92 };
+pub const KEY_F4: Key = Key { raw: 93 };
+pub const KEY_F5: Key = Key { raw: 94 };
+pub const KEY_F6: Key = Key { raw: 95 };
+pub const KEY_F7: Key = Key { raw: 96 };
+pub const KEY_F8: Key = Key { raw: 97 };
+pub const KEY_F9: Key = Key { raw: 98 };
+pub const KEY_F10: Key = Key { raw: 99 };
+pub const KEY_F11: Key = Key { raw: 100 };
+pub const KEY_F12: Key = Key { raw: 101 };
+pub const KEY_PRINT: Key = Key { raw: 102 };
+pub const KEY_SLCK: Key = Key { raw: 103 };
+pub const KEY_PAUSE: Key = Key { raw: 104 };
+pub const KEY_INTL0: Key = Key { raw: 105 };
+pub const KEY_INTL1: Key = Key { raw: 106 };
+pub const KEY_INTL2: Key = Key { raw: 107 };
+pub const KEY_INTL3: Key = Key { raw: 108 };
+pub const KEY_INTL4: Key = Key { raw: 109 };
+pub const KEY_INTL5: Key = Key { raw: 110 };
+pub const KEY_INTL6: Key = Key { raw: 111 };
+pub const KEY_INTL7: Key = Key { raw: 112 };
+pub const KEY_INTL8: Key = Key { raw: 113 };
+pub const KEY_INTL9: Key = Key { raw: 114 };
+pub const MODIFIER_NULL: Modifier = Modifier { raw: 0 };
+pub const MODIFIER_LEFT_CONTROL: Modifier = Modifier { raw: 1 };
+pub const MODIFIER_RIGHT_CONTROL: Modifier = Modifier { raw: 2 };
+pub const MODIFIER_LEFT_ALT: Modifier = Modifier { raw: 3 };
+pub const MODIFIER_RIGHT_ALT: Modifier = Modifier { raw: 4 };
+pub const MODIFIER_ALT_GR: Modifier = Modifier { raw: 5 };
+pub const MODIFIER_INSERT: Modifier = Modifier { raw: 6 };
+pub const MODIFIER_DELETE: Modifier = Modifier { raw: 7 };
+pub const MODIFIER_PAGE_DOWN: Modifier = Modifier { raw: 8 };
+pub const MODIFIER_PAGE_UP: Modifier = Modifier { raw: 9 };
+pub const MODIFIER_HOME: Modifier = Modifier { raw: 10 };
+pub const MODIFIER_END: Modifier = Modifier { raw: 11 };
+pub const MODIFIER_LEFT_SHIFT: Modifier = Modifier { raw: 12 };
+pub const MODIFIER_RIGHT_SHIFT: Modifier = Modifier { raw: 13 };
+pub const MODIFIER_CAPS_LOCK: Modifier = Modifier { raw: 14 };
+pub const MODIFIER_NUM_LOCK: Modifier = Modifier { raw: 15 };
+pub const MODIFIER_LEFT_ARROW: Modifier = Modifier { raw: 16 };
+pub const MODIFIER_RIGHT_ARROW: Modifier = Modifier { raw: 17 };
+pub const MODIFIER_DOWN_ARROW: Modifier = Modifier { raw: 18 };
+pub const MODIFIER_UP_ARROW: Modifier = Modifier { raw: 19 };
+pub const MODIFIER_NS_KEY: Modifier = Modifier { raw: 20 };
+pub const MODIFIER_NS_KEY_DEPENDENCY: Modifier = Modifier { raw: 21 };
+pub const MODIFIER_FUNCTION_KEY_ONE: Modifier = Modifier { raw: 22 };
+pub const MODIFIER_FUNCTION_KEY_TWO: Modifier = Modifier { raw: 23 };
+pub const MODIFIER_FUNCTION_KEY_THREE: Modifier = Modifier { raw: 24 };
+pub const MODIFIER_FUNCTION_KEY_FOUR: Modifier = Modifier { raw: 25 };
+pub const MODIFIER_FUNCTION_KEY_FIVE: Modifier = Modifier { raw: 26 };
+pub const MODIFIER_FUNCTION_KEY_SIX: Modifier = Modifier { raw: 27 };
+pub const MODIFIER_FUNCTION_KEY_SEVEN: Modifier = Modifier { raw: 28 };
+pub const MODIFIER_FUNCTION_KEY_EIGHT: Modifier = Modifier { raw: 29 };
+pub const MODIFIER_FUNCTION_KEY_NINE: Modifier = Modifier { raw: 30 };
+pub const MODIFIER_FUNCTION_KEY_TEN: Modifier = Modifier { raw: 31 };
+pub const MODIFIER_FUNCTION_KEY_ELEVEN: Modifier = Modifier { raw: 32 };
+pub const MODIFIER_FUNCTION_KEY_TWELVE: Modifier = Modifier { raw: 33 };
+pub const MODIFIER_PRINT: Modifier = Modifier { raw: 34 };
+pub const MODIFIER_SYS_REQUEST: Modifier = Modifier { raw: 35 };
+pub const MODIFIER_SCROLL_LOCK: Modifier = Modifier { raw: 36 };
+pub const MODIFIER_PAUSE: Modifier = Modifier { raw: 37 };
+pub const MODIFIER_BREAK: Modifier = Modifier { raw: 38 };
+pub const MODIFIER_LEFT_LOGO: Modifier = Modifier { raw: 39 };
+pub const MODIFIER_RIGHT_LOGO: Modifier = Modifier { raw: 40 };
+pub const MODIFIER_MENU: Modifier = Modifier { raw: 41 };

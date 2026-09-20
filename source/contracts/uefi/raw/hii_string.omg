@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified rust-osdev/uefi-rs translation at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
+// See hii.PORT.md. Inert carriers; pointer/slot bits confer no authority.
+module hii_string;
+use scalars;
+use console;
+
+// Upstream: uefi_raw::protocol::hii::string::HiiStringProtocol
+pub data HiiStringProtocol [copy] {
+    new_string: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, string_id: *mut StringId, language: *const Char8, language_name: *const Char16, string: *const Char16, string_font_info: *const FontInfo, ) -> Status
+    get_string: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, language: *const Char8, package_list: HiiHandle, string_id: StringId, string: *mut Char16, string_size: *mut usize, string_font_info: *mut *mut FontInfo, ) -> Status
+    set_string: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, string_id: StringId, language: *const Char8, string: *const Char16, string_font_info: *const FontInfo, ) -> Status
+    get_languages: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, languages: *mut Char8, languages_size: *mut usize, ) -> Status
+    get_secondary_languages: addr;
+    // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, primary_language: *const Char8, secondary_languages: *mut Char8, secondary_languages_size: *mut usize, ) -> Status
+}
+
+pub const HII_STRING_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x0fd96974, data2: 0x23aa, data3: 0x4cdc, data4: [0xb9, 0xcb, 0x98, 0xd1, 0x77, 0x50, 0x32, 0x2a] };
