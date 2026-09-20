@@ -220,14 +220,16 @@ all fourteen fields through the existing bit policy; native ABI is not measured.
 The [detached table slice](source/libraries/x86_64/tables.PORT.md) adds full-array
 operations and captured translation: 42 actual Rust mapper calls, 43 Omega
 translation scenarios, six table/address fixtures and six body mutations pass.
-Map/unmap/update and live ownership/invalidation integration remain open.
+Complete map/unmap/update routes are covered by the later slice below; live
+ownership/invalidation integration remains open.
 The [page/frame slice](source/libraries/x86_64/pages.PORT.md) passes 267 numeric
 scenarios, 253 actual Rust witnesses, 15 upstream Rust tests, range/overflow
 extras and three body mutations. Checked canonical-gap range deviations are explicit.
 The [mapping-decision slice](source/libraries/x86_64/mapping-plans.PORT.md) passes
 112 actual Rust child/leaf operations and matching Omega decisions, nine extra
 assertions and four body mutations. Partial writes on failure are retained;
-complete mapper orchestration and invalidation settlement remain open.
+the later route slice completes this captured mapper orchestration; live
+invalidation settlement remains separate.
 The [interrupt slice](source/drivers/facts/x86_interrupts.PORT.md) passes 73 Rust
 observations/target assertions, four Rust tests, Omega option/frame/gate checks,
 complete 4096-byte table encode/decode/rejection fixtures and six body mutations.
@@ -250,6 +252,15 @@ bounded, resumable inclusive-range traversal: 13 whole-range Rust witnesses,
 18 Omega steps, five additional fixtures and three body mutations pass. Exhaustion
 retains the exact next page; actual custody, invalidation and reclamation remain
 separate integration work.
+
+The [complete route slice](source/libraries/x86_64/mapping-routes.PORT.md) passes
+208 actual Rust/Omega scenarios, four additional fixture groups and four body
+mutations, including partial edits, allocation failures and capture mismatches.
+[Mapper conveniences](source/libraries/x86_64/mapper-conveniences.PORT.md) add
+actual trait-default witnesses, three Omega fixtures and four body mutations.
+The [remaining pure-work audit](source/libraries/x86_64/remaining-pure.RECONCILIATION.md)
+identifies unfinished recursive mapper algorithms, explicit encryption, owned
+GDT storage and register recipes; these are implementation work.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

@@ -1,0 +1,24 @@
+use x86_values::mapper_conveniences;
+use x86_values::mapping_routes::CapturedPath;
+use x86_values::mapping_routes::AllocationInputs;
+use x86_values::mapping_routes::RoutePlan;
+use x86_values::mapping_routes::Outcome;
+use x86_values::mapping_plans::LeafPlan;
+machine ready(value: RoutePlan) -> bool {
+ transition value.outcome { Outcome::Leaf { leaf } -> leaf_is(leaf) _ -> (false) }
+ state leaf_is(value: LeafPlan) { transition value { LeafPlan::Ready { frame } -> (frame == 36864) _ -> (false) } }
+}
+machine test_result() -> i32 {
+ let path: CapturedPath = CapturedPath { table_ids: [20480, 4096, 8192, 12288], words: [4097, 8193, 12289, 36871] };
+ let translated: RoutePlan = mapper_conveniences::translate_page(&path, 16384, 4096);
+ let supply: AllocationInputs;
+ let rejected: RoutePlan = mapper_conveniences::identity_map(&path, &supply, 0x800000000000, 4096, 7);
+ transition translated.edits.write_mask == 0 && translated.edits.zero_mask == 0 && translated.edits.allocation_calls == 0 &&
+ translated.edits.visited == 4 && translated.edits.words[3] == 36871 && ready(translated) &&
+ rejected.edits.write_mask == 0 && rejected.edits.allocation_calls == 0 && rejected.edits.visited == 0 && rejected.outcome in Outcome::InvalidInput {
+ true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

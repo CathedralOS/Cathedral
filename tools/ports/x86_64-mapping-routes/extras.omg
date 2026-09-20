@@ -1,0 +1,46 @@
+// Original malformed/snapshot cases outside the typed Rust mapper inputs.
+use x86::mapping_routes;
+use x86::mapping_routes::CapturedPath;
+use x86::mapping_routes::AllocationInputs;
+use x86::mapping_routes::Request;
+use x86::mapping_routes::RoutePlan;
+use x86::mapping_routes::Outcome;
+use x86::mapping_plans::FrameSupply;
+use x86::mapping_plans::ChildPlan;
+use x86::mapping_plans::LeafPlan;
+
+machine invalids()->i32 {
+    let path:CapturedPath=CapturedPath { table_ids:[16384,4096,8192,12288],words:[4097,8193,12289,1] };
+    let inputs:AllocationInputs=AllocationInputs {};
+    let bad_page:RoutePlan=mapping_routes::plan(&path,&inputs,1,4096,Request::Translate);
+    let hole:RoutePlan=mapping_routes::plan(&path,&inputs,140737488355328,4096,Request::Translate);
+    let size:RoutePlan=mapping_routes::plan(&path,&inputs,0,0,Request::Translate);
+    let frame:RoutePlan=mapping_routes::plan(&path,&inputs,0,4096,Request::Map { frame:1,flags:3,parent_flags:3 });
+    let level:RoutePlan=mapping_routes::plan(&path,&inputs,0,4096,Request::SetParent { level:255,table_flags:3 });
+    let correct:bool=bad_page.outcome in Outcome::InvalidInput && hole.outcome in Outcome::InvalidInput && size.outcome in Outcome::InvalidInput && frame.outcome in Outcome::InvalidInput && level.outcome in Outcome::InvalidInput;
+    transition correct { true -> (0) _ -> (1) }
+}
+machine mismatch()->i32 {
+    let path:CapturedPath=CapturedPath { table_ids:[16384,8192,8192,12288],words:[4097,0,0,0] };
+    let inputs:AllocationInputs=AllocationInputs {};
+    let value:RoutePlan=mapping_routes::plan(&path,&inputs,0,1073741824,Request::Map { frame:0,flags:3,parent_flags:3 });
+    let edits:bool=value.edits.words[0]==4099 && value.edits.write_mask==1 && value.edits.visited==1;
+    transition value.outcome { Outcome::CaptureMismatch { expected,supplied } -> payload(edits,expected,supplied) _ -> (1) }
+    state payload(edits:bool,expected:u64,supplied:u64)->i32 { transition edits && expected==4096 && supplied==8192 { true -> (0) _ -> (1) } }
+}
+machine bad_supply()->i32 {
+    let path:CapturedPath=CapturedPath { words:[0,1,1,1] };
+    let inputs:AllocationInputs=AllocationInputs { frames:[FrameSupply::Supplied { address:4097 },FrameSupply::Unavailable,FrameSupply::Unavailable] };
+    let value:RoutePlan=mapping_routes::plan(&path,&inputs,0,4096,Request::Map { frame:0,flags:3,parent_flags:3 });
+    let effects:bool=value.edits.allocation_calls==1 && value.edits.write_mask==0 && value.edits.zero_mask==0;
+    transition value.outcome { Outcome::ChildFailure { child } -> inspect(effects,child) _ -> (1) }
+    state inspect(effects:bool,child:ChildPlan)->i32 { transition effects && child in ChildPlan::InvalidSuppliedFrame { true -> (0) _ -> (1) } }
+}
+machine replaced_capture()->i32 {
+    let path:CapturedPath=CapturedPath { table_ids:[16384,123,456,789],words:[0,512,512,512] };
+    let inputs:AllocationInputs=AllocationInputs { frames:[FrameSupply::Supplied { address:32768 },FrameSupply::Unavailable,FrameSupply::Unavailable] };
+    let value:RoutePlan=mapping_routes::plan(&path,&inputs,0,1073741824,Request::Map { frame:0,flags:3,parent_flags:3 });
+    let effects:bool=value.edits.table_ids[1]==32768 && value.edits.words[0]==32771 && value.edits.words[1]==131 && value.edits.words[2]==512 && value.edits.allocation_calls==1 && value.edits.write_mask==3 && value.edits.zero_mask==2;
+    transition value.outcome { Outcome::Leaf { leaf } -> inspect(effects,leaf) _ -> (1) }
+    state inspect(effects:bool,leaf:LeafPlan)->i32 { transition effects && leaf in LeafPlan::Ready { true -> (0) _ -> (1) } }
+}

@@ -1,0 +1,43 @@
+use x86_values::mapper_conveniences;
+use x86_values::mapping_routes::CapturedPath;
+use x86_values::mapping_routes::AllocationInputs;
+use x86_values::mapping_routes::RoutePlan;
+use x86_values::mapping_routes::Outcome;
+use x86_values::mapping_plans::FrameSupply;
+use x86_values::mapping_plans::LeafPlan;
+machine ready(value: RoutePlan, expected: u64) -> bool {
+ transition value.outcome { Outcome::Leaf { leaf } -> leaf_is(leaf, expected) _ -> (false) }
+ state leaf_is(value: LeafPlan, expected: u64) { transition value { LeafPlan::Ready { frame } -> (frame == expected) _ -> (false) } }
+}
+machine map4k() -> bool {
+ let path: CapturedPath = CapturedPath { table_ids: [20480, 0, 0, 0], words: [0, 0, 0, 0] };
+ let supply: AllocationInputs = AllocationInputs { frames: [FrameSupply::Supplied { address: 4096 }, FrameSupply::Supplied { address: 8192 }, FrameSupply::Supplied { address: 12288 }] };
+ let value: RoutePlan = mapper_conveniences::default_map(&path, &supply, 16384, 4096, 36864, 7);
+ value.edits.write_mask == 15 && value.edits.zero_mask == 14 && value.edits.allocation_calls == 3 && value.edits.visited == 4 &&
+ value.edits.words[0] == 4103 && value.edits.words[1] == 8199 && value.edits.words[2] == 12295 && value.edits.words[3] == 36871 &&
+ value.edits.indices[3] == 4 && ready(value, 36864)
+}
+machine identity2m() -> bool {
+ let path: CapturedPath = CapturedPath { table_ids: [20480, 0, 0, 0], words: [0, 0, 0, 0] };
+ let supply: AllocationInputs = AllocationInputs { frames: [FrameSupply::Supplied { address: 4096 }, FrameSupply::Supplied { address: 8192 }, FrameSupply::Unavailable] };
+ let value: RoutePlan = mapper_conveniences::identity_map(&path, &supply, 4194304, 2097152, 7);
+ value.edits.write_mask == 7 && value.edits.zero_mask == 6 && value.edits.allocation_calls == 2 && value.edits.visited == 3 &&
+ value.edits.words[0] == 4103 && value.edits.words[1] == 8199 && value.edits.words[2] == 4194439 && value.edits.words[3] == 0 &&
+ value.edits.indices[2] == 2 && ready(value, 4194304)
+}
+machine map1g() -> bool {
+ let path: CapturedPath = CapturedPath { table_ids: [20480, 0, 0, 0], words: [0, 0, 0, 0] };
+ let supply: AllocationInputs = AllocationInputs { frames: [FrameSupply::Supplied { address: 4096 }, FrameSupply::Unavailable, FrameSupply::Unavailable] };
+ let value: RoutePlan = mapper_conveniences::default_map(&path, &supply, 2147483648, 1073741824, 3221225472, 7);
+ value.edits.write_mask == 3 && value.edits.zero_mask == 2 && value.edits.allocation_calls == 1 && value.edits.visited == 2 &&
+ value.edits.words[0] == 4103 && value.edits.words[1] == 3221225607 && value.edits.words[2] == 0 && value.edits.words[3] == 0 &&
+ value.edits.indices[1] == 2 && ready(value, 3221225472)
+}
+machine test_result() -> i32 {
+ let a: bool = map4k(); let b: bool = identity2m(); let c: bool = map1g();
+ transition a && b && c { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

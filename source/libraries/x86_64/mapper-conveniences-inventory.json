@@ -1,0 +1,307 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/x86_64",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/paging/mapper/mod.rs"
+    ]
+  },
+  "files": {
+    "src/structures/paging/mapper/mod.rs": {
+      "sha256": "9b33e4f767f0eb77560cc7daf0826feadd176d0ced292ada00329a0695f67b6e",
+      "disposition": "translated",
+      "reason": "Bounded defaults and numeric view overlay. Remaining interfaces already implemented elsewhere or deliberately excluded from this wrapper API.",
+      "symbols": {
+        "3:self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};": {
+          "anchor": "pub use self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "5:self::offset_page_table::OffsetPageTable;": {
+          "anchor": "pub use self::offset_page_table::OffsetPageTable;",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "7:self::recursive_page_table::{InvalidPageTable, RecursivePageTable};": {
+          "anchor": "pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "17:mapped_page_table": {
+          "anchor": "mod mapped_page_table;",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "18:offset_page_table": {
+          "anchor": "mod offset_page_table;",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "20:recursive_page_table": {
+          "anchor": "mod recursive_page_table;",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "23:MapperAllSizes": {
+          "anchor": "pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB> {}",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "28:Translate": {
+          "anchor": "pub trait Translate {",
+          "disposition": "translated",
+          "reason": "Pure wrapper/view over existing numeric route or translation implementation; no mapped-frame, memory, flush or custody authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapper_conveniences.omg",
+              "anchor": "pub machine translate_address_from_words"
+            }
+          ]
+        },
+        "36:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult;",
+          "disposition": "translated",
+          "reason": "Pure wrapper/view over existing numeric route or translation implementation; no mapped-frame, memory, flush or custody authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/translation.omg",
+              "anchor": "pub machine translate_words"
+            }
+          ]
+        },
+        "45:translate_addr": {
+          "anchor": "fn translate_addr(&self, addr: VirtAddr) -> Option<PhysAddr> {",
+          "disposition": "translated",
+          "reason": "Exact default addition permits offset>=size on a valid typed-frame shape; physical overflow/panic becomes Rejected. Existing captured-result strict helper remains unchanged.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapper_conveniences.omg",
+              "anchor": "pub machine translated_address_pinned"
+            }
+          ]
+        },
+        "58:TranslateResult": {
+          "anchor": "pub enum TranslateResult {",
+          "disposition": "translated",
+          "reason": "Existing Translation remains canonical; local InvalidVirtual/InvalidRootHugePage errors remain explicit. Generic InvalidFrameAddress payload is not separately reintroduced; optional-address projection maps all nonmapped outcomes to Rejected.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/translation.omg",
+              "anchor": "pub data Translation"
+            }
+          ]
+        },
+        "80:MappedFrame": {
+          "anchor": "pub enum MappedFrame {",
+          "disposition": "translated",
+          "reason": "Pure wrapper/view over existing numeric route or translation implementation; no mapped-frame, memory, flush or custody authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapper_conveniences.omg",
+              "anchor": "pub data MappedFrame"
+            }
+          ]
+        },
+        "91:start_address": {
+          "anchor": "pub const fn start_address(&self) -> PhysAddr {",
+          "disposition": "translated",
+          "reason": "Pure wrapper/view over existing numeric route or translation implementation; no mapped-frame, memory, flush or custody authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapper_conveniences.omg",
+              "anchor": "pub machine frame_start"
+            }
+          ]
+        },
+        "100:size": {
+          "anchor": "pub const fn size(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Pure wrapper/view over existing numeric route or translation implementation; no mapped-frame, memory, flush or custody authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapper_conveniences.omg",
+              "anchor": "pub machine frame_size"
+            }
+          ]
+        },
+        "110:Mapper": {
+          "anchor": "pub trait Mapper<S: PageSize> {",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "179:map_to": {
+          "anchor": "unsafe fn map_to<A>(",
+          "disposition": "translated",
+          "reason": "Pure wrapper/view over existing numeric route or translation implementation; no mapped-frame, memory, flush or custody authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapper_conveniences.omg",
+              "anchor": "pub machine default_map("
+            }
+          ]
+        },
+        "270:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "285:unmap": {
+          "anchor": "fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "298:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "313:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "328:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "343:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "353:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;",
+          "disposition": "translated",
+          "reason": "Pure wrapper/view over existing numeric route or translation implementation; no mapped-frame, memory, flush or custody authority.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapper_conveniences.omg",
+              "anchor": "pub machine translate_page("
+            }
+          ]
+        },
+        "362:identity_map": {
+          "anchor": "unsafe fn identity_map<A>(",
+          "disposition": "translated",
+          "reason": "Validates typed-frame geometry and strict canonical identity address before default route delegation. No manufactured flush receipt.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapper_conveniences.omg",
+              "anchor": "pub machine identity_map("
+            }
+          ]
+        },
+        "390:MapperFlush": {
+          "anchor": "pub struct MapperFlush<S: PageSize>(Page<S>);",
+          "disposition": "omitted",
+          "reason": "MapperFlush/MapperFlushAll construction, page projection, flush and public ignore are deliberately excluded as authority APIs. Numeric route edits do not settle invalidation or grant the ability to discard a debt."
+        },
+        "398:new": {
+          "anchor": "pub fn new(page: Page<S>) -> Self {",
+          "disposition": "omitted",
+          "reason": "MapperFlush/MapperFlushAll construction, page projection, flush and public ignore are deliberately excluded as authority APIs. Numeric route edits do not settle invalidation or grant the ability to discard a debt."
+        },
+        "405:flush": {
+          "anchor": "pub fn flush(self) {",
+          "disposition": "omitted",
+          "reason": "MapperFlush/MapperFlushAll construction, page projection, flush and public ignore are deliberately excluded as authority APIs. Numeric route edits do not settle invalidation or grant the ability to discard a debt."
+        },
+        "411:ignore": {
+          "anchor": "pub fn ignore(self) {}",
+          "disposition": "omitted",
+          "reason": "MapperFlush/MapperFlushAll construction, page projection, flush and public ignore are deliberately excluded as authority APIs. Numeric route edits do not settle invalidation or grant the ability to discard a debt."
+        },
+        "415:page": {
+          "anchor": "pub fn page(&self) -> Page<S> {",
+          "disposition": "omitted",
+          "reason": "MapperFlush/MapperFlushAll construction, page projection, flush and public ignore are deliberately excluded as authority APIs. Numeric route edits do not settle invalidation or grant the ability to discard a debt."
+        },
+        "427:MapperFlushAll": {
+          "anchor": "pub struct MapperFlushAll(());",
+          "disposition": "omitted",
+          "reason": "MapperFlush/MapperFlushAll construction, page projection, flush and public ignore are deliberately excluded as authority APIs. Numeric route edits do not settle invalidation or grant the ability to discard a debt."
+        },
+        "435:new": {
+          "anchor": "pub fn new() -> Self {",
+          "disposition": "omitted",
+          "reason": "MapperFlush/MapperFlushAll construction, page projection, flush and public ignore are deliberately excluded as authority APIs. Numeric route edits do not settle invalidation or grant the ability to discard a debt."
+        },
+        "442:flush_all": {
+          "anchor": "pub fn flush_all(self) {",
+          "disposition": "omitted",
+          "reason": "MapperFlush/MapperFlushAll construction, page projection, flush and public ignore are deliberately excluded as authority APIs. Numeric route edits do not settle invalidation or grant the ability to discard a debt."
+        },
+        "448:ignore": {
+          "anchor": "pub fn ignore(self) {}",
+          "disposition": "omitted",
+          "reason": "MapperFlush/MapperFlushAll construction, page projection, flush and public ignore are deliberately excluded as authority APIs. Numeric route edits do not settle invalidation or grant the ability to discard a debt."
+        },
+        "453:MapToError": {
+          "anchor": "pub enum MapToError<S: PageSize> {",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "466:UnmapError": {
+          "anchor": "pub enum UnmapError {",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "478:FlagUpdateError": {
+          "anchor": "pub enum FlagUpdateError {",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "488:TranslateError": {
+          "anchor": "pub enum TranslateError {",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "498:_ASSERT_OBJECT_SAFE": {
+          "anchor": "static _ASSERT_OBJECT_SAFE: Option<&(dyn Translate + Sync)> = None;",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "501:CleanUp": {
+          "anchor": "pub trait CleanUp {",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "509:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        },
+        "534:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "omitted",
+          "reason": "Existing underlying mapping routes/plans or other mapper implementation, Rust trait/format scaffolding, and cleanup are outside this bounded convenience overlay; no new blocker claim."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/mapper_conveniences.omg",
+          "anchor": "module mapper_conveniences;"
+        }
+      ]
+    }
+  },
+  "semantic_variants": {
+    "MappedFrame": [
+      "Size4KiB(address)",
+      "Size2MiB(address)",
+      "Size1GiB(address)"
+    ],
+    "meaning": "Numeric size alternatives only; checked constructor uses existing physical frame geometry. No native enum layout or backing authority."
+  },
+  "reused_implementations": [
+    "mapping_routes::plan",
+    "mapping_plans::default_parent_flags",
+    "pages::start_valid",
+    "addresses::virtual_valid",
+    "addresses::physical_add",
+    "translation::translate_words",
+    "translation::translated_address"
+  ]
+}

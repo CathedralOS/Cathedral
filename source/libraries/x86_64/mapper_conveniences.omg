@@ -1,0 +1,117 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pure defaults/views from pinned paging/mapper/mod.rs.
+// Numeric requests and results grant no frame, mapping, flush or custody authority.
+module mapper_conveniences;
+use addresses;
+use addresses::NumberResult;
+use pages;
+use mapping_plans;
+use mapping_routes;
+use mapping_routes::Request;
+use mapping_routes::CapturedPath;
+use mapping_routes::AllocationInputs;
+use mapping_routes::RoutePlan;
+use translation;
+use translation::Translation;
+
+// Size alternatives are semantic views, not another frame/backing authority.
+pub data MappedFrame [copy] {
+    case Size4KiB(address: u64);
+    case Size2MiB(address: u64);
+    case Size1GiB(address: u64);
+}
+pub data MappedFrameCheck [copy] { case Rejected; case Value(frame: MappedFrame); }
+pub machine mapped_frame(address: u64, size: u64) -> MappedFrameCheck {
+    let valid: bool = pages::start_valid(address, size, true);
+    transition valid { true -> sized(address, size) _ -> (MappedFrameCheck::Rejected) }
+    state sized(address: u64, size: u64) {
+        transition size {
+            4096 -> (MappedFrameCheck::Value { frame: MappedFrame::Size4KiB { address: address } })
+            2097152 -> (MappedFrameCheck::Value { frame: MappedFrame::Size2MiB { address: address } })
+            1073741824 -> (MappedFrameCheck::Value { frame: MappedFrame::Size1GiB { address: address } })
+            _ -> (MappedFrameCheck::Rejected)
+        }
+    }
+}
+pub machine frame_start(value: MappedFrame) -> u64 {
+    transition value {
+        MappedFrame::Size4KiB { address } -> (address)
+        MappedFrame::Size2MiB { address } -> (address)
+        MappedFrame::Size1GiB { address } -> (address)
+    }
+}
+pub machine frame_size(value: MappedFrame) -> u64 {
+    transition value {
+        MappedFrame::Size4KiB { address } -> (4096)
+        MappedFrame::Size2MiB { address } -> (2097152)
+        MappedFrame::Size1GiB { address } -> (1073741824)
+    }
+}
+pub machine frame_from_translation(value: Translation) -> MappedFrameCheck {
+    transition value {
+        Translation::Mapped { frame, size, offset, flags } -> shape(frame, size)
+        _ -> (MappedFrameCheck::Rejected)
+    }
+    state shape(frame: u64, size: u64) {
+        let result: MappedFrameCheck = mapped_frame(frame, size);
+        result
+    }
+}
+pub machine default_map_request(frame: u64, flags: u64) -> Request {
+    let parent: u64 = mapping_plans::default_parent_flags(flags);
+    Request::Map { frame: frame, flags: flags, parent_flags: parent }
+}
+pub machine default_map(path: &CapturedPath, allocations: &AllocationInputs, page: u64, size: u64, frame: u64, flags: u64) -> RoutePlan {
+    let request: Request = default_map_request(frame, flags);
+    let result: RoutePlan = mapping_routes::plan(path, allocations, page, size, request);
+    result
+}
+// This pin's VirtAddr::new is strict. A zero-extended bit47 physical frame fails
+// before delegation, despite an obsolete upstream error comment suggesting otherwise.
+pub machine identity_page(frame: u64, size: u64) -> NumberResult {
+    let frame_valid: bool = pages::start_valid(frame, size, true);
+    let canonical: bool = addresses::virtual_valid(frame);
+    transition frame_valid && canonical {
+        true -> (NumberResult::Value { value: frame })
+        _ -> (NumberResult::Rejected)
+    }
+}
+pub machine identity_map(path: &CapturedPath, allocations: &AllocationInputs, frame: u64, size: u64, flags: u64) -> RoutePlan {
+    let page: NumberResult = identity_page(frame, size);
+    transition page {
+        NumberResult::Value { value } -> mapped(path, allocations, value, size, frame, flags)
+        _ -> (RoutePlan {})
+    }
+    state mapped(path: &CapturedPath, allocations: &AllocationInputs, page: u64, size: u64, frame: u64, flags: u64) {
+        let result: RoutePlan = default_map(path, allocations, page, size, frame, flags);
+        result
+    }
+}
+pub machine translate_page(path: &CapturedPath, page: u64, size: u64) -> RoutePlan {
+    let allocations: AllocationInputs;
+    let result: RoutePlan = mapping_routes::plan(path, &allocations, page, size, Request::Translate);
+    result
+}
+// The public Rust TranslateResult allows offsets outside the frame. Its default
+// translate_addr adds them without a size check; physical overflow panics there.
+pub machine translated_address_pinned(value: Translation) -> NumberResult {
+    transition value {
+        Translation::Mapped { frame, size, offset, flags } -> shape(frame, size, offset)
+        _ -> (NumberResult::Rejected)
+    }
+    state shape(frame: u64, size: u64, offset: u64) {
+        let valid: bool = pages::start_valid(frame, size, true);
+        transition valid { true -> add(frame, offset) _ -> (NumberResult::Rejected) }
+    }
+    state add(frame: u64, offset: u64) {
+        let result: NumberResult = addresses::physical_add(frame, offset, 0);
+        result
+    }
+}
+// Captured translation always computes an offset inside the frame; reuse its
+// existing stronger result validator without changing arbitrary-result semantics.
+pub machine translate_address_from_words(va: u64, p4: u64, p3: u64, p2: u64, p1: u64) -> NumberResult {
+    let value: Translation = translation::translate_words(va, p4, p3, p2, p1);
+    let result: NumberResult = translation::translated_address(value);
+    result
+}

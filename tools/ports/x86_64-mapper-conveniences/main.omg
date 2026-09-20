@@ -1,0 +1,243 @@
+use x86_values::mapper_conveniences;
+use x86_values::mapper_conveniences::MappedFrame;
+use x86_values::mapper_conveniences::MappedFrameCheck;
+use x86_values::mapping_routes::Request;
+use x86_values::addresses::NumberResult;
+use x86_values::translation;
+use x86_values::translation::Translation;
+
+machine number_is(value: NumberResult, expected: u64) -> bool { transition value { NumberResult::Value { value } -> (value == expected) _ -> (false) } }
+machine request_is(value: Request, expected_frame: u64, expected_flags: u64, expected_parent: u64) -> bool {
+ transition value { Request::Map { frame, flags, parent_flags } -> (frame == expected_frame && flags == expected_flags && parent_flags == expected_parent) _ -> (false) }
+}
+machine frame_is(value: MappedFrameCheck, expected_address: u64, expected_size: u64) -> bool {
+ transition value { MappedFrameCheck::Value { frame } -> check(frame, expected_address, expected_size) _ -> (false) }
+ state check(value: MappedFrame, address: u64, size: u64) {
+  let start: u64 = mapper_conveniences::frame_start(value);
+  let length: u64 = mapper_conveniences::frame_size(value);
+  start == address && length == size
+ }
+}
+
+machine default_0_0() -> bool {
+let flags: u64 = 0;
+let request: Request = mapper_conveniences::default_map_request(12288, flags);
+request_is(request, 12288, flags, 0)
+}
+machine default_0_1() -> bool {
+let flags: u64 = 1;
+let request: Request = mapper_conveniences::default_map_request(12288, flags);
+request_is(request, 12288, flags, 1)
+}
+machine default_0_2() -> bool {
+let flags: u64 = 2;
+let request: Request = mapper_conveniences::default_map_request(12288, flags);
+request_is(request, 12288, flags, 2)
+}
+machine default_0_3() -> bool {
+let flags: u64 = 4;
+let request: Request = mapper_conveniences::default_map_request(12288, flags);
+request_is(request, 12288, flags, 4)
+}
+machine default_0_4() -> bool {
+let flags: u64 = 7;
+let request: Request = mapper_conveniences::default_map_request(12288, flags);
+request_is(request, 12288, flags, 7)
+}
+machine default_0_5() -> bool {
+let flags: u64 = 128;
+let request: Request = mapper_conveniences::default_map_request(12288, flags);
+request_is(request, 12288, flags, 0)
+}
+machine default_0_6() -> bool {
+let flags: u64 = 256;
+let request: Request = mapper_conveniences::default_map_request(12288, flags);
+request_is(request, 12288, flags, 0)
+}
+machine default_0_7() -> bool {
+let flags: u64 = 305418247;
+let request: Request = mapper_conveniences::default_map_request(12288, flags);
+request_is(request, 12288, flags, 7)
+}
+machine default_0_8() -> bool {
+let flags: u64 = 9223372036854775815;
+let request: Request = mapper_conveniences::default_map_request(12288, flags);
+request_is(request, 12288, flags, 7)
+}
+machine frame_0() -> bool {
+let checked: MappedFrameCheck = mapper_conveniences::mapped_frame(8192, 4096);
+let observed: MappedFrameCheck = mapper_conveniences::frame_from_translation(Translation::Mapped { frame: 8192, size: 4096, offset: 1, flags: 0 });
+frame_is(checked, 8192, 4096) && frame_is(observed, 8192, 4096) && number_is(mapper_conveniences::identity_page(12288, 4096), 12288)
+}
+machine translation_0_0() -> bool {
+let result: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 8192, size: 4096, offset: 0, flags: 0 });
+number_is(result, 8192)
+}
+machine translation_0_1() -> bool {
+let result: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 8192, size: 4096, offset: 4095, flags: 0 });
+number_is(result, 12287)
+}
+machine translation_0_2() -> bool {
+let result: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 8192, size: 4096, offset: 4096, flags: 0 });
+number_is(result, 12288)
+}
+machine translation_0_3() -> bool {
+let result: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 8192, size: 4096, offset: 4097, flags: 0 });
+number_is(result, 12289)
+}
+machine default_1_0() -> bool {
+let flags: u64 = 0;
+let request: Request = mapper_conveniences::default_map_request(6291456, flags);
+request_is(request, 6291456, flags, 0)
+}
+machine default_1_1() -> bool {
+let flags: u64 = 1;
+let request: Request = mapper_conveniences::default_map_request(6291456, flags);
+request_is(request, 6291456, flags, 1)
+}
+machine default_1_2() -> bool {
+let flags: u64 = 2;
+let request: Request = mapper_conveniences::default_map_request(6291456, flags);
+request_is(request, 6291456, flags, 2)
+}
+machine default_1_3() -> bool {
+let flags: u64 = 4;
+let request: Request = mapper_conveniences::default_map_request(6291456, flags);
+request_is(request, 6291456, flags, 4)
+}
+machine default_1_4() -> bool {
+let flags: u64 = 7;
+let request: Request = mapper_conveniences::default_map_request(6291456, flags);
+request_is(request, 6291456, flags, 7)
+}
+machine default_1_5() -> bool {
+let flags: u64 = 128;
+let request: Request = mapper_conveniences::default_map_request(6291456, flags);
+request_is(request, 6291456, flags, 0)
+}
+machine default_1_6() -> bool {
+let flags: u64 = 256;
+let request: Request = mapper_conveniences::default_map_request(6291456, flags);
+request_is(request, 6291456, flags, 0)
+}
+machine default_1_7() -> bool {
+let flags: u64 = 305418247;
+let request: Request = mapper_conveniences::default_map_request(6291456, flags);
+request_is(request, 6291456, flags, 7)
+}
+machine default_1_8() -> bool {
+let flags: u64 = 9223372036854775815;
+let request: Request = mapper_conveniences::default_map_request(6291456, flags);
+request_is(request, 6291456, flags, 7)
+}
+machine frame_1() -> bool {
+let checked: MappedFrameCheck = mapper_conveniences::mapped_frame(4194304, 2097152);
+let observed: MappedFrameCheck = mapper_conveniences::frame_from_translation(Translation::Mapped { frame: 4194304, size: 2097152, offset: 1, flags: 0 });
+frame_is(checked, 4194304, 2097152) && frame_is(observed, 4194304, 2097152) && number_is(mapper_conveniences::identity_page(6291456, 2097152), 6291456)
+}
+machine translation_1_0() -> bool {
+let result: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 4194304, size: 2097152, offset: 0, flags: 0 });
+number_is(result, 4194304)
+}
+machine translation_1_1() -> bool {
+let result: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 4194304, size: 2097152, offset: 2097151, flags: 0 });
+number_is(result, 6291455)
+}
+machine translation_1_2() -> bool {
+let result: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 4194304, size: 2097152, offset: 2097152, flags: 0 });
+number_is(result, 6291456)
+}
+machine translation_1_3() -> bool {
+let result: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 4194304, size: 2097152, offset: 2097153, flags: 0 });
+number_is(result, 6291457)
+}
+machine default_2_0() -> bool {
+let flags: u64 = 0;
+let request: Request = mapper_conveniences::default_map_request(3221225472, flags);
+request_is(request, 3221225472, flags, 0)
+}
+machine default_2_1() -> bool {
+let flags: u64 = 1;
+let request: Request = mapper_conveniences::default_map_request(3221225472, flags);
+request_is(request, 3221225472, flags, 1)
+}
+machine default_2_2() -> bool {
+let flags: u64 = 2;
+let request: Request = mapper_conveniences::default_map_request(3221225472, flags);
+request_is(request, 3221225472, flags, 2)
+}
+machine default_2_3() -> bool {
+let flags: u64 = 4;
+let request: Request = mapper_conveniences::default_map_request(3221225472, flags);
+request_is(request, 3221225472, flags, 4)
+}
+machine default_2_4() -> bool {
+let flags: u64 = 7;
+let request: Request = mapper_conveniences::default_map_request(3221225472, flags);
+request_is(request, 3221225472, flags, 7)
+}
+machine default_2_5() -> bool {
+let flags: u64 = 128;
+let request: Request = mapper_conveniences::default_map_request(3221225472, flags);
+request_is(request, 3221225472, flags, 0)
+}
+machine default_2_6() -> bool {
+let flags: u64 = 256;
+let request: Request = mapper_conveniences::default_map_request(3221225472, flags);
+request_is(request, 3221225472, flags, 0)
+}
+machine default_2_7() -> bool {
+let flags: u64 = 305418247;
+let request: Request = mapper_conveniences::default_map_request(3221225472, flags);
+request_is(request, 3221225472, flags, 7)
+}
+machine default_2_8() -> bool {
+let flags: u64 = 9223372036854775815;
+let request: Request = mapper_conveniences::default_map_request(3221225472, flags);
+request_is(request, 3221225472, flags, 7)
+}
+machine frame_2() -> bool {
+let checked: MappedFrameCheck = mapper_conveniences::mapped_frame(2147483648, 1073741824);
+let observed: MappedFrameCheck = mapper_conveniences::frame_from_translation(Translation::Mapped { frame: 2147483648, size: 1073741824, offset: 1, flags: 0 });
+frame_is(checked, 2147483648, 1073741824) && frame_is(observed, 2147483648, 1073741824) && number_is(mapper_conveniences::identity_page(3221225472, 1073741824), 3221225472)
+}
+machine translation_2_0() -> bool {
+let result: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 2147483648, size: 1073741824, offset: 0, flags: 0 });
+number_is(result, 2147483648)
+}
+machine translation_2_1() -> bool {
+let result: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 2147483648, size: 1073741824, offset: 1073741823, flags: 0 });
+number_is(result, 3221225471)
+}
+machine translation_2_2() -> bool {
+let result: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 2147483648, size: 1073741824, offset: 1073741824, flags: 0 });
+number_is(result, 3221225472)
+}
+machine translation_2_3() -> bool {
+let result: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 2147483648, size: 1073741824, offset: 1073741825, flags: 0 });
+number_is(result, 3221225473)
+}
+machine invalids() -> bool {
+ let bit47: u64 = 0x800000000000;
+ let bad_identity: NumberResult = mapper_conveniences::identity_page(bit47, 4096);
+ let unaligned: NumberResult = mapper_conveniences::identity_page(4097, 4096);
+ let bad_size: MappedFrameCheck = mapper_conveniences::mapped_frame(0, 8192);
+ let bad_frame: MappedFrameCheck = mapper_conveniences::mapped_frame(4097, 4096);
+ let unmapped: MappedFrameCheck = mapper_conveniences::frame_from_translation(Translation::NotMapped);
+ let overflow: NumberResult = mapper_conveniences::translated_address_pinned(Translation::Mapped { frame: 0xffffffffff000, size: 4096, offset: 4096, flags: 0 });
+ let empty: NumberResult = mapper_conveniences::translated_address_pinned(Translation::NotMapped);
+ let strict: NumberResult = translation::translated_address(Translation::Mapped { frame: 8192, size: 4096, offset: 4096, flags: 0 });
+ bad_identity in NumberResult::Rejected && unaligned in NumberResult::Rejected && bad_size in MappedFrameCheck::Rejected && bad_frame in MappedFrameCheck::Rejected && unmapped in MappedFrameCheck::Rejected && overflow in NumberResult::Rejected && empty in NumberResult::Rejected && strict in NumberResult::Rejected
+}
+machine captured() -> bool {
+ let address: NumberResult = mapper_conveniences::translate_address_from_words(0x4321, 4097, 8193, 12289, 36871);
+ let absent: NumberResult = mapper_conveniences::translate_address_from_words(0x4321, 0, 0, 0, 0);
+ let metadata: NumberResult = mapper_conveniences::translate_address_from_words(0xabc, 4097, 8193, 12289, 4096);
+ number_is(address, 37665) && absent in NumberResult::Rejected && number_is(metadata, 6844)
+}
+
+machine test_result() -> i32 { transition default_0_0() && default_0_1() && default_0_2() && default_0_3() && default_0_4() && default_0_5() && default_0_6() && default_0_7() && default_0_8() && frame_0() && translation_0_0() && translation_0_1() && translation_0_2() && translation_0_3() && default_1_0() && default_1_1() && default_1_2() && default_1_3() && default_1_4() && default_1_5() && default_1_6() && default_1_7() && default_1_8() && frame_1() && translation_1_0() && translation_1_1() && translation_1_2() && translation_1_3() && default_2_0() && default_2_1() && default_2_2() && default_2_3() && default_2_4() && default_2_5() && default_2_6() && default_2_7() && default_2_8() && frame_2() && translation_2_0() && translation_2_1() && translation_2_2() && translation_2_3() && invalids() && captured() { true -> (0) _ -> (1) } }
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

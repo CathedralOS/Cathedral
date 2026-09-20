@@ -1,0 +1,755 @@
+{
+  "files": {
+    "src/structures/paging/mapper/mapped_page_table.rs": {
+      "disposition": "pending",
+      "reason": "Pure captured mapper routes are translated; cleanup, convenience wrappers and live authority/flush surfaces remain separate pending work.",
+      "sha256": "e250c729f0588d1ce129c1c68ab43337f2f44328d2b38fe896cbeeacc1bc4ff2",
+      "symbols": {
+        "108:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "126:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "143:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "151:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "159:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "15:MappedPageTable": {
+          "anchor": "pub struct MappedPageTable<'a, P: PageTableFrameMapping> {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "176:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "207:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "236:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "258:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "275:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "295:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "303:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "31:new": {
+          "anchor": "pub unsafe fn new(level_4_table: &'a mut PageTable, page_table_frame_mapping: P) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "321:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "357:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "383:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "39:level_4_table": {
+          "anchor": "pub fn level_4_table(&self) -> &PageTable {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "408:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "425:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "445:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "44:level_4_table_mut": {
+          "anchor": "pub fn level_4_table_mut(&mut self) -> &mut PageTable {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "468:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "487:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult {",
+          "disposition": "translated",
+          "reason": "Previously tested complete size-discovering captured translation; distinct from size-specific route translation.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/translation.omg",
+              "anchor": "pub machine translate_words("
+            }
+          ]
+        },
+        "49:page_table_frame_mapping": {
+          "anchor": "pub fn page_table_frame_mapping(&self) -> &P {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "551:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "566:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "56:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "573:clean_up": {
+          "anchor": "unsafe fn clean_up<P: PageTableFrameMapping>(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "644:PageTableWalker": {
+          "anchor": "struct PageTableWalker<P: PageTableFrameMapping> {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "650:new": {
+          "anchor": "pub unsafe fn new(page_table_frame_mapping: P) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "662:next_table": {
+          "anchor": "fn next_table<'b>(",
+          "disposition": "translated",
+          "reason": "PRESENT-before-HUGE traversal and error propagation are semantic outcomes in the captured route. Numeric table IDs are compared before a supplied existing child snapshot is used; no pointer is constructed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "680:next_table_mut": {
+          "anchor": "fn next_table_mut<'b>(",
+          "disposition": "translated",
+          "reason": "PRESENT-before-HUGE traversal and error propagation are semantic outcomes in the captured route. Numeric table IDs are compared before a supplied existing child snapshot is used; no pointer is constructed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "701:create_next_table": {
+          "anchor": "fn create_next_table<'b, A>(",
+          "disposition": "translated",
+          "reason": "Pure branch decisions and preceding word write retained in prepare_child, with explicit frame supply and zero-child request. No allocator call or physical table reference is fabricated.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine prepare_child("
+            }
+          ]
+        },
+        "742:PageTableWalkError": {
+          "anchor": "enum PageTableWalkError {",
+          "disposition": "translated",
+          "reason": "PRESENT-before-HUGE traversal and error propagation are semantic outcomes in the captured route. Numeric table IDs are compared before a supplied existing child snapshot is used; no pointer is constructed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "748:PageTableCreateError": {
+          "anchor": "enum PageTableCreateError {",
+          "disposition": "translated",
+          "reason": "PRESENT-before-HUGE traversal and error propagation are semantic outcomes in the captured route. Numeric table IDs are compared before a supplied existing child snapshot is used; no pointer is constructed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "755:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "translated",
+          "reason": "PRESENT-before-HUGE traversal and error propagation are semantic outcomes in the captured route. Numeric table IDs are compared before a supplied existing child snapshot is used; no pointer is constructed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "765:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "translated",
+          "reason": "PRESENT-before-HUGE traversal and error propagation are semantic outcomes in the captured route. Numeric table IDs are compared before a supplied existing child snapshot is used; no pointer is constructed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "775:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "translated",
+          "reason": "PRESENT-before-HUGE traversal and error propagation are semantic outcomes in the captured route. Numeric table IDs are compared before a supplied existing child snapshot is used; no pointer is constructed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "785:from": {
+          "anchor": "fn from(err: FrameError) -> Self {",
+          "disposition": "translated",
+          "reason": "PRESENT-before-HUGE traversal and error propagation are semantic outcomes in the captured route. Numeric table IDs are compared before a supplied existing child snapshot is used; no pointer is constructed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "795:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "translated",
+          "reason": "PRESENT-before-HUGE traversal and error propagation are semantic outcomes in the captured route. Numeric table IDs are compared before a supplied existing child snapshot is used; no pointer is constructed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "805:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "translated",
+          "reason": "PRESENT-before-HUGE traversal and error propagation are semantic outcomes in the captured route. Numeric table IDs are compared before a supplied existing child snapshot is used; no pointer is constructed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "815:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "translated",
+          "reason": "PRESENT-before-HUGE traversal and error propagation are semantic outcomes in the captured route. Numeric table IDs are compared before a supplied existing child snapshot is used; no pointer is constructed.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "82:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "translated",
+          "reason": "Complete pure route order over selected initialized snapshots, allocation observations and retained edits. Live hierarchy references, mapping/allocator custody and invalidation settlement remain explicit external interfaces.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "832:PageTableFrameMapping": {
+          "anchor": "pub unsafe trait PageTableFrameMapping {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "834:frame_to_pointer": {
+          "anchor": "fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable;",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "839:frame_to_pointer": {
+          "anchor": "fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/mapping_routes.omg",
+          "anchor": "module mapping_routes;"
+        }
+      ]
+    },
+    "src/structures/paging/mapper/mod.rs": {
+      "disposition": "pending",
+      "reason": "Pure captured mapper routes are translated; cleanup, convenience wrappers and live authority/flush surfaces remain separate pending work.",
+      "sha256": "9b33e4f767f0eb77560cc7daf0826feadd176d0ced292ada00329a0695f67b6e",
+      "symbols": {
+        "100:size": {
+          "anchor": "pub const fn size(&self) -> u64 {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "110:Mapper": {
+          "anchor": "pub trait Mapper<S: PageSize> {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "179:map_to": {
+          "anchor": "unsafe fn map_to<A>(",
+          "disposition": "pending",
+          "reason": "Default parent flag selection extracted and tested; complete map call/allocator ownership remains pending.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_plans.omg",
+              "anchor": "pub machine default_parent_flags("
+            }
+          ]
+        },
+        "17:mapped_page_table": {
+          "anchor": "mod mapped_page_table;",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "18:offset_page_table": {
+          "anchor": "mod offset_page_table;",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "20:recursive_page_table": {
+          "anchor": "mod recursive_page_table;",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "23:MapperAllSizes": {
+          "anchor": "pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB> {}",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "270:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Pure numeric method behavior is represented by captured route requests; Rust mutable mapper/allocator traits are not authority types.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Request [copy]"
+            }
+          ]
+        },
+        "285:unmap": {
+          "anchor": "fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;",
+          "disposition": "translated",
+          "reason": "Pure numeric method behavior is represented by captured route requests; Rust mutable mapper/allocator traits are not authority types.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Request [copy]"
+            }
+          ]
+        },
+        "28:Translate": {
+          "anchor": "pub trait Translate {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "298:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Pure numeric method behavior is represented by captured route requests; Rust mutable mapper/allocator traits are not authority types.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Request [copy]"
+            }
+          ]
+        },
+        "313:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Pure numeric method behavior is represented by captured route requests; Rust mutable mapper/allocator traits are not authority types.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Request [copy]"
+            }
+          ]
+        },
+        "328:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Pure numeric method behavior is represented by captured route requests; Rust mutable mapper/allocator traits are not authority types.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Request [copy]"
+            }
+          ]
+        },
+        "343:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Pure numeric method behavior is represented by captured route requests; Rust mutable mapper/allocator traits are not authority types.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Request [copy]"
+            }
+          ]
+        },
+        "353:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;",
+          "disposition": "translated",
+          "reason": "Pure numeric method behavior is represented by captured route requests; Rust mutable mapper/allocator traits are not authority types.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Request [copy]"
+            }
+          ]
+        },
+        "362:identity_map": {
+          "anchor": "unsafe fn identity_map<A>(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "36:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult;",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "390:MapperFlush": {
+          "anchor": "pub struct MapperFlush<S: PageSize>(Page<S>);",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "398:new": {
+          "anchor": "pub fn new(page: Page<S>) -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "3:self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};": {
+          "anchor": "pub use self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "405:flush": {
+          "anchor": "pub fn flush(self) {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "411:ignore": {
+          "anchor": "pub fn ignore(self) {}",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "415:page": {
+          "anchor": "pub fn page(&self) -> Page<S> {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "427:MapperFlushAll": {
+          "anchor": "pub struct MapperFlushAll(());",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "435:new": {
+          "anchor": "pub fn new() -> Self {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "442:flush_all": {
+          "anchor": "pub fn flush_all(self) {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "448:ignore": {
+          "anchor": "pub fn ignore(self) {}",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "453:MapToError": {
+          "anchor": "pub enum MapToError<S: PageSize> {",
+          "disposition": "translated",
+          "reason": "Operation-specific semantic cases and payloads are retained by route Outcome wrapping the tested ChildPlan/LeafPlan; invalid raw inputs add explicit rejections.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "45:translate_addr": {
+          "anchor": "fn translate_addr(&self, addr: VirtAddr) -> Option<PhysAddr> {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "466:UnmapError": {
+          "anchor": "pub enum UnmapError {",
+          "disposition": "translated",
+          "reason": "Operation-specific semantic cases and payloads are retained by route Outcome wrapping the tested ChildPlan/LeafPlan; invalid raw inputs add explicit rejections.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "478:FlagUpdateError": {
+          "anchor": "pub enum FlagUpdateError {",
+          "disposition": "translated",
+          "reason": "Operation-specific semantic cases and payloads are retained by route Outcome wrapping the tested ChildPlan/LeafPlan; invalid raw inputs add explicit rejections.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "488:TranslateError": {
+          "anchor": "pub enum TranslateError {",
+          "disposition": "translated",
+          "reason": "Operation-specific semantic cases and payloads are retained by route Outcome wrapping the tested ChildPlan/LeafPlan; invalid raw inputs add explicit rejections.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/mapping_routes.omg",
+              "anchor": "pub data Outcome [copy]"
+            }
+          ]
+        },
+        "498:_ASSERT_OBJECT_SAFE": {
+          "anchor": "static _ASSERT_OBJECT_SAFE: Option<&(dyn Translate + Sync)> = None;",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "501:CleanUp": {
+          "anchor": "pub trait CleanUp {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "509:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "534:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "58:TranslateResult": {
+          "anchor": "pub enum TranslateResult {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "5:self::offset_page_table::OffsetPageTable;": {
+          "anchor": "pub use self::offset_page_table::OffsetPageTable;",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "7:self::recursive_page_table::{InvalidPageTable, RecursivePageTable};": {
+          "anchor": "pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};",
+          "disposition": "omitted",
+          "reason": "Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API."
+        },
+        "80:MappedFrame": {
+          "anchor": "pub enum MappedFrame {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        },
+        "91:start_address": {
+          "anchor": "pub const fn start_address(&self) -> PhysAddr {",
+          "disposition": "pending",
+          "reason": "Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/mapping_routes.omg",
+          "anchor": "module mapping_routes;"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/paging/mapper/mapped_page_table.rs",
+      "src/structures/paging/mapper/mod.rs"
+    ],
+    "url": "https://github.com/rust-osdev/x86_64"
+  }
+}
