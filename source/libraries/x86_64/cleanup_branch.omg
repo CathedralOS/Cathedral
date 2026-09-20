@@ -1,0 +1,117 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified MappedPageTable::clean_up_addr_range for one selected 4KiB page.
+// Bottom-up detach/deallocation proposals; never releases actual frame custody.
+module cleanup_branch;
+use pages;
+use page_entries;
+use facts::x86_page_table_entry;
+
+pub data CleanupPlan [copy] {
+    words: [u64; 4]; frames_to_retire: [u64; 3]; retire_count: u8;
+    write_mask: u8; visited: u8;
+    outcome: CleanupOutcome;
+}
+pub data CleanupOutcome [copy] {
+    case InvalidPage;
+    case CaptureMismatch(expected: u64, supplied: u64);
+    case Ready;
+}
+// other_nonzero[i] states whether any of table i's other 511 entries is nonzero.
+// It is a detached observation; `has_other_entries` can compute it from a full
+// initialized snapshot. The table IDs name those snapshots, not live grants.
+pub machine plan(words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4], page: u64) -> CleanupPlan {
+    let valid: bool = pages::start_valid(page, 4096, false);
+    transition valid {
+        true -> start(words, table_ids, other_nonzero)
+        _ -> (CleanupPlan { outcome: CleanupOutcome::InvalidPage, words: [words[0], words[1], words[2], words[3]] })
+    }
+    state start(words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> CleanupPlan {
+        let linked: bool = table_link(words[0]);
+        let address: u64 = page_entries::address(words[0]);
+        transition {
+            !linked -> (CleanupPlan { outcome: CleanupOutcome::Ready, words: [words[0], words[1], words[2], words[3]], visited: 1 })
+            address != table_ids[1] -> (CleanupPlan { words: [words[0], words[1], words[2], words[3]], visited: 1, outcome: CleanupOutcome::CaptureMismatch { expected: address, supplied: table_ids[1] } })
+            _ -> p3(words, table_ids, other_nonzero)
+        }
+    }
+    state p3(words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> CleanupPlan {
+        let linked: bool = table_link(words[1]);
+        let address: u64 = page_entries::address(words[1]);
+        transition {
+            !linked -> unwind(words, table_ids, other_nonzero, 1)
+            address != table_ids[2] -> (CleanupPlan { words: [words[0], words[1], words[2], words[3]], visited: 2, outcome: CleanupOutcome::CaptureMismatch { expected: address, supplied: table_ids[2] } })
+            _ -> p2(words, table_ids, other_nonzero)
+        }
+    }
+    state p2(words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> CleanupPlan {
+        let linked: bool = table_link(words[2]);
+        let address: u64 = page_entries::address(words[2]);
+        transition {
+            !linked -> unwind(words, table_ids, other_nonzero, 2)
+            address != table_ids[3] -> (CleanupPlan { words: [words[0], words[1], words[2], words[3]], visited: 3, outcome: CleanupOutcome::CaptureMismatch { expected: address, supplied: table_ids[3] } })
+            _ -> unwind(words, table_ids, other_nonzero, 3)
+        }
+    }
+    state unwind(words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4], depth: u8 [1..=3]) -> CleanupPlan {
+        let result: CleanupPlan = CleanupPlan { outcome: CleanupOutcome::Ready, words: [words[0], words[1], words[2], words[3]], visited: depth + 1 };
+        unwind_branch(&mut result, table_ids, other_nonzero, depth);
+        result
+    }
+}
+machine table_link(word: u64) -> bool { (word & 1) != 0 && (word & 128) == 0 }
+machine unwind_branch(result: &mut CleanupPlan, table_ids: &[u64; 4], other_nonzero: &[bool; 4], depth: u8 [1..=3]) {
+    let empty: bool = result.words[depth] == 0 && !other_nonzero[depth];
+    transition empty {
+        true -> remove(result, table_ids, other_nonzero, depth)
+        _ -> {}
+    }
+    state remove(result: &mut CleanupPlan, table_ids: &[u64; 4], other_nonzero: &[bool; 4], depth: u8 [1..=3]) {
+        let parent: u8 [0..=2] = depth - 1;
+        result.frames_to_retire[0] = table_ids[depth];
+        result.retire_count = 1;
+        result.words[parent] = 0;
+        result.write_mask = (1 as u8) << parent;
+        transition parent >= 1 && !other_nonzero[parent] {
+            true -> remove_parent(result, table_ids, other_nonzero, parent)
+            _ -> {}
+        }
+    }
+    state remove_parent(result: &mut CleanupPlan, table_ids: &[u64; 4], other_nonzero: &[bool; 4], parent: u8 [1..=2]) {
+        let grandparent: u8 [0..=1] = parent - 1;
+        result.frames_to_retire[1] = table_ids[parent];
+        result.retire_count = 2;
+        result.words[grandparent] = 0;
+        result.write_mask = result.write_mask | ((1 as u8) << grandparent);
+        transition grandparent == 1 && !other_nonzero[grandparent] {
+            true -> remove_grandparent(result, table_ids)
+            _ -> {}
+        }
+    }
+    state remove_grandparent(result: &mut CleanupPlan, table_ids: &[u64; 4]) {
+        result.frames_to_retire[2] = table_ids[1];
+        result.retire_count = 3;
+        result.words[0] = 0;
+        result.write_mask = result.write_mask | 1;
+    }
+}
+
+pub machine has_other_entries(table: &[X86PageTableEntry; 512], selected: u16 [0..=511]) -> bool {
+    let result: bool = scan_others(table, selected, 0, 512, false);
+    result
+}
+machine scan_others(table: &[X86PageTableEntry; 512], selected: u16 [0..=511], index: u64, end: u64, found: bool)
+terminates by (index, end) -> Nat::BoundedDistance;
+-> bool {
+    let next: bool = other_step(table, selected, index, found);
+    transition index < end { true -> scan_others(table, selected, index + 1, end, next) _ -> (found) }
+}
+machine other_step(table: &[X86PageTableEntry; 512], selected: u16 [0..=511], index: u64, found: bool) -> bool {
+    transition index < 512 && index != selected as u64 {
+        true -> inspect(table, index, found)
+        _ -> (found)
+    }
+    state inspect(table: &[X86PageTableEntry; 512], index: u64 [0..=511], found: bool) -> bool {
+        let word: u64 = page_entries::encode(&table[index]);
+        found || word != 0
+    }
+}

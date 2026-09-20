@@ -1,0 +1,33 @@
+use x86::cleanup_branch;
+use x86::cleanup_branch::CleanupPlan;
+use x86::cleanup_branch::CleanupOutcome;
+use x86::page_entries;
+use facts::x86_page_table_entry;
+
+machine invalid_page()->i32 {
+    let words:[u64;4]=[4097,8193,12289,0];let ids:[u64;4]=[16384,4096,8192,12288];let others:[bool;4];
+    let result:CleanupPlan=cleanup_branch::plan(&words,&ids,&others,1);
+    transition result.outcome in CleanupOutcome::InvalidPage && result.write_mask==0 && result.retire_count==0 { true -> (0) _ -> (1) }
+}
+machine mismatch()->i32 {
+    let words:[u64;4]=[4097,8193,12289,0];let ids:[u64;4]=[16384,4096,8192,16384];let others:[bool;4];
+    let result:CleanupPlan=cleanup_branch::plan(&words,&ids,&others,0);
+    let preserved:bool=result.write_mask==0 && result.retire_count==0 && result.visited==3;
+    transition result.outcome { CleanupOutcome::CaptureMismatch { expected,supplied } -> payload(preserved,expected,supplied) _ -> (1) }
+    state payload(preserved:bool,expected:u64,supplied:u64)->i32 { transition preserved && expected==12288 && supplied==16384 { true -> (0) _ -> (1) } }
+}
+machine all_empty()->i32 {
+    let table:[X86PageTableEntry;512];
+    let found:bool=cleanup_branch::has_other_entries(&table,0);
+    transition found == false { true -> (0) _ -> (1) }
+}
+machine selected_only()->i32 {
+    let table:[X86PageTableEntry;512];table[511]=page_entries::decode(9223372036854775808);
+    let found:bool=cleanup_branch::has_other_entries(&table,511);
+    transition found == false { true -> (0) _ -> (1) }
+}
+machine last_neighbor()->i32 {
+    let table:[X86PageTableEntry;512];table[511]=page_entries::decode(9223372036854775808);
+    let found:bool=cleanup_branch::has_other_entries(&table,0);
+    transition found == true { true -> (0) _ -> (1) }
+}

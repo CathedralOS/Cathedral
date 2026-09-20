@@ -238,6 +238,11 @@ The [TLB operand slice](source/libraries/x86_64/tlb-operands.PORT.md) passes
 Rust tests and Omega semantic checks with four body mutations. Pinned and
 AMD-defined range-count recipes are separate; no TLB instruction or invalidation
 settlement is claimed.
+The [cleanup branch slice](source/libraries/x86_64/cleanup-branch.PORT.md) passes
+112 actual Rust/Omega singleton-range scenarios, five additional fixtures and
+three body mutations. It retains non-present nonzero entries, checks all 512
+entries for sibling occupancy and records deepest-first retirement requests.
+Arbitrary-range orchestration and actual reclamation remain separate work.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

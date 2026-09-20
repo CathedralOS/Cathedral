@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use std::cell::UnsafeCell;
+use x86_64::{PhysAddr,VirtAddr};
+use x86_64::structures::paging::{PageTable,Page,Size4KiB,PhysFrame,PageTableFlags,FrameDeallocator};
+use x86_64::structures::paging::mapper::{CleanUp,MappedPageTable,PageTableFrameMapping};
+const MASK:u64=0x000ffffffffff000;
+struct Captures([Box<UnsafeCell<PageTable>>;3]);
+// Distinct stable owned tables; generated links are acyclic and unaliased.
+unsafe impl PageTableFrameMapping for Captures {
+ fn frame_to_pointer(&self,frame:PhysFrame)->*mut PageTable {let id=frame.start_address().as_u64();assert!([4096,8192,12288].contains(&id));self.0[(id/4096-1)as usize].get()}
+}
+struct Retire(Vec<u64>);
+// Detached fixture keeps backing alive to inspect cleared links after the call.
+// The callback records order; none of these frames belongs to live hardware.
+impl FrameDeallocator<Size4KiB> for Retire {unsafe fn deallocate_frame(&mut self,frame:PhysFrame){self.0.push(frame.start_address().as_u64());}}
+fn store(table:&mut PageTable,index:usize,word:u64){table[index].set_addr(PhysAddr::new(word&MASK),PageTableFlags::from_bits_retain(word&!MASK));}
+fn raw(table:&PageTable,index:usize)->u64{table[index].addr().as_u64()|table[index].flags().bits()}
+fn observe(words:[u64;4],others:u8)->([u64;4],Vec<u64>){
+ let mut root=Box::new(PageTable::new());store(&mut root,0,words[0]);if others&1!=0{root[511].set_flags(PageTableFlags::NO_EXECUTE);}
+ let mut captures=Captures(std::array::from_fn(|_|Box::new(UnsafeCell::new(PageTable::new()))));
+ for n in 0..3{store(captures.0[n].get_mut(),0,words[n+1]);if others&(1<<(n+1))!=0{captures.0[n].get_mut()[511].set_flags(PageTableFlags::NO_EXECUTE);}}
+ let mut mapper=unsafe{MappedPageTable::new(&mut root,captures)};let page=Page::<Size4KiB>::from_start_address(VirtAddr::new(0)).unwrap();
+ let mut retired=Retire(vec![]);unsafe{mapper.clean_up_addr_range(Page::range_inclusive(page,page),&mut retired)};
+ let mut result=[raw(mapper.level_4_table(),0),0,0,0];
+ for n in 0..3{let table=unsafe{&*mapper.page_table_frame_mapping().0[n].get()};result[n+1]=raw(table,0);assert_eq!(table[511].is_unused(),others&(1<<(n+1))==0);}
+ (result,retired.0)
+}
+fn main(){
+ // GENERATED_CHECKS
+ println!("PASS actual pinned cleanup branches and bottom-up callback order on detached tables");
+}
