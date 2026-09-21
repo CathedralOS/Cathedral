@@ -54,3 +54,9 @@ Object::to_integer observations and 46 actual Interpreter ToInteger evaluations.
 The latter use Null targets. They document width, empty-input, lexical and
 overflow differences; they do not attest named target replacement. No new public
 Rust run, constant evaluation, native execution or hardware result is claimed.
+
+Later [canonical interaction verification](../../../../../tools/ports/acpi/interpreter/component-integration/README.md)
+passes 14 pairs across both Integer widths with ObjectType and normal Fields
+installed. The suite checks target type replacement, Field-target rejection,
+Owned Local sources and seeded RefOf/Index argument redirection. The original
+68 component pairs retain their separate tested source identities.

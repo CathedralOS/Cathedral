@@ -350,3 +350,19 @@ including the unchanged 305 object-source cases and complete-store failure
 preservation. Existing target types and positive Buffer extents are retained.
 Generic named-target routing remains a separate pending integration; aggregate
 source counts are unchanged.
+
+[ObjectType execution](execution/object-type.PORT.md) inspects names, Local/Arg bindings
+and Debug through the canonical metadata helper, including pure Scope lookup and method
+noninvocation. Its isolated checkpoint `5bbaf37` passed 53 bytecode and 12
+complete-state decoder pairs, with 37 public Rust observations. [Explicit ToInteger
+execution](execution/to-integer.PORT.md) converts through the canonical kernel and
+replaces the destination type while preserving target binding rules. Its source-bound
+checkpoints passed 43 bytecode and 25 complete-state retirement pairs. General reference
+constructors, field evaluation and the wider interpreter remain open; these milestones
+do not complete ACPI-005.
+
+The [canonical interaction suite](../../../../tools/ports/acpi/interpreter/component-integration/README.md) passed 14 additional behavior/control pairs at both Integer widths with
+normal Field installation, ObjectType and ToInteger combined. It covers type
+replacement, Field metadata without region access, Field-target rejection,
+Owned Local sources and seeded RefOf/Index argument redirection. Component
+receipts retain their original source identities.

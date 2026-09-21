@@ -186,3 +186,9 @@ upstream function or whole generic execution coverage is claimed by that audit.
 Public Rust comparison uses the root-owned `aml-public-execution` harness, with
 trapped host callbacks and no ObjectToken forgery. Primary argument binding
 isolation and expression results retain documented differences from the pin.
+
+Subsequent adapters add [ObjectType](object-type.PORT.md) metadata inspection and
+[ToInteger](to-integer.PORT.md) explicit conversion/target replacement. Their
+isolated receipts retain their own tested checkpoints; they do not relabel this
+original generic-execution checkpoint as a run of later source. Broader literals,
+reference constructors, field access and services remain ordinary port work.

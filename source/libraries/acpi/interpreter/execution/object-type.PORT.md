@@ -99,3 +99,9 @@ Receipt snapshots belong to the exact recorded source, including their isolated
 base; later integration requires a new run before claiming current-source
 verification. Omega native ABI, firmware, hardware and production integration
 are not exercised.
+
+Later [canonical interaction verification](../../../../../tools/ports/acpi/interpreter/component-integration/README.md)
+passes 14 pairs across both Integer widths with normal Field and ToInteger
+installed. Those cases include Field ObjectType 5 without region access and
+Integer type inspection after named String/Buffer conversion. The 65 original
+component pairs remain source-bound to `5bbaf37`.

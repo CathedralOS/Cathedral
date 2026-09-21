@@ -1,0 +1,226 @@
+[
+  {
+    "name": "converted_string_type_32",
+    "table": "085352435f0d343200084453545f0d6f6c640014154d41494e00995352435f4453545fa48e4453545f",
+    "kind": 1,
+    "number": 1,
+    "bytes": "",
+    "bits": 32,
+    "after": {
+      "DST": 42
+    },
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false
+  },
+  {
+    "name": "converted_buffer_type_32",
+    "table": "085352435f0d343200084453545f11020014154d41494e00995352435f4453545fa48e4453545f",
+    "kind": 1,
+    "number": 1,
+    "bytes": "",
+    "bits": 32,
+    "after": {
+      "DST": 42
+    },
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false
+  },
+  {
+    "name": "installed_field_type_32",
+    "table": "5b805245473000000a105b810b5245473001464c443008140c4d41494e00a48e464c4430",
+    "kind": 1,
+    "number": 5,
+    "bytes": "",
+    "bits": 32,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false
+  },
+  {
+    "name": "field_conversion_target_32",
+    "table": "085352435f0d3432005b805245473000000a105b810b5245473001464c44300814104d41494e00a4995352435f464c4430",
+    "kind": 1,
+    "number": 42,
+    "bytes": "",
+    "bits": 32,
+    "after": {},
+    "object_count": 4,
+    "error": "UnresolvedRegion",
+    "note": "",
+    "setup": [],
+    "mutate_source": false
+  },
+  {
+    "name": "owned_local_source_32",
+    "table": "085352435f0d343200084453545f0a0714104d41494e009d5352435f60a4996000",
+    "kind": 1,
+    "number": 42,
+    "bytes": "",
+    "bits": 32,
+    "after": {
+      "DST": 7
+    },
+    "object_count": 4,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false
+  },
+  {
+    "name": "argument_refof_target_32",
+    "table": "085352435f0d343200084453545f0d6f6c6400085245463000140d43414c5f01a4995352435f68140f4d41494e00a443414c5f52454630",
+    "kind": 1,
+    "number": 42,
+    "bytes": "",
+    "bits": 32,
+    "after": {
+      "DST": 42
+    },
+    "object_count": 5,
+    "error": "Success",
+    "note": "",
+    "setup": [
+      "program.store.space.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};"
+    ],
+    "mutate_source": false
+  },
+  {
+    "name": "argument_index_target_32",
+    "table": "085352435f0d343200084453545f0d6f6c6400085245463000140d43414c5f01a4995352435f68140f4d41494e00a443414c5f52454630",
+    "kind": 1,
+    "number": 42,
+    "bytes": "",
+    "bits": 32,
+    "after": {
+      "DST": 42
+    },
+    "object_count": 5,
+    "error": "Success",
+    "note": "",
+    "setup": [
+      "program.store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};"
+    ],
+    "mutate_source": false
+  },
+  {
+    "name": "converted_string_type_64",
+    "table": "085352435f0d343200084453545f0d6f6c640014154d41494e00995352435f4453545fa48e4453545f",
+    "kind": 1,
+    "number": 1,
+    "bytes": "",
+    "bits": 64,
+    "after": {
+      "DST": 42
+    },
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false
+  },
+  {
+    "name": "converted_buffer_type_64",
+    "table": "085352435f0d343200084453545f11020014154d41494e00995352435f4453545fa48e4453545f",
+    "kind": 1,
+    "number": 1,
+    "bytes": "",
+    "bits": 64,
+    "after": {
+      "DST": 42
+    },
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false
+  },
+  {
+    "name": "installed_field_type_64",
+    "table": "5b805245473000000a105b810b5245473001464c443008140c4d41494e00a48e464c4430",
+    "kind": 1,
+    "number": 5,
+    "bytes": "",
+    "bits": 64,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false
+  },
+  {
+    "name": "field_conversion_target_64",
+    "table": "085352435f0d3432005b805245473000000a105b810b5245473001464c44300814104d41494e00a4995352435f464c4430",
+    "kind": 1,
+    "number": 42,
+    "bytes": "",
+    "bits": 64,
+    "after": {},
+    "object_count": 4,
+    "error": "UnresolvedRegion",
+    "note": "",
+    "setup": [],
+    "mutate_source": false
+  },
+  {
+    "name": "owned_local_source_64",
+    "table": "085352435f0d343200084453545f0a0714104d41494e009d5352435f60a4996000",
+    "kind": 1,
+    "number": 42,
+    "bytes": "",
+    "bits": 64,
+    "after": {
+      "DST": 7
+    },
+    "object_count": 4,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false
+  },
+  {
+    "name": "argument_refof_target_64",
+    "table": "085352435f0d343200084453545f0d6f6c6400085245463000140d43414c5f01a4995352435f68140f4d41494e00a443414c5f52454630",
+    "kind": 1,
+    "number": 42,
+    "bytes": "",
+    "bits": 64,
+    "after": {
+      "DST": 42
+    },
+    "object_count": 5,
+    "error": "Success",
+    "note": "",
+    "setup": [
+      "program.store.space.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};"
+    ],
+    "mutate_source": false
+  },
+  {
+    "name": "argument_index_target_64",
+    "table": "085352435f0d343200084453545f0d6f6c6400085245463000140d43414c5f01a4995352435f68140f4d41494e00a443414c5f52454630",
+    "kind": 1,
+    "number": 42,
+    "bytes": "",
+    "bits": 64,
+    "after": {
+      "DST": 42
+    },
+    "object_count": 5,
+    "error": "Success",
+    "note": "",
+    "setup": [
+      "program.store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};"
+    ],
+    "mutate_source": false
+  }
+]
