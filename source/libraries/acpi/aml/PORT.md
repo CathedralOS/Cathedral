@@ -222,3 +222,9 @@ including the unchanged 305 object-source cases and complete-store failure
 preservation. Existing target types and positive Buffer extents are retained.
 Generic named-target routing remains a separate pending integration; aggregate
 source counts are unchanged.
+
+[BankField and IndexField namespace installation](field-indirect.PORT.md) extends
+the same canonical FieldUnit and namespace transaction with explicit region,
+selector and data identities. Static literal BankValue metadata is retained;
+dynamic declaration operands and live field evaluation remain open. Earlier
+normal-Field receipts describe the preserved `24aed04` checkpoint.

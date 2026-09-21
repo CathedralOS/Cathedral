@@ -1,4 +1,4 @@
-"""Original normal Field loader inputs and explicit complete-state expectations."""
+"""Original Field/BankField/IndexField loader inputs and explicit complete-state expectations."""
 import argparse
 import json
 from pathlib import Path
@@ -112,8 +112,8 @@ def cases():
  wrong=base();wrong['values'][0]=dict(kind='reference',reference_kind='RefOf',object_id=0)
  add('reference_not_region',normal(),initial=wrong,error='UnsupportedSyntax')
  add('later_opcode_failure_rolls_back',normal()+b'\x72',error='UnsupportedSyntax')
- add('index_field_stays_unsupported',b'\x5b\x86'+envelope(b'REG0REG0\x01FLD0\x08'),error='UnsupportedSyntax')
- add('bank_field_stays_unsupported',b'\x5b\x87'+envelope(b'REG0REG0\x01\x01FLD0\x08'),error='UnsupportedSyntax')
+ add('index_field_rejects_region_registers',b'\x5b\x86'+envelope(b'REG0REG0\x01FLD0\x08'),error='UnsupportedSyntax')
+ add('bank_field_rejects_region_selector',b'\x5b\x87'+envelope(b'REG0REG0\x01\x01FLD0\x08'),error='UnsupportedSyntax')
  full=base(objects=63)
  add('last_object_slot',normal(),[field('FLD0',one)],initial=full)
  add('object_exhaustion_atomic_declaration',normal(elements=b'F000\x08F001\x08'),initial=full,error='Capacity')
@@ -130,6 +130,104 @@ def cases():
  raw=normal(elements=b'\0'+length(0xfffffff)+b'WIDE'+length(0xfffffff))
  fs=[dict(name='WIDE',offset=0xfffffff,bits=0xfffffff,start=5,end=13)]
  add('large_metadata_extent',raw,[field('WIDE',field_expected(raw,fields=fs)[0])])
+ rows.extend(indirect_cases())
+ return rows
+
+def indirect(kind='Bank',primary=None,secondary=None,bank_value=42,flags=1,elements=b'FLD0\x08',bank_wire=None):
+ primary=primary or ('REG0'if kind=='Bank'else'IDX0');secondary=secondary or ('IDX0'if kind=='Bank'else'DAT0')
+ value=(integer(bank_value)if bank_wire is None else bank_wire)if kind=='Bank'else b''
+ return b'\x5b'+bytes([0x87 if kind=='Bank'else 0x86])+envelope(path_wire(primary)+path_wire(secondary)+value+bytes([flags])+elements)
+def indirect_expected(wire,kind='Bank',primary=None,secondary=None,bank_value=42,flags=1,scope='',begin=0,fields=None,first=0,second=1):
+ primary=primary or ('REG0'if kind=='Bank'else'IDX0');secondary=secondary or ('IDX0'if kind=='Bank'else'DAT0')
+ list_start=begin+2+(wire[2]>>6)+1+len(path_wire(primary))+len(path_wire(secondary))+(len(integer(bank_value))if kind=='Bank'else 0)+1
+ declaration=dict(kind=kind,scope=path(scope,True),primary_name=path(primary),secondary_name=path(secondary),bank_value=bank_value if kind=='Bank'else 0,flags=flags,source=span(begin,begin+len(wire)),field_list=span(list_start,begin+len(wire)))
+ out=[]
+ for item in fields or [dict(name='FLD0',offset=0,bits=8,start=0,end=5)]:
+  value=dict(kind='field',binding_kind=kind,declaration=declaration,field=dict(name=path('.'.join(filter(None,[scope,item['name']])),True),bit_offset=item['offset'],bit_length=item['bits'],access=item.get('access',access(flags)),connection=item.get('connection',dict(kind='None')),source=span(list_start+item['start'],list_start+item['end'])))
+  if kind=='Bank':value.update(region=first,selector=second)
+  else:value.update(index=first,data=second)
+  out.append(dict(path='.'.join(filter(None,[scope,item['name']])),value=value))
+ return out
+
+def indirect_base(objects=3):
+ initial=base(objects=objects,entries=[dict(path='',level=True),dict(path='REG0',object=0),dict(path='IDX0',object=1),dict(path='DAT0',object=2)])
+ raw=normal(elements=b'IDX0\x08DAT0\x08')
+ fields=[dict(name='IDX0',offset=0,bits=8,start=0,end=5),dict(name='DAT0',offset=8,bits=8,start=5,end=10)]
+ initial['values'].update(dict(enumerate(field_expected(raw,fields=fields),1)))
+ return initial
+
+def indirect_cases():
+ rows=[]
+ def add(name,wire,expected=None,initial=None,error='Success',terms=64,values=64):
+  rows.append(dict(name=name,wire=wire.hex(),expected=expected or [],initial=initial or indirect_base(),error=error,terms=terms,values=values,definitions=True))
+ for kind in ['Bank','Index']:
+  lower=kind.lower();first,second=(0,1)if kind=='Bank'else(1,2)
+  def expected(raw,**kwargs):return indirect_expected(raw,kind=kind,first=first,second=second,**kwargs)
+  raw=indirect(kind);add(lower+'_basic',raw,expected(raw))
+  raw=indirect(kind,elements=b'ZERO\0');fs=[dict(name='ZERO',offset=0,bits=0,start=0,end=5)]
+  add(lower+'_zero_width',raw,expected(raw,fields=fs))
+  # Access changes, a connection name, and extended access survive installation.
+  elements=b'A000\x03\0\x05\x01\x42\x17\x02CON0A001\x10\x03\x04\x0e\x20A002\x40\x04'
+  fs=[dict(name='A000',offset=0,bits=3,start=0,end=5),dict(name='A001',offset=8,bits=16,start=15,end=20,access=access(0x32,0x17,1),connection=dict(kind='Name',connection_name=path('CON0'))),dict(name='A002',offset=24,bits=64,start=24,end=30,access=access(0x34,0x0e,0,True,0x20),connection=dict(kind='Name',connection_name=path('CON0')))]
+  raw=indirect(kind,flags=0x31,elements=elements);add(lower+'_access_connection_metadata',raw,expected(raw,flags=0x31,fields=fs))
+  raw=indirect(kind,elements=b'');add(lower+'_empty',raw,values=0)
+  raw=indirect(kind);add(lower+'_exact_term_budget',raw,expected(raw),terms=2)
+  add(lower+'_term_budget_rollback',raw,error='WorkLimit',terms=1)
+  add(lower+'_element_budget_rollback',indirect(kind,elements=b'A000\x08A001\x08'),error='WorkLimit',values=1)
+  add(lower+'_late_malformed_rollback',indirect(kind,elements=b'A000\x08\x03\x04'),error='Truncated')
+  add(lower+'_invalid_flags',indirect(kind,flags=0x60),error='BadEncoding')
+  add(lower+'_truncated_envelope',raw[:-1],error='BadEncoding')
+  add(lower+'_missing_primary',indirect(kind,primary='MISS'),error='MissingObject')
+  add(lower+'_missing_secondary',indirect(kind,secondary='MISS'),error='MissingObject')
+  initial=indirect_base();initial['values'][first]=dict(kind='integer',number=2)
+  add(lower+'_wrong_primary',raw,initial=initial,error='UnsupportedSyntax')
+  initial=indirect_base();initial['values'][second]=dict(kind='integer',number=2)
+  add(lower+'_wrong_secondary',raw,initial=initial,error='UnsupportedSyntax')
+  initial=indirect_base();initial['values'][second]=dict(kind='reference',reference_kind='RefOf',object_id=second)
+  add(lower+'_reference_secondary',raw,initial=initial,error='UnsupportedSyntax')
+  # Both lookup identities must be resolved before any FieldList name replaces them.
+  replaced='IDX0'if kind=='Bank'else'DAT0';fs=[dict(name=replaced,offset=0,bits=8,start=0,end=5),dict(name='F001',offset=8,bits=8,start=5,end=10)]
+  rebind=indirect(kind,elements=replaced.encode()+b'\x08F001\x08');add(lower+'_list_replaces_register',rebind,expected(rebind,fields=fs))
+  initial=indirect_base();initial['entries'] += [dict(path='PALS',object=first,alias=True),dict(path='SALS',object=second,alias=True)]
+  alias=indirect(kind,primary='PALS',secondary='SALS');add(lower+'_aliases',alias,expected(alias,primary='PALS',secondary='SALS'),initial=initial)
+  initial=indirect_base();initial['entries'].append(dict(path='DEV0',level=True,level_kind='Device'))
+  scope=b'\x10'+envelope(path_wire('DEV0')+raw);add(lower+'_ancestor_scope',scope,expected(raw,scope='DEV0',begin=len(scope)-len(raw)),initial=initial)
+  primary='\\REG0'if kind=='Bank'else'\\IDX0';secondary='^IDX0'if kind=='Bank'else'^DAT0'
+  nested=indirect(kind,primary=primary,secondary=secondary);scope=b'\x10'+envelope(path_wire('DEV0')+nested)
+  add(lower+'_absolute_parent_names',scope,expected(nested,primary=primary,secondary=secondary,scope='DEV0',begin=len(scope)-len(nested)),initial=initial)
+  add(lower+'_last_object_slot',raw,expected(raw),initial=indirect_base(objects=63))
+  add(lower+'_object_exhaustion_rollback',indirect(kind,elements=b'A000\x08A001\x08'),initial=indirect_base(objects=63),error='Capacity')
+  fs=[dict(name=f'B{i:03}',offset=i,bits=1,start=i*5,end=i*5+5)for i in range(28)]
+  many=indirect(kind,elements=b''.join(f['name'].encode()+b'\x01'for f in fs));add(lower+'_last_namespace_slot',many,expected(many,fields=fs))
+  add(lower+'_namespace_exhaustion_rollback',indirect(kind,elements=b''.join(f'B{i:03}'.encode()+b'\x01'for i in range(29))),error='Capacity')
+  add(lower+'_later_opcode_rollback',raw+b'\x72',error='UnsupportedSyntax')
+  method=b'\x14'+envelope(b'MAIN\0\xa4\x01')
+  add(lower+'_method_and_field_rollback',method+raw+b'\x72',error='UnsupportedSyntax')
+  # The full declaration must fail parsing before missing names are inspected.
+  add(lower+'_syntax_precedes_lookup',indirect(kind,primary='MISS',elements=b'A000\x08\x01\x02'),error='Truncated')
+ # Literal BankValue is retained as metadata, without selector-width coercion.
+ for label,value in [('zero',0),('one',1),('max',MAX)]:
+  raw=indirect(bank_value=value);add('bank_value_'+label,raw,indirect_expected(raw,bank_value=value))
+ add('bank_dynamic_value_pending',indirect(bank_wire=b'\x60'),error='UnsupportedSyntax')
+ add('bank_truncated_literal',b'\x5b\x87'+envelope(b'REG0IDX0\x0e\x01'),error='Truncated')
+ # Existing bank/index fields may themselves be selector/data identities.
+ for kind in ['Bank','Index']:
+  initial=indirect_base();old=indirect(kind)
+  initial['values'][1]=indirect_expected(old,kind=kind,first=0 if kind=='Bank'else 2,second=2)[0]['value']
+  raw=indirect('Index');add('index_'+kind.lower()+'_selector_identity',raw,indirect_expected(raw,kind='Index',first=1,second=2),initial=initial)
+ raw=indirect('Index',secondary='IDX0');add('index_shared_register_identity',raw,indirect_expected(raw,kind='Index',secondary='IDX0',first=1,second=1))
+ # Later replacement never retargets the first indexed field.
+ a=indirect('Index');rebind=normal(elements=b'DAT0\x10');b=indirect('Index',elements=b'NEW0\x08')
+ ex=indirect_expected(a,kind='Index',first=1,second=2)
+ ex += [dict(path='DAT0',value=field_expected(rebind,begin=len(a),fields=[dict(name='DAT0',offset=0,bits=16,start=0,end=5)])[0])]
+ ex += indirect_expected(b,kind='Index',first=1,second=4,begin=len(a)+len(rebind),fields=[dict(name='NEW0',offset=0,bits=8,start=0,end=5)])
+ add('index_later_data_rebind_retains_identity',a+rebind+b,ex)
+ # All three declaration families can compose in one transaction.
+ normalraw=normal(elements=b'IDX0\x08DAT0\x08');bankraw=indirect(elements=b'BNK0\x08');indexraw=indirect('Index',primary='BNK0',elements=b'OUT0\x08')
+ ex=[dict(path=name,value=f)for name,f in zip(['IDX0','DAT0'],field_expected(normalraw,fields=[dict(name='IDX0',offset=0,bits=8,start=0,end=5),dict(name='DAT0',offset=8,bits=8,start=5,end=10)]))]
+ ex+=indirect_expected(bankraw,begin=len(normalraw),fields=[dict(name='BNK0',offset=0,bits=8,start=0,end=5)])
+ ex+=indirect_expected(indexraw,kind='Index',primary='BNK0',first=3,second=2,begin=len(normalraw)+len(bankraw),fields=[dict(name='OUT0',offset=0,bits=8,start=0,end=5)])
+ add('mixed_field_families_transaction',normalraw+bankraw+indexraw,ex,initial=base())
  return rows
 
 IMPORTS='''use aml::model::Outcome;
@@ -137,6 +235,7 @@ use aml::model::Namespace;
 use aml::model::Entry;
 use aml::model::Object;
 use aml::model::Value;
+use aml::model::FieldBinding;
 use aml::model::ReferenceKind;
 use aml::model::Path;
 use aml::model::Span;
@@ -181,8 +280,14 @@ def value_expr(v,bindings,key):
   if c['kind']=='Name':connection+=' {connection_name:'+path_expr(c['connection_name'],bindings,key+'_connection')+'}'
   elif c['kind']=='Buffer':connection+=' {'+','.join(f'{k}:{span_expr(val)if isinstance(val,dict)else omega(val)}'for k,val in c.items()if k!='kind')+'}'
   descriptor='Field {'+f'name:{name},bit_offset:{f["bit_offset"]},bit_length:{f["bit_length"]},access:{acc},connection:{connection},source:{span_expr(f["source"])}'+'}'
-  return 'Value::FieldUnit {'+f'region_object:{v["region"]},declaration:{declaration},field:{descriptor}'+'}'
+  return 'Value::FieldUnit {'+f'binding:{binding_expr(v)},declaration:{declaration},field:{descriptor}'+'}'
  raise ValueError(kind)
+
+def binding_expr(v):
+ kind=v.get('binding_kind','Region')
+ if kind=='Region':return 'FieldBinding::Region {region_object:'+str(v['region'])+'}'
+ if kind=='Bank':return 'FieldBinding::Bank {region_object:'+str(v['region'])+',selector_object:'+str(v['selector'])+'}'
+ return 'FieldBinding::Index {index_object:'+str(v['index'])+',data_object:'+str(v['data'])+'}'
 
 def fixture_body(row,control=False):
  b=['let mut source:[u8;1024];']+[f'source[{i}]={v};'for i,v in enumerate(bytes.fromhex(row['wire']))if v]
@@ -205,7 +310,14 @@ def fixture_body(row,control=False):
  b.append(f'let result:i32=compare(&observed.load.space,&expected,&observed.definitions,&definitions,observed.load.outcome,Outcome::{row["error"]});result')
  return '\n'.join(b)
 
-HELPERS='''machine initial_space()->Namespace {let mut s:Namespace;seed(&mut s,0,64);s}
+HELPERS='''machine bindings(a:FieldBinding,b:FieldBinding)->bool {transition a {
+ FieldBinding::Region {region_object} -> region(region_object,b)
+ FieldBinding::Bank {region_object,selector_object} -> bank(region_object,selector_object,b)
+ FieldBinding::Index {index_object,data_object} -> index(index_object,data_object,b)}
+ state region(id:u64,b:FieldBinding)->bool {transition b {FieldBinding::Region {region_object} -> (id==region_object) _ -> (false)}}
+ state bank(region:u64,selector:u64,b:FieldBinding)->bool {transition b {FieldBinding::Bank {region_object,selector_object} -> (region==region_object && selector==selector_object) _ -> (false)}}
+ state index(index:u64,data:u64,b:FieldBinding)->bool {transition b {FieldBinding::Index {index_object,data_object} -> (index==index_object && data==data_object) _ -> (false)}}}
+machine initial_space()->Namespace {let mut s:Namespace;seed(&mut s,0,64);s}
 machine seed(s:&mut Namespace,index:u64,count:u64)
 terminates by(index,count)->Nat::BoundedDistance;
 {seed_one(s,index);transition index<count {true -> seed(s,index+1,count) _ -> {}}}
@@ -231,14 +343,14 @@ machine fields(a:Field,b:Field)->bool {let name:bool=paths(a.name,b.name);let ac
 machine values(a:Value,b:Value)->bool {transition a {
  Value::Integer {number} -> integer(number,b)
  Value::OperationRegion {space,base,length,scope} -> region(space,base,length,scope,b)
- Value::FieldUnit {region_object,declaration,field} -> field(region_object,declaration,field,b)
+ Value::FieldUnit {binding,declaration,field} -> field(binding,declaration,field,b)
  Value::Reference {kind,object_id} -> reference(kind,object_id,b)
  _ -> (false)}
  state integer(a:u64,b:Value)->bool {transition b {Value::Integer {number} -> (a==number) _ -> (false)}}
  state region(a:u8,base_a:u64,length_a:u64,scope_a:Path,b:Value)->bool {transition b {Value::OperationRegion {space,base,length,scope} -> region_same(a,base_a,length_a,scope_a,space,base,length,scope) _ -> (false)}}
  state region_same(a:u8,ab:u64,al:u64,ap:Path,b:u8,bb:u64,bl:u64,bp:Path)->bool {let same:bool=paths(ap,bp);a==b && ab==bb && al==bl && same}
- state field(a:u64,ad:Declaration,af:Field,b:Value)->bool {transition b {Value::FieldUnit {region_object,declaration,field} -> field_same(a,ad,af,region_object,declaration,field) _ -> (false)}}
- state field_same(a:u64,ad:Declaration,af:Field,b:u64,bd:Declaration,bf:Field)->bool {let ds:bool=declarations(ad,bd);let fs:bool=fields(af,bf);a==b && ds && fs}
+ state field(a:FieldBinding,ad:Declaration,af:Field,b:Value)->bool {transition b {Value::FieldUnit {binding,declaration,field} -> field_same(a,ad,af,binding,declaration,field) _ -> (false)}}
+ state field_same(a:FieldBinding,ad:Declaration,af:Field,b:FieldBinding,bd:Declaration,bf:Field)->bool {let bs:bool=bindings(a,b);let ds:bool=declarations(ad,bd);let fs:bool=fields(af,bf);bs && ds && fs}
  state reference(a:ReferenceKind,id:u64,b:Value)->bool {transition b {Value::Reference {kind,object_id} -> (a==kind && id==object_id) _ -> (false)}}}
 machine objects(a:&Namespace,b:&Namespace,index:u64,count:u64,prior:bool)
 terminates by(index,count)->Nat::BoundedDistance;
@@ -268,4 +380,4 @@ if __name__=='__main__':
  for name,text in outputs.items():
   if a.check:assert (HERE/name).read_text()==text,name
   else:(HERE/name).write_text(text)
- print(f'{len(rows)} independently authored normal Field loader scenario/control pairs')
+ print(f'{len(rows)} independently authored field-declaration loader scenario/control pairs')

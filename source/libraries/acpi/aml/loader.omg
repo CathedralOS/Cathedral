@@ -66,6 +66,8 @@ machine load_step(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodD
    0x5b02 -> call_event_7(input,value,op.next)
    0x5b80 -> call_region_8(input,value,op.next)
    0x5b81 -> field(input,value)
+   0x5b86 -> field(input,value)
+   0x5b87 -> field(input,value)
    0x5b82 -> call_scoped_9(input,value,op,LevelKind::Device)
    0x5b83 -> call_scoped_10(input,value,op,LevelKind::Processor)
    0x5b84 -> call_scoped_11(input,value,op,LevelKind::PowerResource)

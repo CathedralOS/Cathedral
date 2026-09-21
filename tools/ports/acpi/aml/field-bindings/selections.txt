@@ -1,0 +1,12 @@
+Suite::region_FourBytes_positive=0
+Suite::region_FourBytes_control=1
+Suite::region_EightBytes_positive=0
+Suite::region_EightBytes_control=1
+Suite::bank_FourBytes_positive=0
+Suite::bank_FourBytes_control=1
+Suite::bank_EightBytes_positive=0
+Suite::bank_EightBytes_control=1
+Suite::index_FourBytes_positive=0
+Suite::index_FourBytes_control=1
+Suite::index_EightBytes_positive=0
+Suite::index_EightBytes_control=1

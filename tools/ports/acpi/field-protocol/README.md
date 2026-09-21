@@ -1,5 +1,11 @@
 # BankField and IndexField protocol checks
 
+The original full receipts below describe `b92c4ed`; the later three-pair owner
+migration describes `24aed04`. Both remain historical after the Bank/Index
+namespace extension changes the shared object model. Its unchanged detached
+protocol algorithms and metadata parser bodies are not broadly re-executed by
+that namespace milestone.
+
 These checks exercise the detached
 [logical protocol planner](../../../../source/libraries/acpi/field_protocol/PORT.md).
 They do not execute Omega AML opcodes, payload transfers, native callbacks or
@@ -16,7 +22,7 @@ assertion body; returning a different constant is not a control.
 
 Verified: all 204 checked pairs and three constant pairs pass. Checked execution
 took 312.784 seconds with three workers; constant evaluation took 128.916 seconds.
-The final verifier checks 23 current inputs and all 60 public observations.
+That checkpoint verifier checks its 23 recorded inputs and all 60 public observations.
 
 `reference.py` authors 60 AML inputs for the public pinned interpreter. It reuses
 the unchanged `field-access/reference.rs` harness, lockfile and byte encoders.

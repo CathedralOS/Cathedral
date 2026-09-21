@@ -1,5 +1,10 @@
 # Normal Field namespace installation
 
+The following evidence records the normal-Field checkpoint `24aed04`. The later
+[BankField/IndexField extension](field-indirect.PORT.md) generalizes its canonical
+identity to FieldBinding and carries new source-bound verification. Earlier
+receipts remain historical; the original committed inputs are preserved.
+
 Status: **tested in the recorded isolated worktree**: 38 checked loader pairs,
 one constant-evaluator pair, 20 metadata/consumer compatibility pairs and three
 selected upstream protocol owner-migration pairs pass.

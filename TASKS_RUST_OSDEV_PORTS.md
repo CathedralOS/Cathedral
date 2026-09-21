@@ -546,8 +546,11 @@ access/connection metadata, stable region identity and whole-load rollback.
 All 38 checked loader pairs, one constant pair, 20 metadata/consumer pairs and
 three selected upstream protocol owner-migration pairs pass in the recorded
 isolated worktree. The original parser/protocol receipts remain historical.
-IndexField/BankField installation and full interpreter behavior remain ordinary
-implementation work; ACPI-004 stays open. The separate integer executor does not
+[BankField/IndexField namespace installation](source/libraries/acpi/aml/field-indirect.PORT.md)
+adds explicit canonical register identities and extends the same transaction.
+All 100 loader pairs, six unresolved-boundary pairs and three shared-comparator
+pairs pass in the recorded isolated worktree. Dynamic BankValue and full interpreter behavior remain
+ordinary implementation work; ACPI-004 stays open. The separate integer executor does not
 complete these syntax/resource-limit milestones.
 [Normal Field geometry](source/libraries/acpi/field_access/PORT.md) adds aligned
 access footprints, bounded chunk plans and scalar extract/merge arithmetic, with

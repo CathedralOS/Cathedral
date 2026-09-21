@@ -1,3 +1,8 @@
+use aml::model::FieldBinding;
+use aml::field_model::Access;
+use aml::field_model::Connection;
+use aml::field_model::Declaration;
+use aml::field_model::Field;
 use aml::model::Value;
 use aml::model::Span;
 use aml::model::Path;
@@ -42,12 +47,31 @@ machine fx_buffer(a:BufferStorage,b:BufferStorage)->bool {
  state span(size:u64,a:Span,other:u64,b:Span)->bool {let good:bool=fx_span(a,b);size==other && good}
  state owned(a:u64,b:BufferStorage)->bool {transition b {BufferStorage::Owned {buffer_owner} -> (a==buffer_owner) _ -> (false)}}
 }
+machine fx_field_binding(a:FieldBinding,b:FieldBinding)->bool {transition a {
+ FieldBinding::Region {region_object} -> region(region_object,b)
+ FieldBinding::Bank {region_object,selector_object} -> bank(region_object,selector_object,b)
+ FieldBinding::Index {index_object,data_object} -> index(index_object,data_object,b)}
+ state region(id:u64,b:FieldBinding)->bool {transition b {FieldBinding::Region {region_object} -> (id==region_object) _ -> (false)}}
+ state bank(region:u64,selector:u64,b:FieldBinding)->bool {transition b {FieldBinding::Bank {region_object,selector_object} -> (region==region_object && selector==selector_object) _ -> (false)}}
+ state index(index:u64,data:u64,b:FieldBinding)->bool {transition b {FieldBinding::Index {index_object,data_object} -> (index==index_object && data==data_object) _ -> (false)}}}
+machine fx_access(a:Access,b:Access)->bool {a.flags==b.flags && a.kind==b.kind && a.locked==b.locked && a.update==b.update && a.attribute==b.attribute && a.attribute_mode==b.attribute_mode && a.extended==b.extended && a.access_length==b.access_length}
+machine fx_connection(a:Connection,b:Connection)->bool {transition a {
+ Connection::None -> none(b) Connection::Name {connection_name} -> name(connection_name,b)
+ Connection::Buffer {buffer_encoding,size_known,declared_size,initializer} -> buffer(buffer_encoding,size_known,declared_size,initializer,b)}
+ state none(b:Connection)->bool {transition b {Connection::None -> (true) _ -> (false)}}
+ state name(a:Path,b:Connection)->bool {transition b {Connection::Name {connection_name} -> name_same(a,connection_name) _ -> (false)}}
+ state name_same(a:Path,b:Path)->bool {let result:bool=fx_path(a,b);result}
+ state buffer(a:Span,known:bool,size:u64,bytes:Span,b:Connection)->bool {transition b {Connection::Buffer {buffer_encoding,size_known,declared_size,initializer} -> buffer_same(a,known,size,bytes,buffer_encoding,size_known,declared_size,initializer) _ -> (false)}}
+ state buffer_same(a:Span,ak:bool,az:u64,ai:Span,b:Span,bk:bool,bz:u64,bi:Span)->bool {let encoding:bool=fx_span(a,b);let init:bool=fx_span(ai,bi);encoding && init && ak==bk && az==bz}}
+machine fx_declaration(a:Declaration,b:Declaration)->bool {let scope:bool=fx_path(a.scope,b.scope);let primary:bool=fx_path(a.primary_name,b.primary_name);let secondary:bool=fx_path(a.secondary_name,b.secondary_name);let source:bool=fx_span(a.source,b.source);let list:bool=fx_span(a.field_list,b.field_list);scope && primary && secondary && source && list && a.kind==b.kind && a.bank_value==b.bank_value && a.flags==b.flags}
+machine fx_field(a:Field,b:Field)->bool {let name:bool=fx_path(a.name,b.name);let acc:bool=fx_access(a.access,b.access);let connection:bool=fx_connection(a.connection,b.connection);let source:bool=fx_span(a.source,b.source);name && acc && connection && source && a.bit_offset==b.bit_offset && a.bit_length==b.bit_length}
 machine fx_value(a:Value,b:Value)->bool {transition a {
 Value::Uninitialized -> c_uninitialized(b)
 Value::Integer {number} -> c_integer(number,b)
 Value::String {string_storage} -> c_string(string_storage,b)
 Value::Buffer {buffer_storage} -> c_buffer(buffer_storage,b)
 Value::BufferField {backing_object,bit_offset,bit_length} -> c_bufferfield(backing_object,bit_offset,bit_length,b)
+Value::FieldUnit {binding,declaration,field} -> c_fieldunit(binding,declaration,field,b)
 Value::Package {first,count} -> c_package(first,count,b)
 Value::NameReference {name,scope} -> c_namereference(name,scope,b)
 Value::Reference {kind,object_id} -> c_reference(kind,object_id,b)
@@ -67,6 +91,8 @@ state check_c_string(a_string_storage:StringStorage,string_storage:StringStorage
 state c_buffer(a_buffer_storage:BufferStorage,b:Value)->bool {transition b {Value::Buffer {buffer_storage} -> check_c_buffer(a_buffer_storage,buffer_storage) _ -> (false)}}
 state check_c_buffer(a_buffer_storage:BufferStorage,buffer_storage:BufferStorage)->bool {let good_buffer_storage:bool=fx_buffer(a_buffer_storage,buffer_storage);good_buffer_storage}
 state c_bufferfield(a_backing_object:u64,a_bit_offset:u64,a_bit_length:u64,b:Value)->bool {transition b {Value::BufferField {backing_object,bit_offset,bit_length} -> (a_backing_object==backing_object && a_bit_offset==bit_offset && a_bit_length==bit_length) _ -> (false)}}
+state c_fieldunit(binding:FieldBinding,declaration:Declaration,field:Field,b:Value)->bool {transition b {Value::FieldUnit {binding as other_binding,declaration as other_declaration,field as other_field} -> check_c_fieldunit(binding,declaration,field,other_binding,other_declaration,other_field) _ -> (false)}}
+state check_c_fieldunit(binding:FieldBinding,declaration:Declaration,field:Field,other_binding:FieldBinding,other_declaration:Declaration,other_field:Field)->bool {let same_binding:bool=fx_field_binding(binding,other_binding);let same_declaration:bool=fx_declaration(declaration,other_declaration);let same_field:bool=fx_field(field,other_field);same_binding && same_declaration && same_field}
 state c_package(a_first:u64,a_count:u64,b:Value)->bool {transition b {Value::Package {first,count} -> (a_first==first && a_count==count) _ -> (false)}}
 state c_namereference(a_name:Path,a_scope:Path,b:Value)->bool {transition b {Value::NameReference {name,scope} -> check_c_namereference(a_name,a_scope,name,scope) _ -> (false)}}
 state check_c_namereference(a_name:Path,a_scope:Path,name:Path,scope:Path)->bool {let good_name:bool=fx_path(a_name,name);let good_scope:bool=fx_path(a_scope,scope);good_name && good_scope}

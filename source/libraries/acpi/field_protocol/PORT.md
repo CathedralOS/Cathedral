@@ -1,7 +1,10 @@
 # Detached BankField and IndexField sequencing
 
-Status: **tested**. The metadata-owner migration passes all three selected
-checked behavior/control pairs, with an exact current-input verifier.
+Status: **tested at the preserved `24aed04` metadata-owner checkpoint**.
+Its three selected checked behavior/control pairs pass with exact recorded
+inputs. The subsequent [Bank/Index namespace extension](../aml/field-indirect.PORT.md)
+changes the shared object model; this conservative full-source receipt remains
+historical. Protocol algorithms and canonical parser/metadata bodies are unchanged.
 Upstream `b92c4ed` retains 204 checked-interpreter behavior/control pairs, three
 constant-evaluator pairs and 60 public Rust observations. Their original exact
 source/tool hashes remain historical after the shared Field types move to
