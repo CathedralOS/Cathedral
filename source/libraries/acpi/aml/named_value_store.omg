@@ -134,7 +134,7 @@ machine prepare_integer(number:u64,size:IntegerSize,target:ConversionTarget,exte
   transition formatted {StringResult::String {length,bytes} -> (ImplicitResult::String {length:length,bytes:bytes}) StringResult::Capacity -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity})}
  }
  state bounded(number:u64,size:IntegerSize,extent:u64)->ImplicitResult {
-  transition {extent==0 -> (ImplicitResult::Failure {reason:ConversionFailure::Bounds}) extent>256 -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity}) _ -> buffer(number,size,extent)}
+  transition {extent>256 -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity}) _ -> buffer(number,size,extent)}
  }
  state buffer(number:u64,size:IntegerSize,extent:u64)->ImplicitResult {
   let mut bytes:[u8;256];let packed:IntegerResult=integer_to_buffer(size,number,&mut bytes);

@@ -1,5 +1,9 @@
 # Positive-extent Buffer value preparation
 
+The later [zero-length Buffer conversion extension](zero-buffer-store.PORT.md)
+admits Integer/String stores into existing empty Buffers. The profile and
+source-bound receipts below record this earlier milestone, before that extension.
+
 Same-type Buffer copying is now handled by the separate
 [equal-extent named Store branch](named-buffer-store.PORT.md). This conversion
 helper and its original Integer/String profile remain unchanged.

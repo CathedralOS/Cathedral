@@ -764,6 +764,16 @@ Unequal Buffer extents need a narrow compatibility choice between resize and
 fixed-extent behavior; this does not block other ACPI-005 implementation work.
 Aggregate source anchors remain pending.
 
+
+[Zero-length Buffer conversion](source/libraries/acpi/aml/zero-buffer-store.PORT.md)
+extends direct named Store and preparation to existing empty Buffers with fully
+admitted Integer/String sources. Focused isolated evidence covers 86 checked
+behavior/control pairs and six actual pinned public observations; earlier receipts
+remain historical. Empty String into a positive Buffer still needs the narrow
+precedence decision between the conversion table's empty-result special case and
+existing-target padding rule. Unequal Buffer-copy geometry remains its separate
+compatibility decision; ACPI-005 and aggregate source counts stay open.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and
