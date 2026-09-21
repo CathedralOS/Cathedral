@@ -657,6 +657,13 @@ reuse the same conversion path without a temporary object slot. All 168 scalar
 pairs and 315 original object-source pairs pass with exact source and binary
 verification. Field-write retirement and providers remain pending.
 
+[Single-payload Field write sequencing](source/libraries/acpi/field_writes/transfer.PORT.md)
+retains one admitted payload and orders each Preserve read immediately before
+its native write. All 102 continuation pairs and eight unchanged assembly
+regressions pass with exact source/binary checks. Rejected responses preserve
+the entire continuation; terminal failures retain acknowledged effect counts.
+AML retirement and actual providers remain pending; ACPI-005 stays open.
+
 [Direct basic-data Concatenate](source/libraries/acpi/aml/object-concat.PORT.md) composes all Integer/String/Buffer
 pairings with primary right-hand conversion, little-endian integer encoding and
 complete admission before combined capacity checks. All 314 checked pairs and

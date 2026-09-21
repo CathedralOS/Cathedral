@@ -1,12 +1,17 @@
 # Selecting one normal Field write chunk
 
-Status: **tested**. All 629 checked-interpreter positive/control pairs pass:
+Status: **tested at checkpoint `1c2f63b`**. All 629 checked-interpreter positive/control pairs pass:
 175 selected-chunk and 454 unchanged bulk pairs. Exact verification passes all
 64 source hashes, generated batches and the pinned runner binary. This extends the existing
 detached write algorithm with `write::assemble_chunk`. Both public assembly forms
 share the same extraction and surrounding-bit merge. It prepares ordinary numeric
 data and does not complete interpreter field writes or change the ACPI-005 task
 status.
+
+The later [write continuation](transfer.PORT.md) adds two package modules and
+shares the unchanged private merge kernel. The conservative whole-package receipt
+above retains its original source closure; new continuation and selected original
+assembly regressions have separate source-bound receipts.
 
 The modified translation derives from rust-osdev/acpi
 [`257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5`, `src/aml/mod.rs:2612`](https://github.com/rust-osdev/acpi/blob/257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5/src/aml/mod.rs#L2612),
