@@ -1,0 +1,1824 @@
+{
+  "counts": {
+    "strict_buffer_size_correction": 44,
+    "strict_geometry_agrees": 292,
+    "strict_rejects_InvalidFlags": 10,
+    "strict_rejects_OutsideRegion": 8,
+    "strict_rejects_UnsupportedBuffer": 2,
+    "strict_rejects_UnsupportedZeroWidth": 6
+  },
+  "public_count": 362,
+  "rows": [
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_0_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_0_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_0_7_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_0_7_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_0_8_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_0_8_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_0_9_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_0_9_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_0_33_read"
+    },
+    {
+      "access_count": 6,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_0_33_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_0_0_65_read"
+    },
+    {
+      "access_count": 10,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_0_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_1_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_1_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_1_7_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_1_7_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_1_8_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_1_8_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_1_9_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_1_9_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_1_33_read"
+    },
+    {
+      "access_count": 7,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_1_33_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_0_1_65_read"
+    },
+    {
+      "access_count": 11,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_1_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_7_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_7_1_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_7_7_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_7_7_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_7_8_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_7_8_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_7_9_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_7_9_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_7_33_read"
+    },
+    {
+      "access_count": 6,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_7_33_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_0_7_65_read"
+    },
+    {
+      "access_count": 10,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_7_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_8_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_8_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_8_7_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_8_7_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_8_8_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_8_8_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_8_9_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_8_9_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_8_33_read"
+    },
+    {
+      "access_count": 6,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_8_33_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_0_8_65_read"
+    },
+    {
+      "access_count": 10,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_8_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_9_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_9_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_9_7_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_9_7_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_9_8_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_9_8_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_9_9_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_9_9_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_9_33_read"
+    },
+    {
+      "access_count": 7,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_9_33_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_0_9_65_read"
+    },
+    {
+      "access_count": 11,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_0_9_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_0_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_0_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_0_7_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_0_7_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_0_8_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_0_8_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_0_9_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_0_9_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_0_33_read"
+    },
+    {
+      "access_count": 6,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_0_33_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_1_0_65_read"
+    },
+    {
+      "access_count": 10,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_0_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_1_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_1_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_1_7_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_1_7_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_1_8_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_1_8_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_1_9_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_1_9_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_1_33_read"
+    },
+    {
+      "access_count": 7,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_1_33_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_1_1_65_read"
+    },
+    {
+      "access_count": 11,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_1_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_7_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_7_1_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_7_7_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_7_7_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_7_8_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_7_8_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_7_9_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_7_9_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_7_33_read"
+    },
+    {
+      "access_count": 6,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_7_33_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_1_7_65_read"
+    },
+    {
+      "access_count": 10,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_7_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_8_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_8_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_8_7_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_8_7_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_8_8_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_8_8_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_8_9_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_8_9_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_8_33_read"
+    },
+    {
+      "access_count": 6,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_8_33_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_1_8_65_read"
+    },
+    {
+      "access_count": 10,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_8_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_9_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_9_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_9_7_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_9_7_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_9_8_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_9_8_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_9_9_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_9_9_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_9_33_read"
+    },
+    {
+      "access_count": 7,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_9_33_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_1_9_65_read"
+    },
+    {
+      "access_count": 11,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_1_9_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_0_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_0_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_0_15_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_0_15_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_0_16_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_0_16_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_0_17_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_0_17_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_0_33_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_0_33_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_2_0_65_read"
+    },
+    {
+      "access_count": 6,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_0_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_1_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_1_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_1_15_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_1_15_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_1_16_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_1_16_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_1_17_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_1_17_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_1_33_read"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_1_33_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_2_1_65_read"
+    },
+    {
+      "access_count": 7,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_1_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_15_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_15_1_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_15_15_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_15_15_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_15_16_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_15_16_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_15_17_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_15_17_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_15_33_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_15_33_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_2_15_65_read"
+    },
+    {
+      "access_count": 6,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_15_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_16_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_16_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_16_15_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_16_15_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_16_16_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_16_16_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_16_17_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_16_17_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_16_33_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_16_33_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_2_16_65_read"
+    },
+    {
+      "access_count": 6,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_16_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_17_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_17_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_17_15_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_17_15_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_17_16_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_17_16_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_17_17_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_17_17_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_17_33_read"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_17_33_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_2_17_65_read"
+    },
+    {
+      "access_count": 7,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_2_17_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_0_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_0_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_0_31_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_0_31_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_0_32_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_0_32_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_0_33_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_0_33_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_3_0_65_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_0_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_1_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_1_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_1_31_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_1_31_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_1_32_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_1_32_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_1_33_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_1_33_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_3_1_65_read"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_1_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_31_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_31_1_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_31_31_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_31_31_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_31_32_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_31_32_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_31_33_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_31_33_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_3_31_65_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_31_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_32_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_32_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_32_31_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_32_31_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_32_32_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_32_32_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_32_33_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_32_33_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_3_32_65_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_32_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_33_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_33_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_33_31_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_33_31_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_33_32_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_33_32_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_33_33_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_33_33_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_3_33_65_read"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_3_33_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_0_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_0_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_0_33_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_0_33_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_0_63_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_0_63_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_0_64_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_0_64_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_4_0_65_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_0_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_1_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_1_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_1_33_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_1_33_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_1_63_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_1_63_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_1_64_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_1_64_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_4_1_65_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_1_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_63_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_63_1_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_63_33_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_63_33_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_63_63_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_63_63_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_63_64_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_63_64_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_4_63_65_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_63_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_64_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_64_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_64_33_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_64_33_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_64_63_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_64_63_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_64_64_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_64_64_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_4_64_65_read"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_64_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_65_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_65_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_65_33_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_65_33_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_65_63_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_65_63_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_65_64_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_65_64_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_buffer_size_correction",
+      "name": "geometry_4_65_65_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "geometry_4_65_65_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_1_32_read"
+    },
+    {
+      "access_count": 7,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_1_32_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_buffer_size_correction",
+      "name": "integer32_1_33_read"
+    },
+    {
+      "access_count": 7,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_1_33_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "integer32_1_64_read"
+    },
+    {
+      "access_count": 11,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_1_64_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "integer32_1_65_read"
+    },
+    {
+      "access_count": 11,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_1_65_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_3_32_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_3_32_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_buffer_size_correction",
+      "name": "integer32_3_33_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_3_33_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_buffer_size_correction",
+      "name": "integer32_3_64_read"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_3_64_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_buffer_size_correction",
+      "name": "integer32_3_65_read"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_3_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_4_32_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_4_32_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_buffer_size_correction",
+      "name": "integer32_4_33_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_4_33_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_buffer_size_correction",
+      "name": "integer32_4_64_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_4_64_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_buffer_size_correction",
+      "name": "integer32_4_65_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "integer32_4_65_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "update_1_3_11_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "update_1_3_11_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "update_1_0_16_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "update_1_0_16_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "update_1_3_17_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "update_1_3_17_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "update_2_3_11_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "update_2_3_11_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "update_2_0_16_read"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_geometry_agrees",
+      "name": "update_2_0_16_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "update_2_3_17_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_geometry_agrees",
+      "name": "update_2_3_17_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "locked_0_read"
+    },
+    {
+      "access_count": 11,
+      "category": "strict_geometry_agrees",
+      "name": "locked_0_write"
+    },
+    {
+      "access_count": 9,
+      "category": "strict_buffer_size_correction",
+      "name": "locked_1_read"
+    },
+    {
+      "access_count": 11,
+      "category": "strict_geometry_agrees",
+      "name": "locked_1_write"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_buffer_size_correction",
+      "name": "locked_2_read"
+    },
+    {
+      "access_count": 7,
+      "category": "strict_geometry_agrees",
+      "name": "locked_2_write"
+    },
+    {
+      "access_count": 3,
+      "category": "strict_buffer_size_correction",
+      "name": "locked_3_read"
+    },
+    {
+      "access_count": 5,
+      "category": "strict_geometry_agrees",
+      "name": "locked_3_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_buffer_size_correction",
+      "name": "locked_4_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "locked_4_write"
+    },
+    {
+      "access_count": 257,
+      "category": "strict_buffer_size_correction",
+      "name": "capacity_0_read"
+    },
+    {
+      "access_count": 259,
+      "category": "strict_geometry_agrees",
+      "name": "capacity_0_write"
+    },
+    {
+      "access_count": 257,
+      "category": "strict_buffer_size_correction",
+      "name": "capacity_1_read"
+    },
+    {
+      "access_count": 259,
+      "category": "strict_geometry_agrees",
+      "name": "capacity_1_write"
+    },
+    {
+      "access_count": 129,
+      "category": "strict_buffer_size_correction",
+      "name": "capacity_2_read"
+    },
+    {
+      "access_count": 131,
+      "category": "strict_geometry_agrees",
+      "name": "capacity_2_write"
+    },
+    {
+      "access_count": 33,
+      "category": "strict_buffer_size_correction",
+      "name": "capacity_4_read"
+    },
+    {
+      "access_count": 35,
+      "category": "strict_geometry_agrees",
+      "name": "capacity_4_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_rejects_OutsideRegion",
+      "name": "odd_word_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_rejects_OutsideRegion",
+      "name": "odd_word_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_rejects_OutsideRegion",
+      "name": "short_qword_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_rejects_OutsideRegion",
+      "name": "short_qword_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_rejects_OutsideRegion",
+      "name": "empty_region_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_rejects_OutsideRegion",
+      "name": "empty_region_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_rejects_OutsideRegion",
+      "name": "field_past_region_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_rejects_OutsideRegion",
+      "name": "field_past_region_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_buffer_size_correction",
+      "name": "region_max_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_geometry_agrees",
+      "name": "region_max_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_rejects_UnsupportedBuffer",
+      "name": "flags_5_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_rejects_UnsupportedBuffer",
+      "name": "flags_5_write"
+    },
+    {
+      "access_count": 0,
+      "category": "strict_rejects_InvalidFlags",
+      "name": "flags_6_read"
+    },
+    {
+      "access_count": 0,
+      "category": "strict_rejects_InvalidFlags",
+      "name": "flags_6_write"
+    },
+    {
+      "access_count": 0,
+      "category": "strict_rejects_InvalidFlags",
+      "name": "flags_15_read"
+    },
+    {
+      "access_count": 0,
+      "category": "strict_rejects_InvalidFlags",
+      "name": "flags_15_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_rejects_InvalidFlags",
+      "name": "flags_97_read"
+    },
+    {
+      "access_count": 0,
+      "category": "strict_rejects_InvalidFlags",
+      "name": "flags_97_write"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_rejects_InvalidFlags",
+      "name": "flags_129_read"
+    },
+    {
+      "access_count": 4,
+      "category": "strict_rejects_InvalidFlags",
+      "name": "flags_129_write"
+    },
+    {
+      "access_count": 0,
+      "category": "strict_rejects_InvalidFlags",
+      "name": "flags_255_read"
+    },
+    {
+      "access_count": 0,
+      "category": "strict_rejects_InvalidFlags",
+      "name": "flags_255_write"
+    },
+    {
+      "access_count": 0,
+      "category": "strict_rejects_UnsupportedZeroWidth",
+      "name": "zero_0_read"
+    },
+    {
+      "access_count": 0,
+      "category": "strict_rejects_UnsupportedZeroWidth",
+      "name": "zero_0_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_rejects_UnsupportedZeroWidth",
+      "name": "zero_1_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_rejects_UnsupportedZeroWidth",
+      "name": "zero_1_write"
+    },
+    {
+      "access_count": 1,
+      "category": "strict_rejects_UnsupportedZeroWidth",
+      "name": "zero_7_read"
+    },
+    {
+      "access_count": 2,
+      "category": "strict_rejects_UnsupportedZeroWidth",
+      "name": "zero_7_write"
+    }
+  ],
+  "stage": "independent interval/bit arithmetic checked against actual public callback tuples and complete memory images"
+}

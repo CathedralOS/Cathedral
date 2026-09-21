@@ -1116,7 +1116,18 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-007"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine plan(",
+              "path": "source/libraries/acpi/field_access/geometry.omg"
+            },
+            {
+              "anchor": "pub machine extract(",
+              "path": "source/libraries/acpi/field_access/chunks.omg"
+            }
+          ],
+          "note": "Partial only: normal linear aligned access geometry and per-chunk extraction/update are implemented. Namespace/region lookup, source conversion, complete result assembly, lock/provider authority, Bank/Index, and actual native services remain outside this slice."
         },
         "251:evaluate_if_present": {
           "anchor": "pub fn evaluate_if_present(",
@@ -1159,7 +1170,18 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-007"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine plan(",
+              "path": "source/libraries/acpi/field_access/geometry.omg"
+            },
+            {
+              "anchor": "pub machine merge(",
+              "path": "source/libraries/acpi/field_access/chunks.omg"
+            }
+          ],
+          "note": "Partial only: normal linear aligned access geometry and per-chunk extraction/update are implemented. Namespace/region lookup, source conversion, complete result assembly, lock/provider authority, Bank/Index, and actual native services remain outside this slice."
         },
         "269:install_region_handler": {
           "anchor": "pub fn install_region_handler(&self, space: RegionSpace, handler: Box<R>) {",
@@ -3599,8 +3621,17 @@
             {
               "anchor": "pub machine copy_bits",
               "path": "source/libraries/acpi/interpreter/buffer_fields.omg"
+            },
+            {
+              "anchor": "pub machine extract(",
+              "path": "source/libraries/acpi/field_access/chunks.omg"
+            },
+            {
+              "anchor": "pub machine merge(",
+              "path": "source/libraries/acpi/field_access/chunks.omg"
             }
-          ]
+          ],
+          "note": "Additional Field decomposition: Partial scalar chunk extraction/merge only. General arbitrary-length byte-array copying is not implemented here."
         },
         "588:align_down": {
           "anchor": "pub(crate) fn align_down(value: usize, align: usize) -> usize {",
@@ -3613,7 +3644,14 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "(offset/8)&~(width-1)",
+              "path": "source/libraries/acpi/field_access/geometry.omg"
+            }
+          ],
+          "note": "Specialized positive native power-of-two alignment is embedded in geometry; general align=0 helper semantics are not a public API here."
         },
         "608:tests": {
           "anchor": "mod tests {",

@@ -1,0 +1,75 @@
+{
+  "compiler_path": "/tmp/cathedral-omega-eaa7993/release/omega",
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "control_count": 3,
+  "elapsed_seconds": 68.484,
+  "input_sha256": {
+    "source/libraries/acpi/aml/build.omg": "2129610bb9e275f63e87c5e736bb29114044d1a466cdc1d288e4c9103b076319",
+    "source/libraries/acpi/aml/fields/build.omg": "1bed0d77c834d0cc89726bbb6990da3a985af2e88c2c7634eaf089eb505fab0c",
+    "source/libraries/acpi/aml/fields/field_model.omg": "20516bb37529164d24f292aeae102189b761d41d22bdf48bf78aa460d78c7844",
+    "source/libraries/acpi/aml/fields/flags.omg": "5a284110c178c77ea64fff76e032f95639c55e949be512e7a48132822ac44431",
+    "source/libraries/acpi/aml/model.omg": "1fc2a3ceb403f0adef2022f76ac0c1187fc74b0cd794df4e7855d643838a10af",
+    "source/libraries/acpi/field_access/build.omg": "b019e82e212aebf76af70d6d0bcfd34ed870b54d191f15fec4c25854031ce771",
+    "source/libraries/acpi/field_access/chunks.omg": "ba275a44e316fff5313e1a7a3300d2eff92c164a33f0be1e2e6c6a57b1dfe22f",
+    "source/libraries/acpi/field_access/geometry.omg": "5e89cfe363b9f3b0ac0e20c66899d6e5ccc8fefb7acb0acdd7a340ad8ac90bf5",
+    "source/libraries/acpi/field_access/model.omg": "0846521cf92722e75541d12a728f1ee8e9d5f5b3bfcaf3c420cdeb4a26d2b94b",
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196",
+    "tools/ports/acpi/field-access/aml_encoding.py": "e46261542865a0d84870e9d97165d5cc67aa839a828073348dd1f3111b897e42",
+    "tools/ports/acpi/field-access/cases.json": "010169ee265a49d671696e494110a8a4acd16fd2746e9261a8a1ee1c03ec78c1",
+    "tools/ports/acpi/field-access/check.py": "00b7a746aded28c9ff702abe60c0f8969b454dd32fcaa5e77190efbe7dd5218e",
+    "tools/ports/acpi/field-access/check_const.py": "ca09e48f99f38cfa06bd537e3bec72743b60b1512b6cac63ef6494238dbab0ec",
+    "tools/ports/acpi/field-access/compare.py": "952e4d61df5cf6fd091fca9d6709f220e646437702247a2e936e7b915d5e3de0",
+    "tools/ports/acpi/field-access/comparison.json": "17da6060f53767a955936ead7ef86bd5c12eef793d0371a7da29f4712b86b82f",
+    "tools/ports/acpi/field-access/fixtures.py": "7c859bbf3edb81692a5ea6aae7c13f059cea8f28e014808966681e90de63b461",
+    "tools/ports/acpi/field-access/reference-verification.json": "dd8d222739158bbc9a0a26b2b63dce308f259638c18c17e932de82fc0a5a3772",
+    "tools/ports/acpi/field-access/reference.Cargo.lock": "9367b4eb30c481fbb3d63bdf427838778563773a81653783c5afde02e008219b",
+    "tools/ports/acpi/field-access/reference.py": "338d8a9edff946e3b7bbad02dd4290a2008e572ca398ba7bba5a69681e788051",
+    "tools/ports/acpi/field-access/reference.rs": "141a25da30df40a79c3b7af449c0c464bddbd2ea1cd808b81c5dfa88296511d4",
+    "tools/ports/acpi/field-access/vectors.py": "6a1bd8dd2c3b8318e098f80ba38fb1d7b37a1b24da0c71dd17d6395f4529c682",
+    "tools/ports/acpi/field-access/verify_record.py": "1c9c5251502d114b994dad9d775f3e9d02eb8c633c899a2f3acda685493d74f0",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805"
+  },
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "positive_count": 3,
+  "proofs": [
+    {
+      "case": "geometry_2_1_17",
+      "control": false,
+      "output": "compiled 17 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-761dfac23005c301fe2797c7bbc3027c7e5cd78713c6714972691f2ade1f7662/source/main.omg; wrote_output=false\n",
+      "source_sha256": "690c7e053fc41a3943d01d7e97eda009870b8e2abcdc357fad0717349f76805a"
+    },
+    {
+      "case": "geometry_2_1_17",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-field-access-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "40ccfab34358cb231381e3e6e69b8e3f209b3ab00efecee6c8e8d76ea591e0c9"
+    },
+    {
+      "case": "offset_max",
+      "control": false,
+      "output": "compiled 17 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-6af85ca7ffec16eb6ec764cda378c888192a25a0512ff55c25259def9fbfe69a/source/main.omg; wrote_output=false\n",
+      "source_sha256": "8f3941ad50cf39188f79a2f69fd03329a8163d550c09f304f964dd64d2a49a96"
+    },
+    {
+      "case": "offset_max",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-field-access-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "518adb58f47eecbc7a9c327dca76bb0cfdc8797ca62dfe0ed7d063675a42dafa"
+    },
+    {
+      "case": "merge_8_3_5_1_0_1",
+      "control": false,
+      "output": "compiled 17 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-fd9874e5d9343f3a35a2dbb8a9c8a0b1c13e472c38fe475694593a01aedb3a17/source/main.omg; wrote_output=false\n",
+      "source_sha256": "b7839e2f662c989161f265f20e0e0e25603394ce08c5f4762708a13003efc848"
+    },
+    {
+      "case": "merge_8_3_5_1_0_1",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-field-access-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "da629189a11f373246a2362b26af99436b26306442867f6f4d97802f7725153f"
+    }
+  ],
+  "stage": "constant evaluation and requires proof; no native or namespace evaluation"
+}

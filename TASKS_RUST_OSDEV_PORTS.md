@@ -541,6 +541,11 @@ BankField and all five FieldList forms. Dynamic BankValue/BufferSize bodies rema
 explicitly unparsed or opaque; field namespace installation and full interpreter
 behavior remain pending. The separate integer executor does not complete these
 syntax/resource-limit milestones.
+[Normal Field geometry](source/libraries/acpi/field_access/PORT.md) adds aligned
+access footprints, bounded chunk plans and scalar extract/merge arithmetic, with
+451 checked pairs, three constant pairs and 362 public synthetic-memory
+observations. Lock and Preserve-read requirements are inert facts. Full result
+assembly, Bank/Index protocols and evaluator/provider integration remain pending.
 [Resource descriptor parsing](source/libraries/acpi/resources/PORT.md) adds 210
 checked-interpreter pairs, four const pairs and 187 actual public Rust observations,
 including 64 normalized supported-result agreements.

@@ -1,0 +1,61 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Adapted from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Upstream copyright 2018 Isaac Woods; Cathedral detached adaptation 2026.
+// Detached bit extraction/update arithmetic; no read or write service.
+module chunks;
+use fields::field_model::UpdateRule;
+use model::Chunk;
+use model::Previous;
+use model::WordResult;
+use model::Error;
+pub machine low_mask(bits:u64)->u64 {
+ let all:u64=18446744073709551615;
+ transition {bits==0 -> (0) bits<=64 -> (all>>(64-bits)) _ -> (0)}
+}
+pub machine valid(chunk:Chunk)->bool {
+ let width:u64=chunk.width;let start:u64=chunk.native_bit;let count:u64=chunk.bit_count;let field:u64=chunk.field_bit;let offset:u64=chunk.offset;
+ transition width==1 || width==2 || width==4 || width==8 {true -> width(chunk,width,start,count,field,offset) _ -> (false)}
+ state width(chunk:Chunk,width:u64,start:u64,count:u64,field:u64,offset:u64)->bool {
+  transition width<=8 {true -> bits(chunk,width,start,count,field,offset,width*8) _ -> (false)}
+ }
+ state bits(chunk:Chunk,width:u64,start:u64,count:u64,field:u64,offset:u64,bits:u64)->bool {
+  transition start<bits && count>0 && count<=bits-start && field<=2048 && count<=2048-field && offset<=18446744073709551615-width && offset%width==0 {
+   true -> mask(chunk,start,count,bits) _ -> (false)
+  }
+ }
+ state mask(chunk:Chunk,start:u64,count:u64,bits:u64)->bool {
+  let base:u64=low_mask(count);let mask:u64=((base as u64 in Wrapping)<<(start as u64 in Wrapping)) as u64;
+  chunk.mask==mask && chunk.partial==(start!=0 || count!=bits)
+ }
+}
+pub machine extract(chunk:Chunk,raw:u64)->WordResult {
+ let checked:bool=valid(chunk);
+ transition checked {true -> bits(chunk,raw) _ -> (WordResult::Failure {error:Error::InvalidChunk})}
+ state bits(chunk:Chunk,raw:u64)->WordResult {
+  let start:u64=chunk.native_bit;let count:u64=chunk.bit_count;
+  transition start<64 && count<=64 {true -> read(raw,start,count) _ -> (WordResult::Failure {error:Error::InvalidChunk})}
+ }
+ state read(raw:u64,start:u64,count:u64)->WordResult {let mask:u64=low_mask(count);WordResult::Word {value:(raw>>start)&mask}}
+}
+pub machine merge(chunk:Chunk,rule:UpdateRule,previous:Previous,value:u64)->WordResult {
+ let checked:bool=valid(chunk);
+ transition checked {true -> rule(chunk,rule,previous,value) _ -> (WordResult::Failure {error:Error::InvalidChunk})}
+ state rule(chunk:Chunk,rule:UpdateRule,previous:Previous,value:u64)->WordResult {
+  transition chunk.partial {true -> partial(chunk,rule,previous,value) _ -> combine(chunk,0,value)}
+ }
+ state partial(chunk:Chunk,rule:UpdateRule,previous:Previous,value:u64)->WordResult {
+  transition rule {UpdateRule::Preserve -> preserve(chunk,previous,value) UpdateRule::WriteAsOnes -> combine(chunk,18446744073709551615,value) UpdateRule::WriteAsZeros -> combine(chunk,0,value)}
+ }
+ state preserve(chunk:Chunk,previous:Previous,value:u64)->WordResult {
+  transition previous {Previous::Value {word} -> combine(chunk,word,value) _ -> (WordResult::Failure {error:Error::NeedsPrevious})}
+ }
+ state combine(chunk:Chunk,old:u64,value:u64)->WordResult {
+  let width:u64=chunk.width;let start:u64=chunk.native_bit;let count:u64=chunk.bit_count;
+  transition width<=8 && start<64 && count<=64 {true -> masked(chunk,old,value,width*8,start,count) _ -> (WordResult::Failure {error:Error::InvalidChunk})}
+ }
+ state masked(chunk:Chunk,old:u64,value:u64,bits:u64,start:u64,count:u64)->WordResult {
+  let field_mask:u64=low_mask(count);let native_mask:u64=low_mask(bits);
+  let placed:u64=(((value&field_mask) as u64 in Wrapping)<<(start as u64 in Wrapping)) as u64;
+  WordResult::Word {value:((old&~chunk.mask)|placed)&native_mask}
+ }
+}

@@ -227,3 +227,11 @@ stable object storage. Its 44 checked pairs, two constant pairs and 12 actual
 public Rust observations pass, including full 32-entry and depth-16 cases.
 Malformed flat namespaces fail before mutation; no-op requests preserve all slots.
 Object reclamation and AML Unload remain separate lifecycle work.
+
+[Normal Field access geometry](field_access/PORT.md) adds complete aligned
+region-relative footprints, initialized chunk plans, read-shape metadata and
+scalar extraction/update arithmetic. Its 451 checked pairs, three constant pairs
+and 362 actual public synthetic-memory observations retain source-bound evidence.
+Requested GlobalLock and Preserve-read requirements remain explicit; plans convey
+no access permission. Bank/Index, complete result assembly and runtime/provider
+integration remain pending, so aggregate source-map counts are unchanged.

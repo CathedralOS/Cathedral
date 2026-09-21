@@ -1,0 +1,131 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Adapted from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Upstream copyright 2018 Isaac Woods; Cathedral detached adaptation 2026.
+// Normal linear Field geometry from pinned acpi do_field_read/write. Partial
+// pure decomposition only; no region lookup, lock acquisition or native access.
+module geometry;
+use aml::model::Outcome;
+use fields::field_model::Field;
+use fields::field_model::Access;
+use fields::field_model::AccessResult;
+use fields::field_model::AccessType;
+use fields::field_model::UpdateRule;
+use fields::field_model::Connection;
+use fields::field_model::DeclarationKind;
+use fields::flags;
+use integers::integers::IntegerSize;
+use integers::integers::integer_bits;
+use model::Error;
+use model::Plan;
+use model::PlanResult;
+use model::Chunk;
+use model::ReadShape;
+use model::LockRequirement;
+use chunks::low_mask;
+data Builder [copy] {failed:bool;plan:Plan;}
+data Made [copy] {case Good(chunk:Chunk);case Bad;}
+pub machine plan(kind:DeclarationKind,field:&Field,region_bytes:u64,size:IntegerSize)->PlanResult {
+ transition kind==DeclarationKind::Field {true -> connection(field,region_bytes,size) _ -> (PlanResult::Failure {error:Error::UnsupportedKind})}
+ state connection(field:&Field,region_bytes:u64,size:IntegerSize)->PlanResult {
+  transition field.connection {Connection::None -> metadata(field,region_bytes,size) _ -> (PlanResult::Failure {error:Error::UnsupportedConnection})}
+ }
+ state metadata(field:&Field,region_bytes:u64,size:IntegerSize)->PlanResult {
+  let access:Access=field.access;
+  transition access.attribute==0 && access.attribute_mode==0 && !access.extended && access.access_length==0 {true -> flags(field,region_bytes,size,access) _ -> (PlanResult::Failure {error:Error::UnsupportedMetadata})}
+ }
+ state flags(field:&Field,region_bytes:u64,size:IntegerSize,access:Access)->PlanResult {
+  let decoded:AccessResult=flags::decode_flags(access.flags);
+  transition decoded.outcome==Outcome::Success {true -> consistent(field,region_bytes,size,access,decoded.access) _ -> (PlanResult::Failure {error:Error::InvalidFlags})}
+ }
+ state consistent(field:&Field,region_bytes:u64,size:IntegerSize,access:Access,decoded:Access)->PlanResult {
+  transition access.kind==decoded.kind && access.update==decoded.update && access.locked==decoded.locked {true -> supported(field,region_bytes,size,access) _ -> (PlanResult::Failure {error:Error::InconsistentAccess})}
+ }
+ state supported(field:&Field,region_bytes:u64,size:IntegerSize,access:Access)->PlanResult {
+  let offset:u64=field.bit_offset;let length:u64=field.bit_length;
+  transition access.kind {AccessType::Buffer -> (PlanResult::Failure {error:Error::UnsupportedBuffer}) _ -> length(offset,length,region_bytes,size,access)}
+ }
+ state length(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access)->PlanResult {
+  transition {length==0 -> (PlanResult::Failure {error:Error::UnsupportedZeroWidth}) length>2048 -> (PlanResult::Failure {error:Error::Capacity}) _ -> interval(offset,length,region_bytes,size,access)}
+ }
+ state interval(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access)->PlanResult {
+  transition length<=18446744073709551615-offset {true -> width(offset,length,region_bytes,size,access) _ -> (PlanResult::Failure {error:Error::Overflow})}
+ }
+ state width(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access)->PlanResult {
+  let width:u64=access_width(access.kind);
+  transition width>0 && width<=8 {true -> units(offset,length,region_bytes,size,access,width,width*8) _ -> (PlanResult::Failure {error:Error::InvalidFlags})}
+ }
+ state units(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access,width:u64,bits:u64)->PlanResult {
+  transition bits>0 && bits<=64 {true -> lead(offset,length,region_bytes,size,access,width,bits,offset%bits) _ -> (PlanResult::Failure {error:Error::InvalidFlags})}
+ }
+ state lead(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access,width:u64,bits:u64,lead:u64)->PlanResult {
+  transition length<=2048 && lead<=63 && bits>0 && bits<=64 && width>0 {true -> count(offset,length,region_bytes,size,access,width,bits,lead,(lead+length+bits-1)/bits) _ -> (PlanResult::Failure {error:Error::Capacity})}
+ }
+ state count(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access,width:u64,bits:u64,lead:u64,count:u64)->PlanResult {
+  transition count>0 && count<=257 && width>0 && width<=8 {
+   true -> footprint(offset,length,region_bytes,size,access,width,bits,lead,count,(offset/8)&~(width-1),count*width)
+   _ -> (PlanResult::Failure {error:Error::Capacity})
+  }
+ }
+ state footprint(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access,width:u64,bits:u64,lead:u64,count:u64,start:u64,footprint:u64)->PlanResult {
+  transition start<=region_bytes {true -> fits(offset,length,region_bytes,size,access,width,bits,lead,count,start,footprint) _ -> (PlanResult::Failure {error:Error::OutsideRegion})}
+ }
+ state fits(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access,width:u64,bits:u64,lead:u64,count:u64,start:u64,footprint:u64)->PlanResult {
+  transition start<=region_bytes && footprint<=region_bytes-start {true -> initialize(offset,length,region_bytes,size,access,width,bits,lead,count,start,start+footprint) _ -> (PlanResult::Failure {error:Error::OutsideRegion})}
+ }
+ state initialize(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access,width:u64,bits:u64,lead:u64,count:u64,start:u64,end:u64)->PlanResult {
+  let lock:LockRequirement=lock_requirement(access.locked);let shape:ReadShape=read_shape(size,length);
+  let initial:Builder=Builder {plan:Plan {access:access.kind,update:access.update,lock:lock,shape:shape,bit_offset:offset,bit_length:length,region_bytes:region_bytes,start:start,end:end,width:width,count:count}};
+  let completed:Builder=build_chunks(initial,bits,lead,0,count);
+  transition completed.failed {true -> (PlanResult::Failure {error:Error::InvalidChunk}) _ -> (PlanResult::Ready {plan:completed.plan})}
+ }
+}
+machine access_width(kind:AccessType)->u64 {transition kind {AccessType::Word -> (2) AccessType::DWord -> (4) AccessType::QWord -> (8) _ -> (1)}}
+machine lock_requirement(locked:bool)->LockRequirement {transition locked {true -> (LockRequirement::UnmetGlobalLock) _ -> (LockRequirement::NotRequested)}}
+machine read_shape(size:IntegerSize,length:u64)->ReadShape {
+ let bits:u64=integer_bits(size);
+ transition length<=bits {true -> (ReadShape::Integer {size:size}) _ -> buffer(length)}
+ state buffer(length:u64)->ReadShape {transition length<=2048 {true -> (ReadShape::Buffer {bytes:(length+7)/8}) _ -> (ReadShape::Buffer {bytes:0})}}
+}
+machine build_chunks(current:Builder,bits:u64,lead:u64,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->Builder {
+ let next:Builder=build_step(current,bits,lead,index,count);
+ transition index<count {true -> build_chunks(next,bits,lead,index+1,count) _ -> (current)}
+}
+machine build_step(current:Builder,bits:u64,lead:u64,index:u64,count:u64)->Builder {
+ transition !current.failed && index<count && index<257 {true -> make(current,bits,lead,index) _ -> (current)}
+ state make(current:Builder,bits:u64,lead:u64,index:u64)->Builder {
+  let made:Made=make_chunk(current.plan.start,current.plan.width,current.plan.bit_length,bits,lead,index);
+  transition made {Made::Good {chunk} -> write(current,index,chunk) _ -> (Builder {failed:true})}
+ }
+ state write(current:Builder,index:u64,chunk:Chunk)->Builder {
+  transition index<257 {true -> store(current,index,chunk) _ -> (Builder {failed:true})}
+ }
+ state store(current:Builder,index:u64,chunk:Chunk)->Builder {
+  let mut next:Builder=current;next.plan.chunks[index]=chunk;
+  let previous:u64=preserve_count(current.plan.preserve_reads,current.plan.update,chunk.partial);next.plan.preserve_reads=previous;next
+ }
+}
+machine preserve_count(count:u64,rule:UpdateRule,partial:bool)->u64 {transition count<257 && rule==UpdateRule::Preserve && partial {true -> (count+1) _ -> (count)}}
+machine make_chunk(start:u64,width:u64,length:u64,bits:u64,lead:u64,index:u64)->Made {
+ transition index<257 && width>0 && width<=8 && bits>0 && bits<=64 {true -> first(start,width,length,bits,lead,index,index*width,index*bits) _ -> (Made::Bad)}
+ state first(start:u64,width:u64,length:u64,bits:u64,lead:u64,index:u64,step:u64,advance:u64)->Made {
+  transition index==0 {true -> offset(start,width,length,bits,lead,step,0) _ -> later(start,width,length,bits,lead,step,advance)}
+ }
+ state later(start:u64,width:u64,length:u64,bits:u64,lead:u64,step:u64,advance:u64)->Made {
+  transition advance>=lead {true -> offset(start,width,length,bits,0,step,advance-lead) _ -> (Made::Bad)}
+ }
+ state offset(start:u64,width:u64,length:u64,bits:u64,native:u64,step:u64,field:u64)->Made {
+  transition start<=18446744073709551615-step && field<length && native<bits {true -> remaining(start+step,width,length-field,bits,native,field) _ -> (Made::Bad)}
+ }
+ state remaining(offset:u64,width:u64,remaining:u64,bits:u64,native:u64,field:u64)->Made {
+  transition native<bits {true -> count(offset,width,remaining,bits,native,field,bits-native) _ -> (Made::Bad)}
+ }
+ state count(offset:u64,width:u64,remaining:u64,bits:u64,native:u64,field:u64,room:u64)->Made {
+  transition remaining<room {true -> masked(offset,width,remaining,bits,native,field) _ -> masked(offset,width,room,bits,native,field)}
+ }
+ state masked(offset:u64,width:u64,count:u64,bits:u64,native:u64,field:u64)->Made {
+  let base:u64=low_mask(count);let mask:u64=((base as u64 in Wrapping)<<(native as u64 in Wrapping)) as u64;
+  Made::Good {chunk:Chunk {offset:offset,width:width,field_bit:field,native_bit:native,bit_count:count,mask:mask,partial:native!=0 || count!=bits}}
+ }
+}

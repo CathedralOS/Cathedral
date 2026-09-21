@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified detached Field access geometry from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; copyright 2018 Isaac Woods.
+module model;
+use fields::field_model::AccessType;
+use fields::field_model::UpdateRule;
+use integers::integers::IntegerSize;
+pub data Error [copy] {case InvalidFlags;case InconsistentAccess;case UnsupportedKind;case UnsupportedConnection;case UnsupportedMetadata;case UnsupportedBuffer;case UnsupportedZeroWidth;case Capacity;case Overflow;case OutsideRegion;case InvalidChunk;case NeedsPrevious;}
+pub data LockRequirement [copy] {case NotRequested;case UnmetGlobalLock;}
+pub data ReadShape [copy] {case Integer(size:IntegerSize);case Buffer(bytes:u64);}
+// Offsets are relative to a supplied region; none is a physical address.
+pub data Chunk [copy] {offset:u64;width:u64;field_bit:u64;native_bit:u64;bit_count:u64;mask:u64;partial:bool;}
+pub data Plan [copy] {access:AccessType;update:UpdateRule;lock:LockRequirement;shape:ReadShape;bit_offset:u64;bit_length:u64;region_bytes:u64;start:u64;end:u64;width:u64;count:u64;preserve_reads:u64;chunks:[Chunk;257];}
+pub data PlanResult [copy] {case Ready(plan:Plan);case Failure(error:Error);}
+// A supplied number is not a device observation receipt or access permission.
+pub data Previous [copy] {case Absent;case Value(word:u64);}
+pub data WordResult [copy] {case Word(value:u64);case Failure(error:Error);}
