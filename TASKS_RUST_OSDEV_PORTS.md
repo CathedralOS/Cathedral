@@ -576,7 +576,8 @@ implicit operand/target dispatch and the ACPI-005 aggregate remain pending.
 [Primary Integer/Buffer-to-String conversion](source/libraries/acpi/interpreter/implicit-strings.PORT.md)
 adds fixed-width hexadecimal Integer text and spaced byte pairs. Its 334 checked
 pairs and three const pairs verify complete initialized output and bounded
-capacity. Generic implicit conversion selection and target dispatch stay pending.
+capacity. Direct conversion selection is supplied by the adapter below; runtime
+operand and target dispatch stay pending.
 
 [Canonical object conversion preflight](source/libraries/acpi/aml/object-conversions.PORT.md)
 adds direct ObjectStore conversion with semantic results, complete byte validation
@@ -589,6 +590,18 @@ constructs complete Integer/Buffer data from exactly counted numeric words after
 recomputing geometry. All 301 checked pairs, three const pairs and 259 public Rust
 read observations pass, including the explicit pinned Buffer allocation correction.
 Lock/provider authority, Bank/Index and evaluator integration remain pending.
+
+[Primary implicit conversion dispatch](source/libraries/acpi/aml/implicit-conversions.PORT.md)
+selects all nine direct Integer/String/Buffer conversions with 239 checked pairs
+and three constant pairs. Complete source validation and semantic destination
+cases are preserved. Existing-target extents, reference/Field resolution, object
+installation and Store execution remain pending; ACPI-005 stays open.
+
+[Detached BufferField reads](source/libraries/acpi/aml/buffer-field-values.PORT.md)
+complete bounded read_buffer_field data translation with 281 checked pairs,
+three constant pairs and 136 actual public Object observations. Full field bounds,
+zero output tails and the primary 32/64-bit shape rule are enforced. One source
+anchor closes; reference/context dispatch and wider-field conversion stay open.
 
 ## Phase 5 — only after the corpus above is healthy
 

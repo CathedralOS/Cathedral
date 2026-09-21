@@ -84,6 +84,22 @@ integration remains pending.
 Integer/String/Buffer values and bounded numeric BufferFields into detached
 semantic results. Its 207 checked pairs, three constant pairs and 166 actual
 public Rust observations cover storage validation, width normalization and named
-String policies. Reference resolution, wider field reads, opcode retirement and
-target mutation remain pending. The standalone primary implicit numeric and
-String formatting helpers do not change this adapter's explicit conversion policy.
+String policies. Reference resolution, opcode retirement and target mutation
+remain pending. Wider reads are supplied separately below. The standalone primary
+implicit numeric and String formatting helpers do not change this adapter's
+explicit conversion policy.
+
+[Primary implicit conversion dispatch](implicit-conversions.PORT.md) selects all
+nine Integer/String/Buffer conversions for direct canonical object IDs. Its 239
+checked pairs and three constant pairs verify complete backing admission, exact
+semantic result cases, width rules and zeroed output tails. These detached results
+have no existing target extent; reference/Field resolution, named Buffer resizing,
+object installation and opcode integration remain pending.
+
+[Detached BufferField reads](buffer-field-values.PORT.md) complete the bounded
+read_buffer_field data algorithm, with 281 checked pairs, three constant pairs
+and 136 actual public Object observations. The helper validates complete backing
+and field bounds and returns an Integer or a zero-tailed Buffer through 2048 bits.
+The primary width test uses 32/64 bits, correcting the pin's byte-width comparison.
+Outer reference resolution, opcode integration and the existing conversion
+adapter's wider-field policy remain separate work.

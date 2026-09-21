@@ -1103,9 +1103,13 @@
             {
               "path": "source/libraries/acpi/interpreter/implicit_strings.omg",
               "anchor": "pub machine from_buffer("
+            },
+            {
+              "path": "source/libraries/acpi/aml/implicit_conversions.omg",
+              "anchor": "pub machine convert("
             }
           ],
-          "note": "Partial only: primary Table 19.7 bounded String-to-Integer and Integer/Buffer-to-String helpers exist. Generic source resolution, conversion selection, target storage and Store execution remain pending."
+          "note": "Partial only: primary Table 19.7 bounded numeric/String helpers and direct canonical Integer/String/Buffer conversion selection produce detached semantic results. Generic source/reference/Field resolution, existing-target extent policy, target storage and Store execution remain pending."
         },
         "2488:do_copy_object": {
           "anchor": "fn do_copy_object(&self, target: WrappedObject, object: WrappedObject) -> Result<(), AmlError> {",
@@ -3112,8 +3116,8 @@
         },
         "264:read_buffer_field": {
           "anchor": "pub fn read_buffer_field(&self, integer_size: IntegerSize) -> Result<Object, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Bounded direct canonical field read, shared backing byte snapshots and existing bit helpers; primary 32/64-bit shape correction, zero/out-of-range rejection, strict string storage encoding and finite 256-byte limit documented. No pointer, runtime dispatch or region access.",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3126,13 +3130,17 @@
             {
               "anchor": "pub machine read_field_integer",
               "path": "source/libraries/acpi/aml/byte_storage.omg"
+            },
+            {
+              "path": "source/libraries/acpi/aml/buffer_field_values.omg",
+              "anchor": "pub machine read"
             }
           ],
           "owned_byte_component": {
             "components": [
               "Bounded numeric field reads through stable IDs; source or owned backing"
             ],
-            "remaining": "Numeric-only result kernel implemented with complete bounds; general Object Buffer results for fields wider than integer width and opcode integration remain pending. Corrects pin byte/bit-width branch comparison."
+            "remaining": "General Integer/Buffer read shape now supplied by buffer_field_values, including wider bounded fields. Source/reference admission and opcode integration remain separate; existing object_conversions::to_integer retains its numeric-only field policy."
           }
         },
         "291:write_buffer_field": {

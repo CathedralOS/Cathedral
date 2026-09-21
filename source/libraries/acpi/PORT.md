@@ -4,7 +4,7 @@
 
 **Stage: inventoried, 2026-09-20.** This milestone covers the complete pinned
 Rust corpus and test-scenario metadata. It does not claim an Omega translation,
-compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 587 translated table/topology/AML/helper anchors, two omitted Rust formatting hooks and 992
+compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 588 translated table/topology/AML/helper anchors, two omitted Rust formatting hooks and 991
 pending anchors. Inventory completion and translation completion are different
 milestones. The bounded ACPI-001 slice is separately
 [tested by Omega semantic evaluation](headers.PORT.md): 65 original scenarios
@@ -256,3 +256,16 @@ and constructs complete Integer/Buffer results from supplied numeric words. All
 301 checked pairs, three const pairs and 259 actual public Rust reads pass.
 Outputs retain unmet lock requirements and exact zero tails. Region access and
 object/evaluator integration remain pending; aggregate source counts are unchanged.
+
+[Primary implicit conversion dispatch](aml/implicit-conversions.PORT.md) composes
+the canonical helpers for all nine direct Integer/String/Buffer combinations.
+All 239 checked pairs and three constant pairs pass. Results are detached and
+fully initialized; existing-target extent policy, reference/Field resolution and
+Store execution remain pending. Aggregate source counts are unchanged.
+
+[Detached BufferField reads](aml/buffer-field-values.PORT.md) return Integer or
+Buffer from canonical Source/Owned backing using the Definition Block's bit width.
+All 281 checked pairs, three constant pairs and 136 actual public Object calls
+pass. One source anchor is translated; strict complete-field bounds and the
+pinned byte-versus-bit shape correction are documented. Runtime field dispatch
+and conversion integration remain pending.

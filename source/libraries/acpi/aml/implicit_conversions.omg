@@ -1,0 +1,131 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Primary ACPI 6.6 Table 19.7 policy over the licensed canonical conversion port.
+// Detached Integer/String/Buffer values only, no reference or target dispatch.
+module implicit_conversions;
+use model::ObjectStore;
+use model::Value;
+use byte_storage::ByteRead;
+use byte_storage::ByteOutcome;
+use byte_storage::read_bytes;
+use object_conversions;
+use object_conversions::ConversionResult;
+use object_conversions::ConversionFailure;
+use object_conversions::BufferRule;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::implicit_integer;
+use integer_helpers::implicit_integer::Conversion;
+use integer_helpers::implicit_integer::Error;
+use integer_helpers::implicit_strings;
+use integer_helpers::implicit_strings::StringResult;
+use integer_helpers::conversions::mid;
+pub data ConversionTarget [copy] {case Integer;case Buffer;case String;}
+pub data ImplicitResult [copy] {
+ case Failure(reason:ConversionFailure);
+ case Integer(number:u64);
+ case Buffer(length:u64,bytes:[u8;256]);
+ case String(length:u64,bytes:[u8;256]);
+}
+data SourceKind [copy] {case Integer(number:u64);case Buffer;case String;}
+
+pub machine convert(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize,target:ConversionTarget)->ImplicitResult {
+ let count:u64=store.space.object_count;
+ transition count<=64 && object<count && object<64 {true -> source(input,length,unit,store,object,size,target) _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})}
+ state source(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize,target:ConversionTarget)->ImplicitResult {
+  transition store.space.objects[object].value {
+   Value::Integer {number} -> selected(input,length,unit,store,object,size,target,SourceKind::Integer {number:number})
+   Value::Buffer {buffer_storage} -> selected(input,length,unit,store,object,size,target,SourceKind::Buffer)
+   Value::String {string_storage} -> selected(input,length,unit,store,object,size,target,SourceKind::String)
+   _ -> (ImplicitResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state selected(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize,target:ConversionTarget,kind:SourceKind)->ImplicitResult {
+  transition target {
+   ConversionTarget::Integer -> integer(input,length,unit,store,object,size,kind)
+   ConversionTarget::Buffer -> buffer(input,length,unit,store,object,size)
+   ConversionTarget::String -> string(input,length,unit,store,object,size,kind)
+  }
+ }
+ state integer(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize,kind:SourceKind)->ImplicitResult {
+  transition kind {SourceKind::String -> string_integer(input,length,unit,store,object,size) _ -> ordinary_integer(input,length,unit,store,object,size)}
+ }
+ state ordinary_integer(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize)->ImplicitResult {
+  let value:ConversionResult=object_conversions::to_integer(input,length,unit,store,object,size);let result:ImplicitResult=ic_integer(value);result
+ }
+ state string_integer(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize)->ImplicitResult {
+  let bytes:ByteRead=read_bytes(input,length,unit,store,object);let result:ImplicitResult=ic_string_integer(bytes,size);result
+ }
+ state buffer(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize)->ImplicitResult {
+  let value:ConversionResult=object_conversions::to_buffer(input,length,unit,store,object,size,BufferRule::ExplicitTerminated);
+  let result:ImplicitResult=ic_buffer(value);result
+ }
+ state string(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize,kind:SourceKind)->ImplicitResult {
+  transition kind {SourceKind::Integer {number} -> integer_string(size,number) _ -> bytes_string(input,length,unit,store,object,kind)}
+ }
+ state integer_string(size:IntegerSize,number:u64)->ImplicitResult {
+  let formatted:StringResult=implicit_strings::from_integer(size,number);let result:ImplicitResult=ic_string(formatted);result
+ }
+ state bytes_string(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,kind:SourceKind)->ImplicitResult {
+  let bytes:ByteRead=read_bytes(input,length,unit,store,object);let result:ImplicitResult=ic_bytes_string(bytes,kind);result
+ }
+}
+machine ic_integer(value:ConversionResult)->ImplicitResult {
+ transition value {
+  ConversionResult::Integer {number} -> (ImplicitResult::Integer {number:number})
+  ConversionResult::Failure {reason} -> (ImplicitResult::Failure {reason:reason})
+  _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+}
+machine ic_buffer(value:ConversionResult)->ImplicitResult {
+ transition value {
+  ConversionResult::Bytes {length,bytes} -> (ImplicitResult::Buffer {length:length,bytes:bytes})
+  ConversionResult::Failure {reason} -> (ImplicitResult::Failure {reason:reason})
+  _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+}
+machine ic_string(value:StringResult)->ImplicitResult {
+ transition value {
+  StringResult::String {length,bytes} -> (ImplicitResult::String {length:length,bytes:bytes})
+  StringResult::Capacity -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity})
+ }
+}
+machine ic_string_integer(bytes:ByteRead,size:IntegerSize)->ImplicitResult {
+ transition bytes.outcome==ByteOutcome::Success {true -> parse(bytes,size) _ -> failed(bytes.outcome)}
+ state parse(bytes:ByteRead,size:IntegerSize)->ImplicitResult {
+  let value:Conversion=implicit_integer::from_string(size,&bytes.bytes,bytes.length);
+  transition value {Conversion::Integer {value} -> (ImplicitResult::Integer {number:value}) Conversion::Failure {reason} -> numeric_failure(reason)}
+ }
+ state numeric_failure(error:Error)->ImplicitResult {
+  transition error {
+   Error::Capacity -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity})
+   Error::Empty -> (ImplicitResult::Failure {reason:ConversionFailure::Empty})
+   Error::Encoding -> (ImplicitResult::Failure {reason:ConversionFailure::Encoding})
+  }
+ }
+ state failed(error:ByteOutcome)->ImplicitResult {let result:ImplicitResult=ic_storage_failure(error);result}
+}
+machine ic_bytes_string(bytes:ByteRead,kind:SourceKind)->ImplicitResult {
+ transition bytes.outcome==ByteOutcome::Success {true -> selected(bytes,kind) _ -> failed(bytes.outcome)}
+ state selected(bytes:ByteRead,kind:SourceKind)->ImplicitResult {
+  transition kind {SourceKind::Buffer -> formatted(bytes) _ -> copied(bytes)}
+ }
+ state formatted(bytes:ByteRead)->ImplicitResult {
+  let value:StringResult=implicit_strings::from_buffer(&bytes.bytes,bytes.length);let result:ImplicitResult=ic_string(value);result
+ }
+ state copied(bytes:ByteRead)->ImplicitResult {
+  let mut output:[u8;256];let copied:IntegerResult=mid(&bytes.bytes,bytes.length,0,bytes.length,&mut output);
+  transition copied.error==0 {true -> (ImplicitResult::String {length:copied.value,bytes:output}) _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state failed(error:ByteOutcome)->ImplicitResult {let result:ImplicitResult=ic_storage_failure(error);result}
+}
+machine ic_storage_failure(error:ByteOutcome)->ImplicitResult {
+ transition error {
+  ByteOutcome::Capacity -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity})
+  ByteOutcome::Bounds -> (ImplicitResult::Failure {reason:ConversionFailure::Bounds})
+  ByteOutcome::Encoding -> (ImplicitResult::Failure {reason:ConversionFailure::Encoding})
+  ByteOutcome::UnsupportedValue -> (ImplicitResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  ByteOutcome::ReferenceCycle -> (ImplicitResult::Failure {reason:ConversionFailure::ReferenceCycle})
+  ByteOutcome::WorkLimit -> (ImplicitResult::Failure {reason:ConversionFailure::WorkLimit})
+  _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+}

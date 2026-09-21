@@ -1,0 +1,331 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/acpi",
+    "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+    "roots": [
+      "src/aml/object.rs"
+    ]
+  },
+  "files": {
+    "src/aml/object.rs": {
+      "sha256": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+      "disposition": "pending",
+      "reason": "Only read_buffer_field is translated by this component; generic Object and remaining operations are outside scope.",
+      "symbols": {
+        "11:NativeMethod": {
+          "anchor": "type NativeMethod = dyn Fn(&[WrappedObject]) -> Result<WrappedObject, AmlError>;",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "14:Object": {
+          "anchor": "pub enum Object {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "38:native_method": {
+          "anchor": "pub fn native_method<F>(num_args: u8, f: F) -> Object",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "49:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "95:ObjectToken": {
+          "anchor": "pub struct ObjectToken {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "102:create_interpreter_token": {
+          "anchor": "pub(super) unsafe fn create_interpreter_token() -> ObjectToken {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "108:WrappedObject": {
+          "anchor": "pub struct WrappedObject(Arc<UnsafeCell<Object>>);",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "111:new": {
+          "anchor": "pub fn new(object: Object) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "124:gain_mut": {
+          "anchor": "pub unsafe fn gain_mut<'r, 'a, 't>(&'a self, _token: &'t ObjectToken) -> &'r mut Object",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "132:unwrap_reference": {
+          "anchor": "pub fn unwrap_reference(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "145:unwrap_transparent_reference": {
+          "anchor": "pub fn unwrap_transparent_reference(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "160:Target": {
+          "anchor": "type Target = Object;",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "162:deref": {
+          "anchor": "fn deref(&self) -> &Self::Target {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "174:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "180:wrap": {
+          "anchor": "pub fn wrap(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "187:as_integer": {
+          "anchor": "pub fn as_integer(&self) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "195:as_string": {
+          "anchor": "pub fn as_string(&self) -> Result<Cow<'_, str>, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "203:as_buffer": {
+          "anchor": "pub fn as_buffer(&self) -> Result<&[u8], AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "214:to_integer": {
+          "anchor": "pub fn to_integer(&self, integer_size: IntegerSize) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "252:to_buffer": {
+          "anchor": "pub fn to_buffer(&self, integer_size: IntegerSize) -> Result<Vec<u8>, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "264:read_buffer_field": {
+          "anchor": "pub fn read_buffer_field(&self, integer_size: IntegerSize) -> Result<Object, AmlError> {",
+          "disposition": "translated",
+          "reason": "Bounded direct canonical field read, shared backing byte snapshots and existing bit helpers; primary 32/64-bit shape correction, zero/out-of-range rejection, strict string storage encoding and finite 256-byte limit documented. No pointer, runtime dispatch or region access.",
+          "targets": [
+            {
+              "path": "source/libraries/acpi/aml/buffer_field_values.omg",
+              "anchor": "pub machine read"
+            }
+          ]
+        },
+        "291:write_buffer_field": {
+          "anchor": "pub fn write_buffer_field(&mut self, value: &[u8], token: &ObjectToken) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "317:replace_with_implicit_casting": {
+          "anchor": "pub fn replace_with_implicit_casting(&mut self, new: Object) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "346:typ": {
+          "anchor": "pub fn typ(&self) -> ObjectType {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "377:aml_cmp": {
+          "anchor": "pub fn aml_cmp(&self, other: &Object) -> Result<Ordering, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "394:FieldUnit": {
+          "anchor": "pub struct FieldUnit {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "395:kind": {
+          "anchor": "pub kind: FieldUnitKind,",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "396:flags": {
+          "anchor": "pub flags: FieldFlags,",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "397:bit_index": {
+          "anchor": "pub bit_index: usize,",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "398:bit_length": {
+          "anchor": "pub bit_length: usize,",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "402:FieldUnitKind": {
+          "anchor": "pub enum FieldUnitKind {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "409:FieldFlags": {
+          "anchor": "pub struct FieldFlags(pub u8);",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "412:FieldAccessType": {
+          "anchor": "pub enum FieldAccessType {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "422:FieldUpdateRule": {
+          "anchor": "pub enum FieldUpdateRule {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "429:access_type": {
+          "anchor": "pub fn access_type(&self) -> Result<FieldAccessType, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "441:access_type_bytes": {
+          "anchor": "pub fn access_type_bytes(&self) -> Result<usize, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "455:lock_rule": {
+          "anchor": "pub fn lock_rule(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "459:update_rule": {
+          "anchor": "pub fn update_rule(&self) -> FieldUpdateRule {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "470:MethodFlags": {
+          "anchor": "pub struct MethodFlags(pub u8);",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "473:arg_count": {
+          "anchor": "pub fn arg_count(&self) -> usize {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "477:serialize": {
+          "anchor": "pub fn serialize(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "481:sync_level": {
+          "anchor": "pub fn sync_level(&self) -> u8 {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "487:ReferenceKind": {
+          "anchor": "pub enum ReferenceKind {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "497:ObjectType": {
+          "anchor": "pub enum ObjectType {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "519:DeviceStatus": {
+          "anchor": "pub struct DeviceStatus(pub u64);",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "522:present": {
+          "anchor": "pub fn present(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "526:enabled": {
+          "anchor": "pub fn enabled(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "530:show_in_ui": {
+          "anchor": "pub fn show_in_ui(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "534:functioning": {
+          "anchor": "pub fn functioning(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "540:battery_present": {
+          "anchor": "pub fn battery_present(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "548:copy_bits": {
+          "anchor": "pub(crate) fn copy_bits(",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "588:align_down": {
+          "anchor": "pub(crate) fn align_down(value: usize, align: usize) -> usize {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "608:tests": {
+          "anchor": "mod tests {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "612:test_copy_bits": {
+          "anchor": "fn test_copy_bits() {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "621:buffer_to_integer": {
+          "anchor": "fn buffer_to_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "626:buffer_field_to_integer": {
+          "anchor": "fn buffer_field_to_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "627:BUFFER": {
+          "anchor": "const BUFFER: [u8; 5] = [0xffu8; 5];",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "635:buffer_field_to_4_byte_integer": {
+          "anchor": "fn buffer_field_to_4_byte_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "637:BUFFER": {
+          "anchor": "const BUFFER: [u8; 5] = [0x0f, 0x00, 0x00, 0x00, 0xf0];",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "649:buffer_field_to_8_byte_integer": {
+          "anchor": "fn buffer_field_to_8_byte_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        },
+        "650:BUFFER": {
+          "anchor": "const BUFFER: [u8; 6] = [0x0f, 0x00, 0x00, 0x00, 0xf0, 0xff];",
+          "disposition": "pending",
+          "reason": "Outside this detached field-read component."
+        }
+      }
+    }
+  },
+  "scope": "Detached bounded direct BufferField read: primary integer-bit-width shape, strict metadata validation; no runtime or Field Unit services."
+}

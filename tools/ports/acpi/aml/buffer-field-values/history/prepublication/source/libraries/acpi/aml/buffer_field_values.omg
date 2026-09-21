@@ -1,0 +1,78 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Bounded adaptation of rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Copyright 2018 Isaac Woods; Omega adaptation 2026. See buffer-field-values.PORT.md.
+// Detached observations only. No allocation, object mutation, region or IO access.
+module buffer_field_values;
+use model::ObjectStore;
+use model::Value;
+use byte_storage::ByteRead;
+use byte_storage::ByteOutcome;
+use byte_storage::read_bytes;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::integers::integer_bits;
+use integer_helpers::buffer_fields::field_to_integer;
+use integer_helpers::buffer_fields::copy_bits;
+pub data FieldReadFailure [copy] {
+ case InvalidState; case UnsupportedValue; case Bounds; case Capacity;
+ case Encoding; case ReferenceCycle; case WorkLimit;
+}
+pub data FieldValueRead [copy] {
+ case Failure(reason:FieldReadFailure);
+ case Integer(number:u64);
+ case Buffer(length:u64,bytes:[u8;256]);
+}
+// The caller resolves outer references. Backing references use read_bytes' own
+// transparent policy; a RefOf/Index wrapper is not silently dereferenced here.
+pub machine read(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,field:u64,size:IntegerSize)->FieldValueRead {
+ let count:u64=store.space.object_count;
+ transition count<=64 && field<count && field<64 {true -> payload(input,length,unit,store,store.space.objects[field].value,size) _ -> (FieldValueRead::Failure {reason:FieldReadFailure::InvalidState})}
+ state payload(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,value:Value,size:IntegerSize)->FieldValueRead {
+  transition value {
+   Value::BufferField {backing_object,bit_offset,bit_length} -> backing(input,length,unit,store,backing_object,bit_offset,bit_length,size)
+   _ -> (FieldValueRead::Failure {reason:FieldReadFailure::UnsupportedValue})
+  }
+ }
+ state backing(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,start:u64,count:u64,size:IntegerSize)->FieldValueRead {
+  let snapshot:ByteRead=read_bytes(input,length,unit,store,object);
+  transition snapshot.outcome==ByteOutcome::Success {true -> extent(snapshot,start,count,size) _ -> failure(snapshot.outcome)}
+ }
+ state failure(outcome:ByteOutcome)->FieldValueRead {let result:FieldValueRead=field_value_failure(outcome);result}
+ state extent(snapshot:ByteRead,start:u64,count:u64,size:IntegerSize)->FieldValueRead {
+  let length:u64=snapshot.length;
+  transition length<=256 {true -> start_bound(snapshot,start,count,size,length*8) _ -> (FieldValueRead::Failure {reason:FieldReadFailure::Capacity})}
+ }
+ state start_bound(snapshot:ByteRead,start:u64,count:u64,size:IntegerSize,bits:u64)->FieldValueRead {
+  transition start<=bits && count>0 {true -> count_bound(snapshot,start,count,size,bits-start) _ -> (FieldValueRead::Failure {reason:FieldReadFailure::Bounds})}
+ }
+ state count_bound(snapshot:ByteRead,start:u64,count:u64,size:IntegerSize,remaining:u64)->FieldValueRead {
+  transition count<=remaining {true -> shape(snapshot,start,count,size) _ -> (FieldValueRead::Failure {reason:FieldReadFailure::Bounds})}
+ }
+ state shape(snapshot:ByteRead,start:u64,count:u64,size:IntegerSize)->FieldValueRead {
+  let width:u64=integer_bits(size);
+  transition count<=width {true -> integer(snapshot,start,count,size) _ -> buffer(snapshot,start,count)}
+ }
+ state integer(snapshot:ByteRead,start:u64,count:u64,size:IntegerSize)->FieldValueRead {
+  let result:IntegerResult=field_to_integer(size,&snapshot.bytes,snapshot.length,start,count);
+  transition result.error==0 {true -> (FieldValueRead::Integer {number:result.value}) _ -> (FieldValueRead::Failure {reason:FieldReadFailure::InvalidState})}
+ }
+ state buffer(snapshot:ByteRead,start:u64,count:u64)->FieldValueRead {
+  transition count<=2048 {true -> buffer_copy(snapshot,start,count) _ -> (FieldValueRead::Failure {reason:FieldReadFailure::Capacity})}
+ }
+ state buffer_copy(snapshot:ByteRead,start:u64,count:u64)->FieldValueRead {
+  let length:u64=(count+7)/8;let mut output:[u8;256];
+  let error:u8=copy_bits(&snapshot.bytes,snapshot.length,start,&mut output,length,0,count);
+  transition error==0 {true -> (FieldValueRead::Buffer {length:length,bytes:output}) _ -> (FieldValueRead::Failure {reason:FieldReadFailure::InvalidState})}
+ }
+}
+machine field_value_failure(outcome:ByteOutcome)->FieldValueRead {
+ transition outcome {
+  ByteOutcome::UnsupportedValue -> (FieldValueRead::Failure {reason:FieldReadFailure::UnsupportedValue})
+  ByteOutcome::Bounds -> (FieldValueRead::Failure {reason:FieldReadFailure::Bounds})
+  ByteOutcome::Capacity -> (FieldValueRead::Failure {reason:FieldReadFailure::Capacity})
+  ByteOutcome::Encoding -> (FieldValueRead::Failure {reason:FieldReadFailure::Encoding})
+  ByteOutcome::ReferenceCycle -> (FieldValueRead::Failure {reason:FieldReadFailure::ReferenceCycle})
+  ByteOutcome::WorkLimit -> (FieldValueRead::Failure {reason:FieldReadFailure::WorkLimit})
+  _ -> (FieldValueRead::Failure {reason:FieldReadFailure::InvalidState})
+ }
+}
