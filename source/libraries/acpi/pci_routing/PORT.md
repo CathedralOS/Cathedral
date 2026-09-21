@@ -157,3 +157,8 @@ parser pairs, recorded under the kernel harness's `regressions/` directory.
 Earlier query const and full306 regression records remain historical receipts
 for commit `600eb26`; their raw hashes are preserved. The unchanged byte-storage
 kernels do not call the modified namespace APIs. No compiler source was changed.
+
+The 117-pair receipt is bound to commit `7629bb8`. Its broad package snapshot
+predates the additive `aml/name_text.omg` module; that new unused module makes
+the whole-package hash set historical without changing the routing bodies.
+The retained record and hashes are preserved, not relabeled as a fresh run.

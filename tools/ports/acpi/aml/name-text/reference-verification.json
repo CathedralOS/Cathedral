@@ -1,0 +1,773 @@
+{
+  "binary_sha256": "51a137254ef013726964b50f0dbfeb13ecad6c53f99718a58305f0262bcc4896",
+  "observations": [
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:EmptyNamesAreInvalid"
+      },
+      "text_hex": ""
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "true",
+        "normalized": "ok:415f5f5f",
+        "parent": "ok:",
+        "parsed": "ok:415f5f5f",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e415f5f5f",
+        "search": "true"
+      },
+      "text_hex": "41"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "true",
+        "normalized": "ok:41425f5f",
+        "parent": "ok:",
+        "parsed": "ok:41425f5f",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e41425f5f",
+        "search": "true"
+      },
+      "text_hex": "4142"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "true",
+        "normalized": "ok:4142435f",
+        "parent": "ok:",
+        "parsed": "ok:4142435f",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e4142435f",
+        "search": "true"
+      },
+      "text_hex": "414243"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "true",
+        "normalized": "ok:41424344",
+        "parent": "ok:",
+        "parsed": "ok:41424344",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e41424344",
+        "search": "true"
+      },
+      "text_hex": "41424344"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "4142434445"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "true",
+        "normalized": "ok:5f5f5f5f",
+        "parent": "ok:",
+        "parsed": "ok:5f5f5f5f",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e5f5f5f5f",
+        "search": "true"
+      },
+      "text_hex": "5f"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "true",
+        "normalized": "ok:41305f5f",
+        "parent": "ok:",
+        "parsed": "ok:41305f5f",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e41305f5f",
+        "search": "true"
+      },
+      "text_hex": "4130"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "true",
+        "normalized": "ok:415f395a",
+        "parent": "ok:",
+        "parsed": "ok:415f395a",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e415f395a",
+        "search": "true"
+      },
+      "text_hex": "415f395a"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "30"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([48, 65, 66, 67])"
+      },
+      "text_hex": "30414243"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "61"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "6162"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "616263"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([97, 98, 99, 100])"
+      },
+      "text_hex": "61626364"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([97, 66, 99, 68])"
+      },
+      "text_hex": "61426344"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "21"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "4121"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "414221"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([65, 66, 67, 33])"
+      },
+      "text_hex": "41424321"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "2041"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "4120"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "4100"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "410a"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "c3a9"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "41c3a9"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "414243c3a9"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "true",
+        "normal": "true",
+        "normalized": "ok:5c",
+        "parent": "error:RootHasNoParent",
+        "parsed": "ok:5c",
+        "resolved": "ok:5c",
+        "search": "false"
+      },
+      "text_hex": "5c"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "5e"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "5e5e"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "false",
+        "normalized": "error:InvalidNormalizedName(AmlName([Prefix, Segment(\"A___\")]))",
+        "parent": "error:InvalidNormalizedName(AmlName([Prefix, Segment(\"A___\")]))",
+        "parsed": "ok:5e415f5f5f",
+        "resolved": "ok:5c5f53425f2e504349302e415f5f5f",
+        "search": "false"
+      },
+      "text_hex": "5e41"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "false",
+        "normalized": "error:InvalidNormalizedName(AmlName([Prefix, Prefix, Segment(\"A___\")]))",
+        "parent": "error:InvalidNormalizedName(AmlName([Prefix, Prefix, Segment(\"A___\")]))",
+        "parsed": "ok:5e5e415f5f5f",
+        "resolved": "ok:5c5f53425f2e415f5f5f",
+        "search": "false"
+      },
+      "text_hex": "5e5e41"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "true",
+        "normal": "true",
+        "normalized": "ok:5c415f5f5f",
+        "parent": "ok:5c",
+        "parsed": "ok:5c415f5f5f",
+        "resolved": "ok:5c415f5f5f",
+        "search": "false"
+      },
+      "text_hex": "5c41"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "true",
+        "normal": "true",
+        "normalized": "ok:5c5f53425f2e50434930",
+        "parent": "ok:5c5f53425f",
+        "parsed": "ok:5c5f53425f2e50434930",
+        "resolved": "ok:5c5f53425f2e50434930",
+        "search": "false"
+      },
+      "text_hex": "5c5f53422e50434930"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "true",
+        "normalized": "ok:415f5f5f2e425f5f5f",
+        "parent": "ok:415f5f5f",
+        "parsed": "ok:415f5f5f2e425f5f5f",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e415f5f5f2e425f5f5f",
+        "search": "false"
+      },
+      "text_hex": "412e42"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "true",
+        "normalized": "ok:415f5f5f2e425f5f5f2e435f5f5f",
+        "parent": "ok:415f5f5f2e425f5f5f",
+        "parsed": "ok:415f5f5f2e425f5f5f2e435f5f5f",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e415f5f5f2e425f5f5f2e435f5f5f",
+        "search": "false"
+      },
+      "text_hex": "412e422e43"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "true",
+        "normalized": "ok:415f5f5f2e425f5f5f2e435f5f5f2e445f5f5f",
+        "parent": "ok:415f5f5f2e425f5f5f2e435f5f5f",
+        "parsed": "ok:415f5f5f2e425f5f5f2e435f5f5f2e445f5f5f",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e415f5f5f2e425f5f5f2e435f5f5f2e445f5f5f",
+        "search": "false"
+      },
+      "text_hex": "412e422e432e44"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "2e"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "412e"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "2e41"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "412e2e42"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "5c2e41"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "true",
+        "normal": "false",
+        "normalized": "error:InvalidNormalizedName(AmlName([Root, Prefix, Segment(\"A___\")]))",
+        "parent": "error:InvalidNormalizedName(AmlName([Root, Prefix, Segment(\"A___\")]))",
+        "parsed": "ok:5c5e415f5f5f",
+        "resolved": "ok:5c5e415f5f5f",
+        "search": "false"
+      },
+      "text_hex": "5c5e41"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "false",
+        "normalized": "ok:425f5f5f",
+        "parent": "ok:",
+        "parsed": "ok:415f5f5f2e5e425f5f5f",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e425f5f5f",
+        "search": "false"
+      },
+      "text_hex": "412e5e42"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "false",
+        "normalized": "error:InvalidNormalizedName(AmlName([Segment(\"A___\"), Prefix, Prefix, Segment(\"B___\")]))",
+        "parent": "error:InvalidNormalizedName(AmlName([Segment(\"A___\"), Prefix, Prefix, Segment(\"B___\")]))",
+        "parsed": "ok:415f5f5f2e5e5e425f5f5f",
+        "resolved": "ok:5c5f53425f2e504349302e425f5f5f",
+        "search": "false"
+      },
+      "text_hex": "412e5e5e42"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "412e5c42"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "5e5e2e41"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "5c5c41"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "415c42"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "false",
+        "normalized": "error:InvalidNormalizedName(AmlName([Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Segment(\"ABCD\")]))",
+        "parent": "error:InvalidNormalizedName(AmlName([Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Segment(\"ABCD\")]))",
+        "parsed": "ok:5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e41424344",
+        "resolved": "error:InvalidNormalizedName(AmlName([Root, Segment(\"_SB_\"), Segment(\"PCI0\"), Segment(\"DEV0\"), Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Segment(\"ABCD\")]))",
+        "search": "false"
+      },
+      "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e41424344"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "false",
+        "normalized": "error:InvalidNormalizedName(AmlName([Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Segment(\"ABCD\")]))",
+        "parent": "error:InvalidNormalizedName(AmlName([Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Segment(\"ABCD\")]))",
+        "parsed": "ok:5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e41424344",
+        "resolved": "error:InvalidNormalizedName(AmlName([Root, Segment(\"_SB_\"), Segment(\"PCI0\"), Segment(\"DEV0\"), Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Segment(\"ABCD\")]))",
+        "search": "false"
+      },
+      "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e41424344"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "true",
+        "normalized": "ok:414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "parent": "ok:414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "parsed": "ok:414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "search": "false"
+      },
+      "text_hex": "414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "true",
+        "normalized": "ok:414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "parent": "ok:414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "parsed": "ok:414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "resolved": "ok:5c5f53425f2e504349302e444556302e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "search": "false"
+      },
+      "text_hex": "414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "true",
+        "normal": "true",
+        "normalized": "ok:5c414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "parent": "ok:5c414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "parsed": "ok:5c414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "resolved": "ok:5c414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "search": "false"
+      },
+      "text_hex": "5c414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344"
+    },
+    {
+      "kind": "path",
+      "observed": {
+        "absolute": "false",
+        "normal": "false",
+        "normalized": "error:InvalidNormalizedName(AmlName([Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\")]))",
+        "parent": "error:InvalidNormalizedName(AmlName([Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\")]))",
+        "parsed": "ok:5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "resolved": "error:InvalidNormalizedName(AmlName([Root, Segment(\"_SB_\"), Segment(\"PCI0\"), Segment(\"DEV0\"), Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\"), Segment(\"ABCD\")]))",
+        "search": "false"
+      },
+      "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": ""
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "ok:415f5f5f"
+      },
+      "text_hex": "41"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "ok:41425f5f"
+      },
+      "text_hex": "4142"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "ok:4142435f"
+      },
+      "text_hex": "414243"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "ok:41424344"
+      },
+      "text_hex": "41424344"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "4142434445"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "ok:5f5f5f5f"
+      },
+      "text_hex": "5f"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "ok:41305f5f"
+      },
+      "text_hex": "4130"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "ok:415f395a"
+      },
+      "text_hex": "415f395a"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "30"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([48, 65, 66, 67])"
+      },
+      "text_hex": "30414243"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "61"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "6162"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "616263"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([97, 98, 99, 100])"
+      },
+      "text_hex": "61626364"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([97, 66, 99, 68])"
+      },
+      "text_hex": "61426344"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "21"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "4121"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "414221"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([65, 66, 67, 33])"
+      },
+      "text_hex": "41424321"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "2041"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "4120"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "4100"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "410a"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "c3a9"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "panic": "true"
+      },
+      "text_hex": "41c3a9"
+    },
+    {
+      "kind": "segment",
+      "observed": {
+        "parsed": "error:InvalidNameSeg([255, 255, 255, 255])"
+      },
+      "text_hex": "414243c3a9"
+    }
+  ],
+  "pin": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "source_sha256": {
+    "reference.Cargo.lock": "a4e89addca77b8db006a0ddc28149f1b7f8d3da2ee65808e37af54fde4036c89",
+    "reference.py": "65b32eb00ca0f432bba295574f4ddc64bfedc0a14d4970d773cb26aab08deaa5",
+    "reference.rs": "183ad4234a242324966383ada0029e1c2b0f1d97c097afef316e6fa597a748ac"
+  },
+  "stage": "actual pinned public AmlName/NameSeg operations; no AML evaluation, native Omega or hardware",
+  "upstream_sha256": {
+    "Cargo.toml": "437a679d0f958db2171af775e0a1368ac35edd4cc0a48ec8b449233750db61cf",
+    "LICENCE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "LICENCE-MIT": "d7ed579f795c55b1b9f734f3f1ac6410ba84fef011acf3aaff95d0c9fe6cdd77",
+    "src/address.rs": "38048355ffe9b7c956e3ebaf84effdadca7defffd70c07feb0587e1c85fbb20a",
+    "src/aml/mod.rs": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+    "src/aml/namespace.rs": "311f3d9b5fbcb08395dcde0b5dce5455e932ad4a8fb6c273580d80c507b2f347",
+    "src/aml/object.rs": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+    "src/aml/op_region.rs": "43f7430d7aa41625f944bf66ffccc7f9bed7d403ff1979a9a2c09dedba7bf69b",
+    "src/aml/pci_routing.rs": "4c2371d38c0a67cab28ab686c8ad6374577e012cd02f561d4730e2f7895dcc39",
+    "src/aml/resource.rs": "abca9e6c8c60e40730cc11b2304acf37e2171942097f8871f5f8a8c7911fae09",
+    "src/lib.rs": "09fcc41658affdc55f6d8c0cb2b29b642d908879a07ed735014b70c7935335c7",
+    "src/platform/interrupt.rs": "c9a95f11b49535cd2baee66bdb55944870df284d3bc65f7a0e34416c5631c2bf",
+    "src/platform/mod.rs": "e49bb52792f164f1001a397bee489dc9dda8f3501681072a21396f4d276c87b5",
+    "src/platform/numa.rs": "93371276644afdf0dee1cf8b8215bb24c54a485552f045705b88424e69139596",
+    "src/platform/pci.rs": "5ad4a415a5037a741a7312d950299640a83905d454ba0eb4d40925c47a90d0c0",
+    "src/registers.rs": "9d8ed68f84cf8659f7822b0edd97fd7153a99bcca39de44b3726c6d5c00990a8",
+    "src/rsdp.rs": "ca2389abeffce9de4e1e28a87b9097c195a737f4dfa0beca5d2ccb23067f824c",
+    "src/sdt/bgrt.rs": "33baf3f6d386a091dc7ad13fb902ed4a265bbebd9809dd122d107981ea5cf5bb",
+    "src/sdt/facs.rs": "6977a2857c78c2bb07e880f555a738278571c4e5e9e173cc1375ca600da161d8",
+    "src/sdt/fadt.rs": "3b213e82029458b0c4c2633b232f2e3f1b4f9f59c07c5ac201286fb54a7927b7",
+    "src/sdt/hpet.rs": "ad52bbf848ac167a26561838d2695579b780b174006d9b553f8b154e74e6aca5",
+    "src/sdt/madt.rs": "4decb527324cd1aec925b20adc517d56f88ea80cc8c1cd50741a15b7da927ac0",
+    "src/sdt/mcfg.rs": "c33d9c34b0e270f5a7b3bf1817853aa07e7cb800030eace6447b915b4651900b",
+    "src/sdt/mod.rs": "136cb4b65a02f8e0bb3949543ff4f55fdaa540117010540cc4fe770e400a7052",
+    "src/sdt/slit.rs": "46b271c98f0071b65ccccce36db98aa8d8e4a8929c99bf81cd0ad90e5703ba52",
+    "src/sdt/spcr.rs": "bcd71238ac0a4a08946380508cc4d72762eb93cd7935fc4cc5fbad8519721fbd",
+    "src/sdt/srat.rs": "a73a29fff2fc609f3012c096a1f860d2f577593ef7995f9518e2b34f05b87b66"
+  }
+}

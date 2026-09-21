@@ -915,7 +915,7 @@
             }
           ],
           "note": "Bounded component; scopes and absent Value payloads / opcode retirement remain separate.",
-          "reason": "Bounded component; scopes and absent Value payloads / opcode retirement remain separate."
+          "reason": "Inventoried for ACPI-004, ACPI-005, ACPI-006; no translation/execution claimed."
         },
         "2283:do_index": {
           "anchor": "fn do_index(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
@@ -1016,7 +1016,7 @@
             }
           ],
           "note": "Bounded component; scopes and absent Value payloads / opcode retirement remain separate.",
-          "reason": "Bounded component; scopes and absent Value payloads / opcode retirement remain separate."
+          "reason": "Inventoried for ACPI-004, ACPI-005, ACPI-006; no translation/execution claimed."
         },
         "236:evaluate": {
           "anchor": "pub fn evaluate(&self, path: AmlName, args: Vec<WrappedObject>) -> Result<WrappedObject, AmlError> {",
@@ -2419,8 +2419,8 @@
         },
         "473:as_string": {
           "anchor": "pub fn as_string(&self) -> String {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Bounded canonical uppercase, padded output; no Rust allocation.",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2428,6 +2428,12 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine format",
+              "path": "source/libraries/acpi/aml/name_text.omg"
+            }
           ]
         },
         "487:is_normal": {
@@ -2551,8 +2557,8 @@
         },
         "584:Err": {
           "anchor": "type Err = AmlError;",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Canonical explicit outcomes replace Rust errors/panics.",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2560,12 +2566,18 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub data Outcome",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
           ]
         },
         "586:from_str": {
           "anchor": "fn from_str(mut string: &str) -> Result<Self, Self::Err> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Primary ASL grammar with explicit prefix, lowercase and capacity differences.",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2573,12 +2585,18 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine parse",
+              "path": "source/libraries/acpi/aml/name_text.omg"
+            }
           ]
         },
         "617:fmt": {
           "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "omitted",
+          "reason": "Rust Formatter/Debug integration is not a pure ASL conversion API; ordinary initialized text is supplied by format.",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2626,8 +2644,8 @@
         },
         "642:as_str": {
           "anchor": "pub fn as_str(&self) -> &str {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Emit canonical segment bytes as part of initialized text; no unsafe UTF-8 borrow.",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2635,12 +2653,18 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "machine output_byte",
+              "path": "source/libraries/acpi/aml/name_text.omg"
+            }
           ]
         },
         "649:Err": {
           "anchor": "type Err = AmlError;",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Canonical explicit outcomes replace Rust errors/panics.",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2648,12 +2672,18 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub data Outcome",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
           ]
         },
         "651:from_str": {
           "anchor": "fn from_str(s: &str) -> Result<Self, Self::Err> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Embedded segment parsing validates and underscore-pads one to four characters; no separate NameSeg nominal type.",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -2661,6 +2691,12 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "state start",
+              "path": "source/libraries/acpi/aml/name_text.omg"
+            }
           ]
         },
         "679:is_lead_name_char": {
@@ -2701,8 +2737,8 @@
         },
         "688:fmt": {
           "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "omitted",
+          "reason": "Rust Formatter/Debug integration is not a pure ASL conversion API; ordinary initialized text is supplied by format.",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"

@@ -1,0 +1,164 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Adapted AmlName/NameSeg text conversion, rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5, copyright 2018 Isaac Woods.
+// Primary ASL pathname grammar; ordinary initialized text, no namespace access.
+module name_text;
+use model::Outcome;
+use model::Path;
+use model::PathResult;
+use names::lead_char;
+use names::name_char;
+use names::path_valid;
+
+data Phase [copy] {case Prefix;case Segment(word:u32,width:u64);case AfterDot;}
+data Scan [copy] {outcome:Outcome;path:Path;phase:Phase;offset:u64;}
+pub data TextResult [copy] {
+ case Text(length:u64,bytes:[u8;256]);
+ case Failure(error:Outcome);
+}
+machine upper(value:u64)->u64 {
+ transition value>=97 && value<=122 {true -> (value-32) _ -> (value)}
+}
+
+// Logical length excludes the String terminator. Root and parent-only names
+// are grammar-valid. Empty input, empty dotted segments and interior prefixes
+// reject; valid short names are padded to the four-byte canonical NameSeg.
+pub machine parse(input:&[u8;256],length:u64)->PathResult {
+ transition length<=256 {true -> nonempty(input,length) _ -> (PathResult {outcome:Outcome::Truncated})}
+ state nonempty(input:&[u8;256],length:u64)->PathResult {
+  transition length>0 {true -> scan(input,length) _ -> (PathResult {outcome:Outcome::InvalidName})}
+ }
+ state scan(input:&[u8;256],length:u64)->PathResult {
+  let result:Scan=text_loop(input,Scan {},0,length);let finished:Scan=text_finish(result,length);
+  transition finished.outcome==Outcome::Success {
+   true -> (PathResult {value:finished.path,next:length})
+   _ -> (PathResult {outcome:finished.outcome,offset:finished.offset})
+  }
+ }
+}
+machine text_loop(input:&[u8;256],current:Scan,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->Scan {
+ let next:Scan=text_step(input,current,index,count);
+ transition index<count {true -> text_loop(input,next,index+1,count) _ -> (current)}
+}
+machine fail(current:Scan,error:Outcome,at:u64)->Scan {
+ Scan {outcome:error,path:current.path,phase:current.phase,offset:at}
+}
+machine text_step(input:&[u8;256],current:Scan,index:u64,count:u64)->Scan {
+ transition current.outcome==Outcome::Success && index<count && index<256 {
+  true -> phase(current,input[index] as u64,index) _ -> (current)
+ }
+ state phase(current:Scan,byte:u64,index:u64)->Scan {
+  transition current.phase {
+   Phase::Prefix -> prefix(current,byte,index)
+   Phase::AfterDot -> start(current,byte,index)
+   Phase::Segment {word,width} -> segment(current,byte,index,word,width)
+  }
+ }
+ state prefix(current:Scan,byte:u64,index:u64)->Scan {
+  transition byte {
+   92 -> root(current,index)
+   94 -> parent(current,index)
+   _ -> start(current,byte,index)
+  }
+ }
+ state root(current:Scan,index:u64)->Scan {
+  transition index==0 {true -> rooted(current) _ -> (fail(current,Outcome::InvalidName,index))}
+ }
+ state rooted(current:Scan)->Scan {let mut out:Scan=current;out.path.absolute=true;out}
+ state parent(current:Scan,index:u64)->Scan {
+  let parents:u64=current.path.parents;
+  transition !current.path.absolute && parents<16 {
+   true -> add_parent(current,parents)
+   _ -> prefix_error(current,index,parents)
+  }
+ }
+ state prefix_error(current:Scan,index:u64,parents:u64)->Scan {
+  transition current.path.absolute {true -> (fail(current,Outcome::InvalidName,index)) _ -> (fail(current,Outcome::Capacity,index))}
+ }
+ state add_parent(current:Scan,parents:u64)->Scan {let mut out:Scan=current;out.path.parents=parents+1;out}
+ state start(current:Scan,byte:u64,index:u64)->Scan {
+  let c:u64=upper(byte);
+  transition c<=255 && lead_char(c) {true -> first(current,c) _ -> (fail(current,Outcome::InvalidName,index))}
+ }
+ state first(current:Scan,byte:u64)->Scan {
+  let mut out:Scan=current;out.phase=Phase::Segment {word:((0x5f5f5f00 | byte)&0xffffffff) as u32,width:1};out
+ }
+ state segment(current:Scan,byte:u64,index:u64,word:u32,width:u64)->Scan {
+  let c:u64=upper(byte);
+  transition byte==46 {true -> dot(current,index,word) _ -> more(current,c,index,word,width)}
+ }
+ state dot(current:Scan,index:u64,word:u32)->Scan {
+  let mut out:Scan=text_append(current,word,index);out.phase=Phase::AfterDot;out
+ }
+ state more(current:Scan,byte:u64,index:u64,word:u32,width:u64)->Scan {
+  transition width<4 && byte<=255 && name_char(byte) {true -> append_char(current,byte,word,width) _ -> (fail(current,Outcome::InvalidName,index))}
+ }
+ state append_char(current:Scan,byte:u64,word:u32,width:u64)->Scan {
+  let shift:u64=width*8;let mask:u64=(255 as u64)<<shift;
+  let combined:u64=((word as u64)&~mask)|(byte<<shift);
+  let mut out:Scan=current;out.phase=Phase::Segment {word:(combined&0xffffffff) as u32,width:width+1};out
+ }
+}
+machine text_append(current:Scan,word:u32,index:u64)->Scan {
+ let count:u64=current.path.count;
+ transition count<16 {true -> put(current,word,count) _ -> (fail(current,Outcome::Capacity,index))}
+ state put(current:Scan,word:u32,count:u64)->Scan {
+  let mut out:Scan=current;out.path.segments[count]=word;out.path.count=count+1;out
+ }
+}
+machine text_finish(current:Scan,length:u64)->Scan {
+ transition current.outcome==Outcome::Success {true -> phase(current,length) _ -> (current)}
+ state phase(current:Scan,length:u64)->Scan {
+  transition current.phase {
+   Phase::Segment {word,width} -> append(current,word,length)
+   Phase::Prefix -> (current)
+   Phase::AfterDot -> (fail(current,Outcome::InvalidName,length))
+  }
+ }
+ state append(current:Scan,word:u32,length:u64)->Scan {let result:Scan=text_append(current,word,length);result}
+}
+
+// Emit canonical padded segments, without a terminator in the logical length.
+// All remaining initialized bytes are zero. Maximal admitted output is95 bytes.
+pub machine format(path:Path)->TextResult {
+ let count:u64=path.count;let parents:u64=path.parents;
+ transition count<=16 && parents<=16 {true -> bounded(path,count,parents) _ -> (TextResult::Failure {error:Outcome::InvalidName})}
+ state bounded(path:Path,count:u64,parents:u64)->TextResult {
+  let valid:bool=path_valid(path);
+  transition valid && (path.absolute || parents>0 || count>0) {true -> valid(path) _ -> (TextResult::Failure {error:Outcome::InvalidName})}
+ }
+ state valid(path:Path)->TextResult {
+  let prefix:u64=prefix_length(path);let separators:u64=separator_count(path.count);
+  transition prefix<=16 && separators<=15 && path.count<=16 {true -> render(path,prefix,separators) _ -> (TextResult::Failure {error:Outcome::InvalidName})}
+ }
+ state render(path:Path,prefix:u64,separators:u64)->TextResult {
+  let length:u64=prefix+path.count*4+separators;let mut bytes:[u8;256];
+  text_output(path,&mut bytes,0,length,prefix);
+  TextResult::Text {length:length,bytes:bytes}
+ }
+}
+machine prefix_length(path:Path)->u64 {transition path.absolute {true -> (1) _ -> (path.parents)}}
+machine separator_count(count:u64)->u64 {transition count>0 {true -> (count-1) _ -> (0)}}
+machine text_output(path:Path,bytes:&mut [u8;256],index:u64,count:u64,prefix:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+{
+ output_one(path,bytes,index,count,prefix);
+ transition index<count {true -> text_output(path,bytes,index+1,count,prefix) _ -> {}}
+}
+machine output_one(path:Path,bytes:&mut [u8;256],index:u64,count:u64,prefix:u64) {
+ transition index<count && index<256 {true -> write(path,bytes,index,prefix) _ -> {}}
+ state write(path:Path,bytes:&mut [u8;256],index:u64,prefix:u64) {bytes[index]=output_byte(path,index,prefix);}
+}
+machine output_byte(path:Path,index:u64,prefix:u64)->u8 {
+ transition index<prefix {true -> head(path) _ -> segment(path,index-prefix)}
+ state head(path:Path)->u8 {transition path.absolute {true -> (92) _ -> (94)}}
+ state segment(path:Path,position:u64)->u8 {
+  let part:u64=position/5;let within:u64=position%5;
+  transition within==4 {true -> (46) _ -> letter(path,part,within)}
+ }
+ state letter(path:Path,part:u64,within:u64)->u8 {
+  transition part<16 {true -> ((((path.segments[part] as u64)>>(within*8))&255) as u8) _ -> (0)}
+ }
+}

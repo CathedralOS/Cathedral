@@ -1,0 +1,1051 @@
+{
+  "counts": {
+    "accepted_text_agreement": 26,
+    "both_reject": 40,
+    "primary_acceptance_correction": 13,
+    "strict_grammar_or_capacity_rejection": 5
+  },
+  "rows": [
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "error:EmptyNamesAreInvalid",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": ""
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:415f5f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "415f5f5f",
+        "words": [
+          1600085825
+        ]
+      },
+      "text_hex": "41"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:41425f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "41425f5f",
+        "words": [
+          1600078401
+        ]
+      },
+      "text_hex": "4142"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:4142435f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "4142435f",
+        "words": [
+          1598243393
+        ]
+      },
+      "text_hex": "414243"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:41424344",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "41424344",
+        "words": [
+          1145258561
+        ]
+      },
+      "text_hex": "41424344"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 4
+      },
+      "text_hex": "4142434445"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:5f5f5f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "5f5f5f5f",
+        "words": [
+          1600085855
+        ]
+      },
+      "text_hex": "5f"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:41305f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "41305f5f",
+        "words": [
+          1600073793
+        ]
+      },
+      "text_hex": "4130"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:415f395a",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "415f395a",
+        "words": [
+          1513709377
+        ]
+      },
+      "text_hex": "415f395a"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": "30"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([48, 65, 66, 67])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": "30414243"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "415f5f5f",
+        "words": [
+          1600085825
+        ]
+      },
+      "text_hex": "61"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "41425f5f",
+        "words": [
+          1600078401
+        ]
+      },
+      "text_hex": "6162"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "4142435f",
+        "words": [
+          1598243393
+        ]
+      },
+      "text_hex": "616263"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([97, 98, 99, 100])",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "41424344",
+        "words": [
+          1145258561
+        ]
+      },
+      "text_hex": "61626364"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([97, 66, 99, 68])",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "41424344",
+        "words": [
+          1145258561
+        ]
+      },
+      "text_hex": "61426344"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": "21"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "4121"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 2
+      },
+      "text_hex": "414221"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([65, 66, 67, 33])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 3
+      },
+      "text_hex": "41424321"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": "2041"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "4120"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "4100"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "410a"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": "c3a9"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "41c3a9"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 3
+      },
+      "text_hex": "414243c3a9"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:5c",
+      "strict_expectation": {
+        "absolute": true,
+        "parents": 0,
+        "text_hex": "5c",
+        "words": []
+      },
+      "text_hex": "5c"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 1,
+        "text_hex": "5e",
+        "words": []
+      },
+      "text_hex": "5e"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 2,
+        "text_hex": "5e5e",
+        "words": []
+      },
+      "text_hex": "5e5e"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:5e415f5f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 1,
+        "text_hex": "5e415f5f5f",
+        "words": [
+          1600085825
+        ]
+      },
+      "text_hex": "5e41"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:5e5e415f5f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 2,
+        "text_hex": "5e5e415f5f5f",
+        "words": [
+          1600085825
+        ]
+      },
+      "text_hex": "5e5e41"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:5c415f5f5f",
+      "strict_expectation": {
+        "absolute": true,
+        "parents": 0,
+        "text_hex": "5c415f5f5f",
+        "words": [
+          1600085825
+        ]
+      },
+      "text_hex": "5c41"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:5c5f53425f2e50434930",
+      "strict_expectation": {
+        "absolute": true,
+        "parents": 0,
+        "text_hex": "5c5f53425f2e50434930",
+        "words": [
+          1598182239,
+          810107728
+        ]
+      },
+      "text_hex": "5c5f53422e50434930"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:415f5f5f2e425f5f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "415f5f5f2e425f5f5f",
+        "words": [
+          1600085825,
+          1600085826
+        ]
+      },
+      "text_hex": "412e42"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:415f5f5f2e425f5f5f2e435f5f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "415f5f5f2e425f5f5f2e435f5f5f",
+        "words": [
+          1600085825,
+          1600085826,
+          1600085827
+        ]
+      },
+      "text_hex": "412e422e43"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:415f5f5f2e425f5f5f2e435f5f5f2e445f5f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "415f5f5f2e425f5f5f2e435f5f5f2e445f5f5f",
+        "words": [
+          1600085825,
+          1600085826,
+          1600085827,
+          1600085828
+        ]
+      },
+      "text_hex": "412e422e432e44"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": "2e"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 2
+      },
+      "text_hex": "412e"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": "2e41"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 2
+      },
+      "text_hex": "412e2e42"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "5c2e41"
+    },
+    {
+      "category": "strict_grammar_or_capacity_rejection",
+      "kind": "path",
+      "pin_parsed": "ok:5c5e415f5f5f",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "5c5e41"
+    },
+    {
+      "category": "strict_grammar_or_capacity_rejection",
+      "kind": "path",
+      "pin_parsed": "ok:415f5f5f2e5e425f5f5f",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 2
+      },
+      "text_hex": "412e5e42"
+    },
+    {
+      "category": "strict_grammar_or_capacity_rejection",
+      "kind": "path",
+      "pin_parsed": "ok:415f5f5f2e5e5e425f5f5f",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 2
+      },
+      "text_hex": "412e5e5e42"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 2
+      },
+      "text_hex": "412e5c42"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 2
+      },
+      "text_hex": "5e5e2e41"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "5c5c41"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "415c42"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 16,
+        "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "words": []
+      },
+      "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e"
+    },
+    {
+      "category": "both_reject",
+      "kind": "path",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "error": "Capacity",
+        "offset": 16
+      },
+      "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e41424344",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 16,
+        "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e41424344",
+        "words": [
+          1145258561
+        ]
+      },
+      "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e41424344"
+    },
+    {
+      "category": "strict_grammar_or_capacity_rejection",
+      "kind": "path",
+      "pin_parsed": "ok:5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e41424344",
+      "strict_expectation": {
+        "error": "Capacity",
+        "offset": 16
+      },
+      "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e41424344"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "words": [
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561
+        ]
+      },
+      "text_hex": "414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344"
+    },
+    {
+      "category": "strict_grammar_or_capacity_rejection",
+      "kind": "path",
+      "pin_parsed": "ok:414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+      "strict_expectation": {
+        "error": "Capacity",
+        "offset": 84
+      },
+      "text_hex": "414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:5c414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+      "strict_expectation": {
+        "absolute": true,
+        "parents": 0,
+        "text_hex": "5c414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "words": [
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561
+        ]
+      },
+      "text_hex": "5c414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "path",
+      "pin_parsed": "ok:5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 16,
+        "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344",
+        "words": [
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561,
+          1145258561
+        ]
+      },
+      "text_hex": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e414243442e41424344"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": ""
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "segment",
+      "pin_parsed": "ok:415f5f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "415f5f5f",
+        "words": [
+          1600085825
+        ]
+      },
+      "text_hex": "41"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "segment",
+      "pin_parsed": "ok:41425f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "41425f5f",
+        "words": [
+          1600078401
+        ]
+      },
+      "text_hex": "4142"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "segment",
+      "pin_parsed": "ok:4142435f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "4142435f",
+        "words": [
+          1598243393
+        ]
+      },
+      "text_hex": "414243"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "segment",
+      "pin_parsed": "ok:41424344",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "41424344",
+        "words": [
+          1145258561
+        ]
+      },
+      "text_hex": "41424344"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 4
+      },
+      "text_hex": "4142434445"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "segment",
+      "pin_parsed": "ok:5f5f5f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "5f5f5f5f",
+        "words": [
+          1600085855
+        ]
+      },
+      "text_hex": "5f"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "segment",
+      "pin_parsed": "ok:41305f5f",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "41305f5f",
+        "words": [
+          1600073793
+        ]
+      },
+      "text_hex": "4130"
+    },
+    {
+      "category": "accepted_text_agreement",
+      "kind": "segment",
+      "pin_parsed": "ok:415f395a",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "415f395a",
+        "words": [
+          1513709377
+        ]
+      },
+      "text_hex": "415f395a"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": "30"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "error:InvalidNameSeg([48, 65, 66, 67])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": "30414243"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "415f5f5f",
+        "words": [
+          1600085825
+        ]
+      },
+      "text_hex": "61"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "41425f5f",
+        "words": [
+          1600078401
+        ]
+      },
+      "text_hex": "6162"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "4142435f",
+        "words": [
+          1598243393
+        ]
+      },
+      "text_hex": "616263"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "segment",
+      "pin_parsed": "error:InvalidNameSeg([97, 98, 99, 100])",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "41424344",
+        "words": [
+          1145258561
+        ]
+      },
+      "text_hex": "61626364"
+    },
+    {
+      "category": "primary_acceptance_correction",
+      "kind": "segment",
+      "pin_parsed": "error:InvalidNameSeg([97, 66, 99, 68])",
+      "strict_expectation": {
+        "absolute": false,
+        "parents": 0,
+        "text_hex": "41424344",
+        "words": [
+          1145258561
+        ]
+      },
+      "text_hex": "61426344"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": "21"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "4121"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 2
+      },
+      "text_hex": "414221"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "error:InvalidNameSeg([65, 66, 67, 33])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 3
+      },
+      "text_hex": "41424321"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": "2041"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "4120"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "4100"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "410a"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 0
+      },
+      "text_hex": "c3a9"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "panic",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 1
+      },
+      "text_hex": "41c3a9"
+    },
+    {
+      "category": "both_reject",
+      "kind": "segment",
+      "pin_parsed": "error:InvalidNameSeg([255, 255, 255, 255])",
+      "strict_expectation": {
+        "error": "InvalidName",
+        "offset": 3
+      },
+      "text_hex": "414243c3a9"
+    }
+  ],
+  "stage": "classification of actual public Rust observations; strict expected values are exercised separately by Omega fixtures"
+}

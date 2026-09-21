@@ -59,3 +59,8 @@ and cannot masquerade as full-suite receipts. `generate.py` can emit readable
 own suite directly. Fixtures are original canonical values and synthetic bytes,
 not firmware transcriptions. The public host's strict expectation annotations
 and these independently executed kernel cases remain separate evidence stages.
+
+The 117-pair receipt is bound to commit `7629bb8`. Its broad package snapshot
+predates the additive `aml/name_text.omg` module; that new unused module makes
+the whole-package hash set historical without changing the routing bodies.
+The retained record and hashes are preserved, not relabeled as a fresh run.

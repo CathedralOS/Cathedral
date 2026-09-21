@@ -4,7 +4,7 @@
 
 **Stage: inventoried, 2026-09-20.** This milestone covers the complete pinned
 Rust corpus and test-scenario metadata. It does not claim an Omega translation,
-compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 570 translated table/topology/AML/helper anchors and 1,011
+compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 576 translated table/topology/AML/helper anchors, two omitted Rust formatting hooks and 1,003
 pending anchors. Inventory completion and translation completion are different
 milestones. The bounded ACPI-001 slice is separately
 [tested by Omega semantic evaluation](headers.PORT.md): 65 original scenarios
@@ -197,3 +197,11 @@ and all 4096 resource bytes. Shared unsigned-count guard fixes also pass fresh
 Rust probe retains its 101 observations and documented pin differences. AML
 method evaluation and interrupt installation remain caller boundaries. No live
 access or completed generic AML routing service is implied.
+
+[ASL textual names](aml/name-text.PORT.md) adds bounded parse/format conversion
+into canonical paths, with lowercase folding, underscore padding and explicit
+prefix/segment grammar. All 150 checked pairs, three const pairs and 84 actual
+public Rust observations pass. The tests include full initialized outputs and
+35 canonical guard regressions. Six new source anchors are translated; two Rust
+formatting hooks are deliberately omitted. Namespace lookup and generic DerefOf
+execution remain separate work.
