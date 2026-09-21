@@ -2,7 +2,8 @@
 
 This package connects the bounded static loader to the bounded generic method
 executor. It adds no hardware access, firmware invocation, physical mapping or
-production boot import. Full ACPI-005/006 interpreter coverage remains pending.
+production boot import. ACPI-005 interpreter coverage remains pending; the bounded Program resource
+profile satisfies ACPI-006 within its documented scope.
 
 ## Source and licensing
 
@@ -111,6 +112,7 @@ in the companion verification records. Commands and remaining evidence are in
 backing and Package member chains are validated without evaluating references,
 resolving names or copying the graph. The 49 pure-kernel, 27 Program and three supplemental behavior/control pairs
 pass in the recorded isolated worktree. Rejected results expose no
-value while preserving prior execution effects and diagnostics. This is partial
-ACPI-006 evidence; reclamation, deep copy accounting and other resource work
-remain open. No upstream source anchor is promoted by this original composition.
+value while preserving prior execution effects and diagnostics. The completed
+[ACPI-006 resource audit](resource-limits.PORT.md) records the precise bounded Program profile
+and low-level API boundary. No upstream source anchor is promoted by this
+original composition.

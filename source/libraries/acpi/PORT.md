@@ -24,7 +24,7 @@ and namespace behavior. [Field declaration metadata](aml/fields/PORT.md) adds
 FieldList forms. The [integer executor](interpreter/execution/PORT.md) passes
 79 checked-interpreter pairs; [declaration capture and owned-source execution](pipeline/PORT.md)
 adds 22 pipeline pairs and current parser/field regressions.
-The supplementary [public interpreter probe](../../../../tools/ports/acpi/aml-public-execution/README.md)
+The supplementary [public interpreter probe](../../../tools/ports/acpi/aml-public-execution/README.md)
 records 49 finite Rust loader/evaluator observations, including 24 successful
 value/state agreements. Corresponding errors, pin differences and thirty
 explicitly excluded fixture rows remain separately recorded.
@@ -119,7 +119,8 @@ model; copying Rust marker traits cannot establish it.
 
 `MAX_NAME_PATH_INDIRECTIONS = 8` bounds one name-resolution chain, not all AML
 work. Loops, recursion, namespace growth, object allocation and returned data
-still require separate ACPI-006 budgets. The upstream test README names several
+require separate budgets, now supplied by the bounded Program profile
+([ACPI-006 resource audit](pipeline/resource-limits.PORT.md)). The upstream test README names several
 external tests that can hang; they must become timeout/exhaustion scenarios,
 not be silently deleted or counted as passing.
 
@@ -420,7 +421,7 @@ now contribute converted stored data, following ACPI 6.6 §19.6.132. All 255
 checked behavior/control pairs pass: 44 bytecode, 30 complete-state bridge, 25
 target-dispatch, 55 generic, 79 integer and 22 pipeline pairs. CopyObject and
 Local/Arg bindings retain their existing contracts. Broader bytecodes, field
-evaluation and resource accounting remain pending; ACPI-005 and aggregate source
+evaluation remain pending; ACPI-005 and aggregate source
 anchors stay open.
 
 [Equal-extent named Buffer Store](aml/named-buffer-store.PORT.md) admits Buffer sources when both logical extents match, including zero, self-store
@@ -431,3 +432,20 @@ Those exact production and fixture hashes match the integrated source at
 Unequal Buffer extents need a narrow compatibility choice between resize and
 fixed-extent behavior; this does not block other ACPI-005 implementation work.
 Aggregate source anchors remain pending.
+
+[Zero-length Buffer destination conversion](aml/zero-buffer-store.PORT.md) retains zero extent for Integer and fully admitted String sources. The 86
+focused checked behavior/control pairs and six public Rust observations remain
+bound to their isolated worktree. Their production and fixture hashes match the
+integrated source at `3a74b52`. Positive-target empty String precedence and
+unequal Buffer extents remain the two narrow compatibility decisions; other
+ACPI-005 work continues.
+
+[Returned object graph quotas](aml/result-graph.PORT.md) share one object/byte budget across the public Program result, validate nested
+backing and preserve reference identity. The recorded isolated worktree passed
+49 pure-kernel, 27 Program and three supplemental behavior/control pairs. Result
+rejection preserves prior execution effects and exact step/fault diagnostics.
+ACPI-006 is complete for the current single-source bounded Program profile;
+[the resource audit](pipeline/resource-limits.PORT.md) records limits, evidence
+and the distinct low-level engine contract. The combined canonical Store suites
+passed all 58 bytecode and 38 complete-state bridge pairs with graph validation
+and equal/zero-length Buffer support installed.

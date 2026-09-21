@@ -63,11 +63,14 @@ write are not rolled back by a later failure.
 The original checkpoint admitted positive Buffer extents and Integer/nonempty
 String sources. The subsequent [equal-extent Buffer slice](../../aml/named-buffer-store.PORT.md)
 adds same-length Buffer copying, including zero. Unequal Buffer extents need the
-narrow compatibility decision documented there. Zero targets for Integer/String
-and empty String conversion remain separate profile gaps.
+narrow compatibility decision documented there. The [zero-length destination extension](../../aml/zero-buffer-store.PORT.md)
+admits Integer and fully validated String conversion into empty Buffers. Empty
+String conversion into a positive-length Buffer remains a separate, documented
+precedence decision.
 Other source conversions, dynamic literals, Field/BufferField target dispatch,
-RefOf/DerefOf/Index bytecodes, complete package cloning, and resource accounting
-remain ordinary implementation work. No aggregate source anchor or task checkbox
+RefOf/DerefOf/Index bytecodes and complete package cloning remain ordinary
+implementation work. The bounded Program resource profile is recorded separately
+in [ACPI-006 evidence](../../pipeline/resource-limits.PORT.md). No aggregate source anchor or task checkbox
 is promoted to complete by this integration.
 
 ## Verification
@@ -99,3 +102,10 @@ upstream BankField/IndexField package was merged. Subsequent receipts must retai
 their own source identity; these six results are not relabeled as execution of
 later code. Use `tools/ports/acpi/interpreter/named-store-execution/history/verify_checkpoint.py`
 with `--source-ref a75f0cc` to reproduce their historical integrity.
+
+The subsequent integrated checkpoint passed 58 bytecode and 38 complete-state
+bridge pairs with equal/zero-length Buffer support and Program graph validation
+enabled. Both new receipts passed exact input/body/build/selection verification.
+They add explicit destination identity checks for named String/Buffer results,
+equal/self/empty copies, zero-length conversion and malformed-source preservation.
+The original six receipts remain bound to `a75f0cc`.

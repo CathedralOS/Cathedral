@@ -25,7 +25,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "integer_to_buffer_32",
@@ -39,7 +40,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "string_to_integer_32",
@@ -67,7 +69,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "string_to_buffer_32",
@@ -81,7 +84,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "buffer_to_integer_32",
@@ -109,7 +113,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "buffer_to_buffer_32",
@@ -137,7 +142,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "add_result_to_2_32",
@@ -151,7 +157,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "divide_named_results_32",
@@ -167,7 +174,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "store_expression_converted_integer_32",
@@ -197,7 +205,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "store_expression_converted_buffer_32",
@@ -211,7 +220,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "integer_to_integer_64",
@@ -239,7 +249,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "integer_to_buffer_64",
@@ -253,7 +264,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "string_to_integer_64",
@@ -281,7 +293,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "string_to_buffer_64",
@@ -295,7 +308,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "buffer_to_integer_64",
@@ -323,7 +337,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "buffer_to_buffer_64",
@@ -351,7 +366,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "add_result_to_2_64",
@@ -365,7 +381,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "divide_named_results_64",
@@ -381,7 +398,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "store_expression_converted_integer_64",
@@ -411,7 +429,8 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "store_expression_converted_buffer_64",
@@ -425,7 +444,218 @@
     "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "equal_buffer_copy_32",
+    "table": "085352435f11060a03414243084453545f11060a0378797a14144d41494e00705352435f4453545fa44453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "414243",
+    "bits": 32,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "empty_buffer_copy_32",
+    "table": "085352435f110200084453545f11020014144d41494e00705352435f4453545fa44453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "",
+    "bits": 32,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "self_buffer_copy_32",
+    "table": "085352435f00084453545f11060a0341424314144d41494e00704453545f4453545fa44453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "414243",
+    "bits": 32,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "empty_string_to_zero_buffer_32",
+    "table": "085352435f0d00084453545f11020014144d41494e00705352435f4453545fa44453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "",
+    "bits": 32,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "string_to_zero_buffer_32",
+    "table": "085352435f0d414200084453545f11020014144d41494e00705352435f4453545fa44453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "",
+    "bits": 32,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "inline_integer_to_zero_buffer_32",
+    "table": "085352435f00084453545f11020014154d41494e00a4700ef0debc9a785634124453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "",
+    "bits": 32,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "store_expression_equal_buffer_32",
+    "table": "085352435f11060a03414243084453545f11060a0378797a14104d41494e00a4705352435f4453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "414243",
+    "bits": 32,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "equal_buffer_copy_64",
+    "table": "085352435f11060a03414243084453545f11060a0378797a14144d41494e00705352435f4453545fa44453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "414243",
+    "bits": 64,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "empty_buffer_copy_64",
+    "table": "085352435f110200084453545f11020014144d41494e00705352435f4453545fa44453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "",
+    "bits": 64,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "self_buffer_copy_64",
+    "table": "085352435f00084453545f11060a0341424314144d41494e00704453545f4453545fa44453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "414243",
+    "bits": 64,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "empty_string_to_zero_buffer_64",
+    "table": "085352435f0d00084453545f11020014144d41494e00705352435f4453545fa44453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "",
+    "bits": 64,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "string_to_zero_buffer_64",
+    "table": "085352435f0d414200084453545f11020014144d41494e00705352435f4453545fa44453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "",
+    "bits": 64,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "inline_integer_to_zero_buffer_64",
+    "table": "085352435f00084453545f11020014154d41494e00a4700ef0debc9a785634124453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "",
+    "bits": 64,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
+  },
+  {
+    "name": "store_expression_equal_buffer_64",
+    "table": "085352435f11060a03414243084453545f11060a0378797a14104d41494e00a4705352435f4453545f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "414243",
+    "bits": 64,
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "named_alias_preserves_type",
@@ -546,10 +776,11 @@
     "bits": 64,
     "after": {},
     "object_count": 3,
-    "error": "Bounds",
+    "error": "Success",
     "note": "",
     "setup": [],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "empty_buffer_source",
@@ -607,7 +838,8 @@
     "setup": [
       "program.store.space.object_count=64;"
     ],
-    "mutate_source": false
+    "mutate_source": false,
+    "result_object": 1
   },
   {
     "name": "copyobject_still_replaces_type",

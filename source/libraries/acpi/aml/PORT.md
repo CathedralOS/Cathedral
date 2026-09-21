@@ -230,7 +230,7 @@ now contribute converted stored data, following ACPI 6.6 §19.6.132. All 255
 checked behavior/control pairs pass: 44 bytecode, 30 complete-state bridge, 25
 target-dispatch, 55 generic, 79 integer and 22 pipeline pairs. CopyObject and
 Local/Arg bindings retain their existing contracts. Broader bytecodes, field
-evaluation and resource accounting remain pending; ACPI-005 and aggregate source
+evaluation remain pending; ACPI-005 and aggregate source
 anchors stay open.
 
 [Equal-extent named Buffer Store](named-buffer-store.PORT.md) admits Buffer sources when both logical extents match, including zero, self-store
@@ -246,6 +246,14 @@ Aggregate source anchors remain pending.
 backing and Package member chains are validated without evaluating references,
 resolving names or copying the graph. The 49 pure-kernel, 27 Program and three supplemental behavior/control pairs
 pass in the recorded isolated worktree. Rejected results expose no
-value while preserving prior execution effects and diagnostics. This is partial
-ACPI-006 evidence; reclamation, deep copy accounting and other resource work
-remain open. No upstream source anchor is promoted by this original composition.
+value while preserving prior execution effects and diagnostics. The completed
+[ACPI-006 resource audit](../pipeline/resource-limits.PORT.md) records the precise bounded Program profile
+and low-level API boundary. No upstream source anchor is promoted by this
+original composition.
+
+[Zero-length Buffer destination conversion](zero-buffer-store.PORT.md) retains zero extent for Integer and fully admitted String sources. The 86
+focused checked behavior/control pairs and six public Rust observations remain
+bound to their isolated worktree. Their production and fixture hashes match the
+integrated source at `3a74b52`. Positive-target empty String precedence and
+unequal Buffer extents remain the two narrow compatibility decisions; other
+ACPI-005 work continues.

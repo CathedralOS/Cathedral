@@ -3,7 +3,8 @@
 Status: 49 pure-kernel, 27 Program-boundary and three supplemental checked
 behavior/control pairs pass in the isolated
 `/private/tmp/cathedral-acpi-result-graph` worktree.
-ACPI-006 remains open.
+The completed [ACPI-006 audit](../pipeline/resource-limits.PORT.md) records the
+full bounded Program profile and its low-level API boundary.
 
 `result_graph::check_graph` validates the reachable canonical object graph from
 one allocated root ID under caller-supplied object and byte quotas. It returns
@@ -64,7 +65,7 @@ package chains, malformed child storage, high-bit/MAX metadata, exact limits and
 full 64-slot graphs. Controls change expected visited sets or failure kinds.
 The pure-kernel receipt binds all 49 behavior/control pairs to the recorded
 isolated worktree inputs. Native execution, public Rust quota equivalence and
-complete resource accounting are not claimed.
+unbounded or general-purpose resource accounting are not claimed.
 
 ## Program boundary
 
@@ -89,7 +90,8 @@ exercise these boundary semantics. All 27 behavior/control pairs pass through
 the actual loader and engine, with source and runner hashes unchanged. The
 receipts retain the exact isolated execution root; they are not relabeled as
 canonical-checkout execution. This does not close pending bytecode work,
-full deep package copying, reclamation or all ACPI-006 resource accounting.
+full deep package copying or reclamation. The subsequent ACPI-006 audit closes
+the resource task for the bounded Program profile, retaining those exclusions.
 
 Three additional Program behavior/control pairs follow RefOf and Index edges to
 an extra four-byte Buffer under exact and one-short object/byte quotas. Each also

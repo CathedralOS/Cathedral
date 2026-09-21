@@ -18,3 +18,9 @@ hash, observations and unchanged-input result. The driver never rebuilds or
 replaces a live binary. Checked interpretation is separate from native execution.
 All 49 pairs pass in the recorded isolated worktree. The receipt remains
 evidence for that exact root and source snapshot.
+
+The recursive free helpers use the `rg_` prefix because the pinned checked
+interpreter resolved an unqualified recursive `scan` call to a dependency's
+same-named state during an earlier failing run. The unique names avoid that
+observed resolution collision; the complete 49-pair run covers recursive
+traversal after the correction. No compiler source was changed.

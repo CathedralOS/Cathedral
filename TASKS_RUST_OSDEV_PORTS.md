@@ -396,9 +396,10 @@ eight-slot direct-buffer profile is explicit; asynchronous DMA is not modeled.
 - [ ] **ACPI-005 — Port the AML interpreter core.** Arithmetic, values, methods,
   control flow, packages, fields, and upstream semantic tests.  Represent
   operation-region access as an explicit unresolved service boundary.
-- [ ] **ACPI-006 — Add AML resource limits.** Bound input, namespace growth,
+- [x] **ACPI-006 — Add AML resource limits.** Bound input, namespace growth,
   recursion, method work, and returned data.  Fail closed on unsupported or
-  exhausted behavior.
+  exhausted behavior. Tested for the current single-source bounded Program
+  profile; see [scope and evidence](source/libraries/acpi/pipeline/resource-limits.PORT.md).
 - [x] **ACPI-007 — Define the later Cathedral adapter.** Specify—but do not yet
   integrate—the attenuation from discovered regions to separately granted
   physical/MMIO/I/O capabilities.
@@ -778,9 +779,10 @@ compatibility decision; ACPI-005 and aggregate source counts stay open.
 backing and Package member chains are validated without evaluating references,
 resolving names or copying the graph. The 49 pure-kernel, 27 Program and three supplemental behavior/control pairs
 pass in the recorded isolated worktree. Rejected results expose no
-value while preserving prior execution effects and diagnostics. This is partial
-ACPI-006 evidence; reclamation, deep copy accounting and other resource work
-remain open. No upstream source anchor is promoted by this original composition.
+value while preserving prior execution effects and diagnostics. The completed
+[ACPI-006 resource audit](source/libraries/acpi/pipeline/resource-limits.PORT.md) records the precise bounded Program profile
+and low-level API boundary. No upstream source anchor is promoted by this
+original composition.
 
 ## Phase 5 — only after the corpus above is healthy
 

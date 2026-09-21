@@ -55,6 +55,17 @@ def execution_cases():
             body=ret(op(0x70, name('SRC'), name('DST'))))
         add(f'store_expression_converted_buffer_{bits}', integer(42), buffer(b'zzzzz'), 2, data=b'\x2a\0\0\0\0', bits=bits,
             body=ret(op(0x70, name('SRC'), name('DST'))))
+    for bits in (32, 64):
+        add(f'equal_buffer_copy_{bits}', buffer(b'ABC'), buffer(b'xyz'), 2, data=b'ABC', bits=bits)
+        add(f'empty_buffer_copy_{bits}', buffer(b''), buffer(b''), 2, bits=bits)
+        add(f'self_buffer_copy_{bits}', integer(0), buffer(b'ABC'), 2, data=b'ABC', bits=bits,
+            body=op(0x70, name('DST'), name('DST')) + ret(name('DST')))
+        add(f'empty_string_to_zero_buffer_{bits}', string(b''), buffer(b''), 2, bits=bits)
+        add(f'string_to_zero_buffer_{bits}', string(b'AB'), buffer(b''), 2, bits=bits)
+        add(f'inline_integer_to_zero_buffer_{bits}', integer(0), buffer(b''), 2, bits=bits,
+            body=ret(op(0x70, integer(0x123456789ABCDEF0), name('DST'))))
+        add(f'store_expression_equal_buffer_{bits}', buffer(b'ABC'), buffer(b'xyz'), 2, data=b'ABC', bits=bits,
+            body=ret(op(0x70, name('SRC'), name('DST'))))
     add('named_alias_preserves_type', string(b'2A'), integer(7), 1, number=42,
         body=op(0x70, name('SRC'), name('ALS')) + ret(name('DST')),
         declarations=op(0x06, name('DST'), name('ALS')))
@@ -66,7 +77,7 @@ def execution_cases():
             setup=[f'program.store.space.objects[0].value=Value::Reference {{kind:ReferenceKind::{kind},object_id:1}};'])
     add('source_cycle', integer(0), integer(7), 1, error='InvalidState',
         setup=['program.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};'])
-    add('empty_buffer_destination', integer(9), buffer(b''), 2, error='Bounds')
+    add('empty_buffer_destination', integer(9), buffer(b''), 2)
     add('empty_buffer_source', buffer(b''), integer(9), 1, error='Empty')
     add('empty_string_source', string(b''), integer(9), 1, error='Empty')
     add('buffer_string_capacity', buffer(bytes([42]) * 86), string(b'old'), 3, error='Capacity')
@@ -76,6 +87,9 @@ def execution_cases():
         body=op(0x9d, name('SRC'), name('DST')) + ret(name('DST')))
     add('store_local_still_replaces_type', string(b'2A'), integer(7), 3, data=b'2A', count=4,
         body=op(0x70, integer(7), b'\x60') + op(0x70, name('SRC'), b'\x60') + ret(b'\x60'))
+    for row in rows:
+        if row['error']=='Success' and row['kind'] in (2, 3) and not row['name'].startswith(('copyobject_', 'store_local_')):
+            row['result_object']=1
     return rows
 
 
@@ -93,6 +107,16 @@ def bridge_cases():
             setup = 'store.space.objects[1].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}};store.bytes.blocks[1]=ByteBlock {initialized:true,length:5};store.bytes.blocks[1].bytes[4]=99;'
             add(prefix+'_buffer', setup, 'expected_store.bytes.blocks[1]=ByteBlock {initialized:true,length:5};expected_store.bytes.blocks[1].bytes[0]=42;', bits=bits, scalar=scalar)
             add(prefix+'_integer', '', 'expected_store.space.objects[1].value=Value::Integer {number:42};expected_store.bytes.blocks[1]=ByteBlock {};', bits=bits, scalar=scalar)
+    for bits in (32, 64):
+        source='store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true,length:3};store.bytes.blocks[0].bytes[0]=65;store.bytes.blocks[0].bytes[1]=66;store.bytes.blocks[0].bytes[2]=67;store.bytes.blocks[0].bytes[255]=99;'
+        target='store.space.objects[1].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}};store.bytes.blocks[1]=ByteBlock {initialized:true,length:3};store.bytes.blocks[1].bytes[255]=91;'
+        expected='expected_store.bytes.blocks[1]=ByteBlock {initialized:true,length:3};expected_store.bytes.blocks[1].bytes[0]=65;expected_store.bytes.blocks[1].bytes[1]=66;expected_store.bytes.blocks[1].bytes[2]=67;'
+        add(f'equal_buffer_copy_{bits}', source+target, expected, 'Operand::Object {object_id:0}', bits=bits)
+        add(f'self_buffer_copy_{bits}', target+'store.bytes.blocks[1].bytes[0]=65;', 'expected_store.bytes.blocks[1]=ByteBlock {initialized:true,length:3};expected_store.bytes.blocks[1].bytes[0]=65;', 'Operand::Object {object_id:1}', bits=bits)
+        target='store.space.objects[1].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}};store.bytes.blocks[1]=ByteBlock {initialized:true};store.bytes.blocks[1].bytes[255]=91;'
+        source='store.space.objects[0].value=Value::String {string_storage:StringStorage::Owned {string_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true};'
+        add(f'empty_string_to_zero_buffer_{bits}', source+target, 'expected_store.bytes.blocks[1]=ByteBlock {initialized:true};', 'Operand::Object {object_id:0}', bits=bits)
+        add(f'zero_buffer_bad_string_{bits}', source+target+'store.bytes.blocks[0].length=1;store.bytes.blocks[0].bytes[0]=255;', operand='Operand::Object {object_id:0}', error='Encoding', bits=bits)
     add('transparent_string_source', 'store.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:2};store.space.objects[2].value=Value::String {string_storage:StringStorage::Source {string_source:Span {unit:7,start:0,end:2}}};', 'expected_store.space.objects[1].value=Value::Integer {number:42};expected_store.bytes.blocks[1]=ByteBlock {};', 'Operand::Object {object_id:0}')
     add('self_string_source', 'store.space.objects[1].value=Value::String {string_storage:StringStorage::Source {string_source:Span {unit:7,start:0,end:2}}};', 'expected_store.space.objects[1].value=Value::String {string_storage:StringStorage::Owned {string_owner:1}};expected_store.bytes.blocks[1]=ByteBlock {initialized:true,length:2};expected_store.bytes.blocks[1].bytes[0]=50;expected_store.bytes.blocks[1].bytes[1]=65;', 'Operand::Object {object_id:1}')
     for kind in ('RefOf', 'Index'):
@@ -102,7 +126,7 @@ def bridge_cases():
     add('uninitialized', operand='Operand::Uninitialized', error='Uninitialized')
     add('empty_source', 'store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true};', operand='Operand::Object {object_id:0}', error='Empty')
     add('invalid_ascii', 'store.space.objects[0].value=Value::String {string_storage:StringStorage::Owned {string_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true,length:1};store.bytes.blocks[0].bytes[0]=255;', operand='Operand::Object {object_id:0}', error='Encoding')
-    add('zero_extent', 'store.space.objects[1].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}};store.bytes.blocks[1]=ByteBlock {initialized:true};', error='Bounds')
+    add('zero_extent', 'store.space.objects[1].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}};store.bytes.blocks[1]=ByteBlock {initialized:true};', 'expected_store.bytes.blocks[1]=ByteBlock {initialized:true};')
     add('destination_first', 'store.space.objects[1].value=Value::String {string_storage:StringStorage::Owned {string_owner:1}};store.bytes.blocks[1]=ByteBlock {initialized:true,length:257};', operand=f'Operand::Object {{object_id:{MAX}}}', error='Capacity')
     add('bad_owner', 'store.space.objects[1].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};', error='InvalidState')
     add('target_max', target=f'Target::Named {{object_id:{MAX}}}', error='MissingObject')
@@ -153,6 +177,14 @@ def render(group, match=''):
     rows = [r for r in rows if any(part in r['name'] for part in match.split(','))]
     assert rows
     source, names = base.render(rows) if group == 'execution' else render_bridge(rows)
+    if group == 'execution':
+        source=source.replace('matched && transport,bytes,after,count,mutation', 'matched && transport && ns_result_identity(result.operand,row.patch),bytes,after,count,mutation')
+        identity='machine ns_result_identity(operand:Operand,patch:u64)->bool {transition patch {'
+        for index,row in enumerate(rows):
+            if 'result_object' in row:
+                identity+=f'{index+1} -> object(operand,{row["result_object"]}) '
+        identity+='_ -> (true)} state object(operand:Operand,wanted:u64)->bool {transition operand {Operand::Object {object_id} -> (object_id==wanted) _ -> (false)}}}\n'
+        source+=identity
     return rows, source, names
 
 
