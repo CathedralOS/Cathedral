@@ -74,6 +74,15 @@ These define encoding and behavior, not ABI or grant authority.
 
 ## Profile, effects and deviations
 
+The supplementary [public Rust interpreter probe](../../../../../tools/ports/acpi/aml-public-execution/README.md)
+loads synthetic AML and calls the pinned public evaluator for 49 finite fixture
+cases. Twenty-four agree on successful values and requested namespace effects;
+the remaining records retain corresponding errors and documented differences.
+Thirty cases have explicit exclusions for host services, nontermination, direct
+storage edits or Cathedral caller limits. All completed observations make zero
+device/time/synchronization callbacks. This is separate host Rust evidence,
+without Omega native or firmware execution.
+
 - Input capacity is 1024 initialized bytes; namespace capacity is 32 entries and
   64 objects inherited from the parser. This executor never grows/rebinds either.
 - At most four active method frames, sixteen pending expressions and eight
@@ -99,6 +108,9 @@ These define encoding and behavior, not ABI or grant authority.
   the documented helper profile and primary corrections. Divide parses/stores
   remainder first, quotient second, following AML grammar; the pin assigns these
   targets in the opposite order. Integer CopyObject remains a narrow value copy.
+  The public pin also returns InternalError for the valid unary/BCD fixture
+  encodings because retirement extracts fewer arguments than dispatch collects;
+  the bounded executor follows the complete AML operand/target forms.
 - Existing aliases keep identity across Store. No object is reallocated. Slot
   writes preserve `Object.has_next/next`; arbitrary shared references and object
   type replacement are future work. Null targets discard arithmetic results;

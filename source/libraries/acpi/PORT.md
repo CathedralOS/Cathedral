@@ -24,6 +24,10 @@ and namespace behavior. [Field declaration metadata](aml/fields/PORT.md) adds
 FieldList forms. The [integer executor](interpreter/execution/PORT.md) passes
 79 checked-interpreter pairs; [declaration capture and owned-source execution](pipeline/PORT.md)
 adds 22 pipeline pairs and current parser/field regressions.
+The supplementary [public interpreter probe](../../../../tools/ports/acpi/aml-public-execution/README.md)
+records 49 finite Rust loader/evaluator observations, including 24 successful
+value/state agreements. Corresponding errors, pin differences and thirty
+explicitly excluded fixture rows remain separately recorded.
 The [resource parser](resources/PORT.md) adds 210 checked-interpreter pairs, four
 constant-evaluation pairs and 187 actual public Rust observations, including
 64 normalized supported-result agreements. It checks bounded envelopes, all

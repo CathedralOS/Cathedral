@@ -453,6 +453,10 @@ distinct checked-interpreter stage. Definition observations preserve original
 scope across aliases/rebinding. Generic values, fields,
 packages, dynamic declarations and multi-unit source management remain pending.
 Unresolved region/synchronization/service results grant no live access.
+An additional [public Rust interpreter probe](tools/ports/acpi/aml-public-execution/README.md)
+records 49 finite loader/evaluator cases, including 24 successful value/state
+agreements. Other errors/differences and thirty explicit exclusions remain
+recorded; no device/time/synchronization callback occurs.
 The [loader-to-executor pipeline](source/libraries/acpi/pipeline/PORT.md) now
 captures method observations during declaration, rolls them back with failed
 loads and owns a single initialized source snapshot. All 22 pipeline pairs,

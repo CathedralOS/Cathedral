@@ -1,0 +1,834 @@
+{
+  "binary_sha256": "c593976974ff451b078e6a85a9c4d3680f22fb3ee84cabfbf484aa927cbccefb",
+  "different_or_error_observations": [
+    "call_no_return_operand",
+    "divide_targets",
+    "unary_not",
+    "unary_highest",
+    "unary_lowest",
+    "zero_division",
+    "uninitialized_local",
+    "uninitialized_argument",
+    "argument_count",
+    "copy_null",
+    "store_null",
+    "break_outside",
+    "continue_outside",
+    "orphan_else",
+    "truncated_constant",
+    "truncated_expression",
+    "malformed_package",
+    "unsupported_buffer",
+    "missing_name",
+    "noop_operand",
+    "block_depth",
+    "expression_depth",
+    "from_bcd",
+    "to_bcd",
+    "invalid_bcd"
+  ],
+  "format": "cathedral-public-aml-execution-v1",
+  "omitted": {
+    "debug_store": "Requires explicitly absent host service or region model",
+    "definition_flags": "Direct Cathedral namespace/definition edits require a separate public-API fixture",
+    "definition_identity": "Direct Cathedral namespace/definition edits require a separate public-API fixture",
+    "definition_missing": "Direct Cathedral namespace/definition edits require a separate public-API fixture",
+    "definition_span": "Direct Cathedral namespace/definition edits require a separate public-API fixture",
+    "loop_budget": "Unbounded pinned loop/recursion has no corresponding Cathedral fuel/depth mechanism",
+    "method_alias_rebound": "Direct Cathedral namespace/definition edits require a separate public-API fixture",
+    "method_alias_removed": "Direct Cathedral namespace/definition edits require a separate public-API fixture",
+    "method_alias_scope": "Direct Cathedral namespace/definition edits require a separate public-API fixture",
+    "method_alias_unobserved": "Direct Cathedral namespace/definition edits require a separate public-API fixture",
+    "method_bound_removed": "Direct Cathedral namespace/definition edits require a separate public-API fixture",
+    "method_bound_unobserved": "Direct Cathedral namespace/definition edits require a separate public-API fixture",
+    "namespace_capacity": "Cathedral storage/span/capacity admission profile, not encoded AML",
+    "object_capacity": "Cathedral storage/span/capacity admission profile, not encoded AML",
+    "over_budget": "Caller-supplied Cathedral work admission is not an upstream API parameter",
+    "recursive_depth": "Unbounded pinned loop/recursion has no corresponding Cathedral fuel/depth mechanism",
+    "region_read": "Requires explicitly absent host service or region model",
+    "region_store": "Requires explicitly absent host service or region model",
+    "serialized": "Requires explicitly absent host service or region model",
+    "source_capacity": "Cathedral storage/span/capacity admission profile, not encoded AML",
+    "source_inverted": "Cathedral storage/span/capacity admission profile, not encoded AML",
+    "source_length": "Cathedral storage/span/capacity admission profile, not encoded AML",
+    "source_max_end": "Cathedral storage/span/capacity admission profile, not encoded AML",
+    "source_max_start": "Cathedral storage/span/capacity admission profile, not encoded AML",
+    "source_unit": "Cathedral storage/span/capacity admission profile, not encoded AML",
+    "store_then_limit": "Unbounded pinned loop/recursion has no corresponding Cathedral fuel/depth mechanism",
+    "unresolved_breakpoint": "Requires explicitly absent host service or region model",
+    "unresolved_sleep": "Requires explicitly absent host service or region model",
+    "unresolved_timer": "Requires explicitly absent host service or region model",
+    "zero_budget": "Caller-supplied Cathedral work admission is not an upstream API parameter"
+  },
+  "rows": {
+    "argument_copy": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:31"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:31"
+      },
+      "table_hex": "140c4d41494e079d0a1f6ea46e",
+      "table_sha256": "49bad09849ec1c894479759b1545180c61efb08082849baf6f34577ce17a7930"
+    },
+    "argument_count": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:MethodArgCountIncorrect"
+      },
+      "omega_expected": {
+        "outcome": "ArgumentCount",
+        "result": "uninitialized"
+      },
+      "table_hex": "14084d41494e01a401",
+      "table_sha256": "31fc6f3ad0599c8237c7d65955e0b121362a7cf03699fa56c01a23076f75904a"
+    },
+    "argument_store": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:17"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:17"
+      },
+      "table_hex": "140c4d41494e01700a1168a468",
+      "table_sha256": "d8d759a74aaf86eccdc014e0e144da2a07fdac9af9365a7d4a4c89cb73d2c472"
+    },
+    "block_depth": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:42"
+      },
+      "omega_expected": {
+        "outcome": "Depth",
+        "result": "uninitialized"
+      },
+      "table_hex": "14244d41494e00a01d01a01a01a01701a01401a01101a00e01a00b01a00801a00501a40a2a",
+      "table_sha256": "4d31527a6e8455b56218a0452d1ff441be4c0237d03016fe85d6222353ca493d"
+    },
+    "break_outside": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:BreakOutsideOfWhile"
+      },
+      "omega_expected": {
+        "outcome": "ControlOutsideLoop",
+        "result": "uninitialized"
+      },
+      "table_hex": "14074d41494e00a5",
+      "table_sha256": "892881c90606d8c5b1854e79b635cb45930c3f03114fa86ddfe3c878bfe7f834"
+    },
+    "call_argument": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:42"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:42"
+      },
+      "table_hex": "140d4d41494e00a4464f4f5f0a29140b464f4f5f01a472680100",
+      "table_sha256": "061053c59d9aeccc72a9371fd64c8a1ebfdae942ac07e3e8ecf986482600341b"
+    },
+    "call_no_return_operand": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "uninitialized"
+      },
+      "omega_expected": {
+        "outcome": "Uninitialized",
+        "result": "uninitialized"
+      },
+      "table_hex": "140b4d41494e00a4464f4f5f1407464f4f5f00a3",
+      "table_sha256": "d6df1bfe84b2051ae439c0766802f8fe4000090678649f284fdcd148faf5d6c1"
+    },
+    "call_no_return_statement": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:42"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:42"
+      },
+      "table_hex": "140d4d41494e00464f4f5fa40a2a1407464f4f5f00a3",
+      "table_sha256": "4e4e5ed8b7dabf792899a69c67e7efb7c923b7913aa9771c0454fb1de6f9bd73"
+    },
+    "continue_outside": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:ContinueOutsideOfWhile"
+      },
+      "omega_expected": {
+        "outcome": "ControlOutsideLoop",
+        "result": "uninitialized"
+      },
+      "table_hex": "14074d41494e009f",
+      "table_sha256": "cc196bf63288729b148eda65d4f066443d0a99d93fbac1f70b3370161a7cce86"
+    },
+    "copy_null": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:InternalError(\"Target of CopyObject must be a reference\")"
+      },
+      "omega_expected": {
+        "outcome": "InvalidTarget",
+        "result": "uninitialized"
+      },
+      "table_hex": "14094d41494e009d0100",
+      "table_sha256": "ff6ca63a83a3ece14b6d40d8e422b4d76485edcfdc77c24ac6516e384c48988b"
+    },
+    "divide_targets": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:43"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:34"
+      },
+      "table_hex": "14164d41494e00780a170a056061a47277600a0a006100",
+      "table_sha256": "1217b3fd2d8c2919eb298427af6ed4ecf2ba680a91f0948167da207026b331ff"
+    },
+    "empty_method": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "uninitialized"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "uninitialized"
+      },
+      "table_hex": "14064d41494e00",
+      "table_sha256": "62bee2bdc250268f1fc189d4b3450e9f3181d0d9c31c4660e763819e06aaacf1"
+    },
+    "expression_depth": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:0"
+      },
+      "omega_expected": {
+        "outcome": "Depth",
+        "result": "uninitialized"
+      },
+      "table_hex": "14194d41494e00a4929292929292929292929292929292929201",
+      "table_sha256": "a000154004d6138d28a29d56abd90dcdb5a5d0e72373e6ffc700f6502793c4d5"
+    },
+    "from_bcd": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:InternalError(\"Operation has invalid argument types: [Argument::Object(value)], in reference_code/rust-osdev/acpi/src/aml/mod.rs:2234\")"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:1234"
+      },
+      "table_hex": "140d4d41494e00a45b280b341200",
+      "table_sha256": "c330c592e1cd9422c86cad049159611db39995812046b22e0e05d9adbac1bedd"
+    },
+    "if_else_0": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:22"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:22"
+      },
+      "table_hex": "14144d41494e00a00500a40a0ba104a40a16a40a21",
+      "table_sha256": "1bd96aceebfc5ff5b8d81550c63f3642c4f0bed23ff4ce6da339fee3e1f792c3"
+    },
+    "if_else_1": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:11"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:11"
+      },
+      "table_hex": "14144d41494e00a00501a40a0ba104a40a16a40a21",
+      "table_sha256": "25002c7e624625d415e5f4786b2c1b72f73cd1a6f17a288e43ce102c75f25755"
+    },
+    "if_no_else_0": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:33"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:33"
+      },
+      "table_hex": "140f4d41494e00a00500a40a0ba40a21",
+      "table_sha256": "f58aed103e625238699c2cb94a047cad0b3f305166a5fdbe2b3ebd9915f526a3"
+    },
+    "if_no_else_1": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:11"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:11"
+      },
+      "table_hex": "140f4d41494e00a00501a40a0ba40a21",
+      "table_sha256": "325082809c3eea0c27ec81bf5f3001b6d8ccd6683fb3b620b68036b5f3388c7d"
+    },
+    "incdec": {
+      "observed": {
+        "after:X": "integer:2",
+        "after:Y": "integer:3",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:2"
+      },
+      "omega_expected": {
+        "after:X": "integer:2",
+        "after:Y": "integer:3",
+        "outcome": "Success",
+        "result": "integer:2"
+      },
+      "table_hex": "08585f5f5f0008595f5f5f0014284d41494e0075585f5f5f75585f5f5f75585f5f5f70585f5f5f595f5f5f76585f5f5fa4585f5f5f",
+      "table_sha256": "eb2c7bc32058bd792ad6d67a1de9b917ed52b8a5d466ca035cfe24a3576b5df8"
+    },
+    "invalid_bcd": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:InternalError(\"Operation has invalid argument types: [Argument::Object(value)], in reference_code/rust-osdev/acpi/src/aml/mod.rs:2234\")"
+      },
+      "omega_expected": {
+        "outcome": "BadEncoding",
+        "result": "uninitialized"
+      },
+      "table_hex": "140c4d41494e00a45b280a0a00",
+      "table_sha256": "886bbc97dbbc91090cb3b41e389d2ff0a44670c2dbb215595f6a80d4ca1dad9f"
+    },
+    "local_store": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:17"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:17"
+      },
+      "table_hex": "140c4d41494e00700a1160a460",
+      "table_sha256": "15ffee0d038d205fc7e1a46c9dfffa86e51cca7b10ddcab1609d9c0f11f9296b"
+    },
+    "logical_not": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:0"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:0"
+      },
+      "table_hex": "14094d41494e00a49201",
+      "table_sha256": "6e37d7670cf385309126bab4ce7b3bea73517a676bbe301f1ced3a99398f5333"
+    },
+    "malformed_package": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "panic": "true"
+      },
+      "omega_expected": {
+        "outcome": "BadEncoding",
+        "result": "uninitialized"
+      },
+      "table_hex": "14094d41494e00a03f01",
+      "table_sha256": "a45c23eb213cb01a512316a17c9145de9e0ca5f6744a8b9b162a3da34bf5e335"
+    },
+    "method_0": {
+      "observed": {
+        "after:Y": "integer:85",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:85"
+      },
+      "omega_expected": {
+        "after:Y": "integer:85",
+        "outcome": "Success",
+        "result": "integer:85"
+      },
+      "table_hex": "08585f5f5f0008595f5f5f0014144d41494e0070464f4f5f595f5f5fa4595f5f5f1417464f4f5f00a00894585f5f5f01a3a104a40a55a40a3f",
+      "table_sha256": "c0b380af6a51ce8b7a53063b82bba110d15868b3774a7b4c00271b0b7f69d089"
+    },
+    "method_5": {
+      "observed": {
+        "after:Y": "integer:63",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:63"
+      },
+      "omega_expected": {
+        "after:Y": "integer:63",
+        "outcome": "Success",
+        "result": "integer:63"
+      },
+      "table_hex": "08585f5f5f0a0508595f5f5f0014144d41494e0070464f4f5f595f5f5fa4595f5f5f1417464f4f5f00a00894585f5f5f01a3a104a40a55a40a3f",
+      "table_sha256": "09cba0bd351dd0388d9caad4a726ac47bb0449b71a4225d6320771649d5045b1"
+    },
+    "missing_name": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:ObjectDoesNotExist(AmlName([Segment(\"MISS\")]))"
+      },
+      "omega_expected": {
+        "outcome": "MissingObject",
+        "result": "uninitialized"
+      },
+      "table_hex": "140b4d41494e00a44d495353",
+      "table_sha256": "33aecc0bda876b07abf23aa897db1775c0aaca9d9f40c55296baa6eaf71767e7"
+    },
+    "named_alias_store": {
+      "observed": {
+        "after:X": "integer:42",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:42"
+      },
+      "omega_expected": {
+        "after:X": "integer:42",
+        "outcome": "Success",
+        "result": "integer:42"
+      },
+      "table_hex": "08585f5f5f0a0514124d41494e00700a2a414c4953a4585f5f5f06585f5f5f414c4953",
+      "table_sha256": "5a65a5cd74ae4023ff5b7fc7e6b2f6e4335216747b04681b8afd19668a0f22ea"
+    },
+    "named_store": {
+      "observed": {
+        "after:X": "integer:42",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:42"
+      },
+      "omega_expected": {
+        "after:X": "integer:42",
+        "outcome": "Success",
+        "result": "integer:42"
+      },
+      "table_hex": "08585f5f5f0a0514124d41494e00700a2a585f5f5fa4585f5f5f",
+      "table_sha256": "0c3b4010db43d5b791627cf64abaa8a23d4a524153bda378222f1dbc06a1a0c3"
+    },
+    "noop_operand": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "uninitialized"
+      },
+      "omega_expected": {
+        "outcome": "BadEncoding",
+        "result": "uninitialized"
+      },
+      "table_hex": "14084d41494e00a4a3",
+      "table_sha256": "2c9000c13d351fed38a00850c0f34329c695b412ffb07e219eb818beafff28fa"
+    },
+    "orphan_else": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:ElseFoundWithoutCorrespondingIf"
+      },
+      "omega_expected": {
+        "outcome": "BadEncoding",
+        "result": "uninitialized"
+      },
+      "table_hex": "14094d41494e00a102a3",
+      "table_sha256": "cde1236239a99420a87906a0e8c25c93abbbf1743d1d9d966a98a9d73545856b"
+    },
+    "qword_literal": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:4294967296"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:4294967296"
+      },
+      "table_hex": "14104d41494e00a40e0000000001000000",
+      "table_sha256": "041cf37079138fe0fede281ead34b53c3f25bdf303424a2bc077fca5aa0f638f"
+    },
+    "return_add": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:42"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:42"
+      },
+      "table_hex": "140d4d41494e00a4720a280a0200",
+      "table_sha256": "4c79273db924fa5f3c573787dc5dd2da6870bac80854ee6d0762e021930cee50"
+    },
+    "return_literal": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:42"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:42"
+      },
+      "table_hex": "14094d41494e00a40a2a",
+      "table_sha256": "6745dcb2fc2effcf63977263237802b75591a15f3ca69e82ec49d7f8848373d3"
+    },
+    "store_null": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "uninitialized"
+      },
+      "omega_expected": {
+        "outcome": "InvalidTarget",
+        "result": "uninitialized"
+      },
+      "table_hex": "14094d41494e00700100",
+      "table_sha256": "9930cd6cf9c89660249001b0a91ad7c7c65d8b333c07c34c27460f14aacaab54"
+    },
+    "to_bcd": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:InternalError(\"Operation has invalid argument types: [Argument::Object(value)], in reference_code/rust-osdev/acpi/src/aml/mod.rs:2251\")"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:4660"
+      },
+      "table_hex": "140d4d41494e00a45b290bd20400",
+      "table_sha256": "64c61ba797914e276e514f709f0a2491c74cfef4b00ee34b15ccf5fda1fc2042"
+    },
+    "truncated_constant": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:RunOutOfStream"
+      },
+      "omega_expected": {
+        "outcome": "Truncated",
+        "result": "uninitialized"
+      },
+      "table_hex": "14094d41494e00a40c12",
+      "table_sha256": "cbe0eea12d131710d7886e90fb52a7cef48c91c71cf135fe44e74d3c60528d37"
+    },
+    "truncated_expression": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "uninitialized"
+      },
+      "omega_expected": {
+        "outcome": "Truncated",
+        "result": "uninitialized"
+      },
+      "table_hex": "14094d41494e00a47201",
+      "table_sha256": "b02af4c96219110619093d0513affde93a1154ad68e4947c3ea06174a0a96bba"
+    },
+    "unary_highest": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:InternalError(\"Operation has invalid argument types: [Argument::Object(operand)], in reference_code/rust-osdev/acpi/src/aml/mod.rs:1932\")"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:8"
+      },
+      "table_hex": "140b4d41494e00a4810a8000",
+      "table_sha256": "d06d1c2e333e0a72b9041084ec8a0e9b0736247e02ed1831af129371f8d01ba1"
+    },
+    "unary_lowest": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:InternalError(\"Operation has invalid argument types: [Argument::Object(operand)], in reference_code/rust-osdev/acpi/src/aml/mod.rs:1932\")"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:8"
+      },
+      "table_hex": "140b4d41494e00a4820a8000",
+      "table_sha256": "772bdbd0cf3aaccb841deba1b9934a8bf56ae7e1cb9f9f3bec6deb2e28952dab"
+    },
+    "unary_not": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:InternalError(\"Operation has invalid argument types: [Argument::Object(operand)], in reference_code/rust-osdev/acpi/src/aml/mod.rs:1932\")"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:4294967167"
+      },
+      "table_hex": "140b4d41494e00a4800a8000",
+      "table_sha256": "475f7cf8e871393d4db027e32aa091d7f8ce2a7a8a241d0f58f70af9be5fab21"
+    },
+    "uninitialized_argument": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "uninitialized"
+      },
+      "omega_expected": {
+        "outcome": "Uninitialized",
+        "result": "uninitialized"
+      },
+      "table_hex": "14084d41494e00a468",
+      "table_sha256": "926aaae225cf40ffd718c2b02304841c4e3dcdbc1e1df489526fbbd67791bfc9"
+    },
+    "uninitialized_local": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "uninitialized"
+      },
+      "omega_expected": {
+        "outcome": "Uninitialized",
+        "result": "uninitialized"
+      },
+      "table_hex": "14084d41494e00a460",
+      "table_sha256": "4a67a2393d8150fadc1f54c77d209a1d95d4f39327cdea22adc116aa6c6e431d"
+    },
+    "unsupported_buffer": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "other:Buffer"
+      },
+      "omega_expected": {
+        "outcome": "UnsupportedOpcode",
+        "result": "uninitialized"
+      },
+      "table_hex": "140b4d41494e00a411030100",
+      "table_sha256": "6070c5ad808a1335b333ff23555feb9439348475cf51106547ec0a0e45aeed6c"
+    },
+    "while_break": {
+      "observed": {
+        "after:Y": "integer:5",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:5"
+      },
+      "omega_expected": {
+        "after:Y": "integer:5",
+        "outcome": "Success",
+        "result": "integer:5"
+      },
+      "table_hex": "08595f5f5f0014244d41494e00a21895595f5f5f0a0aa00a9295595f5f5f0a05a575595f5f5fa4595f5f5f",
+      "table_sha256": "1147464bc3a1b65969a0d70ad5459ae716c18c933e12acc790052cf85c5b470f"
+    },
+    "while_continue": {
+      "observed": {
+        "after:CNT": "integer:5",
+        "after:Z": "integer:0",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:0"
+      },
+      "omega_expected": {
+        "after:CNT": "integer:5",
+        "after:Z": "integer:0",
+        "outcome": "Success",
+        "result": "integer:0"
+      },
+      "table_hex": "08434e545f00085a5f5f5f00141f4d41494e00a21395434e545f0a0575434e545f9f755a5f5f5fa45a5f5f5f",
+      "table_sha256": "e1edfe189cae5247d01e5d3cd92305bab3e7ac4337dcca76fd5e7ff6efecb3f8"
+    },
+    "while_decrement_predicate": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:0"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:0"
+      },
+      "table_hex": "14114d41494e00700a0560a20476609fa460",
+      "table_sha256": "7daff07d05f749afa5cd9afc9170e591fc00c94e75411ecd5e70c03656000e29"
+    },
+    "while_increment": {
+      "observed": {
+        "after:X": "integer:5",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:5"
+      },
+      "omega_expected": {
+        "after:X": "integer:5",
+        "outcome": "Success",
+        "result": "integer:5"
+      },
+      "table_hex": "08585f5f5f0014194d41494e00a20d95585f5f5f0a0575585f5f5fa4585f5f5f",
+      "table_sha256": "e00512edf83c396ab0238481bea64251661f4e705f6b8ab5b5d8e1fda0baa98d"
+    },
+    "wrap64": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:0"
+      },
+      "omega_expected": {
+        "outcome": "Success",
+        "result": "integer:0"
+      },
+      "table_hex": "140b4d41494e00a472ff0100",
+      "table_sha256": "3e3a820b9a1a309e769a72d9683eb438da0582fc5f96bc1c00d55021ad1af475"
+    },
+    "zero_division": {
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "panic": "true"
+      },
+      "omega_expected": {
+        "outcome": "DivideByZero",
+        "result": "uninitialized"
+      },
+      "table_hex": "140c4d41494e00a47801000000",
+      "table_sha256": "41aface894ed3ff6c4d7af6a1ad61dca6293600b36d2aca4fecef44afa550f87"
+    }
+  },
+  "rustc": "rustc 1.100.0-nightly (a69a63265 2026-09-03)",
+  "source_sha256": {
+    "tools/ports/acpi/aml-public-execution/Cargo.lock": "ba4543d96562e5f411c8447ec4a23a08d224acb0e4af7c5e61e099a976dcf880",
+    "tools/ports/acpi/aml-public-execution/Cargo.toml": "5b8c17e5e61e7b2b2ff2b29f4ca5feb00639297abb742387a31ef2262f818642",
+    "tools/ports/acpi/aml-public-execution/check.py": "4a9b7214ae7952fe0ed5530dd274fd5fdc84c15519f34cdd3f39556b8ad7836f",
+    "tools/ports/acpi/aml-public-execution/src/main.rs": "ec7a67ce3956b42883604c0c0b3cd26e4d76bf73a78344e7a2c1035d1e7ec943",
+    "tools/ports/acpi/interpreter/execution/cases.json": "b89368911c2fbedad2d95e6d92c20f1c86e42fcbde2d032e87040a540e79214a",
+    "tools/ports/acpi/interpreter/execution/fixtures.py": "c428f215738de207fd2443dff6124080c64840a2ceacab74264bb92a6592d305"
+  },
+  "stage": "actual pinned public Rust Interpreter::new/load_table/evaluate on host; no Omega native or hardware execution",
+  "successful_value_agreements": [
+    "return_add",
+    "return_literal",
+    "empty_method",
+    "logical_not",
+    "local_store",
+    "argument_store",
+    "argument_copy",
+    "named_store",
+    "named_alias_store",
+    "incdec",
+    "if_else_0",
+    "if_no_else_0",
+    "if_else_1",
+    "if_no_else_1",
+    "method_0",
+    "method_5",
+    "call_argument",
+    "call_no_return_statement",
+    "while_increment",
+    "while_break",
+    "while_continue",
+    "while_decrement_predicate",
+    "wrap64",
+    "qword_literal"
+  ],
+  "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "upstream_source_sha256": {
+    "src/address.rs": "38048355ffe9b7c956e3ebaf84effdadca7defffd70c07feb0587e1c85fbb20a",
+    "src/aml/mod.rs": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+    "src/aml/namespace.rs": "311f3d9b5fbcb08395dcde0b5dce5455e932ad4a8fb6c273580d80c507b2f347",
+    "src/aml/object.rs": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+    "src/aml/op_region.rs": "43f7430d7aa41625f944bf66ffccc7f9bed7d403ff1979a9a2c09dedba7bf69b",
+    "src/aml/pci_routing.rs": "4c2371d38c0a67cab28ab686c8ad6374577e012cd02f561d4730e2f7895dcc39",
+    "src/aml/resource.rs": "abca9e6c8c60e40730cc11b2304acf37e2171942097f8871f5f8a8c7911fae09",
+    "src/lib.rs": "09fcc41658affdc55f6d8c0cb2b29b642d908879a07ed735014b70c7935335c7",
+    "src/platform/interrupt.rs": "c9a95f11b49535cd2baee66bdb55944870df284d3bc65f7a0e34416c5631c2bf",
+    "src/platform/mod.rs": "e49bb52792f164f1001a397bee489dc9dda8f3501681072a21396f4d276c87b5",
+    "src/platform/numa.rs": "93371276644afdf0dee1cf8b8215bb24c54a485552f045705b88424e69139596",
+    "src/platform/pci.rs": "5ad4a415a5037a741a7312d950299640a83905d454ba0eb4d40925c47a90d0c0",
+    "src/registers.rs": "9d8ed68f84cf8659f7822b0edd97fd7153a99bcca39de44b3726c6d5c00990a8",
+    "src/rsdp.rs": "ca2389abeffce9de4e1e28a87b9097c195a737f4dfa0beca5d2ccb23067f824c",
+    "src/sdt/bgrt.rs": "33baf3f6d386a091dc7ad13fb902ed4a265bbebd9809dd122d107981ea5cf5bb",
+    "src/sdt/facs.rs": "6977a2857c78c2bb07e880f555a738278571c4e5e9e173cc1375ca600da161d8",
+    "src/sdt/fadt.rs": "3b213e82029458b0c4c2633b232f2e3f1b4f9f59c07c5ac201286fb54a7927b7",
+    "src/sdt/hpet.rs": "ad52bbf848ac167a26561838d2695579b780b174006d9b553f8b154e74e6aca5",
+    "src/sdt/madt.rs": "4decb527324cd1aec925b20adc517d56f88ea80cc8c1cd50741a15b7da927ac0",
+    "src/sdt/mcfg.rs": "c33d9c34b0e270f5a7b3bf1817853aa07e7cb800030eace6447b915b4651900b",
+    "src/sdt/mod.rs": "136cb4b65a02f8e0bb3949543ff4f55fdaa540117010540cc4fe770e400a7052",
+    "src/sdt/slit.rs": "46b271c98f0071b65ccccce36db98aa8d8e4a8929c99bf81cd0ad90e5703ba52",
+    "src/sdt/spcr.rs": "bcd71238ac0a4a08946380508cc4d72762eb93cd7935fc4cc5fbad8519721fbd",
+    "src/sdt/srat.rs": "a73a29fff2fc609f3012c096a1f860d2f577593ef7995f9518e2b34f05b87b66"
+  }
+}
