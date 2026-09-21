@@ -727,6 +727,1430 @@
   "fixed-short": {
     "result": "error"
   },
+  "gpio-bad-both-level": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        0,
+        2,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-bad-config-reserved": {
+    "result": "error"
+  },
+  "gpio-bad-config-vendor": {
+    "result": "error"
+  },
+  "gpio-bad-flags-high": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-bad-flags-reserved": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-bad-general-high": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-bad-general-low": {
+    "resources": [
+      [
+        6,
+        0,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-bad-index": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-bad-kind": {
+    "result": "error"
+  },
+  "gpio-bad-pin-empty": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        0,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-bad-pin-in-header": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        1024,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-bad-pin-odd": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        5,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-bad-pin-offset-max": {
+    "result": "panic"
+  },
+  "gpio-bad-pin-reversed": {
+    "result": "panic"
+  },
+  "gpio-bad-polarity-reserved": {
+    "result": "error"
+  },
+  "gpio-bad-revision": {
+    "result": "error"
+  },
+  "gpio-bad-source-offset-max": {
+    "result": "panic"
+  },
+  "gpio-bad-vendor-in-source": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-bad-vendor-length": {
+    "result": "panic"
+  },
+  "gpio-bad-vendor-length-max": {
+    "result": "panic"
+  },
+  "gpio-bad-vendor-past-end": {
+    "result": "panic"
+  },
+  "gpio-capacity-end": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-empty-source": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-header-only": {
+    "result": "panic"
+  },
+  "gpio-interrupt-0": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-interrupt-1": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-interrupt-17": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        1
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-interrupt-2": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-interrupt-27": {
+    "resources": [
+      [
+        6,
+        1,
+        1,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        1,
+        1
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-interrupt-29": {
+    "resources": [
+      [
+        6,
+        1,
+        1,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        2,
+        1
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-interrupt-3": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        1,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-interrupt-5": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        2,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-interrupt-8": {
+    "resources": [
+      [
+        6,
+        1,
+        1,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-io-0": {
+    "resources": [
+      [
+        6,
+        0,
+        1,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        1,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-io-1": {
+    "resources": [
+      [
+        6,
+        0,
+        1,
+        1,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        1,
+        1
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-io-2": {
+    "resources": [
+      [
+        6,
+        0,
+        1,
+        2,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        1,
+        2
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-io-3": {
+    "resources": [
+      [
+        6,
+        0,
+        1,
+        3,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        1,
+        3
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-io-reserved": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        1,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-io-wake-reserved": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        1,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-offset-prefix": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        65535,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-padding-before-pins": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-pins-vendor": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        3,
+        0,
+        65535,
+        513,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        3,
+        0,
+        255,
+        128,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-short": {
+    "result": "error"
+  },
+  "gpio-source-absent": {
+    "result": "panic"
+  },
+  "gpio-source-inner-nul": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        3,
+        65,
+        0,
+        66,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "gpio-source-nonascii": {
+    "result": "error"
+  },
+  "gpio-source-unterminated": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-address-reserved": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        65535,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-address-seven": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        128,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-bus-csi2": {
+    "result": "error"
+  },
+  "i2c-bus-reserved": {
+    "result": "error"
+  },
+  "i2c-bus-reserved-high": {
+    "result": "error"
+  },
+  "i2c-bus-spi": {
+    "result": "error"
+  },
+  "i2c-bus-uart": {
+    "result": "error"
+  },
+  "i2c-bus-vendor": {
+    "result": "error"
+  },
+  "i2c-capacity-end": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-empty-source": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-flags": {
+    "resources": [
+      [
+        7,
+        0,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-flags-0": {
+    "resources": [
+      [
+        7,
+        0,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-flags-1": {
+    "resources": [
+      [
+        7,
+        0,
+        0,
+        1,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-flags-2": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-flags-3": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        1,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-flags-4": {
+    "resources": [
+      [
+        7,
+        0,
+        1,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-flags-5": {
+    "resources": [
+      [
+        7,
+        0,
+        1,
+        1,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-flags-6": {
+    "resources": [
+      [
+        7,
+        1,
+        1,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-flags-7": {
+    "resources": [
+      [
+        7,
+        1,
+        1,
+        1,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-mode": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-offset-prefix": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-revision-high": {
+    "result": "error"
+  },
+  "i2c-revision-old": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-revision-zero": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-seven-max": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        0,
+        127,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-short": {
+    "result": "error"
+  },
+  "i2c-source-absent": {
+    "result": "panic"
+  },
+  "i2c-source-inner-nul": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        3,
+        65,
+        0,
+        66,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-source-nonascii": {
+    "result": "error"
+  },
+  "i2c-source-unterminated": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        0,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-ten-bit": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        1,
+        4294967295,
+        1023,
+        255,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        3,
+        255,
+        0,
+        128
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-ten-overflow": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        1,
+        400000,
+        1024,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
+  "i2c-type-length-long": {
+    "result": "panic"
+  },
+  "i2c-type-length-no-source": {
+    "result": "panic"
+  },
+  "i2c-type-length-short": {
+    "result": "error"
+  },
+  "i2c-type-revision-high": {
+    "result": "error"
+  },
+  "i2c-type-revision-zero": {
+    "resources": [
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
+    "result": "ok"
+  },
   "io": {
     "resources": [
       [
@@ -1047,6 +2471,9 @@
   "reserved-small11": {
     "result": "error"
   },
+  "serial-short": {
+    "result": "error"
+  },
   "small-payload-truncated": {
     "result": "panic"
   },
@@ -1071,6 +2498,50 @@
   },
   "template-checksum": {
     "resources": [],
+    "result": "ok"
+  },
+  "template-connections": {
+    "resources": [
+      [
+        6,
+        1,
+        0,
+        0,
+        125,
+        250,
+        1,
+        4,
+        6,
+        92,
+        71,
+        80,
+        73,
+        79,
+        48,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        7,
+        1,
+        0,
+        0,
+        0,
+        400000,
+        82,
+        0,
+        5,
+        92,
+        73,
+        50,
+        67,
+        48,
+        0
+      ]
+    ],
     "result": "ok"
   },
   "template-empty": {
@@ -1145,6 +2616,9 @@
     "resources": [],
     "result": "ok"
   },
+  "template-unsupported-bus": {
+    "result": "error"
+  },
   "unsupported-large-1": {
     "resources": [],
     "result": "ok"
@@ -1153,15 +2627,9 @@
     "resources": [],
     "result": "ok"
   },
-  "unsupported-large-12": {
-    "result": "error"
-  },
   "unsupported-large-13": {
     "resources": [],
     "result": "ok"
-  },
-  "unsupported-large-14": {
-    "result": "error"
   },
   "unsupported-large-15": {
     "resources": [],

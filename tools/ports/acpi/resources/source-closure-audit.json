@@ -1,0 +1,215 @@
+{
+  "audit_time_ns": 1789950823782266000,
+  "discovery": "fixed_bytes.omg imports bytes::le32/le64; bytes.omg imports headers::ChecksumResult; headers.omg has no further imports",
+  "first_checkpoint_header_sha256": "3bc53060656dd0f508b23d53732b7e6a497d055b586d690a125af1608d480626",
+  "format": "cathedral-resource-transitive-closure-audit-v1",
+  "git_head_header_sha256": "3bc53060656dd0f508b23d53732b7e6a497d055b586d690a125af1608d480626",
+  "harness_updates": {
+    "tools/ports/acpi/resources/check.py": {
+      "change": "Add unchanged transitive headers.omg to before/after source list; running processes retain their original already-loaded ten-path hash code, explicitly supplemented by this audit.",
+      "future_canonical_harness_sha256": "2002f216ed8975d08d1d9abf39414a58cb8225245a1dd1caf0466d506eee2b8b",
+      "original_run_harness_sha256": "95e58baa9d08dcbeb704ee893c861d3e9c07941775bea1145bc90ef182df2997"
+    },
+    "tools/ports/acpi/resources/check_interpreted.py": {
+      "change": "Add unchanged transitive headers.omg to before/after source list; running processes retain their original already-loaded ten-path hash code, explicitly supplemented by this audit.",
+      "future_canonical_harness_sha256": "677543e1c0603ce327f27ce096cc846ed3e9ad0eac12f212e47d775466d5f1ff",
+      "original_run_harness_sha256": "aa01e30f1f774e13a0f5e5d5bf8062dfe5c4ecce8b4e09ea90be741179b666d4"
+    }
+  },
+  "last_header_commit": "9ff74271254cee85fa6bd7578a1a73558802996a",
+  "matching_prepared_source_snapshots": [
+    {
+      "mtime_ns": 1789948349885153141,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-7ceca996948a3c789e22a0d687e49bf073b7b1022cc0bd9437683b4a377c7641/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789939707348318317,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-e369dfd58eb2a6172a86d2d24f5439ddd61c05bb50d30ec5c12369b56a2278cb/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940592526809104,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-c9660f66156ce23956de8b9d371ed59d3fbe834cf26561de75a67ccb5037aa39/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789939991537076438,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-a57d725c37f40cf0233deabb496369e8f98ea0947590103d59c063d124b76843/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940258795516885,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-62de30401909176428b3c5a929de14cd6433b584bed6251c40b7d5bb420c5775/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940137701997084,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-0710672a30846f2552d776a781c1673555ee0831269aeb667e444fb4bda72d41/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940584052650037,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-20eaabb9d8a0589ec2dbb0aacee7dcc3744083f8a4d2f57470219b04687f3dc6/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940314336773692,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-ce1970486eac5461172d5943c633a917dc93c237eb5ef0b1cba263569e67233f/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940832512134466,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-02bb99c9a045fbdb78dcadad9e1c4b5e94b41e26bf5734164113e120a453677e/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789950588976848044,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-a5f9b4f439161d1ffa7c390fa8c86adcebabf47c65ebf528d8b0a3d464476bc8/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789939869522947834,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-5acd20d68924e2327a3fdb68a65ec43ee8d0489967f0e4c1d5801977508d87cd/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789947332950479935,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-6b8a9323a157abf834dc7d8f31040757fc2456c583f054889c0acd28faa6d730/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789947510441719586,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-9cb930af3f5a5212b8f55bdc87b1b632ecec338c7ff9a7993e6a5b8512b0c692/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789949881198471951,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-178bc085e3536bbbf269e43aa06ca52d36e1c8674b8c45a9743e5d45b647329b/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789948276112983033,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-e328bad2d3828704cf52b69f6a79d65000cde50cae6be80ca71c7a7e36b4dcd5/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789938844591849146,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-28e06198b319a5736b45ac7bcfb2a918058e72319bba917d504a71f7d2ec99cc/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789938994826136154,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-ff2541a5c0b741e2749238ca7e6ae0ebf7178a4014569349b447850ac0c5e99a/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789938570891852654,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-4e58d930b20c109ca8d490f6e97ed9168dfbed11f1798084014ccd56f38e268a/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789939851541640892,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-217e7bd59a1d27390929d9b81ab3e7696a936dfc0b0f3bfeb756d45fcd4da886/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789939923752567220,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-703270147f6fbb1a246be203398f0931a986292a96f1c2d0a0ad1bfecb16a33a/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789939746727069869,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-b392ec5a209b11c95043201bc4250974117f4167580a81459a91ef42161cebca/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789939798428953607,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-8590cf4f83e50e94fc8263b20e62dfa48cfca4d407b3323d7ef6be0fa2321177/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940768527427943,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-3a5def1505aeabca246894edf5218b01a65e4b8c9e6eda9a67d7e99b156b2b8a/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940654046144264,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-d600b6be17d3d2da750691bc5987ce03c40e85458c024bb0b615077a445b61e6/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789938046517265568,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-80bb33f2e09175e5a103b84f4a198ce65d5cff1767f092a910bf0b83728767a8/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940022980994596,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-435bc9b9927c1b3846006ccb09988b0dff93ff6f45e7097d2358f4499afcd95a/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789939816025100217,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-fca815f9ceb10deeaea63c9e2b767b4d378def3085da51588611e04a8049b28e/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789947532634300845,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-70af173e37b1705076079875ec4e7d26b4b4fb6f5b85de1877eace2ef1e948bc/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789939869996257072,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-8734a6c6291aeebfa9fc541a217b24bcabbb7ce68605fefe63e401b51ca4bcda/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940954629711097,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-35c8b6482636a96f1aeeb24b0b44772b196aa10325385a675d59268e56305537/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940507782636044,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-a32d3bb17fac00afcb1a828822e444f69e3e5f873af6fc5ea79e2ce6d742f296/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789948945924339087,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-c3f6dfb70a1d1b5800e004ea14565c4b069dc838e4339fdac780283589afcb44/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789950251222669123,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-1582832d653d02a9f214d3a19b957df1c55825e74585ffb7ba094549637c873f/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940204209861313,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-3a0608ae80d40ffa32228df08fe674e90296a9a448237906f2243de8b0de918a/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789950698440735916,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-b947fd9833555dca188382a1614d121b0691f602c8e4db80f518895102771f2d/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789939206418480174,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-2c74764a7ff9d131bb85e98deaa2ee123e535bd4529be71b35646b13cb447f7a/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789950539527506713,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-b537539b696e2b6d77f35b21288a451f311ac16baddbac4992b1dc4028a5362e/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789950087019107276,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-ee80176585785476cdcdbbe32aeec92699bd5fb85ece145cbce014789fac382d/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940714341255242,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-2a60ab393ccd2858509b7e27935bcc12d0d602788f525d3d39667c1ba838df04/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940125506664530,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-fcc2a2d1f251fc24f4663e845e754fd465016fe383b8ee4406008e5f59ad14d0/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789939833705163589,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-b2fa03e079535ecb4578520afb770e197190124b715abd5a5e8456a87c4b29b1/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789947461991165817,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-93a073d991094eb045c9d05899f54d7f14179bbaee84d75251acf08920c262f8/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789937954886784971,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-7fef2a1fa264c5cc8e1806d14dbd54d8e9f6a6de871b1ce71835e3f89b8aa0fe/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789940530103904092,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-d9a1e4855b259545039e2509630e788315d392693aae920215517b64308e23fb/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789939672890648865,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-8335c9936a235dc3948ead29ef715b1c79e8cfc659750071b3130a055583d384/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789947425457405107,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-f6b6ee73afbc3a0df30af39089bd2a501e48fc00ef5095dc4b8e6491bcdb6495/source/headers.omg"
+    },
+    {
+      "mtime_ns": 1789947949334625940,
+      "path": "/Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-2b34048c69f2b0f9f791bb71ccdae71dc2dfaffe05fb5af064ffaae5fa4214ba/source/headers.omg"
+    }
+  ],
+  "original_record_scope": "First-slice records covered 9 authored/dependency paths; in-flight connection records cover 10. These were incomplete as total dependency closures. Their original hashes are retained as recorded subsets. The current complete Cathedral source closure adds headers.omg. Omega core/compiler sources are separately pinned.",
+  "supplemental_source_sha256": {
+    "source/libraries/acpi/headers.omg": "3bc53060656dd0f508b23d53732b7e6a497d055b586d690a125af1608d480626"
+  },
+  "working_tree_header_mtime_ns": 1789937954488709924
+}

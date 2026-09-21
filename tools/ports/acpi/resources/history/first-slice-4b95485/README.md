@@ -1,0 +1,3 @@
+Historical records for Cathedral commit `4b95485`. These hashes and 117-case results describe the first resource slice, not the current GPIO/I2C extension. Read the root verification records for current evidence.
+
+Audit correction: the historical nine-path hash was an incomplete dependency list: `fixed_bytes.omg -> bytes.omg -> headers::ChecksumResult` also loads `source/libraries/acpi/headers.omg`. Its unchanged checkpoint/current SHA-256 is `3bc53060656dd0f508b23d53732b7e6a497d055b586d690a125af1608d480626`. The historical records remain byte-for-byte original; see `../../source-closure-audit.json` for the supplemental committed/prepared-source evidence. Do not interpret their nine-path hash as a complete dependency closure.

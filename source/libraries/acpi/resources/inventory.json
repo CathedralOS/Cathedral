@@ -1,8 +1,8 @@
 {
   "files": {
     "src/aml/resource.rs": {
-      "disposition": "pending",
-      "reason": "First resource slice only; GPIO, serial buses and other descriptor semantics remain pending. Full bytes and all anchors bound.",
+      "disposition": "translated",
+      "reason": "All pin-supported families mapped to bounded decoders; declared profile/spec corrections documented. Other defined families remain explicit Unsupported, as the pin omits their semantics.",
       "sha256": "abca9e6c8c60e40730cc11b2304acf37e2171942097f8871f5f8a8c7911fae09",
       "symbols": {
         "1038:skips_unsupported_large_resource_descriptors": {
@@ -22,7 +22,7 @@
         },
         "10:Resource": {
           "anchor": "pub enum Resource {",
-          "disposition": "pending",
+          "disposition": "translated",
           "implemented_components": [
             "bounded descriptor envelope",
             "strict template termination/checksum profile",
@@ -31,13 +31,11 @@
             "IO",
             "FixedMemory32",
             "Word/DWord/QWord address",
-            "ExtendedIRQ"
+            "ExtendedIRQ",
+            "GPIO interrupt and IO",
+            "SerialBus/I2C"
           ],
-          "reason": "Partial aggregate only: supported IRQ/DMA/IO/FixedMemory32/Word-DWord-QWord address/ExtendedIRQ components are implemented, but GPIO and SerialBus/I2C variants and dispatch remain explicit Unsupported. Retained targets identify partial implementations, not completed aggregate translation.",
-          "remaining_components": [
-            "GPIO descriptor semantics",
-            "SerialBus/I2C descriptor semantics"
-          ],
+          "reason": "All resource families implemented by this pin are represented: IRQ/DMA/IO/FixedMemory32/address/ExtendedIRQ/GPIO/SerialBus-I2C. Bounded spans replace allocations; strict envelope/source/EndTag and spec corrections documented. Other defined descriptors remain explicit Unsupported and are not claimed semantically decoded.",
           "targets": [
             {
               "anchor": "pub data Resource ",
@@ -355,7 +353,7 @@
         },
         "43:resource_descriptor_list": {
           "anchor": "pub fn resource_descriptor_list(descriptor: WrappedObject) -> Result<Vec<Resource>, AmlError> {",
-          "disposition": "pending",
+          "disposition": "translated",
           "implemented_components": [
             "bounded descriptor envelope",
             "strict template termination/checksum profile",
@@ -364,13 +362,11 @@
             "IO",
             "FixedMemory32",
             "Word/DWord/QWord address",
-            "ExtendedIRQ"
+            "ExtendedIRQ",
+            "GPIO interrupt and IO",
+            "SerialBus/I2C"
           ],
-          "reason": "Partial aggregate only: supported IRQ/DMA/IO/FixedMemory32/Word-DWord-QWord address/ExtendedIRQ components are implemented, but GPIO and SerialBus/I2C variants and dispatch remain explicit Unsupported. Retained targets identify partial implementations, not completed aggregate translation.",
-          "remaining_components": [
-            "GPIO descriptor semantics",
-            "SerialBus/I2C descriptor semantics"
-          ],
+          "reason": "All resource families implemented by this pin are represented: IRQ/DMA/IO/FixedMemory32/address/ExtendedIRQ/GPIO/SerialBus-I2C. Bounded spans replace allocations; strict envelope/source/EndTag and spec corrections documented. Other defined descriptors remain explicit Unsupported and are not claimed semantically decoded.",
           "targets": [
             {
               "anchor": "pub machine validate_template(",
@@ -550,43 +546,91 @@
         },
         "612:ShareType": {
           "anchor": "pub enum ShareType {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data I2c ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "618:ResourceUsage": {
           "anchor": "pub enum ResourceUsage {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data I2c ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "624:SlaveMode": {
           "anchor": "pub enum SlaveMode {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data I2c ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "630:AddressingMode": {
           "anchor": "pub enum AddressingMode {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data AddressingMode ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "636:SerialBusDescriptor": {
           "anchor": "pub struct SerialBusDescriptor {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data I2c ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "637:sharing": {
           "anchor": "pub sharing: ShareType,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data I2c ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "638:usage": {
           "anchor": "pub usage: ResourceUsage,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data I2c ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "639:slave_mode": {
           "anchor": "pub slave_mode: SlaveMode,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data I2c ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "63:unsupported_resource_descriptor_name": {
           "anchor": "fn unsupported_resource_descriptor_name(",
@@ -601,43 +645,91 @@
         },
         "640:source": {
           "anchor": "pub source: alloc::string::String,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data I2c ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "641:source_index": {
           "anchor": "pub source_index: u8,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data I2c ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "642:vendor_data": {
           "anchor": "pub vendor_data: Vec<u8>,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data I2c ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "643:bus": {
           "anchor": "pub bus: SerialBus,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data I2c ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "647:SerialBus": {
           "anchor": "pub enum SerialBus {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data I2c ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "651:i2c_bus_descriptor": {
           "anchor": "fn i2c_bus_descriptor(bytes: &[u8]) -> Result<(SerialBus, (usize, usize)), AmlError> {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "machine decode_serial_connection(",
+              "path": "source/libraries/acpi/resources/resource_connections.omg"
+            }
+          ]
         },
         "679:serial_bus_descriptor": {
           "anchor": "fn serial_bus_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "machine decode_serial_connection(",
+              "path": "source/libraries/acpi/resources/resource_connections.omg"
+            }
+          ]
         },
         "707:GPIOInterruptPolarity": {
           "anchor": "pub enum GPIOInterruptPolarity {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data GpioPolarity ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "70:skip_unsupported_resource": {
           "anchor": "fn skip_unsupported_resource<'a>(",
@@ -652,78 +744,168 @@
         },
         "714:WakeCapability": {
           "anchor": "pub enum WakeCapability {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data GpioConnection ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "720:IORestriction": {
           "anchor": "pub enum IORestriction {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data IoRestriction ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "728:PinConfiguration": {
           "anchor": "pub enum PinConfiguration {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data PinConfiguration ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "736:GPIOConnectionDescriptor": {
           "anchor": "pub struct GPIOConnectionDescriptor {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Gpio ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "737:usage": {
           "anchor": "pub usage: ResourceUsage,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Gpio ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "738:sharing": {
           "anchor": "pub sharing: ShareType,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Gpio ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "739:pin_configuration": {
           "anchor": "pub pin_configuration: PinConfiguration,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Gpio ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "740:output_drive_strength": {
           "anchor": "pub output_drive_strength: u16,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Gpio ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "741:debounce_timeout": {
           "anchor": "pub debounce_timeout: u16,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Gpio ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "742:pins": {
           "anchor": "pub pins: Vec<u16>,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Gpio ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "743:source": {
           "anchor": "pub source: alloc::string::String,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Gpio ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "744:vendor_data": {
           "anchor": "pub vendor_data: Vec<u8>,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Gpio ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "745:connection": {
           "anchor": "pub connection: GPIOConnection,",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Gpio ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "749:GPIOConnection": {
           "anchor": "pub enum GPIOConnection {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data GpioConnection ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
         },
         "754:gpio_connection_descriptor": {
           "anchor": "fn gpio_connection_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
-          "disposition": "pending",
-          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "machine decode_gpio_connection(",
+              "path": "source/libraries/acpi/resources/resource_connections.omg"
+            }
+          ]
         },
         "7:smallvec;": {
           "anchor": "pub use smallvec;",
@@ -732,7 +914,7 @@
         },
         "80:resource_descriptor": {
           "anchor": "fn resource_descriptor(bytes: &[u8]) -> Result<(Option<Resource>, &[u8]), AmlError> {",
-          "disposition": "pending",
+          "disposition": "translated",
           "implemented_components": [
             "bounded descriptor envelope",
             "strict template termination/checksum profile",
@@ -741,13 +923,11 @@
             "IO",
             "FixedMemory32",
             "Word/DWord/QWord address",
-            "ExtendedIRQ"
+            "ExtendedIRQ",
+            "GPIO interrupt and IO",
+            "SerialBus/I2C"
           ],
-          "reason": "Partial aggregate only: supported IRQ/DMA/IO/FixedMemory32/Word-DWord-QWord address/ExtendedIRQ components are implemented, but GPIO and SerialBus/I2C variants and dispatch remain explicit Unsupported. Retained targets identify partial implementations, not completed aggregate translation.",
-          "remaining_components": [
-            "GPIO descriptor semantics",
-            "SerialBus/I2C descriptor semantics"
-          ],
+          "reason": "All resource families implemented by this pin are represented: IRQ/DMA/IO/FixedMemory32/address/ExtendedIRQ/GPIO/SerialBus-I2C. Bounded spans replace allocations; strict envelope/source/EndTag and spec corrections documented. Other defined descriptors remain explicit Unsupported and are not claimed semantically decoded.",
           "targets": [
             {
               "anchor": "pub machine parse_one(",
@@ -770,11 +950,21 @@
           "disposition": "omitted",
           "reason": "Upstream test/module body not copied. Original synthetic positive/malformed fixtures call the actual pinned public parser and actual Omega bodies; no firmware dump transcription."
         }
-      }
+      },
+      "targets": [
+        {
+          "anchor": "pub machine parse_one(",
+          "path": "source/libraries/acpi/resources/resource_parse.omg"
+        },
+        {
+          "anchor": "pub machine parse_connection(",
+          "path": "source/libraries/acpi/resources/resource_connections.omg"
+        }
+      ]
     }
   },
   "format": "cathedral-port-inventory-v1",
-  "slice": "bounded resource descriptor first slice; unsupported spans are framing-only, not completed family semantics",
+  "slice": "bounded pin-supported descriptor families including GPIO and SerialBus/I2C; other defined descriptors remain framing-only Unsupported",
   "upstream": {
     "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
     "roots": [

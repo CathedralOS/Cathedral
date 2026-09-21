@@ -77,3 +77,13 @@ machine source_ascii_byte(input:&[u8;4096],at:u64,end:u64)->bool {
   transition at+1==end {true -> (input[at]==0) _ -> (input[at]>0 && input[at]<128)}
  }
 }
+
+// Required controller source: explicit ASCII/final-NUL Cathedral byte profile.
+// The index lives in the fixed connection header, not before the source bytes.
+pub machine controller_source(input:&[u8;4096],at:u64,end:u64,index:u8)->SourceResult {
+ transition at<end && end<=4096 {true -> validate(input,at,end,index) _ -> (SourceResult{outcome:Outcome::BadEncoding})}
+ state validate(input:&[u8;4096],at:u64,end:u64,index:u8) {
+  let good:bool=source_ascii_scan(input,at,end,true);
+  transition good {true -> (SourceResult{outcome:Outcome::Success,source:Source{present:true,index:index,name:Span{start:at,end:end-1}}}) _ -> (SourceResult{outcome:Outcome::BadEncoding})}
+ }
+}

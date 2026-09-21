@@ -4,7 +4,7 @@
 
 **Stage: inventoried, 2026-09-20.** This milestone covers the complete pinned
 Rust corpus and test-scenario metadata. It does not claim an Omega translation,
-compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 525 translated table/topology/AML/helper anchors and 1,056
+compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 559 translated table/topology/AML/helper anchors and 1,022
 pending anchors. Inventory completion and translation completion are different
 milestones. The bounded ACPI-001 slice is separately
 [tested by Omega semantic evaluation](headers.PORT.md): 65 original scenarios
@@ -24,11 +24,13 @@ and namespace behavior. [Field declaration metadata](aml/fields/PORT.md) adds
 FieldList forms. The [integer executor](interpreter/execution/PORT.md) passes
 79 checked-interpreter pairs; [declaration capture and owned-source execution](pipeline/PORT.md)
 adds 22 pipeline pairs and current parser/field regressions.
-The [resource parser](resources/PORT.md) adds 117 checked-interpreter pairs, four
-constant-evaluation pairs and 102 actual public Rust observations. It checks
-bounded envelopes, supported descriptors and strict template termination/checksum;
-aggregate dispatch, GPIO/serial families, runtime fields and complete object/context
-behavior remain pending. No count implies full AML compatibility.
+The [resource parser](resources/PORT.md) adds 210 checked-interpreter pairs, four
+constant-evaluation pairs and 187 actual public Rust observations, including
+64 normalized supported-result agreements. It checks bounded envelopes, all
+pin-supported descriptor families including GPIO/I²C, aggregate dispatch and
+strict template termination/checksum. Other defined families retain explicit
+unsupported spans. Runtime fields and complete object/context behavior remain
+pending. No count implies full AML compatibility.
 No production build root imports this directory. The libraries charter governs
 pure algorithms; firmware/physical-address facts convey no mapping authority.
 

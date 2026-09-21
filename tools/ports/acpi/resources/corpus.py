@@ -16,7 +16,7 @@ for w in [2,4,8]:
 add('address-source',address(2,source=[7,92,95,83,66,46,76,78,75,65,0]));add('address-empty-source',address(4,source=[0,0]))
 add('extended-one',extended());add('extended-many',extended(0,[0,255,0xffffffff]));add('extended-source',extended(2,[16,17],[3,92,76,78,75,65,0]))
 for tag in [6,7,9,10,14]:add('unsupported-small-'+str(tag),[tag<<3])
-for tag in [1,2,4,5,11,12,13,14,15,16,17,18,19]:add('unsupported-large-'+str(tag),large(tag,[]))
+for tag in [1,2,4,5,11,13,15,16,17,18,19]:add('unsupported-large-'+str(tag),large(tag,[]))
 for name,data in [('reserved-small',[0]),('reserved-small11',[88]),('reserved-large0',[128,0,0]),('reserved-large3',[131,0,0]),('reserved-large20',[148,0,0]),('irq-short',[0x21,0]),('irq-long',[0x24,0,0,1,0]),('irq-invalid-polarity',[0x23,1,0,0]),('irq-reserved',[0x23,1,0,65]),('dma-reserved',[0x2a,1,3]),('dma-flag-reserved',[0x2a,1,128]),('dma-short',[0x29,1]),('io-reserved',[0x47,128,0,0,0,0,0,1]),('fixed-short',large(6,[1]*8)),('fixed-long',large(6,[1]*10)),('address-short',large(8,[0]*12)),('address-reserved-kind',address(2,kind=3)),('address-reserved-flags',address(2,flags=128)),('address-unterminated',address(2,source=[0,65])),('address-source-index-only',address(2,source=[0])),('address-source-inner-nul',address(2,source=[0,65,0,65,0])),('address-source-nonascii',address(2,source=[0,128,0])),('extended-zero',large(9,[0,0,0,0,0,0])),('extended-truncated-table',large(9,[0,2]+le(17,4))),('extended-reserved',extended(128)),('extended-source-bad',extended(0,[17],[0,65])),('endtag-short',[0x78]),('endtag-long',[0x7a,0,0])]:add(name,data)
 add('address-pcc',address(8,kind=10));add('address-vendor',address(8,kind=192))
 for name,data in [('empty',[]),('large-header-one',[0x86]),('large-header-two',[0x86,9]),('large-payload-truncated',[0x86,9,0,1]),('small-payload-truncated',[0x22,1]),('length-max',[0x86,255,255])]:add(name,data)
@@ -35,6 +35,34 @@ add('last-two-bytes-end',[0]*4094+[121,0],at=4094)
 add('extended-255',extended(7,list(range(255))))
 add('address-distinct64',address(8,flags=0,values=[0x7fffffffffffffff,0x8000000000000000,0xffffffffffffffff,0xfedcba9876543210,0x123456789abcdef0]))
 
+# ACPI 6.6 connection wire fixtures: all offsets are descriptor-relative.
+def gpio(kind=0,flags=1,config=0,pins=[4],source=[92,71,80,73,79,48,0],vendor=[],general=1):
+ source_at=23+2*len(pins);vendor_at=source_at+len(source)
+ return large(12,[1,kind]+le(general,2)+le(flags,2)+[config]+le(125,2)+le(250,2)+le(23,2)+[0]+le(source_at,2)+le(vendor_at,2)+le(len(vendor),2)+sum([le(x,2)for x in pins],[])+source+vendor)
+def i2c(mode=0,address=0x52,flags=2,vendor=[],source=[92,73,50,67,48,0],index=0,lvr=0,speed=400000):
+ return large(14,[2,index,1,flags,mode,lvr,1]+le(6+len(vendor),2)+le(speed,4)+le(address,2)+vendor+source)
+def changed(data,at,value,width=1):
+ result=list(data);result[at:at+width]=le(value,width);return result
+for flags in [0,1,2,3,5,8,17,27,29]:add('gpio-interrupt-'+str(flags),gpio(flags=flags))
+for restriction in range(4):add('gpio-io-'+str(restriction),gpio(kind=1,flags=8|restriction,config=restriction,general=0))
+add('gpio-pins-vendor',gpio(pins=[0,65535,513],vendor=[0,255,128]))
+add('gpio-empty-source',gpio(source=[0]));add('gpio-offset-prefix',[1,2,3]+gpio(pins=[65535]),at=3)
+for flags in range(8):add('i2c-flags-'+str(flags),i2c(flags=flags))
+add('i2c-ten-bit',i2c(mode=1,address=1023,vendor=[255,0,128],index=255,lvr=255,speed=0xffffffff))
+add('i2c-seven-max',i2c(address=127,speed=0));add('i2c-empty-source',i2c(source=[0]));add('i2c-offset-prefix',[9]+i2c(),at=1)
+for name,at,value,width in [('revision',3,0,1),('kind',4,2,1),('general-low',5,2,1),('general-high',6,1,1),('flags-reserved',7,32,1),('flags-high',8,1,1),('both-level',7,4,1),('polarity-reserved',7,7,1),('config-reserved',9,4,1),('config-vendor',9,128,1),('pin-in-header',14,22,2),('pin-empty',14,25,2),('pin-reversed',14,27,2),('pin-offset-max',14,65535,2),('pin-odd',17,26,2),('source-offset-max',17,65535,2),('index',16,1,1),('vendor-in-source',19,25,2),('vendor-past-end',19,65535,2),('vendor-length',21,1,2),('vendor-length-max',21,65535,2)]:add('gpio-bad-'+name,changed(gpio(),at,value,width))
+add('gpio-io-reserved',gpio(kind=1,flags=4));add('gpio-io-wake-reserved',gpio(kind=1,flags=16))
+for name,source in [('unterminated',[65]),('inner-nul',[65,0,66,0]),('nonascii',[128,0]),('absent',[])]:add('gpio-source-'+name,gpio(source=source));add('i2c-source-'+name,i2c(source=source))
+for name,at,value,width in [('revision-zero',3,0,1),('revision-old',3,1,1),('revision-high',3,3,1),('flags',6,8,1),('mode',7,2,1),('type-revision-zero',9,0,1),('type-revision-high',9,2,1),('type-length-short',10,5,2),('type-length-long',10,65535,2),('type-length-no-source',10,12,2),('address-seven',16,128,2),('address-reserved',16,65535,2),('bus-reserved',5,0,1),('bus-reserved-high',5,5,1),('bus-spi',5,2,1),('bus-uart',5,3,1),('bus-csi2',5,4,1),('bus-vendor',5,192,1)]:add('i2c-'+name,changed(i2c(),at,value,width))
+add('i2c-ten-overflow',i2c(mode=1,address=1024))
+add('gpio-short',large(12,[]));add('gpio-header-only',large(12,gpio()[3:23]));add('serial-short',large(14,[]));add('i2c-short',large(14,i2c()[3:17]))
+gap=gpio();gap[23:23]=[99,88];gap[1:3]=le(len(gap)-3,2)
+for offset in [14,17,19]:gap[offset:offset+2]=le(int.from_bytes(bytes(gap[offset:offset+2]),'little')+2,2)
+add('gpio-padding-before-pins',gap)
+for name,wire in [('gpio',gpio()),('i2c',i2c())]:add(name+'-capacity-end',[0]*(4096-len(wire))+wire,at=4096-len(wire))
+add('template-connections',gpio()+i2c()+[121,0],template=True)
+add('template-unsupported-bus',changed(i2c(),5,2)+[121,0],template=True)
+
 def parse(data,length=None,at=0):
  n=len(data)if length is None else length
  def fail(s):return dict(outcome=s)
@@ -51,7 +79,7 @@ def parse(data,length=None,at=0):
   if not tail:return dict(present=False,index=0,start=0,end=0)
   if len(tail)<2 or tail[-1]!=0 or any(x==0 or x>127 for x in tail[1:-1]):return None
   return dict(present=True,index=tail[0],start=body+core+1,end=end-1)
- if (not islarge and tag in [6,7,9,10,14])or(islarge and tag in [1,2,4,5,11,12,13,14,15,16,17,18,19]):result.update(kind='Unsupported',norm=None);return result
+ if (not islarge and tag in [6,7,9,10,14])or(islarge and tag in [1,2,4,5,11,13,15,16,17,18,19]):result.update(kind='Unsupported',norm=None);return result
  if not islarge:
   if tag==4:
    if size not in [2,3]:return fail('BadEncoding')
@@ -89,6 +117,30 @@ def parse(data,length=None,at=0):
    src=source(core)
    if src is None:return fail('BadEncoding')
    f=b[0];result.update(kind='Irq',flags=f,extended=True,consumer=bool(f&1),edge=bool(f&2),low=bool(f&4),shared=bool(f&8),wake=bool(f&16),irqs=[num(2+i*4,4)for i in range(b[1])],table_start=body+2,table_end=body+core,source=src)
+  elif tag==12:
+   if size<20:return fail('BadEncoding')
+   kind=b[1];general=num(2,2);flags=num(4,2);config=b[6];pins=num(11,2);src=num(14,2);vendor=num(16,2);vendor_len=num(18,2);total=size+3
+   if b[0]!=1 or b[13]!=0 or general&65534 or kind>1:return fail('BadEncoding')
+   if kind==0 and(flags&65504 or (flags>>1)&3==3 or ((flags>>1)&3==2 and not flags&1)):return fail('BadEncoding')
+   if kind==1 and flags&65524:return fail('BadEncoding')
+   if not(23<=pins<src<vendor<=total)or(src-pins)%2 or vendor_len!=total-vendor:return fail('BadEncoding')
+   name=b[src-3:vendor-3]
+   if not name or name[-1]!=0 or any(x==0 or x>127 for x in name[:-1]):return fail('BadEncoding')
+   if config>=128:result.update(kind='Unsupported',norm=None);return result
+   if config>3:return fail('BadEncoding')
+   pin_values=[int.from_bytes(bytes(b[i:i+2]),'little')for i in range(pins-3,src-3,2)];vendors=b[vendor-3:];conn=[0,int(bool(flags&1)),(flags>>1)&3,int(bool(flags&16))]if kind==0 else[1,flags&3]
+   result.update(kind='Gpio',consumer=bool(general&1),shared=bool(flags&8),config=config,drive=num(7,2),debounce=num(9,2),pin_start=at+pins,pin_end=at+src,pins=pin_values,source=dict(present=True,index=0,start=at+src,end=at+vendor-1),vendor_start=at+vendor,vendor_end=end,vendors=vendors,general=general,flags=flags,connection=conn,norm=[6,general&1,int(bool(flags&8)),config,num(7,2),num(9,2),len(pin_values),*pin_values,len(name)-1,*name[:-1],len(vendors),*vendors,*conn])
+  elif tag==14:
+   if size<9:return fail('BadEncoding')
+   bus=b[2]
+   if bus in [2,3,4]or bus>=192:result.update(kind='Unsupported',norm=None);return result
+   if bus!=1 or size<15:return fail('BadEncoding')
+   flags=b[3];mode=b[4];address=num(13,2);typed=num(7,2);total=size+3
+   if b[0]!=2 or flags&248 or mode&254 or b[6]!=1 or address>(1023 if mode==1 else 127):return fail('BadEncoding')
+   if typed<6 or typed>=total-12:return fail('BadEncoding')
+   name=b[9+typed:];vendors=b[15:9+typed]
+   if not name or name[-1]!=0 or any(x==0 or x>127 for x in name[:-1]):return fail('BadEncoding')
+   result.update(kind='I2c',consumer=bool(flags&2),shared=bool(flags&4),device=bool(flags&1),mode=mode,speed=num(9,4),address=address,lvr=b[5],flags=flags,source=dict(present=True,index=b[1],start=at+12+typed,end=end-1),vendor_start=at+18,vendor_end=at+12+typed,vendors=vendors,norm=[7,int(bool(flags&2)),int(bool(flags&4)),int(bool(flags&1)),mode,num(9,4),address,b[1],len(name)-1,*name[:-1],len(vendors),*vendors])
   else:return fail('BadEncoding')
  if result['kind']=='Irq':result['norm']=[1,int(result['consumer']),int(result['edge']),int(result['low']),int(result['shared']),int(result['wake']),len(result['irqs']),*result['irqs']]
  return result

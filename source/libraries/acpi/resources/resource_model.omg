@@ -17,6 +17,16 @@ pub data Io [copy] {decodes_full:bool;minimum:u16;maximum:u16;alignment:u8;lengt
 pub data FixedMemory [copy] {writable:bool;base:u32;length:u32;flags:u8;}
 pub data AddressKind [copy] {case Memory;case IoRange;case BusNumber;}
 pub data Address [copy] {width:u8;kind:AddressKind;maximum_fixed:bool;minimum_fixed:bool;subtractive:bool;general_flags:u8;type_flags:u8;granularity:u64;minimum:u64;maximum:u64;translation:u64;length:u64;source:Source;}
+pub data GpioPolarity [copy] {case ActiveHigh;case ActiveLow;case ActiveBoth;}
+pub data PinConfiguration [copy] {case Default;case PullUp;case PullDown;case NoPull;}
+pub data IoRestriction [copy] {case None;case InputOnly;case OutputOnly;case Preserve;}
+pub data GpioConnection [copy] {
+ case Interrupt(trigger:Trigger,polarity:GpioPolarity,wake:bool);
+ case Io(restriction:IoRestriction);
+}
+pub data Gpio [copy] {is_consumer:bool;shared:bool;pin_configuration:PinConfiguration;drive_strength:u16;debounce_timeout:u16;pins:Span;pin_count:u64;source:Source;vendor:Span;connection:GpioConnection;general_flags:u16;connection_flags:u16;}
+pub data AddressingMode [copy] {case Bits7;case Bits10;}
+pub data I2c [copy] {is_consumer:bool;shared:bool;device_initiated:bool;addressing:AddressingMode;speed:u32;address:u16;legacy_virtual_register:u8;source:Source;vendor:Span;general_flags:u8;}
 pub data Resource [copy] {
  case None;
  case IrqResource(irq:Irq);
@@ -24,6 +34,8 @@ pub data Resource [copy] {
  case IoResource(io:Io);
  case FixedMemoryResource(memory:FixedMemory);
  case AddressResource(address:Address);
+ case GpioResource(gpio:Gpio);
+ case I2cResource(i2c:I2c);
  case Unsupported(large:bool,tag:u8,encoding:Span);
  case EndTag(checksum:u8);
 }

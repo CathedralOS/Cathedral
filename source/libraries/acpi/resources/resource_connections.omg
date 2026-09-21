@@ -1,0 +1,136 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified acpi resource.rs, pin 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Upstream copyright 2018 Isaac Woods; bounded Cathedral adaptation 2026.
+// ACPI 6.6 Tables 6.54–6.56; spans are initialized bytes, never IO authority.
+module resource_connections;
+use resource_model::Outcome;
+use resource_model::Envelope;
+use resource_model::Parsed;
+use resource_model::Resource;
+use resource_model::Span;
+use resource_model::NumberResult;
+use resource_model::SourceResult;
+use resource_model::Gpio;
+use resource_model::GpioConnection;
+use resource_model::GpioPolarity;
+use resource_model::PinConfiguration;
+use resource_model::IoRestriction;
+use resource_model::Trigger;
+use resource_model::I2c;
+use resource_model::AddressingMode;
+use resource_bytes::envelope;
+use resource_bytes::relative;
+use resource_bytes::controller_source;
+// Public entry independently validates the envelope; forged offsets cannot enter.
+pub machine parse_connection(input:&[u8;4096],length:u64,at:u64)->Parsed {
+ let e:Envelope=envelope(input,length,at);
+ transition e.outcome==Outcome::Success {true -> connection_kind(input,e) _ -> (Parsed{outcome:e.outcome})}
+ state connection_kind(input:&[u8;4096],e:Envelope) {
+  transition e.large {true -> dispatch(input,e) _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+ state dispatch(input:&[u8;4096],e:Envelope) {
+  transition e.tag {12 -> gpio(input,e) 14 -> serial(input,e) _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+ state gpio(input:&[u8;4096],e:Envelope) {let r:Parsed=decode_gpio_connection(input,e,e.start,e.end,e.length);r}
+ state serial(input:&[u8;4096],e:Envelope) {let r:Parsed=decode_serial_connection(input,e,e.start,e.end,e.length);r}
+}
+data GpioHeader [copy] {kind:u64;general:u64;flags:u64;pin_config:u64;drive:u64;debounce:u64;pin_offset:u64;source_offset:u64;vendor_offset:u64;vendor_length:u64;}
+machine decode_gpio_connection(input:&[u8;4096],e:Envelope,start:u64,end:u64,size:u64)->Parsed {
+ transition size>=20 && start<=end && end<=4096 {true -> header(input,e,start,end) _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ state header(input:&[u8;4096],e:Envelope,start:u64,end:u64) {
+  let rev:NumberResult=relative(input,end,start,3,1);let kind:NumberResult=relative(input,end,start,4,1);
+  let general:NumberResult=relative(input,end,start,5,2);let flags:NumberResult=relative(input,end,start,7,2);
+  let config:NumberResult=relative(input,end,start,9,1);let drive:NumberResult=relative(input,end,start,10,2);let debounce:NumberResult=relative(input,end,start,12,2);
+  let pins:NumberResult=relative(input,end,start,14,2);let index:NumberResult=relative(input,end,start,16,1);let source:NumberResult=relative(input,end,start,17,2);
+  let vendor:NumberResult=relative(input,end,start,19,2);let length:NumberResult=relative(input,end,start,21,2);
+  let h:GpioHeader=GpioHeader{kind:kind.value,general:general.value,flags:flags.value,pin_config:config.value,drive:drive.value,debounce:debounce.value,pin_offset:pins.value,source_offset:source.value,vendor_offset:vendor.value,vendor_length:length.value};
+  transition rev.value==1 && index.value==0 && general.value&65534==0 && kind.value<=1 {true -> flags(input,e,start,end,h) _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+ state flags(input:&[u8;4096],e:Envelope,start:u64,end:u64,h:GpioHeader) {
+  let flags:u64=h.flags;
+  transition {h.kind==0 && flags&65504==0 && (flags>>1)&3!=3 && ((flags>>1)&3!=2 || flags&1!=0) -> offsets(input,e,start,end,h,h.pin_offset,h.source_offset,h.vendor_offset,h.vendor_length)
+   h.kind==1 && flags&65524==0 -> offsets(input,e,start,end,h,h.pin_offset,h.source_offset,h.vendor_offset,h.vendor_length)
+   _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+ state offsets(input:&[u8;4096],e:Envelope,start:u64,end:u64,h:GpioHeader,pins:u64,source:u64,vendor:u64,length:u64) {
+  transition start<=end && end<=4096 && pins>=23 && pins<source && source<vendor && vendor<=end-start {
+   true -> extents(input,e,start,end,h,pins,source,vendor,length)
+   _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+ state extents(input:&[u8;4096],e:Envelope,start:u64,end:u64,h:GpioHeader,pins:u64,source:u64,vendor:u64,length:u64) {
+  transition (source-pins)&1==0 && length==end-start-vendor {true -> source_name(input,e,start,h,pins,source,vendor) _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+ state source_name(input:&[u8;4096],e:Envelope,start:u64,h:GpioHeader,pins:u64,source:u64,vendor:u64) {
+  transition start<=4096 && vendor<=4096 && source<=4096 && pins<=4096 {true -> source_bytes(input,e,start,h,pins,source,vendor) _ -> (Parsed{})}
+ }
+ state source_bytes(input:&[u8;4096],e:Envelope,start:u64,h:GpioHeader,pins:u64,source:u64,vendor:u64) {
+  let name:SourceResult=controller_source(input,start+source,start+vendor,0);
+  transition name.outcome==Outcome::Success {true -> configuration(e,start,h,pins,source,vendor,name) _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+ state configuration(e:Envelope,start:u64,h:GpioHeader,pins:u64,source:u64,vendor:u64,name:SourceResult) {
+  transition {h.pin_config<=3 -> ready(e,start,h,pins,source,vendor,name)
+   h.pin_config>=128 -> unsupported(e)
+   _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+ state unsupported(e:Envelope) {Parsed{outcome:Outcome::Success,encoding:Span{start:e.start,end:e.end},next:e.end,resource:Resource::Unsupported{large:true,tag:e.tag,encoding:Span{start:e.start,end:e.end}}}}
+ state ready(e:Envelope,start:u64,h:GpioHeader,pins:u64,source:u64,vendor:u64,name:SourceResult) {
+  let config:PinConfiguration=gpio_pin_configuration(h.pin_config);let connection:GpioConnection=gpio_connection_kind(h.kind,h.flags);
+  Parsed{outcome:Outcome::Success,encoding:Span{start:e.start,end:e.end},next:e.end,resource:Resource::GpioResource{gpio:Gpio{is_consumer:h.general&1!=0,shared:h.flags&8!=0,pin_configuration:config,drive_strength:((h.drive&65535)as u16),debounce_timeout:((h.debounce&65535)as u16),pins:Span{start:start+pins,end:start+source},pin_count:(source-pins)/2,source:name.source,vendor:Span{start:start+vendor,end:e.end},connection:connection,general_flags:((h.general&65535)as u16),connection_flags:((h.flags&65535)as u16)}}}
+ }
+}
+machine gpio_pin_configuration(value:u64)->PinConfiguration {transition value {1 -> (PinConfiguration::PullUp) 2 -> (PinConfiguration::PullDown) 3 -> (PinConfiguration::NoPull) _ -> (PinConfiguration::Default)}}
+machine gpio_connection_kind(kind:u64,flags:u64)->GpioConnection {
+ transition kind==0 {true -> interrupt(flags) _ -> io(flags)}
+ state interrupt(flags:u64) {let trigger:Trigger=gpio_trigger(flags&1!=0);let polarity:GpioPolarity=gpio_polarity((flags>>1)&3);GpioConnection::Interrupt{trigger:trigger,polarity:polarity,wake:flags&16!=0}}
+ state io(flags:u64) {let restriction:IoRestriction=gpio_restriction(flags&3);GpioConnection::Io{restriction:restriction}}
+}
+machine gpio_trigger(edge:bool)->Trigger {transition edge {true -> (Trigger::Edge) _ -> (Trigger::Level)}}
+machine gpio_polarity(value:u64)->GpioPolarity {transition value {1 -> (GpioPolarity::ActiveLow) 2 -> (GpioPolarity::ActiveBoth) _ -> (GpioPolarity::ActiveHigh)}}
+machine gpio_restriction(value:u64)->IoRestriction {transition value {1 -> (IoRestriction::InputOnly) 2 -> (IoRestriction::OutputOnly) 3 -> (IoRestriction::Preserve) _ -> (IoRestriction::None)}}
+machine decode_serial_connection(input:&[u8;4096],e:Envelope,start:u64,end:u64,size:u64)->Parsed {
+ transition size>=9 && start<=end && end<=4096 {true -> header(input,e,start,end,size) _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ state header(input:&[u8;4096],e:Envelope,start:u64,end:u64,size:u64) {
+  let bus:NumberResult=relative(input,end,start,5,1);
+  transition {bus.value==1 -> i2c(input,e,start,end,size)
+   bus.value==2 || bus.value==3 || bus.value==4 || bus.value>=192 -> unsupported(e)
+   _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+ state unsupported(e:Envelope) {Parsed{outcome:Outcome::Success,encoding:Span{start:e.start,end:e.end},next:e.end,resource:Resource::Unsupported{large:true,tag:e.tag,encoding:Span{start:e.start,end:e.end}}}}
+ state i2c(input:&[u8;4096],e:Envelope,start:u64,end:u64,size:u64) {
+  transition size>=15 {true -> i2c_header(input,e,start,end) _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+ state i2c_header(input:&[u8;4096],e:Envelope,start:u64,end:u64) {
+  let rev:NumberResult=relative(input,end,start,3,1);let flags:NumberResult=relative(input,end,start,6,1);let mode:NumberResult=relative(input,end,start,7,1);
+  let type_rev:NumberResult=relative(input,end,start,9,1);let type_length:NumberResult=relative(input,end,start,10,2);let address:NumberResult=relative(input,end,start,16,2);
+  transition rev.value==2 && flags.value&248==0 && mode.value&254==0 && type_rev.value==1 && ((mode.value==0 && address.value<=127) || (mode.value==1 && address.value<=1023)) {
+   true -> extent(input,e,start,end,flags.value,mode.value,type_length.value,address.value)
+   _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+ state extent(input:&[u8;4096],e:Envelope,start:u64,end:u64,flags:u64,mode:u64,length:u64,address:u64) {
+  transition start<=end && end<=4096 && end-start>=18 {true -> data_extent(input,e,start,end,flags,mode,length,address) _ -> (Parsed{})}
+ }
+ state data_extent(input:&[u8;4096],e:Envelope,start:u64,end:u64,flags:u64,mode:u64,length:u64,address:u64) {
+  transition length>=6 && length<end-start-12 {true -> source_name(input,e,start,end,flags,mode,length,address) _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+ state source_name(input:&[u8;4096],e:Envelope,start:u64,end:u64,flags:u64,mode:u64,length:u64,address:u64) {
+  transition start<=4096 && length<=4096 {true -> source_bytes(input,e,start,end,flags,mode,length,address) _ -> (Parsed{})}
+ }
+ state source_bytes(input:&[u8;4096],e:Envelope,start:u64,end:u64,flags:u64,mode:u64,length:u64,address:u64) {
+  let index:NumberResult=relative(input,end,start,4,1);let source:SourceResult=controller_source(input,start+12+length,end,((index.value&255)as u8));
+  let speed:NumberResult=relative(input,end,start,12,4);let lvr:NumberResult=relative(input,end,start,8,1);let addressing:AddressingMode=i2c_addressing_mode(mode);
+  transition source.outcome==Outcome::Success {true -> (Parsed{outcome:Outcome::Success,encoding:Span{start:e.start,end:e.end},next:e.end,resource:Resource::I2cResource{i2c:I2c{is_consumer:flags&2!=0,shared:flags&4!=0,device_initiated:flags&1!=0,addressing:addressing,speed:((speed.value&4294967295)as u32),address:((address&65535)as u16),legacy_virtual_register:((lvr.value&255)as u8),source:source.source,vendor:Span{start:start+18,end:start+12+length},general_flags:((flags&255)as u8)}}}) _ -> (Parsed{outcome:Outcome::BadEncoding})}
+ }
+}
+machine i2c_addressing_mode(value:u64)->AddressingMode {transition value==1 {true -> (AddressingMode::Bits10) _ -> (AddressingMode::Bits7)}}
+// Raw pin numbers include 0xffff (ACPI No Pin). The caller owns interpretation.
+pub machine pin_at(input:&[u8;4096],length:u64,pins:Span,index:u64)->NumberResult {
+ let start:u64=pins.start;let end:u64=pins.end;
+ transition length<=4096 && start<=end && end<=length {true -> extent(input,length,start,end,index) _ -> (NumberResult{})}
+ state extent(input:&[u8;4096],length:u64,start:u64,end:u64,index:u64) {
+  transition (end-start)&1==0 && index<(end-start)/2 {true -> fetch(input,end,start,index) _ -> (NumberResult{})}
+ }
+ state fetch(input:&[u8;4096],end:u64,start:u64,index:u64) {
+  transition index<2048 {true -> bounded(input,end,start,index) _ -> (NumberResult{})}
+ }
+ state bounded(input:&[u8;4096],end:u64,start:u64,index:u64) {let r:NumberResult=relative(input,end,start,index*2,2);r}
+}

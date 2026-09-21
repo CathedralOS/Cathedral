@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Check one authored resource suite and interpret each actual body/control."""
-import argparse,hashlib,json,os,re,subprocess,tempfile,time
+import argparse,hashlib,json,os,re,shlex,subprocess,tempfile,time
 from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[3]
 PIN='eaa7993a23623cd8fabf45350340479c5c9c7879'
@@ -12,7 +12,7 @@ def main():
  subprocess.run(['python3',str(HERE/'map_inventory.py'),'--check'],cwd=ROOT,check=True)
  subprocess.run(['python3',str(ROOT/'tools/ports/inventory.py'),'check',str(ROOT/'source/libraries/acpi/resources/inventory.json'),'--checkout',str(ROOT/'reference_code/rust-osdev/acpi')],cwd=ROOT,check=True)
  cases=json.loads((HERE/'cases.json').read_text());names=a.case or list(cases)
- source_files=sorted(list((ROOT/'source/libraries/acpi/resources').glob('*.omg'))+[ROOT/name for name in ['source/libraries/acpi/build.omg','source/libraries/acpi/bytes.omg','source/libraries/acpi/fixed_bytes.omg']])
+ source_files=sorted(list((ROOT/'source/libraries/acpi/resources').glob('*.omg'))+[ROOT/name for name in ['source/libraries/acpi/build.omg','source/libraries/acpi/bytes.omg','source/libraries/acpi/fixed_bytes.omg','source/libraries/acpi/headers.omg']])
  def hashes():return {str(f.relative_to(ROOT)):hashlib.sha256(f.read_bytes()).hexdigest()for f in source_files}
  before=hashes()
  with tempfile.TemporaryDirectory(prefix='cathedral-resource-checked-')as directory:
@@ -28,7 +28,7 @@ def main():
     if negative:
      old,new=cases[name]['mutation'];assert body.count(old)==1,name;body=body.replace(old,new)
     unique=name.replace('-','_')+('_control'if negative else'_positive');machine='ResourceSuite::'+unique
-    for helper in ['check_resource','check_interrupts']:body=re.sub(r'\b'+helper+r'\b',unique+'_'+helper,body)
+    for helper in ['check_resource','check_interrupts','check_connection']:body=re.sub(r'\b'+helper+r'\b',unique+'_'+helper,body)
     assert body.count('machine test()')==1,name;body=body.replace('machine test()','machine '+machine+'(&mut self)',1)
     bodies.append(body);selections.append(machine+'='+str(int(negative)))
   suite='\n'.join(sorted(set(imports)))+'\ndata ResourceSuite{}\n'+''.join(bodies)
@@ -39,7 +39,7 @@ def main():
   code=process.wait();assert before==hashes(),'source changed during suite';output=''.join(lines)
   if code:raise SystemExit(code)
   if a.record:
-   record={'format':'cathedral-resource-checked-v1','stage':'checked-interpreter execution; no native ABI or firmware execution','omega_revision':revision,'runner_sha256':hashlib.sha256(runner.read_bytes()).hexdigest(),'runner_source_sha256':hashlib.sha256((HERE/'checked_runner.rs').read_bytes()).hexdigest(),'cargo_lock_sha256':hashlib.sha256((root/'Cargo.lock').read_bytes()).hexdigest(),'suite_sha256':hashlib.sha256(suite.encode()).hexdigest(),'source_sha256':before,'fixture_sha256':{n:hashlib.sha256((HERE/'cases'/f'{n}.omg').read_bytes()).hexdigest()for n in names},'scenario_count':len(names),'control_count':len(names),'elapsed_seconds':round(time.monotonic()-started,3),'output':output,'command':'python3 tools/ports/acpi/resources/check_interpreted.py --record tools/ports/acpi/resources/checked-verification.json'}
+   record={'format':'cathedral-resource-checked-v1','stage':'checked-interpreter execution; no native ABI or firmware execution','omega_revision':revision,'runner_sha256':hashlib.sha256(runner.read_bytes()).hexdigest(),'runner_source_sha256':hashlib.sha256((HERE/'checked_runner.rs').read_bytes()).hexdigest(),'cargo_lock_sha256':hashlib.sha256((root/'Cargo.lock').read_bytes()).hexdigest(),'suite_sha256':hashlib.sha256(suite.encode()).hexdigest(),'source_sha256':before,'fixture_sha256':{n:hashlib.sha256((HERE/'cases'/f'{n}.omg').read_bytes()).hexdigest()for n in names},'scenario_count':len(names),'control_count':len(names),'elapsed_seconds':round(time.monotonic()-started,3),'output':output,'command':shlex.join(['python3','tools/ports/acpi/resources/check_interpreted.py',*sum([['--case',n]for n in names],[]),'--record',str(a.record)])}
    a.record.write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
  print(f'PASS {len(names)} checked resource bodies + {len(names)} changed-body controls.',flush=True)
 if __name__=='__main__':main()

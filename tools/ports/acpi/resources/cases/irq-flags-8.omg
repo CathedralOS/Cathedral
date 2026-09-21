@@ -17,9 +17,18 @@ use resources::resource_model::AddressKind;
 use resources::resource_model::Source;
 use resources::resource_model::Template;
 use resources::resource_model::NumberResult;
+use resources::resource_model::Gpio;
+use resources::resource_model::GpioConnection;
+use resources::resource_model::GpioPolarity;
+use resources::resource_model::PinConfiguration;
+use resources::resource_model::IoRestriction;
+use resources::resource_model::I2c;
+use resources::resource_model::AddressingMode;
+use resources::resource_model::Span;
 use resources::resource_parse::parse_one;
 use resources::resource_template::validate_template;
 use resources::resource_irq::irq_at;
+use resources::resource_connections::pin_at;
 machine check_interrupts(value:Interrupts)->bool {transition value {Interrupts::Mask{bits} -> (bits==32897) _ -> (false)}}
 machine check_resource(input:&[u8;4096],value:Resource)->bool {transition value {Resource::IrqResource{irq} -> details(input,irq) _ -> (false)} state details(input:&[u8;4096],p:Irq)->bool {let i0:NumberResult=irq_at(input,4,p.interrupts,0);let i2:NumberResult=irq_at(input,4,p.interrupts,2);let missing:NumberResult=irq_at(input,4,p.interrupts,3);let shape:bool=check_interrupts(p.interrupts);
 p.extended==false && p.is_consumer==false && p.trigger==Trigger::Level && p.polarity==Polarity::ActiveLow && p.shared==false && p.wake==false && p.flags==8 && p.source.present==false && p.source.index==0 && p.source.name.start==0 && p.source.name.end==0 && i0.outcome==Outcome::Success && i0.value==0 && i2.outcome==Outcome::Success && i2.value==15 && missing.outcome==Outcome::InvalidState && shape}}

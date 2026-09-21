@@ -21,6 +21,7 @@ use resource_model::Io;
 use resource_model::FixedMemory;
 use resource_model::Address;
 use resource_model::AddressKind;
+use resource_connections::parse_connection;
 use resource_bytes::envelope;
 use resource_bytes::relative;
 use resource_bytes::optional_source;
@@ -47,11 +48,12 @@ pub machine parse_one(input:&[u8;4096],length:u64,at:u64)->Parsed {
    6 -> memory(input,e,body,end,size) 7 -> address(input,e,body,end,size,4) 8 -> address(input,e,body,end,size,2)
    9 -> extended(input,e,body,end,size) 10 -> address(input,e,body,end,size,8)
    1 -> unsupported(e) 2 -> unsupported(e) 4 -> unsupported(e) 5 -> unsupported(e)
-   11 -> unsupported(e) 12 -> unsupported(e) 13 -> unsupported(e) 14 -> unsupported(e)
+   11 -> unsupported(e) 12 -> connection(input,e) 13 -> unsupported(e) 14 -> connection(input,e)
    15 -> unsupported(e) 16 -> unsupported(e) 17 -> unsupported(e) 18 -> unsupported(e) 19 -> unsupported(e)
    _ -> (Parsed{outcome:Outcome::BadEncoding})
   }
  }
+ state connection(input:&[u8;4096],e:Envelope) {let value:Parsed=parse_connection(input,e.end,e.start);value}
  state unsupported(e:Envelope) {Parsed{outcome:Outcome::Success,encoding:Span{start:e.start,end:e.end},next:e.end,resource:Resource::Unsupported{large:e.large,tag:e.tag,encoding:Span{start:e.start,end:e.end}}}}
  state irq(input:&[u8;4096],e:Envelope,body:u64,end:u64,size:u64) {let value:Parsed=decode_irq(input,e,body,end,size);value}
  state dma(input:&[u8;4096],e:Envelope,body:u64,end:u64,size:u64) {let value:Parsed=decode_dma(input,e,body,end,size);value}

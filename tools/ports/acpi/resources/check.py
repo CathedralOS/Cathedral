@@ -17,6 +17,7 @@ def main():
  parser.add_argument('--case',action='append')
  parser.add_argument('--jobs',type=int,default=2)
  parser.add_argument('--positive-only',action='store_true')
+ parser.add_argument('--record',type=Path)
  args=parser.parse_args();compiler=args.omega.resolve()
  subprocess.run(['python3',str(HERE/'generate.py'),'--check'],cwd=ROOT,check=True)
  cases=json.loads((HERE/'cases.json').read_text())
@@ -24,7 +25,7 @@ def main():
  print('Omega SHA-256:',hashlib.sha256(compiler.read_bytes()).hexdigest(),flush=True)
  def package_hash():
   digest=hashlib.sha256()
-  files=list((ROOT/'source/libraries/acpi/resources').glob('*.omg'))+[ROOT/name for name in ['source/libraries/acpi/build.omg','source/libraries/acpi/bytes.omg','source/libraries/acpi/fixed_bytes.omg']]
+  files=list((ROOT/'source/libraries/acpi/resources').glob('*.omg'))+[ROOT/name for name in ['source/libraries/acpi/build.omg','source/libraries/acpi/bytes.omg','source/libraries/acpi/fixed_bytes.omg','source/libraries/acpi/headers.omg']]
   for file in sorted(files):
    digest.update(str(file.relative_to(ROOT)).encode());digest.update(b'\0');digest.update(file.read_bytes())
   return digest.hexdigest()
@@ -39,14 +40,16 @@ def main():
    result=subprocess.run([str(compiler),'--check',str(work/'main.omg')],cwd=ROOT,capture_output=True,text=True)
    output=result.stdout+result.stderr
    if result.returncode:raise RuntimeError(name+' positive failed:\n'+output)
+   positive_output=output;negative_output=None
    print(f'{name}: positive PASS ({time.monotonic()-started:.1f}s)',flush=True)
    if not args.positive_only:
     (work/'main.omg').write_text(source.replace(old,new))
     result=subprocess.run([str(compiler),'--check',str(work/'main.omg')],cwd=ROOT,capture_output=True,text=True)
     output=result.stdout+result.stderr
     if result.returncode==0 or 'cannot prove requires contract' not in output or '1 == 0' not in output:raise RuntimeError(name+' negative failed to compute1:\n'+output)
+    negative_output=output
     print(name+': changed behavior computes1 and is rejected',flush=True)
-  return name
+  return {'name':name,'positive_output':positive_output,'negative_output':negative_output,'fixture_sha256':hashlib.sha256(source.encode()).hexdigest()}
  results=[];errors=[]
  with ThreadPoolExecutor(max_workers=args.jobs) as pool:
   futures={pool.submit(check,name):name for name in selected}
@@ -57,5 +60,7 @@ def main():
  if package_hash()!=before:raise SystemExit('Resource descriptor closure changed during checks; repeat against a fixed source hash.')
  if errors:raise SystemExit(f'{len(errors)} cases failed; {len(results)} cases passed.')
  print(f'{len(results)} positive cases passed'+('' if args.positive_only else f'; {len(results)} body-mutating controls rejected')+'.',flush=True)
+ if args.record:
+  args.record.write_text(json.dumps({'format':'cathedral-resource-constant-v2','stage':'constant semantic evaluator; actual body/control pairs','omega_compiler_sha256':hashlib.sha256(compiler.read_bytes()).hexdigest(),'selected_source_sha256':before,'scenario_count':len(results),'control_count':0 if args.positive_only else len(results),'results':sorted(results,key=lambda r:r['name']),'command':'python3 tools/ports/acpi/resources/check.py --jobs '+str(args.jobs)+' '+ ' '.join('--case '+n for n in selected)+' --record '+str(args.record)},indent=2,sort_keys=True)+'\n')
  print('Semantic evaluation only; no native ABI, interpreter execution, firmware, table mapping or handler access.')
 if __name__=='__main__':main()

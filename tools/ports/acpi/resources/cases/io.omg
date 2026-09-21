@@ -17,9 +17,18 @@ use resources::resource_model::AddressKind;
 use resources::resource_model::Source;
 use resources::resource_model::Template;
 use resources::resource_model::NumberResult;
+use resources::resource_model::Gpio;
+use resources::resource_model::GpioConnection;
+use resources::resource_model::GpioPolarity;
+use resources::resource_model::PinConfiguration;
+use resources::resource_model::IoRestriction;
+use resources::resource_model::I2c;
+use resources::resource_model::AddressingMode;
+use resources::resource_model::Span;
 use resources::resource_parse::parse_one;
 use resources::resource_template::validate_template;
 use resources::resource_irq::irq_at;
+use resources::resource_connections::pin_at;
 machine check_resource(input:&[u8;4096],value:Resource)->bool {transition value {Resource::IoResource{io} -> details(input,io) _ -> (false)} state details(input:&[u8;4096],p:Io)->bool {
 p.decodes_full==true && p.minimum==1016 && p.maximum==1016 && p.alignment==8 && p.length==8}}
 machine test()->i32 {

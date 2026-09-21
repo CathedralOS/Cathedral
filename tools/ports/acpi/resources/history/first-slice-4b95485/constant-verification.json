@@ -1,0 +1,17 @@
+{
+  "body_control_rejections": 4,
+  "command": "python3 tools/ports/acpi/resources/check.py --jobs 4 --case irq-default --case address-8 --case extended-many --case template-mixture",
+  "compiler_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "fixtures": {
+    "address-8": "fc27a1637a0def6a97214891e67e46460c0e885bbfb290a01ed0b0df692fe2d0",
+    "extended-many": "7d0aa804a10ded469fcc6ae7d5003a14c7d120b73cdfda557b4dac75f0e4f83c",
+    "irq-default": "4d88fa7d437d82bade28daee037a65ebc0bcc6f59ad771989bc0f5780f981710",
+    "template-mixture": "437e8bc9dfa1a208bc1a87eb9ba68d8b7b7a02d1d5c2e87b7dbdb0cdbe472697"
+  },
+  "output": "100 Omega fixtures; 98 actual pinned public parser observations; 31 normalized supported descriptor agreements\nOmega SHA-256: 2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4\nResource descriptor closure SHA-256: 179ec3bca00887f9e693bf08ae8a475e97324841a7bfb6febc63b52e72c210a1\ntemplate-mixture: positive PASS (105.6s)\naddress-8: positive PASS (118.6s)\nextended-many: positive PASS (118.8s)\nirq-default: positive PASS (119.0s)\ntemplate-mixture: changed behavior computes1 and is rejected\nirq-default: changed behavior computes1 and is rejected\naddress-8: changed behavior computes1 and is rejected\nextended-many: changed behavior computes1 and is rejected\n4 positive cases passed; 4 body-mutating controls rejected.\nSemantic evaluation only; no native ABI, interpreter execution, firmware, table mapping or handler access.\n",
+  "positive_cases": 4,
+  "selected_source_sha256": "179ec3bca00887f9e693bf08ae8a475e97324841a7bfb6febc63b52e72c210a1",
+  "source_hash_algorithm": "SHA-256 over sorted repository-relative path + NUL + file bytes",
+  "stage": "constant semantic evaluation via omega --check; no native execution"
+}
