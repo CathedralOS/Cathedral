@@ -910,9 +910,13 @@
             {
               "path": "source/libraries/acpi/aml/object_descriptions.omg",
               "anchor": "pub machine describe("
+            },
+            {
+              "path": "source/libraries/acpi/aml/object_concat_described.omg",
+              "anchor": "pub machine concatenate("
             }
           ],
-          "note": "Basic Integer/String/Buffer concatenation and eleven represented nonbasic description labels are implemented as separate components. General nonbasic concatenation dispatch, missing canonical types, reference/context policy, target coercion, installation and opcode execution remain pending."
+          "note": "Basic Integer/String/Buffer concatenation and represented nonbasic descriptions now compose under canonical primary conversion policy. Integer plus description remains a local exclusion, not a normative rejection. Missing types, reference/context evaluation, target application and opcode retirement remain pending."
         },
         "2176:resolve_as_string": {
           "anchor": "fn resolve_as_string(obj: &Object) -> String {",
@@ -936,9 +940,13 @@
             {
               "path": "source/libraries/acpi/aml/object_descriptions.omg",
               "anchor": "pub machine describe("
+            },
+            {
+              "path": "source/libraries/acpi/aml/object_concat_described.omg",
+              "anchor": "pub machine concatenate("
             }
           ],
-          "note": "Basic Integer/String/Buffer concatenation and eleven represented nonbasic description labels are implemented as separate components. General nonbasic concatenation dispatch, missing canonical types, reference/context policy, target coercion, installation and opcode execution remain pending."
+          "note": "Basic Integer/String/Buffer concatenation and represented nonbasic descriptions now compose under canonical primary conversion policy. Integer plus description remains a local exclusion, not a normative rejection. Missing types, reference/context evaluation, target application and opcode retirement remain pending."
         },
         "21:op_region": {
           "anchor": "pub mod op_region;",

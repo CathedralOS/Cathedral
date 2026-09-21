@@ -708,6 +708,12 @@ public Index observations pass, covering two-slot allocation, failure preservati
 transparent references and fresh field/reference identities. Source evaluation,
 target Store and opcode retirement remain pending; source counts are unchanged.
 
+[Description-aware Concatenate](source/libraries/acpi/aml/object-concat-described.PORT.md) composes the eleven represented nonbasic labels with canonical basic-data conversion.
+All 472 checked pairs, three constant pairs and 52 actual public opcode observations
+pass. Integer plus a description remains explicitly outside this bounded profile;
+reference/field evaluation, target application and retirement remain pending.
+Aggregate source counts are unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

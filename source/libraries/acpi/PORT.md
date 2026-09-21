@@ -374,3 +374,9 @@ All 117 complete-store checked pairs, three bounded constant pairs and 44 actual
 public Index observations pass, covering two-slot allocation, failure preservation,
 transparent references and fresh field/reference identities. Source evaluation,
 target Store and opcode retirement remain pending; source counts are unchanged.
+
+[Description-aware Concatenate](aml/object-concat-described.PORT.md) composes the eleven represented nonbasic labels with canonical basic-data conversion.
+All 472 checked pairs, three constant pairs and 52 actual public opcode observations
+pass. Integer plus a description remains explicitly outside this bounded profile;
+reference/field evaluation, target application and retirement remain pending.
+Aggregate source counts are unchanged.

@@ -1,0 +1,94 @@
+{
+  "build_sha256": "8f1c6fe7d84cb0dc529c9903abb7e5e87eeb65373f1ebf648cb8be46634cd1e8",
+  "build_text": "machine build(builder:&mut Build){builder.application(\"object-concat-described-constant\");builder.freestanding=true;builder.depend_as(\"aml\",Source::Path {location:\"/private/tmp/cathedral-aml-object-concat-described-20260920/source/libraries/acpi/aml\"});builder.depend_as(\"integer_helpers\",Source::Path {location:\"/private/tmp/cathedral-aml-object-concat-described-20260920/source/libraries/acpi/interpreter\"});}",
+  "cases": [
+    "desc_Device_buffer_left",
+    "desc_Package_integer_right",
+    "left_encoding_before_right_id_True"
+  ],
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "execution_root": "/private/tmp/cathedral-aml-object-concat-described-20260920",
+  "input_sha256": {
+    "/Users/zcanann/Documents/projects/Cathedral/tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "/Users/zcanann/Documents/projects/Cathedral/tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805",
+    "source/libraries/acpi/aml/build.omg": "2129610bb9e275f63e87c5e736bb29114044d1a466cdc1d288e4c9103b076319",
+    "source/libraries/acpi/aml/byte_storage.omg": "045be1e6efc512f051231c3233f2a177473a15eb832f78111086f67a7b504f25",
+    "source/libraries/acpi/aml/bytes.omg": "66a5f91ebe3bba63c398a20dba184854f257d580279cde514ba00aa8216251be",
+    "source/libraries/acpi/aml/implicit_conversions.omg": "a8fb3a9676e634e99df1c7ca523e98ef1602134116f99e0af0b06cc7c3f769ba",
+    "source/libraries/acpi/aml/model.omg": "1fc2a3ceb403f0adef2022f76ac0c1187fc74b0cd794df4e7855d643838a10af",
+    "source/libraries/acpi/aml/names.omg": "4d616001e6f0eef3f5233fb2e7df6b237e2cc89d1d565475f4dd0d03036f444e",
+    "source/libraries/acpi/aml/namespace.omg": "2cb9a7187ad787316f89e712c115906290e29a477e23ec0b4e29642935468d97",
+    "source/libraries/acpi/aml/object_concat.omg": "9cba4f5d45d050772954d0db944cb8e90026b56d9db29c2e238389fa3931211b",
+    "source/libraries/acpi/aml/object_concat_described.omg": "276ebf2a6fb8435e10258b395478f32e1a22e4812166679081a427e9bd6db948",
+    "source/libraries/acpi/aml/object_conversions.omg": "b26ea6b3b0023fd656d78759f2a36d9de49872f7e78e01807cd6f18526e5c390",
+    "source/libraries/acpi/aml/object_descriptions.omg": "e334ac1e9e2dac58d1a112df9fe81ffd7e52c9bb07da32519b476dbd2d9fb1c7",
+    "source/libraries/acpi/aml/object_references.omg": "4c06bb925681f2e833ebb815b15e5e53d476f08810d0252e77a977af4134b703",
+    "source/libraries/acpi/interpreter/buffer_fields.omg": "98e1df3d821a88ba1d63c63189f3d9ac782f197b62cd04e6b71abd396042688a",
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/byte_concat.omg": "91e4a7464493eb5a2cd2a4692b88180a5d96cd625ce65f962255a7bbc8d9085f",
+    "source/libraries/acpi/interpreter/conversions.omg": "b3ee9811b5434883bfa2374c8ca6a746ad2a75ab4c9eacea3e8dd19b5510f714",
+    "source/libraries/acpi/interpreter/implicit_integer.omg": "794a0d9a88da8215604ec85842cd4b1431ab62116749f2e8597bba3b770b3a21",
+    "source/libraries/acpi/interpreter/implicit_strings.omg": "615ef95b8fd69e2689ad4ef83df7b394f438f3b0a54ac0baf3cf6f5d9dfc4478",
+    "source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196",
+    "source/libraries/acpi/interpreter/string_numbers.omg": "8553d26a77cd0cb482a24a45aa739b86c7fbed94fb61bc97eb4974de5c9db389",
+    "tools/ports/acpi/aml/object-concat-described/cases.json": "d96f5e30bcec279201b27fadbcea2e24f03eace436de91a87585bba467f87c69",
+    "tools/ports/acpi/aml/object-concat-described/check.py": "af2df0993a0627ea3fe312a8212bd00b00c3b2c657e59c3e3783d2ce71e4a8e7",
+    "tools/ports/acpi/aml/object-concat-described/check_const.py": "534b46df4d034c447f8c887e022e90681d05e4e375a7fe639a96c9a1a68c53ef",
+    "tools/ports/acpi/aml/object-concat-described/fixtures.py": "c08fa296aa17306fc739a2f865d99c4397f6cf3cb6073c1616277736eb0ffb1f",
+    "tools/ports/acpi/aml/object-concat-described/inventory.py": "98f94b73dbd2102a8ecfcd0c9c0cfa278f9e08047710148c102e435cd63411e5",
+    "tools/ports/acpi/aml/object-concat-described/reference.py": "36c5da1f54451a1ea502afe33a1ab289f4f396212d4826af19cf12c74cb34e07",
+    "tools/ports/acpi/aml/object-concat-described/verify_record.py": "12b29f6efd21f51dbb0ac9d37db2aaed54f86f2829fb1a1643b6f746b5e7b9b3"
+  },
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "proofs": [
+    {
+      "build_sha256": "8f1c6fe7d84cb0dc529c9903abb7e5e87eeb65373f1ebf648cb8be46634cd1e8",
+      "case": "desc_Device_buffer_left",
+      "control": false,
+      "execution_root": "/private/tmp/cathedral-aml-object-concat-described-20260920",
+      "output": "compiled 28 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-23f896a67ea0f3a3b017e80dc57481619b094dc55fe614a9d2d851b0409fb987/source/main.omg; wrote_output=false\n",
+      "source_sha256": "dd3328fefc3dd300b7a509cdb5c79b0bb17adeac603d539af7988f0cb15158dc"
+    },
+    {
+      "build_sha256": "8f1c6fe7d84cb0dc529c9903abb7e5e87eeb65373f1ebf648cb8be46634cd1e8",
+      "case": "desc_Device_buffer_left",
+      "control": true,
+      "execution_root": "/private/tmp/cathedral-aml-object-concat-described-20260920",
+      "output": "cannot check prepared project: checked compilation failed for package `object-concat-described-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "848e640449c31092f2e4d3755e50c6f3f6b5d8842c058e7b02fcbee741c112f5"
+    },
+    {
+      "build_sha256": "8f1c6fe7d84cb0dc529c9903abb7e5e87eeb65373f1ebf648cb8be46634cd1e8",
+      "case": "desc_Package_integer_right",
+      "control": false,
+      "execution_root": "/private/tmp/cathedral-aml-object-concat-described-20260920",
+      "output": "compiled 28 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-1e31286df2b95b734058214d53f890b50971ffe7e93d739d8ef8bafcfa70a7f3/source/main.omg; wrote_output=false\n",
+      "source_sha256": "5391c7e506894d30d1438be9fcf7f210c52f2f954b3ab8cfc15949c2bbfcedeb"
+    },
+    {
+      "build_sha256": "8f1c6fe7d84cb0dc529c9903abb7e5e87eeb65373f1ebf648cb8be46634cd1e8",
+      "case": "desc_Package_integer_right",
+      "control": true,
+      "execution_root": "/private/tmp/cathedral-aml-object-concat-described-20260920",
+      "output": "cannot check prepared project: checked compilation failed for package `object-concat-described-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "c5c6fc1f8aae30d94de2045cd5e14c0d352bb213e75710953834b4f01e14bb58"
+    },
+    {
+      "build_sha256": "8f1c6fe7d84cb0dc529c9903abb7e5e87eeb65373f1ebf648cb8be46634cd1e8",
+      "case": "left_encoding_before_right_id_True",
+      "control": false,
+      "execution_root": "/private/tmp/cathedral-aml-object-concat-described-20260920",
+      "output": "compiled 28 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-4363ea77cdb73c4407e846c4644a18749b8c06b66a64d792d8a95914e74820f1/source/main.omg; wrote_output=false\n",
+      "source_sha256": "c556335b559134ea2a1261e88b984f8ec6c6a5c9e6af0cd4b4c5c61a2e098c2c"
+    },
+    {
+      "build_sha256": "8f1c6fe7d84cb0dc529c9903abb7e5e87eeb65373f1ebf648cb8be46634cd1e8",
+      "case": "left_encoding_before_right_id_True",
+      "control": true,
+      "execution_root": "/private/tmp/cathedral-aml-object-concat-described-20260920",
+      "output": "cannot check prepared project: checked compilation failed for package `object-concat-described-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "0ea16e0ebf95c5f4e2723f79bbb00e845249cf92041e0b9bbeaab5ec785ed5e4"
+    }
+  ],
+  "stage": "constant evaluation and checked requires; native/hardware not run"
+}

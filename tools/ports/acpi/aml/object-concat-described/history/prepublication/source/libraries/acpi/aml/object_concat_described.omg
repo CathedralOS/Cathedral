@@ -1,0 +1,107 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Description-aware Concatenate component alongside rust-osdev/acpi do_concat,
+// pin 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
+// Primary ACPI 6.6 Tables 19.30/19.31; direct data only, no opcode/target dispatch.
+module object_concat_described;
+use model::ObjectStore;
+use model::Value;
+use object_concat;
+use object_concat::Concatenated;
+use object_descriptions::describe;
+use object_descriptions::Description;
+use object_conversions::ConversionFailure;
+use implicit_conversions::convert;
+use implicit_conversions::ConversionTarget;
+use implicit_conversions::ImplicitResult;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::conversions::string_to_buffer;
+use integer_helpers::byte_concat;
+
+pub machine concatenate(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize)->Concatenated {
+ let count:u64=store.space.object_count;
+ transition count<=64 && left<count && left<64 {true -> admit(input,length,unit,store,left,right,size) _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})}
+ state admit(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize)->Concatenated {
+  let target:ConversionTarget=cd_target(store.space.objects[left].value);
+  let a:ImplicitResult=cd_admit(input,length,unit,store,left,size,target);
+  transition a {ImplicitResult::Failure {reason} -> (Concatenated::Failure {reason:reason}) _ -> select(input,length,unit,store,left,right,size,target,a)}
+ }
+ state select(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize,target:ConversionTarget,a:ImplicitResult)->Concatenated {
+  let left_basic:bool=cd_basic(store,left);let right_basic:bool=cd_basic(store,right);
+  transition left_basic && right_basic {true -> delegated(input,length,unit,store,left,right,size) _ -> described(input,length,unit,store,right,size,target,a)}
+ }
+ state delegated(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize)->Concatenated {
+  // Bounded pure left admission repeats inside the established all-basic API.
+  let result:Concatenated=object_concat::concatenate(input,length,unit,store,left,right,size);result
+ }
+ state described(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,right:u64,size:IntegerSize,target:ConversionTarget,a:ImplicitResult)->Concatenated {
+  let b:ImplicitResult=cd_admit(input,length,unit,store,right,size,target);
+  let result:Concatenated=cd_append(a,b);result
+ }
+}
+machine cd_target(value:Value)->ConversionTarget {
+ transition value {Value::Integer {number} -> (ConversionTarget::Integer) Value::Buffer {buffer_storage} -> (ConversionTarget::Buffer) _ -> (ConversionTarget::String)}
+}
+machine cd_basic(store:&ObjectStore,object:u64)->bool {
+ let count:u64=store.space.object_count;
+ transition count<=64 && object<count && object<64 {true -> kind(store.space.objects[object].value) _ -> (false)}
+ state kind(value:Value)->bool {transition value {Value::Integer {number} -> (true) Value::Buffer {buffer_storage} -> (true) Value::String {string_storage} -> (true) _ -> (false)}}
+}
+machine cd_admit(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize,target:ConversionTarget)->ImplicitResult {
+ let basic:bool=cd_basic(store,object);
+ transition basic {true -> converted(input,length,unit,store,object,size,target) _ -> described(store,object,target)}
+ state converted(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize,target:ConversionTarget)->ImplicitResult {let result:ImplicitResult=convert(input,length,unit,store,object,size,target);result}
+ state described(store:&ObjectStore,object:u64,target:ConversionTarget)->ImplicitResult {
+  // describe validates the slot even when cd_basic rejected its bounds.
+  // Integer x nonbasic is a local excluded profile, not a normative ACPI error.
+  let label:Description=describe(store,object);let result:ImplicitResult=cd_label(label,target);result
+ }
+}
+machine cd_label(label:Description,target:ConversionTarget)->ImplicitResult {
+ transition label {
+  Description::Failure {reason} -> (ImplicitResult::Failure {reason:reason})
+  Description::String {length,bytes} -> selected(length,bytes,target)
+ }
+ state selected(length:u64,bytes:[u8;256],target:ConversionTarget)->ImplicitResult {
+  transition target {
+   ConversionTarget::String -> (ImplicitResult::String {length:length,bytes:bytes})
+   ConversionTarget::Buffer -> buffer(length,bytes)
+   ConversionTarget::Integer -> (ImplicitResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state buffer(length:u64,bytes:[u8;256])->ImplicitResult {
+  let mut output:[u8;256];let copied:IntegerResult=string_to_buffer(&bytes,length,true,&mut output);
+  transition {copied.error==0 -> (ImplicitResult::Buffer {length:copied.value,bytes:output}) copied.error==4 -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity}) copied.error==7 -> (ImplicitResult::Failure {reason:ConversionFailure::Encoding}) _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})}
+ }
+}
+machine cd_append(a:ImplicitResult,b:ImplicitResult)->Concatenated {
+ transition b {ImplicitResult::Failure {reason} -> (Concatenated::Failure {reason:reason}) _ -> selected(a,b)}
+ state selected(a:ImplicitResult,b:ImplicitResult)->Concatenated {
+  transition a {
+   ImplicitResult::String {length,bytes} -> string(&bytes,length,b)
+   ImplicitResult::Buffer {length,bytes} -> buffer(&bytes,length,b)
+   _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})
+  }
+ }
+ state string(a:&[u8;256],length:u64,b:ImplicitResult)->Concatenated {
+  transition b {ImplicitResult::String {length as n,bytes} -> append(a,length,&bytes,n,true) _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state buffer(a:&[u8;256],length:u64,b:ImplicitResult)->Concatenated {
+  transition b {ImplicitResult::Buffer {length as n,bytes} -> append(a,length,&bytes,n,false) _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state append(a:&[u8;256],length:u64,b:&[u8;256],n:u64,string:bool)->Concatenated {
+  transition string {true -> strings(a,length,b,n) _ -> buffers(a,length,b,n)}
+ }
+ state strings(a:&[u8;256],length:u64,b:&[u8;256],n:u64)->Concatenated {
+  let mut output:[u8;256];let copied:IntegerResult=byte_concat::concat_strings(a,length,b,n,&mut output,256);let result:Concatenated=cd_output(copied,output,true);result
+ }
+ state buffers(a:&[u8;256],length:u64,b:&[u8;256],n:u64)->Concatenated {
+  let mut output:[u8;256];let copied:IntegerResult=byte_concat::concat_buffers(a,length,b,n,&mut output,256);let result:Concatenated=cd_output(copied,output,false);result
+ }
+}
+machine cd_output(copied:IntegerResult,bytes:[u8;256],string:bool)->Concatenated {
+ transition {copied.error==0 -> success(copied.value,bytes,string) copied.error==4 -> (Concatenated::Failure {reason:ConversionFailure::Capacity}) copied.error==7 -> (Concatenated::Failure {reason:ConversionFailure::Encoding}) _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})}
+ state success(length:u64,bytes:[u8;256],string:bool)->Concatenated {
+  transition string {true -> (Concatenated::String {length:length,bytes:bytes}) _ -> (Concatenated::Buffer {length:length,bytes:bytes})}
+ }
+}
