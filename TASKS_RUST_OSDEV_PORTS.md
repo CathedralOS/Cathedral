@@ -683,6 +683,12 @@ pairs, three constant pairs and eleven static pinned-label audits pass; receipts
 bind the final execution root and generated build text. General Concatenate
 dispatch and opcode execution remain pending; aggregate counts are unchanged.
 
+[Direct arithmetic results](source/libraries/acpi/aml/object-maths.PORT.md) admit canonical Integer/String/Buffer
+operands before width-normalized mathematics. All 506 checked pairs and three
+constant pairs pass, including separate quotient/remainder results and semantic
+conversion, divide-by-zero and BCD failures. Target writes, operand/reference
+evaluation and opcode retirement remain pending; aggregate counts are unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

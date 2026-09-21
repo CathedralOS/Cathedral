@@ -683,7 +683,16 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine binary(",
+              "path": "source/libraries/acpi/aml/object_maths.omg"
+            }
+          ],
+          "direct_arithmetic_component": {
+            "note": "Direct Integer/String/Buffer operands undergo primary implicit Integer conversion and existing width-normalized mathematics. Semantic failures and detached quotient/remainder are retained. Reference/Field evaluation, target stores, context contribution and retirement remain pending."
+          }
         },
         "1931:do_unary_maths": {
           "anchor": "fn do_unary_maths(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
@@ -698,7 +707,16 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine unary(",
+              "path": "source/libraries/acpi/aml/object_maths.omg"
+            }
+          ],
+          "direct_arithmetic_component": {
+            "note": "Direct Integer/String/Buffer operands undergo primary implicit Integer conversion and existing width-normalized mathematics. Semantic failures and detached quotient/remainder are retained. Reference/Field evaluation, target stores, context contribution and retirement remain pending."
+          }
         },
         "1972:do_logical_op": {
           "anchor": "fn do_logical_op(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
@@ -950,7 +968,16 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine unary(",
+              "path": "source/libraries/acpi/aml/object_maths.omg"
+            }
+          ],
+          "direct_arithmetic_component": {
+            "note": "Direct Integer/String/Buffer operands undergo primary implicit Integer conversion and existing width-normalized mathematics. Semantic failures and detached quotient/remainder are retained. Reference/Field evaluation, target stores, context contribution and retirement remain pending."
+          }
         },
         "2250:do_to_bcd": {
           "anchor": "fn do_to_bcd(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
@@ -965,7 +992,16 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine unary(",
+              "path": "source/libraries/acpi/aml/object_maths.omg"
+            }
+          ],
+          "direct_arithmetic_component": {
+            "note": "Direct Integer/String/Buffer operands undergo primary implicit Integer conversion and existing width-normalized mathematics. Semantic failures and detached quotient/remainder are retained. Reference/Field evaluation, target stores, context contribution and retirement remain pending."
+          }
         },
         "2267:do_size_of": {
           "anchor": "fn do_size_of(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",

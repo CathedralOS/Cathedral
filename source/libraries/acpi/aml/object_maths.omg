@@ -1,0 +1,81 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Primary data operations alongside rust-osdev/acpi do_binary_maths,
+// do_unary_maths, do_from_bcd and do_to_bcd. Copyright 2018 Isaac Woods.
+// Pin 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; direct evaluated IDs only.
+module object_maths;
+use model::ObjectStore;
+use implicit_conversions::convert;
+use implicit_conversions::ConversionTarget;
+use implicit_conversions::ImplicitResult;
+use object_conversions::ConversionFailure;
+use integer_helpers::integers;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::integers::Binary;
+use integer_helpers::bcd;
+pub data Unary [copy] {case BitwiseNot;case FindSetLeft;case FindSetRight;case FromBcd;case ToBcd;}
+pub data MathFailure [copy] {
+ case Conversion(reason:ConversionFailure);
+ case DivideByZero;
+ case InvalidBcd;
+ case Overflow;
+}
+pub data MathResult [copy] {
+ case Failure(reason:MathFailure);
+ case Integer(number:u64);
+ case Division(quotient:u64,remainder:u64);
+}
+pub machine binary(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize,op:Binary)->MathResult {
+ let a:ImplicitResult=convert(input,length,unit,store,left,size,ConversionTarget::Integer);
+ transition a {
+  ImplicitResult::Failure {reason} -> (MathResult::Failure {reason:MathFailure::Conversion {reason:reason}})
+  ImplicitResult::Integer {number} -> other(input,length,unit,store,right,size,op,number)
+  _ -> invalid()
+ }
+ state other(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,right:u64,size:IntegerSize,op:Binary,a:u64)->MathResult {
+  let b:ImplicitResult=convert(input,length,unit,store,right,size,ConversionTarget::Integer);
+  transition b {
+   ImplicitResult::Failure {reason} -> (MathResult::Failure {reason:MathFailure::Conversion {reason:reason}})
+   ImplicitResult::Integer {number} -> apply(size,op,a,number)
+   _ -> invalid()
+  }
+ }
+ state apply(size:IntegerSize,op:Binary,a:u64,b:u64)->MathResult {
+  let value:IntegerResult=integers::binary(size,op,a,b);let result:MathResult=omath_result(value,op==Binary::Divide);result
+ }
+ state invalid()->MathResult {MathResult::Failure {reason:MathFailure::Conversion {reason:ConversionFailure::InvalidState}}}
+}
+pub machine unary(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,op:Unary)->MathResult {
+ let value:ImplicitResult=convert(input,length,unit,store,source,size,ConversionTarget::Integer);
+ transition value {
+  ImplicitResult::Failure {reason} -> (MathResult::Failure {reason:MathFailure::Conversion {reason:reason}})
+  ImplicitResult::Integer {number} -> apply(size,op,number)
+  _ -> (MathResult::Failure {reason:MathFailure::Conversion {reason:ConversionFailure::InvalidState}})
+ }
+ state apply(size:IntegerSize,op:Unary,number:u64)->MathResult {
+  transition op {
+   Unary::BitwiseNot -> invert(size,number)
+   Unary::FindSetLeft -> left(size,number)
+   Unary::FindSetRight -> right(size,number)
+   Unary::FromBcd -> decode(size,number)
+   Unary::ToBcd -> encode(size,number)
+  }
+ }
+ state invert(size:IntegerSize,number:u64)->MathResult {let result:u64=integers::bitwise_not(size,number);MathResult::Integer {number:result}}
+ state left(size:IntegerSize,number:u64)->MathResult {let result:u64=integers::find_set_left(size,number);MathResult::Integer {number:result}}
+ state right(size:IntegerSize,number:u64)->MathResult {let result:u64=integers::find_set_right(size,number);MathResult::Integer {number:result}}
+ state decode(size:IntegerSize,number:u64)->MathResult {let value:IntegerResult=bcd::from_bcd(size,number);let result:MathResult=omath_result(value,false);result}
+ state encode(size:IntegerSize,number:u64)->MathResult {let value:IntegerResult=bcd::to_bcd(size,number);let result:MathResult=omath_result(value,false);result}
+}
+machine omath_result(value:IntegerResult,division:bool)->MathResult {
+ transition {
+  value.error==0 -> success(value,division)
+  value.error==integers::ERROR_DIVIDE_BY_ZERO -> (MathResult::Failure {reason:MathFailure::DivideByZero})
+  value.error==integers::ERROR_INVALID_BCD -> (MathResult::Failure {reason:MathFailure::InvalidBcd})
+  value.error==integers::ERROR_OVERFLOW -> (MathResult::Failure {reason:MathFailure::Overflow})
+  _ -> (MathResult::Failure {reason:MathFailure::Conversion {reason:ConversionFailure::InvalidState}})
+ }
+ state success(value:IntegerResult,division:bool)->MathResult {
+  transition division {true -> (MathResult::Division {quotient:value.value,remainder:value.remainder}) _ -> (MathResult::Integer {number:value.value})}
+ }
+}
