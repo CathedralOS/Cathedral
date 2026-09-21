@@ -1102,7 +1102,14 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine lookup(",
+              "path": "source/libraries/acpi/aml/string_lookup.omg"
+            }
+          ],
+          "note": "Direct canonical String storage admission, ASL textual name parsing and existing scoped namespace search return a stable object identity and resolved path. Reference/context evaluation, target reading and full DerefOf execution remain pending."
         },
         "23:resource": {
           "anchor": "pub mod resource;",

@@ -657,6 +657,12 @@ record retains 100 String results and two pinned literal-construction panics.
 Explicit formatting and width/capacity differences are documented. Operand
 resolution, target writes and opcode retirement remain pending; counts are unchanged.
 
+[Direct String-name lookup](source/libraries/acpi/aml/string-lookup.PORT.md) joins canonical String admission, textual
+ASL name parsing and scoped namespace search, returning an object ID and path.
+All 97 checked pairs and three constant pairs pass, including scope validation,
+error precedence and all initialized path segments. Target evaluation, reference
+policy and full DerefOf execution remain pending; aggregate counts are unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

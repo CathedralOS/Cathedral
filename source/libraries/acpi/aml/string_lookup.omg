@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// String-name component of rust-osdev/acpi do_deref_of at
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
+// Returns canonical identity only; no target evaluation or object mutation.
+module string_lookup;
+use model::ObjectStore;
+use model::Namespace;
+use model::Value;
+use model::Path;
+use model::PathResult;
+use model::Lookup;
+use model::Outcome;
+use byte_storage::ByteRead;
+use byte_storage::ByteOutcome;
+use byte_storage::read_bytes;
+use name_text::parse;
+use namespace::search;
+pub data LookupFailure [copy] {
+ case InvalidState;
+ case UnsupportedValue;
+ case Storage(reason:ByteOutcome);
+ case Name(reason:Outcome,offset:u64);
+ case Search(reason:Outcome);
+}
+pub data StringLookup [copy] {
+ case Failure(reason:LookupFailure);
+ case Found(object:u64,path:Path);
+}
+pub machine lookup(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,scope:Path)->StringLookup {
+ let objects:u64=store.space.object_count;let entries:u64=store.space.count;
+ transition objects<=64 && entries<=32 && source<objects && source<64 {true -> kind(input,length,unit,store,source,scope) _ -> (StringLookup::Failure {reason:LookupFailure::InvalidState})}
+ state kind(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,scope:Path)->StringLookup {
+  transition store.space.objects[source].value {
+   Value::String {string_storage} -> bytes(input,length,unit,store,source,scope)
+   _ -> (StringLookup::Failure {reason:LookupFailure::UnsupportedValue})
+  }
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,scope:Path)->StringLookup {
+  let read:ByteRead=read_bytes(input,length,unit,store,source);
+  transition read.outcome==ByteOutcome::Success {true -> name(store,read,scope) _ -> (StringLookup::Failure {reason:LookupFailure::Storage {reason:read.outcome}})}
+ }
+ state name(store:&ObjectStore,read:ByteRead,scope:Path)->StringLookup {
+  let parsed:PathResult=parse(&read.bytes,read.length);
+  transition parsed.outcome==Outcome::Success {true -> find(store,parsed.value,scope) _ -> (StringLookup::Failure {reason:LookupFailure::Name {reason:parsed.outcome,offset:parsed.offset}})}
+ }
+ state find(store:&ObjectStore,name:Path,scope:Path)->StringLookup {
+  let space:Namespace=Namespace {count:store.space.count,object_count:store.space.object_count,entries:store.space.entries,objects:store.space.objects};
+  let found:Lookup=search(space,name,scope);
+  transition found.outcome==Outcome::Success {true -> (StringLookup::Found {object:found.object,path:found.path}) _ -> (StringLookup::Failure {reason:LookupFailure::Search {reason:found.outcome}})}
+ }
+}
