@@ -1,0 +1,176 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Adapted from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5,
+// aml/mod.rs do_field_read/write; copyright 2018 Isaac Woods.
+// ACPI 6.6 sections 19.6.7 and 19.6.64. Detached bounded sequencing only.
+module protocol;
+use access::geometry;
+use access::chunks;
+use access::model::Plan;
+use access::model::PlanResult;
+use access::model::Error;
+use access::model::LockRequirement;
+use fields::field_model::DeclarationKind;
+use fields::field_model::UpdateRule;
+use integers::integers;
+use model::Request;
+use model::Recipe;
+use model::ProtocolResult;
+use model::Component;
+use model::Direction;
+use model::Action;
+data Builder [copy] {failed:bool;recipe:Recipe;}
+
+pub machine plan(request:&Request)->ProtocolResult {
+ transition request.kind {
+  DeclarationKind::Bank -> outer(request,request.region_bytes)
+  DeclarationKind::Index -> outer(request,18446744073709551615)
+  _ -> (ProtocolResult::Failure {component:Component::Field,error:Error::UnsupportedKind})
+ }
+ state outer(request:&Request,region:u64)->ProtocolResult {
+  let result:PlanResult=geometry::plan(DeclarationKind::Field,&request.field,region,request.size);
+  transition result {
+   PlanResult::Ready {plan} -> selector(request,plan)
+   PlanResult::Failure {error} -> (ProtocolResult::Failure {component:Component::Field,error:error})
+  }
+ }
+ state selector(request:&Request,outer:Plan)->ProtocolResult {
+  let result:PlanResult=geometry::plan(request.selector.kind,&request.selector.field,request.selector.region_bytes,request.size);
+  transition result {
+   PlanResult::Ready {plan} -> data(request,outer,plan)
+   PlanResult::Failure {error} -> (ProtocolResult::Failure {component:Component::Selector,error:error})
+  }
+ }
+ state data(request:&Request,outer:Plan,selector:Plan)->ProtocolResult {
+  transition request.kind {
+   DeclarationKind::Index -> data_geometry(request,outer,selector)
+   _ -> selected(request,outer,selector,Plan {})
+  }
+ }
+ state data_geometry(request:&Request,outer:Plan,selector:Plan)->ProtocolResult {
+  let result:PlanResult=geometry::plan(request.data.kind,&request.data.field,request.data.region_bytes,request.size);
+  transition result {
+   PlanResult::Ready {plan} -> selected(request,outer,selector,plan)
+   PlanResult::Failure {error} -> (ProtocolResult::Failure {component:Component::Data,error:error})
+  }
+ }
+ state selected(request:&Request,outer:Plan,selector:Plan,data:Plan)->ProtocolResult {
+  let bank:u64=bank_value(request);
+  transition request.kind {
+   DeclarationKind::Bank -> fits(request,outer,selector,data,bank,bank)
+   _ -> last(request,outer,selector,data,bank,outer.count)
+  }
+ }
+ state last(request:&Request,outer:Plan,selector:Plan,data:Plan,bank:u64,count:u64)->ProtocolResult {
+  transition count>0 && count<=257 {
+   true -> last_at(request,outer,selector,data,bank,count-1)
+   _ -> (ProtocolResult::Failure {component:Component::Field,error:Error::InvalidChunk})
+  }
+ }
+ state last_at(request:&Request,outer:Plan,selector:Plan,data:Plan,bank:u64,index:u64)->ProtocolResult {
+  transition index<257 {
+   true -> fits(request,outer,selector,data,bank,outer.chunks[index].offset)
+   _ -> (ProtocolResult::Failure {component:Component::Field,error:Error::InvalidChunk})
+  }
+ }
+ state fits(request:&Request,outer:Plan,selector:Plan,data:Plan,bank:u64,maximum:u64)->ProtocolResult {
+  let fits:bool=selector_fits(selector.bit_length,maximum);
+  transition fits {
+   true -> initialize(request,outer,selector,data,bank)
+   _ -> (ProtocolResult::SelectorOverflow)
+  }
+ }
+ state initialize(request:&Request,outer:Plan,selector:Plan,data:Plan,bank:u64)->ProtocolResult {
+  let lock:LockRequirement=combined_lock(outer.lock,selector.lock,data.lock);
+  let initial:Builder=Builder {recipe:Recipe {kind:request.kind,direction:request.direction,outer:outer,selector:selector,data:data,bank_value:bank,lock:lock}};
+  let built:Builder=sequence(initial,0,outer.count);
+  transition built.failed {
+   true -> (ProtocolResult::Failure {component:Component::Field,error:Error::Capacity})
+   _ -> (ProtocolResult::Ready {recipe:built.recipe})
+  }
+ }
+}
+
+machine bank_value(request:&Request)->u64 {
+ transition request.kind {
+  DeclarationKind::Bank -> normalized(request)
+  _ -> (0)
+ }
+ state normalized(request:&Request)->u64 {let value:u64=integers::normalize(request.size,request.bank_value);value}
+}
+machine selector_fits(bits:u64,value:u64)->bool {
+ transition bits>=64 {true -> (true) _ -> small(bits,value)}
+ state small(bits:u64,value:u64)->bool {let mask:u64=chunks::low_mask(bits);value<=mask}
+}
+machine combined_lock(a:LockRequirement,b:LockRequirement,c:LockRequirement)->LockRequirement {
+ transition a==LockRequirement::UnmetGlobalLock || b==LockRequirement::UnmetGlobalLock || c==LockRequirement::UnmetGlobalLock {
+  true -> (LockRequirement::UnmetGlobalLock) _ -> (LockRequirement::NotRequested)
+ }
+}
+machine sequence(current:Builder,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->Builder {
+ let next:Builder=step(current,index);
+ transition index<count {true -> sequence(next,index+1,count) _ -> (current)}
+}
+machine step(current:Builder,index:u64)->Builder {
+ let count:u64=current.recipe.outer.count;
+ transition !current.failed && index<count && index<257 {
+  true -> selected(current,index)
+  _ -> (current)
+ }
+ state selected(current:Builder,index:u64)->Builder {
+  let value:u64=selector_value(&current.recipe,index);
+  let read:bool=needs_read(&current.recipe,index);
+  let next:Builder=read_action(current,index,value,read);
+  transition next.recipe.direction {
+   Direction::Write -> write(next,index,value)
+   _ -> (next)
+  }
+ }
+ state write(current:Builder,index:u64,value:u64)->Builder {let next:Builder=write_action(current,index,value);next}
+}
+machine selector_value(recipe:&Recipe,index:u64)->u64 {
+ transition recipe.kind {
+  DeclarationKind::Bank -> (recipe.bank_value)
+  _ -> indexed(recipe,index)
+ }
+ state indexed(recipe:&Recipe,index:u64)->u64 {
+  transition index<257 {true -> (recipe.outer.chunks[index].offset) _ -> (0)}
+ }
+}
+machine needs_read(recipe:&Recipe,index:u64)->bool {
+ transition recipe.direction {Direction::Read -> (true) _ -> preserve(recipe,index)}
+ state preserve(recipe:&Recipe,index:u64)->bool {
+  transition index<257 {
+   true -> (recipe.outer.update==UpdateRule::Preserve && recipe.outer.chunks[index].partial)
+   _ -> (false)
+  }
+ }
+}
+machine read_action(current:Builder,index:u64,value:u64,read:bool)->Builder {
+ transition read {true -> selected(current,index,value) _ -> (current)}
+ state selected(current:Builder,index:u64,value:u64)->Builder {
+  let next:Builder=append(current,Action::Select {value:value});
+  append(next,Action::ReadDatum {chunk:index})
+ }
+}
+machine write_action(current:Builder,index:u64,value:u64)->Builder {
+ let next:Builder=append(current,Action::Select {value:value});
+ append(next,Action::WriteDatum {chunk:index})
+}
+machine append(current:Builder,action:Action)->Builder {
+ let count:u64=current.recipe.count;
+ transition !current.failed && count<1028 {
+  true -> store(current,action,count)
+  _ -> failed(current)
+ }
+ state store(current:Builder,action:Action,count:u64)->Builder {
+  transition count<1028 {true -> write(current,action,count) _ -> failed(current)}
+ }
+ state write(current:Builder,action:Action,count:u64)->Builder {
+  let mut next:Builder=current;next.recipe.actions[count]=action;next.recipe.count=next_count(count);next
+ }
+ state failed(current:Builder)->Builder {let mut next:Builder=current;next.failed=true;next}
+}
+
+machine next_count(count:u64)->u64 {transition count<1028 {true -> (count+1) _ -> (count)}}

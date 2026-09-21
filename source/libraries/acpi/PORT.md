@@ -233,8 +233,17 @@ region-relative footprints, initialized chunk plans, read-shape metadata and
 scalar extraction/update arithmetic. Its 451 checked pairs, three constant pairs
 and 362 actual public synthetic-memory observations retain source-bound evidence.
 Requested GlobalLock and Preserve-read requirements remain explicit; plans convey
-no access permission. Bank/Index and runtime/provider
-integration remain pending, so aggregate source-map counts are unchanged.
+no access permission. Runtime/provider integration remains pending, so aggregate
+source-map counts are unchanged.
+
+[Detached Bank/Index sequencing](field_protocol/PORT.md) adds independently
+validated register geometry, aligned Index selectors and ordered logical
+read/write actions. Its 204 checked pairs, three constant pairs and 60 public
+Rust observations pass with exact retained inputs. The public comparison keeps
+32 explicit differences; selector overflow rejects before a recipe and lock
+requirements remain unmet. Payload transfers, namespace installation,
+synchronization and provider/opcode execution remain pending. ACPI-005 and
+aggregate source-map counts are unchanged.
 
 [Implicit String-to-Integer conversion](interpreter/implicit-integer.PORT.md) adds
 the primary Table 19.7 hexadecimal prefix rule, with 630 checked pairs and three

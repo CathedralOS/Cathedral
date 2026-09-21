@@ -544,8 +544,16 @@ syntax/resource-limit milestones.
 [Normal Field geometry](source/libraries/acpi/field_access/PORT.md) adds aligned
 access footprints, bounded chunk plans and scalar extract/merge arithmetic, with
 451 checked pairs, three constant pairs and 362 public synthetic-memory
-observations. Lock and Preserve-read requirements are inert facts. Bank/Index
-protocols and evaluator/provider integration remain pending.
+observations. Lock and Preserve-read requirements are inert facts. Complete
+field execution and evaluator/provider integration remain pending.
+[Detached Bank/Index sequencing](source/libraries/acpi/field_protocol/PORT.md)
+adds validated selector/data geometry, aligned Index byte selectors and ordered
+read/write actions. All 204 checked pairs, three constant pairs and 60 public
+Rust observations pass; the public comparison preserves 32 explicit differences.
+Register widths remain independent, selector overflow rejects before a recipe,
+and lock requirements stay unmet. Payload transfers, namespace installation,
+synchronization and provider/opcode execution remain pending; ACPI-005 stays
+open and aggregate source counts are unchanged.
 [Resource descriptor parsing](source/libraries/acpi/resources/PORT.md) adds 210
 checked-interpreter pairs, four const pairs and 187 actual public Rust observations,
 including 64 normalized supported-result agreements.
