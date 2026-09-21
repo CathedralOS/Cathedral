@@ -1,0 +1,162 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Resumable target retirement over the pinned rust-osdev/acpi adaptation.
+// ACPI6.6 19.6.32 orders Divide's remainder before its quotient; 19.6.132
+// contributes Store's converted data. No provider or region access lives here.
+module write_retirement;
+use aml::model::ObjectStore;
+use aml::model::Value;
+use execution_model::ExecutionOutcome;
+use execution_model::Frame;
+use execution_model::Operand;
+use execution_model::Target;
+use execution_model::DeferredWrite;
+use generic_target_model::TargetSelection;
+use generic_target_model::ArgumentAction;
+use generic_targets::select_target;
+use generic_target_values::classify_argument;
+use generic_target_bridge::write_generic_target;
+use integer_target_bridge::write_integer_target;
+use generic_values::normalized_operand;
+use generic_values::validate_operand;
+use operands::contribute_operand;
+use integer_helpers::integers::IntegerResult;
+
+data FieldTarget [copy] {case Ordinary;case Field(object:u64);case Failure(outcome:ExecutionOutcome);}
+data AfterWrite [copy] {result:Operand;stored:bool;has_second:bool;second_target:Target;second_value:u64;}
+
+machine field_target(store:&ObjectStore,frame:&Frame,target:Target)->FieldTarget {
+ let selected:TargetSelection=select_target(frame,target);
+ transition selected {
+  TargetSelection::Named {object_id} -> object(store,object_id)
+  TargetSelection::Argument {argument_index,argument_binding} -> argument(store,argument_binding)
+  TargetSelection::Failure {outcome} -> (FieldTarget::Failure {outcome:outcome})
+  _ -> (FieldTarget::Ordinary)
+ }
+ state argument(store:&ObjectStore,binding:execution_model::Binding)->FieldTarget {
+  let selected:ArgumentAction=classify_argument(store,binding);
+  transition selected {
+   ArgumentAction::CopyReferent {binding,object_id} -> object(store,object_id)
+   ArgumentAction::Failure {outcome} -> (FieldTarget::Failure {outcome:outcome})
+   _ -> (FieldTarget::Ordinary)
+  }
+ }
+ state object(store:&ObjectStore,id:u64)->FieldTarget {
+  let count:u64=store.space.object_count;
+  transition count<=64 && id<count && id<64 {true -> value(store,id) _ -> (FieldTarget::Ordinary)}
+ }
+ state value(store:&ObjectStore,id:u64)->FieldTarget {
+  transition store.space.objects[id].value {Value::FieldUnit {binding,declaration,field} -> (FieldTarget::Field {object:id}) _ -> (FieldTarget::Ordinary)}
+ }
+}
+
+pub machine retire_store(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,source:Operand)->ExecutionOutcome {
+ let normalized:Operand=normalized_operand(store,frame.size,source);
+ let after:AfterWrite=AfterWrite {result:normalized,stored:true};
+ let outcome:ExecutionOutcome=write(input,store,frame,target,normalized,after);
+ transition outcome==ExecutionOutcome::Success {true -> pending(store,frame,target,normalized) _ -> (outcome)}
+ state pending(store:&ObjectStore,frame:&mut Frame,target:Target,source:Operand)->ExecutionOutcome {
+  transition frame.deferred_write {DeferredWrite::None -> target(store,frame,target,source) _ -> (ExecutionOutcome::Success)}
+ }
+ state target(store:&ObjectStore,frame:&mut Frame,target:Target,source:Operand)->ExecutionOutcome {
+  transition target {Target::Named {object_id} -> named(store,frame,object_id) _ -> contribute(frame,source)}
+ }
+ state named(store:&ObjectStore,frame:&mut Frame,id:u64)->ExecutionOutcome {
+  let result:Operand=normalized_operand(store,frame.size,Operand::Object {object_id:id});
+  let outcome:ExecutionOutcome=contribute_operand(frame,result);outcome
+ }
+ state contribute(frame:&mut Frame,source:Operand)->ExecutionOutcome {let outcome:ExecutionOutcome=contribute_operand(frame,source);outcome}
+}
+pub machine retire_scalar(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,opcode:u64,targets:u64,first:Target,second:Target,result:IntegerResult)->ExecutionOutcome {
+ let after:AfterWrite=AfterWrite {result:Operand::Integer {number:result.value},has_second:opcode==0x78,second_target:second,second_value:result.value};
+ transition {targets==0 -> contribute(frame,after.result)
+  opcode==0x78 -> first(input,store,frame,first,Operand::Integer {number:result.remainder},after)
+  _ -> first(input,store,frame,first,after.result,after)}
+ state first(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,source:Operand,after:AfterWrite)->ExecutionOutcome {
+  let outcome:ExecutionOutcome=write(input,store,frame,target,source,after);
+  transition outcome==ExecutionOutcome::Success {true -> pending(input,store,frame,after) _ -> (outcome)}
+ }
+ state pending(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,after:AfterWrite)->ExecutionOutcome {
+  transition frame.deferred_write {DeferredWrite::None -> continued(input,store,frame,after) _ -> (ExecutionOutcome::Success)}
+ }
+ state continued(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,after:AfterWrite)->ExecutionOutcome {
+  let outcome:ExecutionOutcome=continue_retirement(input,store,frame,after);outcome
+ }
+ state contribute(frame:&mut Frame,result:Operand)->ExecutionOutcome {let outcome:ExecutionOutcome=contribute_operand(frame,result);outcome}
+}
+
+machine write(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,source:Operand,after:AfterWrite)->ExecutionOutcome {
+ transition frame.deferred_write {DeferredWrite::None -> select(input,store,frame,target,source,after) _ -> (ExecutionOutcome::InvalidState)}
+ state select(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,source:Operand,after:AfterWrite)->ExecutionOutcome {
+  let selected:FieldTarget=field_target(store,frame,target);
+  transition selected {
+   FieldTarget::Field {object} -> enabled(frame,object,source,after)
+   FieldTarget::Failure {outcome} -> (outcome)
+   _ -> ordinary(input,store,frame,target,source,after)
+  }
+ }
+ state enabled(frame:&mut Frame,object:u64,source:Operand,after:AfterWrite)->ExecutionOutcome {
+  transition frame.field_writes {true -> parent(frame,object,source,after) _ -> (ExecutionOutcome::UnresolvedRegion)}
+ }
+ state parent(frame:&mut Frame,object:u64,source:Operand,after:AfterWrite)->ExecutionOutcome {
+  // Before publishing an external request, prove the eventual parent has room.
+  // Its value does not matter for admission, and the caller's frame is unchanged.
+  let mut staged:Frame=frame;
+  let admitted:ExecutionOutcome=contribute_operand(&mut staged,after.result);
+  transition admitted==ExecutionOutcome::Success {true -> defer(frame,object,source,after) _ -> (admitted)}
+ }
+ state defer(frame:&mut Frame,object:u64,source:Operand,after:AfterWrite)->ExecutionOutcome {
+  frame.deferred_write=DeferredWrite::Field {object:object,source:source,result:after.result,stored:after.stored,has_second:after.has_second,second_target:after.second_target,second_value:after.second_value};
+  ExecutionOutcome::Success
+ }
+ state ordinary(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,source:Operand,after:AfterWrite)->ExecutionOutcome {
+  transition source {Operand::Integer {number} -> integer(input,store,frame,target,number,after) _ -> generic(input,store,frame,target,source,after)}
+ }
+ state integer(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,number:u64,after:AfterWrite)->ExecutionOutcome {
+  let outcome:ExecutionOutcome=write_integer_target(input,store,frame,target,number,false);outcome
+ }
+ state generic(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,source:Operand,after:AfterWrite)->ExecutionOutcome {
+  let outcome:ExecutionOutcome=write_generic_target(input,store,frame,target,source,false);outcome
+ }
+}
+
+machine continue_retirement(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,after:AfterWrite)->ExecutionOutcome {
+ transition after.has_second {true -> second(input,store,frame,after) _ -> contribute(frame,after.result)}
+ state second(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,after:AfterWrite)->ExecutionOutcome {
+  let remaining:AfterWrite=AfterWrite {result:after.result};
+  let outcome:ExecutionOutcome=write(input,store,frame,after.second_target,Operand::Integer {number:after.second_value},remaining);
+  transition outcome==ExecutionOutcome::Success {true -> pending(frame,after.result) _ -> (outcome)}
+ }
+ state pending(frame:&mut Frame,result:Operand)->ExecutionOutcome {
+  transition frame.deferred_write {DeferredWrite::None -> contribute(frame,result) _ -> (ExecutionOutcome::Success)}
+ }
+ state contribute(frame:&mut Frame,result:Operand)->ExecutionOutcome {let outcome:ExecutionOutcome=contribute_operand(frame,result);outcome}
+}
+
+// The provider-facing owner calls this once the entire selected source write
+// is complete. It supplies the already-admitted converted Store result; scalar
+// operators keep their own computed result. A pending second target is not lost.
+pub machine complete_field_write(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,written:Operand)->ExecutionOutcome {
+ transition frame.deferred_write {
+  DeferredWrite::Field {object,source,result,stored,has_second,second_target,second_value} -> ready(input,store,frame,written,AfterWrite {result:result,stored:stored,has_second:has_second,second_target:second_target,second_value:second_value})
+  _ -> (ExecutionOutcome::InvalidState)
+ }
+ state ready(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,written:Operand,after:AfterWrite)->ExecutionOutcome {
+  transition frame.field_writes {true -> kind(input,store,frame,written,after) _ -> (ExecutionOutcome::InvalidState)}
+ }
+ state kind(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,written:Operand,after:AfterWrite)->ExecutionOutcome {
+  transition after.stored {true -> validate(input,store,frame,written,after) _ -> resume(input,store,frame,after)}
+ }
+ state validate(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,written:Operand,after:AfterWrite)->ExecutionOutcome {
+  let admitted:ExecutionOutcome=validate_operand(input,frame.source_length,frame.body.unit,store,written);
+  transition admitted==ExecutionOutcome::Success {true -> converted(input,store,frame,written,after) _ -> (admitted)}
+ }
+ state converted(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,written:Operand,after:AfterWrite)->ExecutionOutcome {
+  let mut converted:AfterWrite=after;converted.result=normalized_operand(store,frame.size,written);
+  frame.deferred_write=DeferredWrite::None;
+  let outcome:ExecutionOutcome=continue_retirement(input,store,frame,converted);outcome
+ }
+ state resume(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,after:AfterWrite)->ExecutionOutcome {
+  frame.deferred_write=DeferredWrite::None;
+  let outcome:ExecutionOutcome=continue_retirement(input,store,frame,after);outcome
+ }
+}

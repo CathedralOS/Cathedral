@@ -30,6 +30,7 @@ use control::enter_block;
 use operator_specs::compute_integer;
 use to_integer_execution::retire_to_integer;
 use integer_helpers::integers::IntegerResult;
+use write_retirement;
 pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operation:Operation)->ExecutionOutcome {
  transition operation.opcode {
   0xa4 -> returned(input,space,frame,operation.operands[0])
@@ -56,6 +57,12 @@ pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut 
  }
  state branch_value(input:&[u8;1024],frame:&mut Frame,opcode:u64,body_end:u64,parent_end:u64,predicate:u64,number:u64)->ExecutionOutcome {let result:ExecutionOutcome=retire_branch(input,frame,opcode,body_end,parent_end,predicate,number);result}
  state copy(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,target:Target,operand:Operand,is_copy:bool)->ExecutionOutcome {
+  transition frame.field_writes && !is_copy {true -> deferred_store(input,space,frame,target,operand) _ -> immediate_copy(input,space,frame,target,operand,is_copy)}
+ }
+ state deferred_store(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,target:Target,operand:Operand)->ExecutionOutcome {
+  let result:ExecutionOutcome=write_retirement::retire_store(input,space,frame,target,operand);result
+ }
+ state immediate_copy(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,target:Target,operand:Operand,is_copy:bool)->ExecutionOutcome {
   let result:ExecutionOutcome=write_generic_target(input,space,frame,target,operand,is_copy);
   transition result==ExecutionOutcome::Success {true -> copied(space,frame,target,operand,is_copy) _ -> (result)}
  }
@@ -93,6 +100,12 @@ pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut 
   transition {result.error==1 -> (ExecutionOutcome::DivideByZero) result.error!=0 -> (ExecutionOutcome::BadEncoding) _ -> store(input,space,frame,opcode,targets,first,second,result)}
  }
  state store(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,opcode:u64,targets:u64,first:Target,second:Target,result:IntegerResult)->ExecutionOutcome {
+  transition frame.field_writes {true -> deferred_scalar(input,space,frame,opcode,targets,first,second,result) _ -> immediate_scalar(input,space,frame,opcode,targets,first,second,result)}
+ }
+ state deferred_scalar(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,opcode:u64,targets:u64,first:Target,second:Target,result:IntegerResult)->ExecutionOutcome {
+  let outcome:ExecutionOutcome=write_retirement::retire_scalar(input,space,frame,opcode,targets,first,second,result);outcome
+ }
+ state immediate_scalar(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,opcode:u64,targets:u64,first:Target,second:Target,result:IntegerResult)->ExecutionOutcome {
   let outcome:ExecutionOutcome=operation_stores(input,space,frame,opcode,targets,first,second,result);
   transition outcome==ExecutionOutcome::Success {true -> integer(frame,result.value) _ -> (outcome)}
  }

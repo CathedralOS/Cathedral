@@ -19,6 +19,9 @@ use execution_model::ValueResult;
 use operands::contribute_operand;
 use execution_model::Operation;
 use runtime_model::Runtime;
+use runtime_model::RuntimeStart;
+use execution_model::DeferredWrite;
+use write_retirement::complete_field_write;
 use frames::observed_frame;
 use aml::model::MethodDefinition;
 use execution_names::execution_lookup;
@@ -152,7 +155,11 @@ machine invoke_frame(runtime: &mut Runtime, definitions: &[MethodDefinition; 64]
         let method: Value = Value::Method { flags: operation.method_flags, body: operation.method_body };
         let started: FrameResult = observed_frame(method, operation.method_id, definitions, &arguments, operation.value_arity, runtime.frames[caller].size, runtime.unit, runtime.length);
         let index: u64 = runtime.count;
-        transition started.outcome == ExecutionOutcome::Success && index < 4 { true -> push(runtime, index, started.frame) _ -> (started.outcome) }
+        transition started.outcome == ExecutionOutcome::Success && index < 4 && caller < 4 { true -> inherit(runtime, index, caller, started.frame) _ -> (started.outcome) }
+    }
+    state inherit(runtime:&mut Runtime,index:u64,caller:u64,frame:Frame)->ExecutionOutcome {
+        let mut inherited:Frame=frame;inherited.field_writes=runtime.frames[caller].field_writes;
+        transition {_ -> push(runtime,index,inherited)}
     }
     state push(runtime: &mut Runtime, index: u64, frame: Frame) -> ExecutionOutcome {
         runtime.frames[index] = frame; runtime.count = index + 1; ExecutionOutcome::Success
@@ -180,4 +187,72 @@ terminates by(index,count)->Nat::BoundedDistance;
 machine execution_admit_argument(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,arguments:&[Operand;7],index:u64,count:u64,prior:ExecutionOutcome)->ExecutionOutcome {
  transition prior==ExecutionOutcome::Success && index<count && index<7 {true -> inspect(input,length,unit,store,arguments,index) _ -> (prior)}
  state inspect(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,arguments:&[Operand;7],index:u64)->ExecutionOutcome {let result:ExecutionOutcome=validate_operand(input,length,unit,store,arguments[index]);result}
+}
+
+// Resumable target retirement for a caller-owned provider session.
+pub machine start_write_runtime(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,definitions:&[MethodDefinition;64],path:Path,arguments:&[Value;7],count:u64,size:IntegerSize)->RuntimeStart {
+ let placeholders:[Operand;7];
+ let checked:FrameResult=execution_entry_frame(length,unit,store,definitions,path,&placeholders,count,size,1024);
+ transition checked.outcome==ExecutionOutcome::Success {
+  true -> arguments(input,length,unit,store,definitions,path,arguments,count,size)
+  _ -> (RuntimeStart::Failure {outcome:checked.outcome})
+ }
+ state arguments(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,definitions:&[MethodDefinition;64],path:Path,arguments:&[Value;7],count:u64,size:IntegerSize)->RuntimeStart {
+  let prepared:ExternalArguments=prepare_external_arguments(input,length,unit,store,arguments,count,size);
+  transition prepared.outcome==ExecutionOutcome::Success {
+   true -> frame(length,unit,store,definitions,path,prepared,count,size)
+   _ -> (RuntimeStart::Failure {outcome:prepared.outcome})
+  }
+ }
+ state frame(length:u64,unit:u64,store:&ObjectStore,definitions:&[MethodDefinition;64],path:Path,arguments:ExternalArguments,count:u64,size:IntegerSize)->RuntimeStart {
+  let started:FrameResult=execution_entry_frame(length,unit,store,definitions,path,&arguments.operands,count,size,1024);
+  transition started.outcome==ExecutionOutcome::Success {
+   true -> ready(length,unit,started.frame) _ -> (RuntimeStart::Failure {outcome:started.outcome})
+  }
+ }
+ state ready(length:u64,unit:u64,frame:Frame)->RuntimeStart {
+  let mut runtime:Runtime=Runtime {count:1,unit:unit,length:length};
+  runtime.frames[0]=frame;runtime.frames[0].field_writes=true;
+  RuntimeStart::Ready {runtime:runtime}
+ }
+}
+pub machine pending_write(runtime:&Runtime)->DeferredWrite {
+ transition runtime.count>0 && runtime.count<=4 {true -> frame(runtime,runtime.count-1) _ -> (DeferredWrite::None)}
+ state frame(runtime:&Runtime,index:u64)->DeferredWrite {
+  transition index<4 {true -> (runtime.frames[index].deferred_write) _ -> (DeferredWrite::None)}
+ }
+}
+// One AML turn. A pending write and its completion consume no second retirement turn.
+// The existing 1024-turn cumulative method limit remains in force across calls.
+pub machine advance_write_runtime(input:&[u8;1024],store:&mut ObjectStore,definitions:&[MethodDefinition;64],runtime:&mut Runtime)->ExecutionOutcome {
+ transition runtime.finished || runtime.outcome!=ExecutionOutcome::Success {
+  true -> (runtime.outcome) _ -> pending(input,store,definitions,runtime)
+ }
+ state pending(input:&[u8;1024],store:&mut ObjectStore,definitions:&[MethodDefinition;64],runtime:&mut Runtime)->ExecutionOutcome {
+  let deferred:DeferredWrite=pending_write(runtime);
+  transition deferred {DeferredWrite::None -> fuel(input,store,definitions,runtime) _ -> (ExecutionOutcome::Success)}
+ }
+ state fuel(input:&[u8;1024],store:&mut ObjectStore,definitions:&[MethodDefinition;64],runtime:&mut Runtime)->ExecutionOutcome {
+  transition runtime.steps<1024 {true -> turn(input,store,definitions,runtime) _ -> exhausted(runtime)}
+ }
+ state turn(input:&[u8;1024],store:&mut ObjectStore,definitions:&[MethodDefinition;64],runtime:&mut Runtime)->ExecutionOutcome {
+  let outcome:ExecutionOutcome=execution_run_turn(input,store,definitions,runtime,0,1);outcome
+ }
+ state exhausted(runtime:&mut Runtime)->ExecutionOutcome {runtime.outcome=ExecutionOutcome::WorkLimit;runtime.outcome}
+}
+
+pub machine complete_retired_write(input:&[u8;1024],store:&mut ObjectStore,runtime:&mut Runtime,written:Operand)->ExecutionOutcome {
+ transition runtime.count>0 && runtime.count<=4 && !runtime.finished && runtime.outcome==ExecutionOutcome::Success {
+  true -> frame(input,store,runtime,written,runtime.count-1) _ -> (ExecutionOutcome::InvalidState)
+ }
+ state frame(input:&[u8;1024],store:&mut ObjectStore,runtime:&mut Runtime,written:Operand,index:u64)->ExecutionOutcome {
+  transition index<4 {true -> complete(input,store,runtime,written,index) _ -> (ExecutionOutcome::InvalidState)}
+ }
+ state complete(input:&[u8;1024],store:&mut ObjectStore,runtime:&mut Runtime,written:Operand,index:u64)->ExecutionOutcome {
+  let outcome:ExecutionOutcome=complete_field_write(input,store,&mut runtime.frames[index],written);outcome
+ }
+}
+pub machine write_runtime_result(store:&ObjectStore,runtime:&Runtime)->ExecutionResult {
+ let scalar:SlotResult=integer_operand(store,runtime.frames[0].size,runtime.result);
+ ExecutionResult {outcome:runtime.outcome,value:scalar.slot,has_value:runtime.has_result,operand:runtime.result,steps:runtime.steps,fault_offset:runtime.fault_offset}
 }

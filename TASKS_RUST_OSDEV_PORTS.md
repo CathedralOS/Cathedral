@@ -664,6 +664,13 @@ regressions pass with exact source/binary checks. Rejected responses preserve
 the entire continuation; terminal failures retain acknowledged effect counts.
 AML retirement and actual providers remain pending; ACPI-005 stays open.
 
+[Resumable Field-target retirement](source/libraries/acpi/interpreter/execution/write-retirement.PORT.md)
+is transcribed in the isolated write-execution branch, with 24 whole-state pairs
+authored and focused checked verification running. Store and scalar target
+continuations retain the expression result and the optional second Divide write.
+Provider-facing pipeline composition and bytecode evidence remain pending;
+this is not yet a tested integration milestone.
+
 [Direct basic-data Concatenate](source/libraries/acpi/aml/object-concat.PORT.md) composes all Integer/String/Buffer
 pairings with primary right-hand conversion, little-endian integer encoding and
 complete admission before combined capacity checks. All 314 checked pairs and

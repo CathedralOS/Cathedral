@@ -26,6 +26,13 @@ pub data Target [copy] {
     case Null; case Local(local_index: u64); case Argument(argument_index: u64);
     case Named(object_id: u64); case Debug;
 }
+// A cooked retirement continuation retains an optional second Divide write.
+// Its object/result coordinates are ordinary data, not provider authority.
+pub data DeferredWrite [copy] {
+    case None;
+    case Field(object:u64,source:Operand,result:Operand,stored:bool,
+        has_second:bool,second_target:Target,second_value:u64);
+}
 pub data SlotResult [copy] { outcome: ExecutionOutcome; slot: Slot; }
 pub data TargetResult [copy] { outcome: ExecutionOutcome; target: Target; next: u64; }
 pub data Block [copy] { looping: bool; parent_end: u64; after: u64; predicate: u64; end: u64; }
@@ -41,5 +48,6 @@ pub data Frame [copy] {
     operation_count: u64; operations: [Operation; 16];
     cache_count: u64; lookup_cache: [NameCache; 16];
     returned: bool; has_return_value:bool; return_value: Operand;
+    field_writes:bool; deferred_write:DeferredWrite;
 }
 pub data FrameResult [copy] { outcome: ExecutionOutcome; frame: Frame; }

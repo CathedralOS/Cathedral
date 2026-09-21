@@ -223,7 +223,7 @@
         "2406:do_store": {
           "anchor": "fn do_store(&self, target: WrappedObject, object: WrappedObject) -> Result<WrappedObject, AmlError> {",
           "disposition": "pending",
-          "reason": "Partial generic execution and named basic-data implicit conversion through canonical Store kernels; named Store expression results follow ACPI 6.6 19.6.132 rather than the pin's source result. Field targets, wider Buffer behavior and general references remain implementation work; see generic.PORT.md and named-store.PORT.md.",
+          "reason": "Partial generic execution and named basic-data implicit conversion through canonical Store kernels; named Store expression results follow ACPI 6.6 19.6.132 rather than the pin's source result. Field targets, wider Buffer behavior and general references remain implementation work; see generic.PORT.md and named-store.PORT.md. The isolated write-retirement extension adds transcribed pending Field targets and ordered scalar result continuations; provider composition remains pending. See write-retirement.PORT.md.",
           "targets": [
             {
               "anchor": "pub machine write_generic_target",
@@ -244,6 +244,10 @@
             {
               "anchor": "pub machine retire_operation",
               "path": "source/libraries/acpi/interpreter/execution/retire.omg"
+            },
+            {
+              "anchor": "pub machine retire_store",
+              "path": "source/libraries/acpi/interpreter/execution/write_retirement.omg"
             }
           ]
         },
@@ -353,6 +357,10 @@
           "targets": [
             {
               "anchor": "pub data Operation",
+              "path": "source/libraries/acpi/interpreter/execution/execution_model.omg"
+            },
+            {
+              "anchor": "pub data DeferredWrite",
               "path": "source/libraries/acpi/interpreter/execution/execution_model.omg"
             }
           ]
