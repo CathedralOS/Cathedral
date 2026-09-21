@@ -1,0 +1,676 @@
+{
+  "agreements": 16,
+  "binary": "/tmp/cathedral-concat-public-target/release/cathedral-acpi-public-execution",
+  "binary_sha256": "6d116bb6154f3f2358de5cee94836e222761a7038a1f679631cbc3d49ae569c3",
+  "build_command": [
+    "/Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/bin/cargo",
+    "build",
+    "--offline",
+    "--locked",
+    "--release",
+    "--manifest-path",
+    "/var/folders/3c/8v1q6rv5745bgbx96v3bn1jc0000gn/T/cathedral-concat-public-h2az5cvm/Cargo.toml",
+    "--target-dir",
+    "/tmp/cathedral-concat-public-target"
+  ],
+  "build_output": "   Compiling scopeguard v1.2.0\n   Compiling bitflags v2.13.2\n   Compiling bit_field v0.10.3\n   Compiling byteorder v1.5.0\n   Compiling log v0.4.34\n   Compiling smallvec v1.16.1\n   Compiling lock_api v0.4.14\n   Compiling pci_types v0.10.1\n   Compiling spinning_top v0.3.0\n   Compiling acpi v6.1.1 (/Users/zcanann/Documents/Projects/Cathedral/reference_code/rust-osdev/acpi)\n   Compiling cathedral-acpi-public-execution v0.0.0 (/var/folders/3c/8v1q6rv5745bgbx96v3bn1jc0000gn/T/cathedral-concat-public-h2az5cvm)\nwarning: stripping debug info with `rust-objcopy` failed: signal: 6 (SIGABRT)\n  |\n  = note: dyld[27769]: Library not loaded: @rpath/libLLVM.dylib\n            Referenced from: <D6B3C499-A2AF-3E42-8F77-C42BD658AAB5> /Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/rust-objcopy\n            Reason: tried: '/Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/../lib/libLLVM.dylib' (no such file), '/Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/../lib/libLLVM.dylib' (no such file), '/Users/zcanann/lib/libLLVM.dylib' (no such file), '/usr/local/lib/libLLVM.dylib' (no such file), '/usr/lib/libLLVM.dylib' (no such file, not in dyld cache)\n          \n\nwarning: `cathedral-acpi-public-execution` (bin \"cathedral-acpi-public-execution\") generated 1 warning\n    Finished `release` profile [optimized] target(s) in 4.13s\n",
+  "build_source": "[package]\nname=\"cathedral-acpi-public-execution\"\nversion=\"0.0.0\"\nedition=\"2024\"\npublish=false\n[dependencies]\nacpi={path=\"/Users/zcanann/Documents/Projects/Cathedral/reference_code/rust-osdev/acpi\"}\n",
+  "cargo": "cargo 1.100.0-nightly (b2e9d5f9d 2026-09-02)\n",
+  "omitted": {
+    "buffer_buffer_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "buffer_buffer_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "buffer_inline_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "buffer_inline_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "buffer_string_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "buffer_string_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "cycle_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "cycle_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "description_left_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "description_left_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "description_right_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "description_right_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "empty_buffer_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "empty_buffer_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "empty_string_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "empty_string_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "explicit_reference_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "explicit_reference_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "full_arena_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "full_arena_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "full_string_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "full_string_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "inline_buffer_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "inline_buffer_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "inline_inline_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "inline_inline_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "inline_string_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "inline_string_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "last_slot_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "last_slot_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "last_slot_local_rollback_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "last_slot_local_rollback_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "late_target_storage_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "late_target_storage_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "malformed_right_before_fit_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "malformed_right_before_fit_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "missing_source_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "missing_source_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "overflow_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "overflow_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "parent_full_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "parent_full_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "parent_full_field_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "parent_full_field_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "self_string_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "self_string_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "stored_integers_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "stored_integers_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "string_buffer_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "string_buffer_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "string_inline_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "string_inline_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "string_string_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "string_string_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_arg_field_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_arg_field_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_arg_ref_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_arg_ref_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_argument_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_argument_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_debug_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_debug_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_field_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_field_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_field_disabled_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_field_disabled_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_local_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_local_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_local_cell_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_local_cell_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_named_buffer_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_named_buffer_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_named_integer_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_named_integer_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_named_string_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_named_string_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_stale_cell_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_stale_cell_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_stale_named_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_stale_named_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_stale_ref_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "target_stale_ref_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "transparent_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "transparent_64": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "uninitialized_32": "Whole-state retirement setup has no equivalent public AML-only fixture.",
+    "uninitialized_64": "Whole-state retirement setup has no equivalent public AML-only fixture."
+  },
+  "rows": {
+    "aml_buffer_buffer_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "buffer:1234",
+        "after:RGHT": "buffer:1234",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:12341234"
+      },
+      "omega_expected": {
+        "after:LEFT": "buffer:1234",
+        "after:RGHT": "buffer:1234",
+        "result": "buffer:12341234"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:12341234\nafter:LEFT\tbuffer:1234\nafter:RGHT\tbuffer:1234\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c45465411050a021234085247485411050a02123414114d41494e00a4734c4546545247485400"
+    },
+    "aml_buffer_buffer_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "buffer:1234",
+        "after:RGHT": "buffer:1234",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:12341234"
+      },
+      "omega_expected": {
+        "after:LEFT": "buffer:1234",
+        "after:RGHT": "buffer:1234",
+        "result": "buffer:12341234"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:12341234\nafter:LEFT\tbuffer:1234\nafter:RGHT\tbuffer:1234\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c45465411050a021234085247485411050a02123414114d41494e00a4734c4546545247485400"
+    },
+    "aml_buffer_inline_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "buffer:1234",
+        "after:RGHT": "integer:1311768467463790320",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:1234f0debc9a"
+      },
+      "omega_expected": {
+        "after:LEFT": "buffer:1234",
+        "after:RGHT": "integer:1311768467463790320",
+        "result": "buffer:1234f0debc9a"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:1234f0debc9a\nafter:LEFT\tbuffer:1234\nafter:RGHT\tinteger:1311768467463790320\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c45465411050a02123408524748540ef0debc9a7856341214114d41494e00a4734c4546545247485400"
+    },
+    "aml_buffer_inline_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "buffer:1234",
+        "after:RGHT": "integer:1311768467463790320",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:1234f0debc9a78563412"
+      },
+      "omega_expected": {
+        "after:LEFT": "buffer:1234",
+        "after:RGHT": "integer:1311768467463790320",
+        "result": "buffer:1234f0debc9a78563412"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:1234f0debc9a78563412\nafter:LEFT\tbuffer:1234\nafter:RGHT\tinteger:1311768467463790320\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c45465411050a02123408524748540ef0debc9a7856341214114d41494e00a4734c4546545247485400"
+    },
+    "aml_buffer_string_32": {
+      "agrees_on_value_and_state": false,
+      "bits": 32,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "buffer:1234",
+        "after:RGHT": "string:4630",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:12344630"
+      },
+      "omega_expected": {
+        "after:LEFT": "buffer:1234",
+        "after:RGHT": "string:4630",
+        "result": "buffer:1234463000"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:12344630\nafter:LEFT\tbuffer:1234\nafter:RGHT\tstring:4630\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c45465411050a02123408524748540d46300014114d41494e00a4734c4546545247485400"
+    },
+    "aml_buffer_string_64": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "buffer:1234",
+        "after:RGHT": "string:4630",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:12344630"
+      },
+      "omega_expected": {
+        "after:LEFT": "buffer:1234",
+        "after:RGHT": "string:4630",
+        "result": "buffer:1234463000"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:12344630\nafter:LEFT\tbuffer:1234\nafter:RGHT\tstring:4630\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c45465411050a02123408524748540d46300014114d41494e00a4734c4546545247485400"
+    },
+    "aml_inline_buffer_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "integer:1311768467463790320",
+        "after:RGHT": "buffer:1234",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:f0debc9a12340000"
+      },
+      "omega_expected": {
+        "after:LEFT": "integer:1311768467463790320",
+        "after:RGHT": "buffer:1234",
+        "result": "buffer:f0debc9a12340000"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:f0debc9a12340000\nafter:LEFT\tinteger:1311768467463790320\nafter:RGHT\tbuffer:1234\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540ef0debc9a78563412085247485411050a02123414114d41494e00a4734c4546545247485400"
+    },
+    "aml_inline_buffer_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "integer:1311768467463790320",
+        "after:RGHT": "buffer:1234",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:f0debc9a785634121234000000000000"
+      },
+      "omega_expected": {
+        "after:LEFT": "integer:1311768467463790320",
+        "after:RGHT": "buffer:1234",
+        "result": "buffer:f0debc9a785634121234000000000000"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:f0debc9a785634121234000000000000\nafter:LEFT\tinteger:1311768467463790320\nafter:RGHT\tbuffer:1234\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540ef0debc9a78563412085247485411050a02123414114d41494e00a4734c4546545247485400"
+    },
+    "aml_inline_inline_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "integer:1311768467463790320",
+        "after:RGHT": "integer:1311768467463790320",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:f0debc9af0debc9a"
+      },
+      "omega_expected": {
+        "after:LEFT": "integer:1311768467463790320",
+        "after:RGHT": "integer:1311768467463790320",
+        "result": "buffer:f0debc9af0debc9a"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:f0debc9af0debc9a\nafter:LEFT\tinteger:1311768467463790320\nafter:RGHT\tinteger:1311768467463790320\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540ef0debc9a7856341208524748540ef0debc9a7856341214114d41494e00a4734c4546545247485400"
+    },
+    "aml_inline_inline_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "integer:1311768467463790320",
+        "after:RGHT": "integer:1311768467463790320",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:f0debc9a78563412f0debc9a78563412"
+      },
+      "omega_expected": {
+        "after:LEFT": "integer:1311768467463790320",
+        "after:RGHT": "integer:1311768467463790320",
+        "result": "buffer:f0debc9a78563412f0debc9a78563412"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:f0debc9a78563412f0debc9a78563412\nafter:LEFT\tinteger:1311768467463790320\nafter:RGHT\tinteger:1311768467463790320\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540ef0debc9a7856341208524748540ef0debc9a7856341214114d41494e00a4734c4546545247485400"
+    },
+    "aml_inline_string_32": {
+      "agrees_on_value_and_state": false,
+      "bits": 32,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "integer:1311768467463790320",
+        "after:RGHT": "string:4630",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:f0debc9a00000000"
+      },
+      "omega_expected": {
+        "after:LEFT": "integer:1311768467463790320",
+        "after:RGHT": "string:4630",
+        "result": "buffer:f0debc9af0000000"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:f0debc9a00000000\nafter:LEFT\tinteger:1311768467463790320\nafter:RGHT\tstring:4630\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540ef0debc9a7856341208524748540d46300014114d41494e00a4734c4546545247485400"
+    },
+    "aml_inline_string_64": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "integer:1311768467463790320",
+        "after:RGHT": "string:4630",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:f0debc9a785634120000000000000000"
+      },
+      "omega_expected": {
+        "after:LEFT": "integer:1311768467463790320",
+        "after:RGHT": "string:4630",
+        "result": "buffer:f0debc9a78563412f000000000000000"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:f0debc9a785634120000000000000000\nafter:LEFT\tinteger:1311768467463790320\nafter:RGHT\tstring:4630\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540ef0debc9a7856341208524748540d46300014114d41494e00a4734c4546545247485400"
+    },
+    "aml_local_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "buffer:41",
+        "after:RGHT": "buffer:42",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:4142"
+      },
+      "omega_expected": {
+        "after:LEFT": "buffer:41",
+        "after:RGHT": "buffer:42",
+        "result": "buffer:4142"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:4142\nafter:LEFT\tbuffer:41\nafter:RGHT\tbuffer:42\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546541103014108524748541103014214114d41494e00a4734c4546545247485460"
+    },
+    "aml_local_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "buffer:41",
+        "after:RGHT": "buffer:42",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:4142"
+      },
+      "omega_expected": {
+        "after:LEFT": "buffer:41",
+        "after:RGHT": "buffer:42",
+        "result": "buffer:4142"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:4142\nafter:LEFT\tbuffer:41\nafter:RGHT\tbuffer:42\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546541103014108524748541103014214114d41494e00a4734c4546545247485460"
+    },
+    "aml_nested_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "buffer:41",
+        "after:RGHT": "buffer:42",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:414203000000"
+      },
+      "omega_expected": {
+        "after:LEFT": "buffer:41",
+        "after:RGHT": "buffer:42",
+        "result": "buffer:414203000000"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:414203000000\nafter:LEFT\tbuffer:41\nafter:RGHT\tbuffer:42\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546541103014108524748541103014214154d41494e00a473734c45465452474854000a0300"
+    },
+    "aml_nested_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "buffer:41",
+        "after:RGHT": "buffer:42",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:41420300000000000000"
+      },
+      "omega_expected": {
+        "after:LEFT": "buffer:41",
+        "after:RGHT": "buffer:42",
+        "result": "buffer:41420300000000000000"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tbuffer:41420300000000000000\nafter:LEFT\tbuffer:41\nafter:RGHT\tbuffer:42\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546541103014108524748541103014214154d41494e00a473734c45465452474854000a0300"
+    },
+    "aml_self_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "string:4142",
+        "after:RGHT": "string:42",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:4142"
+      },
+      "omega_expected": {
+        "after:LEFT": "string:4142",
+        "after:RGHT": "string:42",
+        "result": "string:4142"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tstring:4142\nafter:LEFT\tstring:4142\nafter:RGHT\tstring:42\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540d410008524748540d420014144d41494e00a4734c454654524748544c454654"
+    },
+    "aml_self_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "string:4142",
+        "after:RGHT": "string:42",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:4142"
+      },
+      "omega_expected": {
+        "after:LEFT": "string:4142",
+        "after:RGHT": "string:42",
+        "result": "string:4142"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tstring:4142\nafter:LEFT\tstring:4142\nafter:RGHT\tstring:42\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540d410008524748540d420014144d41494e00a4734c454654524748544c454654"
+    },
+    "aml_string_buffer_32": {
+      "agrees_on_value_and_state": false,
+      "bits": 32,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "string:4630",
+        "after:RGHT": "buffer:1234",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:46301234"
+      },
+      "omega_expected": {
+        "after:LEFT": "string:4630",
+        "after:RGHT": "buffer:1234",
+        "result": "string:46303132203334"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tstring:46301234\nafter:LEFT\tstring:4630\nafter:RGHT\tbuffer:1234\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540d463000085247485411050a02123414114d41494e00a4734c4546545247485400"
+    },
+    "aml_string_buffer_64": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "string:4630",
+        "after:RGHT": "buffer:1234",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:46301234"
+      },
+      "omega_expected": {
+        "after:LEFT": "string:4630",
+        "after:RGHT": "buffer:1234",
+        "result": "string:46303132203334"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tstring:46301234\nafter:LEFT\tstring:4630\nafter:RGHT\tbuffer:1234\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540d463000085247485411050a02123414114d41494e00a4734c4546545247485400"
+    },
+    "aml_string_inline_32": {
+      "agrees_on_value_and_state": false,
+      "bits": 32,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "string:4630",
+        "after:RGHT": "integer:1311768467463790320",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:463031333131373638343637343633373930333230"
+      },
+      "omega_expected": {
+        "after:LEFT": "string:4630",
+        "after:RGHT": "integer:1311768467463790320",
+        "result": "string:46303941424344454630"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tstring:463031333131373638343637343633373930333230\nafter:LEFT\tstring:4630\nafter:RGHT\tinteger:1311768467463790320\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540d46300008524748540ef0debc9a7856341214114d41494e00a4734c4546545247485400"
+    },
+    "aml_string_inline_64": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "string:4630",
+        "after:RGHT": "integer:1311768467463790320",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:463031333131373638343637343633373930333230"
+      },
+      "omega_expected": {
+        "after:LEFT": "string:4630",
+        "after:RGHT": "integer:1311768467463790320",
+        "result": "string:463031323334353637383941424344454630"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tstring:463031333131373638343637343633373930333230\nafter:LEFT\tstring:4630\nafter:RGHT\tinteger:1311768467463790320\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540d46300008524748540ef0debc9a7856341214114d41494e00a4734c4546545247485400"
+    },
+    "aml_string_string_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "string:4630",
+        "after:RGHT": "string:4630",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:46304630"
+      },
+      "omega_expected": {
+        "after:LEFT": "string:4630",
+        "after:RGHT": "string:4630",
+        "result": "string:46304630"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tstring:46304630\nafter:LEFT\tstring:4630\nafter:RGHT\tstring:4630\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540d46300008524748540d46300014114d41494e00a4734c4546545247485400"
+    },
+    "aml_string_string_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "exit_code": 0,
+      "observed": {
+        "after:LEFT": "string:4630",
+        "after:RGHT": "string:4630",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:46304630"
+      },
+      "omega_expected": {
+        "after:LEFT": "string:4630",
+        "after:RGHT": "string:4630",
+        "result": "string:46304630"
+      },
+      "omega_outcome": "Success",
+      "stderr": "",
+      "stdout": "load\tok\nresult\tstring:46304630\nafter:LEFT\tstring:4630\nafter:RGHT\tstring:4630\nforbidden_calls\t0\ncreated_mutexes\t1\n",
+      "table_hex": "084c4546540d46300008524748540d46300014114d41494e00a4734c4546545247485400"
+    }
+  },
+  "rustc": "rustc 1.100.0-nightly (a69a63265 2026-09-03)\nbinary: rustc\ncommit-hash: a69a63265cfd9e006d43137f98301b8d274ad4c9\ncommit-date: 2026-09-03\nhost: aarch64-apple-darwin\nrelease: 1.100.0-nightly\nLLVM version: 23.1.1\n",
+  "source_sha256": {
+    "tools/ports/acpi/aml-public-execution/Cargo.lock": "ba4543d96562e5f411c8447ec4a23a08d224acb0e4af7c5e61e099a976dcf880",
+    "tools/ports/acpi/aml-public-execution/Cargo.toml": "5b8c17e5e61e7b2b2ff2b29f4ca5feb00639297abb742387a31ef2262f818642",
+    "tools/ports/acpi/aml-public-execution/src/main.rs": "ca6c249f592018b4407cb3b16f36460c758cdd24e1b3834dc681ac6d43b4fb83",
+    "tools/ports/acpi/interpreter/concat-execution/fixtures.py": "5192e9f6d2c3b84c2af0d969ea86ee0777c85572e17ba971605c8ba83ffaf7b3",
+    "tools/ports/acpi/interpreter/concat-execution/public/check.py": "f2faa4cb551b44ddb1a7163ecb11432810faef06e3ddaa3cb289f886c8ca057a"
+  },
+  "source_unchanged": true,
+  "stage": "Pinned public Interpreter load/evaluate; no native Omega or hardware claim",
+  "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "upstream_sha256": {
+    "Cargo.toml": "437a679d0f958db2171af775e0a1368ac35edd4cc0a48ec8b449233750db61cf",
+    "src/address.rs": "38048355ffe9b7c956e3ebaf84effdadca7defffd70c07feb0587e1c85fbb20a",
+    "src/aml/mod.rs": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+    "src/aml/namespace.rs": "311f3d9b5fbcb08395dcde0b5dce5455e932ad4a8fb6c273580d80c507b2f347",
+    "src/aml/object.rs": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+    "src/aml/op_region.rs": "43f7430d7aa41625f944bf66ffccc7f9bed7d403ff1979a9a2c09dedba7bf69b",
+    "src/aml/pci_routing.rs": "4c2371d38c0a67cab28ab686c8ad6374577e012cd02f561d4730e2f7895dcc39",
+    "src/aml/resource.rs": "abca9e6c8c60e40730cc11b2304acf37e2171942097f8871f5f8a8c7911fae09",
+    "src/lib.rs": "09fcc41658affdc55f6d8c0cb2b29b642d908879a07ed735014b70c7935335c7",
+    "src/platform/interrupt.rs": "c9a95f11b49535cd2baee66bdb55944870df284d3bc65f7a0e34416c5631c2bf",
+    "src/platform/mod.rs": "e49bb52792f164f1001a397bee489dc9dda8f3501681072a21396f4d276c87b5",
+    "src/platform/numa.rs": "93371276644afdf0dee1cf8b8215bb24c54a485552f045705b88424e69139596",
+    "src/platform/pci.rs": "5ad4a415a5037a741a7312d950299640a83905d454ba0eb4d40925c47a90d0c0",
+    "src/registers.rs": "9d8ed68f84cf8659f7822b0edd97fd7153a99bcca39de44b3726c6d5c00990a8",
+    "src/rsdp.rs": "ca2389abeffce9de4e1e28a87b9097c195a737f4dfa0beca5d2ccb23067f824c",
+    "src/sdt/bgrt.rs": "33baf3f6d386a091dc7ad13fb902ed4a265bbebd9809dd122d107981ea5cf5bb",
+    "src/sdt/facs.rs": "6977a2857c78c2bb07e880f555a738278571c4e5e9e173cc1375ca600da161d8",
+    "src/sdt/fadt.rs": "3b213e82029458b0c4c2633b232f2e3f1b4f9f59c07c5ac201286fb54a7927b7",
+    "src/sdt/hpet.rs": "ad52bbf848ac167a26561838d2695579b780b174006d9b553f8b154e74e6aca5",
+    "src/sdt/madt.rs": "4decb527324cd1aec925b20adc517d56f88ea80cc8c1cd50741a15b7da927ac0",
+    "src/sdt/mcfg.rs": "c33d9c34b0e270f5a7b3bf1817853aa07e7cb800030eace6447b915b4651900b",
+    "src/sdt/mod.rs": "136cb4b65a02f8e0bb3949543ff4f55fdaa540117010540cc4fe770e400a7052",
+    "src/sdt/slit.rs": "46b271c98f0071b65ccccce36db98aa8d8e4a8929c99bf81cd0ad90e5703ba52",
+    "src/sdt/spcr.rs": "bcd71238ac0a4a08946380508cc4d72762eb93cd7935fc4cc5fbad8519721fbd",
+    "src/sdt/srat.rs": "a73a29fff2fc609f3012c096a1f860d2f577593ef7995f9518e2b34f05b87b66"
+  },
+  "upstream_source": "/Users/zcanann/Documents/Projects/Cathedral/reference_code/rust-osdev/acpi"
+}

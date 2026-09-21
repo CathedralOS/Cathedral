@@ -91,9 +91,9 @@ The 24 AML bodies exercise opcode shape and dispatch through the real loader and
 Program executor, including all nine basic pairings, Local targets, String
 self-targets and nested results. Controls alter inactive expected state and must
 fail the assertion body. Their presence is not evidence of successful execution.
-The immutable Omega runner is used without compiler changes. Public Rust
-Concatenate observations in prior components remain historical; no new public,
-constant-evaluation, native or hardware result is claimed here.
+The immutable Omega runner is used without compiler changes. Prior public Rust component observations remain historical. The new public
+observations below are separate evidence; no constant-evaluation, native Omega
+or hardware result is claimed here.
 
 The initial nine-pair run at `5b32747` was stopped before any result because
 review found a record-type mismatch: the new resolver needs `OperandResult`,
@@ -101,3 +101,15 @@ not the existing Value metadata carrier. Review also corrected the malformed
 String expectation to Encoding and the transparent-cycle expectation to the
 existing adapter's InvalidState mapping. The production error mapping was not
 changed to satisfy tests. The updated focused selection includes both errors.
+
+The [new public Rust receipt](../../../../../tools/ports/acpi/interpreter/concat-execution/public/verification.json)
+records all 24 encoded AML cases against the unchanged pinned Interpreter through
+the existing service-trap harness. Sixteen values and post-call source states
+agree. Eight differences are retained, one of each at both widths: the pin omits
+the right String's Buffer terminator, converts the bare numeric text `F0` to zero,
+uses raw Buffer bytes in String concatenation, and formats Integers as unnormalized
+decimal text. All cases loaded and returned values with zero forbidden service
+calls and one inert mutex construction. The 86 direct retirement setups have no
+equivalent AML-only fixture and are explicitly omitted. Exact generated AML,
+expected/observed values, source hashes, pinned crate files, build and binary
+identity pass receipt verification. This does not establish Omega execution.

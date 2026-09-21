@@ -22,3 +22,17 @@ Broader unchanged regression replay remains required before this extension lands
 See [the port contract](../../../../../source/libraries/acpi/interpreter/execution/concat.PORT.md)
 for source pin, primary rules, allocation atomicity, Field continuation and
 remaining opcode/description boundaries.
+
+The separate public Rust probe completed all 24 encoded AML cases: 16 value/state
+agreements and eight retained primary/pin conversion differences. It recovers the
+exact initialized AML arrays from the checked fixture generator, uses the unchanged
+service-trap harness and pinned crate, and records every result. All runs returned
+with zero forbidden callbacks; 86 direct canonical-state cases are explicit
+omissions from this public probe.
+
+```sh
+python3 tools/ports/acpi/interpreter/concat-execution/public/check.py --acpi-source /path/to/pinned/acpi
+python3 tools/ports/acpi/interpreter/concat-execution/public/check.py --verify --require-binary
+```
+
+These are public Rust observations, not proof that the Omega assertions passed.
