@@ -1,0 +1,20 @@
+{
+  "source": "/tmp/cathedral-omega-source-eaa7993",
+  "source_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "source_clean": true,
+  "original_omega_head_unchanged": "6f57bbbd8620b27ab987db54e5cb1232a1b8b250",
+  "original_omega_clean": true,
+  "rustc": "rustc 1.100.0-nightly (a69a63265 2026-09-03)",
+  "cli": "/tmp/cathedral-omega-eaa7993/release/omega",
+  "runner": "/tmp/cathedral-acpi-generic-checked/release/cathedral-acpi-checked-runner",
+  "runner_manifest": "/tmp/cathedral-acpi-checked-runner-manifest-eaa7993/Cargo.toml",
+  "runner_source_sha256": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+  "runner_lock_sha256": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805",
+  "cli_build": "cargo build --offline --locked --release -p omega --target-dir /tmp/cathedral-omega-eaa7993",
+  "runner_build": "cargo build --locked --release --manifest-path /tmp/cathedral-acpi-checked-runner-manifest-eaa7993/Cargo.toml --target-dir /tmp/cathedral-omega-eaa7993",
+  "smoke_cli": "/tmp/cathedral-omega-eaa7993/release/omega --check --offline --build-dir /tmp/cathedral-toolchain-smoke-eaa7993/cli-build /tmp/cathedral-toolchain-smoke-eaa7993/main.omg",
+  "smoke_runner": "/tmp/cathedral-acpi-generic-checked/release/cathedral-acpi-checked-runner /tmp/cathedral-toolchain-smoke-eaa7993/main.omg /tmp/cathedral-toolchain-smoke-eaa7993/runner-build Suite::answer=42",
+  "smoke_passed": true,
+  "cli_sha256": "b973708da351907134476492278a4fdf65f1542712848710888d000415255dde",
+  "runner_sha256": "19e3f01dff2e6d7fbc9a1ee04843c4075b63a2e3c83b23f15203b6a58e9fec3a"
+}
