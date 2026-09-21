@@ -3182,8 +3182,8 @@
         },
         "291:write_buffer_field": {
           "anchor": "pub fn write_buffer_field(&mut self, value: &[u8], token: &ObjectToken) -> Result<(), AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Bounded direct canonical field write using payload/backing snapshots and existing bit/encoding helpers; zero/out-of-range rejection, atomic String validation and finite 256-byte profile. Actual public method called with the real Interpreter-created locked token; no fabricated authority or runtime/Store dispatch.",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3196,6 +3196,10 @@
             {
               "anchor": "pub machine write_field_integer",
               "path": "source/libraries/acpi/aml/byte_storage.omg"
+            },
+            {
+              "path": "source/libraries/acpi/aml/buffer_field_writes.omg",
+              "anchor": "pub machine write"
             }
           ],
           "owned_byte_component": {
@@ -3204,7 +3208,7 @@
               "ASCII/NUL-free string postcondition",
               "Source materialization only after full validation"
             ],
-            "remaining": "Integer-source write kernel implemented; arbitrary byte-input field stores, implicit conversion and full opcode/target dispatch remain pending. Pin lacks complete bounds and uses unsafe mutable String bytes; this profile rejects invalid ASCII atomically."
+            "remaining": "Arbitrary already-converted byte-input field writes now supplied by buffer_field_writes, with complete bounds and atomic String validation. Source conversion, context/reference evaluation and full opcode/target dispatch remain pending. Existing integer-write kernel is unchanged."
           }
         },
         "317:replace_with_implicit_casting": {

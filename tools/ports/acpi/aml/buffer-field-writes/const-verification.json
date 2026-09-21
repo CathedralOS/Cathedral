@@ -1,0 +1,74 @@
+{
+  "cases": [
+    "write_9_1_False",
+    "string_nul_True",
+    "field_max"
+  ],
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "input_sha256": {
+    "source/libraries/acpi/aml/buffer_field_writes.omg": "c5c11a26efe0672de82b3f4ba84971e8c7ede34030e1f51c65678fa4f0c59188",
+    "source/libraries/acpi/aml/build.omg": "2129610bb9e275f63e87c5e736bb29114044d1a466cdc1d288e4c9103b076319",
+    "source/libraries/acpi/aml/byte_storage.omg": "045be1e6efc512f051231c3233f2a177473a15eb832f78111086f67a7b504f25",
+    "source/libraries/acpi/aml/bytes.omg": "66a5f91ebe3bba63c398a20dba184854f257d580279cde514ba00aa8216251be",
+    "source/libraries/acpi/aml/model.omg": "1fc2a3ceb403f0adef2022f76ac0c1187fc74b0cd794df4e7855d643838a10af",
+    "source/libraries/acpi/aml/names.omg": "4d616001e6f0eef3f5233fb2e7df6b237e2cc89d1d565475f4dd0d03036f444e",
+    "source/libraries/acpi/aml/namespace.omg": "2cb9a7187ad787316f89e712c115906290e29a477e23ec0b4e29642935468d97",
+    "source/libraries/acpi/aml/object_references.omg": "4c06bb925681f2e833ebb815b15e5e53d476f08810d0252e77a977af4134b703",
+    "source/libraries/acpi/interpreter/buffer_fields.omg": "98e1df3d821a88ba1d63c63189f3d9ac782f197b62cd04e6b71abd396042688a",
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/conversions.omg": "b3ee9811b5434883bfa2374c8ca6a746ad2a75ab4c9eacea3e8dd19b5510f714",
+    "source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196",
+    "tools/ports/acpi/aml/buffer-field-writes/cases.json": "d05022a6213ea194cc773ccdc919f6eac032a97cfb03c0c3cfb598c397954ef5",
+    "tools/ports/acpi/aml/buffer-field-writes/check.py": "7ecd2431cf3c9cdbac7edfcd14e3fb86d76f0cfd5eaae7b035c145b6aa67854b",
+    "tools/ports/acpi/aml/buffer-field-writes/check_const.py": "15baaf02e257781d44cdba2df84fa83c0ed77989cf5628891ac3711a27f409e7",
+    "tools/ports/acpi/aml/buffer-field-writes/fixtures.py": "c857f569bb9532e5b140fc2ca1350b437c559bd0a70beb93ad215cee4dd22452",
+    "tools/ports/acpi/aml/buffer-field-writes/inventory.py": "7843265d9acdd7effd34a170f7acb1c33be3f0c4324d873d783926d83bb032ea",
+    "tools/ports/acpi/aml/buffer-field-writes/object_reference.rs": "e22282fa04d03d615e63a45bee92df31cc56ab1919316a47620d4f7e3398d82d",
+    "tools/ports/acpi/aml/buffer-field-writes/reference.Cargo.lock": "c8c98cfc57aa2c0e3625daa150e6202a00c179eb61b6d4ab50f18bb7c9150776",
+    "tools/ports/acpi/aml/buffer-field-writes/reference.py": "b349441f2a4d35d6f26bb0749905393e50448c108924b613ba04c8a076d2048b",
+    "tools/ports/acpi/aml/buffer-field-writes/store_checks.py": "7f7919a18b7e41946c993405b601d622d959528bea3293b2cd84449cf4bbd474",
+    "tools/ports/acpi/aml/buffer-field-writes/verify_record.py": "46aa86700f95202f40d74602abe9c14b01fa3f316de0e47e7f394402423feca3",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805"
+  },
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "proofs": [
+    {
+      "case": "write_9_1_False",
+      "control": false,
+      "output": "compiled 20 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-41e4e1766fe48a575e9e044f65d6408a24753ff3d871bc38c9f4eef549146f97/source/main.omg; wrote_output=false\n",
+      "source_sha256": "75ba46dce2319cfc09007531669a6c60c93c862182921a52cb0dd1668a360e80"
+    },
+    {
+      "case": "write_9_1_False",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `query-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "21a79027bdeeedd5ba3c0438c429a81d8d62410dbc68cb173736b9b9a29e51f5"
+    },
+    {
+      "case": "string_nul_True",
+      "control": false,
+      "output": "compiled 20 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-10d30d256275933b1f2da873f298229868a616043d93510493fca92e14b2888d/source/main.omg; wrote_output=false\n",
+      "source_sha256": "e5ab813b9e1585625d0a013298a905d339e187f5ae2a2a87c76c7a9554443281"
+    },
+    {
+      "case": "string_nul_True",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `query-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "47e6bf6c1335df52a99e7559e13e6f05fbb129700b2547b6e255a570988308d4"
+    },
+    {
+      "case": "field_max",
+      "control": false,
+      "output": "compiled 20 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-87a420a7362f1487284c226dd4c62b89a0e2ae16c52ea5ecc4adfb1583d49f9d/source/main.omg; wrote_output=false\n",
+      "source_sha256": "417fbbd751f208ea4ac0c63b3f91b8b5dc4b33d952b088ed262384e20529ef76"
+    },
+    {
+      "case": "field_max",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `query-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "b104c38bb7ad0e91974780dd42f58c3f750110e00d497900022560093e71ca1f"
+    }
+  ],
+  "stage": "constant evaluation and checked requires; native/hardware not run"
+}

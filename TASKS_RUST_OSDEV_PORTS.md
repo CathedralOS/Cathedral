@@ -631,6 +631,12 @@ three constant pairs pass. Other-object descriptions, reference/field policies,
 object installation and opcode retirement remain pending; aggregate counts are
 unchanged.
 
+[Atomic BufferField byte writes](source/libraries/acpi/aml/buffer-field-writes.PORT.md) stage already-converted payloads,
+validate the full field and backing, and publish only after String encoding checks.
+All 189 whole-store behavior/control pairs, three representative constant pairs
+and 89 actual public Object method observations pass. One bounded source anchor
+closes; source conversion, target handling and Store execution remain pending.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

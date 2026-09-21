@@ -1,0 +1,26 @@
+{
+  "actual_public_observations": 89,
+  "behavior_control_pairs": 189,
+  "constant_pairs": 3,
+  "files_sha256": {
+    "canonical-baseline.json": "4b24c199684b4132ce517447f8a35aaba5ee09fd716308013baebb98337cae01",
+    "source/libraries/acpi/aml/buffer-field-writes-inventory.json": "f78c8d313814ee97441db64a3f7bc8cf82e4d7971934ffbf9b57121fb0125409",
+    "source/libraries/acpi/aml/buffer-field-writes.PORT.md": "1de3dac3702fa7e5471e705a3cabde6ad6c0d4bf30ad20f010656edcea37291c",
+    "source/libraries/acpi/aml/buffer_field_writes.omg": "c5c11a26efe0672de82b3f4ba84971e8c7ede34030e1f51c65678fa4f0c59188",
+    "tools/ports/acpi/aml/buffer-field-writes/README.md": "53c442463481af3072bec46e19eff7825a7bfae8aff6d74b83ee7aa8b4b63ba1",
+    "tools/ports/acpi/aml/buffer-field-writes/cases.json": "d05022a6213ea194cc773ccdc919f6eac032a97cfb03c0c3cfb598c397954ef5",
+    "tools/ports/acpi/aml/buffer-field-writes/check.py": "5fb0590c41dd7d24fe2e7fa94933b6c50dbcf6ec4781c03e7f64b9dc87300849",
+    "tools/ports/acpi/aml/buffer-field-writes/check_const.py": "15baaf02e257781d44cdba2df84fa83c0ed77989cf5628891ac3711a27f409e7",
+    "tools/ports/acpi/aml/buffer-field-writes/const-verification.json": "f0a13406e91688e5de1d2ac7c2a925a538921e7e97ec124049c72a931a4c2bb1",
+    "tools/ports/acpi/aml/buffer-field-writes/fixtures.py": "c857f569bb9532e5b140fc2ca1350b437c559bd0a70beb93ad215cee4dd22452",
+    "tools/ports/acpi/aml/buffer-field-writes/inventory.py": "de1692d33cd6eaecba1d0ef6f4e29d47059a770176d00e27edd3d34672c67747",
+    "tools/ports/acpi/aml/buffer-field-writes/object_reference.rs": "e22282fa04d03d615e63a45bee92df31cc56ab1919316a47620d4f7e3398d82d",
+    "tools/ports/acpi/aml/buffer-field-writes/reference-verification.json": "9cc51416d510992ecc6e3ffa021eb22bd2a66e97030814a472e79c17d1d060e5",
+    "tools/ports/acpi/aml/buffer-field-writes/reference.Cargo.lock": "c8c98cfc57aa2c0e3625daa150e6202a00c179eb61b6d4ab50f18bb7c9150776",
+    "tools/ports/acpi/aml/buffer-field-writes/reference.py": "19128885e8e3b35c0a8aa4d7a23e935d246f9e4984b5510db89a72ccd4e3de9c",
+    "tools/ports/acpi/aml/buffer-field-writes/store_checks.py": "7f7919a18b7e41946c993405b601d622d959528bea3293b2cd84449cf4bbd474",
+    "tools/ports/acpi/aml/buffer-field-writes/verification.json": "55cd16a07d1673d6511cb99e980b68654bf7b2c94f91514a8f38844d93db24a1",
+    "tools/ports/acpi/aml/buffer-field-writes/verify_record.py": "e5e4ee32b2a7acfe16c798aa29612f7cad3fc55e9448c08176b08fc040a89e9a"
+  },
+  "format": "cathedral-buffer-field-writes-scratch-v1"
+}

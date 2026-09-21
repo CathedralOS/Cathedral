@@ -4,7 +4,7 @@
 
 **Stage: inventoried, 2026-09-20.** This milestone covers the complete pinned
 Rust corpus and test-scenario metadata. It does not claim an Omega translation,
-compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 588 translated table/topology/AML/helper anchors, two omitted Rust formatting hooks and 991
+compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 589 translated table/topology/AML/helper anchors, two omitted Rust formatting hooks and 990
 pending anchors. Inventory completion and translation completion are different
 milestones. The bounded ACPI-001 slice is separately
 [tested by Omega semantic evaluation](headers.PORT.md): 65 original scenarios
@@ -297,3 +297,9 @@ complete admission before combined capacity checks. All 314 checked pairs and
 three constant pairs pass. Other-object descriptions, reference/field policies,
 object installation and opcode retirement remain pending; aggregate counts are
 unchanged.
+
+[Atomic BufferField byte writes](aml/buffer-field-writes.PORT.md) stage already-converted payloads,
+validate the full field and backing, and publish only after String encoding checks.
+All 189 whole-store behavior/control pairs, three representative constant pairs
+and 89 actual public Object method observations pass. One bounded source anchor
+closes; source conversion, target handling and Store execution remain pending.
