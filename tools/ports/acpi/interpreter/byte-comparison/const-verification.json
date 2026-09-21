@@ -1,0 +1,60 @@
+{
+  "cases": [
+    "opposed_ascii_Lexicographic",
+    "opposed_ascii_PinnedLengthFirst",
+    "later_nul_String",
+    "capacity_String_2"
+  ],
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "runs": [
+    {
+      "case": "opposed_ascii_Lexicographic",
+      "control": false,
+      "output": "compiled 11 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-757c43be833315bdc20d4065ca2e1a6b0659b501b1046a3bc66df52a9aaa0003/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "opposed_ascii_Lexicographic",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-acpi-byte-comparison-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "case": "opposed_ascii_PinnedLengthFirst",
+      "control": false,
+      "output": "compiled 11 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-c58f47938a82371eeca541ebb90f5e4c8fbdbbbe307a8e828740f709232364fd/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "opposed_ascii_PinnedLengthFirst",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-acpi-byte-comparison-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "case": "later_nul_String",
+      "control": false,
+      "output": "compiled 11 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-2ca1782d9de948eb9835ac5fa6e1943b41e72ce613e6ede41dfb26dcce65f85b/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "later_nul_String",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-acpi-byte-comparison-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "case": "capacity_String_2",
+      "control": false,
+      "output": "compiled 11 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-b0bb87e843f09b981a9087a5713b5c0cc0e32ac77bf69146ff92a26a70d864c7/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "capacity_String_2",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-acpi-byte-comparison-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    }
+  ],
+  "source_sha256": {
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/byte_comparison.omg": "39ec2a48cbea8f172fb142fca208e6abebada45fec47d13724fd303069192ba8",
+    "tools/ports/acpi/interpreter/byte-comparison/build.omg": "e9d117aa7af2bc899216e7b2cc3da2a5bcc4220fb0b8e8d4583fbc2f79de0998",
+    "tools/ports/acpi/interpreter/byte-comparison/cases.json": "d9be0273810c0f4886a7436cbd1cae6a2122052ae77be8d7ced6170b8fa46d51",
+    "tools/ports/acpi/interpreter/byte-comparison/check_const.py": "5316f604c9dbc792ccb4b9c326de56dc03c3fcb48fd2b144f6676fbd65f8bd98",
+    "tools/ports/acpi/interpreter/byte-comparison/fixtures.py": "69e6cb2895f75b2e2d338879be56f802da747c44f7caa5ea35dd4ff9bcc19fd2"
+  },
+  "stage": "constant evaluation and checked requires; native/hardware not run"
+}

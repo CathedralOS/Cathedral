@@ -1,0 +1,160 @@
+{
+  "stage": "actual public Object::aml_cmp calls on original owned values; no opcode execution",
+  "pin": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "upstream_sha256": {
+    "src/aml/object.rs": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+    "src/aml/mod.rs": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+    "Cargo.toml": "437a679d0f958db2171af775e0a1368ac35edd4cc0a48ec8b449233750db61cf",
+    "LICENCE-MIT": "d7ed579f795c55b1b9f734f3f1ac6410ba84fef011acf3aaff95d0c9fe6cdd77",
+    "LICENCE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+  },
+  "actual_public_calls": 62,
+  "omitted": [
+    {
+      "case": "opposed_length_String",
+      "reason": "Invalid UTF8 cannot construct a Rust String"
+    },
+    {
+      "case": "unsigned_String",
+      "reason": "Invalid UTF8 cannot construct a Rust String"
+    },
+    {
+      "case": "later_nonascii_String",
+      "reason": "Invalid UTF8 cannot construct a Rust String"
+    },
+    {
+      "case": "empty_nonascii_String",
+      "reason": "Invalid UTF8 cannot construct a Rust String"
+    },
+    {
+      "case": "capacity_Lexicographic_0",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_Lexicographic_1",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_Lexicographic_2",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_Lexicographic_3",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_Lexicographic_4",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_PinnedLengthFirst_0",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_PinnedLengthFirst_1",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_PinnedLengthFirst_2",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_PinnedLengthFirst_3",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_PinnedLengthFirst_4",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_String_0",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_String_1",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_String_2",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_String_3",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    },
+    {
+      "case": "capacity_String_4",
+      "reason": "Logical extent cannot be represented by initialized Rust buffer"
+    }
+  ],
+  "observed": {
+    "empty_Lexicographic": 0,
+    "empty_PinnedLengthFirst": 0,
+    "empty_String": 0,
+    "empty_left_Lexicographic": -1,
+    "empty_left_PinnedLengthFirst": -1,
+    "empty_left_String": -1,
+    "empty_right_Lexicographic": 1,
+    "empty_right_PinnedLengthFirst": 1,
+    "empty_right_String": 1,
+    "same_Lexicographic": 0,
+    "same_PinnedLengthFirst": 0,
+    "same_String": 0,
+    "less_Lexicographic": -1,
+    "less_PinnedLengthFirst": -1,
+    "less_String": -1,
+    "greater_Lexicographic": 1,
+    "greater_PinnedLengthFirst": 1,
+    "greater_String": 1,
+    "prefix_Lexicographic": -1,
+    "prefix_PinnedLengthFirst": -1,
+    "prefix_String": -1,
+    "prefix_reverse_Lexicographic": 1,
+    "prefix_reverse_PinnedLengthFirst": 1,
+    "prefix_reverse_String": 1,
+    "opposed_length_Lexicographic": -1,
+    "opposed_length_PinnedLengthFirst": -1,
+    "opposed_ascii_Lexicographic": -1,
+    "opposed_ascii_PinnedLengthFirst": -1,
+    "opposed_ascii_String": 1,
+    "opposed_reverse_Lexicographic": 1,
+    "opposed_reverse_PinnedLengthFirst": 1,
+    "opposed_reverse_String": -1,
+    "later_less_Lexicographic": -1,
+    "later_less_PinnedLengthFirst": -1,
+    "later_less_String": -1,
+    "later_greater_Lexicographic": 1,
+    "later_greater_PinnedLengthFirst": 1,
+    "later_greater_String": 1,
+    "unsigned_Lexicographic": 1,
+    "unsigned_PinnedLengthFirst": 1,
+    "zero_Lexicographic": -1,
+    "zero_PinnedLengthFirst": -1,
+    "zero_String": -1,
+    "later_nul_Lexicographic": -1,
+    "later_nul_PinnedLengthFirst": -1,
+    "later_nul_String": -1,
+    "later_nonascii_Lexicographic": -1,
+    "later_nonascii_PinnedLengthFirst": -1,
+    "all256_Lexicographic": 0,
+    "all256_PinnedLengthFirst": 0,
+    "all256_String": 0,
+    "last256_Lexicographic": 1,
+    "last256_PinnedLengthFirst": 1,
+    "last256_String": 1,
+    "first256_Lexicographic": 1,
+    "first256_PinnedLengthFirst": 1,
+    "first256_String": 1,
+    "length255_Lexicographic": -1,
+    "length255_PinnedLengthFirst": -1,
+    "length255_String": -1,
+    "empty_nonascii_Lexicographic": -1,
+    "empty_nonascii_PinnedLengthFirst": -1
+  },
+  "source_sha256": {
+    "tools/ports/acpi/interpreter/byte-comparison/reference.py": "5cced084213c7f6c9229bddf73b4c80dcc04b03f204996badeaa6b9a6257803c",
+    "tools/ports/acpi/interpreter/byte-comparison/fixtures.py": "69e6cb2895f75b2e2d338879be56f802da747c44f7caa5ea35dd4ff9bcc19fd2",
+    "tools/ports/acpi/interpreter/byte-comparison/reference.Cargo.lock": "7a325f8839fcbe9acc97901fcf64b533596539af489afcf12b95987325b14a9d",
+    "tools/ports/acpi/interpreter/byte-comparison/cases.json": "d9be0273810c0f4886a7436cbd1cae6a2122052ae77be8d7ced6170b8fa46d51"
+  }
+}

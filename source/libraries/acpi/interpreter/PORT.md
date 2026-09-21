@@ -162,3 +162,9 @@ decimal/hex formatting. All 200 checked-interpreter cases and 200 controls pass,
 plus four constant-evaluation pairs; reference evidence includes 116 actual
 public Rust calls and 76 labelled private formatting mirrors. Generic opcode
 argument/target/context integration remains pending.
+
+The [byte comparison component](byte_comparison.PORT.md) adds bounded ASCII
+String ordering and explicit primary lexicographic versus pinned length-first
+Buffer ordering. All 81 checked-interpreter pairs and four const pairs pass;
+62 public Rust comparisons retain the documented profile differences. Implicit
+right-hand conversion and complete generic logical opcodes remain pending.

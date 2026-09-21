@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Bounded adaptation of pinned acpi Object::aml_cmp; explicit spec/pin profiles.
+module byte_comparison;
+pub data BufferOrdering [copy] {case Lexicographic;case PinnedLengthFirst;}
+pub data Comparison [copy] {case Capacity;case Encoding;case Less;case Equal;case Greater;}
+
+pub machine compare_buffers(left:&[u8;256],left_length:u64,right:&[u8;256],right_length:u64,profile:BufferOrdering)->Comparison {
+ transition left_length<=256 && right_length<=256 {true -> valid(left,left_length,right,right_length,profile) _ -> (Comparison::Capacity)}
+ state valid(left:&[u8;256],a:u64,right:&[u8;256],b:u64,profile:BufferOrdering)->Comparison {
+  transition profile {BufferOrdering::PinnedLengthFirst -> lengths(left,a,right,b) _ -> lexical(left,a,right,b)}
+ }
+ state lengths(left:&[u8;256],a:u64,right:&[u8;256],b:u64)->Comparison {
+  transition {a<b -> (Comparison::Less) a>b -> (Comparison::Greater) _ -> lexical(left,a,right,b)}
+ }
+ state lexical(left:&[u8;256],a:u64,right:&[u8;256],b:u64)->Comparison {let value:Comparison=compare_valid(left,a,right,b);value}
+}
+// Strings are initialized ASCII extents excluding NUL; validate the complete
+// logical contents even if an earlier byte already establishes an ordering.
+pub machine compare_strings(left:&[u8;256],left_length:u64,right:&[u8;256],right_length:u64)->Comparison {
+ transition left_length<=256 && right_length<=256 {true -> valid(left,left_length,right,right_length) _ -> (Comparison::Capacity)}
+ state valid(left:&[u8;256],a:u64,right:&[u8;256],b:u64)->Comparison {
+  let left_valid:bool=ascii_extent(left,0,a,true);let right_valid:bool=ascii_extent(right,0,b,true);
+  transition left_valid && right_valid {true -> lexical(left,a,right,b) _ -> (Comparison::Encoding)}
+ }
+ state lexical(left:&[u8;256],a:u64,right:&[u8;256],b:u64)->Comparison {let value:Comparison=compare_valid(left,a,right,b);value}
+}
+machine ascii_extent(input:&[u8;256],index:u64,count:u64,valid:bool)
+terminates by (index,count)->Nat::BoundedDistance;
+->bool {
+ let next:bool=ascii_at(input,index,count,valid);
+ transition index<count {true -> ascii_extent(input,index+1,count,next) _ -> (valid)}
+}
+machine ascii_at(input:&[u8;256],index:u64,count:u64,valid:bool)->bool {
+ transition valid && index<count && index<256 {true -> inspect(input[index]) _ -> (valid)}
+ state inspect(byte:u8)->bool {byte!=0 && byte<128}
+}
+machine compare_valid(left:&[u8;256],a:u64,right:&[u8;256],b:u64)->Comparison {
+ let count:u64=minimum(a,b);let order:u8=compare_prefix(left,right,0,count,0);
+ transition {order==1 -> (Comparison::Less) order==2 -> (Comparison::Greater) a<b -> (Comparison::Less) a>b -> (Comparison::Greater) _ -> (Comparison::Equal)}
+}
+machine minimum(a:u64,b:u64)->u64 {transition a<b {true -> (a) _ -> (b)}}
+machine compare_prefix(left:&[u8;256],right:&[u8;256],index:u64,count:u64,order:u8)
+terminates by (index,count)->Nat::BoundedDistance;
+->u8 {
+ let next:u8=compare_at(left,right,index,count,order);
+ transition index<count {true -> compare_prefix(left,right,index+1,count,next) _ -> (order)}
+}
+machine compare_at(left:&[u8;256],right:&[u8;256],index:u64,count:u64,order:u8)->u8 {
+ transition order==0 && index<count && index<256 {true -> inspect(left[index],right[index]) _ -> (order)}
+ state inspect(a:u8,b:u8)->u8 {transition {a<b -> (1) a>b -> (2) _ -> (0)}}
+}

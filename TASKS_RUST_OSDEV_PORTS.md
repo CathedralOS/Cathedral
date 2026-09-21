@@ -421,6 +421,10 @@ add 200 checked-interpreter pairs and four constant-evaluation pairs, with 116
 actual Rust parser observations and 76 labelled formatting mirrors. Strict versus
 pinned ASCII parsing and atomic bounded output are explicit; generic conversion
 opcodes remain pending.
+[Bounded byte comparisons](source/libraries/acpi/interpreter/byte_comparison.PORT.md)
+add 81 checked-interpreter pairs, four const pairs and 62 public Rust observations.
+Primary lexicographic versus pinned length-first Buffer ordering is explicit;
+generic logical opcode conversion/dispatch remains pending.
 The [integer method executor](source/libraries/acpi/interpreter/execution/PORT.md)
 now passes 79 actual Omega checked-interpreter cases and 79 changed-body controls.
 It executes integer method bytes, nested calls, existing named/alias targets and
