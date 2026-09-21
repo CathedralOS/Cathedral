@@ -118,7 +118,17 @@
         "2057:do_to_integer": {
           "anchor": "fn do_to_integer(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
           "disposition": "pending",
-          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+          "reason": "Partial explicit ToInteger composition through canonical numeric conversion and direct copy publication; field/reference bytecodes and complete upstream semantics remain pending.",
+          "targets": [
+            {
+              "anchor": "pub machine retire_to_integer",
+              "path": "source/libraries/acpi/interpreter/execution/to_integer_execution.omg"
+            },
+            {
+              "anchor": "# Explicit ToInteger execution",
+              "path": "source/libraries/acpi/interpreter/execution/to-integer.PORT.md"
+            }
+          ]
         },
         "2068:do_to_string": {
           "anchor": "fn do_to_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",

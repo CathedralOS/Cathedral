@@ -1,0 +1,78 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified do_to_integer composition from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5, src/aml/mod.rs:2057.
+// Copyright 2018 Isaac Woods. See to-integer.PORT.md for primary corrections.
+module to_integer_execution;
+use aml::model::ObjectStore;
+use aml::model::Outcome;
+use aml::model::ReferenceState;
+use aml::object_references::unwrap_transparent;
+use aml::object_conversions::ConversionResult;
+use aml::object_conversions::ConversionFailure;
+use aml::object_conversions::to_integer;
+use execution_model::ExecutionOutcome;
+use execution_model::Operand;
+use execution_model::Frame;
+use execution_model::Target;
+use execution_model::Slot;
+use execution_model::SlotResult;
+use generic_target_bridge::write_generic_target;
+use named_store::conversion_outcome;
+use operands::contribute_integer;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::normalize;
+
+// Prepare the complete explicit conversion before any target mutation. The
+// canonical helper owns byte admission and its StrictDecimalHex policy.
+pub machine integer_conversion(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,operand:Operand)->SlotResult {
+ transition operand {
+  Operand::Uninitialized -> (SlotResult {outcome:ExecutionOutcome::Uninitialized})
+  Operand::Integer {number} -> scalar(number,size)
+  Operand::Object {object_id} -> object(input,length,unit,store,size,object_id)
+ }
+ state scalar(number:u64,size:IntegerSize)->SlotResult {
+  let value:u64=normalize(size,number);SlotResult {slot:Slot {initialized:true,number:value}}
+ }
+ state object(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64)->SlotResult {
+  let found:ReferenceState=unwrap_transparent(&store.space,id,64);
+  transition found.outcome {
+   Outcome::Success -> resolved(input,length,unit,store,size,found.object)
+   Outcome::ReferenceCycle -> (SlotResult {outcome:ExecutionOutcome::ReferenceCycle})
+   Outcome::WorkLimit -> (SlotResult {outcome:ExecutionOutcome::WorkLimit})
+   _ -> (SlotResult {outcome:ExecutionOutcome::InvalidState})
+  }
+ }
+ state resolved(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64)->SlotResult {
+  let converted:ConversionResult=to_integer(input,length,unit,store,id,size);
+  transition converted {
+   ConversionResult::Integer {number} -> (SlotResult {slot:Slot {initialized:true,number:number}})
+   ConversionResult::Failure {reason} -> failed(reason)
+   _ -> (SlotResult {outcome:ExecutionOutcome::InvalidState})
+  }
+ }
+ state failed(reason:ConversionFailure)->SlotResult {
+  let outcome:ExecutionOutcome=conversion_outcome(reason);SlotResult {outcome:outcome}
+ }
+}
+
+pub machine retire_to_integer(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,operand:Operand,target:Target)->ExecutionOutcome {
+ let prepared:SlotResult=integer_conversion(input,frame.source_length,frame.body.unit,store,frame.size,operand);
+ transition prepared.outcome==ExecutionOutcome::Success {
+  true -> write(input,store,frame,target,prepared.slot.number)
+  _ -> (prepared.outcome)
+ }
+ state write(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,number:u64)->ExecutionOutcome {
+  transition target {Target::Null -> contribute(frame,number)
+   Target::Debug -> (ExecutionOutcome::UnresolvedService)
+   _ -> copy_result(input,store,frame,target,number)}
+ }
+ state copy_result(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,number:u64)->ExecutionOutcome {
+  // ACPI 6.6 19.3.5.5: explicit conversion replaces the target directly.
+  // The expression remains Integer even when the previous target was bytes.
+  let written:ExecutionOutcome=write_generic_target(input,store,frame,target,Operand::Integer {number:number},true);
+  transition written==ExecutionOutcome::Success {true -> contribute(frame,number) _ -> (written)}
+ }
+ state contribute(frame:&mut Frame,number:u64)->ExecutionOutcome {
+  let result:ExecutionOutcome=contribute_integer(frame,number);result
+ }
+}
