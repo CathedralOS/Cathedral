@@ -14,6 +14,11 @@ use aml::loader::load_with_definitions;
 use execution::engine::ExecutionResult;
 use execution::engine::run_method;
 use execution::execution_model::ExecutionOutcome;
+use execution::execution_model::Operand;
+use aml::result_graph::GraphResult;
+use aml::result_graph::check_graph;
+use aml::result_graph::limits_valid;
+use aml::object_conversions::ConversionFailure;
 use integer_helpers::integers::IntegerSize;
 
 pub data Program {
@@ -34,10 +39,46 @@ pub machine prepare_program(input: [u8; 1024], length: u64, unit: u64, term_budg
 // No replacement-source or reload parameter exists. All methods in this initial
 // wrapper must refer to this one retained unit. Multi-unit dispatch stays absent.
 pub machine run_program(program: &mut Program, path: Path, arguments: &[Value; 7], count: u64, size: IntegerSize, budget: u64) -> ExecutionResult {
+    let result:ExecutionResult=run_program_limited(program,path,arguments,count,size,budget,64,16384);result
+}
+// Result quotas are per public call and shared by the whole reachable graph.
+// Invalid quota requests fail before method execution or argument allocation.
+pub machine run_program_limited(program:&mut Program,path:Path,arguments:&[Value;7],count:u64,size:IntegerSize,budget:u64,result_objects:u64,result_bytes:u64)->ExecutionResult {
+    let valid:bool=limits_valid(result_objects,result_bytes);
     transition { !program.loaded -> (ExecutionResult { outcome: ExecutionOutcome::InvalidState })
         program.length > 1024 -> (ExecutionResult { outcome: ExecutionOutcome::Capacity })
-        _ -> execute(program, path, arguments, count, size, budget) }
-    state execute(program: &mut Program, path: Path, arguments: &[Value; 7], count: u64, size: IntegerSize, budget: u64) -> ExecutionResult {
-        let result: ExecutionResult = run_method(&program.source, program.length, program.unit, &mut program.store, &program.definitions.entries, path, arguments, count, size, budget); result
+        !valid -> (ExecutionResult {outcome:ExecutionOutcome::Capacity})
+        _ -> execute(program, path, arguments, count, size, budget,result_objects,result_bytes) }
+    state execute(program: &mut Program, path: Path, arguments: &[Value; 7], count: u64, size: IntegerSize, budget: u64,result_objects:u64,result_bytes:u64) -> ExecutionResult {
+        let result: ExecutionResult = run_method(&program.source, program.length, program.unit, &mut program.store, &program.definitions.entries, path, arguments, count, size, budget);
+        transition result.outcome==ExecutionOutcome::Success && result.has_value {true -> returned(program,result,result_objects,result_bytes) _ -> (result)}
     }
+    state returned(program:&Program,result:ExecutionResult,result_objects:u64,result_bytes:u64)->ExecutionResult {
+        transition result.operand {Operand::Integer {number} -> (result)
+            Operand::Object {object_id} -> graph(program,result,object_id,result_objects,result_bytes)
+            _ -> rejected(result,ExecutionOutcome::Uninitialized)}
+    }
+    state graph(program:&Program,result:ExecutionResult,id:u64,result_objects:u64,result_bytes:u64)->ExecutionResult {
+        let checked:GraphResult=check_graph(&program.source,program.length,program.unit,&program.store,id,result_objects,result_bytes);
+        transition checked {GraphResult::Admitted {objects,bytes,visited} -> (result) GraphResult::Failure {reason} -> failure(result,reason)}
+    }
+    state failure(result:ExecutionResult,reason:ConversionFailure)->ExecutionResult {
+        let outcome:ExecutionOutcome=result_failure(reason);let rejected:ExecutionResult=reject_result(result,outcome);rejected
+    }
+    state rejected(result:ExecutionResult,outcome:ExecutionOutcome)->ExecutionResult {
+        let rejected:ExecutionResult=reject_result(result,outcome);rejected
+    }
+}
+// Match the existing generic execution admission outcomes. The standalone
+// GraphResult retains finer byte/source failure distinctions for direct callers.
+machine result_failure(reason:ConversionFailure)->ExecutionOutcome {
+    transition reason {ConversionFailure::Capacity -> (ExecutionOutcome::Capacity)
+        ConversionFailure::WorkLimit -> (ExecutionOutcome::WorkLimit)
+        ConversionFailure::UnsupportedValue -> (ExecutionOutcome::UnsupportedValue)
+        _ -> (ExecutionOutcome::InvalidState)}
+}
+machine reject_result(result:ExecutionResult,outcome:ExecutionOutcome)->ExecutionResult {
+    // Earlier execution effects and diagnostic locations remain observable.
+    // Failure exposes no purported result value or graph root.
+    ExecutionResult {outcome:outcome,steps:result.steps,fault_offset:result.fault_offset}
 }

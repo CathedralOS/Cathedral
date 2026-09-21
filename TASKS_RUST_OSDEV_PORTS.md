@@ -737,6 +737,14 @@ preservation. Existing target types and positive Buffer extents are retained.
 Generic named-target routing remains a separate pending integration; aggregate
 source counts are unchanged.
 
+[Returned object graph quotas](source/libraries/acpi/aml/result-graph.PORT.md) apply one shared object/byte budget at the public Program boundary. Nested byte
+backing and Package member chains are validated without evaluating references,
+resolving names or copying the graph. The 49 pure-kernel and 27 Program behavior/
+control pairs pass in the recorded isolated worktree. Rejected results expose no
+value while preserving prior execution effects and diagnostics. This is partial
+ACPI-006 evidence; reclamation, deep copy accounting and other resource work
+remain open. No upstream source anchor is promoted by this original composition.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and
