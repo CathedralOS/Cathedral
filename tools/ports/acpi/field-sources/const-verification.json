@@ -1,0 +1,83 @@
+{
+  "build_sha256": "d9f20c3c50ca4d05cff4a1fb148ca15034961dcbb136949b61f763bc98c6d7b1",
+  "compiler_path": "/tmp/cathedral-omega-eaa7993/release/omega",
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "control_count": 3,
+  "elapsed_seconds": 136.158,
+  "input_sha256": {
+    "source/libraries/acpi/aml/build.omg": "2129610bb9e275f63e87c5e736bb29114044d1a466cdc1d288e4c9103b076319",
+    "source/libraries/acpi/aml/byte_storage.omg": "045be1e6efc512f051231c3233f2a177473a15eb832f78111086f67a7b504f25",
+    "source/libraries/acpi/aml/bytes.omg": "66a5f91ebe3bba63c398a20dba184854f257d580279cde514ba00aa8216251be",
+    "source/libraries/acpi/aml/model.omg": "1fc2a3ceb403f0adef2022f76ac0c1187fc74b0cd794df4e7855d643838a10af",
+    "source/libraries/acpi/aml/names.omg": "4d616001e6f0eef3f5233fb2e7df6b237e2cc89d1d565475f4dd0d03036f444e",
+    "source/libraries/acpi/aml/namespace.omg": "2cb9a7187ad787316f89e712c115906290e29a477e23ec0b4e29642935468d97",
+    "source/libraries/acpi/aml/object_conversions.omg": "b26ea6b3b0023fd656d78759f2a36d9de49872f7e78e01807cd6f18526e5c390",
+    "source/libraries/acpi/aml/object_references.omg": "4c06bb925681f2e833ebb815b15e5e53d476f08810d0252e77a977af4134b703",
+    "source/libraries/acpi/field_sources/build.omg": "15704101111b676f12da8e2e572390466a6df214cc0c70224a73c6a6fe661121",
+    "source/libraries/acpi/field_sources/model.omg": "2948bb8728f5a4f329c8e839aa5c47cf1c2dacc09f20b44cc1a748642e516712",
+    "source/libraries/acpi/field_sources/sequence.omg": "de37de170c8481967e01d772f35427266137b05e225be793b7b82f0eaa7bd488",
+    "source/libraries/acpi/interpreter/buffer_fields.omg": "98e1df3d821a88ba1d63c63189f3d9ac782f197b62cd04e6b71abd396042688a",
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/conversions.omg": "b3ee9811b5434883bfa2374c8ca6a746ad2a75ab4c9eacea3e8dd19b5510f714",
+    "source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196",
+    "source/libraries/acpi/interpreter/string_numbers.omg": "8553d26a77cd0cb482a24a45aa739b86c7fbed94fb61bc97eb4974de5c9db389",
+    "tools/ports/acpi/field-sources/aml_encoding.py": "e46261542865a0d84870e9d97165d5cc67aa839a828073348dd1f3111b897e42",
+    "tools/ports/acpi/field-sources/cases.json": "46a04e741e57640fec9cfc8465e9acb857d5713a217924cc3bfad43871fe247b",
+    "tools/ports/acpi/field-sources/check.py": "01c022e93d0307eb34768575b00ead780534c32004d99f8a85c1eb69b0643410",
+    "tools/ports/acpi/field-sources/check_const.py": "b4a123d07d9f675cde77c0e932f88fc353f3f57e93e01ebb1cf993677e208cd9",
+    "tools/ports/acpi/field-sources/compare.py": "4beb457d80f4bbcd35b7fc82451a49323df4cf3ea4161fa14c0c2132d38e41d4",
+    "tools/ports/acpi/field-sources/comparison.json": "4d266de85d63c49186578de9ae5274e8352fce311c838ed5d474f0e92280b74b",
+    "tools/ports/acpi/field-sources/fixture_common.py": "757bf626b48c37e368c12a976f9813d08237c576a34555461f13c9f79a7c2328",
+    "tools/ports/acpi/field-sources/fixtures.py": "b5212b71bc91b16a2ae5414d5f0716f480e78e2385d90ffe455e4ff5f716018e",
+    "tools/ports/acpi/field-sources/geometry_vectors.py": "6a1bd8dd2c3b8318e098f80ba38fb1d7b37a1b24da0c71dd17d6395f4529c682",
+    "tools/ports/acpi/field-sources/reference-verification.json": "148f58674c475a545551e10a810119a41334810460793491cc842267825b2576",
+    "tools/ports/acpi/field-sources/reference.Cargo.lock": "8fb51e8b59479101b00eef5588d7389b1147f61642204fb6a0710d0460a77ae3",
+    "tools/ports/acpi/field-sources/reference.py": "aeb9d8277d9fc507f7c677b99deb00a34679f71d684218fbfe38313917c6308c",
+    "tools/ports/acpi/field-sources/reference.rs": "141a25da30df40a79c3b7af449c0c464bddbd2ea1cd808b81c5dfa88296511d4",
+    "tools/ports/acpi/field-sources/vectors.py": "87cf68f8a8fb599d63554df80769b0f7f8a371bd0fe83b0e3b8d250b3884323e",
+    "tools/ports/acpi/field-sources/verify_record.py": "2732e295d8fcb1f77439f2ff9dd6ab8db433b3a23a67b69e5634ea8110c05749",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805"
+  },
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "positive_count": 3,
+  "proofs": [
+    {
+      "case": "buffer_3_9_2_False",
+      "control": false,
+      "output": "compiled 23 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-9975a4ec88862898657ba9ab545c7d4461cdeb65b7b090fec95f5726ef3851b0/source/main.omg; wrote_output=false\n",
+      "source_sha256": "27d95220dd9bb4041f87d81c53dc88e8590b0b4978e55def947ac0ec00b47709"
+    },
+    {
+      "case": "buffer_3_9_2_False",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-field-sources-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "270f10cb8f43d6cd45c2592d13ad13601ebad2e4e99dd9cbb9324f7c446df59e"
+    },
+    {
+      "case": "integer_32_65_0",
+      "control": false,
+      "output": "compiled 23 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-c807fea4111ced56a441a87899bf4f1462d0790f901018e56e63abf2e19fa66e/source/main.omg; wrote_output=false\n",
+      "source_sha256": "c5623c67a56e0524bf2ec0ed4c62025292510aee759bfe157401d60101b69e36"
+    },
+    {
+      "case": "integer_32_65_0",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-field-sources-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "8f1e077ac4e569e8eb3b01a840ca676d00fbca01c88c630b2902921101ec9ef5"
+    },
+    {
+      "case": "encoding_tail_end_True",
+      "control": false,
+      "output": "compiled 23 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-183ea0d26ef3d43e20d03ffd5278f3d94e050d0496b6aa844e2b49e0ff13270b/source/main.omg; wrote_output=false\n",
+      "source_sha256": "f8c38d815cd06ba2245924d27de44f9200e9afde10f2f708227e8400fdaa4255"
+    },
+    {
+      "case": "encoding_tail_end_True",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-field-sources-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "37375058050c7141306e9ebb9aca29a89f13c94fa15e0d7f1d5b58a447d59dea"
+    }
+  ],
+  "stage": "constant evaluation and requires proof; no native or namespace evaluation"
+}

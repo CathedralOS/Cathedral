@@ -1,0 +1,98 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Primary ACPI6.6 Table19.7 FieldUnit source sequencing, composed over canonical
+// rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5 adaptations.
+// Copyright 2018 Isaac Woods; Omega adaptation 2026. See PORT.md.
+// Detached payload only; no repeated write execution, Store or provider authority.
+module sequence;
+use aml::model::ObjectStore;
+use aml::model::Value;
+use aml::byte_storage;
+use aml::byte_storage::ByteRead;
+use aml::byte_storage::ByteOutcome;
+use aml::byte_storage::ByteKind;
+use aml::object_conversions::ConversionFailure;
+use integers::integers;
+use integers::integers::IntegerSize;
+use integers::integers::IntegerResult;
+use integers::conversions;
+use integers::buffer_fields;
+use model::PayloadResult;
+data Bytes [copy] {bytes:[u8;256];}
+
+pub machine payload_at(input:&[u8;1024],input_length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
+ transition {field_bits==0 -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})
+  field_bits>2048 -> (PayloadResult::Failure {reason:ConversionFailure::Capacity})
+  _ -> identity(input,input_length,unit,store,source,size,field_bits,ordinal)}
+ state identity(input:&[u8;1024],input_length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
+  let count:u64=store.space.object_count;
+  transition count<=64 && source<count && source<64 {true -> value(input,input_length,unit,store,source,size,field_bits,ordinal) _ -> (PayloadResult::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state value(input:&[u8;1024],input_length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
+  transition store.space.objects[source].value {
+   Value::Integer {number} -> integer(number,size,field_bits,ordinal)
+   Value::Buffer {buffer_storage} -> bytes(input,input_length,unit,store,source,field_bits,ordinal)
+   Value::String {string_storage} -> bytes(input,input_length,unit,store,source,field_bits,ordinal)
+   _ -> (PayloadResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state integer(number:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
+  let normalized:u64=integers::normalize(size,number);
+  transition ordinal==0 {true -> encode(normalized,size,field_bits) _ -> (PayloadResult::End {total:1})}
+ }
+ state encode(number:u64,size:IntegerSize,field_bits:u64)->PayloadResult {
+  let mut data:Bytes=Bytes {};let encoded:IntegerResult=conversions::integer_to_buffer(size,number,&mut data.bytes);
+  let result:PayloadResult=copy_payload(&data.bytes,encoded.value,0,field_bits,1,0);result
+ }
+ state bytes(input:&[u8;1024],input_length:u64,unit:u64,store:&ObjectStore,source:u64,field_bits:u64,ordinal:u64)->PayloadResult {
+  let read:ByteRead=byte_storage::read_bytes(input,input_length,unit,store,source);
+  transition read.outcome==ByteOutcome::Success {true -> validated(read,field_bits,ordinal) _ -> failed(read.outcome)}
+ }
+ state failed(error:ByteOutcome)->PayloadResult {let reason:ConversionFailure=storage_failure(error);PayloadResult::Failure {reason:reason}}
+ state validated(read:ByteRead,field_bits:u64,ordinal:u64)->PayloadResult {
+  let length:u64=read.length;
+  transition length<=256 {true -> kind(read,field_bits,ordinal,length) _ -> (PayloadResult::Failure {reason:ConversionFailure::Capacity})}
+ }
+ state kind(read:ByteRead,field_bits:u64,ordinal:u64,length:u64)->PayloadResult {
+  transition read.kind {ByteKind::String -> string(read,field_bits,ordinal,length) ByteKind::Buffer -> buffer(read,field_bits,ordinal,length)}
+ }
+ state string(read:ByteRead,field_bits:u64,ordinal:u64,length:u64)->PayloadResult {
+  transition ordinal<length && ordinal<256 {true -> character(read,field_bits,ordinal,length) _ -> (PayloadResult::End {total:length})}
+ }
+ state character(read:ByteRead,field_bits:u64,ordinal:u64,length:u64)->PayloadResult {
+  let mut character:Bytes=Bytes {};character.bytes[0]=read.bytes[ordinal];
+  let result:PayloadResult=copy_payload(&character.bytes,1,0,field_bits,length,ordinal);result
+ }
+ state buffer(read:ByteRead,field_bits:u64,ordinal:u64,length:u64)->PayloadResult {
+  transition field_bits>0 && field_bits<=2048 && length<=256 {true -> rounds(read,field_bits,ordinal,length*8) _ -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})}
+ }
+ state rounds(read:ByteRead,field_bits:u64,ordinal:u64,bits:u64)->PayloadResult {
+  let total:u64=buffer_rounds(bits,field_bits);
+  transition ordinal<total {true -> start(read,field_bits,ordinal,total) _ -> (PayloadResult::End {total:total})}
+ }
+ state start(read:ByteRead,field_bits:u64,ordinal:u64,total:u64)->PayloadResult {
+  // Establish bounded scalar arithmetic before multiplication, including MAX ordinal.
+  transition ordinal<2048 && field_bits<=2048 {true -> part(read,field_bits,ordinal,total,ordinal*field_bits) _ -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})}
+ }
+ state part(read:ByteRead,field_bits:u64,ordinal:u64,total:u64,start:u64)->PayloadResult {
+  let result:PayloadResult=copy_payload(&read.bytes,read.length,start,field_bits,total,ordinal);result
+ }
+}
+machine buffer_rounds(bits:u64,width:u64)->u64 {
+ transition bits==0 {true -> (1) _ -> nonzero(bits,width)}
+ state nonzero(bits:u64,width:u64)->u64 {
+  transition width>0 && width<=2048 && bits<=2048 {true -> ((bits-1)/width+1) _ -> (0)}
+ }
+}
+machine copy_payload(source:&[u8;256],source_length:u64,start:u64,field_bits:u64,total:u64,ordinal:u64)->PayloadResult {
+ transition field_bits>0 && field_bits<=2048 {true -> copy(source,source_length,start,field_bits,total,ordinal,(field_bits+7)/8) _ -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})}
+ state copy(source:&[u8;256],source_length:u64,start:u64,field_bits:u64,total:u64,ordinal:u64,length:u64)->PayloadResult {
+  let mut result:Bytes=Bytes {};let error:u8=buffer_fields::copy_bits(source,source_length,start,&mut result.bytes,length,0,field_bits);
+  transition error==0 {true -> (PayloadResult::Payload {total:total,ordinal:ordinal,length:length,bytes:result.bytes}) _ -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})}
+ }
+}
+machine storage_failure(error:ByteOutcome)->ConversionFailure {
+ transition error {ByteOutcome::Capacity -> (ConversionFailure::Capacity) ByteOutcome::Bounds -> (ConversionFailure::Bounds)
+ ByteOutcome::Encoding -> (ConversionFailure::Encoding) ByteOutcome::UnsupportedValue -> (ConversionFailure::UnsupportedValue)
+ ByteOutcome::ReferenceCycle -> (ConversionFailure::ReferenceCycle) ByteOutcome::WorkLimit -> (ConversionFailure::WorkLimit)
+ _ -> (ConversionFailure::InvalidState)}
+}

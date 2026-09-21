@@ -1,0 +1,9 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Primary ACPI6.6 Table19.7 composition over the licensed ACPI scalar/storage port.
+module model;
+use aml::object_conversions::ConversionFailure;
+pub data PayloadResult [copy] {
+ case Failure(reason:ConversionFailure);
+ case End(total:u64);
+ case Payload(total:u64,ordinal:u64,length:u64,bytes:[u8;256]);
+}

@@ -616,6 +616,14 @@ checked pairs and three constant pairs. Complete validation precedes unsigned
 Integer or lexical byte ordering. Reference/field evaluation, logical truth
 operators and opcode retirement remain pending; aggregate anchors stay open.
 
+[Field source sequencing](source/libraries/acpi/field_sources/PORT.md) prepares one normalized Integer payload,
+ordered Buffer pieces, or individual String characters for a normal Field.
+All 315 checked pairs, three constant pairs and 38 public Rust observations pass;
+the observations retain the pin's single-pass and String-rejection differences.
+Empty-source and terminator choices are documented primary-profile interpretations.
+Repeated execution, provider/lock access and Store integration remain pending;
+aggregate source counts are unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

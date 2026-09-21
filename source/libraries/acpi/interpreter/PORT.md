@@ -229,3 +229,11 @@ exactly field-sized bits into complete native-width numeric write records. All
 Geometry, payload/count checks, Preserve input requirements and unmet lock metadata
 are retained. Source conversion/repeated writes, provider access, Bank/Index and
 Store/evaluator integration remain pending; aggregate source counts are unchanged.
+
+[Field source sequencing](../field_sources/PORT.md) prepares one normalized Integer payload,
+ordered Buffer pieces, or individual String characters for a normal Field.
+All 315 checked pairs, three constant pairs and 38 public Rust observations pass;
+the observations retain the pin's single-pass and String-rejection differences.
+Empty-source and terminator choices are documented primary-profile interpretations.
+Repeated execution, provider/lock access and Store integration remain pending;
+aggregate source counts are unchanged.

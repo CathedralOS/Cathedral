@@ -282,3 +282,11 @@ right-hand conversion with unsigned Integer and lexical String/Buffer ordering.
 The 278 checked pairs and three constant pairs verify all type combinations and
 complete source admission. Reference/field evaluation, logical truth operations
 and runtime integration remain pending; aggregate source counts are unchanged.
+
+[Field source sequencing](field_sources/PORT.md) prepares one normalized Integer payload,
+ordered Buffer pieces, or individual String characters for a normal Field.
+All 315 checked pairs, three constant pairs and 38 public Rust observations pass;
+the observations retain the pin's single-pass and String-rejection differences.
+Empty-source and terminator choices are documented primary-profile interpretations.
+Repeated execution, provider/lock access and Store integration remain pending;
+aggregate source counts are unchanged.

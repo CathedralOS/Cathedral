@@ -1238,9 +1238,17 @@
             {
               "anchor": "pub data WriteResult [copy]",
               "path": "source/libraries/acpi/field_writes/model.omg"
+            },
+            {
+              "anchor": "pub machine payload_at(",
+              "path": "source/libraries/acpi/field_sources/sequence.omg"
+            },
+            {
+              "anchor": "pub data PayloadResult [copy]",
+              "path": "source/libraries/acpi/field_sources/model.omg"
             }
           ],
-          "note": "Partial: recomputed geometry, already-converted exact field-sized bits, normalized per-chunk merge, complete initialized detached write recipes and unmet lock metadata. Source conversion/repeated Buffer writes, region lookup, native reads/writes, GlobalLock, Bank/Index, Store and evaluator integration remain outside this slice."
+          "note": "Partial: recomputed geometry, detached per-ordinal Integer/Buffer/String source payload preparation, normalized per-chunk merge, complete initialized single-pass write recipes and unmet lock metadata. Repeated execution, source evaluation, region lookup, native reads/writes, GlobalLock, Bank/Index, Store and evaluator integration remain outside these slices. Empty-source and String-terminator interpretations are documented in field_sources/PORT.md."
         },
         "269:install_region_handler": {
           "anchor": "pub fn install_region_handler(&self, space: RegionSpace, handler: Box<R>) {",
@@ -3729,10 +3737,15 @@
             {
               "anchor": "chunks::merge(",
               "path": "source/libraries/acpi/field_writes/write.omg"
+            },
+            {
+              "anchor": "buffer_fields::copy_bits(",
+              "path": "source/libraries/acpi/field_sources/sequence.omg"
             }
           ],
           "note": "Additional Field decomposition: Partial scalar chunk extraction/merge only. General arbitrary-length byte-array copying is not implemented here. The field_values consumer reuses this helper for complete detached normal Field read assembly.",
-          "field_write_consumer": "The same lower-bit-first copy arithmetic is composed via existing field_to_integer extraction and chunks::merge; no whole upstream helper or object execution claim."
+          "field_write_consumer": "The same lower-bit-first copy arithmetic is composed via existing field_to_integer extraction and chunks::merge; no whole upstream helper or object execution claim.",
+          "field_source_consumer": "Reuses canonical copy_bits to build one zero-extended field-sized source payload; primary Buffer/String sequencing is detached from actual field execution."
         },
         "588:align_down": {
           "anchor": "pub(crate) fn align_down(value: usize, align: usize) -> usize {",

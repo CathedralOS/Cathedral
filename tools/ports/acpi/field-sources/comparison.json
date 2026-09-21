@@ -1,0 +1,240 @@
+{
+  "counts": {
+    "buffer_single_pass_agreement": 10,
+    "integer_single_pass_agreement": 6,
+    "string_entry_rejection_divergence": 16,
+    "wider_buffer_single_pass_divergence": 6
+  },
+  "public_count": 38,
+  "rows": [
+    {
+      "category": "integer_single_pass_agreement",
+      "name": "integer_32_1_0",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "integer_single_pass_agreement",
+      "name": "integer_32_64_0",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "integer_single_pass_agreement",
+      "name": "integer_32_2048_0",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "integer_single_pass_agreement",
+      "name": "integer_64_1_0",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "integer_single_pass_agreement",
+      "name": "integer_64_64_0",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "integer_single_pass_agreement",
+      "name": "integer_64_2048_0",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "buffer_single_pass_agreement",
+      "name": "buffer_0_1_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "buffer_single_pass_agreement",
+      "name": "buffer_0_9_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "buffer_single_pass_agreement",
+      "name": "buffer_0_64_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "buffer_single_pass_agreement",
+      "name": "buffer_0_2048_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "wider_buffer_single_pass_divergence",
+      "name": "buffer_1_1_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 8
+    },
+    {
+      "category": "buffer_single_pass_agreement",
+      "name": "buffer_1_9_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "buffer_single_pass_agreement",
+      "name": "buffer_1_64_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "buffer_single_pass_agreement",
+      "name": "buffer_1_2048_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "wider_buffer_single_pass_divergence",
+      "name": "buffer_3_1_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 24
+    },
+    {
+      "category": "wider_buffer_single_pass_divergence",
+      "name": "buffer_3_9_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 3
+    },
+    {
+      "category": "buffer_single_pass_agreement",
+      "name": "buffer_3_64_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "buffer_single_pass_agreement",
+      "name": "buffer_3_2048_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "wider_buffer_single_pass_divergence",
+      "name": "buffer_256_1_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 2048
+    },
+    {
+      "category": "wider_buffer_single_pass_divergence",
+      "name": "buffer_256_9_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 228
+    },
+    {
+      "category": "wider_buffer_single_pass_divergence",
+      "name": "buffer_256_64_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 32
+    },
+    {
+      "category": "buffer_single_pass_agreement",
+      "name": "buffer_256_2048_0_False",
+      "pin_field_passes": 1,
+      "primary_total": 1
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_0_1_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 0
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_0_8_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 0
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_0_65_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 0
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_0_2048_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 0
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_1_1_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 1
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_1_8_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 1
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_1_65_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 1
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_1_2048_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 1
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_3_1_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 3
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_3_8_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 3
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_3_65_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 3
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_3_2048_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 3
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_256_1_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 256
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_256_8_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 256
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_256_65_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 256
+    },
+    {
+      "category": "string_entry_rejection_divergence",
+      "name": "string_256_2048_0_False",
+      "pin_field_passes": 0,
+      "primary_total": 256
+    }
+  ],
+  "stage": "public pinned callbacks and full memory versus exact one-pass oracle; primary sequence expectations explicitly separated"
+}
