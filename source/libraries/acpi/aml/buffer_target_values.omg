@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Pure target-sized component alongside rust-osdev/acpi Object::
+// replace_with_implicit_casting, pin 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Copyright 2018 Isaac Woods. ACPI 6.6 Table 19.7 Integer/nonempty String profile.
+module buffer_target_values;
+use model::ObjectStore;
+use model::Value;
+use byte_storage::ByteRead;
+use byte_storage::ByteOutcome;
+use byte_storage::read_bytes;
+use object_conversions::ConversionFailure;
+use implicit_conversions::ImplicitResult;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::conversions::integer_to_buffer;
+use integer_helpers::conversions::mid;
+
+// extent 1..256 is ordinary caller-supplied geometry, not evidence of a target.
+// ID/count -> extent -> source type -> full String admission -> preparation.
+// Bounds for zero extent and Empty for empty String are local profile exclusions.
+// No lookup, allocation, reference evaluation, target mutation or Store execution.
+pub machine prepare_buffer_extent(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,extent:u64)->ImplicitResult {
+ let count:u64=store.space.object_count;
+ transition count<=64 && source<count && source<64 {true -> bounded(input,length,unit,store,source,size,extent) _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})}
+ state bounded(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,extent:u64)->ImplicitResult {
+  transition {extent==0 -> (ImplicitResult::Failure {reason:ConversionFailure::Bounds}) extent>256 -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity}) _ -> selected(input,length,unit,store,source,size,extent)}
+ }
+ state selected(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,extent:u64)->ImplicitResult {
+  transition store.space.objects[source].value {
+   Value::Integer {number} -> integer(number,size,extent)
+   Value::String {string_storage} -> string(input,length,unit,store,source,extent)
+   _ -> (ImplicitResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state integer(number:u64,size:IntegerSize,extent:u64)->ImplicitResult {
+  let mut bytes:[u8;256];let packed:IntegerResult=integer_to_buffer(size,number,&mut bytes);
+  let result:ImplicitResult=fit(&bytes,packed.value,extent);
+  transition packed.error==0 {true -> (result) _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state string(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,extent:u64)->ImplicitResult {
+  let bytes:ByteRead=read_bytes(input,length,unit,store,source);let failure:ImplicitResult=storage_failure(bytes.outcome);
+  transition bytes.outcome==ByteOutcome::Success {true -> nonempty(bytes,extent) _ -> (failure)}
+ }
+ state nonempty(bytes:ByteRead,extent:u64)->ImplicitResult {
+  let count:u64=bytes.length;
+  transition count>0 {true -> string_value(bytes,count,extent) _ -> (ImplicitResult::Failure {reason:ConversionFailure::Empty})}
+ }
+ state string_value(bytes:ByteRead,count:u64,extent:u64)->ImplicitResult {let result:ImplicitResult=fit(&bytes.bytes,count,extent);result}
+}
+// Initialized zeros provide String termination when it fits, full-target padding,
+// and zero output tails. A 256-character String never needs a 257-byte temporary.
+machine fit(bytes:&[u8;256],count:u64,extent:u64)->ImplicitResult {
+ let mut output:[u8;256];let copied:IntegerResult=mid(bytes,count,0,extent,&mut output);
+ transition copied.error==0 {true -> (ImplicitResult::Buffer {length:extent,bytes:output}) _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})}
+}
+machine storage_failure(outcome:ByteOutcome)->ImplicitResult {
+ transition outcome {
+  ByteOutcome::Capacity -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity})
+  ByteOutcome::Bounds -> (ImplicitResult::Failure {reason:ConversionFailure::Bounds})
+  ByteOutcome::Encoding -> (ImplicitResult::Failure {reason:ConversionFailure::Encoding})
+  ByteOutcome::UnsupportedValue -> (ImplicitResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  ByteOutcome::ReferenceCycle -> (ImplicitResult::Failure {reason:ConversionFailure::ReferenceCycle})
+  ByteOutcome::WorkLimit -> (ImplicitResult::Failure {reason:ConversionFailure::WorkLimit})
+  _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+}

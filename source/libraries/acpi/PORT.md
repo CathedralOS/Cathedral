@@ -329,3 +329,11 @@ ASL name parsing and scoped namespace search, returning an object ID and path.
 All 97 checked pairs and three constant pairs pass, including scope validation,
 error precedence and all initialized path segments. Target evaluation, reference
 policy and full DerefOf execution remain pending; aggregate counts are unchanged.
+
+[Positive-extent Buffer preparation](aml/buffer-target-values.PORT.md) prepares Integer/nonempty String bytes for a caller-supplied
+Buffer extent, preserving that extent through truncation and zero padding. All
+204 checked pairs, three constant pairs and 54 public replacement observations
+pass; the public record distinguishes seven agreements, 25 differences and 22
+excluded-policy observations. Zero extent, empty String and Buffer sources remain
+outside this profile. Target provenance, mutation and Store execution are pending;
+aggregate source counts are unchanged.

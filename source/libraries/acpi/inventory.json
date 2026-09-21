@@ -1156,9 +1156,16 @@
             {
               "path": "source/libraries/acpi/aml/implicit_conversions.omg",
               "anchor": "pub machine convert("
+            },
+            {
+              "anchor": "pub machine prepare_buffer_extent(",
+              "path": "source/libraries/acpi/aml/buffer_target_values.omg"
             }
           ],
-          "note": "Partial only: primary Table 19.7 bounded numeric/String helpers and direct canonical Integer/String/Buffer conversion selection produce detached semantic results. Generic source/reference/Field resolution, existing-target extent policy, target storage and Store execution remain pending."
+          "note": "Partial only: primary Table 19.7 bounded numeric/String helpers and direct canonical Integer/String/Buffer conversion selection produce detached semantic results. Generic source/reference/Field resolution, existing-target extent policy, target storage and Store execution remain pending.",
+          "buffer_extent_component": {
+            "note": "Detached positive explicit extent1..256, direct Integer/nonemptyString preparation under primary Table19.7. No target presence/provenance, reference evaluation, mutation or Store; zero extent/emptyString/same-typeBuffer policies excluded explicitly. Pin replacement always resizes to raw source bytes."
+          }
         },
         "2488:do_copy_object": {
           "anchor": "fn do_copy_object(&self, target: WrappedObject, object: WrappedObject) -> Result<(), AmlError> {",
@@ -3250,7 +3257,16 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine prepare_buffer_extent(",
+              "path": "source/libraries/acpi/aml/buffer_target_values.omg"
+            }
+          ],
+          "buffer_extent_component": {
+            "note": "Detached positive explicit extent1..256, direct Integer/nonemptyString preparation under primary Table19.7. No target presence/provenance, reference evaluation, mutation or Store; zero extent/emptyString/same-typeBuffer policies excluded explicitly. Pin replacement always resizes to raw source bytes."
+          }
         },
         "346:typ": {
           "anchor": "pub fn typ(&self) -> ObjectType {",
