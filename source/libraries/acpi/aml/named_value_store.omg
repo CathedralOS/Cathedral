@@ -1,0 +1,99 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Primary named-value component alongside rust-osdev/acpi do_store / replacement,
+// pin 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
+// Direct allocated IDs only; caller selects named fixed-type target semantics.
+module named_value_store;
+use model::ObjectStore;
+use model::Value;
+use model::ByteBlock;
+use model::StringStorage;
+use model::BufferStorage;
+use byte_storage::ByteRead;
+use byte_storage::ByteOutcome;
+use byte_storage::read_bytes;
+use implicit_conversions::ImplicitResult;
+use implicit_conversions::ConversionTarget;
+use implicit_conversions::convert;
+use buffer_target_values::prepare_buffer_extent;
+use object_conversions::ConversionFailure;
+use integer_helpers::integers::IntegerSize;
+pub data StoreResult [copy] {case Failure(reason:ConversionFailure);case Stored(object:u64);}
+
+// Destination admission precedes source conversion. All preparation occurs on
+// the unchanged store, including self-stores; only completed results publish.
+pub machine store_value(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize)->StoreResult {
+ let count:u64=store.space.object_count;
+ transition count<=64 && destination<count && destination<64 {
+  true -> target(input,length,unit,store,destination,source,size,store.space.objects[destination].value)
+  _ -> (StoreResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+ state target(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,value:Value)->StoreResult {
+  transition value {
+   Value::Integer {number} -> prepare(input,length,unit,store,destination,source,size,ConversionTarget::Integer,0)
+   Value::String {string_storage} -> bytes(input,length,unit,store,destination,source,size,ConversionTarget::String)
+   Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,destination,source,size,ConversionTarget::Buffer)
+   _ -> (StoreResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,target:ConversionTarget)->StoreResult {
+  let admitted:ByteRead=read_bytes(input,length,unit,store,destination);
+  transition admitted.outcome==ByteOutcome::Success {
+   true -> prepare(input,length,unit,store,destination,source,size,target,admitted.length)
+   _ -> failed(admitted.outcome)
+  }
+ }
+ state failed(outcome:ByteOutcome)->StoreResult {let reason:ConversionFailure=storage_failure(outcome);StoreResult::Failure {reason:reason}}
+ state prepare(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,target:ConversionTarget,extent:u64)->StoreResult {
+  transition target==ConversionTarget::Buffer {
+   true -> buffer(input,length,unit,store,destination,source,size,extent)
+   _ -> ordinary(input,length,unit,store,destination,source,size,target)
+  }
+ }
+ state buffer(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,extent:u64)->StoreResult {
+  let prepared:ImplicitResult=prepare_buffer_extent(input,length,unit,store,source,size,extent);
+  let result:StoreResult=publish(store,destination,ConversionTarget::Buffer,prepared);result
+ }
+ state ordinary(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,target:ConversionTarget)->StoreResult {
+  let prepared:ImplicitResult=convert(input,length,unit,store,source,size,target);
+  let result:StoreResult=publish(store,destination,target,prepared);result
+ }
+}
+// This private publisher only receives canonical helper results, never a caller
+// supplied payload. Full-value replacement resets the destination's byte block;
+// object links, namespace metadata and every other object/block are untouched.
+machine publish(store:&mut ObjectStore,destination:u64,target:ConversionTarget,prepared:ImplicitResult)->StoreResult {
+ transition prepared {
+  ImplicitResult::Failure {reason} -> (StoreResult::Failure {reason:reason})
+  ImplicitResult::Integer {number} -> integer(store,destination,target,number)
+  ImplicitResult::String {length,bytes} -> string(store,destination,target,length,bytes)
+  ImplicitResult::Buffer {length,bytes} -> buffer(store,destination,target,length,bytes)
+ }
+ state integer(store:&mut ObjectStore,destination:u64,target:ConversionTarget,number:u64)->StoreResult {
+  transition destination<64 && target==ConversionTarget::Integer {true -> put_integer(store,destination,number) _ -> (StoreResult::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state put_integer(store:&mut ObjectStore,destination:u64,number:u64)->StoreResult {
+  store.space.objects[destination].value=Value::Integer {number:number};store.bytes.blocks[destination]=ByteBlock {};
+  StoreResult::Stored {object:destination}
+ }
+ state string(store:&mut ObjectStore,destination:u64,target:ConversionTarget,length:u64,bytes:[u8;256])->StoreResult {
+  transition destination<64 && length<=256 && target==ConversionTarget::String {true -> put(store,destination,length,bytes,Value::String {string_storage:StringStorage::Owned {string_owner:destination}}) _ -> (StoreResult::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state buffer(store:&mut ObjectStore,destination:u64,target:ConversionTarget,length:u64,bytes:[u8;256])->StoreResult {
+  transition destination<64 && length<=256 && target==ConversionTarget::Buffer {true -> put(store,destination,length,bytes,Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:destination}}) _ -> (StoreResult::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state put(store:&mut ObjectStore,destination:u64,length:u64,bytes:[u8;256],value:Value)->StoreResult {
+  store.space.objects[destination].value=value;store.bytes.blocks[destination]=ByteBlock {initialized:true,length:length,bytes:bytes};
+  StoreResult::Stored {object:destination}
+ }
+}
+machine storage_failure(outcome:ByteOutcome)->ConversionFailure {
+ transition outcome {
+  ByteOutcome::Capacity -> (ConversionFailure::Capacity)
+  ByteOutcome::Bounds -> (ConversionFailure::Bounds)
+  ByteOutcome::Encoding -> (ConversionFailure::Encoding)
+  ByteOutcome::UnsupportedValue -> (ConversionFailure::UnsupportedValue)
+  ByteOutcome::ReferenceCycle -> (ConversionFailure::ReferenceCycle)
+  ByteOutcome::WorkLimit -> (ConversionFailure::WorkLimit)
+  _ -> (ConversionFailure::InvalidState)
+ }
+}

@@ -714,6 +714,13 @@ pass. Integer plus a description remains explicitly outside this bounded profile
 reference/field evaluation, target application and retirement remain pending.
 Aggregate source counts are unchanged.
 
+[Atomic named-value Store](source/libraries/acpi/aml/named-value-store.PORT.md) admits existing direct Integer/String/Buffer destinations, prepares canonical conversion,
+and publishes only after success. All 305 whole-store checked pairs, three constant
+pairs and 297 actual public Store observations pass. Destination identity and links
+are retained; full-value byte storage is reset or replaced atomically. The bounded
+Buffer exclusions, generic target selection and opcode retirement remain pending;
+aggregate source counts are unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and
