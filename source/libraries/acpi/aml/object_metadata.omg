@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// MethodFlags and DeviceStatus facts from rust-osdev/acpi object.rs,
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5, copyright 2018 Isaac Woods.
+// Decoding only: no synchronization, evaluation or enumeration policy.
+module object_metadata;
+pub data MethodFacts [copy] { argument_count:u8; serialized:bool; sync_level:u8; }
+pub data StatusFacts [copy] { present:bool; enabled:bool; show_in_ui:bool; functioning:bool; battery_present:bool; }
+pub machine method_flags(raw:u8)->MethodFacts {
+ MethodFacts {argument_count:raw&7,serialized:(raw&8)!=0,sync_level:(raw>>4)&15}
+}
+// Preserve each observed bit independently, including invalid firmware bit
+// combinations. The caller decides validity, battery applicability and policy.
+pub machine device_status(raw:u64)->StatusFacts {
+ StatusFacts {present:(raw&1)!=0,enabled:(raw&2)!=0,show_in_ui:(raw&4)!=0,functioning:(raw&8)!=0,battery_present:(raw&16)!=0}
+}

@@ -3328,8 +3328,8 @@
         },
         "470:MethodFlags": {
           "anchor": "pub struct MethodFlags(pub u8);",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3337,12 +3337,18 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub data MethodFacts",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
           ]
         },
         "473:arg_count": {
           "anchor": "pub fn arg_count(&self) -> usize {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3350,12 +3356,18 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "argument_count:raw&7",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
           ]
         },
         "477:serialize": {
           "anchor": "pub fn serialize(&self) -> bool {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3363,12 +3375,18 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "serialized:(raw&8)!=0",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
           ]
         },
         "481:sync_level": {
           "anchor": "pub fn sync_level(&self) -> u8 {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3376,6 +3394,12 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "sync_level:(raw>>4)&15",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
           ]
         },
         "487:ReferenceKind": {
@@ -3425,8 +3449,8 @@
         },
         "519:DeviceStatus": {
           "anchor": "pub struct DeviceStatus(pub u64);",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3434,12 +3458,18 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub data StatusFacts",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
           ]
         },
         "522:present": {
           "anchor": "pub fn present(&self) -> bool {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3447,12 +3477,18 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "present:(raw&1)!=0",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
           ]
         },
         "526:enabled": {
           "anchor": "pub fn enabled(&self) -> bool {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3460,12 +3496,18 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "enabled:(raw&2)!=0",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
           ]
         },
         "530:show_in_ui": {
           "anchor": "pub fn show_in_ui(&self) -> bool {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3473,12 +3515,18 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "show_in_ui:(raw&4)!=0",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
           ]
         },
         "534:functioning": {
           "anchor": "pub fn functioning(&self) -> bool {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3486,12 +3534,18 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "functioning:(raw&8)!=0",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
           ]
         },
         "540:battery_present": {
           "anchor": "pub fn battery_present(&self) -> bool {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3499,6 +3553,12 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "battery_present:(raw&16)!=0",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
           ]
         },
         "548:copy_bits": {

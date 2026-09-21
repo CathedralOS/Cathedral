@@ -1,0 +1,384 @@
+{
+  "files": {
+    "src/aml/object.rs": {
+      "disposition": "pending",
+      "reason": "Awaiting source review.",
+      "sha256": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+      "symbols": {
+        "102:create_interpreter_token": {
+          "anchor": "pub(super) unsafe fn create_interpreter_token() -> ObjectToken {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "108:WrappedObject": {
+          "anchor": "pub struct WrappedObject(Arc<UnsafeCell<Object>>);",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "111:new": {
+          "anchor": "pub fn new(object: Object) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "11:NativeMethod": {
+          "anchor": "type NativeMethod = dyn Fn(&[WrappedObject]) -> Result<WrappedObject, AmlError>;",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "124:gain_mut": {
+          "anchor": "pub unsafe fn gain_mut<'r, 'a, 't>(&'a self, _token: &'t ObjectToken) -> &'r mut Object",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "132:unwrap_reference": {
+          "anchor": "pub fn unwrap_reference(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "145:unwrap_transparent_reference": {
+          "anchor": "pub fn unwrap_transparent_reference(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "14:Object": {
+          "anchor": "pub enum Object {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "160:Target": {
+          "anchor": "type Target = Object;",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "162:deref": {
+          "anchor": "fn deref(&self) -> &Self::Target {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "174:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "180:wrap": {
+          "anchor": "pub fn wrap(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "187:as_integer": {
+          "anchor": "pub fn as_integer(&self) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "195:as_string": {
+          "anchor": "pub fn as_string(&self) -> Result<Cow<'_, str>, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "203:as_buffer": {
+          "anchor": "pub fn as_buffer(&self) -> Result<&[u8], AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "214:to_integer": {
+          "anchor": "pub fn to_integer(&self, integer_size: IntegerSize) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "252:to_buffer": {
+          "anchor": "pub fn to_buffer(&self, integer_size: IntegerSize) -> Result<Vec<u8>, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "264:read_buffer_field": {
+          "anchor": "pub fn read_buffer_field(&self, integer_size: IntegerSize) -> Result<Object, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "291:write_buffer_field": {
+          "anchor": "pub fn write_buffer_field(&mut self, value: &[u8], token: &ObjectToken) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "317:replace_with_implicit_casting": {
+          "anchor": "pub fn replace_with_implicit_casting(&mut self, new: Object) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "346:typ": {
+          "anchor": "pub fn typ(&self) -> ObjectType {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "377:aml_cmp": {
+          "anchor": "pub fn aml_cmp(&self, other: &Object) -> Result<Ordering, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "38:native_method": {
+          "anchor": "pub fn native_method<F>(num_args: u8, f: F) -> Object",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "394:FieldUnit": {
+          "anchor": "pub struct FieldUnit {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "395:kind": {
+          "anchor": "pub kind: FieldUnitKind,",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "396:flags": {
+          "anchor": "pub flags: FieldFlags,",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "397:bit_index": {
+          "anchor": "pub bit_index: usize,",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "398:bit_length": {
+          "anchor": "pub bit_length: usize,",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "402:FieldUnitKind": {
+          "anchor": "pub enum FieldUnitKind {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "409:FieldFlags": {
+          "anchor": "pub struct FieldFlags(pub u8);",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "412:FieldAccessType": {
+          "anchor": "pub enum FieldAccessType {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "422:FieldUpdateRule": {
+          "anchor": "pub enum FieldUpdateRule {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "429:access_type": {
+          "anchor": "pub fn access_type(&self) -> Result<FieldAccessType, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "441:access_type_bytes": {
+          "anchor": "pub fn access_type_bytes(&self) -> Result<usize, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "455:lock_rule": {
+          "anchor": "pub fn lock_rule(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "459:update_rule": {
+          "anchor": "pub fn update_rule(&self) -> FieldUpdateRule {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "470:MethodFlags": {
+          "anchor": "pub struct MethodFlags(pub u8);",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
+          "targets": [
+            {
+              "anchor": "pub data MethodFacts",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
+          ]
+        },
+        "473:arg_count": {
+          "anchor": "pub fn arg_count(&self) -> usize {",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
+          "targets": [
+            {
+              "anchor": "argument_count:raw&7",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
+          ]
+        },
+        "477:serialize": {
+          "anchor": "pub fn serialize(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
+          "targets": [
+            {
+              "anchor": "serialized:(raw&8)!=0",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
+          ]
+        },
+        "481:sync_level": {
+          "anchor": "pub fn sync_level(&self) -> u8 {",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
+          "targets": [
+            {
+              "anchor": "sync_level:(raw>>4)&15",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
+          ]
+        },
+        "487:ReferenceKind": {
+          "anchor": "pub enum ReferenceKind {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "497:ObjectType": {
+          "anchor": "pub enum ObjectType {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "49:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "519:DeviceStatus": {
+          "anchor": "pub struct DeviceStatus(pub u64);",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
+          "targets": [
+            {
+              "anchor": "pub data StatusFacts",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
+          ]
+        },
+        "522:present": {
+          "anchor": "pub fn present(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
+          "targets": [
+            {
+              "anchor": "present:(raw&1)!=0",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
+          ]
+        },
+        "526:enabled": {
+          "anchor": "pub fn enabled(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
+          "targets": [
+            {
+              "anchor": "enabled:(raw&2)!=0",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
+          ]
+        },
+        "530:show_in_ui": {
+          "anchor": "pub fn show_in_ui(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
+          "targets": [
+            {
+              "anchor": "show_in_ui:(raw&4)!=0",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
+          ]
+        },
+        "534:functioning": {
+          "anchor": "pub fn functioning(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
+          "targets": [
+            {
+              "anchor": "functioning:(raw&8)!=0",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
+          ]
+        },
+        "540:battery_present": {
+          "anchor": "pub fn battery_present(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Pure initialized metadata decode; no synchronization, status validation, enumeration or hardware policy.",
+          "targets": [
+            {
+              "anchor": "battery_present:(raw&16)!=0",
+              "path": "source/libraries/acpi/aml/object_metadata.omg"
+            }
+          ]
+        },
+        "548:copy_bits": {
+          "anchor": "pub(crate) fn copy_bits(",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "588:align_down": {
+          "anchor": "pub(crate) fn align_down(value: usize, align: usize) -> usize {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "608:tests": {
+          "anchor": "mod tests {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "612:test_copy_bits": {
+          "anchor": "fn test_copy_bits() {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "621:buffer_to_integer": {
+          "anchor": "fn buffer_to_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "626:buffer_field_to_integer": {
+          "anchor": "fn buffer_field_to_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "627:BUFFER": {
+          "anchor": "const BUFFER: [u8; 5] = [0xffu8; 5];",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "635:buffer_field_to_4_byte_integer": {
+          "anchor": "fn buffer_field_to_4_byte_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "637:BUFFER": {
+          "anchor": "const BUFFER: [u8; 5] = [0x0f, 0x00, 0x00, 0x00, 0xf0];",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "649:buffer_field_to_8_byte_integer": {
+          "anchor": "fn buffer_field_to_8_byte_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "650:BUFFER": {
+          "anchor": "const BUFFER: [u8; 6] = [0x0f, 0x00, 0x00, 0x00, 0xf0, 0xff];",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        },
+        "95:ObjectToken": {
+          "anchor": "pub struct ObjectToken {",
+          "disposition": "pending",
+          "reason": "Outside this metadata slice; no whole Object implementation claim."
+        }
+      }
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+    "roots": [
+      "src/aml/object.rs"
+    ],
+    "url": "https://github.com/rust-osdev/acpi"
+  }
+}

@@ -513,6 +513,11 @@ fully initialized output. Its 150 checked pairs (including 35 name-guard cases),
 three const pairs and 84 public Rust observations pass. Text conversion does not
 complete runtime DerefOf, namespace lookup or generic opcode integration.
 
+[Method and device-status facts](source/libraries/acpi/aml/object-metadata.PORT.md)
+adds pure metadata decoding, verified against 448 actual public Rust observations
+in 56 checked pairs and one constant pair. It does not implement synchronization
+or device-enumeration policy.
+
 ACPI-004 partial evidence: [static AML syntax and namespace](source/libraries/acpi/aml/PORT.md)
 passes 27 Omega scenarios with 27 body mutations and an 18-file source check.
 It covers NameString/package framing, literal/package values, static declarations,

@@ -4,7 +4,7 @@
 
 **Stage: inventoried, 2026-09-20.** This milestone covers the complete pinned
 Rust corpus and test-scenario metadata. It does not claim an Omega translation,
-compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 576 translated table/topology/AML/helper anchors, two omitted Rust formatting hooks and 1,003
+compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 586 translated table/topology/AML/helper anchors, two omitted Rust formatting hooks and 993
 pending anchors. Inventory completion and translation completion are different
 milestones. The bounded ACPI-001 slice is separately
 [tested by Omega semantic evaluation](headers.PORT.md): 65 original scenarios
@@ -205,3 +205,9 @@ public Rust observations pass. The tests include full initialized outputs and
 35 canonical guard regressions. Six new source anchors are translated; two Rust
 formatting hooks are deliberately omitted. Namespace lookup and generic DerefOf
 execution remain separate work.
+
+[Method/device metadata](aml/object-metadata.PORT.md) translates ten pure
+MethodFlags/DeviceStatus anchors. All 448 actual public Rust observations agree
+with Omega across 56 checked pairs and one constant pair. Decoding retains each
+status bit independently; synchronization, firmware validity and enumeration
+policy remain caller responsibilities.
