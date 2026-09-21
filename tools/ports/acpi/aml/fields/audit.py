@@ -28,5 +28,5 @@ def main():
  for name,item in cases.items():
   assert (HERE/'cases'/f'{name}.omg').read_text().count(item['mutation'][0])==1,name
  print(f'{len(cases)} unique body controls; four upstream test assets retained as metadata only.')
- print('Syntax coverage only; namespace installation and runtime fields remain pending.')
+ print('Syntax coverage only; normal Field installation has a separate field-namespace audit; live field execution remains pending.')
 if __name__=='__main__':main()

@@ -45,7 +45,7 @@ pub machine classify_target(store:&ObjectStore,selection:TargetSelection,operand
   transition count<=64 && id<count && id<64 {true -> named_kind(store,id,operand,store.space.objects[id].value) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::MissingObject})}
  }
  state named_kind(store:&ObjectStore,id:u64,operand:Operand,value:Value)->TargetAction {
-  transition value {Value::Integer {number} -> scalar_source(store,id,operand) Value::Uninitialized -> (TargetAction::CopyTo {object_id:id,result_binding:Binding::Uninitialized}) Value::OperationRegion {space,base,length,scope} -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedRegion}) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::UnsupportedValue})}
+  transition value {Value::Integer {number} -> scalar_source(store,id,operand) Value::Uninitialized -> (TargetAction::CopyTo {object_id:id,result_binding:Binding::Uninitialized}) Value::FieldUnit {region_object,declaration,field} -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedRegion}) Value::OperationRegion {space,base,length,scope} -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedRegion}) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::UnsupportedValue})}
  }
  state scalar_source(store:&ObjectStore,id:u64,operand:Operand)->TargetAction {
   let found:ValueResult=read_value(store,operand);

@@ -1,8 +1,16 @@
 # Detached BankField and IndexField sequencing
 
-Status: **tested**. All 204 checked-interpreter behavior/control pairs and three
-constant-evaluator pairs pass; the exact-input verifier passes with 60 public
-Rust observations. This is a partial ACPI-005 component, outside production roots.
+Status: **tested**. The metadata-owner migration passes all three selected
+checked behavior/control pairs, with an exact current-input verifier.
+Upstream `b92c4ed` retains 204 checked-interpreter behavior/control pairs, three
+constant-evaluator pairs and 60 public Rust observations. Their original exact
+source/tool hashes remain historical after the shared Field types move to
+`aml::field_model`; those receipts are unchanged. The migration changes imports,
+the direct AML dependency and receipt source enumeration, with no protocol
+algorithm or arithmetic-vector changes. This is a partial ACPI-005 component,
+outside production roots.
+The new migration receipt is
+[retained separately](../../../../tools/ports/acpi/field-protocol/owner-migration-verification.json).
 It plans logical operations, without executing AML, moving payload bytes,
 installing namespace objects, acquiring locks or invoking a hardware provider.
 
@@ -144,9 +152,9 @@ live selector values, datum kinds/indices, direction/count, component geometry,
 inactive tails and failure component/discriminant. Three representative
 constant-evaluator pairs are separate evidence. Checked execution took 312.784
 seconds with three workers; constant evaluation took 128.916 seconds. Maximum
-checked fuel was 182,114 per body. The receipts bind 23 current inputs, exact
+checked fuel was 182,114 per body. The pre-relocation receipts bind 23 original inputs, exact
 fixture/build text, original execution root and immutable compiler/runner
-hashes. The read-only verifier passes, including current binary checks.
+hashes. Their pre-relocation read-only verifier passed, including binary checks.
 Final receipts and exact commands belong to the tooling README.
 
 No Omega modification or compiler blocker is required for this slice.

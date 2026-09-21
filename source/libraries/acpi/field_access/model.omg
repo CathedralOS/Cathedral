@@ -2,8 +2,8 @@
 // Modified detached Field access geometry from rust-osdev/acpi
 // 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; copyright 2018 Isaac Woods.
 module model;
-use fields::field_model::AccessType;
-use fields::field_model::UpdateRule;
+use aml::field_model::AccessType;
+use aml::field_model::UpdateRule;
 use integers::integers::IntegerSize;
 pub data Error [copy] {case InvalidFlags;case InconsistentAccess;case UnsupportedKind;case UnsupportedConnection;case UnsupportedMetadata;case UnsupportedBuffer;case UnsupportedZeroWidth;case Capacity;case Overflow;case OutsideRegion;case InvalidChunk;case NeedsPrevious;}
 pub data LockRequirement [copy] {case NotRequested;case UnmetGlobalLock;}

@@ -1,0 +1,101 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Field/IndexField/BankField syntax adapted from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; copyright 2018 Isaac Woods.
+// Cathedral bounded metadata adaptation 2026. No namespace installation or I/O.
+module field_declarations;
+use model::Outcome;
+use model::Read;
+use model::Path;
+use model::PathResult;
+use model::Span;
+use model::Envelope;
+use bytes::read_le;
+use bytes::envelope;
+use bytes::opcode;
+use names::namestring;
+use names::path_valid;
+use values::integer;
+use field_model::DeclarationKind;
+use field_model::Declaration;
+use field_model::DeclarationResult;
+use field_model::Pending;
+use field_model::ListState;
+use field_elements::parse_list;
+
+pub machine parse_declaration(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:Path,bit_limit:u64,budget:u64)->DeclarationResult {
+ let good_scope:bool=path_valid(scope);
+ transition end<=1024 && at<=end && budget<=1024 && good_scope && scope.absolute && scope.parents==0 {
+  true -> start(input,end,at,unit,scope,bit_limit,budget) _ -> (DeclarationResult {outcome:Outcome::InvalidState,offset:at})
+ }
+ state start(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:Path,bit_limit:u64,budget:u64)->DeclarationResult {
+  let mut out:DeclarationResult=DeclarationResult {offset:at,declaration:Declaration {scope:scope,source:Span {unit:unit,start:at}}};
+  let result:Outcome=declaration_header(input,end,at,&mut out);out.outcome=result;
+  transition result==Outcome::Success {true -> fields(input,out,bit_limit,budget) _ -> (out)}
+ }
+ state fields(input:&[u8;1024],value:DeclarationResult,bit_limit:u64,budget:u64)->DeclarationResult {
+  let parsed:ListState=parse_list(input,value.declaration.source.end,value.next,value.declaration.source.unit,value.declaration.scope,value.declaration.flags,bit_limit,budget);
+  let mut out:DeclarationResult=value;out.list=parsed;out.outcome=parsed.outcome;out.offset=parsed.offset;
+  transition parsed.outcome==Outcome::Success {true -> complete(out) _ -> (out)}
+ }
+ state complete(value:DeclarationResult)->DeclarationResult {let mut out:DeclarationResult=value;out.next=out.declaration.source.end;out}
+}
+machine declaration_header(input:&[u8;1024],end:u64,at:u64,out:&mut DeclarationResult)->Outcome {
+ let op:Read=opcode(input,end,at);
+ transition op.outcome==Outcome::Success {true -> kind(input,end,op,out) _ -> (op.outcome)}
+ state kind(input:&[u8;1024],end:u64,op:Read,out:&mut DeclarationResult)->Outcome {
+  transition op.value {
+   0x5b81 -> body(input,end,op.next,out,DeclarationKind::Field)
+   0x5b86 -> body(input,end,op.next,out,DeclarationKind::Index)
+   0x5b87 -> body(input,end,op.next,out,DeclarationKind::Bank)
+   _ -> (Outcome::UnsupportedSyntax)
+  }
+ }
+ state body(input:&[u8;1024],end:u64,at:u64,out:&mut DeclarationResult,kind:DeclarationKind)->Outcome {
+  let body:Envelope=envelope(input,end,at);out.declaration.kind=kind;out.offset=at;
+  transition body.outcome==Outcome::Success {true -> first(input,out,body) _ -> (body.outcome)}
+ }
+ state first(input:&[u8;1024],out:&mut DeclarationResult,body:Envelope)->Outcome {
+  out.declaration.source.end=body.end;out.offset=body.body;
+  let name:PathResult=namestring(input,body.end,body.body);
+  transition name.outcome==Outcome::Success {true -> first_valid(input,out,name) _ -> (name.outcome)}
+ }
+ state first_valid(input:&[u8;1024],out:&mut DeclarationResult,name:PathResult)->Outcome {
+  transition name.value.count>0 {true -> first_store(input,out,name) _ -> (Outcome::InvalidName)}
+ }
+ state first_store(input:&[u8;1024],out:&mut DeclarationResult,name:PathResult)->Outcome {
+  out.declaration.primary_name=name.value;out.next=name.next;out.offset=name.next;
+  transition out.declaration.kind {DeclarationKind::Field -> flags(input,out) _ -> second(input,out)}
+ }
+ state second(input:&[u8;1024],out:&mut DeclarationResult)->Outcome {
+  let name:PathResult=namestring(input,out.declaration.source.end,out.next);
+  transition name.outcome==Outcome::Success {true -> second_valid(input,out,name) _ -> (name.outcome)}
+ }
+ state second_valid(input:&[u8;1024],out:&mut DeclarationResult,name:PathResult)->Outcome {
+  transition name.value.count>0 {true -> second_store(input,out,name) _ -> (Outcome::InvalidName)}
+ }
+ state second_store(input:&[u8;1024],out:&mut DeclarationResult,name:PathResult)->Outcome {
+  out.declaration.secondary_name=name.value;out.next=name.next;out.offset=name.next;
+  transition out.declaration.kind {DeclarationKind::Bank -> bank(input,out) _ -> flags(input,out)}
+ }
+ state bank(input:&[u8;1024],out:&mut DeclarationResult)->Outcome {
+  let value:Read=integer(input,out.declaration.source.end,out.next);
+  transition value.outcome {
+   Outcome::Success -> bank_store(input,out,value)
+   Outcome::UnsupportedSyntax -> bank_pending(out)
+   _ -> (value.outcome)
+  }
+ }
+ state bank_store(input:&[u8;1024],out:&mut DeclarationResult,value:Read)->Outcome {out.declaration.bank_value=value.value;out.next=value.next;out.offset=value.next;transition {_ -> flags(input,out)}}
+ state bank_pending(out:&mut DeclarationResult)->Outcome {
+  out.pending=Pending::BankTermArgRemainder {unparsed:Span {unit:out.declaration.source.unit,start:out.next,end:out.declaration.source.end}};
+  Outcome::UnsupportedSyntax
+ }
+ state flags(input:&[u8;1024],out:&mut DeclarationResult)->Outcome {
+  let flags:Read=read_le(input,out.declaration.source.end,out.next,1);
+  transition flags.outcome==Outcome::Success {true -> flags_store(out,flags) _ -> (flags.outcome)}
+ }
+ state flags_store(out:&mut DeclarationResult,flags:Read)->Outcome {
+  out.declaration.flags=(flags.value&255) as u8;out.next=flags.next;
+  out.declaration.field_list=Span {unit:out.declaration.source.unit,start:flags.next,end:out.declaration.source.end};Outcome::Success
+ }
+}

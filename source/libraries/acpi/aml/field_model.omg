@@ -2,9 +2,9 @@
 // Adapted from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
 // Upstream copyright 2018 Isaac Woods; Cathedral bounded metadata adaptation 2026.
 module field_model;
-use aml::model::Outcome;
-use aml::model::Path;
-use aml::model::Span;
+use model::Outcome;
+use model::Path;
+use model::Span;
 pub data AccessType [copy] {case Any;case Byte;case Word;case DWord;case QWord;case Buffer;}
 pub data UpdateRule [copy] {case Preserve;case WriteAsOnes;case WriteAsZeros;}
 pub data Access [copy] {

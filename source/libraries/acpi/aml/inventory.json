@@ -68,7 +68,17 @@
         "1831:parse_field_list": {
           "anchor": "fn parse_field_list(",
           "disposition": "pending",
-          "reason": "ACPI-004 staged: static declaration/value subset is implemented; dynamic term arguments, control/method execution, fields, table loading, synchronization and handler effects remain pending ACPI-004/005/006."
+          "reason": "Partial: bounded FieldList metadata parsing and transactional normal Field namespace installation; IndexField/BankField installation and runtime access remain pending.",
+          "targets": [
+            {
+              "anchor": "pub machine parse_list(",
+              "path": "source/libraries/acpi/aml/field_elements.omg"
+            },
+            {
+              "anchor": "machine install_fields(",
+              "path": "source/libraries/acpi/aml/field_namespace.omg"
+            }
+          ]
         },
         "1839:RESERVED_FIELD": {
           "anchor": "const RESERVED_FIELD: u8 = 0x00;",
@@ -1050,32 +1060,92 @@
         "394:FieldUnit": {
           "anchor": "pub struct FieldUnit {",
           "disposition": "pending",
-          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+          "reason": "Partial: canonical normal FieldUnit retains region object ID and complete declaration/field metadata. Index/Bank object installation and live access remain pending.",
+          "targets": [
+            {
+              "anchor": "case FieldUnit(",
+              "path": "source/libraries/acpi/aml/model.omg"
+            },
+            {
+              "anchor": "pub data Field [copy]",
+              "path": "source/libraries/acpi/aml/field_model.omg"
+            }
+          ]
         },
         "395:kind": {
           "anchor": "pub kind: FieldUnitKind,",
           "disposition": "pending",
-          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+          "reason": "Partial: canonical normal FieldUnit retains region object ID and complete declaration/field metadata. Index/Bank object installation and live access remain pending.",
+          "targets": [
+            {
+              "anchor": "case FieldUnit(",
+              "path": "source/libraries/acpi/aml/model.omg"
+            },
+            {
+              "anchor": "pub data Field [copy]",
+              "path": "source/libraries/acpi/aml/field_model.omg"
+            }
+          ]
         },
         "396:flags": {
           "anchor": "pub flags: FieldFlags,",
           "disposition": "pending",
-          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+          "reason": "Partial: canonical normal FieldUnit retains region object ID and complete declaration/field metadata. Index/Bank object installation and live access remain pending.",
+          "targets": [
+            {
+              "anchor": "case FieldUnit(",
+              "path": "source/libraries/acpi/aml/model.omg"
+            },
+            {
+              "anchor": "pub data Field [copy]",
+              "path": "source/libraries/acpi/aml/field_model.omg"
+            }
+          ]
         },
         "397:bit_index": {
           "anchor": "pub bit_index: usize,",
           "disposition": "pending",
-          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+          "reason": "Partial: canonical normal FieldUnit retains region object ID and complete declaration/field metadata. Index/Bank object installation and live access remain pending.",
+          "targets": [
+            {
+              "anchor": "case FieldUnit(",
+              "path": "source/libraries/acpi/aml/model.omg"
+            },
+            {
+              "anchor": "pub data Field [copy]",
+              "path": "source/libraries/acpi/aml/field_model.omg"
+            }
+          ]
         },
         "398:bit_length": {
           "anchor": "pub bit_length: usize,",
           "disposition": "pending",
-          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+          "reason": "Partial: canonical normal FieldUnit retains region object ID and complete declaration/field metadata. Index/Bank object installation and live access remain pending.",
+          "targets": [
+            {
+              "anchor": "case FieldUnit(",
+              "path": "source/libraries/acpi/aml/model.omg"
+            },
+            {
+              "anchor": "pub data Field [copy]",
+              "path": "source/libraries/acpi/aml/field_model.omg"
+            }
+          ]
         },
         "402:FieldUnitKind": {
           "anchor": "pub enum FieldUnitKind {",
           "disposition": "pending",
-          "reason": "ACPI-005 pending: live object/reference ownership, conversions, operators and dynamic package/buffer mutation are outside this static syntax/namespace layer."
+          "reason": "Partial: canonical normal FieldUnit retains region object ID and complete declaration/field metadata. Index/Bank object installation and live access remain pending.",
+          "targets": [
+            {
+              "anchor": "case FieldUnit(",
+              "path": "source/libraries/acpi/aml/model.omg"
+            },
+            {
+              "anchor": "pub data Field [copy]",
+              "path": "source/libraries/acpi/aml/field_model.omg"
+            }
+          ]
         },
         "409:FieldFlags": {
           "anchor": "pub struct FieldFlags(pub u8);",

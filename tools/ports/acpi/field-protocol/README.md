@@ -81,3 +81,30 @@ clearly; their absence is not a passing audit.
 The inherited normal-field source is unchanged. New tests execute it for every
 recipe's actual used components, including independent widths and update rules.
 No production build root or existing canary is changed by this isolated package.
+
+## Metadata owner migration
+
+The original 204 checked pairs, three constant pairs and public observations
+below are retained unchanged from upstream `b92c4ed`. Their source/tool snapshots
+predate the canonical `aml::field_model` owner and remain historical; the original
+full-record verifier still requires an exact matching snapshot.
+
+The owner migration changes source and fixture imports, adds a direct `aml`
+dependency, and updates the checked-source snapshot to include the parent model
+and child forwarding closure. It changes no protocol algorithm, expected
+arithmetic, public Rust probe or `cases.json` data. Current type compatibility is
+checked with the existing representative Bank read, Index write and selector
+boundary trio, recorded separately:
+
+```sh
+python3 tools/ports/acpi/field-protocol/check.py \
+  --runner /tmp/cathedral-acpi-generic-checked/release/cathedral-acpi-checked-runner \
+  --case bank_read_0_0 --case index_write_3_0 \
+  --case index_last_selector_overflow --batch-size 3 --workers 1 \
+  --record tools/ports/acpi/field-protocol/owner-migration-verification.json
+python3 tools/ports/acpi/field-protocol/verify_migration.py
+```
+
+`verify_migration.py` verifies only these three current checked pairs, their
+compiled fixture/build text, all recorded inputs and the runner binary. It does
+not claim a new full-vector, constant-evaluator, public Rust or hardware run.

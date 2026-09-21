@@ -1,0 +1,54 @@
+// Original owner-migration compatibility and unresolved-boundary fixtures.
+use aml::field_model::Field;
+use aml::field_model::Declaration;
+use aml::model::ObjectStore;
+use aml::model::Object;
+use aml::model::Value;
+use aml::object_queries::object_type;
+use aml::object_queries::QueryResult;
+use reads::read;
+use reads::model::ReadResult;
+use writes::write;
+use writes::model::WriteResult;
+use access::model::Previous;
+use access::model::LockRequirement;
+use integers::integers::IntegerSize;
+use execution::execution_model::ExecutionOutcome;
+use execution::execution_model::Operand;
+use execution::execution_model::BindingResult;
+use execution::execution_model::SlotResult;
+use execution::frames::scalar_slot;
+use execution::generic_values::validate_operand;
+use execution::generic_values::destination_allowed;
+use execution::generic_target_model::TargetSelection;
+use execution::generic_target_values::apply_selected;
+
+machine consumer_round_trip(expected:u64)->u64 {
+ let decoded:AccessResult=decode_flags(1);
+ let field:Field=Field {bit_offset:4,bit_length:8,access:decoded.access};
+ let mut words:[u64;257];words[0]=176;words[1]=10;
+ let read_result:ReadResult=read::assemble(DeclarationKind::Field,&field,2,IntegerSize::EightBytes,&words,2);
+ let read_ok:bool=consumer_read(read_result,expected);
+ let mut payload:[u8;256];payload[0]=171;
+ let mut previous:[Previous;257];previous[0]=Previous::Value {word:15};previous[1]=Previous::Value {word:240};
+ let write_result:WriteResult=write::assemble(DeclarationKind::Field,&field,2,IntegerSize::EightBytes,&payload,1,&previous,2);
+ let write_ok:bool=consumer_write(write_result);
+ transition read_ok && write_ok {true -> (0) _ -> (1)}
+}
+machine consumer_read(result:ReadResult,expected:u64)->bool {transition result {ReadResult::Integer {value,size,lock} -> (value==expected && size==IntegerSize::EightBytes && lock==LockRequirement::NotRequested) _ -> (false)}}
+machine consumer_write(result:WriteResult)->bool {transition result {WriteResult::Writes {count,records,lock} -> (count==2 && records[0].offset==0 && records[0].width==1 && records[0].value==191 && records[1].offset==1 && records[1].width==1 && records[1].value==250 && lock==LockRequirement::NotRequested) _ -> (false)}}
+machine field_boundary(expected_type:u64)->u64 {
+ let mut input:[u8;1024];let mut store:ObjectStore;
+ let value:Value=Value::FieldUnit {region_object:17,declaration:Declaration {},field:Field {bit_offset:5,bit_length:8}};
+ store.space.object_count=1;store.space.objects[0]=Object {value:value,has_next:true,next:41};
+ let query:QueryResult=object_type(&store.space,0,1);let type_ok:bool=field_type(query,expected_type);
+ let scalar:SlotResult=scalar_slot(IntegerSize::EightBytes,value);
+ let admitted:ExecutionOutcome=validate_operand(&input,0,0,&store,Operand::Object {object_id:0});
+ let allowed:ExecutionOutcome=destination_allowed(&store,0);
+ let stored:BindingResult=apply_selected(&input,0,0,IntegerSize::EightBytes,&mut store,TargetSelection::Named {object_id:0},Operand::Integer {number:9},false);
+ let copied:BindingResult=apply_selected(&input,0,0,IntegerSize::EightBytes,&mut store,TargetSelection::Named {object_id:0},Operand::Integer {number:9},true);
+ let retained:bool=field_retained(store.space.objects[0].value);
+ transition type_ok && scalar.outcome==ExecutionOutcome::UnresolvedRegion && admitted==ExecutionOutcome::UnresolvedRegion && allowed==ExecutionOutcome::UnresolvedRegion && stored.outcome==ExecutionOutcome::UnresolvedRegion && copied.outcome==ExecutionOutcome::UnresolvedRegion && retained && store.space.object_count==1 && store.space.objects[0].has_next && store.space.objects[0].next==41 {true -> (0) _ -> (1)}
+}
+machine field_type(result:QueryResult,expected:u64)->bool {transition result {QueryResult::Value {object,number} -> (object==0 && number==expected) _ -> (false)}}
+machine field_retained(value:Value)->bool {transition value {Value::FieldUnit {region_object,declaration,field} -> (region_object==17 && field.bit_offset==5 && field.bit_length==8) _ -> (false)}}

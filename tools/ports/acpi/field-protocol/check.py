@@ -27,12 +27,12 @@ def snapshot():
     paths = list((ROOT/'source/libraries/acpi/field_protocol').glob('*.omg'))
     for package, files in {
         'field_access': ['build.omg', 'geometry.omg', 'chunks.omg', 'model.omg'],
-        'aml/fields': ['build.omg', 'field_model.omg', 'flags.omg'],
-        'aml': ['build.omg', 'model.omg'],
         'interpreter': ['build.omg', 'integers.omg'],
     }.items():
         paths += [ROOT/'source/libraries/acpi'/package/name for name in files]
-    paths += [HERE/name for name in ['check.py', 'check_const.py', 'verify_record.py', 'fixtures.py', 'vectors.py', 'cases.json', 'toolchain.json']]
+    paths += list((ROOT/'source/libraries/acpi/aml').glob('*.omg'))
+    paths += list((ROOT/'source/libraries/acpi/aml/fields').glob('*.omg'))
+    paths += [HERE/name for name in ['verify_migration.py', 'check.py', 'check_const.py', 'verify_record.py', 'fixtures.py', 'vectors.py', 'cases.json', 'toolchain.json']]
     paths += [ROOT/'tools/ports/acpi/interpreter/execution'/name for name in ['checked_runner.rs', 'runner.Cargo.lock']]
     return {str(path.relative_to(ROOT)): sha(path) for path in sorted(paths)}
 

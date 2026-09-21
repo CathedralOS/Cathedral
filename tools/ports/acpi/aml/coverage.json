@@ -222,8 +222,12 @@
       "wire": 23346
     },
     "Field": {
-      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
-      "status": "pending",
+      "reason": "Normal Field declarations install complete inert metadata with a stable OperationRegion object ID transactionally. IndexField/BankField installation and evaluator/provider integration remain pending.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine load_field(",
+        "path": "source/libraries/acpi/aml/field_namespace.omg"
+      },
       "wire": 23425
     },
     "FindSetLeftBit": {

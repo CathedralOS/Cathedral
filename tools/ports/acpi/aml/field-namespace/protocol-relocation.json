@@ -1,0 +1,43 @@
+{
+  "files": [
+    {
+      "current_sha256": "7df4cd0910e2199717a75c8a88afa9254890a0350aa93262bdcf8ed45682bfb2",
+      "path": "source/libraries/acpi/field_protocol/model.omg",
+      "transformation": "fields::field_model:: -> aml::field_model:: only",
+      "upstream_sha256": "fd43af2f3d9baccf509607112d32da8940515bedb23ce6e5c48c12a3f648d9bc"
+    },
+    {
+      "current_sha256": "d6ce73ad473553f8c0fb37b7865ba8df2a562f4535b1e3b358557751ca395413",
+      "path": "source/libraries/acpi/field_protocol/protocol.omg",
+      "transformation": "fields::field_model:: -> aml::field_model:: only",
+      "upstream_sha256": "2bb81642ca9876fb2f5bcfc08e0dfb03363331e49e4591c615a02bfdaa8024a6"
+    },
+    {
+      "current_sha256": "ac04e502c30f7f349417d811e06a3fa2923e494241b5116e59fe5885c5e9fd9c",
+      "path": "tools/ports/acpi/field-protocol/fixtures.py",
+      "transformation": "fields::field_model:: -> aml::field_model:: only",
+      "upstream_sha256": "a0f57b3585a0563a90502b379c5d955342d2592edfecce369fa3bf5e835451c2"
+    },
+    {
+      "path": "tools/ports/acpi/field-protocol/cases.json",
+      "unchanged_sha256": "07b157a920207b09167f601a57c27a7ccf31447c502cb9150f78bf5cbc6fa918"
+    },
+    {
+      "path": "tools/ports/acpi/field-protocol/checked-verification.json",
+      "unchanged_sha256": "e38a1c22701b5ca33bd4a2a66f9edfc1e884b60d95637eb2cd768147a537384d"
+    },
+    {
+      "path": "tools/ports/acpi/field-protocol/const-verification.json",
+      "unchanged_sha256": "28a82f7d0e5903da8a48df86e7117d3ffa9d497a47655a5e497b10465316e0c9"
+    },
+    {
+      "path": "tools/ports/acpi/field-protocol/reference-verification.json",
+      "unchanged_sha256": "4f223b6b03bc6a151d30025bbff29c6c5d591ed60f6783a31cf65bc643747654"
+    },
+    {
+      "path": "tools/ports/acpi/field-protocol/comparison.json",
+      "unchanged_sha256": "026bc5c6d11609202111ff9c3b2c82ac007b34bb6f9c384e3cf659b6bd95dc9f"
+    }
+  ],
+  "upstream": "b92c4edf6248a47ba8d33635a1bdf72b5ee72851"
+}

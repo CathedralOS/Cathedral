@@ -5,8 +5,8 @@ module model;
 use access::model::Plan;
 use access::model::Error;
 use access::model::LockRequirement;
-use fields::field_model::Field;
-use fields::field_model::DeclarationKind;
+use aml::field_model::Field;
+use aml::field_model::DeclarationKind;
 use integers::integers::IntegerSize;
 pub data Direction [copy] {case Read;case Write;}
 pub data Component [copy] {case Field;case Selector;case Data;}
