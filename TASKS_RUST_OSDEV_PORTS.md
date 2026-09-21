@@ -671,6 +671,12 @@ excluded-policy observations. Zero extent, empty String and Buffer sources remai
 outside this profile. Target provenance, mutation and Store execution are pending;
 aggregate source counts are unchanged.
 
+[Direct logical results](source/libraries/acpi/aml/object-logic.PORT.md) compose primary Integer truth conversion and
+left-directed relational comparison over canonical basic values. All 346 checked
+pairs and three constant pairs pass, including exact 32/64-bit Boolean results,
+full right admission and malformed-tail errors. Operand/reference evaluation and
+context retirement remain pending; aggregate source counts are unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

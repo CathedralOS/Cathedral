@@ -718,9 +718,17 @@
             {
               "anchor": "pub machine compare(",
               "path": "source/libraries/acpi/aml/object_comparison.omg"
+            },
+            {
+              "path": "source/libraries/acpi/aml/object_logic.omg",
+              "anchor": "pub machine binary("
+            },
+            {
+              "path": "source/libraries/acpi/aml/object_logic.omg",
+              "anchor": "pub machine negate("
             }
           ],
-          "note": "Direct Integer/String/Buffer comparison after primary right-hand conversion to the left type. Reference/Field evaluation, truth operators, Boolean result construction and context execution remain pending; pinned Buffer length-first ordering intentionally differs."
+          "note": "Direct Integer/String/Buffer comparison, truth operations and width-normalized Boolean construction after primary conversion are implemented. Reference/Field and operand evaluation, context contribution and retirement remain pending; pinned mixed-type/Buffer/width semantics intentionally differ."
         },
         "19:namespace": {
           "anchor": "pub mod namespace;",

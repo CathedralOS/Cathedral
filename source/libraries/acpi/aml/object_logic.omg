@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Primary logical data policy alongside rust-osdev/acpi do_logical_op,
+// pin 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
+// Direct, already evaluated IDs only. No reference/field evaluation or retirement.
+module object_logic;
+use model::ObjectStore;
+use implicit_conversions::convert;
+use implicit_conversions::ConversionTarget;
+use implicit_conversions::ImplicitResult;
+use object_conversions::ConversionFailure;
+use object_comparison::compare;
+use object_comparison::ObjectComparison;
+use integer_helpers::integers;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::Logical;
+pub data LogicalResult [copy] {
+ case Failure(reason:ConversionFailure);
+ case Integer(number:u64);
+}
+pub machine binary(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize,op:Logical)->LogicalResult {
+ transition op {
+  Logical::And -> truth(input,length,unit,store,left,right,size,op)
+  Logical::Or -> truth(input,length,unit,store,left,right,size,op)
+  _ -> relation(input,length,unit,store,left,right,size,op)
+ }
+ state truth(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize,op:Logical)->LogicalResult {
+  let a:ImplicitResult=convert(input,length,unit,store,left,size,ConversionTarget::Integer);
+  transition a {
+   ImplicitResult::Failure {reason} -> (LogicalResult::Failure {reason:reason})
+   ImplicitResult::Integer {number} -> other(input,length,unit,store,right,size,op,number)
+   _ -> (LogicalResult::Failure {reason:ConversionFailure::InvalidState})
+  }
+ }
+ state other(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,right:u64,size:IntegerSize,op:Logical,a:u64)->LogicalResult {
+  let b:ImplicitResult=convert(input,length,unit,store,right,size,ConversionTarget::Integer);
+  transition b {
+   ImplicitResult::Failure {reason} -> (LogicalResult::Failure {reason:reason})
+   ImplicitResult::Integer {number} -> integers(size,op,a,number)
+   _ -> (LogicalResult::Failure {reason:ConversionFailure::InvalidState})
+  }
+ }
+ state integers(size:IntegerSize,op:Logical,a:u64,b:u64)->LogicalResult {
+  let value:u64=integers::logical(size,op,a,b);LogicalResult::Integer {number:value}
+ }
+ state relation(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize,op:Logical)->LogicalResult {
+  let comparison:ObjectComparison=compare(input,length,unit,store,left,right,size);
+  let result:LogicalResult=ol_relation(comparison,size,op);result
+ }
+}
+pub machine negate(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize)->LogicalResult {
+ let value:ImplicitResult=convert(input,length,unit,store,source,size,ConversionTarget::Integer);
+ transition value {
+  ImplicitResult::Failure {reason} -> (LogicalResult::Failure {reason:reason})
+  ImplicitResult::Integer {number} -> invert(size,number)
+  _ -> (LogicalResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+ state invert(size:IntegerSize,number:u64)->LogicalResult {
+  let value:u64=integers::logical_not(size,number);LogicalResult::Integer {number:value}
+ }
+}
+machine ol_relation(comparison:ObjectComparison,size:IntegerSize,op:Logical)->LogicalResult {
+ transition comparison {
+  ObjectComparison::Failure {reason} -> (LogicalResult::Failure {reason:reason})
+  ObjectComparison::Less -> truth(size,op==Logical::NotEqual || op==Logical::Less || op==Logical::LessEqual)
+  ObjectComparison::Equal -> truth(size,op==Logical::Equal || op==Logical::LessEqual || op==Logical::GreaterEqual)
+  ObjectComparison::Greater -> truth(size,op==Logical::NotEqual || op==Logical::Greater || op==Logical::GreaterEqual)
+ }
+ state truth(size:IntegerSize,yes:bool)->LogicalResult {
+  let mask:u64=integers::integer_mask(size);
+  transition yes {true -> (LogicalResult::Integer {number:mask}) _ -> (LogicalResult::Integer {number:0})}
+ }
+}
