@@ -1,0 +1,127 @@
+{
+  "kind": "Diagnostic copied Field prepare/issue/fail over directly seeded nested Session; real geometry helpers; no loader/engine/decoder execution proof",
+  "sources": {
+    "/tmp/cathedral-field-read-equality-session-micro/main.omg": "5b5cc66cc766ae21953243232ee278f247bb109faa1a392c2cb233fb661bb1e3",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/pipeline/field_reads.omg": "c6d52ec8e7c3452e0b8ba451f279e746ff954ebed7aeda904ec1d920e57b5d6a",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/field_access/geometry.omg": "db4fee30a6e088ad775bb7559fd4462c7805c3e9a2ca92179e05056116526fc2",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/field_flags.omg": "691b6df40716f6d908b8f726efbcc4da6ab7d2297417c5070c9895fc4bddae84",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/field_access/chunks.omg": "dc637c38bedfec4377cc3461149e98f2a78066bd266ee9c644b0921b15c56154",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196",
+    "/tmp/cathedral-field-read-check-inputs/current-tiny1/main.omg": "df6bf81bdb8cccdb1f1f29f2cc0d11674ec8eb4274d9839a192295f4f3f5da14"
+  },
+  "data_declaration_count": 79,
+  "data_prefix_sha256": "3cf74036c2851a8e9bbb2a75a7f4c5969a4d4a48d17869c816cc4eb2af4b52f7",
+  "copies": [
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/pipeline/field_reads.omg",
+      "machine": "prepare",
+      "original_sha256": "f98c8cb36be4cbb50fd1a2a19b99d43b6485e8a3ede5b8731752cd11eaa73366",
+      "copied_sha256": "3f251e8adff63e8ba998460109294c595f3386de8e6e6f496535ce36f604cae5",
+      "substitutions": [
+        [
+          "geometry::plan",
+          "geometry_plan"
+        ]
+      ]
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/pipeline/field_reads.omg",
+      "machine": "issue",
+      "original_sha256": "f8feb63e95abfa1981601fb45e0572acae54c0fb2b98c7df1554f2905d969c66",
+      "copied_sha256": "f8feb63e95abfa1981601fb45e0572acae54c0fb2b98c7df1554f2905d969c66",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/pipeline/field_reads.omg",
+      "machine": "fail",
+      "original_sha256": "40ef35cfe6c5acbf32d703f40171f0b82f854047a6080d176f0107ba372b5361",
+      "copied_sha256": "40ef35cfe6c5acbf32d703f40171f0b82f854047a6080d176f0107ba372b5361",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/pipeline/field_reads.omg",
+      "machine": "same_request",
+      "original_sha256": "5264e80363cc5b617f99769c5f0b1ae3974110376907e166e58229fed1cacd2c",
+      "copied_sha256": "5264e80363cc5b617f99769c5f0b1ae3974110376907e166e58229fed1cacd2c",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/field_access/geometry.omg",
+      "section": "Builder and all following geometry machines",
+      "original_sha256": "45f39f5bee4131872974a832359c347674ffa9461f49e6cdf4a8c3e00893555d",
+      "copied_sha256": "ff8326729d64ddab615e3c573cedda90ed8c1cb069b9902c8d3888e624ed0541",
+      "substitutions": [
+        [
+          "flags::decode_flags",
+          "decode_flags"
+        ],
+        [
+          "pub machine plan(",
+          "pub machine geometry_plan("
+        ]
+      ]
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/field_flags.omg",
+      "machine": "decode_flags",
+      "original_sha256": "7a3d81f988ebaaff435b8626725a6b857cd8eb3a66865660ae66195ebc369548",
+      "copied_sha256": "7a3d81f988ebaaff435b8626725a6b857cd8eb3a66865660ae66195ebc369548",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/field_flags.omg",
+      "machine": "access_kind",
+      "original_sha256": "746149ed88dfb5dfffd7236cfb696b16af387dc61b66e6ddad5d43bd8141d8d2",
+      "copied_sha256": "746149ed88dfb5dfffd7236cfb696b16af387dc61b66e6ddad5d43bd8141d8d2",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/field_flags.omg",
+      "machine": "update_kind",
+      "original_sha256": "480390881c5fc4fedf637f59e816d0026036d062eff5bfea9ab476eb7a31d3a9",
+      "copied_sha256": "480390881c5fc4fedf637f59e816d0026036d062eff5bfea9ab476eb7a31d3a9",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/field_access/chunks.omg",
+      "machine": "low_mask",
+      "original_sha256": "fa3a7d8dcfb20b7197e4e84b8990e08fe2b45d6042db1aa2e0cd8a8159531a86",
+      "copied_sha256": "fa3a7d8dcfb20b7197e4e84b8990e08fe2b45d6042db1aa2e0cd8a8159531a86",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/integers.omg",
+      "machine": "integer_bits",
+      "original_sha256": "9927f14a684a8b7b2b545f8c6f251c9905e7cb818e5f8eb04c2b99127c7c8a06",
+      "copied_sha256": "9927f14a684a8b7b2b545f8c6f251c9905e7cb818e5f8eb04c2b99127c7c8a06",
+      "substitutions": []
+    }
+  ],
+  "substitutions": "Only two module qualifier/name substitutions listed per copied segment; no geometry stubs",
+  "seed": "Direct metadata decoded by inspection from the exact first tiny AML bytes; Runtime represents retained Field read at PC34->38",
+  "main_sha256": "b0cb2eed372e1d2d28130c48c5dbfe1beee0e11bf46960c6c153ef1ff3693f70",
+  "build_sha256": "e5d53cefa6559ed54f8a1345619fe15f49d18a08619f94f31d95eb307d351c7e",
+  "selections": [
+    "AdmissionProbe::ready=0",
+    "AdmissionProbe::wrong_unit=0",
+    "AdmissionProbe::wrong_kind=0",
+    "AdmissionProbe::wrong_access=0"
+  ],
+  "generator_sha256": "fd87d7375b5020a3127be8ad75c9387c0347a26ee4e914f826353c9f2168a66d",
+  "runner": "/tmp/cathedral-field-protocol-target/release/cathedral-acpi-checked-runner",
+  "runner_sha256": "4055e1d9cbc364859aeaaecc32148b1eaefa6cf04b3330076f816ce9bf9401dc",
+  "exit_code": 0,
+  "source_unchanged": true,
+  "output_sha256": "afda8e4f91efadfc2a53c3621a9ecef5637e4d4ec55731df39fd9fe558e895b8",
+  "command": [
+    "/tmp/cathedral-field-protocol-target/release/cathedral-acpi-checked-runner",
+    "main.omg",
+    "build",
+    "AdmissionProbe::ready=0",
+    "AdmissionProbe::wrong_unit=0",
+    "AdmissionProbe::wrong_kind=0",
+    "AdmissionProbe::wrong_access=0"
+  ],
+  "working_directory": "/private/tmp/cathedral-field-read-admission-micro",
+  "result": "CHECKED and all four diagnostic selections PASS; no equality trap; does not prove loader/decoder/call-site integration"
+}

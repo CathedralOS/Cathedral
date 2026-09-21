@@ -40,6 +40,54 @@
     "lean-build.omg": {
       "copied_from": "/tmp/cathedral-field-read-check-inputs/lean-tiny1/build.omg",
       "sha256": "7989095621cef32eb03c1ef897c1b85d278a4544199422c2ca28c288c87e2354"
+    },
+    "admission-micro/main.omg": {
+      "copied_from": "/tmp/cathedral-field-read-admission-micro/main.omg",
+      "sha256": "b0cb2eed372e1d2d28130c48c5dbfe1beee0e11bf46960c6c153ef1ff3693f70"
+    },
+    "admission-micro/build.omg": {
+      "copied_from": "/tmp/cathedral-field-read-admission-micro/build.omg",
+      "sha256": "e5d53cefa6559ed54f8a1345619fe15f49d18a08619f94f31d95eb307d351c7e"
+    },
+    "admission-micro/generate.py": {
+      "copied_from": "/tmp/cathedral-field-read-admission-micro/generate.py",
+      "sha256": "fd87d7375b5020a3127be8ad75c9387c0347a26ee4e914f826353c9f2168a66d"
+    },
+    "admission-micro/manifest.json": {
+      "copied_from": "/tmp/cathedral-field-read-admission-micro/manifest.json",
+      "sha256": "05d176ae1271a3938ff3711521d43fc8755e2c2c88451cbc9f10555344dfe444"
+    },
+    "admission-micro/output.log": {
+      "copied_from": "/tmp/cathedral-field-read-admission-micro/output.log",
+      "sha256": "afda8e4f91efadfc2a53c3621a9ecef5637e4d4ec55731df39fd9fe558e895b8"
+    },
+    "decoder-micro/main.omg": {
+      "copied_from": "/tmp/cathedral-field-read-decoder-micro/main.omg",
+      "sha256": "26ba3d68cf7d0c987b02e268384d92de3e894c65c19230a695b3bea2fa9aa99f"
+    },
+    "decoder-micro/build.omg": {
+      "copied_from": "/tmp/cathedral-field-read-decoder-micro/build.omg",
+      "sha256": "ba7b9ba666e048001bfec06f9257bf374195a0acecf7cb302edbc792f3f87ba5"
+    },
+    "decoder-micro/generate.py": {
+      "copied_from": "/tmp/cathedral-field-read-decoder-micro/generate.py",
+      "sha256": "53dfbf37860a9238988ad7a82216f90f8fe0da9f4f2f09433b2032935fa75aef"
+    },
+    "decoder-micro/run.py": {
+      "copied_from": "/tmp/cathedral-field-read-decoder-micro/run.py",
+      "sha256": "5e862362754e7ef87efd68e86ff2d4573640bcb2db7134b16af4b10f71f75dbb"
+    },
+    "decoder-micro/manifest.json": {
+      "copied_from": "/tmp/cathedral-field-read-decoder-micro/manifest.json",
+      "sha256": "a428539fec250ac5af97f0a1272a5153d54e02b6e206e48b606163d492c49b3b"
+    },
+    "decoder-micro/output.log": {
+      "copied_from": "/tmp/cathedral-field-read-decoder-micro/output.log",
+      "sha256": "7a23b29004c4982b2b2f5ea9ed2bf99102699ed353700dfd9c97f29ad4f6fd61"
+    },
+    "diagnostic-data/session-micro-main.omg": {
+      "copied_from": "/tmp/cathedral-field-read-equality-session-micro/main.omg",
+      "sha256": "5b5cc66cc766ae21953243232ee278f247bb109faa1a392c2cb233fb661bb1e3"
     }
   },
   "regression_harness_sha256": "502fecf6cffc006f7cea7d74061a2c909c1d7ac088e5cf46a9453950bf9b382a"

@@ -1,0 +1,121 @@
+{
+  "kind": "Standalone copied decoder and read Runtime wrappers; synthetic execution_turn, no loader/names/real dispatch/provider; unreachable validation and contribution explicitly fail.",
+  "sources": {
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/decode_execution.omg": "50bbb8d44093b37af883b667248f88ca8992dae9c1c59e646cf9f37d545c79e4",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/generic_values.omg": "b888247c49df0269690bcce584224b518d6e143d32a2e7efc0769776f86d2c92",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/object_references.omg": "4c06bb925681f2e833ebb815b15e5e53d476f08810d0252e77a977af4134b703",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/operands.omg": "de9520bb6911c526bd57187b395255289a6eaab81269473a8aeaca7a01d19348",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/engine.omg": "41ec60725c8d2aeee649e902357437a734587bad01975d77970500090b63b386",
+    "/tmp/cathedral-field-read-admission-micro/main.omg": "b0cb2eed372e1d2d28130c48c5dbfe1beee0e11bf46960c6c153ef1ff3693f70"
+  },
+  "copies": [
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/decode_execution.omg",
+      "machine": "decode_generic_value",
+      "sha256": "620e82f16b78f8bfa4b32066293a1788fe6c8428ff40f24d2f1b9ca8235704fa"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/decode_execution.omg",
+      "machine": "decode_commit_cursor",
+      "sha256": "36f33f75ee45100bb39e57e873f1780ec4855252d9fd95f315da39ba9eadc7a4"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/generic_values.omg",
+      "machine": "object_outcome",
+      "sha256": "161e3e5dc1ba661f8a399cbd04f4a4776668f954666f3f45b0321ac7990dd7f7"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/generic_values.omg",
+      "machine": "read_value",
+      "sha256": "8de4a58e33249e8c255cefab60848218212aeee68d2bd2111e950ddd18368f08"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/object_references.omg",
+      "machine": "unwrap_transparent",
+      "sha256": "7223fc37ea47dd4327a8a90160df787cee15daa4e7ae77f41c7f634c50842a3a"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/object_references.omg",
+      "machine": "or_unwrap",
+      "sha256": "c0632ff1a2f9148a37dfef23f641ba19e86b707edb33895c10221625a4186ecf"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/object_references.omg",
+      "machine": "or_reference_walk",
+      "sha256": "68b93adcf52e57713ce594efce36ec37c997874f37cd883aac917974f11c62cb"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/object_references.omg",
+      "machine": "or_reference_bounded_step",
+      "sha256": "15bd65b3f0fbffd784e570b1a30a5f78ce041b1da582b5cecff8cb59ec4f4c08"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/object_references.omg",
+      "machine": "or_reference_step",
+      "sha256": "20eb2ee00f9727ad1b99d572cfcf92e7391ca4fbfe891f03f3798748a6ffd6ee"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/operands.omg",
+      "machine": "operation_header",
+      "sha256": "80067d647f63bf778d61131fe8b129071175ba79d779b2b4ab624e728fe45447"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/engine.omg",
+      "machine": "pending_read",
+      "sha256": "61c3d04d3e708dcd22f04218f1019d6faf02d150759cbbef866307bf2321404f"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/engine.omg",
+      "machine": "advance_read_runtime",
+      "sha256": "0a3f88831f89408ffbed80561a7905f66eb0361925735af89a2c9c160effe2f5"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/engine.omg",
+      "machine": "execution_run_turn",
+      "sha256": "e89eb1a0e76667ca4c2c985f7932012d7ea50adbf394e1112fcb555ed4c1709c"
+    },
+    {
+      "source": "/tmp/cathedral-field-read-admission-micro/main.omg",
+      "machine": "seeded",
+      "sha256": "8d228c1f4b3ad5352250d9927234aeffce00a5b89f37d297d4f77586f8df3ee0"
+    }
+  ],
+  "data_prefix_sha256": "3cf74036c2851a8e9bbb2a75a7f4c5969a4d4a48d17869c816cc4eb2af4b52f7",
+  "data_prefix_source": "/tmp/cathedral-field-read-equality-session-micro/main.omg",
+  "main_sha256": "26ba3d68cf7d0c987b02e268384d92de3e894c65c19230a695b3bea2fa9aa99f",
+  "build_sha256": "ba7b9ba666e048001bfec06f9257bf374195a0acecf7cb302edbc792f3f87ba5",
+  "generator_sha256": "53dfbf37860a9238988ad7a82216f90f8fe0da9f4f2f09433b2032935fa75aef",
+  "selections": [
+    "DecoderProbe::direct=0",
+    "DecoderProbe::changed_expectation=1",
+    "DecoderProbe::runtime=0",
+    "DecoderProbe::session=0",
+    "DecoderProbe::pending_poll=0",
+    "DecoderProbe::parent_full=0"
+  ],
+  "stubs": [
+    "validate_operand always UnsupportedValue",
+    "contribute_operand always UnsupportedValue",
+    "execution_turn directly invokes exact decoder on Field slot1"
+  ],
+  "substitutions": [],
+  "runner": "/tmp/cathedral-field-protocol-target/release/cathedral-acpi-checked-runner",
+  "runner_sha256": "4055e1d9cbc364859aeaaecc32148b1eaefa6cf04b3330076f816ce9bf9401dc",
+  "run_script_sha256": "5e862362754e7ef87efd68e86ff2d4573640bcb2db7134b16af4b10f71f75dbb",
+  "command": [
+    "/tmp/cathedral-field-protocol-target/release/cathedral-acpi-checked-runner",
+    "/private/tmp/cathedral-field-read-decoder-micro/main.omg",
+    "/private/tmp/cathedral-field-read-decoder-micro/build",
+    "DecoderProbe::direct=0",
+    "DecoderProbe::changed_expectation=1",
+    "DecoderProbe::runtime=0",
+    "DecoderProbe::session=0",
+    "DecoderProbe::pending_poll=0",
+    "DecoderProbe::parent_full=0"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 41.440166665999996,
+  "output": "CHECKED authored package and dependency bodies; native publication NOT requested\nPASS DecoderProbe::direct expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 2231, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 51145, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS DecoderProbe::changed_expectation expected=1 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 2221, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 51145, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS DecoderProbe::runtime expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 2324, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 51145, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS DecoderProbe::session expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 2316, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 51145, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS DecoderProbe::pending_poll expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 2358, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 51145, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS DecoderProbe::parent_full expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 2292, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 51145, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\n",
+  "output_sha256": "7a23b29004c4982b2b2f5ea9ed2bf99102699ed353700dfd9c97f29ad4f6fd61",
+  "inputs_unchanged": true
+}

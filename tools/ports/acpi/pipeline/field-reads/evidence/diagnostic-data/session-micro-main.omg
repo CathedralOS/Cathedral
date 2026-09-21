@@ -1,0 +1,216 @@
+pub data IntegerSize [copy] {case FourBytes;case EightBytes;}
+pub data Outcome [copy] {
+ case Success; case Truncated; case BadEncoding; case UnsupportedSyntax;
+ case Capacity; case Depth; case WorkLimit; case InvalidName; case AboveRoot;
+ case NotAbsolute; case MissingLevel; case MissingObject; case NameCollision;
+ case InvalidState; case ReferenceCycle;
+}
+pub data Path [copy] { absolute: bool; parents: u64; count: u64; segments: [u32; 16]; }
+pub data PathResult [copy] { outcome: Outcome; value: Path; next: u64; offset: u64; }
+pub data Read [copy] { outcome: Outcome; value: u64; next: u64; offset: u64; }
+pub data Envelope [copy] { outcome: Outcome; body: u64; end: u64; offset: u64; }
+pub data Span [copy] { unit: u64; start: u64; end: u64; }
+pub data LevelKind [copy] { case Scope; case Device; case Processor; case PowerResource; case ThermalZone; case MethodLocals; }
+pub data ReferenceKind [copy] { case Named; case RefOf; case Local; case Arg; case Index; case Unresolved; }
+pub data StringStorage [copy] { case Source(string_source:Span); case Owned(string_owner:u64); }
+pub data BufferStorage [copy] { case Source(declared_size:u64,buffer_initializer:Span); case Owned(buffer_owner:u64); }
+pub data FieldBinding [copy] {
+ case Region(region_object:u64);
+ case Bank(region_object:u64,selector_object:u64);
+ case Index(index_object:u64,data_object:u64);
+}
+pub data Value [copy] {
+ case Uninitialized;
+ case Integer(number: u64);
+ case String(string_storage:StringStorage);
+ case Buffer(buffer_storage:BufferStorage);
+ case FieldUnit(binding:FieldBinding,declaration:Declaration,field:Field);
+ case BufferField(backing_object:u64,bit_offset:u64,bit_length:u64);
+ case Package(first: u64, count: u64);
+ case NameReference(name: Path, scope: Path);
+ case Reference(kind: ReferenceKind, object_id: u64);
+ case Method(flags: u8, body: Span);
+ case Device;
+ case Processor(id: u8, address: u32, length: u8);
+ case PowerResource(system_level: u8, order: u16);
+ case ThermalZone;
+ case Mutex(sync_level: u8);
+ case Event;
+ case OperationRegion(space: u8, base: u64, length: u64, scope: Path);
+}
+pub data Object [copy] { value: Value; has_next: bool; next: u64; }
+pub data Entry [copy] { path: Path; has_level: bool; level: LevelKind; has_object: bool; object: u64; alias: bool; }
+pub data Namespace [copy] { count: u64; object_count: u64; entries: [Entry; 32]; objects: [Object; 64]; }
+pub data NamespaceResult [copy] { outcome: Outcome; space: Namespace; index: u64; object: u64; }
+pub data Lookup [copy] { outcome: Outcome; path: Path; index: u64; object: u64; }
+pub data ValueRead [copy] { outcome: Outcome; value: Value; next: u64; offset: u64; }
+pub data PackageFrame [copy] { object: u64; end: u64; remaining: u64; first: bool; last: u64; }
+pub data ValueState [copy] { outcome: Outcome; offset: u64; space: Namespace; at: u64; end: u64; unit: u64; scope: Path; depth: u64; frames: [PackageFrame; 8]; done: bool; object: u64; allow_reference: bool; }
+pub data ScopeFrame [copy] { scope: Path; end: u64; }
+pub data External [copy] { path: Path; object_type: u8; argument_count: u8; offset: u64; }
+pub data LoadState [copy] { outcome: Outcome; offset: u64; space: Namespace; at: u64; end: u64; unit: u64; scope: Path; depth: u64; frames: [ScopeFrame; 8]; done: bool; value_budget: u64; external_count: u64; externals: [External; 32]; }
+pub data ReferenceState [copy] { outcome: Outcome; object: u64; visited: u64; done: bool; }
+pub data MethodDefinition [copy] { present: bool; object_id: u64; scope: Path; flags: u8; body: Span; }
+pub data MethodDefinitions [copy] { entries: [MethodDefinition; 64]; }
+pub data ObservedLoad [copy] { load: LoadState; definitions: MethodDefinitions; }
+pub data ByteBlock [copy] { initialized:bool; length:u64; bytes:[u8;256]; }
+pub data ByteArena [copy] { blocks:[ByteBlock;64]; }
+pub data ObjectStore [copy] { space:Namespace; bytes:ByteArena; }
+pub data AccessType [copy] {case Any;case Byte;case Word;case DWord;case QWord;case Buffer;}
+pub data UpdateRule [copy] {case Preserve;case WriteAsOnes;case WriteAsZeros;}
+pub data Access [copy] {
+ flags:u8;kind:AccessType;locked:bool;update:UpdateRule;
+ attribute:u8;attribute_mode:u8;extended:bool;access_length:u8;
+}
+pub data AccessResult [copy] {outcome:Outcome;access:Access;}
+pub data Connection [copy] {
+ case None;
+ case Name(connection_name:Path);
+ case Buffer(buffer_encoding:Span,size_known:bool,declared_size:u64,initializer:Span);
+}
+pub data Field [copy] {name:Path;bit_offset:u64;bit_length:u64;access:Access;connection:Connection;source:Span;}
+pub data ListState [copy] {
+ outcome:Outcome;offset:u64;at:u64;end:u64;unit:u64;scope:Path;
+ bit_offset:u64;bit_limit:u64;count:u64;fields:[Field;32];
+ access:Access;connection:Connection;done:bool;
+}
+pub data DeclarationKind [copy] {case Field;case Index;case Bank;}
+pub data Pending [copy] {case None;case BankTermArgRemainder(unparsed:Span);}
+pub data Declaration [copy] {
+ kind:DeclarationKind;scope:Path;primary_name:Path;secondary_name:Path;
+ bank_value:u64;flags:u8;source:Span;field_list:Span;
+}
+pub data DeclarationResult [copy] {
+ outcome:Outcome;offset:u64;next:u64;declaration:Declaration;list:ListState;pending:Pending;
+}
+pub data ExecutionOutcome [copy] {
+    case Success; case Truncated; case BadEncoding; case UnsupportedValue;
+    case UnsupportedOpcode; case UnresolvedRegion; case UnresolvedService;
+    case UnresolvedSynchronization; case InvalidState; case Uninitialized;
+    case ArgumentCount; case Capacity; case WorkLimit; case Depth;
+    case MissingObject; case InvalidTarget; case DivideByZero; case SourceUnit;
+    case ControlOutsideLoop; case MethodDefinition;
+    case Bounds; case Empty; case Encoding; case Overflow; case ReferenceCycle;
+}
+pub data Operand [copy] { case Uninitialized; case Integer(number:u64); case Object(object_id:u64); }
+pub data Binding [copy] { case Uninitialized; case Integer(number:u64); case Shared(shared_id:u64); case Cell(cell_id:u64); }
+pub data OperandResult [copy] { outcome:ExecutionOutcome; operand:Operand; }
+pub data BindingResult [copy] { outcome:ExecutionOutcome; binding:Binding; }
+pub data ValueResult [copy] { outcome:ExecutionOutcome; value:Value; has_object:bool; object:u64; }
+pub data Slot [copy] { initialized: bool; number: u64; }
+pub data Target [copy] {
+    case Null; case Local(local_index: u64); case Argument(argument_index: u64);
+    case Named(object_id: u64); case Debug;
+}
+pub data SlotResult [copy] { outcome: ExecutionOutcome; slot: Slot; }
+pub data TargetResult [copy] { outcome: ExecutionOutcome; target: Target; next: u64; }
+pub data Block [copy] { looping: bool; parent_end: u64; after: u64; predicate: u64; end: u64; }
+pub data Operation [copy] {
+    opcode: u64; count: u64; value_arity: u64; target_arity: u64; operands: [Operand; 7]; first_target: Target; second_target: Target;
+    body_end: u64; predicate: u64; parent_end: u64; method_id: u64; method_body: Span; method_flags: u8;
+}
+pub data NameCache [copy] { at: u64; next: u64; object_id: u64; entry_index: u64; }
+pub data DeferredRead [copy] {case None;case Field(object:u64,at:u64,next:u64);}
+pub data Frame [copy] {
+    scope: Path; body: Span; source_length:u64; size: IntegerSize; pc: u64; end: u64;
+    arguments: [Binding; 7]; locals: [Binding; 8];
+    block_count: u64; blocks: [Block; 8];
+    operation_count: u64; operations: [Operation; 16];
+    cache_count: u64; lookup_cache: [NameCache; 16];
+    returned: bool; has_return_value:bool; return_value: Operand;
+    field_reads:bool; deferred_read:DeferredRead;
+}
+pub data FrameResult [copy] { outcome: ExecutionOutcome; frame: Frame; }
+pub data Runtime [copy] {
+    outcome: ExecutionOutcome; frames: [Frame; 4]; count: u64;
+    unit: u64; length: u64; steps: u64; finished: bool; has_result:bool; result: Operand;
+    fault_offset: u64;
+}
+pub data RuntimeStart [copy] {case Failure(outcome:ExecutionOutcome);case Ready(runtime:Runtime);}
+pub data Error [copy] {case InvalidFlags;case InconsistentAccess;case UnsupportedKind;case UnsupportedConnection;case UnsupportedMetadata;case UnsupportedBuffer;case UnsupportedZeroWidth;case Capacity;case Overflow;case OutsideRegion;case InvalidChunk;case NeedsPrevious;}
+pub data LockRequirement [copy] {case NotRequested;case UnmetGlobalLock;}
+pub data ReadShape [copy] {case Integer(size:IntegerSize);case Buffer(bytes:u64);}
+pub data Chunk [copy] {offset:u64;width:u64;field_bit:u64;native_bit:u64;bit_count:u64;mask:u64;partial:bool;}
+pub data Plan [copy] {access:AccessType;update:UpdateRule;lock:LockRequirement;shape:ReadShape;bit_offset:u64;bit_length:u64;region_bytes:u64;start:u64;end:u64;width:u64;count:u64;preserve_reads:u64;chunks:[Chunk;257];}
+pub data PlanResult [copy] {case Ready(plan:Plan);case Failure(error:Error);}
+pub data Previous [copy] {case Absent;case Value(word:u64);}
+pub data WordResult [copy] {case Word(value:u64);case Failure(error:Error);}
+pub data Program {
+    loaded: bool;
+    source: [u8; 1024]; length: u64; unit: u64;
+    store: ObjectStore; definitions: MethodDefinitions;
+}
+pub data Prepared { outcome: Outcome; offset: u64; program: Program; }
+pub data ExecutionResult [copy] { outcome: ExecutionOutcome; value: Slot; has_value:bool; operand:Operand; steps: u64; fault_offset: u64; }
+pub data State [copy] {case Failed;case Running;case AwaitingRead;case Finished;}
+pub data Fault [copy] {
+ case InvalidState;case Execution(outcome:ExecutionOutcome);case Geometry(cause:Error);
+ case UnsupportedSpace;case UnmetLock;case BaseAlignment;case AddressOverflow;
+ case Provider(outcome:ExecutionOutcome);
+}
+pub data NativeRead [copy] {
+ session:u64;serial:u64;unit:u64;field:u64;region:u64;space:u8;
+ base:u64;offset:u64;width:u64;
+}
+pub data Completion [copy] {
+ case Failure(request:NativeRead,outcome:ExecutionOutcome);
+ case Word(request:NativeRead,value:u64);
+}
+pub data ReadField [copy] {object:u64;region:u64;declaration:Declaration;field:Field;}
+pub data Transfer [copy] {
+ definition:ReadField;region:u64;base:u64;region_bytes:u64;size:IntegerSize;
+ plan:Plan;words:[u64;257];received:u64;request:NativeRead;
+}
+pub data Session {
+ state:State;outcome:ExecutionOutcome;fault:Fault;program:Program;runtime:Runtime;
+ correlation:u64;fuel_limit:u64;issued:u64;accepted:u64;transfer:Transfer;
+ result_objects:u64;result_bytes:u64;result:ExecutionResult;
+}
+pub data Progress [copy] {
+ case Failure(outcome:ExecutionOutcome);case Paused;
+ case Read(request:NativeRead);case Finished(result:ExecutionResult);
+}
+pub machine begin(program:Program,path:Path,arguments:&[Value;7],count:u64,size:IntegerSize,fuel:u64,correlation:u64)->Session {
+ let session:Session=begin_limited(program,path,arguments,count,size,fuel,correlation,64,16384);session
+}
+pub machine begin_limited(program:Program,path:Path,arguments:&[Value;7],count:u64,size:IntegerSize,fuel:u64,correlation:u64,result_objects:u64,result_bytes:u64)->Session {
+ let valid:bool=limits_valid(result_objects,result_bytes);
+ transition {
+  !program.loaded -> (Session {program:program,outcome:ExecutionOutcome::InvalidState,correlation:correlation})
+  program.length>1024 || !valid || fuel>1024 -> (Session {program:program,outcome:ExecutionOutcome::Capacity,correlation:correlation})
+  _ -> start(program,path,arguments,count,size,fuel,correlation,result_objects,result_bytes)
+ }
+ state start(program:Program,path:Path,arguments:&[Value;7],count:u64,size:IntegerSize,fuel:u64,correlation:u64,result_objects:u64,result_bytes:u64)->Session {
+  let mut session:Session=Session {program:program,correlation:correlation,fuel_limit:fuel,result_objects:result_objects,result_bytes:result_bytes};
+  let started:RuntimeStart=start_read_runtime(&session.program.source,session.program.length,session.program.unit,&mut session.program.store,&session.program.definitions.entries,path,arguments,count,size);
+  transition started {RuntimeStart::Ready {runtime} -> ready(session,runtime) RuntimeStart::Failure {outcome} -> rejected(session,outcome)}
+ }
+ state ready(session:Session,runtime:Runtime)->Session {let mut out:Session=session;out.runtime=runtime;out.state=State::Running;out}
+ state rejected(session:Session,outcome:ExecutionOutcome)->Session {let mut out:Session=session;out.outcome=outcome;out.fault=Fault::Execution {outcome:outcome};out}
+}
+pub machine progress(session:&Session)->Progress {
+ transition session.state {
+  State::Running -> (Progress::Paused)
+  State::AwaitingRead -> (Progress::Read {request:session.transfer.request})
+  State::Failed -> failed(session.outcome)
+  State::Finished -> result(session)
+ }
+ state failed(outcome:ExecutionOutcome)->Progress {transition outcome==ExecutionOutcome::Success {true -> (Progress::Failure {outcome:ExecutionOutcome::InvalidState}) _ -> (Progress::Failure {outcome:outcome})}}
+ state result(session:&Session)->Progress {Progress::Finished {result:session.result}}
+}
+pub machine same_request(a:NativeRead,b:NativeRead)->bool {
+ a.session==b.session && a.serial==b.serial && a.unit==b.unit && a.field==b.field && a.region==b.region && a.space==b.space && a.base==b.base && a.offset==b.offset && a.width==b.width
+}
+
+machine limits_valid(objects:u64,bytes:u64)->bool {objects<=64 && bytes<=16384}
+machine start_read_runtime(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,definitions:&[MethodDefinition;64],path:Path,arguments:&[Value;7],count:u64,size:IntegerSize)->RuntimeStart {
+ let frame:Frame=Frame {body:Span {unit:unit,start:1,end:length},source_length:length,size:size,pc:1,end:length};
+ let mut runtime:Runtime=Runtime {count:1,unit:unit,length:length};runtime.frames[0]=frame;runtime.frames[0].field_reads=true;
+ RuntimeStart::Ready {runtime:runtime}
+}
+data Probe {}
+machine Probe::defaults(&mut self)->i32 {let session:Session;transition session.state==State::Failed && session.outcome==ExecutionOutcome::Success && session.runtime.outcome==ExecutionOutcome::Success {true -> (0) _ -> (1)}}
+machine Probe::begun(&mut self)->i32 {let program:Program=Program {loaded:true,length:38,unit:7};let path:Path;let arguments:[Value;7];let session:Session=begin(program,path,&arguments,0,IntegerSize::FourBytes,1024,77);transition session.state==State::Running && session.outcome==ExecutionOutcome::Success && session.runtime.outcome==ExecutionOutcome::Success && session.runtime.count==1 && session.runtime.frames[0].field_reads && session.runtime.frames[0].pc==1 {true -> (0) _ -> (1)}}
+machine Probe::progress_running(&mut self)->i32 {let program:Program=Program {loaded:true,length:38,unit:7};let path:Path;let arguments:[Value;7];let session:Session=begin(program,path,&arguments,0,IntegerSize::FourBytes,1024,77);let result:Progress=progress(&session);transition result {Progress::Paused -> (0) _ -> (1)}}
+machine Probe::progress_request(&mut self)->i32 {let mut session:Session=Session {state:State::AwaitingRead};let request:NativeRead=NativeRead {session:77,serial:1,unit:7,field:1,width:1};session.transfer.request=request;let result:Progress=progress(&session);transition result {Progress::Read {request} -> checked(request) _ -> (1)} state checked(request:NativeRead)->i32 {let same:bool=same_request(request,NativeRead {session:77,serial:1,unit:7,field:1,width:1});transition same {true -> (0) _ -> (1)}}}
+

@@ -1,0 +1,450 @@
+pub data IntegerSize [copy] {case FourBytes;case EightBytes;}
+pub data Outcome [copy] {
+ case Success; case Truncated; case BadEncoding; case UnsupportedSyntax;
+ case Capacity; case Depth; case WorkLimit; case InvalidName; case AboveRoot;
+ case NotAbsolute; case MissingLevel; case MissingObject; case NameCollision;
+ case InvalidState; case ReferenceCycle;
+}
+pub data Path [copy] { absolute: bool; parents: u64; count: u64; segments: [u32; 16]; }
+pub data PathResult [copy] { outcome: Outcome; value: Path; next: u64; offset: u64; }
+pub data Read [copy] { outcome: Outcome; value: u64; next: u64; offset: u64; }
+pub data Envelope [copy] { outcome: Outcome; body: u64; end: u64; offset: u64; }
+pub data Span [copy] { unit: u64; start: u64; end: u64; }
+pub data LevelKind [copy] { case Scope; case Device; case Processor; case PowerResource; case ThermalZone; case MethodLocals; }
+pub data ReferenceKind [copy] { case Named; case RefOf; case Local; case Arg; case Index; case Unresolved; }
+pub data StringStorage [copy] { case Source(string_source:Span); case Owned(string_owner:u64); }
+pub data BufferStorage [copy] { case Source(declared_size:u64,buffer_initializer:Span); case Owned(buffer_owner:u64); }
+pub data FieldBinding [copy] {
+ case Region(region_object:u64);
+ case Bank(region_object:u64,selector_object:u64);
+ case Index(index_object:u64,data_object:u64);
+}
+pub data Value [copy] {
+ case Uninitialized;
+ case Integer(number: u64);
+ case String(string_storage:StringStorage);
+ case Buffer(buffer_storage:BufferStorage);
+ case FieldUnit(binding:FieldBinding,declaration:Declaration,field:Field);
+ case BufferField(backing_object:u64,bit_offset:u64,bit_length:u64);
+ case Package(first: u64, count: u64);
+ case NameReference(name: Path, scope: Path);
+ case Reference(kind: ReferenceKind, object_id: u64);
+ case Method(flags: u8, body: Span);
+ case Device;
+ case Processor(id: u8, address: u32, length: u8);
+ case PowerResource(system_level: u8, order: u16);
+ case ThermalZone;
+ case Mutex(sync_level: u8);
+ case Event;
+ case OperationRegion(space: u8, base: u64, length: u64, scope: Path);
+}
+pub data Object [copy] { value: Value; has_next: bool; next: u64; }
+pub data Entry [copy] { path: Path; has_level: bool; level: LevelKind; has_object: bool; object: u64; alias: bool; }
+pub data Namespace [copy] { count: u64; object_count: u64; entries: [Entry; 32]; objects: [Object; 64]; }
+pub data NamespaceResult [copy] { outcome: Outcome; space: Namespace; index: u64; object: u64; }
+pub data Lookup [copy] { outcome: Outcome; path: Path; index: u64; object: u64; }
+pub data ValueRead [copy] { outcome: Outcome; value: Value; next: u64; offset: u64; }
+pub data PackageFrame [copy] { object: u64; end: u64; remaining: u64; first: bool; last: u64; }
+pub data ValueState [copy] { outcome: Outcome; offset: u64; space: Namespace; at: u64; end: u64; unit: u64; scope: Path; depth: u64; frames: [PackageFrame; 8]; done: bool; object: u64; allow_reference: bool; }
+pub data ScopeFrame [copy] { scope: Path; end: u64; }
+pub data External [copy] { path: Path; object_type: u8; argument_count: u8; offset: u64; }
+pub data LoadState [copy] { outcome: Outcome; offset: u64; space: Namespace; at: u64; end: u64; unit: u64; scope: Path; depth: u64; frames: [ScopeFrame; 8]; done: bool; value_budget: u64; external_count: u64; externals: [External; 32]; }
+pub data ReferenceState [copy] { outcome: Outcome; object: u64; visited: u64; done: bool; }
+pub data MethodDefinition [copy] { present: bool; object_id: u64; scope: Path; flags: u8; body: Span; }
+pub data MethodDefinitions [copy] { entries: [MethodDefinition; 64]; }
+pub data ObservedLoad [copy] { load: LoadState; definitions: MethodDefinitions; }
+pub data ByteBlock [copy] { initialized:bool; length:u64; bytes:[u8;256]; }
+pub data ByteArena [copy] { blocks:[ByteBlock;64]; }
+pub data ObjectStore [copy] { space:Namespace; bytes:ByteArena; }
+pub data AccessType [copy] {case Any;case Byte;case Word;case DWord;case QWord;case Buffer;}
+pub data UpdateRule [copy] {case Preserve;case WriteAsOnes;case WriteAsZeros;}
+pub data Access [copy] {
+ flags:u8;kind:AccessType;locked:bool;update:UpdateRule;
+ attribute:u8;attribute_mode:u8;extended:bool;access_length:u8;
+}
+pub data AccessResult [copy] {outcome:Outcome;access:Access;}
+pub data Connection [copy] {
+ case None;
+ case Name(connection_name:Path);
+ case Buffer(buffer_encoding:Span,size_known:bool,declared_size:u64,initializer:Span);
+}
+pub data Field [copy] {name:Path;bit_offset:u64;bit_length:u64;access:Access;connection:Connection;source:Span;}
+pub data ListState [copy] {
+ outcome:Outcome;offset:u64;at:u64;end:u64;unit:u64;scope:Path;
+ bit_offset:u64;bit_limit:u64;count:u64;fields:[Field;32];
+ access:Access;connection:Connection;done:bool;
+}
+pub data DeclarationKind [copy] {case Field;case Index;case Bank;}
+pub data Pending [copy] {case None;case BankTermArgRemainder(unparsed:Span);}
+pub data Declaration [copy] {
+ kind:DeclarationKind;scope:Path;primary_name:Path;secondary_name:Path;
+ bank_value:u64;flags:u8;source:Span;field_list:Span;
+}
+pub data DeclarationResult [copy] {
+ outcome:Outcome;offset:u64;next:u64;declaration:Declaration;list:ListState;pending:Pending;
+}
+pub data ExecutionOutcome [copy] {
+    case Success; case Truncated; case BadEncoding; case UnsupportedValue;
+    case UnsupportedOpcode; case UnresolvedRegion; case UnresolvedService;
+    case UnresolvedSynchronization; case InvalidState; case Uninitialized;
+    case ArgumentCount; case Capacity; case WorkLimit; case Depth;
+    case MissingObject; case InvalidTarget; case DivideByZero; case SourceUnit;
+    case ControlOutsideLoop; case MethodDefinition;
+    case Bounds; case Empty; case Encoding; case Overflow; case ReferenceCycle;
+}
+pub data Operand [copy] { case Uninitialized; case Integer(number:u64); case Object(object_id:u64); }
+pub data Binding [copy] { case Uninitialized; case Integer(number:u64); case Shared(shared_id:u64); case Cell(cell_id:u64); }
+pub data OperandResult [copy] { outcome:ExecutionOutcome; operand:Operand; }
+pub data BindingResult [copy] { outcome:ExecutionOutcome; binding:Binding; }
+pub data ValueResult [copy] { outcome:ExecutionOutcome; value:Value; has_object:bool; object:u64; }
+pub data Slot [copy] { initialized: bool; number: u64; }
+pub data Target [copy] {
+    case Null; case Local(local_index: u64); case Argument(argument_index: u64);
+    case Named(object_id: u64); case Debug;
+}
+pub data SlotResult [copy] { outcome: ExecutionOutcome; slot: Slot; }
+pub data TargetResult [copy] { outcome: ExecutionOutcome; target: Target; next: u64; }
+pub data Block [copy] { looping: bool; parent_end: u64; after: u64; predicate: u64; end: u64; }
+pub data Operation [copy] {
+    opcode: u64; count: u64; value_arity: u64; target_arity: u64; operands: [Operand; 7]; first_target: Target; second_target: Target;
+    body_end: u64; predicate: u64; parent_end: u64; method_id: u64; method_body: Span; method_flags: u8;
+}
+pub data NameCache [copy] { at: u64; next: u64; object_id: u64; entry_index: u64; }
+pub data DeferredRead [copy] {case None;case Field(object:u64,at:u64,next:u64);}
+pub data Frame [copy] {
+    scope: Path; body: Span; source_length:u64; size: IntegerSize; pc: u64; end: u64;
+    arguments: [Binding; 7]; locals: [Binding; 8];
+    block_count: u64; blocks: [Block; 8];
+    operation_count: u64; operations: [Operation; 16];
+    cache_count: u64; lookup_cache: [NameCache; 16];
+    returned: bool; has_return_value:bool; return_value: Operand;
+    field_reads:bool; deferred_read:DeferredRead;
+}
+pub data FrameResult [copy] { outcome: ExecutionOutcome; frame: Frame; }
+pub data Runtime [copy] {
+    outcome: ExecutionOutcome; frames: [Frame; 4]; count: u64;
+    unit: u64; length: u64; steps: u64; finished: bool; has_result:bool; result: Operand;
+    fault_offset: u64;
+}
+pub data RuntimeStart [copy] {case Failure(outcome:ExecutionOutcome);case Ready(runtime:Runtime);}
+pub data Error [copy] {case InvalidFlags;case InconsistentAccess;case UnsupportedKind;case UnsupportedConnection;case UnsupportedMetadata;case UnsupportedBuffer;case UnsupportedZeroWidth;case Capacity;case Overflow;case OutsideRegion;case InvalidChunk;case NeedsPrevious;}
+pub data LockRequirement [copy] {case NotRequested;case UnmetGlobalLock;}
+pub data ReadShape [copy] {case Integer(size:IntegerSize);case Buffer(bytes:u64);}
+pub data Chunk [copy] {offset:u64;width:u64;field_bit:u64;native_bit:u64;bit_count:u64;mask:u64;partial:bool;}
+pub data Plan [copy] {access:AccessType;update:UpdateRule;lock:LockRequirement;shape:ReadShape;bit_offset:u64;bit_length:u64;region_bytes:u64;start:u64;end:u64;width:u64;count:u64;preserve_reads:u64;chunks:[Chunk;257];}
+pub data PlanResult [copy] {case Ready(plan:Plan);case Failure(error:Error);}
+pub data Previous [copy] {case Absent;case Value(word:u64);}
+pub data WordResult [copy] {case Word(value:u64);case Failure(error:Error);}
+pub data Program {
+    loaded: bool;
+    source: [u8; 1024]; length: u64; unit: u64;
+    store: ObjectStore; definitions: MethodDefinitions;
+}
+pub data Prepared { outcome: Outcome; offset: u64; program: Program; }
+pub data ExecutionResult [copy] { outcome: ExecutionOutcome; value: Slot; has_value:bool; operand:Operand; steps: u64; fault_offset: u64; }
+pub data State [copy] {case Failed;case Running;case AwaitingRead;case Finished;}
+pub data Fault [copy] {
+ case InvalidState;case Execution(outcome:ExecutionOutcome);case Geometry(cause:Error);
+ case UnsupportedSpace;case UnmetLock;case BaseAlignment;case AddressOverflow;
+ case Provider(outcome:ExecutionOutcome);
+}
+pub data NativeRead [copy] {
+ session:u64;serial:u64;unit:u64;field:u64;region:u64;space:u8;
+ base:u64;offset:u64;width:u64;
+}
+pub data Completion [copy] {
+ case Failure(request:NativeRead,outcome:ExecutionOutcome);
+ case Word(request:NativeRead,value:u64);
+}
+pub data ReadField [copy] {object:u64;region:u64;declaration:Declaration;field:Field;}
+pub data Transfer [copy] {
+ definition:ReadField;region:u64;base:u64;region_bytes:u64;size:IntegerSize;
+ plan:Plan;words:[u64;257];received:u64;request:NativeRead;
+}
+pub data Session {
+ state:State;outcome:ExecutionOutcome;fault:Fault;program:Program;runtime:Runtime;
+ correlation:u64;fuel_limit:u64;issued:u64;accepted:u64;transfer:Transfer;
+ result_objects:u64;result_bytes:u64;result:ExecutionResult;
+}
+pub data Progress [copy] {
+ case Failure(outcome:ExecutionOutcome);case Paused;
+ case Read(request:NativeRead);case Finished(result:ExecutionResult);
+}
+machine prepare(session:&mut Session,object:u64)->ExecutionOutcome {
+ let count:u64=session.program.store.space.object_count;
+ transition count<=64 && object<count && object<64 {true -> definition(session,object) _ -> invalid(session)}
+ state definition(session:&mut Session,object:u64)->ExecutionOutcome {
+  transition session.program.store.space.objects[object].value {
+   Value::FieldUnit {binding,declaration,field} -> kind(session,object,binding,declaration,field)
+   _ -> invalid(session)
+  }
+ }
+ state kind(session:&mut Session,object:u64,binding:FieldBinding,declaration:Declaration,field:Field)->ExecutionOutcome {
+  transition binding {
+   FieldBinding::Region {region_object} -> normal_binding(session,object,region_object,declaration,field)
+   FieldBinding::Bank {region_object,selector_object} -> bank_binding(session,declaration.kind)
+   FieldBinding::Index {index_object,data_object} -> index_binding(session,declaration.kind)
+  }
+ }
+ state normal_binding(session:&mut Session,object:u64,region:u64,declaration:Declaration,field:Field)->ExecutionOutcome {
+  transition declaration.kind==DeclarationKind::Field {true -> source(session,ReadField {object:object,region:region,declaration:declaration,field:field}) _ -> invalid(session)}
+ }
+ state bank_binding(session:&mut Session,kind:DeclarationKind)->ExecutionOutcome {
+  transition kind==DeclarationKind::Bank {true -> geometry_failed(session,Error::UnsupportedKind) _ -> invalid(session)}
+ }
+ state index_binding(session:&mut Session,kind:DeclarationKind)->ExecutionOutcome {
+  transition kind==DeclarationKind::Index {true -> geometry_failed(session,Error::UnsupportedKind) _ -> invalid(session)}
+ }
+ state source(session:&mut Session,field:ReadField)->ExecutionOutcome {
+  let unit:u64=session.program.unit;let length:u64=session.program.length;
+  transition field.declaration.source.unit==unit && field.field.source.unit==unit && field.declaration.source.start<=field.field.source.start && field.field.source.start<=field.field.source.end && field.field.source.end<=field.declaration.source.end && field.declaration.source.end<=length {
+   true -> region(session,field,field.region) _ -> invalid(session)
+  }
+ }
+ state region(session:&mut Session,field:ReadField,object:u64)->ExecutionOutcome {
+  let count:u64=session.program.store.space.object_count;
+  transition count<=64 && object<count && object<64 {true -> region_value(session,field,object) _ -> invalid(session)}
+ }
+ state region_value(session:&mut Session,field:ReadField,object:u64)->ExecutionOutcome {
+  transition session.program.store.space.objects[object].value {
+   Value::OperationRegion {space,base,length,scope} -> profile(session,field,object,space,base,length)
+   _ -> invalid(session)
+  }
+ }
+ state profile(session:&mut Session,field:ReadField,region:u64,space:u8,base:u64,length:u64)->ExecutionOutcome {
+  transition space==0 {true -> frame(session,field,region,base,length) _ -> unsupported(session)}
+ }
+ state frame(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64)->ExecutionOutcome {
+  let count:u64=session.runtime.count;
+  transition count>0 && count<=4 {true -> size(session,field,region,base,length,count-1) _ -> invalid(session)}
+ }
+ state size(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,index:u64)->ExecutionOutcome {
+  transition index<4 {true -> geometry(session,field,region,base,length,session.runtime.frames[index].size) _ -> invalid(session)}
+ }
+ state geometry(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize)->ExecutionOutcome {
+  let planned:PlanResult=geometry_plan(field.declaration.kind,&field.field,length,size);
+  transition planned {PlanResult::Ready {plan} -> lock(session,field,region,base,length,size,plan) PlanResult::Failure {error} -> geometry_failed(session,error)}
+ }
+ state lock(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan)->ExecutionOutcome {
+  transition plan.lock==LockRequirement::NotRequested {true -> width(session,field,region,base,length,size,plan) _ -> locked(session)}
+ }
+ state width(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan)->ExecutionOutcome {
+  transition plan.width==1 || plan.width==2 || plan.width==4 || plan.width==8 {true -> alignment(session,field,region,base,length,size,plan) _ -> invalid(session)}
+ }
+ state alignment(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan)->ExecutionOutcome {
+  transition base%plan.width==0 {true -> address(session,field,region,base,length,size,plan) _ -> misaligned(session)}
+ }
+ state address(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan)->ExecutionOutcome {
+  transition plan.start<=plan.end && base<=18446744073709551615-plan.end {true -> shape(session,field,region,base,length,size,plan) _ -> overflow(session)}
+ }
+ state shape(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan)->ExecutionOutcome {
+  transition plan.shape {
+   ReadShape::Integer {size} -> stage(session,field,region,base,length,size,plan)
+   ReadShape::Buffer {bytes} -> capacity(session,field,region,base,length,size,plan,bytes)
+  }
+ }
+ state capacity(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan,bytes:u64)->ExecutionOutcome {
+  transition bytes<=256 && session.program.store.space.object_count<64 && session.program.store.space.count<=32 {
+   true -> stage(session,field,region,base,length,size,plan) _ -> exhausted(session)
+  }
+ }
+ state stage(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan)->ExecutionOutcome {
+  session.transfer=Transfer {definition:field,region:region,base:base,region_bytes:length,size:size,plan:plan};
+  let result:ExecutionOutcome=issue(session);result
+ }
+ state invalid(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::InvalidState,Fault::InvalidState);result}
+ state geometry_failed(session:&mut Session,error:Error)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::UnresolvedRegion,Fault::Geometry {cause:error});result}
+ state unsupported(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::UnresolvedRegion,Fault::UnsupportedSpace);result}
+ state locked(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::UnresolvedSynchronization,Fault::UnmetLock);result}
+ state misaligned(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::UnresolvedRegion,Fault::BaseAlignment);result}
+ state overflow(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::Overflow,Fault::AddressOverflow);result}
+ state exhausted(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::Capacity,Fault::Execution {outcome:ExecutionOutcome::Capacity});result}
+}
+machine issue(session:&mut Session)->ExecutionOutcome {
+ let index:u64=session.transfer.received;let count:u64=session.transfer.plan.count;
+ transition count>0 && count<=257 && index<count && index<257 && session.issued<263168 {
+  true -> request(session,index) _ -> invalid(session)
+ }
+ state request(session:&mut Session,index:u64)->ExecutionOutcome {
+  let sequence:u64=session.issued+1;
+  session.transfer.request=NativeRead {session:session.correlation,serial:sequence,unit:session.program.unit,field:session.transfer.definition.object,region:session.transfer.region,base:session.transfer.base,offset:session.transfer.plan.chunks[index].offset,width:session.transfer.plan.chunks[index].width};
+  session.issued=sequence;session.state=State::AwaitingRead;ExecutionOutcome::Success
+ }
+ state invalid(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::InvalidState,Fault::InvalidState);result}
+}
+machine fail(session:&mut Session,outcome:ExecutionOutcome,fault:Fault)->ExecutionOutcome {
+ session.outcome=outcome;session.fault=fault;session.state=State::Failed;session.runtime.outcome=outcome;outcome
+}
+pub machine same_request(a:NativeRead,b:NativeRead)->bool {
+ a.session==b.session && a.serial==b.serial && a.unit==b.unit && a.field==b.field && a.region==b.region && a.space==b.space && a.base==b.base && a.offset==b.offset && a.width==b.width
+}
+data Builder [copy] {failed:bool;plan:Plan;}
+data Made [copy] {case Good(chunk:Chunk);case Bad;}
+pub machine geometry_plan(kind:DeclarationKind,field:&Field,region_bytes:u64,size:IntegerSize)->PlanResult {
+ transition kind==DeclarationKind::Field {true -> connection(field,region_bytes,size) _ -> (PlanResult::Failure {error:Error::UnsupportedKind})}
+ state connection(field:&Field,region_bytes:u64,size:IntegerSize)->PlanResult {
+  transition field.connection {Connection::None -> metadata(field,region_bytes,size) _ -> (PlanResult::Failure {error:Error::UnsupportedConnection})}
+ }
+ state metadata(field:&Field,region_bytes:u64,size:IntegerSize)->PlanResult {
+  let access:Access=field.access;
+  transition access.attribute==0 && access.attribute_mode==0 && !access.extended && access.access_length==0 {true -> flags(field,region_bytes,size,access) _ -> (PlanResult::Failure {error:Error::UnsupportedMetadata})}
+ }
+ state flags(field:&Field,region_bytes:u64,size:IntegerSize,access:Access)->PlanResult {
+  let decoded:AccessResult=decode_flags(access.flags);
+  transition decoded.outcome==Outcome::Success {true -> consistent(field,region_bytes,size,access,decoded.access) _ -> (PlanResult::Failure {error:Error::InvalidFlags})}
+ }
+ state consistent(field:&Field,region_bytes:u64,size:IntegerSize,access:Access,decoded:Access)->PlanResult {
+  transition access.kind==decoded.kind && access.update==decoded.update && access.locked==decoded.locked {true -> supported(field,region_bytes,size,access) _ -> (PlanResult::Failure {error:Error::InconsistentAccess})}
+ }
+ state supported(field:&Field,region_bytes:u64,size:IntegerSize,access:Access)->PlanResult {
+  let offset:u64=field.bit_offset;let length:u64=field.bit_length;
+  transition access.kind {AccessType::Buffer -> (PlanResult::Failure {error:Error::UnsupportedBuffer}) _ -> length(offset,length,region_bytes,size,access)}
+ }
+ state length(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access)->PlanResult {
+  transition {length==0 -> (PlanResult::Failure {error:Error::UnsupportedZeroWidth}) length>2048 -> (PlanResult::Failure {error:Error::Capacity}) _ -> interval(offset,length,region_bytes,size,access)}
+ }
+ state interval(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access)->PlanResult {
+  transition length<=18446744073709551615-offset {true -> width(offset,length,region_bytes,size,access) _ -> (PlanResult::Failure {error:Error::Overflow})}
+ }
+ state width(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access)->PlanResult {
+  let width:u64=access_width(access.kind);
+  transition width>0 && width<=8 {true -> units(offset,length,region_bytes,size,access,width,width*8) _ -> (PlanResult::Failure {error:Error::InvalidFlags})}
+ }
+ state units(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access,width:u64,bits:u64)->PlanResult {
+  transition bits>0 && bits<=64 {true -> lead(offset,length,region_bytes,size,access,width,bits,offset%bits) _ -> (PlanResult::Failure {error:Error::InvalidFlags})}
+ }
+ state lead(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access,width:u64,bits:u64,lead:u64)->PlanResult {
+  transition length<=2048 && lead<=63 && bits>0 && bits<=64 && width>0 {true -> count(offset,length,region_bytes,size,access,width,bits,lead,(lead+length+bits-1)/bits) _ -> (PlanResult::Failure {error:Error::Capacity})}
+ }
+ state count(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access,width:u64,bits:u64,lead:u64,count:u64)->PlanResult {
+  transition count>0 && count<=257 && width>0 && width<=8 {
+   true -> footprint(offset,length,region_bytes,size,access,width,bits,lead,count,(offset/8)&~(width-1),count*width)
+   _ -> (PlanResult::Failure {error:Error::Capacity})
+  }
+ }
+ state footprint(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access,width:u64,bits:u64,lead:u64,count:u64,start:u64,footprint:u64)->PlanResult {
+  transition start<=region_bytes {true -> fits(offset,length,region_bytes,size,access,width,bits,lead,count,start,footprint) _ -> (PlanResult::Failure {error:Error::OutsideRegion})}
+ }
+ state fits(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access,width:u64,bits:u64,lead:u64,count:u64,start:u64,footprint:u64)->PlanResult {
+  transition start<=region_bytes && footprint<=region_bytes-start {true -> initialize(offset,length,region_bytes,size,access,width,bits,lead,count,start,start+footprint) _ -> (PlanResult::Failure {error:Error::OutsideRegion})}
+ }
+ state initialize(offset:u64,length:u64,region_bytes:u64,size:IntegerSize,access:Access,width:u64,bits:u64,lead:u64,count:u64,start:u64,end:u64)->PlanResult {
+  let lock:LockRequirement=lock_requirement(access.locked);let shape:ReadShape=read_shape(size,length);
+  let initial:Builder=Builder {plan:Plan {access:access.kind,update:access.update,lock:lock,shape:shape,bit_offset:offset,bit_length:length,region_bytes:region_bytes,start:start,end:end,width:width,count:count}};
+  let completed:Builder=build_chunks(initial,bits,lead,0,count);
+  transition completed.failed {true -> (PlanResult::Failure {error:Error::InvalidChunk}) _ -> (PlanResult::Ready {plan:completed.plan})}
+ }
+}
+machine access_width(kind:AccessType)->u64 {transition kind {AccessType::Word -> (2) AccessType::DWord -> (4) AccessType::QWord -> (8) _ -> (1)}}
+machine lock_requirement(locked:bool)->LockRequirement {transition locked {true -> (LockRequirement::UnmetGlobalLock) _ -> (LockRequirement::NotRequested)}}
+machine read_shape(size:IntegerSize,length:u64)->ReadShape {
+ let bits:u64=integer_bits(size);
+ transition length<=bits {true -> (ReadShape::Integer {size:size}) _ -> buffer(length)}
+ state buffer(length:u64)->ReadShape {transition length<=2048 {true -> (ReadShape::Buffer {bytes:(length+7)/8}) _ -> (ReadShape::Buffer {bytes:0})}}
+}
+machine build_chunks(current:Builder,bits:u64,lead:u64,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->Builder {
+ let next:Builder=build_step(current,bits,lead,index,count);
+ transition index<count {true -> build_chunks(next,bits,lead,index+1,count) _ -> (current)}
+}
+machine build_step(current:Builder,bits:u64,lead:u64,index:u64,count:u64)->Builder {
+ transition !current.failed && index<count && index<257 {true -> make(current,bits,lead,index) _ -> (current)}
+ state make(current:Builder,bits:u64,lead:u64,index:u64)->Builder {
+  let made:Made=make_chunk(current.plan.start,current.plan.width,current.plan.bit_length,bits,lead,index);
+  transition made {Made::Good {chunk} -> write(current,index,chunk) _ -> (Builder {failed:true})}
+ }
+ state write(current:Builder,index:u64,chunk:Chunk)->Builder {
+  transition index<257 {true -> store(current,index,chunk) _ -> (Builder {failed:true})}
+ }
+ state store(current:Builder,index:u64,chunk:Chunk)->Builder {
+  let mut next:Builder=current;next.plan.chunks[index]=chunk;
+  let previous:u64=preserve_count(current.plan.preserve_reads,current.plan.update,chunk.partial);next.plan.preserve_reads=previous;next
+ }
+}
+machine preserve_count(count:u64,rule:UpdateRule,partial:bool)->u64 {transition count<257 && rule==UpdateRule::Preserve && partial {true -> (count+1) _ -> (count)}}
+machine make_chunk(start:u64,width:u64,length:u64,bits:u64,lead:u64,index:u64)->Made {
+ transition index<257 && width>0 && width<=8 && bits>0 && bits<=64 {true -> first(start,width,length,bits,lead,index,index*width,index*bits) _ -> (Made::Bad)}
+ state first(start:u64,width:u64,length:u64,bits:u64,lead:u64,index:u64,step:u64,advance:u64)->Made {
+  transition index==0 {true -> offset(start,width,length,bits,lead,step,0) _ -> later(start,width,length,bits,lead,step,advance)}
+ }
+ state later(start:u64,width:u64,length:u64,bits:u64,lead:u64,step:u64,advance:u64)->Made {
+  transition advance>=lead {true -> offset(start,width,length,bits,0,step,advance-lead) _ -> (Made::Bad)}
+ }
+ state offset(start:u64,width:u64,length:u64,bits:u64,native:u64,step:u64,field:u64)->Made {
+  transition start<=18446744073709551615-step && field<length && native<bits {true -> remaining(start+step,width,length-field,bits,native,field) _ -> (Made::Bad)}
+ }
+ state remaining(offset:u64,width:u64,remaining:u64,bits:u64,native:u64,field:u64)->Made {
+  transition native<bits {true -> count(offset,width,remaining,bits,native,field,bits-native) _ -> (Made::Bad)}
+ }
+ state count(offset:u64,width:u64,remaining:u64,bits:u64,native:u64,field:u64,room:u64)->Made {
+  transition remaining<room {true -> masked(offset,width,remaining,bits,native,field) _ -> masked(offset,width,room,bits,native,field)}
+ }
+ state masked(offset:u64,width:u64,count:u64,bits:u64,native:u64,field:u64)->Made {
+  let base:u64=low_mask(count);let mask:u64=((base as u64 in Wrapping)<<(native as u64 in Wrapping)) as u64;
+  Made::Good {chunk:Chunk {offset:offset,width:width,field_bit:field,native_bit:native,bit_count:count,mask:mask,partial:native!=0 || count!=bits}}
+ }
+}
+pub machine decode_flags(raw:u8)->AccessResult {
+ let code:u8=raw&15;let update:u8=(raw>>5)&3;
+ transition raw<128 && code<=5 && update<=2 {
+  true -> valid(raw,code,update) _ -> (AccessResult {outcome:Outcome::BadEncoding})
+ }
+ state valid(raw:u8,code:u8,update:u8)->AccessResult {
+  let kind:AccessType=access_kind(code);let rule:UpdateRule=update_kind(update);
+  AccessResult {access:Access {flags:raw,kind:kind,locked:(raw&16)!=0,update:rule}}
+ }
+}
+machine access_kind(code:u8)->AccessType {
+ transition code {1 -> (AccessType::Byte) 2 -> (AccessType::Word) 3 -> (AccessType::DWord) 4 -> (AccessType::QWord) 5 -> (AccessType::Buffer) _ -> (AccessType::Any)}
+}
+machine update_kind(code:u8)->UpdateRule {transition code {1 -> (UpdateRule::WriteAsOnes) 2 -> (UpdateRule::WriteAsZeros) _ -> (UpdateRule::Preserve)}}
+pub machine low_mask(bits:u64)->u64 {
+ let all:u64=18446744073709551615;
+ transition {bits==0 -> (0) bits<=64 -> (all>>(64-bits)) _ -> (0)}
+}
+pub machine integer_bits(size: IntegerSize) -> u64 {
+    transition size { IntegerSize::FourBytes -> (32) IntegerSize::EightBytes -> (64) }
+}
+
+// Diagnostic direct seed of the first tiny fixture after its deferred read.
+// AML loading, engine startup and decoder execution are deliberately absent.
+machine seeded(poison:u64)->Session {
+let mut input:[u8;1024];input[0]=91;input[1]=128;input[2]=82;input[3]=69;input[4]=71;input[5]=48;input[8]=11;input[10]=2;input[11]=91;input[12]=129;input[13]=13;input[14]=82;input[15]=69;input[16]=71;input[17]=48;input[18]=1;input[20]=5;input[21]=70;input[22]=76;input[23]=68;input[24]=95;input[25]=29;input[26]=20;input[27]=11;input[28]=77;input[29]=65;input[30]=73;input[31]=78;input[33]=164;input[34]=70;input[35]=76;input[36]=68;input[37]=95;
+ let root:Path=Path {absolute:true};
+ let mut region_name:Path=Path {count:1};region_name.segments[0]=809977170;
+ let mut field_name:Path=Path {absolute:true,count:1};field_name.segments[0]=1598311494;
+ let mut method_name:Path=Path {absolute:true,count:1};method_name.segments[0]=1313423693;
+ let declaration:Declaration=Declaration {kind:DeclarationKind::Field,scope:root,primary_name:region_name,flags:1,source:Span {unit:7,start:11,end:26},field_list:Span {unit:7,start:19,end:26}};
+ let field:Field=Field {name:field_name,bit_offset:5,bit_length:29,access:Access {flags:1,kind:AccessType::Byte,update:UpdateRule::Preserve},source:Span {unit:7,start:21,end:26}};
+ let mut session:Session=Session {state:State::Running,program:Program {loaded:true,source:input,length:38,unit:7},correlation:77,fuel_limit:1024,result_objects:64,result_bytes:16384};
+ session.program.store.space.count=4;session.program.store.space.object_count=3;
+ session.program.store.space.entries[0]=Entry {path:root,has_level:true,level:LevelKind::Scope};
+ let mut absolute_region:Path=region_name;absolute_region.absolute=true;
+ session.program.store.space.entries[1]=Entry {path:absolute_region,has_object:true,object:0};
+ session.program.store.space.entries[2]=Entry {path:field_name,has_object:true,object:1};
+ session.program.store.space.entries[3]=Entry {path:method_name,has_object:true,object:2};
+ session.program.store.space.objects[0]=Object {value:Value::OperationRegion {space:0,base:0,length:512,scope:root}};
+ session.program.store.space.objects[1]=Object {value:Value::FieldUnit {binding:FieldBinding::Region {region_object:0},declaration:declaration,field:field}};
+ session.program.store.space.objects[2]=Object {value:Value::Method {body:Span {unit:7,start:33,end:38}}};
+ session.program.definitions.entries[2]=MethodDefinition {present:true,object_id:2,scope:root,body:Span {unit:7,start:33,end:38}};
+ session.runtime=Runtime {count:1,steps:2};
+ session.runtime.frames[0]=Frame {scope:root,body:Span {unit:7,start:33,end:38},source_length:38,size:IntegerSize::FourBytes,pc:34,end:38,operation_count:1,field_reads:true,deferred_read:DeferredRead::Field {object:1,at:34,next:38}};
+ session.runtime.frames[0].operations[0]=Operation {opcode:0xa4,value_arity:1};
+ transition poison {1 -> wrong_unit(session,declaration,field) 2 -> wrong_kind(session,declaration,field) 3 -> wrong_access(session,declaration,field) _ -> (session)}
+ state wrong_unit(session:Session,declaration:Declaration,field:Field)->Session {let mut out:Session=session;let mut d:Declaration=declaration;d.source.unit=8;out.program.store.space.objects[1].value=Value::FieldUnit {binding:FieldBinding::Region {region_object:0},declaration:d,field:field};out}
+ state wrong_kind(session:Session,declaration:Declaration,field:Field)->Session {let mut out:Session=session;let mut d:Declaration=declaration;d.kind=DeclarationKind::Bank;out.program.store.space.objects[1].value=Value::FieldUnit {binding:FieldBinding::Region {region_object:0},declaration:d,field:field};out}
+ state wrong_access(session:Session,declaration:Declaration,field:Field)->Session {let mut out:Session=session;let mut f:Field=field;f.access.attribute=1;out.program.store.space.objects[1].value=Value::FieldUnit {binding:FieldBinding::Region {region_object:0},declaration:declaration,field:f};out}
+}
+data AdmissionProbe {}
+machine AdmissionProbe::ready(&mut self)->i32 {
+ let mut session:Session=seeded(0);let outcome:ExecutionOutcome=prepare(&mut session,1);
+ let request:NativeRead=NativeRead {session:77,serial:1,unit:7,field:1,region:0,space:0,base:0,offset:0,width:1};
+ let same:bool=same_request(session.transfer.request,request);
+ transition outcome==ExecutionOutcome::Success && session.state==State::AwaitingRead && session.outcome==ExecutionOutcome::Success && session.runtime.outcome==ExecutionOutcome::Success && session.runtime.steps==2 && session.issued==1 && session.accepted==0 && session.transfer.received==0 && session.transfer.plan.bit_offset==5 && session.transfer.plan.bit_length==29 && session.transfer.plan.count==5 && session.transfer.plan.width==1 && session.transfer.plan.end==5 && same {true -> (0) _ -> (1)}
+}
+machine AdmissionProbe::wrong_unit(&mut self)->i32 {let mut session:Session=seeded(1);let outcome:ExecutionOutcome=prepare(&mut session,1);let fault:bool=invalid_fault(session.fault);transition outcome==ExecutionOutcome::InvalidState && session.state==State::Failed && session.outcome==ExecutionOutcome::InvalidState && session.runtime.outcome==ExecutionOutcome::InvalidState && session.issued==0 && session.accepted==0 && fault {true -> (0) _ -> (1)}}
+machine AdmissionProbe::wrong_kind(&mut self)->i32 {let mut session:Session=seeded(2);let outcome:ExecutionOutcome=prepare(&mut session,1);let fault:bool=invalid_fault(session.fault);transition outcome==ExecutionOutcome::InvalidState && session.state==State::Failed && session.outcome==ExecutionOutcome::InvalidState && session.runtime.outcome==ExecutionOutcome::InvalidState && session.issued==0 && fault {true -> (0) _ -> (1)}}
+machine AdmissionProbe::wrong_access(&mut self)->i32 {let mut session:Session=seeded(3);let outcome:ExecutionOutcome=prepare(&mut session,1);let fault:bool=metadata_fault(session.fault);transition outcome==ExecutionOutcome::UnresolvedRegion && session.state==State::Failed && session.outcome==ExecutionOutcome::UnresolvedRegion && session.runtime.outcome==ExecutionOutcome::UnresolvedRegion && session.issued==0 && fault {true -> (0) _ -> (1)}}
+machine invalid_fault(fault:Fault)->bool {transition fault {Fault::InvalidState -> (true) _ -> (false)}}
+machine metadata_fault(fault:Fault)->bool {transition fault {Fault::Geometry {cause} -> (cause==Error::UnsupportedMetadata) _ -> (false)}}

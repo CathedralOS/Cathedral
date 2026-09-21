@@ -31,6 +31,20 @@ their after-run hash checks and are not success receipts. The original and
 experimental generated sources/build files are preserved in `evidence/`, with
 copy hashes in [retention.json](evidence/retention.json).
 
+Supplemental standalone diagnostics passed four
+[admission selections](evidence/admission-micro/manifest.json) and six
+[decoder/Runtime selections](evidence/decoder-micro/manifest.json), including
+one changed-expectation control. Their generated sources, generators, build
+recipes, manifests and complete output are retained byte-for-byte. These probes
+directly seed the first fixture's metadata and flatten copied module bodies.
+Admission uses real geometry helpers but omits loading and execution. The decoder
+probe uses a synthetic `execution_turn` that directly calls the real copied
+decoder; its excluded validation/contribution paths are explicit failing stubs.
+Neither probe executes the complete Program session or proves Field-read
+correctness. Their generators retain historical absolute input paths; the shared
+declaration input is copied in `evidence/diagnostic-data/`, and the generated
+standalone main/build files are sufficient for direct diagnostic replay.
+
 At this checkpoint the full read corpus and an external staged diagnostic remain
 in progress. Their future results are not included in the claims above. Frozen
 production and fixture bytes remain unchanged by this documentation/evidence
