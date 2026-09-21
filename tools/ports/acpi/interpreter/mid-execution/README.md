@@ -42,3 +42,17 @@ constant-evaluation or hardware execution claim is added here.
 
 The full six-package run completed in 6,423.661 seconds with three workers
 (15,130.065 summed package time; maximum evaluator fuel 525,289).
+
+After independent packages are added, the original broad snapshot verifier
+intentionally detects the larger tree. For the integrated milestone, use:
+
+```sh
+python3 tools/ports/acpi/interpreter/mid-execution/integration/check.py
+```
+
+This requires all 141 original inputs to remain byte-identical, walks the four
+literal dependency packages (77 files), rejects additions inside that closure,
+and runs the original hash-verified verifier on precisely the original inputs.
+The two added Field-write continuation modules are outside that dependency
+closure. The audit proves unchanged checked inputs; it does not execute Omega
+again. The original whole-tree verifier still passes at checkpoint `451e042`.

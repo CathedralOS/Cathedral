@@ -91,3 +91,11 @@ fuel 525,289. Its 74 new bytecode and 42 complete-state retirement pairs include
 all authored boundary cases; the other 199 preserve existing integer, generic,
 pipeline and ToInteger behaviors. These are checked interpretation results, not
 native Omega execution.
+
+Integration preserves tested checkpoint `451e042` in ancestry. Merging the
+independent Field-write continuation adds two Omega files outside Mid's four
+dependency packages. All 141 original inputs and all 77 reachable package files
+remain byte-identical. The [integration audit](../../../../../tools/ports/acpi/interpreter/mid-execution/integration/provenance.json)
+re-runs the original hash-verified receipt verifier against precisely its original
+input set and checks current dependency membership. This is provenance validation,
+not another execution run; the original broad receipt is never rewritten.
