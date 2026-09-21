@@ -35,6 +35,7 @@ use control::leave_loop;
 use integer_helpers::integers::integer_mask;
 use object_type_execution::ObjectTypeResult;
 use object_type_execution::inspect_object_type;
+use object_type_execution::inspect_size_of;
 pub machine decode_target(input: &[u8; 1024], space: &ObjectStore, frame: &mut Frame) -> ExecutionOutcome {
     let parsed: TargetResult = parse_target(input, &space.space, frame);
     let operation: Operation = current_operation(frame);
@@ -70,6 +71,7 @@ pub machine decode_term(input: &[u8; 1024], space: &ObjectStore, frame: &mut Fra
             token.value >= 0x60 && token.value <= 0x67 -> local(input, space, frame, token.next, token.value - 0x60)
             token.value >= 0x68 && token.value <= 0x6e -> argument(input, space, frame, token.next, token.value - 0x68)
             token.value == 0x8e -> object_type(input, space, frame, token.next)
+            token.value == 0x87 -> size_of(input, space, frame, token.next)
             token.value == 0xa0 || token.value == 0xa2 -> branch(input, frame, token)
             token.value == 0xa3 -> noop(frame, token.next)
             token.value == 0xa5 || token.value == 0x9f -> loop_control(frame, token)
@@ -104,6 +106,10 @@ pub machine decode_term(input: &[u8; 1024], space: &ObjectStore, frame: &mut Fra
     // It neither invokes a named method nor evaluates an ordinary TermArg.
     state object_type(input:&[u8;1024],space:&ObjectStore,frame:&mut Frame,at:u64)->ExecutionOutcome {
         let found:ObjectTypeResult=inspect_object_type(input,space,frame,at);
+        transition found.outcome==ExecutionOutcome::Success {true -> constant(frame,found.next,found.number) _ -> (found.outcome)}
+    }
+    state size_of(input:&[u8;1024],space:&ObjectStore,frame:&mut Frame,at:u64)->ExecutionOutcome {
+        let found:ObjectTypeResult=inspect_size_of(input,space,frame,at);
         transition found.outcome==ExecutionOutcome::Success {true -> constant(frame,found.next,found.number) _ -> (found.outcome)}
     }
     state operation(frame: &mut Frame, token: Read) -> ExecutionOutcome {

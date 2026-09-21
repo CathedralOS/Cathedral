@@ -1,0 +1,1998 @@
+[
+  {
+    "aml_hex": "084f424a300a2a140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=10;\ninput[6]=42;\ninput[7]=20;\ninput[8]=12;\ninput[9]=77;\ninput[10]=65;\ninput[11]=73;\ninput[12]=78;\ninput[14]=164;\ninput[15]=142;\ninput[16]=79;\ninput[17]=66;\ninput[18]=74;\ninput[19]=48;\nlet prepared:Prepared=prepare_program(input,20,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==1",
+    "error": "Success",
+    "expected": 1,
+    "mutation": [
+      "result.value.number==1",
+      "result.value.number==0"
+    ],
+    "name": "type_integer",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300a2a140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=10;\ninput[6]=42;\ninput[7]=20;\ninput[8]=12;\ninput[9]=77;\ninput[10]=65;\ninput[11]=73;\ninput[12]=78;\ninput[14]=164;\ninput[15]=135;\ninput[16]=79;\ninput[17]=66;\ninput[18]=74;\ninput[19]=48;\nlet prepared:Prepared=prepare_program(input,20,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_integer",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300d41424300140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=13;\ninput[6]=65;\ninput[7]=66;\ninput[8]=67;\ninput[10]=20;\ninput[11]=12;\ninput[12]=77;\ninput[13]=65;\ninput[14]=73;\ninput[15]=78;\ninput[17]=164;\ninput[18]=142;\ninput[19]=79;\ninput[20]=66;\ninput[21]=74;\ninput[22]=48;\nlet prepared:Prepared=prepare_program(input,23,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==2",
+    "error": "Success",
+    "expected": 2,
+    "mutation": [
+      "result.value.number==2",
+      "result.value.number==3"
+    ],
+    "name": "type_string",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300d41424300140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=13;\ninput[6]=65;\ninput[7]=66;\ninput[8]=67;\ninput[10]=20;\ninput[11]=12;\ninput[12]=77;\ninput[13]=65;\ninput[14]=73;\ninput[15]=78;\ninput[17]=164;\ninput[18]=135;\ninput[19]=79;\ninput[20]=66;\ninput[21]=74;\ninput[22]=48;\nlet prepared:Prepared=prepare_program(input,23,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "size_string",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011050a020102140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=5;\ninput[7]=10;\ninput[8]=2;\ninput[9]=1;\ninput[10]=2;\ninput[11]=20;\ninput[12]=12;\ninput[13]=77;\ninput[14]=65;\ninput[15]=73;\ninput[16]=78;\ninput[18]=164;\ninput[19]=142;\ninput[20]=79;\ninput[21]=66;\ninput[22]=74;\ninput[23]=48;\nlet prepared:Prepared=prepare_program(input,24,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "type_buffer",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011050a020102140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=5;\ninput[7]=10;\ninput[8]=2;\ninput[9]=1;\ninput[10]=2;\ninput[11]=20;\ninput[12]=12;\ninput[13]=77;\ninput[14]=65;\ninput[15]=73;\ninput[16]=78;\ninput[18]=164;\ninput[19]=135;\ninput[20]=79;\ninput[21]=66;\ninput[22]=74;\ninput[23]=48;\nlet prepared:Prepared=prepare_program(input,24,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==2",
+    "error": "Success",
+    "expected": 2,
+    "mutation": [
+      "result.value.number==2",
+      "result.value.number==3"
+    ],
+    "name": "size_buffer",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011050a050102140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=5;\ninput[7]=10;\ninput[8]=5;\ninput[9]=1;\ninput[10]=2;\ninput[11]=20;\ninput[12]=12;\ninput[13]=77;\ninput[14]=65;\ninput[15]=73;\ninput[16]=78;\ninput[18]=164;\ninput[19]=142;\ninput[20]=79;\ninput[21]=66;\ninput[22]=74;\ninput[23]=48;\nlet prepared:Prepared=prepare_program(input,24,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "type_padded_buffer",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011050a050102140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=5;\ninput[7]=10;\ninput[8]=5;\ninput[9]=1;\ninput[10]=2;\ninput[11]=20;\ninput[12]=12;\ninput[13]=77;\ninput[14]=65;\ninput[15]=73;\ninput[16]=78;\ninput[18]=164;\ninput[19]=135;\ninput[20]=79;\ninput[21]=66;\ninput[22]=74;\ninput[23]=48;\nlet prepared:Prepared=prepare_program(input,24,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==5",
+    "error": "Success",
+    "expected": 5,
+    "mutation": [
+      "result.value.number==5",
+      "result.value.number==4"
+    ],
+    "name": "size_padded_buffer",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300d00140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=13;\ninput[7]=20;\ninput[8]=12;\ninput[9]=77;\ninput[10]=65;\ninput[11]=73;\ninput[12]=78;\ninput[14]=164;\ninput[15]=142;\ninput[16]=79;\ninput[17]=66;\ninput[18]=74;\ninput[19]=48;\nlet prepared:Prepared=prepare_program(input,20,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==2",
+    "error": "Success",
+    "expected": 2,
+    "mutation": [
+      "result.value.number==2",
+      "result.value.number==3"
+    ],
+    "name": "type_empty_string",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300d00140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=13;\ninput[7]=20;\ninput[8]=12;\ninput[9]=77;\ninput[10]=65;\ninput[11]=73;\ninput[12]=78;\ninput[14]=164;\ninput[15]=135;\ninput[16]=79;\ninput[17]=66;\ninput[18]=74;\ninput[19]=48;\nlet prepared:Prepared=prepare_program(input,20,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==0",
+    "error": "Success",
+    "expected": 0,
+    "mutation": [
+      "result.value.number==0",
+      "result.value.number==1"
+    ],
+    "name": "size_empty_string",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a30110200140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=2;\ninput[8]=20;\ninput[9]=12;\ninput[10]=77;\ninput[11]=65;\ninput[12]=73;\ninput[13]=78;\ninput[15]=164;\ninput[16]=142;\ninput[17]=79;\ninput[18]=66;\ninput[19]=74;\ninput[20]=48;\nlet prepared:Prepared=prepare_program(input,21,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "type_empty_buffer",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a30110200140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=2;\ninput[8]=20;\ninput[9]=12;\ninput[10]=77;\ninput[11]=65;\ninput[12]=73;\ninput[13]=78;\ninput[15]=164;\ninput[16]=135;\ninput[17]=79;\ninput[18]=66;\ninput[19]=74;\ninput[20]=48;\nlet prepared:Prepared=prepare_program(input,21,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==0",
+    "error": "Success",
+    "expected": 0,
+    "mutation": [
+      "result.value.number==0",
+      "result.value.number==1"
+    ],
+    "name": "size_empty_buffer",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a30120502010a02140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=18;\ninput[6]=5;\ninput[7]=2;\ninput[8]=1;\ninput[9]=10;\ninput[10]=2;\ninput[11]=20;\ninput[12]=12;\ninput[13]=77;\ninput[14]=65;\ninput[15]=73;\ninput[16]=78;\ninput[18]=164;\ninput[19]=142;\ninput[20]=79;\ninput[21]=66;\ninput[22]=74;\ninput[23]=48;\nlet prepared:Prepared=prepare_program(input,24,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==4",
+    "error": "Success",
+    "expected": 4,
+    "mutation": [
+      "result.value.number==4",
+      "result.value.number==5"
+    ],
+    "name": "type_package",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a30120502010a02140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=18;\ninput[6]=5;\ninput[7]=2;\ninput[8]=1;\ninput[9]=10;\ninput[10]=2;\ninput[11]=20;\ninput[12]=12;\ninput[13]=77;\ninput[14]=65;\ninput[15]=73;\ninput[16]=78;\ninput[18]=164;\ninput[19]=135;\ninput[20]=79;\ninput[21]=66;\ninput[22]=74;\ninput[23]=48;\nlet prepared:Prepared=prepare_program(input,24,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==2",
+    "error": "Success",
+    "expected": 2,
+    "mutation": [
+      "result.value.number==2",
+      "result.value.number==3"
+    ],
+    "name": "size_package",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a30120200140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=18;\ninput[6]=2;\ninput[8]=20;\ninput[9]=12;\ninput[10]=77;\ninput[11]=65;\ninput[12]=73;\ninput[13]=78;\ninput[15]=164;\ninput[16]=142;\ninput[17]=79;\ninput[18]=66;\ninput[19]=74;\ninput[20]=48;\nlet prepared:Prepared=prepare_program(input,21,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==4",
+    "error": "Success",
+    "expected": 4,
+    "mutation": [
+      "result.value.number==4",
+      "result.value.number==5"
+    ],
+    "name": "type_empty_package",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a30120200140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=18;\ninput[6]=2;\ninput[8]=20;\ninput[9]=12;\ninput[10]=77;\ninput[11]=65;\ninput[12]=73;\ninput[13]=78;\ninput[15]=164;\ninput[16]=135;\ninput[17]=79;\ninput[18]=66;\ninput[19]=74;\ninput[20]=48;\nlet prepared:Prepared=prepare_program(input,21,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==0",
+    "error": "Success",
+    "expected": 0,
+    "mutation": [
+      "result.value.number==0",
+      "result.value.number==1"
+    ],
+    "name": "size_empty_package",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a30120203140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=18;\ninput[6]=2;\ninput[7]=3;\ninput[8]=20;\ninput[9]=12;\ninput[10]=77;\ninput[11]=65;\ninput[12]=73;\ninput[13]=78;\ninput[15]=164;\ninput[16]=142;\ninput[17]=79;\ninput[18]=66;\ninput[19]=74;\ninput[20]=48;\nlet prepared:Prepared=prepare_program(input,21,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==4",
+    "error": "Success",
+    "expected": 4,
+    "mutation": [
+      "result.value.number==4",
+      "result.value.number==5"
+    ],
+    "name": "type_package_uninitialized",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a30120203140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=18;\ninput[6]=2;\ninput[7]=3;\ninput[8]=20;\ninput[9]=12;\ninput[10]=77;\ninput[11]=65;\ninput[12]=73;\ninput[13]=78;\ninput[15]=164;\ninput[16]=135;\ninput[17]=79;\ninput[18]=66;\ninput[19]=74;\ninput[20]=48;\nlet prepared:Prepared=prepare_program(input,21,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "size_package_uninitialized",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b82054f424a30140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=130;\ninput[2]=5;\ninput[3]=79;\ninput[4]=66;\ninput[5]=74;\ninput[6]=48;\ninput[7]=20;\ninput[8]=12;\ninput[9]=77;\ninput[10]=65;\ninput[11]=73;\ninput[12]=78;\ninput[14]=164;\ninput[15]=142;\ninput[16]=79;\ninput[17]=66;\ninput[18]=74;\ninput[19]=48;\nlet prepared:Prepared=prepare_program(input,20,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==6",
+    "error": "Success",
+    "expected": 6,
+    "mutation": [
+      "result.value.number==6",
+      "result.value.number==7"
+    ],
+    "name": "type_device",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b82054f424a30140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=130;\ninput[2]=5;\ninput[3]=79;\ninput[4]=66;\ninput[5]=74;\ninput[6]=48;\ninput[7]=20;\ninput[8]=12;\ninput[9]=77;\ninput[10]=65;\ninput[11]=73;\ninput[12]=78;\ninput[14]=164;\ninput[15]=135;\ninput[16]=79;\ninput[17]=66;\ninput[18]=74;\ninput[19]=48;\nlet prepared:Prepared=prepare_program(input,20,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_device",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b024f424a30140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=2;\ninput[2]=79;\ninput[3]=66;\ninput[4]=74;\ninput[5]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=142;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==7",
+    "error": "Success",
+    "expected": 7,
+    "mutation": [
+      "result.value.number==7",
+      "result.value.number==6"
+    ],
+    "name": "type_event",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b024f424a30140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=2;\ninput[2]=79;\ninput[3]=66;\ninput[4]=74;\ninput[5]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=135;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_event",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b014f424a3000140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=1;\ninput[2]=79;\ninput[3]=66;\ninput[4]=74;\ninput[5]=48;\ninput[7]=20;\ninput[8]=12;\ninput[9]=77;\ninput[10]=65;\ninput[11]=73;\ninput[12]=78;\ninput[14]=164;\ninput[15]=142;\ninput[16]=79;\ninput[17]=66;\ninput[18]=74;\ninput[19]=48;\nlet prepared:Prepared=prepare_program(input,20,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==9",
+    "error": "Success",
+    "expected": 9,
+    "mutation": [
+      "result.value.number==9",
+      "result.value.number==8"
+    ],
+    "name": "type_mutex",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b014f424a3000140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=1;\ninput[2]=79;\ninput[3]=66;\ninput[4]=74;\ninput[5]=48;\ninput[7]=20;\ninput[8]=12;\ninput[9]=77;\ninput[10]=65;\ninput[11]=73;\ninput[12]=78;\ninput[14]=164;\ninput[15]=135;\ninput[16]=79;\ninput[17]=66;\ninput[18]=74;\ninput[19]=48;\nlet prepared:Prepared=prepare_program(input,20,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_mutex",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b84084f424a30000000140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=132;\ninput[2]=8;\ninput[3]=79;\ninput[4]=66;\ninput[5]=74;\ninput[6]=48;\ninput[10]=20;\ninput[11]=12;\ninput[12]=77;\ninput[13]=65;\ninput[14]=73;\ninput[15]=78;\ninput[17]=164;\ninput[18]=142;\ninput[19]=79;\ninput[20]=66;\ninput[21]=74;\ninput[22]=48;\nlet prepared:Prepared=prepare_program(input,23,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==11",
+    "error": "Success",
+    "expected": 11,
+    "mutation": [
+      "result.value.number==11",
+      "result.value.number==10"
+    ],
+    "name": "type_power",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b84084f424a30000000140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=132;\ninput[2]=8;\ninput[3]=79;\ninput[4]=66;\ninput[5]=74;\ninput[6]=48;\ninput[10]=20;\ninput[11]=12;\ninput[12]=77;\ninput[13]=65;\ninput[14]=73;\ninput[15]=78;\ninput[17]=164;\ninput[18]=135;\ninput[19]=79;\ninput[20]=66;\ninput[21]=74;\ninput[22]=48;\nlet prepared:Prepared=prepare_program(input,23,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_power",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b830b4f424a30000000000000140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=131;\ninput[2]=11;\ninput[3]=79;\ninput[4]=66;\ninput[5]=74;\ninput[6]=48;\ninput[13]=20;\ninput[14]=12;\ninput[15]=77;\ninput[16]=65;\ninput[17]=73;\ninput[18]=78;\ninput[20]=164;\ninput[21]=142;\ninput[22]=79;\ninput[23]=66;\ninput[24]=74;\ninput[25]=48;\nlet prepared:Prepared=prepare_program(input,26,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==12",
+    "error": "Success",
+    "expected": 12,
+    "mutation": [
+      "result.value.number==12",
+      "result.value.number==13"
+    ],
+    "name": "type_processor",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b830b4f424a30000000000000140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=131;\ninput[2]=11;\ninput[3]=79;\ninput[4]=66;\ninput[5]=74;\ninput[6]=48;\ninput[13]=20;\ninput[14]=12;\ninput[15]=77;\ninput[16]=65;\ninput[17]=73;\ninput[18]=78;\ninput[20]=164;\ninput[21]=135;\ninput[22]=79;\ninput[23]=66;\ninput[24]=74;\ninput[25]=48;\nlet prepared:Prepared=prepare_program(input,26,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_processor",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b85054f424a30140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=133;\ninput[2]=5;\ninput[3]=79;\ninput[4]=66;\ninput[5]=74;\ninput[6]=48;\ninput[7]=20;\ninput[8]=12;\ninput[9]=77;\ninput[10]=65;\ninput[11]=73;\ninput[12]=78;\ninput[14]=164;\ninput[15]=142;\ninput[16]=79;\ninput[17]=66;\ninput[18]=74;\ninput[19]=48;\nlet prepared:Prepared=prepare_program(input,20,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==13",
+    "error": "Success",
+    "expected": 13,
+    "mutation": [
+      "result.value.number==13",
+      "result.value.number==12"
+    ],
+    "name": "type_thermal",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b85054f424a30140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=133;\ninput[2]=5;\ninput[3]=79;\ninput[4]=66;\ninput[5]=74;\ninput[6]=48;\ninput[7]=20;\ninput[8]=12;\ninput[9]=77;\ninput[10]=65;\ninput[11]=73;\ninput[12]=78;\ninput[14]=164;\ninput[15]=135;\ninput[16]=79;\ninput[17]=66;\ninput[18]=74;\ninput[19]=48;\nlet prepared:Prepared=prepare_program(input,20,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_thermal",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b8052454730000b00100a10140c4d41494e00a48e52454730",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=128;\ninput[2]=82;\ninput[3]=69;\ninput[4]=71;\ninput[5]=48;\ninput[7]=11;\ninput[9]=16;\ninput[10]=10;\ninput[11]=16;\ninput[12]=20;\ninput[13]=12;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[19]=164;\ninput[20]=142;\ninput[21]=82;\ninput[22]=69;\ninput[23]=71;\ninput[24]=48;\nlet prepared:Prepared=prepare_program(input,25,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==10",
+    "error": "Success",
+    "expected": 10,
+    "mutation": [
+      "result.value.number==10",
+      "result.value.number==11"
+    ],
+    "name": "type_region",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b8052454730000b00100a10140c4d41494e00a48752454730",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=128;\ninput[2]=82;\ninput[3]=69;\ninput[4]=71;\ninput[5]=48;\ninput[7]=11;\ninput[9]=16;\ninput[10]=10;\ninput[11]=16;\ninput[12]=20;\ninput[13]=12;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[19]=164;\ninput[20]=135;\ninput[21]=82;\ninput[22]=69;\ninput[23]=71;\ninput[24]=48;\nlet prepared:Prepared=prepare_program(input,25,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_region",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "08434e54300014105349444507700a63434e5430a40a05140c4d41494e00a48e53494445",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=67;\ninput[2]=78;\ninput[3]=84;\ninput[4]=48;\ninput[6]=20;\ninput[7]=16;\ninput[8]=83;\ninput[9]=73;\ninput[10]=68;\ninput[11]=69;\ninput[12]=7;\ninput[13]=112;\ninput[14]=10;\ninput[15]=99;\ninput[16]=67;\ninput[17]=78;\ninput[18]=84;\ninput[19]=48;\ninput[20]=164;\ninput[21]=10;\ninput[22]=5;\ninput[23]=20;\ninput[24]=12;\ninput[25]=77;\ninput[26]=65;\ninput[27]=73;\ninput[28]=78;\ninput[30]=164;\ninput[31]=142;\ninput[32]=83;\ninput[33]=73;\ninput[34]=68;\ninput[35]=69;\nlet prepared:Prepared=prepare_program(input,36,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\nlet untouched:bool=qe_integer(program.store.space.objects[0].value,0);",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==8 && untouched",
+    "error": "Success",
+    "expected": 8,
+    "mutation": [
+      "result.value.number==8",
+      "result.value.number==9"
+    ],
+    "name": "type_method_no_invocation",
+    "note": "",
+    "public": true,
+    "public_after": {
+      "CNT0": "integer:0"
+    },
+    "revision": 2
+  },
+  {
+    "aml_hex": "08434e54300014105349444507700a63434e5430a40a05140c4d41494e00a48753494445",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=67;\ninput[2]=78;\ninput[3]=84;\ninput[4]=48;\ninput[6]=20;\ninput[7]=16;\ninput[8]=83;\ninput[9]=73;\ninput[10]=68;\ninput[11]=69;\ninput[12]=7;\ninput[13]=112;\ninput[14]=10;\ninput[15]=99;\ninput[16]=67;\ninput[17]=78;\ninput[18]=84;\ninput[19]=48;\ninput[20]=164;\ninput[21]=10;\ninput[22]=5;\ninput[23]=20;\ninput[24]=12;\ninput[25]=77;\ninput[26]=65;\ninput[27]=73;\ninput[28]=78;\ninput[30]=164;\ninput[31]=135;\ninput[32]=83;\ninput[33]=73;\ninput[34]=68;\ninput[35]=69;\nlet prepared:Prepared=prepare_program(input,36,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\nlet untouched:bool=qe_integer(program.store.space.objects[0].value,0);",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value && untouched",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_method_no_invocation",
+    "note": "",
+    "public": true,
+    "public_after": {
+      "CNT0": "integer:0"
+    },
+    "revision": 2
+  },
+  {
+    "aml_hex": "08434e54300014105349444500700a63434e5430a40a05140c4d41494e00a48e53494445",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=67;\ninput[2]=78;\ninput[3]=84;\ninput[4]=48;\ninput[6]=20;\ninput[7]=16;\ninput[8]=83;\ninput[9]=73;\ninput[10]=68;\ninput[11]=69;\ninput[13]=112;\ninput[14]=10;\ninput[15]=99;\ninput[16]=67;\ninput[17]=78;\ninput[18]=84;\ninput[19]=48;\ninput[20]=164;\ninput[21]=10;\ninput[22]=5;\ninput[23]=20;\ninput[24]=12;\ninput[25]=77;\ninput[26]=65;\ninput[27]=73;\ninput[28]=78;\ninput[30]=164;\ninput[31]=142;\ninput[32]=83;\ninput[33]=73;\ninput[34]=68;\ninput[35]=69;\nlet prepared:Prepared=prepare_program(input,36,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\nlet untouched:bool=qe_integer(program.store.space.objects[0].value,0);",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==8 && untouched",
+    "error": "Success",
+    "expected": 8,
+    "mutation": [
+      "result.value.number==8",
+      "result.value.number==9"
+    ],
+    "name": "type_method_zero_arity_no_effect",
+    "note": "",
+    "public": true,
+    "public_after": {
+      "CNT0": "integer:0"
+    },
+    "revision": 2
+  },
+  {
+    "aml_hex": "08434e54300014105349444500700a63434e5430a40a05140c4d41494e00a48753494445",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=67;\ninput[2]=78;\ninput[3]=84;\ninput[4]=48;\ninput[6]=20;\ninput[7]=16;\ninput[8]=83;\ninput[9]=73;\ninput[10]=68;\ninput[11]=69;\ninput[13]=112;\ninput[14]=10;\ninput[15]=99;\ninput[16]=67;\ninput[17]=78;\ninput[18]=84;\ninput[19]=48;\ninput[20]=164;\ninput[21]=10;\ninput[22]=5;\ninput[23]=20;\ninput[24]=12;\ninput[25]=77;\ninput[26]=65;\ninput[27]=73;\ninput[28]=78;\ninput[30]=164;\ninput[31]=135;\ninput[32]=83;\ninput[33]=73;\ninput[34]=68;\ninput[35]=69;\nlet prepared:Prepared=prepare_program(input,36,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\nlet untouched:bool=qe_integer(program.store.space.objects[0].value,0);",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value && untouched",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_method_zero_arity_no_effect",
+    "note": "",
+    "public": true,
+    "public_after": {
+      "CNT0": "integer:0"
+    },
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b8052454730000b00100a105b810b5245473011464c443008140c4d41494e00a48e464c4430",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=128;\ninput[2]=82;\ninput[3]=69;\ninput[4]=71;\ninput[5]=48;\ninput[7]=11;\ninput[9]=16;\ninput[10]=10;\ninput[11]=16;\ninput[12]=91;\ninput[13]=129;\ninput[14]=11;\ninput[15]=82;\ninput[16]=69;\ninput[17]=71;\ninput[18]=48;\ninput[19]=17;\ninput[20]=70;\ninput[21]=76;\ninput[22]=68;\ninput[23]=48;\ninput[24]=8;\ninput[25]=20;\ninput[26]=12;\ninput[27]=77;\ninput[28]=65;\ninput[29]=73;\ninput[30]=78;\ninput[32]=164;\ninput[33]=142;\ninput[34]=70;\ninput[35]=76;\ninput[36]=68;\ninput[37]=48;\nlet prepared:Prepared=prepare_program(input,38,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\nlet unchanged:bool=qe_field(program.store.space.objects[1].value,0);",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==5 && unchanged",
+    "error": "Success",
+    "expected": 5,
+    "mutation": [
+      "result.value.number==5",
+      "result.value.number==4"
+    ],
+    "name": "type_installed_field",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b8052454730000b00100a105b810b5245473011464c443008140c4d41494e00a487464c4430",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=128;\ninput[2]=82;\ninput[3]=69;\ninput[4]=71;\ninput[5]=48;\ninput[7]=11;\ninput[9]=16;\ninput[10]=10;\ninput[11]=16;\ninput[12]=91;\ninput[13]=129;\ninput[14]=11;\ninput[15]=82;\ninput[16]=69;\ninput[17]=71;\ninput[18]=48;\ninput[19]=17;\ninput[20]=70;\ninput[21]=76;\ninput[22]=68;\ninput[23]=48;\ninput[24]=8;\ninput[25]=20;\ninput[26]=12;\ninput[27]=77;\ninput[28]=65;\ninput[29]=73;\ninput[30]=78;\ninput[32]=164;\ninput[33]=135;\ninput[34]=70;\ninput[35]=76;\ninput[36]=68;\ninput[37]=48;\nlet prepared:Prepared=prepare_program(input,38,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\nlet unchanged:bool=qe_field(program.store.space.objects[1].value,0);",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value && unchanged",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_installed_field",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b8052454730000b00100a105b8110524547300153454c300844544130085b87115245473053454c300a02014f424a3008140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=128;\ninput[2]=82;\ninput[3]=69;\ninput[4]=71;\ninput[5]=48;\ninput[7]=11;\ninput[9]=16;\ninput[10]=10;\ninput[11]=16;\ninput[12]=91;\ninput[13]=129;\ninput[14]=16;\ninput[15]=82;\ninput[16]=69;\ninput[17]=71;\ninput[18]=48;\ninput[19]=1;\ninput[20]=83;\ninput[21]=69;\ninput[22]=76;\ninput[23]=48;\ninput[24]=8;\ninput[25]=68;\ninput[26]=84;\ninput[27]=65;\ninput[28]=48;\ninput[29]=8;\ninput[30]=91;\ninput[31]=135;\ninput[32]=17;\ninput[33]=82;\ninput[34]=69;\ninput[35]=71;\ninput[36]=48;\ninput[37]=83;\ninput[38]=69;\ninput[39]=76;\ninput[40]=48;\ninput[41]=10;\ninput[42]=2;\ninput[43]=1;\ninput[44]=79;\ninput[45]=66;\ninput[46]=74;\ninput[47]=48;\ninput[48]=8;\ninput[49]=20;\ninput[50]=12;\ninput[51]=77;\ninput[52]=65;\ninput[53]=73;\ninput[54]=78;\ninput[56]=164;\ninput[57]=142;\ninput[58]=79;\ninput[59]=66;\ninput[60]=74;\ninput[61]=48;\nlet prepared:Prepared=prepare_program(input,62,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==5",
+    "error": "Success",
+    "expected": 5,
+    "mutation": [
+      "result.value.number==5",
+      "result.value.number==4"
+    ],
+    "name": "type_installed_bank",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b8052454730000b00100a105b8110524547300153454c300844544130085b87115245473053454c300a02014f424a3008140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=128;\ninput[2]=82;\ninput[3]=69;\ninput[4]=71;\ninput[5]=48;\ninput[7]=11;\ninput[9]=16;\ninput[10]=10;\ninput[11]=16;\ninput[12]=91;\ninput[13]=129;\ninput[14]=16;\ninput[15]=82;\ninput[16]=69;\ninput[17]=71;\ninput[18]=48;\ninput[19]=1;\ninput[20]=83;\ninput[21]=69;\ninput[22]=76;\ninput[23]=48;\ninput[24]=8;\ninput[25]=68;\ninput[26]=84;\ninput[27]=65;\ninput[28]=48;\ninput[29]=8;\ninput[30]=91;\ninput[31]=135;\ninput[32]=17;\ninput[33]=82;\ninput[34]=69;\ninput[35]=71;\ninput[36]=48;\ninput[37]=83;\ninput[38]=69;\ninput[39]=76;\ninput[40]=48;\ninput[41]=10;\ninput[42]=2;\ninput[43]=1;\ninput[44]=79;\ninput[45]=66;\ninput[46]=74;\ninput[47]=48;\ninput[48]=8;\ninput[49]=20;\ninput[50]=12;\ninput[51]=77;\ninput[52]=65;\ninput[53]=73;\ninput[54]=78;\ninput[56]=164;\ninput[57]=135;\ninput[58]=79;\ninput[59]=66;\ninput[60]=74;\ninput[61]=48;\nlet prepared:Prepared=prepare_program(input,62,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_installed_bank",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b8052454730000b00100a105b8110524547300153454c300844544130085b860f53454c3044544130014f424a3008140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=128;\ninput[2]=82;\ninput[3]=69;\ninput[4]=71;\ninput[5]=48;\ninput[7]=11;\ninput[9]=16;\ninput[10]=10;\ninput[11]=16;\ninput[12]=91;\ninput[13]=129;\ninput[14]=16;\ninput[15]=82;\ninput[16]=69;\ninput[17]=71;\ninput[18]=48;\ninput[19]=1;\ninput[20]=83;\ninput[21]=69;\ninput[22]=76;\ninput[23]=48;\ninput[24]=8;\ninput[25]=68;\ninput[26]=84;\ninput[27]=65;\ninput[28]=48;\ninput[29]=8;\ninput[30]=91;\ninput[31]=134;\ninput[32]=15;\ninput[33]=83;\ninput[34]=69;\ninput[35]=76;\ninput[36]=48;\ninput[37]=68;\ninput[38]=84;\ninput[39]=65;\ninput[40]=48;\ninput[41]=1;\ninput[42]=79;\ninput[43]=66;\ninput[44]=74;\ninput[45]=48;\ninput[46]=8;\ninput[47]=20;\ninput[48]=12;\ninput[49]=77;\ninput[50]=65;\ninput[51]=73;\ninput[52]=78;\ninput[54]=164;\ninput[55]=142;\ninput[56]=79;\ninput[57]=66;\ninput[58]=74;\ninput[59]=48;\nlet prepared:Prepared=prepare_program(input,60,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==5",
+    "error": "Success",
+    "expected": 5,
+    "mutation": [
+      "result.value.number==5",
+      "result.value.number==4"
+    ],
+    "name": "type_installed_index",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b8052454730000b00100a105b8110524547300153454c300844544130085b860f53454c3044544130014f424a3008140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=128;\ninput[2]=82;\ninput[3]=69;\ninput[4]=71;\ninput[5]=48;\ninput[7]=11;\ninput[9]=16;\ninput[10]=10;\ninput[11]=16;\ninput[12]=91;\ninput[13]=129;\ninput[14]=16;\ninput[15]=82;\ninput[16]=69;\ninput[17]=71;\ninput[18]=48;\ninput[19]=1;\ninput[20]=83;\ninput[21]=69;\ninput[22]=76;\ninput[23]=48;\ninput[24]=8;\ninput[25]=68;\ninput[26]=84;\ninput[27]=65;\ninput[28]=48;\ninput[29]=8;\ninput[30]=91;\ninput[31]=134;\ninput[32]=15;\ninput[33]=83;\ninput[34]=69;\ninput[35]=76;\ninput[36]=48;\ninput[37]=68;\ninput[38]=84;\ninput[39]=65;\ninput[40]=48;\ninput[41]=1;\ninput[42]=79;\ninput[43]=66;\ninput[44]=74;\ninput[45]=48;\ninput[46]=8;\ninput[47]=20;\ninput[48]=12;\ninput[49]=77;\ninput[50]=65;\ninput[51]=73;\ninput[52]=78;\ninput[54]=164;\ninput[55]=135;\ninput[56]=79;\ninput[57]=66;\ninput[58]=74;\ninput[59]=48;\nlet prepared:Prepared=prepare_program(input,60,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_installed_index",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "140a4d41494e00a48e5b31",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=10;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=142;\ninput[9]=91;\ninput[10]=49;\nlet prepared:Prepared=prepare_program(input,11,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==16",
+    "error": "Success",
+    "expected": 16,
+    "mutation": [
+      "result.value.number==16",
+      "result.value.number==17"
+    ],
+    "name": "type_debug",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "140a4d41494e00a4875b31",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=10;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=135;\ninput[9]=91;\ninput[10]=49;\nlet prepared:Prepared=prepare_program(input,11,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_debug",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14094d41494e00a48e60",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=9;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=142;\ninput[9]=96;\nlet prepared:Prepared=prepare_program(input,10,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==0",
+    "error": "Success",
+    "expected": 0,
+    "mutation": [
+      "result.value.number==0",
+      "result.value.number==1"
+    ],
+    "name": "type_uninitialized_local0",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14094d41494e00a48e67",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=9;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=142;\ninput[9]=103;\nlet prepared:Prepared=prepare_program(input,10,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==0",
+    "error": "Success",
+    "expected": 0,
+    "mutation": [
+      "result.value.number==0",
+      "result.value.number==1"
+    ],
+    "name": "type_uninitialized_local7",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14094d41494e00a48e68",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=9;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=142;\ninput[9]=104;\nlet prepared:Prepared=prepare_program(input,10,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==0",
+    "error": "Success",
+    "expected": 0,
+    "mutation": [
+      "result.value.number==0",
+      "result.value.number==1"
+    ],
+    "name": "type_uninitialized_arg0",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14094d41494e00a48e6e",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=9;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=142;\ninput[9]=110;\nlet prepared:Prepared=prepare_program(input,10,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==0",
+    "error": "Success",
+    "expected": 0,
+    "mutation": [
+      "result.value.number==0",
+      "result.value.number==1"
+    ],
+    "name": "type_uninitialized_arg6",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14094d41494e00a48760",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=9;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=135;\ninput[9]=96;\nlet prepared:Prepared=prepare_program(input,10,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_uninitialized_local0",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14094d41494e00a48767",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=9;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=135;\ninput[9]=103;\nlet prepared:Prepared=prepare_program(input,10,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_uninitialized_local7",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14094d41494e00a48768",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=9;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=135;\ninput[9]=104;\nlet prepared:Prepared=prepare_program(input,10,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_uninitialized_arg0",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14094d41494e00a4876e",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=9;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=135;\ninput[9]=110;\nlet prepared:Prepared=prepare_program(input,10,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_uninitialized_arg6",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "140d4d41494e00700a2a60a48e60",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=13;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=112;\ninput[8]=10;\ninput[9]=42;\ninput[10]=96;\ninput[11]=164;\ninput[12]=142;\ninput[13]=96;\nlet prepared:Prepared=prepare_program(input,14,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==1",
+    "error": "Success",
+    "expected": 1,
+    "mutation": [
+      "result.value.number==1",
+      "result.value.number==0"
+    ],
+    "name": "type_inline_local",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14094d41494e01a48e68",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=9;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[6]=1;\ninput[7]=164;\ninput[8]=142;\ninput[9]=104;\nlet prepared:Prepared=prepare_program(input,10,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];arguments[0]=Value::Integer {number:42};let result:ExecutionResult=run_program(&mut program,main_path,&arguments,1,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==1",
+    "error": "Success",
+    "expected": 1,
+    "mutation": [
+      "result.value.number==1",
+      "result.value.number==0"
+    ],
+    "name": "type_inline_arg",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "140d4d41494e00700a2a60a48760",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=13;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=112;\ninput[8]=10;\ninput[9]=42;\ninput[10]=96;\ninput[11]=164;\ninput[12]=135;\ninput[13]=96;\nlet prepared:Prepared=prepare_program(input,14,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_inline_local",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14094d41494e01a48768",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=9;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[6]=1;\ninput[7]=164;\ninput[8]=135;\ninput[9]=104;\nlet prepared:Prepared=prepare_program(input,10,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];arguments[0]=Value::Integer {number:42};let result:ExecutionResult=run_program(&mut program,main_path,&arguments,1,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_inline_arg",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300d41424300140f4d41494e00704f424a3060a48e60",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=13;\ninput[6]=65;\ninput[7]=66;\ninput[8]=67;\ninput[10]=20;\ninput[11]=15;\ninput[12]=77;\ninput[13]=65;\ninput[14]=73;\ninput[15]=78;\ninput[17]=112;\ninput[18]=79;\ninput[19]=66;\ninput[20]=74;\ninput[21]=48;\ninput[22]=96;\ninput[23]=164;\ninput[24]=142;\ninput[25]=96;\nlet prepared:Prepared=prepare_program(input,26,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==2",
+    "error": "Success",
+    "expected": 2,
+    "mutation": [
+      "result.value.number==2",
+      "result.value.number==3"
+    ],
+    "name": "type_owned_local",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300d41424300064f424a30414c4953140c4d41494e00a48e414c4953",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=13;\ninput[6]=65;\ninput[7]=66;\ninput[8]=67;\ninput[10]=6;\ninput[11]=79;\ninput[12]=66;\ninput[13]=74;\ninput[14]=48;\ninput[15]=65;\ninput[16]=76;\ninput[17]=73;\ninput[18]=83;\ninput[19]=20;\ninput[20]=12;\ninput[21]=77;\ninput[22]=65;\ninput[23]=73;\ninput[24]=78;\ninput[26]=164;\ninput[27]=142;\ninput[28]=65;\ninput[29]=76;\ninput[30]=73;\ninput[31]=83;\nlet prepared:Prepared=prepare_program(input,32,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==2",
+    "error": "Success",
+    "expected": 2,
+    "mutation": [
+      "result.value.number==2",
+      "result.value.number==3"
+    ],
+    "name": "type_alias",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300d41424300140f4d41494e00704f424a3060a48760",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=13;\ninput[6]=65;\ninput[7]=66;\ninput[8]=67;\ninput[10]=20;\ninput[11]=15;\ninput[12]=77;\ninput[13]=65;\ninput[14]=73;\ninput[15]=78;\ninput[17]=112;\ninput[18]=79;\ninput[19]=66;\ninput[20]=74;\ninput[21]=48;\ninput[22]=96;\ninput[23]=164;\ninput[24]=135;\ninput[25]=96;\nlet prepared:Prepared=prepare_program(input,26,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "size_owned_local",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300d41424300064f424a30414c4953140c4d41494e00a487414c4953",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=13;\ninput[6]=65;\ninput[7]=66;\ninput[8]=67;\ninput[10]=6;\ninput[11]=79;\ninput[12]=66;\ninput[13]=74;\ninput[14]=48;\ninput[15]=65;\ninput[16]=76;\ninput[17]=73;\ninput[18]=83;\ninput[19]=20;\ninput[20]=12;\ninput[21]=77;\ninput[22]=65;\ninput[23]=73;\ninput[24]=78;\ninput[26]=164;\ninput[27]=135;\ninput[28]=65;\ninput[29]=76;\ninput[30]=73;\ninput[31]=83;\nlet prepared:Prepared=prepare_program(input,32,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "size_alias",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "100553435030140c4d41494e00a48e53435030",
+    "body": "let mut input:[u8;1024];\ninput[0]=16;\ninput[1]=5;\ninput[2]=83;\ninput[3]=67;\ninput[4]=80;\ninput[5]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=142;\ninput[15]=83;\ninput[16]=67;\ninput[17]=80;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==0",
+    "error": "Success",
+    "expected": 0,
+    "mutation": [
+      "result.value.number==0",
+      "result.value.number==1"
+    ],
+    "name": "type_created_scope",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "100553435030140c4d41494e00a48753435030",
+    "body": "let mut input:[u8;1024];\ninput[0]=16;\ninput[1]=5;\ninput[2]=83;\ninput[3]=67;\ninput[4]=80;\ninput[5]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=135;\ninput[15]=83;\ninput[16]=67;\ninput[17]=80;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_scope",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "140a4d41494e00a48e5c00",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=10;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=142;\ninput[9]=92;\nlet prepared:Prepared=prepare_program(input,11,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==0",
+    "error": "Success",
+    "expected": 0,
+    "mutation": [
+      "result.value.number==0",
+      "result.value.number==1"
+    ],
+    "name": "type_root",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "140d4d41494e00a48e5c5f53425f",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=13;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=142;\ninput[9]=92;\ninput[10]=95;\ninput[11]=83;\ninput[12]=66;\ninput[13]=95;\nlet prepared:Prepared=prepare_program(input,14,7,128,128);let mut program:Program=prepared.program;\nlet mut sb:Path=Path {absolute:true,count:1};sb.segments[0]=1598182239;\nlet added:NamespaceResult=add_level(program.store.space,sb,LevelKind::Scope);program.store.space=added.space;let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==0",
+    "error": "Success",
+    "expected": 0,
+    "mutation": [
+      "result.value.number==0",
+      "result.value.number==1"
+    ],
+    "name": "type_predefined_scope",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300a04101844305f5f10054f424a30140c5445535400a48e4f424a3014114d41494e00a45c2e44305f5f54455354",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=10;\ninput[6]=4;\ninput[7]=16;\ninput[8]=24;\ninput[9]=68;\ninput[10]=48;\ninput[11]=95;\ninput[12]=95;\ninput[13]=16;\ninput[14]=5;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\ninput[19]=20;\ninput[20]=12;\ninput[21]=84;\ninput[22]=69;\ninput[23]=83;\ninput[24]=84;\ninput[26]=164;\ninput[27]=142;\ninput[28]=79;\ninput[29]=66;\ninput[30]=74;\ninput[31]=48;\ninput[32]=20;\ninput[33]=17;\ninput[34]=77;\ninput[35]=65;\ninput[36]=73;\ninput[37]=78;\ninput[39]=164;\ninput[40]=92;\ninput[41]=46;\ninput[42]=68;\ninput[43]=48;\ninput[44]=95;\ninput[45]=95;\ninput[46]=84;\ninput[47]=69;\ninput[48]=83;\ninput[49]=84;\nlet prepared:Prepared=prepare_program(input,50,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==0",
+    "error": "Success",
+    "expected": 0,
+    "mutation": [
+      "result.value.number==0",
+      "result.value.number==1"
+    ],
+    "name": "nearest_scope_wins",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300a04101b44305f5f084f424a300d414200140c5445535400a48e4f424a3014114d41494e00a45c2e44305f5f54455354",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=10;\ninput[6]=4;\ninput[7]=16;\ninput[8]=27;\ninput[9]=68;\ninput[10]=48;\ninput[11]=95;\ninput[12]=95;\ninput[13]=8;\ninput[14]=79;\ninput[15]=66;\ninput[16]=74;\ninput[17]=48;\ninput[18]=13;\ninput[19]=65;\ninput[20]=66;\ninput[22]=20;\ninput[23]=12;\ninput[24]=84;\ninput[25]=69;\ninput[26]=83;\ninput[27]=84;\ninput[29]=164;\ninput[30]=142;\ninput[31]=79;\ninput[32]=66;\ninput[33]=74;\ninput[34]=48;\ninput[35]=20;\ninput[36]=17;\ninput[37]=77;\ninput[38]=65;\ninput[39]=73;\ninput[40]=78;\ninput[42]=164;\ninput[43]=92;\ninput[44]=46;\ninput[45]=68;\ninput[46]=48;\ninput[47]=95;\ninput[48]=95;\ninput[49]=84;\ninput[50]=69;\ninput[51]=83;\ninput[52]=84;\nlet prepared:Prepared=prepare_program(input,53,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==2",
+    "error": "Success",
+    "expected": 2,
+    "mutation": [
+      "result.value.number==2",
+      "result.value.number==3"
+    ],
+    "name": "nearest_object_wins",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a03010203101444305f5f140e5445535400a4875e5e4f424a3014114d41494e00a45c2e44305f5f54455354",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=16;\ninput[13]=20;\ninput[14]=68;\ninput[15]=48;\ninput[16]=95;\ninput[17]=95;\ninput[18]=20;\ninput[19]=14;\ninput[20]=84;\ninput[21]=69;\ninput[22]=83;\ninput[23]=84;\ninput[25]=164;\ninput[26]=135;\ninput[27]=94;\ninput[28]=94;\ninput[29]=79;\ninput[30]=66;\ninput[31]=74;\ninput[32]=48;\ninput[33]=20;\ninput[34]=17;\ninput[35]=77;\ninput[36]=65;\ninput[37]=73;\ninput[38]=78;\ninput[40]=164;\ninput[41]=92;\ninput[42]=46;\ninput[43]=68;\ninput[44]=48;\ninput[45]=95;\ninput[46]=95;\ninput[47]=84;\ninput[48]=69;\ninput[49]=83;\ninput[50]=84;\nlet prepared:Prepared=prepare_program(input,51,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "parent_name_lookup",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300d4142430014134d41494e00a4728e4f424a30874f424a3000",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=13;\ninput[6]=65;\ninput[7]=66;\ninput[8]=67;\ninput[10]=20;\ninput[11]=19;\ninput[12]=77;\ninput[13]=65;\ninput[14]=73;\ninput[15]=78;\ninput[17]=164;\ninput[18]=114;\ninput[19]=142;\ninput[20]=79;\ninput[21]=66;\ninput[22]=74;\ninput[23]=48;\ninput[24]=135;\ninput[25]=79;\ninput[26]=66;\ninput[27]=74;\ninput[28]=48;\nlet prepared:Prepared=prepare_program(input,30,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==5",
+    "error": "Success",
+    "expected": 5,
+    "mutation": [
+      "result.value.number==5",
+      "result.value.number==4"
+    ],
+    "name": "nested_query_arithmetic",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300d41424300140e4d41494e008e4f424a30a40a2a",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=13;\ninput[6]=65;\ninput[7]=66;\ninput[8]=67;\ninput[10]=20;\ninput[11]=14;\ninput[12]=77;\ninput[13]=65;\ninput[14]=73;\ninput[15]=78;\ninput[17]=142;\ninput[18]=79;\ninput[19]=66;\ninput[20]=74;\ninput[21]=48;\ninput[22]=164;\ninput[23]=10;\ninput[24]=42;\nlet prepared:Prepared=prepare_program(input,25,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==42",
+    "error": "Success",
+    "expected": 42,
+    "mutation": [
+      "result.value.number==42",
+      "result.value.number==43"
+    ],
+    "name": "standalone_query",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f55543000084f424a3011060a0301020314154d41494e0070874f424a304f555430a44f555430",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=85;\ninput[3]=84;\ninput[4]=48;\ninput[6]=8;\ninput[7]=79;\ninput[8]=66;\ninput[9]=74;\ninput[10]=48;\ninput[11]=17;\ninput[12]=6;\ninput[13]=10;\ninput[14]=3;\ninput[15]=1;\ninput[16]=2;\ninput[17]=3;\ninput[18]=20;\ninput[19]=21;\ninput[20]=77;\ninput[21]=65;\ninput[22]=73;\ninput[23]=78;\ninput[25]=112;\ninput[26]=135;\ninput[27]=79;\ninput[28]=66;\ninput[29]=74;\ninput[30]=48;\ninput[31]=79;\ninput[32]=85;\ninput[33]=84;\ninput[34]=48;\ninput[35]=164;\ninput[36]=79;\ninput[37]=85;\ninput[38]=84;\ninput[39]=48;\nlet prepared:Prepared=prepare_program(input,40,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\nlet stored:bool=qe_integer(program.store.space.objects[0].value,3);",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3 && stored",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "query_result_store",
+    "note": "",
+    "public": true,
+    "public_after": {
+      "OUT0": "integer:3"
+    },
+    "revision": 2
+  },
+  {
+    "aml_hex": "140c4d41494e00a48e4d495353",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=12;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=142;\ninput[9]=77;\ninput[10]=73;\ninput[11]=83;\ninput[12]=83;\nlet prepared:Prepared=prepare_program(input,13,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::MissingObject && !result.has_value",
+    "error": "MissingObject",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::MissingObject",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "type_missing",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14084d41494e00a48e",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=8;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=142;\nlet prepared:Prepared=prepare_program(input,9,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Truncated && !result.has_value",
+    "error": "Truncated",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::Truncated",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "type_truncated",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "140a4d41494e00a48e4142",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=10;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=142;\ninput[9]=65;\ninput[10]=66;\nlet prepared:Prepared=prepare_program(input,11,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Truncated && !result.has_value",
+    "error": "Truncated",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::Truncated",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "type_truncated_name",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14094d41494e00a48e00",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=9;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=142;\nlet prepared:Prepared=prepare_program(input,10,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::InvalidTarget && !result.has_value",
+    "error": "InvalidTarget",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::InvalidTarget",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "type_null_target",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "140a4d41494e00a48e0a2a",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=10;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=142;\ninput[9]=10;\ninput[10]=42;\nlet prepared:Prepared=prepare_program(input,11,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedOpcode && !result.has_value",
+    "error": "UnsupportedOpcode",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedOpcode",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "type_literal_operand",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a03010203140d4d41494e00a48e714f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=20;\ninput[13]=13;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[19]=164;\ninput[20]=142;\ninput[21]=113;\ninput[22]=79;\ninput[23]=66;\ninput[24]=74;\ninput[25]=48;\nlet prepared:Prepared=prepare_program(input,26,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedOpcode && !result.has_value",
+    "error": "UnsupportedOpcode",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedOpcode",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "type_unsupported_ref_of",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a03010203140d4d41494e00a48e834f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=20;\ninput[13]=13;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[19]=164;\ninput[20]=142;\ninput[21]=131;\ninput[22]=79;\ninput[23]=66;\ninput[24]=74;\ninput[25]=48;\nlet prepared:Prepared=prepare_program(input,26,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedOpcode && !result.has_value",
+    "error": "UnsupportedOpcode",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedOpcode",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "type_unsupported_deref_of",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a03010203140d4d41494e00a48e884f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=20;\ninput[13]=13;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[19]=164;\ninput[20]=142;\ninput[21]=136;\ninput[22]=79;\ninput[23]=66;\ninput[24]=74;\ninput[25]=48;\nlet prepared:Prepared=prepare_program(input,26,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedOpcode && !result.has_value",
+    "error": "UnsupportedOpcode",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedOpcode",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "type_unsupported_index",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "140c4d41494e00a4874d495353",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=12;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=135;\ninput[9]=77;\ninput[10]=73;\ninput[11]=83;\ninput[12]=83;\nlet prepared:Prepared=prepare_program(input,13,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::MissingObject && !result.has_value",
+    "error": "MissingObject",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::MissingObject",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_missing",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14084d41494e00a487",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=8;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=135;\nlet prepared:Prepared=prepare_program(input,9,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Truncated && !result.has_value",
+    "error": "Truncated",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::Truncated",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_truncated",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "140a4d41494e00a4874142",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=10;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=135;\ninput[9]=65;\ninput[10]=66;\nlet prepared:Prepared=prepare_program(input,11,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Truncated && !result.has_value",
+    "error": "Truncated",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::Truncated",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_truncated_name",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14094d41494e00a48700",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=9;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=135;\nlet prepared:Prepared=prepare_program(input,10,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::InvalidTarget && !result.has_value",
+    "error": "InvalidTarget",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::InvalidTarget",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_null_target",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "140a4d41494e00a4870a2a",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=10;\ninput[2]=77;\ninput[3]=65;\ninput[4]=73;\ninput[5]=78;\ninput[7]=164;\ninput[8]=135;\ninput[9]=10;\ninput[10]=42;\nlet prepared:Prepared=prepare_program(input,11,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedOpcode && !result.has_value",
+    "error": "UnsupportedOpcode",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedOpcode",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_literal_operand",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a03010203140d4d41494e00a487714f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=20;\ninput[13]=13;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[19]=164;\ninput[20]=135;\ninput[21]=113;\ninput[22]=79;\ninput[23]=66;\ninput[24]=74;\ninput[25]=48;\nlet prepared:Prepared=prepare_program(input,26,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedOpcode && !result.has_value",
+    "error": "UnsupportedOpcode",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedOpcode",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_unsupported_ref_of",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a03010203140d4d41494e00a487834f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=20;\ninput[13]=13;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[19]=164;\ninput[20]=135;\ninput[21]=131;\ninput[22]=79;\ninput[23]=66;\ninput[24]=74;\ninput[25]=48;\nlet prepared:Prepared=prepare_program(input,26,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedOpcode && !result.has_value",
+    "error": "UnsupportedOpcode",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedOpcode",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_unsupported_deref_of",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a03010203140d4d41494e00a487884f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=20;\ninput[13]=13;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[19]=164;\ninput[20]=135;\ninput[21]=136;\ninput[22]=79;\ninput[23]=66;\ninput[24]=74;\ninput[25]=48;\nlet prepared:Prepared=prepare_program(input,26,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedOpcode && !result.has_value",
+    "error": "UnsupportedOpcode",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedOpcode",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_unsupported_index",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "08434e543000140f4d41494e00a48e720101434e5430",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=67;\ninput[2]=78;\ninput[3]=84;\ninput[4]=48;\ninput[6]=20;\ninput[7]=15;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=142;\ninput[15]=114;\ninput[16]=1;\ninput[17]=1;\ninput[18]=67;\ninput[19]=78;\ninput[20]=84;\ninput[21]=48;\nlet prepared:Prepared=prepare_program(input,22,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\nlet untouched:bool=qe_integer(program.store.space.objects[0].value,0);",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedOpcode && !result.has_value && untouched",
+    "error": "UnsupportedOpcode",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedOpcode",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "query_does_not_execute_expression",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "08434e54300014134d41494e00700a2a434e5430a487434e5430",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=67;\ninput[2]=78;\ninput[3]=84;\ninput[4]=48;\ninput[6]=20;\ninput[7]=19;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=112;\ninput[14]=10;\ninput[15]=42;\ninput[16]=67;\ninput[17]=78;\ninput[18]=84;\ninput[19]=48;\ninput[20]=164;\ninput[21]=135;\ninput[22]=67;\ninput[23]=78;\ninput[24]=84;\ninput[25]=48;\nlet prepared:Prepared=prepare_program(input,26,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\nlet kept:bool=qe_integer(program.store.space.objects[0].value,42);",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value && kept",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "earlier_effect_retained",
+    "note": "",
+    "public": true,
+    "public_after": {
+      "CNT0": "integer:42"
+    },
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011030101140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=3;\ninput[7]=1;\ninput[8]=1;\ninput[9]=20;\ninput[10]=12;\ninput[11]=77;\ninput[12]=65;\ninput[13]=73;\ninput[14]=78;\ninput[16]=164;\ninput[17]=142;\ninput[18]=79;\ninput[19]=66;\ninput[20]=74;\ninput[21]=48;\nlet prepared:Prepared=prepare_program(input,22,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:18446744073709551615}};let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "type_malformed_owned",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011030101140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=3;\ninput[7]=1;\ninput[8]=1;\ninput[9]=20;\ninput[10]=12;\ninput[11]=77;\ninput[12]=65;\ninput[13]=73;\ninput[14]=78;\ninput[16]=164;\ninput[17]=142;\ninput[18]=79;\ninput[19]=66;\ninput[20]=74;\ninput[21]=48;\nlet prepared:Prepared=prepare_program(input,22,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:8,start:0,end:1}}};let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "type_wrong_source_unit",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011030101140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=3;\ninput[7]=1;\ninput[8]=1;\ninput[9]=20;\ninput[10]=12;\ninput[11]=77;\ninput[12]=65;\ninput[13]=73;\ninput[14]=78;\ninput[16]=164;\ninput[17]=135;\ninput[18]=79;\ninput[19]=66;\ninput[20]=74;\ninput[21]=48;\nlet prepared:Prepared=prepare_program(input,22,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:18446744073709551615}};let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::InvalidState && !result.has_value",
+    "error": "InvalidState",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::InvalidState",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_malformed_owned",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011030101140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=3;\ninput[7]=1;\ninput[8]=1;\ninput[9]=20;\ninput[10]=12;\ninput[11]=77;\ninput[12]=65;\ninput[13]=73;\ninput[14]=78;\ninput[16]=164;\ninput[17]=135;\ninput[18]=79;\ninput[19]=66;\ninput[20]=74;\ninput[21]=48;\nlet prepared:Prepared=prepare_program(input,22,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:8,start:0,end:1}}};let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::InvalidState && !result.has_value",
+    "error": "InvalidState",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::InvalidState",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_wrong_source_unit",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14085349444500a401140c4d41494e00a48e53494445",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=8;\ninput[2]=83;\ninput[3]=73;\ninput[4]=68;\ninput[5]=69;\ninput[7]=164;\ninput[8]=1;\ninput[9]=20;\ninput[10]=12;\ninput[11]=77;\ninput[12]=65;\ninput[13]=73;\ninput[14]=78;\ninput[16]=164;\ninput[17]=142;\ninput[18]=83;\ninput[19]=73;\ninput[20]=68;\ninput[21]=69;\nlet prepared:Prepared=prepare_program(input,22,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[0].value=Value::Method {flags:255,body:Span {unit:8,start:18446744073709551615,end:0}};program.definitions.entries[0].present=false;let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==8",
+    "error": "Success",
+    "expected": 8,
+    "mutation": [
+      "result.value.number==8",
+      "result.value.number==9"
+    ],
+    "name": "type_malformed_method",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b8052454730000b00100a105b810b5245473011464c443008140c4d41494e00a48e464c4430",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=128;\ninput[2]=82;\ninput[3]=69;\ninput[4]=71;\ninput[5]=48;\ninput[7]=11;\ninput[9]=16;\ninput[10]=10;\ninput[11]=16;\ninput[12]=91;\ninput[13]=129;\ninput[14]=11;\ninput[15]=82;\ninput[16]=69;\ninput[17]=71;\ninput[18]=48;\ninput[19]=17;\ninput[20]=70;\ninput[21]=76;\ninput[22]=68;\ninput[23]=48;\ninput[24]=8;\ninput[25]=20;\ninput[26]=12;\ninput[27]=77;\ninput[28]=65;\ninput[29]=73;\ninput[30]=78;\ninput[32]=164;\ninput[33]=142;\ninput[34]=70;\ninput[35]=76;\ninput[36]=68;\ninput[37]=48;\nlet prepared:Prepared=prepare_program(input,38,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[1].value=Value::FieldUnit {binding:FieldBinding::Region {region_object:18446744073709551615}};let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==5",
+    "error": "Success",
+    "expected": 5,
+    "mutation": [
+      "result.value.number==5",
+      "result.value.number==4"
+    ],
+    "name": "type_malformed_field",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a30120502010a02140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=18;\ninput[6]=5;\ninput[7]=2;\ninput[8]=1;\ninput[9]=10;\ninput[10]=2;\ninput[11]=20;\ninput[12]=12;\ninput[13]=77;\ninput[14]=65;\ninput[15]=73;\ninput[16]=78;\ninput[18]=164;\ninput[19]=142;\ninput[20]=79;\ninput[21]=66;\ninput[22]=74;\ninput[23]=48;\nlet prepared:Prepared=prepare_program(input,24,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[2].has_next=true;program.store.space.objects[2].next=1;let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==4",
+    "error": "Success",
+    "expected": 4,
+    "mutation": [
+      "result.value.number==4",
+      "result.value.number==5"
+    ],
+    "name": "type_malformed_package",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a30120502010a02140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=18;\ninput[6]=5;\ninput[7]=2;\ninput[8]=1;\ninput[9]=10;\ninput[10]=2;\ninput[11]=20;\ninput[12]=12;\ninput[13]=77;\ninput[14]=65;\ninput[15]=73;\ninput[16]=78;\ninput[18]=164;\ninput[19]=135;\ninput[20]=79;\ninput[21]=66;\ninput[22]=74;\ninput[23]=48;\nlet prepared:Prepared=prepare_program(input,24,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[2].has_next=true;program.store.space.objects[2].next=1;let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::InvalidState && !result.has_value",
+    "error": "InvalidState",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::InvalidState",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_malformed_package",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3000140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=142;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[0].value=Value::BufferField {backing_object:18446744073709551615,bit_offset:18446744073709551615,bit_length:18446744073709551615};let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==14",
+    "error": "Success",
+    "expected": 14,
+    "mutation": [
+      "result.value.number==14",
+      "result.value.number==15"
+    ],
+    "name": "type_buffer_field_metadata",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3000140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=135;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[0].value=Value::BufferField {backing_object:18446744073709551615,bit_offset:18446744073709551615,bit_length:18446744073709551615};let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::UnsupportedValue && !result.has_value",
+    "error": "UnsupportedValue",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::UnsupportedValue",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_buffer_field_metadata",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a0301020314094d41494e01a48e68",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=20;\ninput[13]=9;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[18]=1;\ninput[19]=164;\ninput[20]=142;\ninput[21]=104;\nlet prepared:Prepared=prepare_program(input,22,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];arguments[0]=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};let result:ExecutionResult=run_program(&mut program,main_path,&arguments,1,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "type_arg_reference_RefOf",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a0301020314094d41494e01a48768",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=20;\ninput[13]=9;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[18]=1;\ninput[19]=164;\ninput[20]=135;\ninput[21]=104;\nlet prepared:Prepared=prepare_program(input,22,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];arguments[0]=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};let result:ExecutionResult=run_program(&mut program,main_path,&arguments,1,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "size_arg_reference_RefOf",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a0301020314094d41494e01a48e68",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=20;\ninput[13]=9;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[18]=1;\ninput[19]=164;\ninput[20]=142;\ninput[21]=104;\nlet prepared:Prepared=prepare_program(input,22,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];arguments[0]=Value::Reference {kind:ReferenceKind::Index,object_id:0};let result:ExecutionResult=run_program(&mut program,main_path,&arguments,1,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "type_arg_reference_Index",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a0301020314094d41494e01a48768",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=20;\ninput[13]=9;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[18]=1;\ninput[19]=164;\ninput[20]=135;\ninput[21]=104;\nlet prepared:Prepared=prepare_program(input,22,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];arguments[0]=Value::Reference {kind:ReferenceKind::Index,object_id:0};let result:ExecutionResult=run_program(&mut program,main_path,&arguments,1,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "size_arg_reference_Index",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a0301020314094d41494e01a48e68",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=20;\ninput[13]=9;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[18]=1;\ninput[19]=164;\ninput[20]=142;\ninput[21]=104;\nlet prepared:Prepared=prepare_program(input,22,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];arguments[0]=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};let result:ExecutionResult=run_program(&mut program,main_path,&arguments,1,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "type_arg_reference_Unresolved",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3011060a0301020314094d41494e01a48768",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=17;\ninput[6]=6;\ninput[7]=10;\ninput[8]=3;\ninput[9]=1;\ninput[10]=2;\ninput[11]=3;\ninput[12]=20;\ninput[13]=9;\ninput[14]=77;\ninput[15]=65;\ninput[16]=73;\ninput[17]=78;\ninput[18]=1;\ninput[19]=164;\ninput[20]=135;\ninput[21]=104;\nlet prepared:Prepared=prepare_program(input,22,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];arguments[0]=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};let result:ExecutionResult=run_program(&mut program,main_path,&arguments,1,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "size_arg_reference_Unresolved",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "5b8052454730000b00100a105b810b5245473011464c44300814094d41494e01a48e68",
+    "body": "let mut input:[u8;1024];\ninput[0]=91;\ninput[1]=128;\ninput[2]=82;\ninput[3]=69;\ninput[4]=71;\ninput[5]=48;\ninput[7]=11;\ninput[9]=16;\ninput[10]=10;\ninput[11]=16;\ninput[12]=91;\ninput[13]=129;\ninput[14]=11;\ninput[15]=82;\ninput[16]=69;\ninput[17]=71;\ninput[18]=48;\ninput[19]=17;\ninput[20]=70;\ninput[21]=76;\ninput[22]=68;\ninput[23]=48;\ninput[24]=8;\ninput[25]=20;\ninput[26]=9;\ninput[27]=77;\ninput[28]=65;\ninput[29]=73;\ninput[30]=78;\ninput[31]=1;\ninput[32]=164;\ninput[33]=142;\ninput[34]=104;\nlet prepared:Prepared=prepare_program(input,35,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];arguments[0]=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};let result:ExecutionResult=run_program(&mut program,main_path,&arguments,1,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==5",
+    "error": "Success",
+    "expected": 5,
+    "mutation": [
+      "result.value.number==5",
+      "result.value.number==4"
+    ],
+    "name": "type_reference_to_field",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "14085349444500a40114094d41494e01a48e68",
+    "body": "let mut input:[u8;1024];\ninput[0]=20;\ninput[1]=8;\ninput[2]=83;\ninput[3]=73;\ninput[4]=68;\ninput[5]=69;\ninput[7]=164;\ninput[8]=1;\ninput[9]=20;\ninput[10]=9;\ninput[11]=77;\ninput[12]=65;\ninput[13]=73;\ninput[14]=78;\ninput[15]=1;\ninput[16]=164;\ninput[17]=142;\ninput[18]=104;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];arguments[0]=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};let result:ExecutionResult=run_program(&mut program,main_path,&arguments,1,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==8",
+    "error": "Success",
+    "expected": 8,
+    "mutation": [
+      "result.value.number==8",
+      "result.value.number==9"
+    ],
+    "name": "type_reference_to_method",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3000140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=142;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::ReferenceCycle && !result.has_value",
+    "error": "ReferenceCycle",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::ReferenceCycle",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "type_reference_cycle",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3000140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=142;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:18446744073709551615};let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::InvalidState && !result.has_value",
+    "error": "InvalidState",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::InvalidState",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "type_dangling_reference",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3000140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=135;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::ReferenceCycle && !result.has_value",
+    "error": "ReferenceCycle",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::ReferenceCycle",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_reference_cycle",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3000140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=135;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:18446744073709551615};let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::InvalidState && !result.has_value",
+    "error": "InvalidState",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::InvalidState",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "size_dangling_reference",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3000140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=142;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,0);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::WorkLimit && !result.has_value && result.steps==0",
+    "error": "WorkLimit",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::WorkLimit",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "query_budget_0",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3000140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=142;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,1);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::WorkLimit && !result.has_value && result.steps==1",
+    "error": "WorkLimit",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::WorkLimit",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "query_budget_1",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3000140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=142;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,3);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::WorkLimit && !result.has_value && result.steps==3",
+    "error": "WorkLimit",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::WorkLimit",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "query_budget_3",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3000140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=142;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,4);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==1 && result.steps==4",
+    "error": "Success",
+    "expected": 1,
+    "mutation": [
+      "result.value.number==1",
+      "result.value.number==0"
+    ],
+    "name": "query_budget_4",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a3000140c4d41494e00a48e4f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[6]=20;\ninput[7]=12;\ninput[8]=77;\ninput[9]=65;\ninput[10]=73;\ninput[11]=78;\ninput[13]=164;\ninput[14]=142;\ninput[15]=79;\ninput[16]=66;\ninput[17]=74;\ninput[18]=48;\nlet prepared:Prepared=prepare_program(input,19,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,1025);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Capacity && !result.has_value && result.steps==0",
+    "error": "Capacity",
+    "expected": null,
+    "mutation": [
+      "result.outcome==ExecutionOutcome::Capacity",
+      "result.outcome==ExecutionOutcome::Success"
+    ],
+    "name": "query_budget_1025",
+    "note": "",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "084f424a300d41424300140c4d41494e00a4874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=13;\ninput[6]=65;\ninput[7]=66;\ninput[8]=67;\ninput[10]=20;\ninput[11]=12;\ninput[12]=77;\ninput[13]=65;\ninput[14]=73;\ninput[15]=78;\ninput[17]=164;\ninput[18]=135;\ninput[19]=79;\ninput[20]=66;\ninput[21]=74;\ninput[22]=48;\nlet prepared:Prepared=prepare_program(input,23,7,128,128);let mut program:Program=prepared.program;\nlet mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::FourBytes,128);\n",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::Success && result.has_value && result.value.initialized && result.value.number==3",
+    "error": "Success",
+    "expected": 3,
+    "mutation": [
+      "result.value.number==3",
+      "result.value.number==2"
+    ],
+    "name": "query_integer32",
+    "note": "",
+    "public": true,
+    "public_after": {},
+    "revision": 1
+  },
+  {
+    "aml_hex": "8760",
+    "body": "let mut input:[u8;1024];\ninput[0]=135;\ninput[1]=96;\nlet mut store:ObjectStore=ObjectStore {};let mut frame:Frame=Frame {end:2,source_length:2,body:Span {unit:7,end:2},operation_count:1};store.space.object_count=1;store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true,length:7};frame.locals[0]=Binding::Shared {shared_id:0};frame.operations[0]=Operation {opcode:0xa4,value_arity:1};frame.operations[0].operands[0]=Operand::Integer {number:99};let result:ExecutionOutcome=decode_term(&input,&store,&mut frame);let operand_ok:bool=qe_operand(frame.operations[0].operands[0],7);",
+    "check": "result==ExecutionOutcome::Success && frame.pc==2 && frame.operations[0].count==1 && operand_ok && frame.cache_count==0",
+    "error": "Success",
+    "expected": null,
+    "mutation": [
+      "frame.pc==2",
+      "frame.pc==3"
+    ],
+    "name": "size_contribution",
+    "note": "Direct SizeOf decoder cursor/operand preservation.",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "8760",
+    "body": "let mut input:[u8;1024];\ninput[0]=135;\ninput[1]=96;\nlet mut store:ObjectStore=ObjectStore {};let mut frame:Frame=Frame {end:2,source_length:2,body:Span {unit:7,end:2},operation_count:1};store.space.object_count=1;store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true,length:7};frame.locals[0]=Binding::Shared {shared_id:0};frame.operations[0]=Operation {opcode:0xa4,value_arity:1};frame.operations[0].operands[0]=Operand::Integer {number:99};frame.operations[0].count=1;let result:ExecutionOutcome=decode_term(&input,&store,&mut frame);let operand_ok:bool=qe_operand(frame.operations[0].operands[0],99);",
+    "check": "result==ExecutionOutcome::InvalidState && frame.pc==0 && frame.operations[0].count==1 && operand_ok && frame.cache_count==0",
+    "error": "InvalidState",
+    "expected": null,
+    "mutation": [
+      "frame.pc==0",
+      "frame.pc==1"
+    ],
+    "name": "size_contribution_full",
+    "note": "Direct SizeOf decoder cursor/operand preservation.",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "8760",
+    "body": "let mut input:[u8;1024];\ninput[0]=135;\ninput[1]=96;\nlet mut store:ObjectStore=ObjectStore {};let mut frame:Frame=Frame {end:2,source_length:2,body:Span {unit:7,end:2},operation_count:1};store.space.object_count=1;store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true,length:7};frame.locals[0]=Binding::Shared {shared_id:0};frame.operations[0]=Operation {opcode:0xa4,value_arity:1};frame.operations[0].operands[0]=Operand::Integer {number:99};frame.operation_count=17;let result:ExecutionOutcome=decode_term(&input,&store,&mut frame);let operand_ok:bool=qe_operand(frame.operations[0].operands[0],99);",
+    "check": "result==ExecutionOutcome::InvalidState && frame.pc==0 && frame.operations[0].count==0 && operand_ok && frame.cache_count==0",
+    "error": "InvalidState",
+    "expected": null,
+    "mutation": [
+      "frame.pc==0",
+      "frame.pc==1"
+    ],
+    "name": "size_operation_stack_invalid",
+    "note": "Direct SizeOf decoder cursor/operand preservation.",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "8771",
+    "body": "let mut input:[u8;1024];\ninput[0]=135;\ninput[1]=113;\nlet mut store:ObjectStore=ObjectStore {};let mut frame:Frame=Frame {end:2,source_length:2,body:Span {unit:7,end:2},operation_count:1};store.space.object_count=1;store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true,length:7};frame.locals[0]=Binding::Shared {shared_id:0};frame.operations[0]=Operation {opcode:0xa4,value_arity:1};frame.operations[0].operands[0]=Operand::Integer {number:99};let result:ExecutionOutcome=decode_term(&input,&store,&mut frame);let operand_ok:bool=qe_operand(frame.operations[0].operands[0],99);",
+    "check": "result==ExecutionOutcome::UnsupportedOpcode && frame.pc==0 && frame.operations[0].count==0 && operand_ok && frame.cache_count==0",
+    "error": "UnsupportedOpcode",
+    "expected": null,
+    "mutation": [
+      "frame.pc==0",
+      "frame.pc==1"
+    ],
+    "name": "size_selection_failure_cursor",
+    "note": "Direct SizeOf decoder cursor/operand preservation.",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "87",
+    "body": "let mut input:[u8;1024];\ninput[0]=135;\nlet mut store:ObjectStore=ObjectStore {};let mut frame:Frame=Frame {end:1,source_length:1,body:Span {unit:7,end:1},operation_count:1};store.space.object_count=1;store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true,length:7};frame.locals[0]=Binding::Shared {shared_id:0};frame.operations[0]=Operation {opcode:0xa4,value_arity:1};frame.operations[0].operands[0]=Operand::Integer {number:99};let result:ExecutionOutcome=decode_term(&input,&store,&mut frame);let operand_ok:bool=qe_operand(frame.operations[0].operands[0],99);",
+    "check": "result==ExecutionOutcome::Truncated && frame.pc==0 && frame.operations[0].count==0 && operand_ok && frame.cache_count==0",
+    "error": "Truncated",
+    "expected": null,
+    "mutation": [
+      "frame.pc==0",
+      "frame.pc==1"
+    ],
+    "name": "size_truncated_cursor",
+    "note": "Direct SizeOf decoder cursor/operand preservation.",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "874f424a30",
+    "body": "let mut input:[u8;1024];\ninput[0]=135;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\nlet mut store:ObjectStore=ObjectStore {};let mut frame:Frame=Frame {end:5,source_length:5,body:Span {unit:7,end:5},operation_count:1};store.space.object_count=1;store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true,length:7};frame.locals[0]=Binding::Shared {shared_id:0};frame.operations[0]=Operation {opcode:0xa4,value_arity:1};frame.operations[0].operands[0]=Operand::Integer {number:99};frame.scope=Path {absolute:true,count:16};frame.scope.segments[0]=0x5f5f4241;frame.scope.segments[1]=0x5f5f4241;frame.scope.segments[2]=0x5f5f4241;frame.scope.segments[3]=0x5f5f4241;frame.scope.segments[4]=0x5f5f4241;frame.scope.segments[5]=0x5f5f4241;frame.scope.segments[6]=0x5f5f4241;frame.scope.segments[7]=0x5f5f4241;frame.scope.segments[8]=0x5f5f4241;frame.scope.segments[9]=0x5f5f4241;frame.scope.segments[10]=0x5f5f4241;frame.scope.segments[11]=0x5f5f4241;frame.scope.segments[12]=0x5f5f4241;frame.scope.segments[13]=0x5f5f4241;frame.scope.segments[14]=0x5f5f4241;frame.scope.segments[15]=0x5f5f4241;let result:ExecutionOutcome=decode_term(&input,&store,&mut frame);let operand_ok:bool=qe_operand(frame.operations[0].operands[0],99);",
+    "check": "result==ExecutionOutcome::Capacity && frame.pc==0 && frame.operations[0].count==0 && operand_ok && frame.cache_count==0",
+    "error": "Capacity",
+    "expected": null,
+    "mutation": [
+      "frame.pc==0",
+      "frame.pc==1"
+    ],
+    "name": "size_path_capacity",
+    "note": "Direct SizeOf decoder cursor/operand preservation.",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "8760",
+    "body": "let mut input:[u8;1024];\ninput[0]=135;\ninput[1]=96;\nlet mut store:ObjectStore=ObjectStore {};let mut frame:Frame=Frame {end:2,source_length:2,body:Span {unit:7,end:2},operation_count:1};store.space.object_count=1;store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true,length:7};frame.locals[0]=Binding::Shared {shared_id:0};frame.operations[0]=Operation {opcode:0xa4,value_arity:1};frame.operations[0].operands[0]=Operand::Integer {number:99};store.space.object_count=64;store.space.objects[0].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:2};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:3};store.space.objects[3].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:4};store.space.objects[4].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:5};store.space.objects[5].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:6};store.space.objects[6].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:7};store.space.objects[7].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:8};store.space.objects[8].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:9};store.space.objects[9].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:10};store.space.objects[10].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:11};store.space.objects[11].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:12};store.space.objects[12].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:13};store.space.objects[13].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:14};store.space.objects[14].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:15};store.space.objects[15].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:16};store.space.objects[16].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:17};store.space.objects[17].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:18};store.space.objects[18].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:19};store.space.objects[19].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:20};store.space.objects[20].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:21};store.space.objects[21].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:22};store.space.objects[22].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:23};store.space.objects[23].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:24};store.space.objects[24].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:25};store.space.objects[25].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:26};store.space.objects[26].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:27};store.space.objects[27].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:28};store.space.objects[28].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:29};store.space.objects[29].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:30};store.space.objects[30].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:31};store.space.objects[31].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:32};store.space.objects[32].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:33};store.space.objects[33].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:34};store.space.objects[34].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:35};store.space.objects[35].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:36};store.space.objects[36].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:37};store.space.objects[37].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:38};store.space.objects[38].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:39};store.space.objects[39].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:40};store.space.objects[40].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:41};store.space.objects[41].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:42};store.space.objects[42].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:43};store.space.objects[43].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:44};store.space.objects[44].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:45};store.space.objects[45].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:46};store.space.objects[46].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:47};store.space.objects[47].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:48};store.space.objects[48].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:49};store.space.objects[49].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:50};store.space.objects[50].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:51};store.space.objects[51].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:52};store.space.objects[52].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:53};store.space.objects[53].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:54};store.space.objects[54].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:55};store.space.objects[55].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:56};store.space.objects[56].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:57};store.space.objects[57].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:58};store.space.objects[58].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:59};store.space.objects[59].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:60};store.space.objects[60].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:61};store.space.objects[61].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:62};store.space.objects[62].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:63};store.space.objects[63].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:63}};store.bytes.blocks[63]=ByteBlock {initialized:true,length:7};let result:ExecutionOutcome=decode_term(&input,&store,&mut frame);let operand_ok:bool=qe_operand(frame.operations[0].operands[0],7);",
+    "check": "result==ExecutionOutcome::Success && frame.pc==2 && frame.operations[0].count==1 && operand_ok && frame.cache_count==0",
+    "error": "Success",
+    "expected": null,
+    "mutation": [
+      "frame.pc==2",
+      "frame.pc==3"
+    ],
+    "name": "size_exact64_reference_chain",
+    "note": "Direct SizeOf decoder cursor/operand preservation.",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  },
+  {
+    "aml_hex": "8760",
+    "body": "let mut input:[u8;1024];\ninput[0]=135;\ninput[1]=96;\nlet mut store:ObjectStore=ObjectStore {};let mut frame:Frame=Frame {end:2,source_length:2,body:Span {unit:7,end:2},operation_count:1};store.space.object_count=1;store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true,length:7};frame.locals[0]=Binding::Shared {shared_id:0};frame.operations[0]=Operation {opcode:0xa4,value_arity:1};frame.operations[0].operands[0]=Operand::Integer {number:99};store.space.object_count=64;store.space.objects[0].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:2};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:3};store.space.objects[3].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:4};store.space.objects[4].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:5};store.space.objects[5].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:6};store.space.objects[6].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:7};store.space.objects[7].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:8};store.space.objects[8].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:9};store.space.objects[9].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:10};store.space.objects[10].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:11};store.space.objects[11].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:12};store.space.objects[12].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:13};store.space.objects[13].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:14};store.space.objects[14].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:15};store.space.objects[15].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:16};store.space.objects[16].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:17};store.space.objects[17].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:18};store.space.objects[18].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:19};store.space.objects[19].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:20};store.space.objects[20].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:21};store.space.objects[21].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:22};store.space.objects[22].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:23};store.space.objects[23].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:24};store.space.objects[24].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:25};store.space.objects[25].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:26};store.space.objects[26].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:27};store.space.objects[27].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:28};store.space.objects[28].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:29};store.space.objects[29].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:30};store.space.objects[30].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:31};store.space.objects[31].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:32};store.space.objects[32].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:33};store.space.objects[33].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:34};store.space.objects[34].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:35};store.space.objects[35].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:36};store.space.objects[36].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:37};store.space.objects[37].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:38};store.space.objects[38].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:39};store.space.objects[39].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:40};store.space.objects[40].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:41};store.space.objects[41].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:42};store.space.objects[42].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:43};store.space.objects[43].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:44};store.space.objects[44].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:45};store.space.objects[45].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:46};store.space.objects[46].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:47};store.space.objects[47].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:48};store.space.objects[48].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:49};store.space.objects[49].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:50};store.space.objects[50].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:51};store.space.objects[51].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:52};store.space.objects[52].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:53};store.space.objects[53].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:54};store.space.objects[54].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:55};store.space.objects[55].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:56};store.space.objects[56].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:57};store.space.objects[57].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:58};store.space.objects[58].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:59};store.space.objects[59].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:60};store.space.objects[60].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:61};store.space.objects[61].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:62};store.space.objects[62].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:63};store.space.objects[63].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:63}};store.bytes.blocks[63]=ByteBlock {initialized:true,length:7};store.space.objects[63].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};let result:ExecutionOutcome=decode_term(&input,&store,&mut frame);let operand_ok:bool=qe_operand(frame.operations[0].operands[0],99);",
+    "check": "result==ExecutionOutcome::ReferenceCycle && frame.pc==0 && frame.operations[0].count==0 && operand_ok && frame.cache_count==0",
+    "error": "ReferenceCycle",
+    "expected": null,
+    "mutation": [
+      "frame.pc==0",
+      "frame.pc==1"
+    ],
+    "name": "size_64_reference_cycle",
+    "note": "Direct SizeOf decoder cursor/operand preservation.",
+    "public": false,
+    "public_after": {},
+    "revision": 2
+  }
+]

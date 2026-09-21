@@ -1,0 +1,31 @@
+{
+  "cargo": "cargo 1.100.0-nightly (b2e9d5f9d 2026-09-02)",
+  "commands": [
+    "git -C /Users/zcanann/Documents/Projects/Omega worktree add --detach /tmp/cathedral-field-protocol-omega eaa7993a23623cd8fabf45350340479c5c9c7879",
+    "PATH=/Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/bin:$PATH cargo build --locked --release --jobs 4 --manifest-path /tmp/cathedral-field-protocol-runner/Cargo.toml --target-dir /tmp/cathedral-field-protocol-target",
+    "PATH=/Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/bin:$PATH cargo build --offline --locked --release --jobs 4 -p omega --target-dir /tmp/cathedral-field-protocol-target"
+  ],
+  "notes": [
+    "Build commands run with cwd /tmp/cathedral-field-protocol-omega; mbx unavailable.",
+    "Initial exact-lock offline runner build failed because cached bitflags 2.13.1 did not satisfy locked 2.13.2. Online --locked build fetched 2.13.2; source and lockfile remained unchanged.",
+    "Both builds succeeded with nonfatal rust-objcopy debug stripping warnings because libLLVM.dylib was missing from its runtime search paths.",
+    "Both artifacts are Mach-O arm64 executables. omega --help launched and reported unsupported option, exit 2. No regression suites executed.",
+    "Retain Omega worktree: binaries use its bundled library location at runtime.",
+    "No tracked source edits performed. Sibling Omega main remains clean at 14f736bcbba63c4ef6ae66bb29fe95ae8842e50e."
+  ],
+  "omega_clean": true,
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "omega_source": "/tmp/cathedral-field-protocol-omega",
+  "reuse_note": "These exact previously built artifacts and their recorded source/lock inputs were revalidated for the query opcode milestone. Query execution receipts are separate files.",
+  "runner_manifest": "/tmp/cathedral-field-protocol-runner/Cargo.toml",
+  "runner_manifest_contents": "[package]\nname=\"cathedral-acpi-checked-runner\"\nversion=\"0.1.0\"\nedition=\"2024\"\n[dependencies]\nchecked-interpreter = { path = \"/tmp/cathedral-field-protocol-omega/omega-rust/psi/semantics/checked-interpreter\" }\npackage-manager = { path = \"/tmp/cathedral-field-protocol-omega/omega-rust/omega/packages/manager\" }\ntarget = { path = \"/tmp/cathedral-field-protocol-omega/omega-rust/omega/representations/target\" }\n[[bin]]\nname=\"cathedral-acpi-checked-runner\"\npath=\"/Users/zcanann/Documents/Projects/Cathedral/tools/ports/acpi/interpreter/execution/checked_runner.rs\"\n",
+  "rust_toolchain": "/Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/bin",
+  "rustc": "rustc 1.100.0-nightly (a69a63265 2026-09-03)\nbinary: rustc\ncommit-hash: a69a63265cfd9e006d43137f98301b8d274ad4c9\ncommit-date: 2026-09-03\nhost: aarch64-apple-darwin\nrelease: 1.100.0-nightly\nLLVM version: 23.1.1",
+  "sha256": {
+    "/Users/zcanann/Documents/Projects/Cathedral/tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "/tmp/cathedral-field-protocol-omega/Cargo.lock": "18b39657f292027a952bc9c6231311f2d52b1ab05c9cf964ccb7be64d9afb6a4",
+    "/tmp/cathedral-field-protocol-runner/Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805",
+    "/tmp/cathedral-field-protocol-target/release/cathedral-acpi-checked-runner": "4055e1d9cbc364859aeaaecc32148b1eaefa6cf04b3330076f816ce9bf9401dc",
+    "/tmp/cathedral-field-protocol-target/release/omega": "b7d2a35f679a9ca872c983103b3fc425ec1fccc47c92b02a2c4144c912fe4275"
+  }
+}
