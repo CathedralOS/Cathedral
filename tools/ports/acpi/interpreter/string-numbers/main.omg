@@ -1,0 +1,37 @@
+use helpers::integers::IntegerSize;
+use helpers::integers::IntegerResult;
+use helpers::string_numbers::ParseProfile;
+use helpers::string_numbers::NumberFormat;
+use helpers::string_numbers::string_to_integer;
+use helpers::string_numbers::integer_to_string;
+use helpers::string_numbers::buffer_to_numeric_string;
+machine strings_test_fill(output:&mut [u8;256],index:u64,count:u64)
+terminates by (index,count)->Nat::BoundedDistance;
+->u8 {
+ _=strings_test_fill_one(output,index,count);
+ transition index<count {true -> strings_test_fill(output,index+1,count) _ -> (0)}
+}
+machine strings_test_fill_one(output:&mut [u8;256],index:u64,count:u64)->u8 {
+ transition index<count && index<256 {true -> write(output,index) _ -> (0)}
+ state write(output:&mut [u8;256],index:u64)->u8 {output[index]=90;0}
+}
+machine strings_test_equal(a:&[u8;256],b:&[u8;256],index:u64,count:u64,valid:bool)
+terminates by (index,count)->Nat::BoundedDistance;
+->bool {
+ let next:bool=strings_test_equal_one(a,b,index,count,valid);
+ transition index<count {true -> strings_test_equal(a,b,index+1,count,next) _ -> (valid)}
+}
+machine strings_test_equal_one(a:&[u8;256],b:&[u8;256],index:u64,count:u64,valid:bool)->bool {
+ transition index<count && index<256 {true -> read(a,b,index,valid) _ -> (valid)}
+ state read(a:&[u8;256],b:&[u8;256],index:u64,valid:bool)->bool {valid && a[index]==b[index]}
+}
+machine test_result()->i32 {
+let mut input:[u8;256];
+input[0]=48;
+let result:IntegerResult=string_to_integer(IntegerSize::FourBytes,&input,1,ParseProfile::PinnedAscii);
+transition result.error==0 && result.value==0 {true -> (0) _ -> (1)}
+}
+const TEST_RESULT:i32=test_result();
+machine require_ok(value:i32) requires value==0;{}
+data Main{}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

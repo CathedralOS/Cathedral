@@ -1,0 +1,941 @@
+{
+  "actual_public_method_count": 116,
+  "formatter_mirror_count": 76,
+  "observed": {
+    "buffer_boundaries_Decimal": [
+      "format-mirror",
+      "302c312c392c31302c31352c31362c39392c3130302c323535"
+    ],
+    "buffer_boundaries_Hexadecimal": [
+      "format-mirror",
+      "307830302c307830312c307830392c307830412c307830462c307831302c307836332c307836342c30784646"
+    ],
+    "buffer_capacity_0": [
+      "format-mirror",
+      "30784646"
+    ],
+    "buffer_capacity_1": [
+      "format-mirror",
+      "30784646"
+    ],
+    "buffer_capacity_18446744073709551615": [
+      "format-mirror",
+      "30784646"
+    ],
+    "buffer_capacity_257": [
+      "format-mirror",
+      "30784646"
+    ],
+    "buffer_capacity_3": [
+      "format-mirror",
+      "30784646"
+    ],
+    "buffer_capacity_4": [
+      "format-mirror",
+      "30784646"
+    ],
+    "buffer_capacity_5": [
+      "format-mirror",
+      "30784646"
+    ],
+    "buffer_empty_Decimal": [
+      "format-mirror",
+      ""
+    ],
+    "buffer_empty_Hexadecimal": [
+      "format-mirror",
+      ""
+    ],
+    "buffer_exact_decimal_Decimal": [
+      "format-mirror",
+      "3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c3130302c31302c31"
+    ],
+    "buffer_exact_decimal_Hexadecimal": [
+      "format-mirror",
+      "307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307836342c307830412c30783031"
+    ],
+    "buffer_hex_excess_Decimal": [
+      "format-mirror",
+      "3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c323535"
+    ],
+    "buffer_hex_excess_Hexadecimal": [
+      "format-mirror",
+      "307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c30784646"
+    ],
+    "buffer_hex_fit_Decimal": [
+      "format-mirror",
+      "3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c323535"
+    ],
+    "buffer_hex_fit_Hexadecimal": [
+      "format-mirror",
+      "307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c30784646"
+    ],
+    "buffer_single255_Decimal": [
+      "format-mirror",
+      "323535"
+    ],
+    "buffer_single255_Hexadecimal": [
+      "format-mirror",
+      "30784646"
+    ],
+    "buffer_too_long_Decimal": [
+      "format-mirror",
+      "3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c3235352c323535"
+    ],
+    "buffer_too_long_Hexadecimal": [
+      "format-mirror",
+      "307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c307846462c30784646"
+    ],
+    "buffer_zero_Decimal": [
+      "format-mirror",
+      "30"
+    ],
+    "buffer_zero_Hexadecimal": [
+      "format-mirror",
+      "30783030"
+    ],
+    "buffer_zero_tail_Decimal": [
+      "format-mirror",
+      "34322c30"
+    ],
+    "buffer_zero_tail_Hexadecimal": [
+      "format-mirror",
+      "307832412c30783030"
+    ],
+    "integer_32_0_Decimal": [
+      "format-mirror",
+      "30"
+    ],
+    "integer_32_0_Hexadecimal": [
+      "format-mirror",
+      "307830"
+    ],
+    "integer_32_10_Decimal": [
+      "format-mirror",
+      "3130"
+    ],
+    "integer_32_10_Hexadecimal": [
+      "format-mirror",
+      "307841"
+    ],
+    "integer_32_15_Decimal": [
+      "format-mirror",
+      "3135"
+    ],
+    "integer_32_15_Hexadecimal": [
+      "format-mirror",
+      "307846"
+    ],
+    "integer_32_16_Decimal": [
+      "format-mirror",
+      "3136"
+    ],
+    "integer_32_16_Hexadecimal": [
+      "format-mirror",
+      "30783130"
+    ],
+    "integer_32_18446744073709551615_Decimal": [
+      "format-mirror",
+      "3138343436373434303733373039353531363135"
+    ],
+    "integer_32_18446744073709551615_Hexadecimal": [
+      "format-mirror",
+      "307846464646464646464646464646464646"
+    ],
+    "integer_32_1_Decimal": [
+      "format-mirror",
+      "31"
+    ],
+    "integer_32_1_Hexadecimal": [
+      "format-mirror",
+      "307831"
+    ],
+    "integer_32_255_Decimal": [
+      "format-mirror",
+      "323535"
+    ],
+    "integer_32_255_Hexadecimal": [
+      "format-mirror",
+      "30784646"
+    ],
+    "integer_32_256_Decimal": [
+      "format-mirror",
+      "323536"
+    ],
+    "integer_32_256_Hexadecimal": [
+      "format-mirror",
+      "3078313030"
+    ],
+    "integer_32_4294967295_Decimal": [
+      "format-mirror",
+      "34323934393637323935"
+    ],
+    "integer_32_4294967295_Hexadecimal": [
+      "format-mirror",
+      "30784646464646464646"
+    ],
+    "integer_32_4294967296_Decimal": [
+      "format-mirror",
+      "34323934393637323936"
+    ],
+    "integer_32_4294967296_Hexadecimal": [
+      "format-mirror",
+      "3078313030303030303030"
+    ],
+    "integer_32_9_Decimal": [
+      "format-mirror",
+      "39"
+    ],
+    "integer_32_9_Hexadecimal": [
+      "format-mirror",
+      "307839"
+    ],
+    "integer_64_0_Decimal": [
+      "format-mirror",
+      "30"
+    ],
+    "integer_64_0_Hexadecimal": [
+      "format-mirror",
+      "307830"
+    ],
+    "integer_64_10_Decimal": [
+      "format-mirror",
+      "3130"
+    ],
+    "integer_64_10_Hexadecimal": [
+      "format-mirror",
+      "307841"
+    ],
+    "integer_64_15_Decimal": [
+      "format-mirror",
+      "3135"
+    ],
+    "integer_64_15_Hexadecimal": [
+      "format-mirror",
+      "307846"
+    ],
+    "integer_64_16_Decimal": [
+      "format-mirror",
+      "3136"
+    ],
+    "integer_64_16_Hexadecimal": [
+      "format-mirror",
+      "30783130"
+    ],
+    "integer_64_18446744073709551615_Decimal": [
+      "format-mirror",
+      "3138343436373434303733373039353531363135"
+    ],
+    "integer_64_18446744073709551615_Hexadecimal": [
+      "format-mirror",
+      "307846464646464646464646464646464646"
+    ],
+    "integer_64_1_Decimal": [
+      "format-mirror",
+      "31"
+    ],
+    "integer_64_1_Hexadecimal": [
+      "format-mirror",
+      "307831"
+    ],
+    "integer_64_255_Decimal": [
+      "format-mirror",
+      "323535"
+    ],
+    "integer_64_255_Hexadecimal": [
+      "format-mirror",
+      "30784646"
+    ],
+    "integer_64_256_Decimal": [
+      "format-mirror",
+      "323536"
+    ],
+    "integer_64_256_Hexadecimal": [
+      "format-mirror",
+      "3078313030"
+    ],
+    "integer_64_4294967295_Decimal": [
+      "format-mirror",
+      "34323934393637323935"
+    ],
+    "integer_64_4294967295_Hexadecimal": [
+      "format-mirror",
+      "30784646464646464646"
+    ],
+    "integer_64_4294967296_Decimal": [
+      "format-mirror",
+      "34323934393637323936"
+    ],
+    "integer_64_4294967296_Hexadecimal": [
+      "format-mirror",
+      "3078313030303030303030"
+    ],
+    "integer_64_9_Decimal": [
+      "format-mirror",
+      "39"
+    ],
+    "integer_64_9_Hexadecimal": [
+      "format-mirror",
+      "307839"
+    ],
+    "integer_capacity_0": [
+      "format-mirror",
+      "30784646"
+    ],
+    "integer_capacity_1": [
+      "format-mirror",
+      "30784646"
+    ],
+    "integer_capacity_18446744073709551615": [
+      "format-mirror",
+      "30784646"
+    ],
+    "integer_capacity_257": [
+      "format-mirror",
+      "30784646"
+    ],
+    "integer_capacity_3": [
+      "format-mirror",
+      "30784646"
+    ],
+    "integer_capacity_4": [
+      "format-mirror",
+      "30784646"
+    ],
+    "integer_capacity_5": [
+      "format-mirror",
+      "30784646"
+    ],
+    "parse_above32_32_PinnedAscii": [
+      "parse",
+      "0",
+      "4294967296"
+    ],
+    "parse_above32_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "4294967296"
+    ],
+    "parse_above32_64_PinnedAscii": [
+      "parse",
+      "0",
+      "4294967296"
+    ],
+    "parse_above32_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "4294967296"
+    ],
+    "parse_ascii_space_32_PinnedAscii": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_ascii_space_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_ascii_space_64_PinnedAscii": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_ascii_space_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_binary_prefix_32_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_binary_prefix_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_binary_prefix_64_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_binary_prefix_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_decimal_32_PinnedAscii": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_decimal_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_decimal_64_PinnedAscii": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_decimal_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_decimal_point_32_PinnedAscii": [
+      "parse",
+      "0",
+      "1"
+    ],
+    "parse_decimal_point_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "1"
+    ],
+    "parse_decimal_point_64_PinnedAscii": [
+      "parse",
+      "0",
+      "1"
+    ],
+    "parse_decimal_point_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "1"
+    ],
+    "parse_decimal_tail_32_PinnedAscii": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_decimal_tail_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_decimal_tail_64_PinnedAscii": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_decimal_tail_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_embedded_nul_32_PinnedAscii": [
+      "parse",
+      "0",
+      "4"
+    ],
+    "parse_embedded_nul_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "4"
+    ],
+    "parse_embedded_nul_64_PinnedAscii": [
+      "parse",
+      "0",
+      "4"
+    ],
+    "parse_embedded_nul_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "4"
+    ],
+    "parse_empty_32_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_empty_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_empty_64_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_empty_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_hex_32_PinnedAscii": [
+      "parse",
+      "0",
+      "175"
+    ],
+    "parse_hex_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "175"
+    ],
+    "parse_hex_64_PinnedAscii": [
+      "parse",
+      "0",
+      "175"
+    ],
+    "parse_hex_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "175"
+    ],
+    "parse_hex_max64_32_PinnedAscii": [
+      "parse",
+      "0",
+      "18446744073709551615"
+    ],
+    "parse_hex_max64_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "18446744073709551615"
+    ],
+    "parse_hex_max64_64_PinnedAscii": [
+      "parse",
+      "0",
+      "18446744073709551615"
+    ],
+    "parse_hex_max64_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "18446744073709551615"
+    ],
+    "parse_hex_tail_32_PinnedAscii": [
+      "parse",
+      "0",
+      "18"
+    ],
+    "parse_hex_tail_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "18"
+    ],
+    "parse_hex_tail_64_PinnedAscii": [
+      "parse",
+      "0",
+      "18"
+    ],
+    "parse_hex_tail_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "18"
+    ],
+    "parse_hex_upper_32_PinnedAscii": [
+      "parse",
+      "0",
+      "255"
+    ],
+    "parse_hex_upper_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "255"
+    ],
+    "parse_hex_upper_64_PinnedAscii": [
+      "parse",
+      "0",
+      "255"
+    ],
+    "parse_hex_upper_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "255"
+    ],
+    "parse_leading_letter_32_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_leading_letter_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_leading_letter_64_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_leading_letter_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_leading_zero_decimal_32_PinnedAscii": [
+      "parse",
+      "0",
+      "77"
+    ],
+    "parse_leading_zero_decimal_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "77"
+    ],
+    "parse_leading_zero_decimal_64_PinnedAscii": [
+      "parse",
+      "0",
+      "77"
+    ],
+    "parse_leading_zero_decimal_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "77"
+    ],
+    "parse_leading_zero_max_32_PinnedAscii": [
+      "parse",
+      "0",
+      "18446744073709551615"
+    ],
+    "parse_leading_zero_max_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "18446744073709551615"
+    ],
+    "parse_leading_zero_max_64_PinnedAscii": [
+      "parse",
+      "0",
+      "18446744073709551615"
+    ],
+    "parse_leading_zero_max_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "18446744073709551615"
+    ],
+    "parse_max32_32_PinnedAscii": [
+      "parse",
+      "0",
+      "4294967295"
+    ],
+    "parse_max32_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "4294967295"
+    ],
+    "parse_max32_64_PinnedAscii": [
+      "parse",
+      "0",
+      "4294967295"
+    ],
+    "parse_max32_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "4294967295"
+    ],
+    "parse_max64_32_PinnedAscii": [
+      "parse",
+      "0",
+      "18446744073709551615"
+    ],
+    "parse_max64_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "18446744073709551615"
+    ],
+    "parse_max64_64_PinnedAscii": [
+      "parse",
+      "0",
+      "18446744073709551615"
+    ],
+    "parse_max64_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "18446744073709551615"
+    ],
+    "parse_minus_32_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_minus_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_minus_64_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_minus_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_only_space_32_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_only_space_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_only_space_64_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_only_space_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_overflow_decimal_32_PinnedAscii": [
+      "parse",
+      "3",
+      "0"
+    ],
+    "parse_overflow_decimal_32_StrictDecimalHex": [
+      "parse",
+      "3",
+      "0"
+    ],
+    "parse_overflow_decimal_64_PinnedAscii": [
+      "parse",
+      "3",
+      "0"
+    ],
+    "parse_overflow_decimal_64_StrictDecimalHex": [
+      "parse",
+      "3",
+      "0"
+    ],
+    "parse_overflow_hex_32_PinnedAscii": [
+      "parse",
+      "3",
+      "0"
+    ],
+    "parse_overflow_hex_32_StrictDecimalHex": [
+      "parse",
+      "3",
+      "0"
+    ],
+    "parse_overflow_hex_64_PinnedAscii": [
+      "parse",
+      "3",
+      "0"
+    ],
+    "parse_overflow_hex_64_StrictDecimalHex": [
+      "parse",
+      "3",
+      "0"
+    ],
+    "parse_plus_32_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_plus_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_plus_64_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_plus_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_prefix_only_32_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_prefix_only_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_prefix_only_64_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_prefix_only_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_space_32_PinnedAscii": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_space_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_space_64_PinnedAscii": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_space_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_trailing_nul_32_PinnedAscii": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_trailing_nul_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_trailing_nul_64_PinnedAscii": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_trailing_nul_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_underscore_32_PinnedAscii": [
+      "parse",
+      "0",
+      "1"
+    ],
+    "parse_underscore_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "1"
+    ],
+    "parse_underscore_64_PinnedAscii": [
+      "parse",
+      "0",
+      "1"
+    ],
+    "parse_underscore_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "1"
+    ],
+    "parse_unicode_space_32_PinnedAscii": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_unicode_space_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_unicode_space_64_PinnedAscii": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_unicode_space_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "42"
+    ],
+    "parse_zero_32_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_zero_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_zero_64_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_zero_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_zeros256_32_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_zeros256_32_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_zeros256_64_PinnedAscii": [
+      "parse",
+      "0",
+      "0"
+    ],
+    "parse_zeros256_64_StrictDecimalHex": [
+      "parse",
+      "0",
+      "0"
+    ]
+  },
+  "omitted": [
+    {
+      "case": "parse_nonascii_32_StrictDecimalHex",
+      "reason": "invalid UTF-8 cannot construct a Rust String"
+    },
+    {
+      "case": "parse_nonascii_32_PinnedAscii",
+      "reason": "invalid UTF-8 cannot construct a Rust String"
+    },
+    {
+      "case": "parse_nonascii_64_StrictDecimalHex",
+      "reason": "invalid UTF-8 cannot construct a Rust String"
+    },
+    {
+      "case": "parse_nonascii_64_PinnedAscii",
+      "reason": "invalid UTF-8 cannot construct a Rust String"
+    },
+    {
+      "case": "parse_capacity_257",
+      "reason": "logical input extent exceeds physical initialized storage; local API rejection only"
+    },
+    {
+      "case": "parse_capacity_18446744073709551615",
+      "reason": "logical input extent exceeds physical initialized storage; local API rejection only"
+    },
+    {
+      "case": "buffer_input_capacity_257",
+      "reason": "oversized logical extent has no matching initialized Rust buffer"
+    },
+    {
+      "case": "buffer_input_capacity_18446744073709551615",
+      "reason": "oversized logical extent has no matching initialized Rust buffer"
+    }
+  ],
+  "rustc": "rustc 1.100.0-nightly (a69a63265 2026-09-03)",
+  "source_sha256": {
+    "cases.json": "9744f4be048d5b17e0eeb60efa8ac5213468881bc56c67ff35898162c07c188b",
+    "fixtures.py": "0a79035fa0f265ecc58cb0461e18deb0c300cf791a857d509b91b8f87c689f1b",
+    "reference.Cargo.lock": "ebb580152bc203f56c67759916951b0c2da693151e8c06142a364cae00a510f4",
+    "reference.py": "060774b66c5e94f7b8b4fe17ce38e6f858013715f9c8d2cb313fc93b007a3e13",
+    "reference.rs": "f4a08cb367a6e3975bb1b3dd17bb3dce1eb809003ed9d4cd54661d6026177bd2"
+  },
+  "stage": "host Rust public Object::to_integer and explicitly labelled private formatter pure-body mirror; no AML opcode/target execution",
+  "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "upstream_sha256": {
+    "Cargo.toml": "437a679d0f958db2171af775e0a1368ac35edd4cc0a48ec8b449233750db61cf",
+    "LICENCE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "LICENCE-MIT": "d7ed579f795c55b1b9f734f3f1ac6410ba84fef011acf3aaff95d0c9fe6cdd77",
+    "src/aml/mod.rs": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+    "src/aml/object.rs": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491"
+  }
+}

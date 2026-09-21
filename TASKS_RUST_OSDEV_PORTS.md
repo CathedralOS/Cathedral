@@ -412,6 +412,11 @@ pass 150 Omega scenarios and three body controls, including five translated
 upstream object-test scenarios. Width-aware arithmetic, BCD, bit copying and
 bounded conversions preserve explicit primary-spec corrections. Method/context,
 namespace/target and generic object operations were outside that helper slice.
+The [string/number helpers](source/libraries/acpi/interpreter/string_numbers.PORT.md)
+add 200 checked-interpreter pairs and four constant-evaluation pairs, with 116
+actual Rust parser observations and 76 labelled formatting mirrors. Strict versus
+pinned ASCII parsing and atomic bounded output are explicit; generic conversion
+opcodes remain pending.
 The [integer method executor](source/libraries/acpi/interpreter/execution/PORT.md)
 now passes 79 actual Omega checked-interpreter cases and 79 changed-body controls.
 It executes integer method bytes, nested calls, existing named/alias targets and

@@ -48,7 +48,7 @@ none are erased by an omission overlay.
 | `do_unary_maths`, `do_logical_op` | `find_set_left/right`, `bitwise_not`, `logical_not`, `logical` | Integer-only operations; mixed types and buffer/string comparisons pending. |
 | `do_from_bcd`, `do_to_bcd` | `bcd.omg` | Checked pure BCD conversions; context/op retirement pending. |
 | `copy_bits` | `buffer_fields.omg::copy_bits` | Arbitrary bit offsets, partial-byte preservation, source zero extension. Preflight destination range; fixed capacity and disjoint borrows. |
-| `read_buffer_field`, `to_integer` | `field_to_integer`, `buffer_to_integer` | Pure bit extraction and little-endian integer result; no shared object resolution. String-to-integer conversion pending. |
+| `read_buffer_field`, `to_integer` | `field_to_integer`, `buffer_to_integer` | Pure bit extraction and little-endian integer result; no shared object resolution. String parsing is supplied by the separate [string/number helpers](string_numbers.PORT.md); generic Object dispatch remains pending. |
 | `do_to_buffer`, `Object::to_buffer` | `integer_to_buffer`, `string_to_buffer` | Four/eight integer bytes. Explicit string conversion includes terminator except empty string; implicit conversion excludes it. Buffer identity is caller-owned, not an object clone API. |
 | `do_to_string` | `buffer_to_string` | Bounded ASCII bytes before first NUL or maximum; logical length excludes NUL. |
 | `do_mid` | `mid` | Initialized byte window with clamped output length; no string/object dispatch or target store. |
@@ -155,3 +155,10 @@ The child evaluator returns explicit unresolved region, synchronization and
 service outcomes; it installs no live handlers. Broader object/service dispatch
 remains pending. The [adapter specification](../ADAPTER.md) separately
 requires named grants, bounds, lifetimes and cleanup before live access.
+
+The [string/number component](string_numbers.PORT.md) adds strict and pinned-ASCII
+String-toInteger parsing, width-aware integer formatting and bounded buffer
+decimal/hex formatting. All 200 checked-interpreter cases and 200 controls pass,
+plus four constant-evaluation pairs; reference evidence includes 116 actual
+public Rust calls and 76 labelled private formatting mirrors. Generic opcode
+argument/target/context integration remains pending.
