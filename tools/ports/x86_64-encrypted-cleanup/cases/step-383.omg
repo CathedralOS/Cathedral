@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+use x86::encrypted_cleanup_ranges;
+use x86::encrypted_cleanup_recursive;
+use x86::cleanup_ranges::Cursor;
+use x86::cleanup_ranges::RangeStep;
+use x86::cleanup_ranges::RangeStatus;
+use x86::cleanup_branch::CleanupOutcome;
+use x86::recursive_cleanup::RecursiveCursor;
+use x86::recursive_cleanup::RecursiveStep;
+// repeated47-48 / False / initial-zero-budget
+machine test_result()->i32 {
+    let profile: State = memory_encryption::initial();
+    _ = memory_encryption::configure(&mut profile, Configuration::EncryptedBit { position: 47 });
+    _ = memory_encryption::configure(&mut profile, Configuration::SharedBit { position: 48 });
+    let words:[u64;4]=[65537,131073,196609,0]; let ids:[u64;4]=[262144,65536,131072,196608]; let others:[bool;4]=[false,false,true,false];
+    let cursor:Cursor=encrypted_cleanup_ranges::begin(0,2097152,2);
+    let value:RangeStep=encrypted_cleanup_ranges::step(profile,cursor,&words,&ids,&others);
+    let next:u64=value.cursor.next_page; let last:u64=value.cursor.last_page; let budget:u64=value.cursor.budget;
+    transition value.has_plan==true && value.cursor.status in RangeStatus::Active && next==2097152 && last==2097152 && budget==1 && value.branch.retire_count==1 && value.branch.write_mask==4 && value.branch.visited==4 && value.branch.outcome in CleanupOutcome::Ready && value.branch.words[0]==65537 && value.branch.words[1]==131073 && value.branch.words[2]==0 && value.branch.words[3]==0 && value.branch.frames_to_retire[0]==196608 && value.branch.frames_to_retire[1]==0 && value.branch.frames_to_retire[2]==0 {true -> (0) _ -> (1)}
+}
+
+const TEST_RESULT:i32=test_result();
+machine require_success(value:i32) requires value==0;{}
+data Main{}
+machine Main::main(&mut self){require_success(TEST_RESULT);}

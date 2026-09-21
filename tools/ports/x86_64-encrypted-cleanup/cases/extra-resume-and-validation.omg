@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+use x86::encrypted_cleanup_branch;
+use x86::encrypted_cleanup_ranges;
+use x86::encrypted_cleanup_recursive;
+use x86::cleanup_branch::CleanupPlan;
+use x86::cleanup_branch::CleanupOutcome;
+use x86::cleanup_ranges::Cursor;
+use x86::cleanup_ranges::RangeStep;
+use x86::cleanup_ranges::RangeStatus;
+use x86::recursive_cleanup::RecursiveCursor;
+use x86::recursive_cleanup::RecursiveStep;
+machine test_result()->i32 {
+let profile:State=memory_encryption::initial();
+_ = memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:47});
+_ = memory_encryption::configure(&mut profile,Configuration::SharedBit{position:48});
+let mark:u64=422212465065984;
+let words:[u64;4]=[65537|mark,131073|mark,196609|mark,0];
+let ids:[u64;4]=[262144,65536,131072,196608];let others:[bool;4]=[false,false,false,false];
+let cursor:Cursor=encrypted_cleanup_ranges::begin(0,0,0);
+let resumed:Cursor=encrypted_cleanup_ranges::resume(cursor,18446744073709551615);
+let value:RangeStep=encrypted_cleanup_ranges::step(profile,resumed,&words,&ids,&others);
+let forged:Cursor=Cursor{next_page:0,last_page:0,budget:0,status:RangeStatus::Active};
+let stopped:RangeStep=encrypted_cleanup_ranges::step(profile,forged,&words,&ids,&others);
+let invalid:Cursor=encrypted_cleanup_ranges::begin(1,0,9);
+let preserved:Cursor=encrypted_cleanup_ranges::resume(invalid,9);
+let budget:u64=value.cursor.budget;
+transition value.cursor.status in RangeStatus::Done && budget==18446744073709551614 && value.branch.retire_count==3 && !stopped.has_plan && stopped.cursor.status in RangeStatus::Exhausted && preserved.status in RangeStatus::InvalidRange {true -> (0) _ -> (1)}
+}
+
+const TEST_RESULT:i32=test_result();
+machine require_success(value:i32) requires value==0;{}
+data Main{}
+machine Main::main(&mut self){require_success(TEST_RESULT);}

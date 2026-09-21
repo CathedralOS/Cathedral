@@ -1,0 +1,29 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+use x86::encrypted_cleanup_branch;
+use x86::encrypted_cleanup_ranges;
+use x86::encrypted_cleanup_recursive;
+use x86::cleanup_branch::CleanupPlan;
+use x86::cleanup_branch::CleanupOutcome;
+use x86::cleanup_ranges::Cursor;
+use x86::cleanup_ranges::RangeStep;
+use x86::cleanup_ranges::RangeStatus;
+use x86::recursive_cleanup::RecursiveCursor;
+use x86::recursive_cleanup::RecursiveStep;
+machine test_result()->i32 {
+let profile:State=memory_encryption::initial();
+_ = memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:47});
+_ = memory_encryption::configure(&mut profile,Configuration::SharedBit{position:48});
+let mark:u64=422212465065984;
+let words:[u64;4]=[65537|mark,131073|mark,196609|mark,0];
+let ids:[u64;4]=[262144,65536,131072,196608]; let others:[bool;4]=[false,false,false,false];
+let value:CleanupPlan=encrypted_cleanup_branch::plan(profile,&words,&ids,&others,1);
+transition value.outcome in CleanupOutcome::InvalidPage && value.retire_count==0 && value.write_mask==0 && value.visited==0 && value.words[0]==words[0] {true -> (0) _ -> (1)}
+}
+
+const TEST_RESULT:i32=test_result();
+machine require_success(value:i32) requires value==0;{}
+data Main{}
+machine Main::main(&mut self){require_success(TEST_RESULT);}

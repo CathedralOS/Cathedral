@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Profile numeric RecursivePageTable cleanup orchestration, x86_64
+// cc35c876d3badb57df54a66e22f7768a52be95f2. See recursive-cleanup.PORT.md.
+// Excluded-slot geometry delegates to recursive_cleanup with original captures.
+// See encrypted-cleanup.PORT.md; no live access or frame reclamation.
+module encrypted_cleanup_recursive;
+use addresses;
+use cleanup_ranges;
+use cleanup_ranges::Cursor;
+use cleanup_ranges::RangeStatus;
+use cleanup_ranges::RangeStep;
+use cleanup_branch::CleanupPlan;
+
+use memory_encryption::State;
+use recursive_cleanup;
+use recursive_cleanup::RecursiveCursor;
+use recursive_cleanup::RecursiveStep;
+use encrypted_cleanup_ranges;
+pub machine begin(first: u64, last: u64, budget: u64, recursive_index: u16) -> RecursiveCursor {
+    recursive_cleanup::begin(first, last, budget, recursive_index)
+}
+pub machine resume(cursor: RecursiveCursor, budget: u64) -> RecursiveCursor { recursive_cleanup::resume(cursor, budget) }
+pub machine step(profile: State, cursor: RecursiveCursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> RecursiveStep {
+    transition cursor.recursive_index < 512 {
+        true -> status(profile, cursor, words, table_ids, other_nonzero)
+        _ -> (RecursiveStep {})
+    }
+    state status(profile: State, cursor: RecursiveCursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) {
+        transition cursor.range.status {
+            RangeStatus::Active -> checked(profile, cursor, words, table_ids, other_nonzero)
+            _ -> (RecursiveStep { cursor: cursor })
+        }
+    }
+    state checked(profile: State, cursor: RecursiveCursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) {
+        let checked: Cursor = cleanup_ranges::begin(cursor.range.next_page, cursor.range.last_page, cursor.range.budget);
+        let next: RecursiveCursor = RecursiveCursor { range: checked, recursive_index: cursor.recursive_index };
+        transition checked.status {
+            RangeStatus::Active -> selected(profile, next, words, table_ids, other_nonzero)
+            _ -> (RecursiveStep { cursor: next })
+        }
+    }
+    state selected(profile: State, cursor: RecursiveCursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) {
+        let index: u16 = ((cursor.range.next_page >> 39) & 511) as u16;
+        transition index == cursor.recursive_index {
+            true -> excluded(cursor, words, table_ids, other_nonzero)
+            _ -> ordinary(profile, cursor, words, table_ids, other_nonzero)
+        }
+    }
+    state excluded(cursor: RecursiveCursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) {
+        let result: RecursiveStep = recursive_cleanup::step(cursor, words, table_ids, other_nonzero);
+        result
+    }
+    state ordinary(profile: State, cursor: RecursiveCursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) {
+        let result: RangeStep = encrypted_cleanup_ranges::step(profile, cursor.range, words, table_ids, other_nonzero);
+        RecursiveStep { cursor: RecursiveCursor { range: result.cursor, recursive_index: cursor.recursive_index },
+            has_plan: result.has_plan, branch: result.branch }
+    }
+}

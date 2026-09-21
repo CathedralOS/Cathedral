@@ -269,7 +269,7 @@ now records completion of its twelve historical families.
 pass 232 route and 90 translation cases against adapted pinned Rust bodies, four
 additional checks and nine body mutations. Child allocation, non-present/huge
 ancestor rules and partial writes retain the recursive mapper's distinct order.
-Cross-feature composition remains under review before closing X86-001/002.
+Remaining cross-feature algorithm composition is tracked under X86-002.
 [Owned GDT storage](source/libraries/x86_64/gdt-storage.PORT.md) now passes 16
 actual Rust/Omega scenarios, malformed-input/reset checks and four body mutations,
 including full 8192-word import and failed system appends without partial writes.
@@ -291,7 +291,7 @@ on their default physical profile.
 [Explicit-profile translation](source/libraries/x86_64/encrypted-translation.PORT.md)
 adds 330 actual Rust/Omega observations, seven boundary assertions and nine body
 mutations for generic mapped translation and captured child identities.
-Remaining encryption-profile cleanup, frame/range and constructor
+Remaining encryption-profile frame/range and constructor
 compositions are ordinary implementation work; the closure audit lists them.
 [Encryption-aware register expressions](source/libraries/x86_64/encrypted-registers.PORT.md)
 pass 100 Rust reference rows, 800 Omega calls and twelve body controls, preserving
@@ -306,6 +306,10 @@ body controls, preserving recursive whole-word checks and leaf-HUGE errors.
 pass 318 checked-interpreter route cases, direct leaf checks, five additional
 policies and ten controls. Rust evidence includes 159 actual public mapped calls
 and 159 adapted recursive-body observations across eleven configurations.
+[Profile-aware cleanup](source/libraries/x86_64/encrypted-cleanup.PORT.md)
+passes 384 Rust tree references, 430 checked-interpreter bodies and nine controls,
+plus a representative const pair. It preserves raw occupancy, decoded retirement
+addresses, partial effects and recursive-slot exclusion.
 The full-source closure review found no remaining pure representation family:
 X86-001 is complete at the documented numeric/schema boundary. Native layout,
 instruction/provider and proof limits remain separate; X86-002 stays open for

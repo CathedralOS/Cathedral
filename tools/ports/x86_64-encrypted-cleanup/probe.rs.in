@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+#![feature(step_trait)]
+use std::cell::{RefCell,UnsafeCell};
+use std::iter::Step;
+use x86_64::{PhysAddr,VirtAddr};
+use x86_64::structures::mem_encrypt::{enable_memory_encryption,MemoryEncryptionConfiguration};
+use x86_64::structures::paging::mapper::{CleanUp,MappedPageTable,PageTableFrameMapping};
+use x86_64::structures::paging::{Page,PageTable,PageTableIndex,Size4KiB,PhysFrame,PageTableFlags,FrameDeallocator};
+use x86_64::structures::paging::page::PageRangeInclusive;
+use x86_64::structures::paging::page_table::{PageTableEntry,PageTableLevel};
+const ROOT_ID:u64=262144;
+const IDS:[u64;7]=[0,65536,131072,196608,327680,393216,458752];
+// Stable initialized allocations, acyclic ordinary fixture links; root is
+// deliberately absent so following the recursive self-link fails immediately.
+struct Registry {tables:Vec<(u64,Box<UnsafeCell<PageTable>>)>,resolved:RefCell<Vec<u64>>}
+impl Registry {
+ fn resolve(&self,frame:PhysFrame)->*mut PageTable {
+  let id=frame.start_address().as_u64();self.resolved.borrow_mut().push(id);
+  assert_ne!(id,ROOT_ID,"recursive root must never be resolved");
+  self.tables.iter().find(|(key,_)|*key==id).expect("missing owned registry frame").1.get()
+ }
+}
+unsafe impl PageTableFrameMapping for &Registry {
+ fn frame_to_pointer(&self,frame:PhysFrame)->*mut PageTable {self.resolve(frame)}
+}
+struct Retire(Vec<u64>);
+impl FrameDeallocator<Size4KiB> for Retire {
+ unsafe fn deallocate_frame(&mut self,frame:PhysFrame){let id=frame.start_address().as_u64();assert_ne!(id,ROOT_ID);self.0.push(id);}
+}
+include!("private_cleanup.rs");
+fn store(table:&mut PageTable,index:usize,word:u64){table[index].set_addr(PhysAddr::zero(),PageTableFlags::from_bits_retain(word));}
+fn observe(recursive:bool,first:u64,last:u64,r:u16,entries:&[(u64,usize,u64)]) -> (Vec<(u64,usize,u64)>,Vec<u64>,bool,Vec<u64>) {
+ let mut root=Box::new(PageTable::new());let mut registry=Registry {tables:IDS.into_iter().map(|id|(id,Box::new(UnsafeCell::new(PageTable::new())))).collect(),resolved:RefCell::new(vec![])};
+ for &(id,index,word) in entries {
+  if id==ROOT_ID {store(&mut root,index,word)}else{store(registry.tables.iter_mut().find(|(key,_)|*key==id).unwrap().1.get_mut(),index,word)}
+ }
+ let self_before=root[r as usize].addr().as_u64()|root[r as usize].flags().bits();
+ let range=Page::range_inclusive(Page::<Size4KiB>::from_start_address(VirtAddr::new(first)).unwrap(),Page::<Size4KiB>::from_start_address(VirtAddr::new(last)).unwrap());
+ let mut retired=Retire(vec![]);
+ let empty=if recursive {
+ clean_up(PageTableIndex::new(r),&mut root,PageTableLevel::Four,range,&mut retired,&registry)
+ }else{
+ // The mapper borrows stable disjoint owned tables through the registry. No
+ // table is installed. The callbacks retain allocations for final inspection.
+ let mut mapper=unsafe{MappedPageTable::new(&mut root,&registry)};
+ unsafe{mapper.clean_up_addr_range(range,&mut retired)};
+ let empty=mapper.level_4_table().iter().all(PageTableEntry::is_unused); empty
+ };
+ let self_after=root[r as usize].addr().as_u64()|root[r as usize].flags().bits();if recursive {assert_eq!(self_before,self_after);}
+ let mut result=vec![];
+ for id in [0,65536,131072,196608,ROOT_ID,327680,393216,458752] {
+  let table=if id==ROOT_ID {&*root}else{unsafe{&*registry.tables.iter().find(|(key,_)|*key==id).unwrap().1.get()}};
+  for i in 0..512 {let word=table[i].addr().as_u64()|table[i].flags().bits();if word!=0 {result.push((id,i,word));}}
+ }
+ let resolved=registry.resolved.into_inner();assert!(!resolved.contains(&ROOT_ID));assert!(!retired.0.contains(&ROOT_ID));
+ (result,retired.0,empty,resolved)
+}
+fn main(){
+ let profile:usize=std::env::args().nth(1).unwrap().parse().unwrap();
+ // GENERATED_CONFIGURATIONS
+ // GENERATED_CHECKS
+ println!("PASS actual public mapped and adapted private recursive cleanup: configured owned trees and ordered retirements");
+}

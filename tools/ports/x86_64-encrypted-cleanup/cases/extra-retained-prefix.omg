@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+use x86::encrypted_cleanup_branch;
+use x86::encrypted_cleanup_ranges;
+use x86::encrypted_cleanup_recursive;
+use x86::cleanup_branch::CleanupPlan;
+use x86::cleanup_branch::CleanupOutcome;
+use x86::cleanup_ranges::Cursor;
+use x86::cleanup_ranges::RangeStep;
+use x86::cleanup_ranges::RangeStatus;
+use x86::recursive_cleanup::RecursiveCursor;
+use x86::recursive_cleanup::RecursiveStep;
+machine test_result()->i32 {
+let profile:State=memory_encryption::initial();
+_ = memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:47});
+_ = memory_encryption::configure(&mut profile,Configuration::SharedBit{position:48});
+let mark:u64=422212465065984;
+let first_words:[u64;4]=[65537|mark,131073|mark,196609|mark,0];
+let first_ids:[u64;4]=[262144,65536,131072,196608]; let first_others:[bool;4]=[true,false,true,false];
+let cursor:Cursor=encrypted_cleanup_ranges::begin(0,2097152,9);
+let first:RangeStep=encrypted_cleanup_ranges::step(profile,cursor,&first_words,&first_ids,&first_others);
+let words:[u64;4]=[65537|mark,131073|mark,327681|mark,0];
+let ids:[u64;4]=[262144,65536,131072,458752];let others:[bool;4]=[true,false,false,false];
+let second:RangeStep=encrypted_cleanup_ranges::step(profile,first.cursor,&words,&ids,&others);
+transition second.cursor.status {
+ RangeStatus::CaptureMismatch{expected,supplied} -> checked(&first,&second,expected,supplied)
+ _ -> (1)
+}
+state checked(first:&RangeStep,second:&RangeStep,expected:u64,supplied:u64) {
+ let next:u64=second.cursor.next_page; let budget:u64=second.cursor.budget;
+ transition expected==327680 && supplied==458752 && first.branch.retire_count==1 && first.branch.frames_to_retire[0]==196608 && first.branch.write_mask==4 && first.branch.words[2]==0 && second.branch.retire_count==0 && second.branch.write_mask==0 && next==2097152 && budget==8 && second.branch.words[2]==422212465393665 {true -> (0) _ -> (1)}
+}
+}
+
+const TEST_RESULT:i32=test_result();
+machine require_success(value:i32) requires value==0;{}
+data Main{}
+machine Main::main(&mut self){require_success(TEST_RESULT);}

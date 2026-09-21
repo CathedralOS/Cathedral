@@ -1,0 +1,42 @@
+{
+  "extras": [
+    {
+      "path": "cases/extra-invalid-page.omg"
+    },
+    {
+      "path": "cases/extra-capture-mismatch.omg"
+    },
+    {
+      "path": "cases/extra-retained-prefix.omg"
+    },
+    {
+      "path": "cases/extra-resume-and-validation.omg"
+    },
+    {
+      "path": "cases/extra-recursive-validation.omg"
+    },
+    {
+      "path": "cases/extra-recursive-capture-mismatch.omg"
+    }
+  ],
+  "controls": [
+    {
+      "path": "cases/extra-capture-mismatch.omg",
+      "family": "capture-identity",
+      "old": "expected==196608",
+      "new": "expected==196609"
+    },
+    {
+      "path": "cases/extra-retained-prefix.omg",
+      "family": "retained-earlier-branch",
+      "old": "first.branch.retire_count==1",
+      "new": "first.branch.retire_count==0"
+    },
+    {
+      "path": "cases/extra-resume-and-validation.omg",
+      "family": "maximum-budget-resume",
+      "old": "budget==18446744073709551614",
+      "new": "budget==18446744073709551613"
+    }
+  ]
+}
