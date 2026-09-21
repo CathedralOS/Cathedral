@@ -1,0 +1,3341 @@
+{
+  "cases": [
+    {
+      "aml_hex": "5b823f50434930085f505254123404120b040cffff030000000a28120b040cffff030001000a29120c040cffff03000a02000a2a120c040cffff03000a03000a2b",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          1,
+          0,
+          41
+        ],
+        [
+          262143,
+          2,
+          0,
+          42
+        ],
+        [
+          262143,
+          3,
+          0,
+          43
+        ]
+      ],
+      "name": "direct_all_pins",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          1
+        ],
+        [
+          3,
+          0,
+          2
+        ],
+        [
+          3,
+          0,
+          3
+        ],
+        [
+          3,
+          7,
+          0
+        ],
+        [
+          3,
+          7,
+          1
+        ],
+        [
+          3,
+          7,
+          2
+        ],
+        [
+          3,
+          7,
+          3
+        ],
+        [
+          4,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Four typed fields, DWORD values, wildcard function and direct GSI.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b820d50434930085f505254120200",
+      "entries": [],
+      "name": "direct_empty",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Four typed fields, DWORD values, wildcard function and direct GSI.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821850434930085f505254120d01120a040cffff0300000000",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          0
+        ]
+      ],
+      "name": "gsi_0",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Source-index/GSI must fit DWORD; pin casts to u32.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821850434930085f505254120d01120a040cffff0300000001",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          1
+        ]
+      ],
+      "name": "gsi_1",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Source-index/GSI must fit DWORD; pin casts to u32.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821c50434930085f505254121101120e040cffff030000000cffffffff",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          4294967295
+        ]
+      ],
+      "name": "gsi_4294967295",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Source-index/GSI must fit DWORD; pin casts to u32.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b822050434930085f5052541215011212040cffff030000000e0000000001000000",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          4294967296
+        ]
+      ],
+      "name": "gsi_4294967296",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index/GSI must fit DWORD; pin casts to u32.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821850434930085f505254120d01120a040cffff03000000ff",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          18446744073709551615
+        ]
+      ],
+      "name": "gsi_18446744073709551615",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index/GSI must fit DWORD; pin casts to u32.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821750434930085f505254120c011209040bffff00000a29",
+      "entries": [
+        [
+          65535,
+          0,
+          0,
+          41
+        ]
+      ],
+      "name": "address_65535",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Address must fit DWORD; pin discards bits32..63.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040cffff030000000a29",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          41
+        ]
+      ],
+      "name": "address_262143",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Address must fit DWORD; pin discards bits32..63.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040cffffffff00000a29",
+      "entries": [
+        [
+          4294967295,
+          0,
+          0,
+          41
+        ]
+      ],
+      "name": "address_4294967295",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          65535,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Address must fit DWORD; pin discards bits32..63.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821d50434930085f505254121201120f040effff03000100000000000a29",
+      "entries": [
+        [
+          4295229439,
+          0,
+          0,
+          41
+        ]
+      ],
+      "name": "address_4295229439",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Address must fit DWORD; pin discards bits32..63.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821550434930085f505254120a01120704ff00000a29",
+      "entries": [
+        [
+          18446744073709551615,
+          0,
+          0,
+          41
+        ]
+      ],
+      "name": "address_18446744073709551615",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          65535,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Address must fit DWORD; pin discards bits32..63.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040c0000030000000a2a",
+      "entries": [
+        [
+          196608,
+          0,
+          0,
+          42
+        ]
+      ],
+      "name": "function_0",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          3,
+          7,
+          0
+        ],
+        [
+          3,
+          8,
+          0
+        ],
+        [
+          3,
+          65534,
+          0
+        ],
+        [
+          3,
+          65535,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "ACPI6.6 requires wildcard function FFFF; pin also matches exact functions.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040c0100030000000a2a",
+      "entries": [
+        [
+          196609,
+          0,
+          0,
+          42
+        ]
+      ],
+      "name": "function_1",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          3,
+          7,
+          0
+        ],
+        [
+          3,
+          8,
+          0
+        ],
+        [
+          3,
+          65534,
+          0
+        ],
+        [
+          3,
+          65535,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "ACPI6.6 requires wildcard function FFFF; pin also matches exact functions.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040c0700030000000a2a",
+      "entries": [
+        [
+          196615,
+          0,
+          0,
+          42
+        ]
+      ],
+      "name": "function_7",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          3,
+          7,
+          0
+        ],
+        [
+          3,
+          8,
+          0
+        ],
+        [
+          3,
+          65534,
+          0
+        ],
+        [
+          3,
+          65535,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "ACPI6.6 requires wildcard function FFFF; pin also matches exact functions.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040c0800030000000a2a",
+      "entries": [
+        [
+          196616,
+          0,
+          0,
+          42
+        ]
+      ],
+      "name": "function_8",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          3,
+          7,
+          0
+        ],
+        [
+          3,
+          8,
+          0
+        ],
+        [
+          3,
+          65534,
+          0
+        ],
+        [
+          3,
+          65535,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "ACPI6.6 requires wildcard function FFFF; pin also matches exact functions.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040cfeff030000000a2a",
+      "entries": [
+        [
+          262142,
+          0,
+          0,
+          42
+        ]
+      ],
+      "name": "function_65534",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          3,
+          7,
+          0
+        ],
+        [
+          3,
+          8,
+          0
+        ],
+        [
+          3,
+          65534,
+          0
+        ],
+        [
+          3,
+          65535,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "ACPI6.6 requires wildcard function FFFF; pin also matches exact functions.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040cffff030000000a2a",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          42
+        ]
+      ],
+      "name": "function_65535",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          3,
+          7,
+          0
+        ],
+        [
+          3,
+          8,
+          0
+        ],
+        [
+          3,
+          65534,
+          0
+        ],
+        [
+          3,
+          65535,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "ACPI6.6 requires wildcard function FFFF; pin also matches exact functions.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821a50434930085f505254120f01120c040cffff03000a04000a28",
+      "entries": [
+        [
+          262143,
+          4,
+          0,
+          40
+        ]
+      ],
+      "name": "pin_4",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Only pin integers0..3 are admitted.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821a50434930085f505254120f01120c040cffff03000aff000a28",
+      "entries": [
+        [
+          262143,
+          255,
+          0,
+          40
+        ]
+      ],
+      "name": "pin_255",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Only pin integers0..3 are admitted.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821b50434930085f505254121001120d040cffff03000b0001000a28",
+      "entries": [
+        [
+          262143,
+          256,
+          0,
+          40
+        ]
+      ],
+      "name": "pin_256",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Only pin integers0..3 are admitted.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040cffff0300ff000a28",
+      "entries": [
+        [
+          262143,
+          18446744073709551615,
+          0,
+          40
+        ]
+      ],
+      "name": "pin_18446744073709551615",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Only pin integers0..3 are admitted.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b822550434930085f505254121a02120b040cffff030000000a29120b040cffff030000000a2a",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          41
+        ],
+        [
+          262143,
+          0,
+          0,
+          42
+        ]
+      ],
+      "name": "first_duplicate_wildcard",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Duplicate valid records retained in source order; first match selected.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b822550434930085f505254121a02120b040cffff030000000a29120b040c0100030000000a2a",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          41
+        ],
+        [
+          196609,
+          0,
+          0,
+          42
+        ]
+      ],
+      "name": "wildcard_before_specific",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          3,
+          7,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Specific function is a pin extension; first-match precedence is observable.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b822550434930085f505254121a02120b040c0100030000000a2a120b040cffff030000000a29",
+      "entries": [
+        [
+          196609,
+          0,
+          0,
+          42
+        ],
+        [
+          262143,
+          0,
+          0,
+          41
+        ]
+      ],
+      "name": "specific_before_wildcard",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          3,
+          7,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Specific function is a pin extension; first-match precedence is observable.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b820c50434930085f5052540a07",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          40
+        ]
+      ],
+      "name": "outer_integer",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Outer result must be Package.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b820f50434930085f5052541204010a07",
+      "entries": [
+        7
+      ],
+      "name": "inner_integer",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Every entry must be Package.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821050434930085f505254120501120200",
+      "entries": [
+        []
+      ],
+      "name": "direct_length_0",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821550434930085f505254120a011207010cffff0300",
+      "entries": [
+        [
+          262143
+        ]
+      ],
+      "name": "direct_length_1",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821650434930085f505254120b011208020cffff030000",
+      "entries": [
+        [
+          262143,
+          0
+        ]
+      ],
+      "name": "direct_length_2",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821750434930085f505254120c011209030cffff03000000",
+      "entries": [
+        [
+          262143,
+          0,
+          0
+        ]
+      ],
+      "name": "direct_length_3",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040cffff030000000a28",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          40
+        ]
+      ],
+      "name": "direct_length_4",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821b50434930085f505254121001120d050cffff030000000a280a63",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          40,
+          99
+        ]
+      ],
+      "name": "direct_length_5",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821d50434930085f505254121201120f060cffff030000000a280a630a64",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          40,
+          99,
+          100
+        ]
+      ],
+      "name": "direct_length_6",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821050434930085f505254120501120200",
+      "entries": [
+        []
+      ],
+      "name": "link_length_0",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821550434930085f505254120a011207010cffff0300",
+      "entries": [
+        [
+          262143
+        ]
+      ],
+      "name": "link_length_1",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821650434930085f505254120b011208020cffff030000",
+      "entries": [
+        [
+          262143,
+          0
+        ]
+      ],
+      "name": "link_length_2",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821a50434930085f505254120f01120c030cffff0300004c4e4b41",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          }
+        ]
+      ],
+      "name": "link_length_3",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "link_length_4",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821d50434930085f505254121201120f050cffff0300004c4e4b41000a63",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0,
+          99
+        ]
+      ],
+      "name": "link_length_5",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821f50434930085f5052541214011211060cffff0300004c4e4b41000a630a64",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0,
+          99,
+          100
+        ]
+      ],
+      "name": "link_length_6",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040d4241440000000a28",
+      "entries": [
+        [
+          {
+            "text": "BAD"
+          },
+          0,
+          0,
+          40
+        ]
+      ],
+      "name": "field_0_string",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Address/pin/direct-GSI field has wrong type.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821d50434930085f505254121201120f040cffff03000d42414400000a28",
+      "entries": [
+        [
+          262143,
+          {
+            "text": "BAD"
+          },
+          0,
+          40
+        ]
+      ],
+      "name": "field_1_string",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Address/pin/direct-GSI field has wrong type.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821c50434930085f505254121101120e040cffff030000000d42414400",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          {
+            "text": "BAD"
+          }
+        ]
+      ],
+      "name": "field_3_string",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Address/pin/direct-GSI field has wrong type.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040cffff030000010a28",
+      "entries": [
+        [
+          262143,
+          0,
+          1,
+          40
+        ]
+      ],
+      "name": "source_one",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source must be NamePath or integer zero; no implicit integer conversion.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821950434930085f505254120e01120b040cffff030000ff0a28",
+      "entries": [
+        [
+          262143,
+          0,
+          18446744073709551615,
+          40
+        ]
+      ],
+      "name": "source_maximum",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source must be NamePath or integer zero; no implicit integer conversion.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821c50434930085f505254121101120e040cffff030000110301000a28",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "buffer": "00"
+          },
+          40
+        ]
+      ],
+      "name": "source_buffer",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source must be NamePath or integer zero; no implicit integer conversion.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821b50434930085f505254121001120d040cffff0300001202000a28",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "package": []
+          },
+          40
+        ]
+      ],
+      "name": "source_package",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source must be NamePath or integer zero; no implicit integer conversion.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "name_simple",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Named link; source-index selects a descriptor.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821c50434930085f505254121101120e040cffff0300005c4c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "\\LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "name_absolute",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Named link; source-index selects a descriptor.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821c50434930085f505254121101120e040cffff0300005e4c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "^LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "name_parent",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Named link; source-index selects a descriptor.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821b50434930085f505254121001120d040cffff0300004d49535300",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "MISS"
+          },
+          0
+        ]
+      ],
+      "name": "name_missing_simple",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Named source level absent.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821c50434930085f505254121101120e040cffff0300005c4d49535300",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "\\MISS"
+          },
+          0
+        ]
+      ],
+      "name": "name_missing_absolute",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Strict resolves/validates source level; pin defers absolute missing name to route.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b823d504349305b821b425244475b82144c4e4b41085f43525311090a06230004187900085f5052541215011212040cffff0300002e425244474c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "BRDG.LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "name_relative_multisegment",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Relative path must resolve against source scope; pin returns it unresolved.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b824404504349305b821b425244475b82144c4e4b41085f43525311090a06230004187900085f505254121b011218040cffff0300005c2f0350434930425244474c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "\\PCI0.BRDG.LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "name_absolute_multisegment",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Named link; source-index selects a descriptor.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821b425244475b82144c4e4b41085f43525311090a062300041879005b822150434930085f5052541216011213040cffff0300005e2e425244474c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "^BRDG.LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "name_parent_multisegment",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Parent-relative path must resolve; pin leaves non-search name unresolved.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821d50434930085f505254121201120f040cffff0300000d4c4e4b410000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "string_simple",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821e50434930085f5052541213011210040cffff0300000d5c4c4e4b410000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": "\\LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "string_absolute",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821e50434930085f5052541213011210040cffff0300000d5e4c4e4b410000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": "^LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "string_parent",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b822250434930085f5052541217011214040cffff0300000d425244472e4c4e4b410000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": "BRDG.LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "string_relative_multi",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821e50434930085f5052541213011210040cffff0300000d5c4d4953530000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": "\\MISS"
+          },
+          0
+        ]
+      ],
+      "name": "string_missing",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821950434930085f505254120e01120b040cffff0300000d0000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": ""
+          },
+          0
+        ]
+      ],
+      "name": "string_empty",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821a50434930085f505254120f01120c040cffff0300000d310000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": "1"
+          },
+          0
+        ]
+      ],
+      "name": "string_invalid_lead",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b822150434930085f5052541216011213040cffff0300000d41422e43444546470000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": "AB.CDEFG"
+          },
+          0
+        ]
+      ],
+      "name": "string_long_segment",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821e50434930085f5052541213011210040cffff0300000d4c4e4b412e0000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": "LNKA."
+          },
+          0
+        ]
+      ],
+      "name": "string_empty_segment",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821a50434930085f505254120f01120c040cffff0300000d5c0000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": "\\"
+          },
+          0
+        ]
+      ],
+      "name": "string_root",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821f50434930085f5052541214011211040cffff0300000d5e5e4c4e4b410000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": "^^LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "string_two_parents",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821a50434930085f505254120f01120c040cffff0300000dff0000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "string_hex": "ff"
+          },
+          0
+        ]
+      ],
+      "name": "string_non_ascii",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "No malformed/non-ASCII source string admission.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b8231504349305b82144c4e4b41085f43525311090a06230008187900085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "name_nearest_level",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Single NameSeg selects nearest existing level.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b822150434930084c4e4b4100085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "name_object_shadow",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "An ordinary nearer object does not shadow a farther level in level lookup.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b8233504349305b82144c4e4b41085f43525311090a06230008187900085f505254121201120f040cffff0300000d4c4e4b410000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "string_nearest_level",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String extension searches from _PRT path then its ancestors.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b8231424153455b82144c4e4b41085f43525311090a0623000818790008504b4730121001120d040cffff0300004c4e4b41005b82175043493014115f50525400a45c2e42415345504b4730",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "captured_source_scope_name",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "NamePath retains declaration scope BASE; string extension searches from PCI0._PRT.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b8233424153455b82144c4e4b41085f43525311090a0623000818790008504b4730121201120f040cffff0300000d4c4e4b4100005b82175043493014115f50525400a45c2e42415345504b4730",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "text": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "captured_source_scope_string",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "NamePath retains declaration scope BASE; string extension searches from PCI0._PRT.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "link_index_zero",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Source-index must be DWORD and identify the selected descriptor; pin ignores type/value.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821b50434930085f505254121001120d040cffff0300004c4e4b4101",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          1
+        ]
+      ],
+      "name": "link_index_one",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index must be DWORD and identify the selected descriptor; pin ignores type/value.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821c50434930085f505254121101120e040cffff0300004c4e4b410a02",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          2
+        ]
+      ],
+      "name": "link_index_two",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index must be DWORD and identify the selected descriptor; pin ignores type/value.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821f50434930085f5052541214011211040cffff0300004c4e4b410cffffffff",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          4294967295
+        ]
+      ],
+      "name": "link_index_maximum",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index must be DWORD and identify the selected descriptor; pin ignores type/value.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b822350434930085f5052541218011215040cffff0300004c4e4b410e0000000001000000",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          4294967296
+        ]
+      ],
+      "name": "link_index_overflow",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index must be DWORD and identify the selected descriptor; pin ignores type/value.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879005b821f50434930085f5052541214011211040cffff0300004c4e4b410d42414400",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          {
+            "text": "BAD"
+          }
+        ]
+      ],
+      "name": "link_index_string",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index must be DWORD and identify the selected descriptor; pin ignores type/value.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82184c4e4b41085f435253110d0a0a230002182300041879005b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "two_irqs_index0",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "First physical descriptor is selected; pin rejects two retained resources.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82184c4e4b41085f435253110d0a0a230002182300041879005b821b50434930085f505254121001120d040cffff0300004c4e4b4101",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          1
+        ]
+      ],
+      "name": "two_irqs_index1",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Second physical descriptor is selected; pin rejects two retained resources.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82164c4e4b41085f435253110b0a0871aa2300041879005b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "vendor_then_irq_index0",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Physical descriptor0 is vendor data, not IRQ; pin filters it and ignores index.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82164c4e4b41085f435253110b0a0871aa2300041879005b821b50434930085f505254121001120d040cffff0300004c4e4b4101",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          1
+        ]
+      ],
+      "name": "vendor_then_irq_index1",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Physical descriptor1 is IRQ; pin filters vendor descriptor.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82174c4e4b41085f435253110c0a092a01002300041879005b821b50434930085f505254121001120d040cffff0300004c4e4b4101",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          1
+        ]
+      ],
+      "name": "dma_then_irq_index1",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Second descriptor is IRQ; pin retains DMA and rejects aggregate length.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82134c4e4b41085f43525311080a052a010079005b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "only_dma",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Selected resource is not IRQ.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b820d4c4e4b41085f4352531102005b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "empty_crs",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Strict template needs terminal EndTag and selected descriptor.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82104c4e4b41085f43525311050a0279005b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "only_end",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "EndTag is not an IRQ descriptor.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82124c4e4b41085f43525311070a04230004185b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "missing_end",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Existing strict resource profile requires EndTag; pin accepts exhaustion.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879485b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "valid_checksum",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Nonzero EndTag checksum verifies the complete template.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82144c4e4b41085f43525311090a062300041879015b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "bad_checksum",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Nonzero EndTag checksum must verify; pin ignores it.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82154c4e4b41085f435253110a0a07230004187900ff5b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "trailing_after_end",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "No trailing bytes after strict terminal EndTag; pin ignores remainder.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82104c4e4b41085f43525311050a0223015b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "truncated_irq",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Descriptor extent is incomplete; pin may panic.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82194c4e4b41085f435253110e0a0b8906000d017856341279005b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "extended_gsi",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Extended IRQ carries a full DWORD interrupt.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821d4c4e4b41085f43525311120a0f890a000d02090000000a00000079005b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "extended_multiple",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Current-resource extended IRQ count must be one; pin returns both.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b820c4c4e4b41085f4352530a075b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "crs_wrong_type",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Detached _CRS result must be Buffer.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82054c4e4b415b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "crs_missing",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Selected link lacks _CRS.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b82174c4e4b4114115f43525300a411090a062300041879005b821b50434930085f505254121001120d040cffff0300004c4e4b4100",
+      "entries": [
+        [
+          262143,
+          0,
+          {
+            "name": "LNKA"
+          },
+          0
+        ]
+      ],
+      "name": "crs_method",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Named link; source-index selects a descriptor.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b821c5043493014165f50525400a4120e01120b040cffff030000000a28",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          40
+        ]
+      ],
+      "name": "prt_method",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Four typed fields, DWORD values, wildcard function and direct GSI.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b822650434930085f505254121b02120b040cffff030000000a28120c040cffff04000a04000a29",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          327679,
+          4,
+          0,
+          41
+        ]
+      ],
+      "name": "error_late_row",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Decode validates all rows before publishing even when first row would match.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b824f1850434930085f50525412431820120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ]
+      ],
+      "name": "capacity_32",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Maximum32 output records in the proposed bounded profile; all rows are well formed.",
+        "route_expectations": []
+      }
+    },
+    {
+      "aml_hex": "5b824b1950434930085f505254124f1821120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28120b040cffff030000000a28",
+      "entries": [
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ],
+        [
+          262143,
+          0,
+          0,
+          40
+        ]
+      ],
+      "name": "capacity_33",
+      "origin": "Original synthetic AML and resource bytes; ACPI6.6 \u00a76.2.14 and chapters19/20; no firmware fixtures",
+      "prt_path": "\\PCI0._PRT",
+      "queries": [
+        [
+          3,
+          0,
+          0
+        ]
+      ],
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Explicit bounded output-capacity32 policy; ACPI does not impose this limit.",
+        "route_expectations": []
+      }
+    }
+  ],
+  "format": "cathedral-pci-routing-fixtures-v1"
+}

@@ -1,0 +1,2654 @@
+{
+  "binary_sha256": "acb51a8bb241acff039f84d59709ed2c127a7854f5ad153dcb4dc5d9be431819",
+  "counts": {
+    "decode_error": 18,
+    "decode_not_reached": 1,
+    "decode_panic": 8,
+    "decode_success": 74,
+    "load_panic": 1,
+    "load_success": 100,
+    "route_error": 44,
+    "route_panic": 1,
+    "route_success": 69
+  },
+  "format": "cathedral-public-prt-observations-v1",
+  "rows": {
+    "address_18446744073709551615": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            41
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 65535, function: 65535, pin: IntA, route_type: Gsi(41) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [41] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Address must fit DWORD; pin discards bits32..63.",
+        "route_expectations": []
+      },
+      "table_sha256": "4d1c760cfc8d380af43db1da452b6e1e906df15c2f5eb014005d94347792d9d3"
+    },
+    "address_262143": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            41
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(41) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [41] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Address must fit DWORD; pin discards bits32..63.",
+        "route_expectations": []
+      },
+      "table_sha256": "df3ca301550ec7c3ac2fd9759214088278d5b641391f37095b9dd28941684d92"
+    },
+    "address_4294967295": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            41
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 65535, function: 65535, pin: IntA, route_type: Gsi(41) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [41] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Address must fit DWORD; pin discards bits32..63.",
+        "route_expectations": []
+      },
+      "table_sha256": "326c0784cd1613c375a0d23e5ba2c78ad66e248847f0f5a616e14c34e6b16bc2"
+    },
+    "address_4295229439": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            41
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(41) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [41] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Address must fit DWORD; pin discards bits32..63.",
+        "route_expectations": []
+      },
+      "table_sha256": "6ae3042f300d3c8fa76fd5e432382f09d665fcb6d109082578abe623f6e26eb8"
+    },
+    "address_65535": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            41
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 0, function: 65535, pin: IntA, route_type: Gsi(41) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [41] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Address must fit DWORD; pin discards bits32..63.",
+        "route_expectations": []
+      },
+      "table_sha256": "98759353d7bc9021e8ddfe4b7e2c13d03b13133fb960723d7367d5796acf458c"
+    },
+    "bad_checksum": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Nonzero EndTag checksum must verify; pin ignores it.",
+        "route_expectations": []
+      },
+      "table_sha256": "48bc090364ba6f16a0f6f89ae1137a9b34cbee318b7f7eb9237bc6ad68e4bd01"
+    },
+    "capacity_32": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            40
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [40] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Maximum32 output records in the proposed bounded profile; all rows are well formed.",
+        "route_expectations": []
+      },
+      "table_sha256": "2641852ccf932a30ab57de2a3a86f23b5f869770669f5f660ec1527c1bb11333"
+    },
+    "capacity_33": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            40
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [40] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Explicit bounded output-capacity32 policy; ACPI does not impose this limit.",
+        "route_expectations": []
+      },
+      "table_sha256": "04ca1105ef6d7a6081bf66ab31cd2ac9d4107275cea7eec63076ae68af10f294"
+    },
+    "captured_source_scope_name": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            11
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"BASE\"), Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [11] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "NamePath retains declaration scope BASE; string extension searches from PCI0._PRT.",
+        "route_expectations": []
+      },
+      "table_sha256": "51abfb4adbfaa0577326f5fc3e9805ac3bcf62d8697229ba7f16efcec91f6afd"
+    },
+    "captured_source_scope_string": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "NamePath retains declaration scope BASE; string extension searches from PCI0._PRT.",
+        "route_expectations": []
+      },
+      "table_sha256": "bfc96cd7dc68a498c413a97f950341d155d961b736a10355edb212fe09bea9a9"
+    },
+    "crs_method": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Named link; source-index selects a descriptor.",
+        "route_expectations": []
+      },
+      "table_sha256": "d27ca3a51f95d67a8f383e7f1506e3944c388e508a435556f549e43321c226bc"
+    },
+    "crs_missing": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:ObjectDoesNotExist(AmlName([Root, Segment(\"LNKA\"), Segment(\"_CRS\")]))"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:ObjectDoesNotExist(AmlName([Root, Segment(\"LNKA\"), Segment(\"_CRS\")]))"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Selected link lacks _CRS.",
+        "route_expectations": []
+      },
+      "table_sha256": "8de55ecc57d83c07e158913354c9d39b0d2255abca810f06d17c2774898f0bb9"
+    },
+    "crs_wrong_type": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:InvalidOperationOnObject { op: ParseResource, typ: Integer }"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:InvalidOperationOnObject { op: ParseResource, typ: Integer }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Detached _CRS result must be Buffer.",
+        "route_expectations": []
+      },
+      "table_sha256": "1e322454e56e62f372b5681aaaa63b4a4ab8d3d53f6d0a6f489ddf84b883809d"
+    },
+    "direct_all_pins": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            40
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:1": {
+          "irqs": [
+            41
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:2": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:3": {
+          "irqs": [
+            43
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:4": {
+          "irqs": [
+            40
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:5": {
+          "irqs": [
+            41
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:6": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:7": {
+          "irqs": [
+            43
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:8": {
+          "outcome": "error:PrtNoEntry"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }, PciRoute { device: 3, function: 65535, pin: IntB, route_type: Gsi(41) }, PciRoute { device: 3, function: 65535, pin: IntC, route_type: Gsi(42) }, PciRoute { device: 3, function: 65535, pin: IntD, route_type: Gsi(43) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [40] }",
+        "route:1": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [41] }",
+        "route:2": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:3": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [43] }",
+        "route:4": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [40] }",
+        "route:5": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [41] }",
+        "route:6": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:7": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [43] }",
+        "route:8": "error:PrtNoEntry"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Four typed fields, DWORD values, wildcard function and direct GSI.",
+        "route_expectations": []
+      },
+      "table_sha256": "7307289f6b895a75fef2110c2ddf785858be140f5b5178e2041d249d4cbfb2a5"
+    },
+    "direct_empty": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:PrtNoEntry"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:PrtNoEntry"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Four typed fields, DWORD values, wildcard function and direct GSI.",
+        "route_expectations": []
+      },
+      "table_sha256": "2f889e579c7591f1e6e110489984fecac2e1fbd010c49528b70463d37c4ab69d"
+    },
+    "direct_length_0": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "panic",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      },
+      "table_sha256": "79963507a424d6f5b080a7eaf82f3b4cfe6d001a4e614fc6817119f5fc177d0d"
+    },
+    "direct_length_1": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "panic",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      },
+      "table_sha256": "10c6f4aa7bf5414f1a23995aaffe35753d636bbbb270be169666be3c8399edc4"
+    },
+    "direct_length_2": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "panic",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      },
+      "table_sha256": "00ea218b091037171984c5fae6bf9d30399109384703cc6a1daabd43c2e60af4"
+    },
+    "direct_length_3": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "panic",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      },
+      "table_sha256": "f2ba90451adec429164960f27296b8ba68f1cfa19a82a1ce016b37da16ee4c7d"
+    },
+    "direct_length_4": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            40
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [40] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      },
+      "table_sha256": "16ead6a14c4e3839900db07648fa668cdf987f50677e366281fc25f781875ec6"
+    },
+    "direct_length_5": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            40
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [40] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      },
+      "table_sha256": "8eb7e274d283e8ca44aca8cf50dc38b6501382dce1ec4ba55a3cb269b5aaa80b"
+    },
+    "direct_length_6": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            40
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [40] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Each inner package has exactly four elements; pin indexes or ignores surplus.",
+        "route_expectations": []
+      },
+      "table_sha256": "a711a0943ceb070e5127cfd0ee5b57e9c36024f0db5c39ab8bdb603a05395118"
+    },
+    "dma_then_irq_index1": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:UnexpectedResourceType"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:UnexpectedResourceType"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Second descriptor is IRQ; pin retains DMA and rejects aggregate length.",
+        "route_expectations": []
+      },
+      "table_sha256": "2c6214b371cd7f7d1b8941ed088dc345414e465d747de8e244ba7cc349a900dd"
+    },
+    "empty_crs": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:UnexpectedResourceType"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:UnexpectedResourceType"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Strict template needs terminal EndTag and selected descriptor.",
+        "route_expectations": []
+      },
+      "table_sha256": "d7b2103817430319903931d83102a9ff206d66d8432de045ac830627d8dfda99"
+    },
+    "error_late_row": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:PrtInvalidPin",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Decode validates all rows before publishing even when first row would match.",
+        "route_expectations": []
+      },
+      "table_sha256": "06b643f6a636f2aedde0adef0d1eb86f5000617fef016f2f0687790f2234d775"
+    },
+    "extended_gsi": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            305419896
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [305419896] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Extended IRQ carries a full DWORD interrupt.",
+        "route_expectations": []
+      },
+      "table_sha256": "ec76fddf7ecdaa059aef0802ab5b7ccc40bc895b06d8d5e5fa5a8b7391f07a29"
+    },
+    "extended_multiple": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            9,
+            10
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [9, 10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Current-resource extended IRQ count must be one; pin returns both.",
+        "route_expectations": []
+      },
+      "table_sha256": "40b4269ca96a2f4e7720709dc3b8294601c477ce6ed61f4f44d3802df837b1c4"
+    },
+    "field_0_string": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:PrtInvalidAddress",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Address/pin/direct-GSI field has wrong type.",
+        "route_expectations": []
+      },
+      "table_sha256": "65824554516a63b9b6b24da52113ab7e785834fadb0472fc869c02315ca595aa"
+    },
+    "field_1_string": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:PrtInvalidPin",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Address/pin/direct-GSI field has wrong type.",
+        "route_expectations": []
+      },
+      "table_sha256": "931c5f2ed3ebba48b5be0883ed5c9b9e3981994f3ed1bd2ec9c095c48de61389"
+    },
+    "field_3_string": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:PrtInvalidGsi",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Address/pin/direct-GSI field has wrong type.",
+        "route_expectations": []
+      },
+      "table_sha256": "89d2b235ecb589778a417afb7b1c3f210282a7cae65f8275b6cb5c0d8335c089"
+    },
+    "first_duplicate_wildcard": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            41
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(41) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(42) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [41] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Duplicate valid records retained in source order; first match selected.",
+        "route_expectations": []
+      },
+      "table_sha256": "50c44ee0d3d3f5cf30b2ac68ed9f65ba13d69cca4d8c2903f10429356dc859e9"
+    },
+    "function_0": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:1": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:2": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:3": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:4": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:5": {
+          "outcome": "error:PrtNoEntry"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 0, pin: IntA, route_type: Gsi(42) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:1": "error:PrtNoEntry",
+        "route:2": "error:PrtNoEntry",
+        "route:3": "error:PrtNoEntry",
+        "route:4": "error:PrtNoEntry",
+        "route:5": "error:PrtNoEntry"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "ACPI6.6 requires wildcard function FFFF; pin also matches exact functions.",
+        "route_expectations": []
+      },
+      "table_sha256": "b4f030f8db2cd70b72ab3effae4f66b8056978536a35864c7a2e054bf8e6448b"
+    },
+    "function_1": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:1": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:2": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:3": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:4": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:5": {
+          "outcome": "error:PrtNoEntry"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 1, pin: IntA, route_type: Gsi(42) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:PrtNoEntry",
+        "route:1": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:2": "error:PrtNoEntry",
+        "route:3": "error:PrtNoEntry",
+        "route:4": "error:PrtNoEntry",
+        "route:5": "error:PrtNoEntry"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "ACPI6.6 requires wildcard function FFFF; pin also matches exact functions.",
+        "route_expectations": []
+      },
+      "table_sha256": "8c7f703730fc9f27567b6c732144d56a45de010ea98371d97acd163177224365"
+    },
+    "function_65534": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:1": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:2": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:3": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:4": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:5": {
+          "outcome": "error:PrtNoEntry"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65534, pin: IntA, route_type: Gsi(42) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:PrtNoEntry",
+        "route:1": "error:PrtNoEntry",
+        "route:2": "error:PrtNoEntry",
+        "route:3": "error:PrtNoEntry",
+        "route:4": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:5": "error:PrtNoEntry"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "ACPI6.6 requires wildcard function FFFF; pin also matches exact functions.",
+        "route_expectations": []
+      },
+      "table_sha256": "df23de777c17cdaeda42491e776dc022a8e0f50e668096cac301f86eac64f37b"
+    },
+    "function_65535": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:1": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:2": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:3": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:4": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:5": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(42) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:1": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:2": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:3": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:4": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:5": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "ACPI6.6 requires wildcard function FFFF; pin also matches exact functions.",
+        "route_expectations": []
+      },
+      "table_sha256": "31bbda831789df14ea6a5b5a3d2e1bb67d7e2eaf3f6a324a533500342929278e"
+    },
+    "function_7": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:1": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:2": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:3": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:4": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:5": {
+          "outcome": "error:PrtNoEntry"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 7, pin: IntA, route_type: Gsi(42) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:PrtNoEntry",
+        "route:1": "error:PrtNoEntry",
+        "route:2": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:3": "error:PrtNoEntry",
+        "route:4": "error:PrtNoEntry",
+        "route:5": "error:PrtNoEntry"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "ACPI6.6 requires wildcard function FFFF; pin also matches exact functions.",
+        "route_expectations": []
+      },
+      "table_sha256": "9276d8c6c591d29f60e35b3de44d3ef8f78d29d606dedac137ac9b9197a1b22d"
+    },
+    "function_8": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:1": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:2": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:3": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:4": {
+          "outcome": "error:PrtNoEntry"
+        },
+        "route:5": {
+          "outcome": "error:PrtNoEntry"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 8, pin: IntA, route_type: Gsi(42) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:PrtNoEntry",
+        "route:1": "error:PrtNoEntry",
+        "route:2": "error:PrtNoEntry",
+        "route:3": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:4": "error:PrtNoEntry",
+        "route:5": "error:PrtNoEntry"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "ACPI6.6 requires wildcard function FFFF; pin also matches exact functions.",
+        "route_expectations": []
+      },
+      "table_sha256": "c45837b13d13139e1495184a8e7b85004eab8ed7f3904220ab9d83af095b908e"
+    },
+    "gsi_0": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            0
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(0) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [0] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Source-index/GSI must fit DWORD; pin casts to u32.",
+        "route_expectations": []
+      },
+      "table_sha256": "a9688dbd20da80651be49e7ab068db5ec16ea494c6609c92196cef3665bf3ae4"
+    },
+    "gsi_1": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            1
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(1) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [1] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Source-index/GSI must fit DWORD; pin casts to u32.",
+        "route_expectations": []
+      },
+      "table_sha256": "0a2426a6fe533f1bde8b57d843ed20d2e57dd5e85841533562ad438ad268ed48"
+    },
+    "gsi_18446744073709551615": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            4294967295
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(4294967295) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [4294967295] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index/GSI must fit DWORD; pin casts to u32.",
+        "route_expectations": []
+      },
+      "table_sha256": "2516e791cd6e808249d643fca902591ca25335abe3968d6b8b5fbddcb1e669a6"
+    },
+    "gsi_4294967295": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            4294967295
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(4294967295) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [4294967295] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Source-index/GSI must fit DWORD; pin casts to u32.",
+        "route_expectations": []
+      },
+      "table_sha256": "8f1b9263399535b8e7aa6649f002e530fc86cecbefc8b4802e6ee6541cb014f8"
+    },
+    "gsi_4294967296": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            0
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(0) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [0] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index/GSI must fit DWORD; pin casts to u32.",
+        "route_expectations": []
+      },
+      "table_sha256": "e43e3e522498d249d553c60ee8f3bf709d14a9fefcbcd5d1492e877fe0359f31"
+    },
+    "inner_integer": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:InvalidOperationOnObject { op: DecodePrt, typ: Integer }",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Every entry must be Package.",
+        "route_expectations": []
+      },
+      "table_sha256": "4f8da692fd047226beff18eeb2b87528bd63f8029c988e1e3f4c870ab2976202"
+    },
+    "link_index_maximum": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index must be DWORD and identify the selected descriptor; pin ignores type/value.",
+        "route_expectations": []
+      },
+      "table_sha256": "75c94f9c4ea755d68c3f10b65827f9b2e7affc16378191efff9db60ddf1d69ff"
+    },
+    "link_index_one": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index must be DWORD and identify the selected descriptor; pin ignores type/value.",
+        "route_expectations": []
+      },
+      "table_sha256": "a59e3d2cbd071ce300828912f31a8bad90f4aca75514b4e87e57fe766be37e4a"
+    },
+    "link_index_overflow": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index must be DWORD and identify the selected descriptor; pin ignores type/value.",
+        "route_expectations": []
+      },
+      "table_sha256": "75a0e094efb8de7d4393ec3420d9dc0c8bee8b90785edc2517d12a2025af8456"
+    },
+    "link_index_string": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index must be DWORD and identify the selected descriptor; pin ignores type/value.",
+        "route_expectations": []
+      },
+      "table_sha256": "6884aeeb9c89cf7df80eaf4bf6ad08d0ab2436071ec71c482a597cbd808eec2c"
+    },
+    "link_index_two": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source-index must be DWORD and identify the selected descriptor; pin ignores type/value.",
+        "route_expectations": []
+      },
+      "table_sha256": "10d93d13d250ea1c2512d22ce3ef682dad91eb2832b5708b033f063812426a5e"
+    },
+    "link_index_zero": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Source-index must be DWORD and identify the selected descriptor; pin ignores type/value.",
+        "route_expectations": []
+      },
+      "table_sha256": "849ff395bb47d457247edbb7001d9ce2eb7c620f168ffb4844b9cae617ddb2da"
+    },
+    "link_length_0": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "panic",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      },
+      "table_sha256": "33b2864919be30ddcc20ca23aa8ab5c3c1c6fa4f3235760c700e8a3f7288d9e7"
+    },
+    "link_length_1": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "panic",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      },
+      "table_sha256": "82398317e55fedeb6070b86c181ecfae0b90a079691f16159207110a48971a72"
+    },
+    "link_length_2": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "panic",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      },
+      "table_sha256": "80b3f61a1e13131aa95a63ed25b2b788edeb531dce1e86db9ea452deb3c9f0a7"
+    },
+    "link_length_3": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      },
+      "table_sha256": "d486f9706eed6c15bee853e8e5f7d9cfc063dbd78faf2d47b9b782cc7b3e7eef"
+    },
+    "link_length_4": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      },
+      "table_sha256": "849ff395bb47d457247edbb7001d9ce2eb7c620f168ffb4844b9cae617ddb2da"
+    },
+    "link_length_5": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      },
+      "table_sha256": "6401008d698f80a695adce587bad8d4af712d6e1d660257df514e392f50e2621"
+    },
+    "link_length_6": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Four-element shape required; pin never reads link source-index.",
+        "route_expectations": []
+      },
+      "table_sha256": "1ae8c2b265153b931ce31b3914c01b73b426b8186e69a3d0772e87f2bd56abee"
+    },
+    "missing_end": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Existing strict resource profile requires EndTag; pin accepts exhaustion.",
+        "route_expectations": []
+      },
+      "table_sha256": "5f1266b75fb01a01b65789d161cb276720172b447d670a2e96945c886d1639fc"
+    },
+    "name_absolute": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Named link; source-index selects a descriptor.",
+        "route_expectations": []
+      },
+      "table_sha256": "5397169bf2ea15bbd302158339f5a78af075536223495933cdd7447337d6ebef"
+    },
+    "name_absolute_multisegment": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"PCI0\"), Segment(\"BRDG\"), Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Named link; source-index selects a descriptor.",
+        "route_expectations": []
+      },
+      "table_sha256": "d160f4be80edc23721b4ccb821f8807b50c2b3828351dadf5232fccec405eeca"
+    },
+    "name_missing_absolute": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:LevelDoesNotExist(AmlName([Root, Segment(\"MISS\")]))"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"MISS\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:LevelDoesNotExist(AmlName([Root, Segment(\"MISS\")]))"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Strict resolves/validates source level; pin defers absolute missing name to route.",
+        "route_expectations": []
+      },
+      "table_sha256": "99ef72c8be25d564917c7e1f54f198c27cc5c20af14fac18357179c9caa2ef64"
+    },
+    "name_missing_simple": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:LevelDoesNotExist(AmlName([Segment(\"MISS\")]))",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Named source level absent.",
+        "route_expectations": []
+      },
+      "table_sha256": "5f502c2c15e736128f10376474515f8482a582e92f3e22385af4b5ed66a37c5b"
+    },
+    "name_nearest_level": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            11
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"PCI0\"), Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [11] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Single NameSeg selects nearest existing level.",
+        "route_expectations": []
+      },
+      "table_sha256": "5356d4791ce49899d321f33853e6542e40732d767a9cd4afd97b82ca8151f4b8"
+    },
+    "name_object_shadow": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "An ordinary nearer object does not shadow a farther level in level lookup.",
+        "route_expectations": []
+      },
+      "table_sha256": "eb6e749e90e31e2368ad1af699aaf6fdb7f238b8831db8857cdc2f5715f21320"
+    },
+    "name_parent": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:NameNotAbsolute(AmlName([Prefix, Segment(\"LNKA\")]))"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Prefix, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:NameNotAbsolute(AmlName([Prefix, Segment(\"LNKA\")]))"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Named link; source-index selects a descriptor.",
+        "route_expectations": []
+      },
+      "table_sha256": "0e363bf11b636b918e1cf0e64bbf2c9e5c0bd2bfd54863b0aa4f62755bece600"
+    },
+    "name_parent_multisegment": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:NameNotAbsolute(AmlName([Prefix, Segment(\"BRDG\"), Segment(\"LNKA\")]))"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Prefix, Segment(\"BRDG\"), Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:NameNotAbsolute(AmlName([Prefix, Segment(\"BRDG\"), Segment(\"LNKA\")]))"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Parent-relative path must resolve; pin leaves non-search name unresolved.",
+        "route_expectations": []
+      },
+      "table_sha256": "780e18f547cbfd567e08d9511aa2f60eb1afb3512067fe481356ba072dde55c5"
+    },
+    "name_relative_multisegment": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:NameNotAbsolute(AmlName([Segment(\"BRDG\"), Segment(\"LNKA\")]))"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Segment(\"BRDG\"), Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:NameNotAbsolute(AmlName([Segment(\"BRDG\"), Segment(\"LNKA\")]))"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Relative path must resolve against source scope; pin returns it unresolved.",
+        "route_expectations": []
+      },
+      "table_sha256": "145605f646d388b665473ba2db41efc2986fa9279e32cc69e06352118b5f6b90"
+    },
+    "name_simple": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Named link; source-index selects a descriptor.",
+        "route_expectations": []
+      },
+      "table_sha256": "849ff395bb47d457247edbb7001d9ce2eb7c620f168ffb4844b9cae617ddb2da"
+    },
+    "only_dma": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:UnexpectedResourceType"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:UnexpectedResourceType"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Selected resource is not IRQ.",
+        "route_expectations": []
+      },
+      "table_sha256": "080cd93f961ab06f1c8f8dd661ffe0f410a80170f4795f14d1e6383108dce706"
+    },
+    "only_end": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:UnexpectedResourceType"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:UnexpectedResourceType"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "EndTag is not an IRQ descriptor.",
+        "route_expectations": []
+      },
+      "table_sha256": "99a1356e2001e847be8a35165c970da2146388d0142cfa7ddf11308efa76fd06"
+    },
+    "outer_integer": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:InvalidOperationOnObject { op: DecodePrt, typ: Integer }",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Outer result must be Package.",
+        "route_expectations": []
+      },
+      "table_sha256": "fb64f43817407c798baf5a9f8d75be5d6d3306bb3ee0eed907058f01b68c3790"
+    },
+    "pin_18446744073709551615": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:PrtInvalidPin",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Only pin integers0..3 are admitted.",
+        "route_expectations": []
+      },
+      "table_sha256": "329ae43fe9030b164f30cae448d88d9210441a895c2d6c6dd83dde09d21bf76f"
+    },
+    "pin_255": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:PrtInvalidPin",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Only pin integers0..3 are admitted.",
+        "route_expectations": []
+      },
+      "table_sha256": "4c68d8a230530a5d1dcb42b3bab7740b256fad7da1a15b5c241c4c34d0f6e5f5"
+    },
+    "pin_256": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:PrtInvalidPin",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Only pin integers0..3 are admitted.",
+        "route_expectations": []
+      },
+      "table_sha256": "0a65cc583c0eaf2dfcb5c58f2eca0c5db234c3683908458365723badf4e821e5"
+    },
+    "pin_4": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:PrtInvalidPin",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Only pin integers0..3 are admitted.",
+        "route_expectations": []
+      },
+      "table_sha256": "f1875fc3b889512f7e2263a11ce9510c71889ebff8f2d1d8c0f2331fc8460ada"
+    },
+    "prt_method": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            40
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(40) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [40] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Four typed fields, DWORD values, wildcard function and direct GSI.",
+        "route_expectations": []
+      },
+      "table_sha256": "f3ef9875e50da1c6c8ac2f83ee66254ef1b702cea19484b488ba6f229f248b84"
+    },
+    "source_buffer": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:PrtInvalidSource",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source must be NamePath or integer zero; no implicit integer conversion.",
+        "route_expectations": []
+      },
+      "table_sha256": "2ab11b601823cd8afe4ea4cb5b3acacdb42737ce9629d484643e67f41dfe661c"
+    },
+    "source_maximum": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:PrtInvalidSource",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source must be NamePath or integer zero; no implicit integer conversion.",
+        "route_expectations": []
+      },
+      "table_sha256": "2653135886c1ab17c0d8fd3be833aa1a711ad5329ef8f61b9f125d2976215d5c"
+    },
+    "source_one": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:PrtInvalidSource",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source must be NamePath or integer zero; no implicit integer conversion.",
+        "route_expectations": []
+      },
+      "table_sha256": "c005943e29be20d8450d92d4eb887c5a4f40353211487e31fff3548d82ad2026"
+    },
+    "source_package": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:PrtInvalidSource",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Source must be NamePath or integer zero; no implicit integer conversion.",
+        "route_expectations": []
+      },
+      "table_sha256": "31505452a8bd99fd6d6a932df1a36a64544d5545cc5de47c65f5ce61c0195fd0"
+    },
+    "specific_before_wildcard": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            42
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:1": {
+          "irqs": [
+            41
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 1, pin: IntA, route_type: Gsi(42) }, PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(41) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [42] }",
+        "route:1": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [41] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Specific function is a pin extension; first-match precedence is observable.",
+        "route_expectations": []
+      },
+      "table_sha256": "d1f87562f1fbc2f8cab7a22c9fc36913faec51c01a3c6fdad15b8020bc0ef627"
+    },
+    "string_absolute": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      },
+      "table_sha256": "2f18ebef6de33c0097a081638f2a6be2f23912e02f372d202f44adbe1a825fa0"
+    },
+    "string_empty": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:EmptyNamesAreInvalid",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      },
+      "table_sha256": "c66e7e2444aac3b29d5c08e30a23508c5f478cdef60b2219d74673c83453abd7"
+    },
+    "string_empty_segment": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:InvalidNameSeg([255, 255, 255, 255])",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      },
+      "table_sha256": "d211d61e3dc7330c285234620b2681af64ef05f685c4dcb3cbeba61d6762186f"
+    },
+    "string_invalid_lead": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "panic",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      },
+      "table_sha256": "248acc81fa9cfb3fbb2279ee63dd0910191f6e9a9cb942e1766188141160ffd7"
+    },
+    "string_long_segment": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "error:InvalidNameSeg([255, 255, 255, 255])",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      },
+      "table_sha256": "23f176cd5b311b2133a050bb3b083777cbfebf1137b1ab1968fa1e9d901da572"
+    },
+    "string_missing": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:LevelDoesNotExist(AmlName([Root, Segment(\"MISS\")]))"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"MISS\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:LevelDoesNotExist(AmlName([Root, Segment(\"MISS\")]))"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      },
+      "table_sha256": "f4d2e16595a0439c911f970ed18723bdad923d23c368f376c0868562a25686ae"
+    },
+    "string_nearest_level": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            11
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"PCI0\"), Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [11] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String extension searches from _PRT path then its ancestors.",
+        "route_expectations": []
+      },
+      "table_sha256": "349dfe36bdc1cf058eed213f9224619695705da38a7f2178626d27bdeb8fe4de"
+    },
+    "string_non_ascii": {
+      "normalized_routes": {},
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load_or_probe": "panic"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "No malformed/non-ASCII source string admission.",
+        "route_expectations": []
+      },
+      "table_sha256": "d3e47ec95906b144fb7f1e781d4e767467e26e9dcd0766b3c7bb9351dae32f32"
+    },
+    "string_parent": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:NameNotAbsolute(AmlName([Prefix, Segment(\"LNKA\")]))"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Prefix, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:NameNotAbsolute(AmlName([Prefix, Segment(\"LNKA\")]))"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      },
+      "table_sha256": "695f1082e4570059f714e2aca317f8d15b676e168d92a041769e6cb32847a434"
+    },
+    "string_relative_multi": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:NameNotAbsolute(AmlName([Segment(\"BRDG\"), Segment(\"LNKA\")]))"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Segment(\"BRDG\"), Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:NameNotAbsolute(AmlName([Segment(\"BRDG\"), Segment(\"LNKA\")]))"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      },
+      "table_sha256": "adf4fbd8ca2ce73a5b9be95827c2ad0d917ccffd2cd904f867a5bebf07a99412"
+    },
+    "string_root": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:ObjectDoesNotExist(AmlName([Root, Segment(\"_CRS\")]))"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:ObjectDoesNotExist(AmlName([Root, Segment(\"_CRS\")]))"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      },
+      "table_sha256": "b7184109c00aab8647ecec848f59a12bd082207bc8f7c9c9b3aa1fc0fb3394ff"
+    },
+    "string_simple": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      },
+      "table_sha256": "9c64656397075c0ad61720d846de7f01d1aa484e10fd5fa4e45885ad13b46847"
+    },
+    "string_two_parents": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:NameNotAbsolute(AmlName([Prefix, Prefix, Segment(\"LNKA\")]))"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Prefix, Prefix, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:NameNotAbsolute(AmlName([Prefix, Prefix, Segment(\"LNKA\")]))"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "String source is an explicit pin/legacy extension, not ACPI6.6 NamePath syntax.",
+        "route_expectations": []
+      },
+      "table_sha256": "13827780bd278fbccfe0fc61657a9e700ac1b245a3c1eb7aeb38118270bbe3d9"
+    },
+    "trailing_after_end": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "No trailing bytes after strict terminal EndTag; pin ignores remainder.",
+        "route_expectations": []
+      },
+      "table_sha256": "6b82258b6885dbe7d780ceafa3895ffc66f473b83ef381be4a451f7f4c9381ac"
+    },
+    "truncated_irq": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "panic"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "panic"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Descriptor extent is incomplete; pin may panic.",
+        "route_expectations": []
+      },
+      "table_sha256": "fd7735d1832532ea67f560697f908c3d65cd6e4b1c86e7ff511d353e5fcc5482"
+    },
+    "two_irqs_index0": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:UnexpectedResourceType"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:UnexpectedResourceType"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "First physical descriptor is selected; pin rejects two retained resources.",
+        "route_expectations": []
+      },
+      "table_sha256": "5a547885a75cd2f843787135028a7b944af7fc997296edd6900ff7dd028d0a05"
+    },
+    "two_irqs_index1": {
+      "normalized_routes": {
+        "route:0": {
+          "outcome": "error:UnexpectedResourceType"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "error:UnexpectedResourceType"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Second physical descriptor is selected; pin rejects two retained resources.",
+        "route_expectations": []
+      },
+      "table_sha256": "5dad643f71c20f626e9279f04b444448162d9af736ec53aafa78738244eaead1"
+    },
+    "valid_checksum": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Nonzero EndTag checksum verifies the complete template.",
+        "route_expectations": []
+      },
+      "table_sha256": "783aa90c068cd0c47ce3c611c97c60bec9552b53dd38eb65d22f069ed577403f"
+    },
+    "vendor_then_irq_index0": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Physical descriptor0 is vendor data, not IRQ; pin filters it and ignores index.",
+        "route_expectations": []
+      },
+      "table_sha256": "4f9cd3075475c2bf2287c5e2f298e7484dcf548004b1050ed33df48ef8ca0ef9"
+    },
+    "vendor_then_irq_index1": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            10
+          ],
+          "is_consumer": false,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: LinkObject(AmlName([Root, Segment(\"LNKA\")])) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: false, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [10] }"
+      },
+      "strict_expectation": {
+        "complete_request": "accept",
+        "reason": "Physical descriptor1 is IRQ; pin filters vendor descriptor.",
+        "route_expectations": []
+      },
+      "table_sha256": "edf068a63719a413d35b0f1070e2bf8c1f0cdad7fb5d055c098fb7819c769844"
+    },
+    "wildcard_before_specific": {
+      "normalized_routes": {
+        "route:0": {
+          "irqs": [
+            41
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        },
+        "route:1": {
+          "irqs": [
+            41
+          ],
+          "is_consumer": true,
+          "is_shared": true,
+          "is_wake_capable": false,
+          "outcome": "success",
+          "polarity": "ActiveLow",
+          "trigger": "Level"
+        }
+      },
+      "observed": {
+        "created_mutexes": "1",
+        "decode": "ok:PciRoutingTable { entries: [PciRoute { device: 3, function: 65535, pin: IntA, route_type: Gsi(41) }, PciRoute { device: 3, function: 1, pin: IntA, route_type: Gsi(42) }] }",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "route:0": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [41] }",
+        "route:1": "ok:IrqDescriptor { is_consumer: true, trigger: Level, polarity: ActiveLow, is_shared: true, is_wake_capable: false, irqs: [41] }"
+      },
+      "strict_expectation": {
+        "complete_request": "reject",
+        "reason": "Specific function is a pin extension; first-match precedence is observable.",
+        "route_expectations": []
+      },
+      "table_sha256": "198cc1d94fe5e28c942147890ec9bf6070911d89963bcaf347609118762ea9f8"
+    }
+  },
+  "rustc": "rustc 1.100.0-nightly (a69a63265 2026-09-03)",
+  "source_sha256": {
+    "tools/ports/acpi/pci-routing/.gitignore": "337613937fda3acd2ba7834aa3e1b1eacfe04c9cafb336dfd6dfb7b6827d8f3e",
+    "tools/ports/acpi/pci-routing/Cargo.lock": "f08c21b5de8b12efc045b40106258859a36d9de56a499869e4a248349c97d8b4",
+    "tools/ports/acpi/pci-routing/Cargo.toml": "d15b081dd4ae21fb7190f8d29535f0088e507df3ba457cebd35148f40bfeb8c4",
+    "tools/ports/acpi/pci-routing/README.md": "5b6d7fe114844b98c7810a4b04d691da7a7251e9c15c20490bd7cccbd399d9e0",
+    "tools/ports/acpi/pci-routing/check.py": "a756103b3d7e86b1433948802ed8b2e1422f18ab2b438aae9fc26935f003b1b1",
+    "tools/ports/acpi/pci-routing/fixtures.json": "47168f034a802bf0d58219c7dacd114c10c8365179a5016e1a15d6bfa89384da",
+    "tools/ports/acpi/pci-routing/fixtures.py": "ed4e678644e8c71fb51a144681edf28e70082bdf85a50b8704095b75f2be0e16",
+    "tools/ports/acpi/pci-routing/src/main.rs": "b0aa5ce288e9f463b7174332c9ade38bbc8ad6d30aafc03d7ad119b34589e829",
+    "tools/ports/acpi/pci-routing/verify_record.py": "400df646a4c5fe4b317fcf0167e023cb6ce8eb104790d3765dc8d517893381e1"
+  },
+  "stage": "actual public Rust Interpreter::new/load_table and PciRoutingTable::from_prt_path/route; no Omega execution or hardware",
+  "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "upstream_source_sha256": {
+    "src/address.rs": "38048355ffe9b7c956e3ebaf84effdadca7defffd70c07feb0587e1c85fbb20a",
+    "src/aml/mod.rs": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+    "src/aml/namespace.rs": "311f3d9b5fbcb08395dcde0b5dce5455e932ad4a8fb6c273580d80c507b2f347",
+    "src/aml/object.rs": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+    "src/aml/op_region.rs": "43f7430d7aa41625f944bf66ffccc7f9bed7d403ff1979a9a2c09dedba7bf69b",
+    "src/aml/pci_routing.rs": "4c2371d38c0a67cab28ab686c8ad6374577e012cd02f561d4730e2f7895dcc39",
+    "src/aml/resource.rs": "abca9e6c8c60e40730cc11b2304acf37e2171942097f8871f5f8a8c7911fae09",
+    "src/lib.rs": "09fcc41658affdc55f6d8c0cb2b29b642d908879a07ed735014b70c7935335c7",
+    "src/platform/interrupt.rs": "c9a95f11b49535cd2baee66bdb55944870df284d3bc65f7a0e34416c5631c2bf",
+    "src/platform/mod.rs": "e49bb52792f164f1001a397bee489dc9dda8f3501681072a21396f4d276c87b5",
+    "src/platform/numa.rs": "93371276644afdf0dee1cf8b8215bb24c54a485552f045705b88424e69139596",
+    "src/platform/pci.rs": "5ad4a415a5037a741a7312d950299640a83905d454ba0eb4d40925c47a90d0c0",
+    "src/registers.rs": "9d8ed68f84cf8659f7822b0edd97fd7153a99bcca39de44b3726c6d5c00990a8",
+    "src/rsdp.rs": "ca2389abeffce9de4e1e28a87b9097c195a737f4dfa0beca5d2ccb23067f824c",
+    "src/sdt/bgrt.rs": "33baf3f6d386a091dc7ad13fb902ed4a265bbebd9809dd122d107981ea5cf5bb",
+    "src/sdt/facs.rs": "6977a2857c78c2bb07e880f555a738278571c4e5e9e173cc1375ca600da161d8",
+    "src/sdt/fadt.rs": "3b213e82029458b0c4c2633b232f2e3f1b4f9f59c07c5ac201286fb54a7927b7",
+    "src/sdt/hpet.rs": "ad52bbf848ac167a26561838d2695579b780b174006d9b553f8b154e74e6aca5",
+    "src/sdt/madt.rs": "4decb527324cd1aec925b20adc517d56f88ea80cc8c1cd50741a15b7da927ac0",
+    "src/sdt/mcfg.rs": "c33d9c34b0e270f5a7b3bf1817853aa07e7cb800030eace6447b915b4651900b",
+    "src/sdt/mod.rs": "136cb4b65a02f8e0bb3949543ff4f55fdaa540117010540cc4fe770e400a7052",
+    "src/sdt/slit.rs": "46b271c98f0071b65ccccce36db98aa8d8e4a8929c99bf81cd0ad90e5703ba52",
+    "src/sdt/spcr.rs": "bcd71238ac0a4a08946380508cc4d72762eb93cd7935fc4cc5fbad8519721fbd",
+    "src/sdt/srat.rs": "a73a29fff2fc609f3012c096a1f860d2f577593ef7995f9518e2b34f05b87b66"
+  }
+}
