@@ -702,6 +702,12 @@ The public record retains ten width differences and 24 String-source panics;
 shared source/backing identity is checked safely in Omega. Target/reference
 policy and opcode retirement remain pending; aggregate counts are unchanged.
 
+[Expanded canonical byte Index validation](source/libraries/acpi/aml/byte-index.PORT.md) checks the existing byte_storage constructor without adding a second implementation.
+All 117 complete-store checked pairs, three bounded constant pairs and 44 actual
+public Index observations pass, covering two-slot allocation, failure preservation,
+transparent references and fresh field/reference identities. Source evaluation,
+target Store and opcode retirement remain pending; source counts are unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

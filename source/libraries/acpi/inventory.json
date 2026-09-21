@@ -1058,6 +1058,9 @@
           },
           "package_index_component": {
             "note": "Direct Package selection validates the entire advertised member chain before allocating a RefOf wrapper preserving member identity. Complete failure atomicity and exact one-slot/count changes are checked. Source evaluation, target Store, context contribution and retirement remain pending."
+          },
+          "byte_index_validation": {
+            "note": "Existing byte_storage::make_byte_index now additionally has117 full-store checked pairs,3 boundedconstpairs and44 actual public Index identity/geometry observations; no second implementation or source-anchor closure."
           }
         },
         "228:load_table": {

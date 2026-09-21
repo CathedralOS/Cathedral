@@ -1,0 +1,741 @@
+{
+  "binary_sha256": "6221cc7d53e97c1740b9a3236fece3a62b43142118856c1cf3adcab68fd8636e",
+  "build_sha256": "9d003248c73bd3f44a00a40f082e8852e179ae6a7deb68d82cb196f1bff6729d",
+  "build_text": "[package]\nname=\"cathedral-byte-index-reference\"\nversion=\"0.1.0\"\nedition=\"2024\"\n[dependencies]\nacpi={path=\"/Users/zcanann/Documents/projects/Cathedral/reference_code/rust-osdev/acpi\"}\n[[bin]]\nname=\"reference\"\npath=\"/Users/zcanann/Documents/projects/Cathedral/tools/ports/acpi/aml/byte-index/reference.rs\"\n",
+  "execution_root": "/Users/zcanann/Documents/projects/Cathedral",
+  "notes": [
+    "Two actual calls per row; repeated construction retains the same backing identity and creates distinct RefOf and BufferField identities.",
+    "No target Store or field read/write is claimed; method Index uses NullName destination."
+  ],
+  "pin": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "probe_root": "/Users/zcanann/Documents/projects/Cathedral/tools/ports/acpi/aml/byte-index",
+  "production_mapping_sha256": {
+    "source/libraries/acpi/aml/byte_storage.omg": "045be1e6efc512f051231c3233f2a177473a15eb832f78111086f67a7b504f25",
+    "source/libraries/acpi/aml/namespace.omg": "2cb9a7187ad787316f89e712c115906290e29a477e23ec0b4e29642935468d97",
+    "source/libraries/acpi/aml/object_references.omg": "4c06bb925681f2e833ebb815b15e5e53d476f08810d0252e77a977af4134b703"
+  },
+  "rows": [
+    {
+      "aml_hex": "084241434b110200140e4d41494e00a4884241434b0000",
+      "index": 0,
+      "kind": "Buffer",
+      "name": "Buffer_0_0",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 0,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b11020014164d41494e00a4884241434b0e000000000000008000",
+      "index": 9223372036854775808,
+      "kind": "Buffer",
+      "name": "Buffer_0_9223372036854775808",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 0,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b110200140e4d41494e00a4884241434bff00",
+      "index": 18446744073709551615,
+      "kind": "Buffer",
+      "name": "Buffer_0_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 0,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b11030141140e4d41494e00a4884241434b0000",
+      "index": 0,
+      "kind": "Buffer",
+      "name": "Buffer_1_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "0:8|0:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 1,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b11030141140e4d41494e00a4884241434b0100",
+      "index": 1,
+      "kind": "Buffer",
+      "name": "Buffer_1_1",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 1,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b1103014114164d41494e00a4884241434b0e000000000000008000",
+      "index": 9223372036854775808,
+      "kind": "Buffer",
+      "name": "Buffer_1_9223372036854775808",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 1,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b11030141140e4d41494e00a4884241434bff00",
+      "index": 18446744073709551615,
+      "kind": "Buffer",
+      "name": "Buffer_1_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 1,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b110b0a084141414141414141140e4d41494e00a4884241434b0000",
+      "index": 0,
+      "kind": "Buffer",
+      "name": "Buffer_8_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "0:8|0:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 8,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b110b0a084141414141414141140f4d41494e00a4884241434b0a0700",
+      "index": 7,
+      "kind": "Buffer",
+      "name": "Buffer_8_7",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "56:8|56:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 8,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b110b0a084141414141414141140f4d41494e00a4884241434b0a0800",
+      "index": 8,
+      "kind": "Buffer",
+      "name": "Buffer_8_8",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 8,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b110b0a08414141414141414114164d41494e00a4884241434b0e000000000000008000",
+      "index": 9223372036854775808,
+      "kind": "Buffer",
+      "name": "Buffer_8_9223372036854775808",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 8,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b110b0a084141414141414141140e4d41494e00a4884241434bff00",
+      "index": 18446744073709551615,
+      "kind": "Buffer",
+      "name": "Buffer_8_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 8,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b1143100aff414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141140e4d41494e00a4884241434b0000",
+      "index": 0,
+      "kind": "Buffer",
+      "name": "Buffer_255_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "0:8|0:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 255,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b1143100aff414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141140f4d41494e00a4884241434b0afe00",
+      "index": 254,
+      "kind": "Buffer",
+      "name": "Buffer_255_254",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "2032:8|2032:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 255,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b1143100aff414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141140f4d41494e00a4884241434b0aff00",
+      "index": 255,
+      "kind": "Buffer",
+      "name": "Buffer_255_255",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 255,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b1143100aff41414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414114164d41494e00a4884241434b0e000000000000008000",
+      "index": 9223372036854775808,
+      "kind": "Buffer",
+      "name": "Buffer_255_9223372036854775808",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 255,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b1143100aff414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141140e4d41494e00a4884241434bff00",
+      "index": 18446744073709551615,
+      "kind": "Buffer",
+      "name": "Buffer_255_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 255,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b1145100b000141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141140e4d41494e00a4884241434b0000",
+      "index": 0,
+      "kind": "Buffer",
+      "name": "Buffer_256_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "0:8|0:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 256,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b1145100b000141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141140f4d41494e00a4884241434b0aff00",
+      "index": 255,
+      "kind": "Buffer",
+      "name": "Buffer_256_255",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "2040:8|2040:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 256,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b1145100b00014141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414114104d41494e00a4884241434b0b000100",
+      "index": 256,
+      "kind": "Buffer",
+      "name": "Buffer_256_256",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 256,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b1145100b00014141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414114164d41494e00a4884241434b0e000000000000008000",
+      "index": 9223372036854775808,
+      "kind": "Buffer",
+      "name": "Buffer_256_9223372036854775808",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 256,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b1145100b000141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141140e4d41494e00a4884241434bff00",
+      "index": 18446744073709551615,
+      "kind": "Buffer",
+      "name": "Buffer_256_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 256,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d00140e4d41494e00a4884241434b0000",
+      "index": 0,
+      "kind": "String",
+      "name": "String_0_0",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 0,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d0014164d41494e00a4884241434b0e000000000000008000",
+      "index": 9223372036854775808,
+      "kind": "String",
+      "name": "String_0_9223372036854775808",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 0,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d00140e4d41494e00a4884241434bff00",
+      "index": 18446744073709551615,
+      "kind": "String",
+      "name": "String_0_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 0,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d4100140e4d41494e00a4884241434b0000",
+      "index": 0,
+      "kind": "String",
+      "name": "String_1_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "0:8|0:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 1,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b0d4100140e4d41494e00a4884241434b0100",
+      "index": 1,
+      "kind": "String",
+      "name": "String_1_1",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 1,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d410014164d41494e00a4884241434b0e000000000000008000",
+      "index": 9223372036854775808,
+      "kind": "String",
+      "name": "String_1_9223372036854775808",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 1,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d4100140e4d41494e00a4884241434bff00",
+      "index": 18446744073709551615,
+      "kind": "String",
+      "name": "String_1_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 1,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d414141414141414100140e4d41494e00a4884241434b0000",
+      "index": 0,
+      "kind": "String",
+      "name": "String_8_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "0:8|0:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 8,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b0d414141414141414100140f4d41494e00a4884241434b0a0700",
+      "index": 7,
+      "kind": "String",
+      "name": "String_8_7",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "56:8|56:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 8,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b0d414141414141414100140f4d41494e00a4884241434b0a0800",
+      "index": 8,
+      "kind": "String",
+      "name": "String_8_8",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 8,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d41414141414141410014164d41494e00a4884241434b0e000000000000008000",
+      "index": 9223372036854775808,
+      "kind": "String",
+      "name": "String_8_9223372036854775808",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 8,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d414141414141414100140e4d41494e00a4884241434bff00",
+      "index": 18446744073709551615,
+      "kind": "String",
+      "name": "String_8_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 8,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d41414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414100140e4d41494e00a4884241434b0000",
+      "index": 0,
+      "kind": "String",
+      "name": "String_255_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "0:8|0:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 255,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b0d41414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414100140f4d41494e00a4884241434b0afe00",
+      "index": 254,
+      "kind": "String",
+      "name": "String_255_254",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "2032:8|2032:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 255,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b0d41414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414100140f4d41494e00a4884241434b0aff00",
+      "index": 255,
+      "kind": "String",
+      "name": "String_255_255",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 255,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d4141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141410014164d41494e00a4884241434b0e000000000000008000",
+      "index": 9223372036854775808,
+      "kind": "String",
+      "name": "String_255_9223372036854775808",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 255,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d41414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414100140e4d41494e00a4884241434bff00",
+      "index": 18446744073709551615,
+      "kind": "String",
+      "name": "String_255_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 255,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d4141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414100140e4d41494e00a4884241434b0000",
+      "index": 0,
+      "kind": "String",
+      "name": "String_256_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "0:8|0:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 256,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b0d4141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414100140f4d41494e00a4884241434b0aff00",
+      "index": 255,
+      "kind": "String",
+      "name": "String_256_255",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_fields": "true",
+        "fresh_wrappers": "true",
+        "geometry": "2040:8|2040:8",
+        "kind": "RefOf",
+        "load": "ok",
+        "same_backing": "true",
+        "second_kind": "RefOf"
+      },
+      "size": 256,
+      "success": true
+    },
+    {
+      "aml_hex": "084241434b0d414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141410014104d41494e00a4884241434b0b000100",
+      "index": 256,
+      "kind": "String",
+      "name": "String_256_256",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 256,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141410014164d41494e00a4884241434b0e000000000000008000",
+      "index": 9223372036854775808,
+      "kind": "String",
+      "name": "String_256_9223372036854775808",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 256,
+      "success": false
+    },
+    {
+      "aml_hex": "084241434b0d4141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414100140e4d41494e00a4884241434bff00",
+      "index": 18446744073709551615,
+      "kind": "String",
+      "name": "String_256_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "size": 256,
+      "success": false
+    }
+  ],
+  "source_sha256": {
+    "aml_encoding.py": "e46261542865a0d84870e9d97165d5cc67aa839a828073348dd1f3111b897e42",
+    "reference.Cargo.lock": "3dbe8b5687e8eaf71349d62a2edd26ee7e4c9f86c2c9ee51ffb9daa8310d8ce1",
+    "reference.py": "93dc7e983c851c84a5bcf80718c9928fefa4f03ecd41cf4c96bfd74454276750",
+    "reference.rs": "07eac6f715d6e268f7d49e37d1f7a2d7937a0643502293a82c615723da70abf0"
+  },
+  "stage": "actual public Interpreter::new/load_table/evaluate, synthetic AML, all services trapped; no private mirrors",
+  "upstream_sha256": {
+    "Cargo.toml": "437a679d0f958db2171af775e0a1368ac35edd4cc0a48ec8b449233750db61cf",
+    "LICENCE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "LICENCE-MIT": "d7ed579f795c55b1b9f734f3f1ac6410ba84fef011acf3aaff95d0c9fe6cdd77",
+    "src/address.rs": "38048355ffe9b7c956e3ebaf84effdadca7defffd70c07feb0587e1c85fbb20a",
+    "src/aml/mod.rs": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+    "src/aml/namespace.rs": "311f3d9b5fbcb08395dcde0b5dce5455e932ad4a8fb6c273580d80c507b2f347",
+    "src/aml/object.rs": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+    "src/aml/op_region.rs": "43f7430d7aa41625f944bf66ffccc7f9bed7d403ff1979a9a2c09dedba7bf69b",
+    "src/aml/pci_routing.rs": "4c2371d38c0a67cab28ab686c8ad6374577e012cd02f561d4730e2f7895dcc39",
+    "src/aml/resource.rs": "abca9e6c8c60e40730cc11b2304acf37e2171942097f8871f5f8a8c7911fae09",
+    "src/lib.rs": "09fcc41658affdc55f6d8c0cb2b29b642d908879a07ed735014b70c7935335c7",
+    "src/platform/interrupt.rs": "c9a95f11b49535cd2baee66bdb55944870df284d3bc65f7a0e34416c5631c2bf",
+    "src/platform/mod.rs": "e49bb52792f164f1001a397bee489dc9dda8f3501681072a21396f4d276c87b5",
+    "src/platform/numa.rs": "93371276644afdf0dee1cf8b8215bb24c54a485552f045705b88424e69139596",
+    "src/platform/pci.rs": "5ad4a415a5037a741a7312d950299640a83905d454ba0eb4d40925c47a90d0c0",
+    "src/registers.rs": "9d8ed68f84cf8659f7822b0edd97fd7153a99bcca39de44b3726c6d5c00990a8",
+    "src/rsdp.rs": "ca2389abeffce9de4e1e28a87b9097c195a737f4dfa0beca5d2ccb23067f824c",
+    "src/sdt/bgrt.rs": "33baf3f6d386a091dc7ad13fb902ed4a265bbebd9809dd122d107981ea5cf5bb",
+    "src/sdt/facs.rs": "6977a2857c78c2bb07e880f555a738278571c4e5e9e173cc1375ca600da161d8",
+    "src/sdt/fadt.rs": "3b213e82029458b0c4c2633b232f2e3f1b4f9f59c07c5ac201286fb54a7927b7",
+    "src/sdt/hpet.rs": "ad52bbf848ac167a26561838d2695579b780b174006d9b553f8b154e74e6aca5",
+    "src/sdt/madt.rs": "4decb527324cd1aec925b20adc517d56f88ea80cc8c1cd50741a15b7da927ac0",
+    "src/sdt/mcfg.rs": "c33d9c34b0e270f5a7b3bf1817853aa07e7cb800030eace6447b915b4651900b",
+    "src/sdt/mod.rs": "136cb4b65a02f8e0bb3949543ff4f55fdaa540117010540cc4fe770e400a7052",
+    "src/sdt/slit.rs": "46b271c98f0071b65ccccce36db98aa8d8e4a8929c99bf81cd0ad90e5703ba52",
+    "src/sdt/spcr.rs": "bcd71238ac0a4a08946380508cc4d72762eb93cd7935fc4cc5fbad8519721fbd",
+    "src/sdt/srat.rs": "a73a29fff2fc609f3012c096a1f860d2f577593ef7995f9518e2b34f05b87b66"
+  }
+}
