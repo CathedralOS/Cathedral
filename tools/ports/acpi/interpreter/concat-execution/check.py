@@ -9,7 +9,7 @@ def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def digest(text):return hashlib.sha256(text.encode()).hexdigest()
 def snapshot():
     paths=list((ROOT/'source/libraries/acpi').rglob('*.omg'))
-    paths += [HERE/'fixtures.py',HERE/'check.py',fixtures.COMPARATOR,HERE.parent/'execution/checked_runner.rs',HERE.parent/'execution/runner.Cargo.lock']
+    paths += [HERE/'fixtures.py',HERE/'check.py',fixtures.COMPARATOR,fixtures.RETIRE_FIXTURES,HERE.parent/'execution/checked_runner.rs',HERE.parent/'execution/runner.Cargo.lock']
     return {str(p.relative_to(ROOT)):sha(p) for p in sorted(set(paths))}
 def build():
     text='machine build(builder:&mut Build){builder.package("concat-execution");builder.freestanding=true;'

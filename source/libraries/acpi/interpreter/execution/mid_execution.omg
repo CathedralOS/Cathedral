@@ -1,0 +1,162 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified do_mid composition from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5,
+// src/aml/mod.rs:2137. Copyright 2018 Isaac Woods. Primary bounds and conversion
+// rules follow ACPI 6.6 19.6.86 and 19.3.5. No provider or field access.
+module mid_execution;
+use aml::model::ObjectStore;
+use aml::model::Value;
+use aml::model::Object;
+use aml::model::ByteBlock;
+use aml::model::BufferStorage;
+use aml::model::StringStorage;
+use aml::model::Outcome;
+use aml::model::ReferenceState;
+use aml::object_references::unwrap_transparent;
+use aml::object_mid;
+use aml::object_mid::Portion;
+use aml::implicit_conversions;
+use aml::implicit_conversions::ImplicitResult;
+use aml::implicit_conversions::ConversionTarget;
+use execution_model::ExecutionOutcome;
+use execution_model::Operand;
+use execution_model::SlotResult;
+use execution_model::Slot;
+use execution_model::Frame;
+use execution_model::Target;
+use execution_model::Binding;
+use named_store::conversion_outcome;
+use generic_target_bridge::write_generic_target;
+use generic_targets::select_target;
+use generic_target_values::classify_target;
+use generic_target_model::TargetSelection;
+use generic_target_model::TargetAction;
+use operands::contribute_operand;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::integers::normalize;
+use integer_helpers::conversions;
+
+// Preparation contains detached bytes. All mutation below is staged until
+// allocation, target conversion and parent contribution have succeeded.
+data MidPrepared [copy] {outcome:ExecutionOutcome;string:bool;length:u64;bytes:[u8;256];}
+data MidStage [copy] {store:ObjectStore;frame:Frame;}
+pub machine retire_mid(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,source:Operand,index:Operand,requested:Operand,target:Target)->ExecutionOutcome {
+ let start:SlotResult=mid_integer(input,frame.source_length,frame.body.unit,store,frame.size,index);
+ transition start.outcome==ExecutionOutcome::Success {true -> length(input,store,frame,source,start.slot.number,requested,target) _ -> (start.outcome)}
+ state length(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,source:Operand,index:u64,requested:Operand,target:Target)->ExecutionOutcome {
+  let length:SlotResult=mid_integer(input,frame.source_length,frame.body.unit,store,frame.size,requested);
+  transition length.outcome==ExecutionOutcome::Success {true -> prepare(input,store,frame,source,index,length.slot.number,target) _ -> (length.outcome)}
+ }
+ state prepare(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,source:Operand,index:u64,requested:u64,target:Target)->ExecutionOutcome {
+  let prepared:MidPrepared=mid_source(input,frame.source_length,frame.body.unit,store,frame.size,source,index,requested);
+  transition prepared.outcome==ExecutionOutcome::Success {true -> target(input,store,frame,prepared,target) _ -> (prepared.outcome)}
+ }
+ state target(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,prepared:MidPrepared,target:Target)->ExecutionOutcome {
+  let admitted:ExecutionOutcome=mid_original_target(store,frame,target);
+  transition admitted==ExecutionOutcome::Success {true -> stage(input,store,frame,prepared,target) _ -> (admitted)}
+ }
+ state stage(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,prepared:MidPrepared,target:Target)->ExecutionOutcome {
+  let mut staged:MidStage=MidStage {store:store,frame:frame};
+  let result:ExecutionOutcome=mid_apply(input,&mut staged,prepared,target);
+  transition result==ExecutionOutcome::Success {true -> publish(store,frame,staged) _ -> (result)}
+ }
+ state publish(store:&mut ObjectStore,frame:&mut Frame,staged:MidStage)->ExecutionOutcome {
+  store=staged.store;frame=staged.frame;ExecutionOutcome::Success
+ }
+}
+// Allocation must not make an originally invalid target identity valid. The
+// fresh result changes no existing object or binding, so the canonical bridge
+// will select the same action after this preflight and private allocation.
+machine mid_original_target(store:&ObjectStore,frame:&Frame,target:Target)->ExecutionOutcome {
+ let selected:TargetSelection=select_target(frame,target);
+ let action:TargetAction=classify_target(store,selected,Operand::Uninitialized,false);
+ transition action {
+  TargetAction::Failure {outcome} -> (outcome)
+  TargetAction::CopyTo {object_id,result_binding} -> existing(store,object_id)
+  TargetAction::StoreNamed {object_id} -> existing(store,object_id)
+  TargetAction::Replace {binding} -> binding(store,binding)
+  TargetAction::NoWrite -> (ExecutionOutcome::Success)
+ }
+ state binding(store:&ObjectStore,binding:Binding)->ExecutionOutcome {
+  transition binding {Binding::Cell {cell_id} -> existing(store,cell_id) _ -> (ExecutionOutcome::Success)}
+ }
+ state existing(store:&ObjectStore,id:u64)->ExecutionOutcome {
+  let count:u64=store.space.object_count;
+  transition count<=64 && id<count && id<64 {true -> (ExecutionOutcome::Success) _ -> (ExecutionOutcome::MissingObject)}
+ }
+}
+machine mid_integer(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,operand:Operand)->SlotResult {
+ transition operand {
+  Operand::Uninitialized -> (SlotResult {outcome:ExecutionOutcome::Uninitialized})
+  Operand::Integer {number} -> scalar(size,number)
+  Operand::Object {object_id} -> object(input,length,unit,store,size,object_id)
+ }
+ state scalar(size:IntegerSize,number:u64)->SlotResult {let value:u64=normalize(size,number);SlotResult {slot:Slot {initialized:true,number:value}}}
+ state object(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64)->SlotResult {
+  let found:ReferenceState=unwrap_transparent(&store.space,id,64);
+  transition found.outcome==Outcome::Success {true -> convert(input,length,unit,store,size,found.object) _ -> failed(found.outcome)}
+ }
+ state failed(outcome:Outcome)->SlotResult {let error:ExecutionOutcome=mid_reference_error(outcome);SlotResult {outcome:error}}
+ state convert(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64)->SlotResult {
+  let converted:ImplicitResult=implicit_conversions::convert(input,length,unit,store,id,size,ConversionTarget::Integer);
+  transition converted {ImplicitResult::Integer {number} -> (SlotResult {slot:Slot {initialized:true,number:number}})
+   ImplicitResult::Failure {reason} -> failed_conversion(reason) _ -> (SlotResult {outcome:ExecutionOutcome::InvalidState})}
+ }
+ state failed_conversion(reason:aml::object_conversions::ConversionFailure)->SlotResult {
+  let error:ExecutionOutcome=conversion_outcome(reason);SlotResult {outcome:error}
+ }
+}
+machine mid_reference_error(outcome:Outcome)->ExecutionOutcome {
+ transition outcome {Outcome::ReferenceCycle -> (ExecutionOutcome::ReferenceCycle) Outcome::WorkLimit -> (ExecutionOutcome::WorkLimit) _ -> (ExecutionOutcome::InvalidState)}
+}
+machine mid_source(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,operand:Operand,index:u64,requested:u64)->MidPrepared {
+ transition operand {Operand::Uninitialized -> (MidPrepared {outcome:ExecutionOutcome::Uninitialized})
+  Operand::Integer {number} -> scalar(size,number,index,requested)
+  Operand::Object {object_id} -> object(input,length,unit,store,size,object_id,index,requested)}
+ state object(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,index:u64,requested:u64)->MidPrepared {
+  let found:ReferenceState=unwrap_transparent(&store.space,id,64);
+  transition found.outcome==Outcome::Success && found.object<64 {true -> value(input,length,unit,store,size,found.object,index,requested) _ -> failed(found.outcome)}
+ }
+ state failed(outcome:Outcome)->MidPrepared {let error:ExecutionOutcome=mid_reference_error(outcome);MidPrepared {outcome:error}}
+ state value(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,index:u64,requested:u64)->MidPrepared {
+  transition store.space.objects[id].value {Value::Integer {number} -> scalar(size,number,index,requested)
+   Value::Uninitialized -> (MidPrepared {outcome:ExecutionOutcome::Uninitialized}) _ -> bytes(input,length,unit,store,id,index,requested)}
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,id:u64,index:u64,requested:u64)->MidPrepared {
+  let portion:Portion=object_mid::extract(input,length,unit,store,id,index,requested);
+  transition portion {Portion::Buffer {length,bytes} -> (MidPrepared {length:length,bytes:bytes})
+   Portion::String {length,bytes} -> (MidPrepared {string:true,length:length,bytes:bytes})
+   Portion::Failure {reason} -> failed_conversion(reason)}
+ }
+ state failed_conversion(reason:aml::object_conversions::ConversionFailure)->MidPrepared {
+  let error:ExecutionOutcome=conversion_outcome(reason);MidPrepared {outcome:error}
+ }
+ // Integer's highest-priority allowed source conversion is Buffer (Table19.6).
+ state scalar(size:IntegerSize,number:u64,index:u64,requested:u64)->MidPrepared {
+  let normalized:u64=normalize(size,number);let mut bytes:[u8;256];
+  let encoded:IntegerResult=conversions::integer_to_buffer(size,normalized,&mut bytes);
+  let mut prepared:MidPrepared=MidPrepared {};
+  let copied:IntegerResult=conversions::mid(&bytes,encoded.value,index,requested,&mut prepared.bytes);
+  prepared.length=copied.value;
+  transition encoded.error==0 && copied.error==0 {true -> (prepared) _ -> (MidPrepared {outcome:ExecutionOutcome::Capacity})}
+ }
+}
+machine mid_apply(input:&[u8;1024],staged:&mut MidStage,prepared:MidPrepared,target:Target)->ExecutionOutcome {
+ let id:u64=staged.store.space.object_count;
+ transition id<64 && staged.store.space.count<=32 && prepared.length<=256 {true -> allocate(input,staged,prepared,target,id) _ -> (ExecutionOutcome::Capacity)}
+ state allocate(input:&[u8;1024],staged:&mut MidStage,prepared:MidPrepared,target:Target,id:u64)->ExecutionOutcome {
+  let value:Value=mid_value(prepared.string,id);
+  staged.store.space.objects[id]=Object {value:value};
+  staged.store.bytes.blocks[id]=ByteBlock {initialized:true,length:prepared.length,bytes:prepared.bytes};
+  staged.store.space.object_count=id+1;
+  let written:ExecutionOutcome=write_generic_target(input,&mut staged.store,&mut staged.frame,target,Operand::Object {object_id:id},false);
+  transition written==ExecutionOutcome::Success {true -> contribute(staged,id) _ -> (written)}
+ }
+ state contribute(staged:&mut MidStage,id:u64)->ExecutionOutcome {
+  let result:ExecutionOutcome=contribute_operand(&mut staged.frame,Operand::Object {object_id:id});result
+ }
+}
+machine mid_value(string:bool,id:u64)->Value {
+ transition string {true -> (Value::String {string_storage:StringStorage::Owned {string_owner:id}})
+  _ -> (Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:id}})}
+}

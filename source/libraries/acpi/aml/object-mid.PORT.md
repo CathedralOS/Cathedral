@@ -61,3 +61,8 @@ python3 tools/ports/acpi/aml/object-mid/inventory.py --check
 python3 tools/ports/acpi/aml/object-mid/check.py
 python3 tools/ports/acpi/aml/object-mid/check.py --verify-record
 ```
+
+The separate [opcode composition](../interpreter/execution/mid.PORT.md) adds
+operand conversion, target writes and retirement in its declared bounded profile.
+It owns separate execution receipts; the unchanged pure-helper results above
+retain their original source identity.
