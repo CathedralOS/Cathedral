@@ -1,0 +1,15 @@
+{
+  "status": "mixed diagnostic result, not full read execution proof",
+  "checked_utc": "2026-09-21 23:49 UTC",
+  "passed": [
+    "direct decoder",
+    "changed expectation control",
+    "real dispatcher in separate Runtime",
+    "real dispatcher in nested Session",
+    "pending poll"
+  ],
+  "excluded_assertion": "parent_full inherited an InvalidState expectation from the synthetic-turn probe. The real dispatcher retires an operation whose operand count equals total before decoding; the deliberately failing retire_operation stub returns UnsupportedValue. The five reached decoder/dispatch paths passed. The parent_full selection cannot establish full-parent decoder behavior through this dispatcher.",
+  "original_exit_code": 1,
+  "rerun": "Not repeated: exact direct-decoder full-parent check already passed in the prior decoder bundle; this extra selection does not model a reachable decoder call.",
+  "manifest_sha256": "9ca020031c5e520f0fbd65f4aa26c9ebcb7e2148ee45306cc011a29cccbd02f5"
+}

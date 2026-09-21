@@ -45,8 +45,27 @@ correctness. Their generators retain historical absolute input paths; the shared
 declaration input is copied in `evidence/diagnostic-data/`, and the generated
 standalone main/build files are sufficient for direct diagnostic replay.
 
-At this checkpoint the full read corpus and an external staged diagnostic remain
-in progress. Their future results are not included in the claims above. Frozen
+The subsequent [dispatch diagnostic](evidence/dispatch-micro/interpretation.json)
+retains five passing selections and one failed expectation, with the original
+exit code 1 and full output. It adds the real dispatcher and named operand path,
+but supplies the resolved name synthetically. The failed `parent_full` selection
+reaches the deliberately failing retirement stub before decoding, so its inherited
+decoder expectation does not describe that route. This mixed diagnostic provides
+no complete Program or Field-read success claim.
+
+Two authored defects are identified in the unchanged production draft:
+`turn::pending` transitions directly to the separate machine `prepare`, and
+`complete::word` transitions directly to the separate machine `received`.
+Omega state transitions must remain within their machine; these calls need
+local wrapper states. Whether they explain the earlier equality trap remains
+under investigation. The full 70-pair run was therefore
+[stopped as superseded](evidence/full70-stopped/manifest.json), before any
+`CHECKED` or behavior output. Its exact generated main/build, 130 bound input
+hashes, runner hash, process identity, empty pre-stop log, SIGTERM action and
+reaped wrapper exit code 1 are retained. No full-corpus result is claimed.
+
+At this checkpoint the external staged diagnostic remains in progress, and the
+two production fixes are pending. Its future results are not included here. Frozen
 production and fixture bytes remain unchanged by this documentation/evidence
 checkpoint. No native execution, hardware/provider callback, grant, mapping,
 lock acquisition, or Field write capability is claimed. ACPI-005 and whole

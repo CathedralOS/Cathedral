@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/private/tmp/cathedral-field-reads-current/tools/ports/acpi/pipeline/field-reads/check.py", line 131, in <module>
+    main()
+  File "/private/tmp/cathedral-field-reads-current/tools/ports/acpi/pipeline/field-reads/check.py", line 108, in main
+    assert process.wait() == 0
+AssertionError

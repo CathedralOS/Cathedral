@@ -1,0 +1,171 @@
+{
+  "kind": "Incremental real execution_turn and named_operand diagnostic; deterministic field-name decode; unrelated dispatch/validation/contribution fail if reached; flattened declarations, no loader/provider proof.",
+  "sources": {
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/decode_execution.omg": "50bbb8d44093b37af883b667248f88ca8992dae9c1c59e646cf9f37d545c79e4",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/generic_values.omg": "b888247c49df0269690bcce584224b518d6e143d32a2e7efc0769776f86d2c92",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/object_references.omg": "4c06bb925681f2e833ebb815b15e5e53d476f08810d0252e77a977af4134b703",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/operands.omg": "de9520bb6911c526bd57187b395255289a6eaab81269473a8aeaca7a01d19348",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/engine.omg": "41ec60725c8d2aeee649e902357437a734587bad01975d77970500090b63b386",
+    "/tmp/cathedral-field-read-admission-micro/main.omg": "b0cb2eed372e1d2d28130c48c5dbfe1beee0e11bf46960c6c153ef1ff3693f70",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/execution_names.omg": "fc720353ec5bcbc716d2ac9517adbac8d01fe864292443c85cd9107c0a8c1d3e"
+  },
+  "copies": [
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/decode_execution.omg",
+      "machine": "decode_generic_value",
+      "sha256": "620e82f16b78f8bfa4b32066293a1788fe6c8428ff40f24d2f1b9ca8235704fa"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/decode_execution.omg",
+      "machine": "decode_commit_cursor",
+      "sha256": "36f33f75ee45100bb39e57e873f1780ec4855252d9fd95f315da39ba9eadc7a4"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/generic_values.omg",
+      "machine": "object_outcome",
+      "sha256": "161e3e5dc1ba661f8a399cbd04f4a4776668f954666f3f45b0321ac7990dd7f7"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/generic_values.omg",
+      "machine": "read_value",
+      "sha256": "8de4a58e33249e8c255cefab60848218212aeee68d2bd2111e950ddd18368f08"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/object_references.omg",
+      "machine": "unwrap_transparent",
+      "sha256": "7223fc37ea47dd4327a8a90160df787cee15daa4e7ae77f41c7f634c50842a3a"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/object_references.omg",
+      "machine": "or_unwrap",
+      "sha256": "c0632ff1a2f9148a37dfef23f641ba19e86b707edb33895c10221625a4186ecf"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/object_references.omg",
+      "machine": "or_reference_walk",
+      "sha256": "68b93adcf52e57713ce594efce36ec37c997874f37cd883aac917974f11c62cb"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/object_references.omg",
+      "machine": "or_reference_bounded_step",
+      "sha256": "15bd65b3f0fbffd784e570b1a30a5f78ce041b1da582b5cecff8cb59ec4f4c08"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/aml/object_references.omg",
+      "machine": "or_reference_step",
+      "sha256": "20eb2ee00f9727ad1b99d572cfcf92e7391ca4fbfe891f03f3798748a6ffd6ee"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/operands.omg",
+      "machine": "operation_header",
+      "sha256": "80067d647f63bf778d61131fe8b129071175ba79d779b2b4ab624e728fe45447"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/engine.omg",
+      "machine": "pending_read",
+      "sha256": "61c3d04d3e708dcd22f04218f1019d6faf02d150759cbbef866307bf2321404f"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/engine.omg",
+      "machine": "advance_read_runtime",
+      "sha256": "0a3f88831f89408ffbed80561a7905f66eb0361925735af89a2c9c160effe2f5"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/engine.omg",
+      "machine": "execution_run_turn",
+      "sha256": "e89eb1a0e76667ca4c2c985f7932012d7ea50adbf394e1112fcb555ed4c1709c"
+    },
+    {
+      "source": "/tmp/cathedral-field-read-admission-micro/main.omg",
+      "machine": "seeded",
+      "sha256": "8d228c1f4b3ad5352250d9927234aeffce00a5b89f37d297d4f77586f8df3ee0"
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/engine.omg",
+      "machine": "execution_turn",
+      "original_sha256": "be1007cbfa50bf1e94a622e07b172b6f52d671304c434e0d0cb8b2263906fc34",
+      "copied_sha256": "be1007cbfa50bf1e94a622e07b172b6f52d671304c434e0d0cb8b2263906fc34",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/operands.omg",
+      "machine": "current_operation",
+      "original_sha256": "ee082722de1bbdf4ff25b414130ceb8c6c538f68eade2f0237d0616f56293508",
+      "copied_sha256": "ee082722de1bbdf4ff25b414130ceb8c6c538f68eade2f0237d0616f56293508",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/operands.omg",
+      "machine": "pop_operation",
+      "original_sha256": "62e86bba437c6c6985a9cea7c51b6362bec0536b72268bcc6111fc3f231f092e",
+      "copied_sha256": "62e86bba437c6c6985a9cea7c51b6362bec0536b72268bcc6111fc3f231f092e",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/operands.omg",
+      "machine": "push_operation",
+      "original_sha256": "eb226261cfd8f60664bc610e14aabcbab1a84c14c1e03b83d20dcc535ecbc27a",
+      "copied_sha256": "eb226261cfd8f60664bc610e14aabcbab1a84c14c1e03b83d20dcc535ecbc27a",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/decode_execution.omg",
+      "machine": "named_operand",
+      "original_sha256": "0d98304cf76e0ab6beb1d0333adf6cc2abc42f2b879366f9df34ca7c8c7365cd",
+      "copied_sha256": "3836dc420d9e76b10459545e51bd011f9c0edb4e2659a27ca0d052845d3c0058",
+      "substitutions": [
+        [
+          "aml::model::Span",
+          "Span"
+        ]
+      ]
+    }
+  ],
+  "base_manifest_sha256": "a428539fec250ac5af97f0a1272a5153d54e02b6e206e48b606163d492c49b3b",
+  "base_manifest": "/tmp/cathedral-field-read-decoder-micro/manifest.json",
+  "main_sha256": "183c9d1eb878875587788407e0e33d76f81253fc4b59249fc38016bdd41e8872",
+  "build_sha256": "579821d252ba39f925b5c3b7664a7076a672ac3f2febe49ed3ad39ba6482eb5e",
+  "generator_sha256": "d4645b2d6f3024fd6360846651d8aa65e5d5ac2c092ca913671ead17438441af",
+  "selections": [
+    "DecoderProbe::direct=0",
+    "DecoderProbe::changed_expectation=1",
+    "DecoderProbe::runtime=0",
+    "DecoderProbe::session=0",
+    "DecoderProbe::pending_poll=0",
+    "DecoderProbe::parent_full=0"
+  ],
+  "stubs": [
+    "decode_term supplies real fixture Field object1 and cursor38 to exact named_operand",
+    "validate_operand/contribute_operand/complete_frame/finish_block/decode_target/invoke_frame/retire_operation fail with UnsupportedValue"
+  ],
+  "substitutions": [
+    [
+      "synthetic execution_turn",
+      "exact original execution_turn"
+    ],
+    [
+      "aml::model::Span",
+      "Span in copied named_operand only"
+    ]
+  ],
+  "named_result_declaration_sha256": "01340c251812da4f659347bc4292951029838fb8243a5a6ae36002da0fdce0bb",
+  "runner": "/tmp/cathedral-field-protocol-target/release/cathedral-acpi-checked-runner",
+  "runner_sha256": "4055e1d9cbc364859aeaaecc32148b1eaefa6cf04b3330076f816ce9bf9401dc",
+  "run_script_sha256": "5e862362754e7ef87efd68e86ff2d4573640bcb2db7134b16af4b10f71f75dbb",
+  "command": [
+    "/tmp/cathedral-field-protocol-target/release/cathedral-acpi-checked-runner",
+    "/private/tmp/cathedral-field-read-dispatch-micro/main.omg",
+    "/private/tmp/cathedral-field-read-dispatch-micro/build",
+    "DecoderProbe::direct=0",
+    "DecoderProbe::changed_expectation=1",
+    "DecoderProbe::runtime=0",
+    "DecoderProbe::session=0",
+    "DecoderProbe::pending_poll=0",
+    "DecoderProbe::parent_full=0"
+  ],
+  "exit_code": 1,
+  "elapsed_seconds": 482.138312083,
+  "output": "CHECKED authored package and dependency bodies; native publication NOT requested\nPASS DecoderProbe::direct expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 2231, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 51145, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS DecoderProbe::changed_expectation expected=1 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 2221, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 51145, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS DecoderProbe::runtime expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 2446, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 51145, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS DecoderProbe::session expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 2438, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 51145, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS DecoderProbe::pending_poll expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 2480, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 51145, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nFAIL DecoderProbe::parent_full expected=0 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 526, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 51145, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\n",
+  "output_sha256": "bce22902ef513f1539aaa090b1644a947807627dc723afa8c4b809adc42f5765",
+  "inputs_unchanged": true
+}

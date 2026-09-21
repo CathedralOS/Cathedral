@@ -7,6 +7,13 @@ first actual Field-read pair fails checked interpretation with
 also failed. No successful Field-read execution is claimed; see the exact
 [verification status](../../../../tools/ports/acpi/pipeline/field-reads/STATUS.md).
 
+The current source also contains two identified authored defects: `turn::pending`
+transitions to the separate `prepare` machine, and `complete::word` transitions
+to the separate `received` machine. These require local calling states under
+Omega's machine-local transition rule. The full 70-pair run was stopped before
+checked/behavior results; exact inputs and termination evidence are retained.
+Production remains unchanged while the staged diagnostic and wrapper check run.
+
 This draft implements method execution intended to suspend on a normal Field read
 and continue after an explicit caller-supplied native-word completion. It performs
 no provider call, physical access, mapping, grant redemption or lock operation.

@@ -88,6 +88,54 @@
     "diagnostic-data/session-micro-main.omg": {
       "copied_from": "/tmp/cathedral-field-read-equality-session-micro/main.omg",
       "sha256": "5b5cc66cc766ae21953243232ee278f247bb109faa1a392c2cb233fb661bb1e3"
+    },
+    "full70-stopped/main.omg": {
+      "copied_from": "/tmp/cathedral-field-reads-full70-stopped/main.omg",
+      "sha256": "947053d3516c39d6723bf8cb9bed152808e45f15cb5744e13a8be9022d234c7a"
+    },
+    "full70-stopped/build.omg": {
+      "copied_from": "/tmp/cathedral-field-reads-full70-stopped/build.omg",
+      "sha256": "c2e596eff7dc6a433c7903e64495ac67665563f6d0d4c388eb334b1db426595f"
+    },
+    "full70-stopped/manifest.json": {
+      "copied_from": "/tmp/cathedral-field-reads-full70-stopped/manifest.json",
+      "sha256": "dd8651d258434570cd4703fb0d4da3025d14ff090b8a44da274dbbc8c030829d"
+    },
+    "full70-stopped/before-stop.log": {
+      "copied_from": "/tmp/cathedral-field-reads-full70-stopped/before-stop.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "full70-stopped/terminal.log": {
+      "copied_from": "/tmp/cathedral-field-reads-full70-stopped/terminal.log",
+      "sha256": "9db0bb871b3e8a7ab41a44cb885210a74984fe9624a8452d712b82d6501768b6"
+    },
+    "dispatch-micro/main.omg": {
+      "copied_from": "/tmp/cathedral-field-read-dispatch-micro/main.omg",
+      "sha256": "183c9d1eb878875587788407e0e33d76f81253fc4b59249fc38016bdd41e8872"
+    },
+    "dispatch-micro/build.omg": {
+      "copied_from": "/tmp/cathedral-field-read-dispatch-micro/build.omg",
+      "sha256": "579821d252ba39f925b5c3b7664a7076a672ac3f2febe49ed3ad39ba6482eb5e"
+    },
+    "dispatch-micro/generate.py": {
+      "copied_from": "/tmp/cathedral-field-read-dispatch-micro/generate.py",
+      "sha256": "d4645b2d6f3024fd6360846651d8aa65e5d5ac2c092ca913671ead17438441af"
+    },
+    "dispatch-micro/run.py": {
+      "copied_from": "/tmp/cathedral-field-read-dispatch-micro/run.py",
+      "sha256": "5e862362754e7ef87efd68e86ff2d4573640bcb2db7134b16af4b10f71f75dbb"
+    },
+    "dispatch-micro/manifest.json": {
+      "copied_from": "/tmp/cathedral-field-read-dispatch-micro/manifest.json",
+      "sha256": "9ca020031c5e520f0fbd65f4aa26c9ebcb7e2148ee45306cc011a29cccbd02f5"
+    },
+    "dispatch-micro/output.log": {
+      "copied_from": "/tmp/cathedral-field-read-dispatch-micro/output.log",
+      "sha256": "bce22902ef513f1539aaa090b1644a947807627dc723afa8c4b809adc42f5765"
+    },
+    "dispatch-micro/interpretation.json": {
+      "copied_from": "/tmp/cathedral-field-read-dispatch-micro/interpretation.json",
+      "sha256": "934afe7777eaee2646e5773e274801b1a49c1b6a7db86acba9623d2b95b300de"
     }
   },
   "regression_harness_sha256": "502fecf6cffc006f7cea7d74061a2c909c1d7ac088e5cf46a9453950bf9b382a"

@@ -1,0 +1,1 @@
+machine build(builder:&mut Build){builder.package("field-read-dispatch-micro");builder.freestanding=true;}
