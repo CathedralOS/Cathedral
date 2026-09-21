@@ -1,0 +1,78 @@
+{
+  "cases": [
+    "empty",
+    "two_resources",
+    "right_one",
+    "short_capacity"
+  ],
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "runs": [
+    {
+      "case": "empty",
+      "control": false,
+      "output": "compiled 19 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-e6fb152db931bffa057bafc43db785bb6c6ca865b0b39b02197ce4254505ce8b/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "empty",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-acpi-resource-composition-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "case": "two_resources",
+      "control": false,
+      "output": "compiled 19 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-be90befa8993d1a55b4f2274910f6dc43b099f116ec5e2c16ace5d511c59219c/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "two_resources",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-acpi-resource-composition-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "case": "right_one",
+      "control": false,
+      "output": "compiled 19 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-1ae2bea7a106a7243503b6faa7eedc145b6a2b6a95ac6eb609ae159294174137/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "right_one",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-acpi-resource-composition-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "case": "short_capacity",
+      "control": false,
+      "output": "compiled 19 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-a17802d541a6735c7c4705dec0c59f81b04529c14cfb9e5cd5ad59b1d62285dd/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "short_capacity",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-acpi-resource-composition-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    }
+  ],
+  "source_sha256": {
+    "source/libraries/acpi/build.omg": "a640732241d3b87e71c8bb4c10884d257004c70b41e9fc456d113b3fb1f1e71b",
+    "source/libraries/acpi/bytes.omg": "98525284c96f0566233c80d68448a1d7262c51c8c7077092d9281f621137898f",
+    "source/libraries/acpi/fixed_bytes.omg": "7b61c707f3425c8fe0e1f4afb043562cdc394686ae980d34e45b53ed32a61cf5",
+    "source/libraries/acpi/headers.omg": "3bc53060656dd0f508b23d53732b7e6a497d055b586d690a125af1608d480626",
+    "source/libraries/acpi/resource_composition/build.omg": "3d40f44104494f7f544d6a2d8439ef4eb86203d8baddd704710783135569ae3f",
+    "source/libraries/acpi/resource_composition/concatenate.omg": "37d922ce6def24cb21701772da53e6d4e924480ba487c1c589842334b548e19f",
+    "source/libraries/acpi/resources/build.omg": "56e6e6d5825ad60b76cfcaf7a44396e20e718baace57eb9ffc6b3f28c5319627",
+    "source/libraries/acpi/resources/resource_bytes.omg": "f418e543295b1554b6070d98e8dff187a2600de655b1710b8f87b30a8620c0f9",
+    "source/libraries/acpi/resources/resource_connections.omg": "b6d251bfb8ccaae253f63b0aa67914453472a1f912acfc0639003d2521ceed06",
+    "source/libraries/acpi/resources/resource_irq.omg": "c4ae4e32247b7db9a251c5e3569e811d5669e6b502b9a4bb780c236c59225e88",
+    "source/libraries/acpi/resources/resource_model.omg": "2f256a7a4ead0a9c4ec74105ad782801d7079c83e56e6c2972d69e5a4529b977",
+    "source/libraries/acpi/resources/resource_parse.omg": "078701e28215d89dc50ecef17a281926592c77edddeb6d5214e4f8d54ef12c3a",
+    "source/libraries/acpi/resources/resource_template.omg": "ecf6efa1276680a00a0e3c4f0cc48e1294c56cdbe7a28eaf5be74df153a90b1c",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805",
+    "tools/ports/acpi/resource-composition/build.omg": "58fd623abd03a6c5755dc99e623bacdb5fbe861319ed41a3da31d24a5a6a5814",
+    "tools/ports/acpi/resource-composition/cases.json": "4b906c091b8f7a3dba9530db83c8dc9051b469aebb4d03d6aad145ea6e470713",
+    "tools/ports/acpi/resource-composition/check.py": "0c057e81600233774a1f33f8b6e4bae093affc6b542ddc89c341f292dee69dd1",
+    "tools/ports/acpi/resource-composition/check_const.py": "c561aa0493b0ea0d707bee45eee0399f5b51d8468dd028a5197b063501f96fd9",
+    "tools/ports/acpi/resource-composition/evidence.py": "402014c15f73029f6c3c43dba2c1ed790f3e773a7fe6a1b8d56de64a8d6c1232",
+    "tools/ports/acpi/resource-composition/fixtures.py": "b41f300460bf8cebcbf9acb06062cfec04a83d20561876c57e13e898ee34b8b4",
+    "tools/ports/acpi/resource-composition/pinned.rs": "010f7622ab5410e2b3c129b4cdf3112a27cd16c34b13adebb46acc6c0ff45cc6",
+    "tools/ports/acpi/resource-composition/reference.py": "a3004de09b55e2bab1918d63c0bae06f34167dc509790a86b2565fadc3044168",
+    "tools/ports/acpi/resource-composition/verify_record.py": "85c14d68f08954f1cf92c6dc8ec4bba6444dd3212b57261af687d1e1f928e8fa"
+  },
+  "stage": "constant evaluation and checked requires; native/hardware not run"
+}

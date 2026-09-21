@@ -1,0 +1,4 @@
+machine build(builder:&mut Build) {
+ builder.package("cathedral-acpi-resource-composition");
+ builder.depend_as("resources",Source::Path{location:"../resources"});
+}

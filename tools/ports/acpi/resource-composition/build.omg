@@ -1,0 +1,6 @@
+machine build(builder:&mut Build) {
+ builder.application("cathedral-acpi-resource-composition-tests");
+ builder.freestanding=true;
+ builder.depend_as("composition",Source::Path{location:"../../../../source/libraries/acpi/resource_composition"});
+ builder.depend_as("resources",Source::Path{location:"../../../../source/libraries/acpi/resources"});
+}

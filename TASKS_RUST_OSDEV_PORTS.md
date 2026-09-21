@@ -439,6 +439,11 @@ opcodes remain pending.
 add 81 checked-interpreter pairs, four const pairs and 62 public Rust observations.
 Primary lexicographic versus pinned length-first Buffer ordering is explicit;
 generic logical opcode conversion/dispatch remains pending.
+[Resource-template composition](source/libraries/acpi/resource_composition/PORT.md)
+adds 25 checked-interpreter pairs and four focused const pairs, with 23 labelled
+private Rust result-block mirrors and nine accepted-profile byte agreements.
+Complete input preflight precedes writes; all 4096 output bytes are checked.
+Generic ConcatRes opcode/target integration remains pending.
 The [integer method executor](source/libraries/acpi/interpreter/execution/PORT.md)
 now passes 79 actual Omega checked-interpreter cases and 79 changed-body controls.
 It executes integer method bytes, nested calls, existing named/alias targets and

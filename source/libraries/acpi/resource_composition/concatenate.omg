@@ -1,0 +1,79 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Bounded adaptation of acpi AML ConcatRes at pin257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Original upstream copyright2018 Isaac Woods; strict input profile is explicit.
+module concatenate;
+use resources::resource_template;
+use resources::resource_model::Outcome;
+use resources::resource_model::Template;
+pub data Composition [copy] {
+ case Capacity;
+ case InvalidLeft(reason:Outcome);
+ case InvalidRight(reason:Outcome);
+ case Composed(length:u64,unsupported:u64);
+}
+data Input [copy] {outcome:Outcome;body_length:u64;unsupported:u64;}
+// Initialized detached buffers only. Complete preflight precedes every write.
+pub machine compose(left:&[u8;4096],left_length:u64,right:&[u8;4096],right_length:u64,capacity:u64,output:&mut [u8;4096])->Composition {
+ transition left_length<=4096 && right_length<=4096 && capacity<=4096 {
+  true -> left_input(left,left_length,right,right_length,capacity,output)
+  _ -> (Composition::Capacity)
+ }
+ state left_input(left:&[u8;4096],a:u64,right:&[u8;4096],b:u64,capacity:u64,output:&mut [u8;4096])->Composition {
+  let first:Input=inspect(left,a);
+  transition first.outcome==Outcome::Success {
+   true -> right_input(left,first,right,b,capacity,output)
+   _ -> (Composition::InvalidLeft{reason:first.outcome})
+  }
+ }
+ state right_input(left:&[u8;4096],first:Input,right:&[u8;4096],b:u64,capacity:u64,output:&mut [u8;4096])->Composition {
+  let second:Input=inspect(right,b);
+  transition second.outcome==Outcome::Success {
+   true -> size(left,first,right,second,capacity,output,first.body_length,second.body_length)
+   _ -> (Composition::InvalidRight{reason:second.outcome})
+  }
+ }
+ state size(left:&[u8;4096],first:Input,right:&[u8;4096],second:Input,capacity:u64,output:&mut [u8;4096],a:u64,b:u64)->Composition {
+  transition a<=4094 && b<=4094 {true -> total(left,first,right,second,capacity,output,a,b) _ -> (Composition::Capacity)}
+ }
+ state total(left:&[u8;4096],first:Input,right:&[u8;4096],second:Input,capacity:u64,output:&mut [u8;4096],a:u64,b:u64)->Composition {
+  transition b<=4094-a && a+b+2<=capacity {true -> write(left,first,right,second,output,a,b) _ -> (Composition::Capacity)}
+ }
+ state write(left:&[u8;4096],first:Input,right:&[u8;4096],second:Input,output:&mut [u8;4096],a:u64,b:u64)->Composition {
+  _=copy_prefix(left,output,0,a,0);
+  _=copy_prefix(right,output,0,b,a);
+  let length:u64=finish(output,a+b);
+  Composition::Composed{length:length,unsupported:first.unsupported+second.unsupported}
+ }
+}
+// ACPI19.6.13 admits empty buffers as empty templates; one-byte input fails.
+// Other inputs must meet the existing strict template parser profile.
+machine inspect(input:&[u8;4096],length:u64)->Input {
+ transition {length==0 -> (Input{outcome:Outcome::Success}) length==1 -> (Input{outcome:Outcome::BadEncoding}) _ -> validate(input,length)}
+ state validate(input:&[u8;4096],length:u64)->Input {
+  let parsed:Template=resource_template::validate_template(input,length);
+  transition parsed.outcome==Outcome::Success && length>=2 {true -> (Input{outcome:Outcome::Success,body_length:length-2,unsupported:parsed.unsupported}) _ -> (Input{outcome:parsed.outcome})}
+ }
+}
+machine copy_prefix(input:&[u8;4096],output:&mut [u8;4096],index:u64,count:u64,start:u64)
+terminates by (index,count)->Nat::BoundedDistance;
+->u8 {
+ _=copy_byte(input,output,index,count,start);
+ transition index<count {true -> copy_prefix(input,output,index+1,count,start) _ -> (0)}
+}
+machine copy_byte(input:&[u8;4096],output:&mut [u8;4096],index:u64,count:u64,start:u64)->u8 {
+ transition index<count && index<4096 && start<4096 {true -> bounds(input,output,index,start) _ -> (0)}
+ state bounds(input:&[u8;4096],output:&mut [u8;4096],index:u64,start:u64)->u8 {
+  transition index<4096-start {true -> write(input,output,index,start+index) _ -> (0)}
+ }
+ state write(input:&[u8;4096],output:&mut [u8;4096],index:u64,target:u64)->u8 {
+  transition index<4096 && target<4096 {true -> store(input,output,index,target) _ -> (0)}
+ }
+ state store(input:&[u8;4096],output:&mut [u8;4096],index:u64,target:u64)->u8 {output[target]=input[index];0}
+}
+machine finish(output:&mut [u8;4096],at:u64)->u64 {
+ transition at<=4094 {true -> endtag(output,at,at+1) _ -> (0)}
+ state endtag(output:&mut [u8;4096],at:u64,last:u64)->u64 {
+  transition at<4096 && last<4096 {true -> store(output,at,last) _ -> (0)}
+ }
+ state store(output:&mut [u8;4096],at:u64,last:u64)->u64 {output[at]=121;output[last]=0;last+1}
+}

@@ -148,6 +148,13 @@ management and comprehensive upstream semantic scenarios. Current loops are boun
 whole ACPI-006 resource-limit milestone. Large cases may also exceed the
 compiler evaluator's own work budget; that is separate from a runtime profile.
 
+The separate [resource-template composition](../resource_composition/PORT.md)
+component passes 25 checked-interpreter pairs and four focused const pairs. It
+validates both detached templates before writing, removes their EndTags and
+appends one new EndTag. Full 4096-byte output preservation is checked, with
+23 explicitly labelled private Rust result-block mirrors. Generic ConcatRes
+argument/target dispatch remains pending.
+
 An OperationRegion declaration remains inert AML metadata in the syntax
 package. This helper package exposes no read/write callback, ambient handler,
 physical mapping, I/O primitive, mutex/event/timer service, or successful stub.

@@ -1,0 +1,511 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/acpi",
+    "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+    "roots": [
+      "src/aml/mod.rs"
+    ]
+  },
+  "files": {
+    "src/aml/mod.rs": {
+      "sha256": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+      "disposition": "pending",
+      "reason": "Partial ConcatRes branch; generic Object/Store/context integration remains pending.",
+      "symbols": {
+        "19:namespace": {
+          "anchor": "pub mod namespace;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "20:object": {
+          "anchor": "pub mod object;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "21:op_region": {
+          "anchor": "pub mod op_region;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "22:pci_routing": {
+          "anchor": "pub mod pci_routing;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "23:resource": {
+          "anchor": "pub mod resource;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "104:BaseInterpreter": {
+          "anchor": "pub struct BaseInterpreter<H, R>",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "110:namespace": {
+          "anchor": "pub namespace: Spinlock<Namespace>,",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "111:object_token": {
+          "anchor": "pub object_token: Spinlock<ObjectToken>,",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "128:NoSendInterpreter": {
+          "anchor": "pub type NoSendInterpreter<H> = BaseInterpreter<H, dyn RegionHandler>;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "131:Interpreter": {
+          "anchor": "pub type Interpreter<H> = BaseInterpreter<H, dyn RegionHandler + Send + Sync>;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "138:INTERPRETER_REVISION": {
+          "anchor": "const INTERPRETER_REVISION: u64 = 1;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "143:MAX_NAME_PATH_INDIRECTIONS": {
+          "anchor": "const MAX_NAME_PATH_INDIRECTIONS: usize = 8;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "153:new": {
+          "anchor": "pub fn new(",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "177:new_from_platform": {
+          "anchor": "pub fn new_from_platform(platform: &AcpiPlatform<H>) -> Result<BaseInterpreter<H, R>, AcpiError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "178:load_table": {
+          "anchor": "fn load_table<H, R>(interpreter: &BaseInterpreter<H, R>, table: AmlTable) -> Result<(), AcpiError>",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "228:load_table": {
+          "anchor": "pub fn load_table(&self, stream: &[u8]) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "236:evaluate": {
+          "anchor": "pub fn evaluate(&self, path: AmlName, args: Vec<WrappedObject>) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "251:evaluate_if_present": {
+          "anchor": "pub fn evaluate_if_present(",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "269:install_region_handler": {
+          "anchor": "pub fn install_region_handler(&self, space: RegionSpace, handler: Box<R>) {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "278:initialize_namespace": {
+          "anchor": "pub fn initialize_namespace(&self) {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "354:acquire_global_lock": {
+          "anchor": "pub fn acquire_global_lock(&self, timeout: u16) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "389:try_do_acquire_firmware_lock": {
+          "anchor": "fn try_do_acquire_firmware_lock(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "415:release_global_lock": {
+          "anchor": "pub fn release_global_lock(&self) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "438:do_release_firmware_lock": {
+          "anchor": "fn do_release_firmware_lock(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "457:do_execute_method": {
+          "anchor": "fn do_execute_method(&self, mut context: MethodContext) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "551:strip_end_tag": {
+          "anchor": "fn strip_end_tag(buf: &[u8]) -> &[u8] {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "749:produced": {
+          "anchor": "\"Invalid argument type produced for package element\".to_string(),",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "781:produced": {
+          "anchor": "\"Invalid argument type produced for package element\".to_string(),",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "816:DEF_ELSE_OP": {
+          "anchor": "const DEF_ELSE_OP: u8 = 0xa1;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "1161:DEF_ELSE_OP": {
+          "anchor": "const DEF_ELSE_OP: u8 = 0xa1;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "1482:in": {
+          "anchor": "warn!(\"Wrong data field type in IndexField: {:?}\", data);",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "1831:parse_field_list": {
+          "anchor": "fn parse_field_list(",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "1839:RESERVED_FIELD": {
+          "anchor": "const RESERVED_FIELD: u8 = 0x00;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "1840:ACCESS_FIELD": {
+          "anchor": "const ACCESS_FIELD: u8 = 0x01;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "1841:CONNECT_FIELD": {
+          "anchor": "const CONNECT_FIELD: u8 = 0x02;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "1842:EXTENDED_ACCESS_FIELD": {
+          "anchor": "const EXTENDED_ACCESS_FIELD: u8 = 0x03;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "1896:do_binary_maths": {
+          "anchor": "fn do_binary_maths(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "1931:do_unary_maths": {
+          "anchor": "fn do_unary_maths(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "1972:do_logical_op": {
+          "anchor": "fn do_logical_op(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2024:do_to_buffer": {
+          "anchor": "fn do_to_buffer(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2057:do_to_integer": {
+          "anchor": "fn do_to_integer(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2068:do_to_string": {
+          "anchor": "fn do_to_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2096:do_to_dec_hex_string": {
+          "anchor": "fn do_to_dec_hex_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2137:do_mid": {
+          "anchor": "fn do_mid(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2171:do_concat": {
+          "anchor": "fn do_concat(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2176:resolve_as_string": {
+          "anchor": "fn resolve_as_string(obj: &Object) -> String {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2233:do_from_bcd": {
+          "anchor": "fn do_from_bcd(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2250:do_to_bcd": {
+          "anchor": "fn do_to_bcd(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2267:do_size_of": {
+          "anchor": "fn do_size_of(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2283:do_index": {
+          "anchor": "fn do_index(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2336:resolve_name_path": {
+          "anchor": "fn resolve_name_path(&self, object: WrappedObject) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2355:object_type": {
+          "anchor": "fn object_type(&self, object: WrappedObject) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2383:do_deref_of": {
+          "anchor": "fn do_deref_of(&self, object: WrappedObject, current_scope: &AmlName) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2406:do_store": {
+          "anchor": "fn do_store(&self, target: WrappedObject, object: WrappedObject) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2488:do_copy_object": {
+          "anchor": "fn do_copy_object(&self, target: WrappedObject, object: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2519:do_field_read": {
+          "anchor": "fn do_field_read(&self, field: &FieldUnit) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2527:Output": {
+          "anchor": "enum Output {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2612:do_field_write": {
+          "anchor": "fn do_field_write(&self, field: &FieldUnit, value: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2714:do_native_region_read": {
+          "anchor": "fn do_native_region_read(&self, region: &OpRegion, offset: usize, length: usize) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2770:do_native_region_write": {
+          "anchor": "fn do_native_region_write(",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2835:pci_address_for_device": {
+          "anchor": "fn pci_address_for_device(&self, path: &AmlName) -> Result<PciAddress, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2862:MethodContext": {
+          "anchor": "struct MethodContext {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2873:Block": {
+          "anchor": "struct Block {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2880:stream": {
+          "anchor": "fn stream(&self) -> &[u8] {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2886:BlockKind": {
+          "anchor": "pub enum BlockKind {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2907:ResolveBehaviour": {
+          "anchor": "enum ResolveBehaviour {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2937:OpInFlight": {
+          "anchor": "struct OpInFlight {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2945:Argument": {
+          "anchor": "enum Argument {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2957:new": {
+          "anchor": "pub fn new(op: Opcode, resolve_behaviour: &'static [ResolveBehaviour]) -> OpInFlight {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2964:new_dynamic": {
+          "anchor": "pub fn new_dynamic(",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2974:new_with_dynamic": {
+          "anchor": "pub fn new_with_dynamic(",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2987:new_with": {
+          "anchor": "pub fn new_with(",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "2996:resolve_behaviour": {
+          "anchor": "fn resolve_behaviour(&self) -> ResolveBehaviour {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3008:new_from_table": {
+          "anchor": "unsafe fn new_from_table(stream: &[u8]) -> MethodContext {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3021:new_from_method": {
+          "anchor": "fn new_from_method(",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3053:contribute_arg": {
+          "anchor": "fn contribute_arg(&mut self, arg: Argument) {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3062:start": {
+          "anchor": "fn start(&mut self, op: OpInFlight) {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3073:retire_op": {
+          "anchor": "fn retire_op(&mut self, op: OpInFlight) {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3077:start_new_block": {
+          "anchor": "fn start_new_block(&mut self, kind: BlockKind, length: usize) {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3087:opcode": {
+          "anchor": "fn opcode(&mut self) -> Result<Opcode, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3227:pkglength": {
+          "anchor": "fn pkglength(&mut self) -> Result<usize, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3243:namestring": {
+          "anchor": "fn namestring(&mut self) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3255:NULL_NAME": {
+          "anchor": "const NULL_NAME: u8 = 0x00;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3256:DUAL_NAME_PREFIX": {
+          "anchor": "const DUAL_NAME_PREFIX: u8 = 0x2e;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3257:MULTI_NAME_PREFIX": {
+          "anchor": "const MULTI_NAME_PREFIX: u8 = 0x2f;",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3305:next": {
+          "anchor": "fn next(&mut self) -> Result<u8, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3316:next_u16": {
+          "anchor": "fn next_u16(&mut self) -> Result<u16, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3320:next_u32": {
+          "anchor": "fn next_u32(&mut self) -> Result<u32, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3324:next_u64": {
+          "anchor": "fn next_u64(&mut self) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3337:peek": {
+          "anchor": "fn peek(&self) -> Result<u8, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3347:Opcode": {
+          "anchor": "enum Opcode {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3465:Operation": {
+          "anchor": "pub enum Operation {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3492:AmlError": {
+          "anchor": "pub enum AmlError {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3568:IntegerSize": {
+          "anchor": "pub enum IntegerSize {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3569:FourBytes": {
+          "anchor": "FourBytes = 4,",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3570:EightBytes": {
+          "anchor": "EightBytes = 8,",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        },
+        "3574:from_revision": {
+          "anchor": "pub fn from_revision(revision: u8) -> IntegerSize {",
+          "disposition": "pending",
+          "reason": "Outside this branch or whole interpreter method incomplete; no aggregate completion claim."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/acpi/resource_composition/concatenate.omg",
+          "anchor": "pub machine compose"
+        }
+      ]
+    }
+  },
+  "scope": "Only the bounded ConcatRes result-construction component; whole interpreter methods remain pending."
+}
