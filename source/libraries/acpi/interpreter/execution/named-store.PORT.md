@@ -60,9 +60,11 @@ write are not rolled back by a later failure.
 
 ## Explicit remaining work
 
-The underlying named Buffer component still admits only positive extents and
-Integer/nonempty String sources. Buffer-to-Buffer Store, empty targets and empty
-String-to-Buffer Store remain explicit profile exclusions, not design blockers.
+The original checkpoint admitted positive Buffer extents and Integer/nonempty
+String sources. The subsequent [equal-extent Buffer slice](../../aml/named-buffer-store.PORT.md)
+adds same-length Buffer copying, including zero. Unequal Buffer extents need the
+narrow compatibility decision documented there. Zero targets for Integer/String
+and empty String conversion remain separate profile gaps.
 Other source conversions, dynamic literals, Field/BufferField target dispatch,
 RefOf/DerefOf/Index bytecodes, complete package cloning, and resource accounting
 remain ordinary implementation work. No aggregate source anchor or task checkbox

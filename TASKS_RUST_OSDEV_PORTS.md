@@ -755,6 +755,15 @@ Local/Arg bindings retain their existing contracts. Broader bytecodes, field
 evaluation and resource accounting remain pending; ACPI-005 and aggregate source
 anchors stay open.
 
+[Equal-extent named Buffer Store](source/libraries/acpi/aml/named-buffer-store.PORT.md) admits Buffer sources when both logical extents match, including zero, self-store
+and source padding. All 97 new and 504 retained complete-state behavior/control
+pairs pass in the recorded isolated worktree, with 12 public Rust observations.
+Those exact production and fixture hashes match the integrated source at
+`ea4557d`; this is retained worktree evidence, not a canonical-path rerun.
+Unequal Buffer extents need a narrow compatibility choice between resize and
+fixed-extent behavior; this does not block other ACPI-005 implementation work.
+Aggregate source anchors remain pending.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

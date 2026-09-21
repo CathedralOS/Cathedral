@@ -9,7 +9,8 @@ The 44 bytecode pairs cover both integer widths, direct basic source/target
 families, Add and Divide result targets, converted Store expression values, namespace
 aliases, transparent versus explicit source references, malformed/cyclic data,
 full-arena scalar publication, and unchanged CopyObject/Local behavior. Buffer
-source to named Buffer remains an explicit unsupported profile case. The 30
+source to an unequal-length named Buffer remains an explicit unsupported profile
+case; subsequent equal-extent support has its own component receipts. The 30
 bridge pairs check every ObjectStore byte and metadata field, including inactive
 slots, and every Frame field after successful and failing writes. Controls
 change expectations inside actual assertion bodies.
