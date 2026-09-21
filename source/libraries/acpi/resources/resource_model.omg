@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified resource.rs from acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Upstream copyright 2018 Isaac Woods; bounded Cathedral adaptation 2026.
+module resource_model;
+pub data Outcome [copy] {case InvalidState;case Success;case Truncated;case BadEncoding;case MissingEndTag;case BadChecksum;case TrailingData;}
+pub data Span [copy] {start:u64;end:u64;}
+pub data Envelope [copy] {outcome:Outcome;large:bool;tag:u8;start:u64;body:u64;end:u64;length:u64;}
+pub data Trigger [copy] {case Edge;case Level;}
+pub data Polarity [copy] {case ActiveHigh;case ActiveLow;}
+pub data Interrupts [copy] {case Mask(bits:u16);case Table(entries:Span,count:u64);}
+pub data Source [copy] {present:bool;index:u8;name:Span;}
+pub data Irq [copy] {extended:bool;is_consumer:bool;trigger:Trigger;polarity:Polarity;shared:bool;wake:bool;interrupts:Interrupts;source:Source;flags:u8;}
+pub data DmaSpeed [copy] {case Compatibility;case TypeA;case TypeB;case TypeF;}
+pub data DmaWidth [copy] {case Bits8;case Bits8And16;case Bits16;}
+pub data Dma [copy] {channels:u8;speed:DmaSpeed;width:DmaWidth;bus_master:bool;flags:u8;}
+pub data Io [copy] {decodes_full:bool;minimum:u16;maximum:u16;alignment:u8;length:u8;}
+pub data FixedMemory [copy] {writable:bool;base:u32;length:u32;flags:u8;}
+pub data AddressKind [copy] {case Memory;case IoRange;case BusNumber;}
+pub data Address [copy] {width:u8;kind:AddressKind;maximum_fixed:bool;minimum_fixed:bool;subtractive:bool;general_flags:u8;type_flags:u8;granularity:u64;minimum:u64;maximum:u64;translation:u64;length:u64;source:Source;}
+pub data Resource [copy] {
+ case None;
+ case IrqResource(irq:Irq);
+ case DmaResource(dma:Dma);
+ case IoResource(io:Io);
+ case FixedMemoryResource(memory:FixedMemory);
+ case AddressResource(address:Address);
+ case Unsupported(large:bool,tag:u8,encoding:Span);
+ case EndTag(checksum:u8);
+}
+pub data Parsed [copy] {outcome:Outcome;encoding:Span;next:u64;resource:Resource;}
+pub data SourceResult [copy] {outcome:Outcome;source:Source;}
+pub data NumberResult [copy] {outcome:Outcome;value:u64;}
+pub data Template [copy] {outcome:Outcome;next:u64;count:u64;unsupported:u64;checksum:u8;}

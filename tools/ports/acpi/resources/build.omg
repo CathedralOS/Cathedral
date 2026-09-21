@@ -1,0 +1,1 @@
+machine build(builder:&mut Build) {builder.application("cathedral-resource-tests");builder.freestanding=true;builder.depend_as("resources",Source::Path {location:"../../../../source/libraries/acpi/resources"});}

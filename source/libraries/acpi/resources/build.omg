@@ -1,0 +1,4 @@
+machine build(builder:&mut Build) {
+ builder.package("cathedral-acpi-resources");
+ builder.depend_as("acpi",Source::Path {location:".."});
+}

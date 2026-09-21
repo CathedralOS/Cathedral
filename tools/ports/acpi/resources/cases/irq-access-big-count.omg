@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use resources::resource_model::Span;
+use resources::resource_model::Outcome;
+use resources::resource_model::Parsed;
+use resources::resource_model::Resource;
+use resources::resource_model::Irq;
+use resources::resource_model::Interrupts;
+use resources::resource_model::Trigger;
+use resources::resource_model::Polarity;
+use resources::resource_model::Dma;
+use resources::resource_model::DmaSpeed;
+use resources::resource_model::DmaWidth;
+use resources::resource_model::Io;
+use resources::resource_model::FixedMemory;
+use resources::resource_model::Address;
+use resources::resource_model::AddressKind;
+use resources::resource_model::Source;
+use resources::resource_model::Template;
+use resources::resource_model::NumberResult;
+use resources::resource_parse::parse_one;
+use resources::resource_template::validate_template;
+use resources::resource_irq::irq_at;
+machine test()->i32 {let mut input:[u8;4096];let interrupts:Interrupts=Interrupts::Table{entries:Span{start:0,end:1024},count:256};let r:NumberResult=irq_at(&input,1024,interrupts,0);transition r.outcome==Outcome::InvalidState && r.value==0 {true -> (0) _ -> (1)}}
+const RESULT:i32=test();
+machine require_ok(value:i32) requires value==0;{}
+data Main{}
+machine Main::main(&mut self){require_ok(RESULT);}

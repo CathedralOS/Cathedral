@@ -1,0 +1,24 @@
+{
+  "command": "python3 tools/ports/acpi/resources/generate.py --check",
+  "kind": "actual public Rust resource_descriptor_list on synthetic Object::Buffer inputs; no private mirror",
+  "normalized_supported_agreements": 33,
+  "observations": 102,
+  "observed_error": 16,
+  "observed_ok": 76,
+  "observed_panic": 10,
+  "pin": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "policy": "Panics are observed with catch_unwind solely in the reference probe; the Omega API must return explicit outcomes and never invent parsed output. Profile/spec differences documented in PORT.md.",
+  "primary_spec": "https://uefi.org/specs/ACPI/6.6/06_Device_Configuration.html#resource-data-types-for-acpi",
+  "rustc": "rustc 1.100.0-nightly (a69a63265 2026-09-03)",
+  "sha256": {
+    "reference_code/rust-osdev/acpi/src/aml/resource.rs": "abca9e6c8c60e40730cc11b2304acf37e2171942097f8871f5f8a8c7911fae09",
+    "tools/ports/acpi/resources/Cargo.lock": "d47aae150306335692d5c4cd06640eba42fed53611f931c0e5e1d131a2b5c1d9",
+    "tools/ports/acpi/resources/Cargo.toml": "0b089ea6298e02653e10e9d3aac4449501413959e169544dd646ba14db949b1f",
+    "tools/ports/acpi/resources/corpus.py": "07ec4b1d059766777558f3e207879440d83a9f0145d9c254804ed5b5d73878ef",
+    "tools/ports/acpi/resources/generate.py": "e455e74e73cb4ccded65a35945ad93e36e488e664ee3b0601b315e5debb1d385",
+    "tools/ports/acpi/resources/observations.json": "e19bd1f10fbaf9005c62c350199b995ae1ef7b0519408e5770b32985b4b73aa8",
+    "tools/ports/acpi/resources/probe.rs.in": "b17bf582f5aadb3bfd079692960eac1342dcc89c5676cabb26cf16ef06362496",
+    "tools/ports/acpi/resources/src/main.rs": "45288f8d986fa4c4900c4022fa0d4a4c3eab757e1de17ea84df26673a31653d7"
+  },
+  "upstream_url": "https://github.com/rust-osdev/acpi"
+}

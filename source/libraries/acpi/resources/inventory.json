@@ -1,0 +1,785 @@
+{
+  "files": {
+    "src/aml/resource.rs": {
+      "disposition": "pending",
+      "reason": "First resource slice only; GPIO, serial buses and other descriptor semantics remain pending. Full bytes and all anchors bound.",
+      "sha256": "abca9e6c8c60e40730cc11b2304acf37e2171942097f8871f5f8a8c7911fae09",
+      "symbols": {
+        "1038:skips_unsupported_large_resource_descriptors": {
+          "anchor": "fn skips_unsupported_large_resource_descriptors() {",
+          "disposition": "omitted",
+          "reason": "Upstream test/module body not copied. Original synthetic positive/malformed fixtures call the actual pinned public parser and actual Omega bodies; no firmware dump transcription."
+        },
+        "1061:skips_unsupported_small_resource_descriptors": {
+          "anchor": "fn skips_unsupported_small_resource_descriptors() {",
+          "disposition": "omitted",
+          "reason": "Upstream test/module body not copied. Original synthetic positive/malformed fixtures call the actual pinned public parser and actual Omega bodies; no firmware dump transcription."
+        },
+        "1084:test_fdc_crs": {
+          "anchor": "fn test_fdc_crs() {",
+          "disposition": "omitted",
+          "reason": "Upstream test/module body not copied. Original synthetic positive/malformed fixtures call the actual pinned public parser and actual Omega bodies; no firmware dump transcription."
+        },
+        "10:Resource": {
+          "anchor": "pub enum Resource {",
+          "disposition": "pending",
+          "implemented_components": [
+            "bounded descriptor envelope",
+            "strict template termination/checksum profile",
+            "IRQ",
+            "DMA",
+            "IO",
+            "FixedMemory32",
+            "Word/DWord/QWord address",
+            "ExtendedIRQ"
+          ],
+          "reason": "Partial aggregate only: supported IRQ/DMA/IO/FixedMemory32/Word-DWord-QWord address/ExtendedIRQ components are implemented, but GPIO and SerialBus/I2C variants and dispatch remain explicit Unsupported. Retained targets identify partial implementations, not completed aggregate translation.",
+          "remaining_components": [
+            "GPIO descriptor semantics",
+            "SerialBus/I2C descriptor semantics"
+          ],
+          "targets": [
+            {
+              "anchor": "pub data Resource ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "182:InterruptTrigger": {
+          "anchor": "pub enum InterruptTrigger {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Trigger ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "188:InterruptPolarity": {
+          "anchor": "pub enum InterruptPolarity {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Polarity ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "194:AddressSpaceResourceType": {
+          "anchor": "pub enum AddressSpaceResourceType {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data AddressKind ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "201:AddressSpaceDecodeType": {
+          "anchor": "pub enum AddressSpaceDecodeType {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Address ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "207:AddressSpaceDescriptor": {
+          "anchor": "pub struct AddressSpaceDescriptor {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Address ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "208:resource_type": {
+          "anchor": "pub resource_type: AddressSpaceResourceType,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Address ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "209:is_maximum_address_fixed": {
+          "anchor": "pub is_maximum_address_fixed: bool,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Address ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "20:UNSUPPORTED_LARGE_RESOURCE_DESCRIPTORS": {
+          "anchor": "const UNSUPPORTED_LARGE_RESOURCE_DESCRIPTORS: &[(u8, &str)] = &[",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub machine parse_one(",
+              "path": "source/libraries/acpi/resources/resource_parse.omg"
+            }
+          ]
+        },
+        "210:is_minimum_address_fixed": {
+          "anchor": "pub is_minimum_address_fixed: bool,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Address ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "211:decode_type": {
+          "anchor": "pub decode_type: AddressSpaceDecodeType,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Address ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "213:granularity": {
+          "anchor": "pub granularity: u64,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Address ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "214:address_range": {
+          "anchor": "pub address_range: (u64, u64),",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Address ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "215:translation_offset": {
+          "anchor": "pub translation_offset: u64,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Address ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "216:length": {
+          "anchor": "pub length: u64,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Address ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "220:MemoryRangeDescriptor": {
+          "anchor": "pub enum MemoryRangeDescriptor {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data FixedMemory ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "224:fixed_memory_descriptor": {
+          "anchor": "fn fixed_memory_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "machine decode_memory(",
+              "path": "source/libraries/acpi/resources/resource_parse.omg"
+            }
+          ]
+        },
+        "258:address_space_descriptor": {
+          "anchor": "fn address_space_descriptor<T>(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "machine decode_address(",
+              "path": "source/libraries/acpi/resources/resource_parse.omg"
+            }
+          ]
+        },
+        "345:Irqs": {
+          "anchor": "pub type Irqs = smallvec::SmallVec<[u32; 1]>;",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Interrupts ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "348:IrqDescriptor": {
+          "anchor": "pub struct IrqDescriptor {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Irq ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "349:is_consumer": {
+          "anchor": "pub is_consumer: bool,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Irq ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "34:UNSUPPORTED_SMALL_RESOURCE_DESCRIPTORS": {
+          "anchor": "const UNSUPPORTED_SMALL_RESOURCE_DESCRIPTORS: &[(u8, &str)] = &[",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub machine parse_one(",
+              "path": "source/libraries/acpi/resources/resource_parse.omg"
+            }
+          ]
+        },
+        "350:trigger": {
+          "anchor": "pub trigger: InterruptTrigger,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Irq ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "351:polarity": {
+          "anchor": "pub polarity: InterruptPolarity,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Irq ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "352:is_shared": {
+          "anchor": "pub is_shared: bool,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Irq ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "353:is_wake_capable": {
+          "anchor": "pub is_wake_capable: bool,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Irq ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "354:irqs": {
+          "anchor": "pub irqs: Irqs,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Irq ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "357:irq_format_descriptor": {
+          "anchor": "fn irq_format_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "machine decode_irq(",
+              "path": "source/libraries/acpi/resources/resource_parse.omg"
+            }
+          ]
+        },
+        "390:irqs_from_bit_mask": {
+          "anchor": "fn irqs_from_bit_mask(bit_mask: u16) -> Irqs {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub machine irq_at(",
+              "path": "source/libraries/acpi/resources/resource_irq.omg"
+            }
+          ]
+        },
+        "43:resource_descriptor_list": {
+          "anchor": "pub fn resource_descriptor_list(descriptor: WrappedObject) -> Result<Vec<Resource>, AmlError> {",
+          "disposition": "pending",
+          "implemented_components": [
+            "bounded descriptor envelope",
+            "strict template termination/checksum profile",
+            "IRQ",
+            "DMA",
+            "IO",
+            "FixedMemory32",
+            "Word/DWord/QWord address",
+            "ExtendedIRQ"
+          ],
+          "reason": "Partial aggregate only: supported IRQ/DMA/IO/FixedMemory32/Word-DWord-QWord address/ExtendedIRQ components are implemented, but GPIO and SerialBus/I2C variants and dispatch remain explicit Unsupported. Retained targets identify partial implementations, not completed aggregate translation.",
+          "remaining_components": [
+            "GPIO descriptor semantics",
+            "SerialBus/I2C descriptor semantics"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine validate_template(",
+              "path": "source/libraries/acpi/resources/resource_template.omg"
+            }
+          ]
+        },
+        "447:DMASupportedSpeed": {
+          "anchor": "pub enum DMASupportedSpeed {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data DmaSpeed ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "455:DMATransferTypePreference": {
+          "anchor": "pub enum DMATransferTypePreference {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data DmaWidth ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "462:DMADescriptor": {
+          "anchor": "pub struct DMADescriptor {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Dma ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "463:channel_mask": {
+          "anchor": "pub channel_mask: u8,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Dma ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "464:supported_speeds": {
+          "anchor": "pub supported_speeds: DMASupportedSpeed,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Dma ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "465:is_bus_master": {
+          "anchor": "pub is_bus_master: bool,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Dma ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "466:transfer_type_preference": {
+          "anchor": "pub transfer_type_preference: DMATransferTypePreference,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Dma ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "469:dma_format_descriptor": {
+          "anchor": "pub fn dma_format_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "machine decode_dma(",
+              "path": "source/libraries/acpi/resources/resource_parse.omg"
+            }
+          ]
+        },
+        "510:preference": {
+          "anchor": "3 => unimplemented!(\"Reserved DMA transfer type preference\"),",
+          "disposition": "omitted",
+          "reason": "Lexical scanner false positive inside unimplemented!(\"Reserved DMA transfer type preference\") string, not a Rust declaration. Actual reserved code becomes BadEncoding in decode_dma."
+        },
+        "518:IOPortDescriptor": {
+          "anchor": "pub struct IOPortDescriptor {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Io ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "519:decodes_full_address": {
+          "anchor": "pub decodes_full_address: bool,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Io ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "520:memory_range": {
+          "anchor": "pub memory_range: (u16, u16),",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Io ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "521:base_alignment": {
+          "anchor": "pub base_alignment: u8,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Io ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "522:range_length": {
+          "anchor": "pub range_length: u8,",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub data Io ",
+              "path": "source/libraries/acpi/resources/resource_model.omg"
+            }
+          ]
+        },
+        "525:io_port_descriptor": {
+          "anchor": "fn io_port_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "machine decode_io(",
+              "path": "source/libraries/acpi/resources/resource_parse.omg"
+            }
+          ]
+        },
+        "559:extended_interrupt_descriptor": {
+          "anchor": "fn extended_interrupt_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "machine decode_extended(",
+              "path": "source/libraries/acpi/resources/resource_parse.omg"
+            }
+          ]
+        },
+        "612:ShareType": {
+          "anchor": "pub enum ShareType {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "618:ResourceUsage": {
+          "anchor": "pub enum ResourceUsage {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "624:SlaveMode": {
+          "anchor": "pub enum SlaveMode {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "630:AddressingMode": {
+          "anchor": "pub enum AddressingMode {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "636:SerialBusDescriptor": {
+          "anchor": "pub struct SerialBusDescriptor {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "637:sharing": {
+          "anchor": "pub sharing: ShareType,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "638:usage": {
+          "anchor": "pub usage: ResourceUsage,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "639:slave_mode": {
+          "anchor": "pub slave_mode: SlaveMode,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "63:unsupported_resource_descriptor_name": {
+          "anchor": "fn unsupported_resource_descriptor_name(",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub machine parse_one(",
+              "path": "source/libraries/acpi/resources/resource_parse.omg"
+            }
+          ]
+        },
+        "640:source": {
+          "anchor": "pub source: alloc::string::String,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "641:source_index": {
+          "anchor": "pub source_index: u8,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "642:vendor_data": {
+          "anchor": "pub vendor_data: Vec<u8>,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "643:bus": {
+          "anchor": "pub bus: SerialBus,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "647:SerialBus": {
+          "anchor": "pub enum SerialBus {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "651:i2c_bus_descriptor": {
+          "anchor": "fn i2c_bus_descriptor(bytes: &[u8]) -> Result<(SerialBus, (usize, usize)), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "679:serial_bus_descriptor": {
+          "anchor": "fn serial_bus_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "707:GPIOInterruptPolarity": {
+          "anchor": "pub enum GPIOInterruptPolarity {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "70:skip_unsupported_resource": {
+          "anchor": "fn skip_unsupported_resource<'a>(",
+          "disposition": "translated",
+          "reason": "Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.",
+          "targets": [
+            {
+              "anchor": "pub machine parse_one(",
+              "path": "source/libraries/acpi/resources/resource_parse.omg"
+            }
+          ]
+        },
+        "714:WakeCapability": {
+          "anchor": "pub enum WakeCapability {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "720:IORestriction": {
+          "anchor": "pub enum IORestriction {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "728:PinConfiguration": {
+          "anchor": "pub enum PinConfiguration {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "736:GPIOConnectionDescriptor": {
+          "anchor": "pub struct GPIOConnectionDescriptor {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "737:usage": {
+          "anchor": "pub usage: ResourceUsage,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "738:sharing": {
+          "anchor": "pub sharing: ShareType,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "739:pin_configuration": {
+          "anchor": "pub pin_configuration: PinConfiguration,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "740:output_drive_strength": {
+          "anchor": "pub output_drive_strength: u16,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "741:debounce_timeout": {
+          "anchor": "pub debounce_timeout: u16,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "742:pins": {
+          "anchor": "pub pins: Vec<u16>,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "743:source": {
+          "anchor": "pub source: alloc::string::String,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "744:vendor_data": {
+          "anchor": "pub vendor_data: Vec<u8>,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "745:connection": {
+          "anchor": "pub connection: GPIOConnection,",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "749:GPIOConnection": {
+          "anchor": "pub enum GPIOConnection {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "754:gpio_connection_descriptor": {
+          "anchor": "fn gpio_connection_descriptor(bytes: &[u8]) -> Result<Resource, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending."
+        },
+        "7:smallvec;": {
+          "anchor": "pub use smallvec;",
+          "disposition": "omitted",
+          "reason": "smallvec allocator re-export is replaced by bounded mask/table-span views and checked index access; no dynamic container dependency."
+        },
+        "80:resource_descriptor": {
+          "anchor": "fn resource_descriptor(bytes: &[u8]) -> Result<(Option<Resource>, &[u8]), AmlError> {",
+          "disposition": "pending",
+          "implemented_components": [
+            "bounded descriptor envelope",
+            "strict template termination/checksum profile",
+            "IRQ",
+            "DMA",
+            "IO",
+            "FixedMemory32",
+            "Word/DWord/QWord address",
+            "ExtendedIRQ"
+          ],
+          "reason": "Partial aggregate only: supported IRQ/DMA/IO/FixedMemory32/Word-DWord-QWord address/ExtendedIRQ components are implemented, but GPIO and SerialBus/I2C variants and dispatch remain explicit Unsupported. Retained targets identify partial implementations, not completed aggregate translation.",
+          "remaining_components": [
+            "GPIO descriptor semantics",
+            "SerialBus/I2C descriptor semantics"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine parse_one(",
+              "path": "source/libraries/acpi/resources/resource_parse.omg"
+            }
+          ]
+        },
+        "826:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Upstream test/module body not copied. Original synthetic positive/malformed fixtures call the actual pinned public parser and actual Omega bodies; no firmware dump transcription."
+        },
+        "830:test_parses_keyboard_crs": {
+          "anchor": "fn test_parses_keyboard_crs() {",
+          "disposition": "omitted",
+          "reason": "Upstream test/module body not copied. Original synthetic positive/malformed fixtures call the actual pinned public parser and actual Omega bodies; no firmware dump transcription."
+        },
+        "892:test_pci_crs": {
+          "anchor": "fn test_pci_crs() {",
+          "disposition": "omitted",
+          "reason": "Upstream test/module body not copied. Original synthetic positive/malformed fixtures call the actual pinned public parser and actual Omega bodies; no firmware dump transcription."
+        }
+      }
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "slice": "bounded resource descriptor first slice; unsupported spans are framing-only, not completed family semantics",
+  "upstream": {
+    "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+    "roots": [
+      "src/aml/resource.rs"
+    ],
+    "url": "https://github.com/rust-osdev/acpi"
+  }
+}

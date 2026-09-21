@@ -437,7 +437,13 @@ semantic cases, 18 body mutations and a 19-file source check for Field, IndexFie
 BankField and all five FieldList forms. Dynamic BankValue/BufferSize bodies remain
 explicitly unparsed or opaque; field namespace installation and full interpreter
 behavior remain pending. The separate integer executor does not complete these
-syntax/resource-limit milestones. ACPI-004/006 stay open.
+syntax/resource-limit milestones.
+[Resource descriptor parsing](source/libraries/acpi/resources/PORT.md) adds 117
+checked-interpreter pairs, four const pairs and 102 actual public Rust observations.
+It checks bounded envelopes, strict EndTag/checksum behavior, IRQ/DMA/I/O,
+FixedMemory32, address and ExtendedIRQ descriptors, with explicit unsupported
+spans for other defined families. GPIO/serial decoding and aggregate resource
+completion remain pending. ACPI-004/006 stay open.
 
 ## Phase 5 — only after the corpus above is healthy
 

@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Actual pinned public resource parser; no private mirror and no ACPI handlers.
+use acpi::aml::{object::Object,resource::*};
+fn normalized(value:Resource)->Vec<u64>{match value{
+ Resource::Irq(i)=>{let mut out=vec![1,i.is_consumer as u64,(i.trigger==InterruptTrigger::Edge)as u64,(i.polarity==InterruptPolarity::ActiveLow)as u64,i.is_shared as u64,i.is_wake_capable as u64,i.irqs.len()as u64];out.extend(i.irqs.into_iter().map(u64::from));out},
+ Resource::Dma(d)=>vec![2,d.channel_mask as u64,match d.supported_speeds{DMASupportedSpeed::CompatibilityMode=>0,DMASupportedSpeed::TypeA=>1,DMASupportedSpeed::TypeB=>2,DMASupportedSpeed::TypeF=>3},match d.transfer_type_preference{DMATransferTypePreference::_8BitOnly=>0,DMATransferTypePreference::_8And16Bit=>1,DMATransferTypePreference::_16Bit=>2},d.is_bus_master as u64],
+ Resource::IOPort(i)=>vec![3,i.decodes_full_address as u64,i.memory_range.0 as u64,i.memory_range.1 as u64,i.base_alignment as u64,i.range_length as u64],
+ Resource::MemoryRange(MemoryRangeDescriptor::FixedLocation{is_writable,base_address,range_length})=>vec![4,is_writable as u64,base_address as u64,range_length as u64],
+ Resource::AddressSpace(a)=>vec![5,match a.resource_type{AddressSpaceResourceType::MemoryRange=>0,AddressSpaceResourceType::IORange=>1,AddressSpaceResourceType::BusNumberRange=>2},a.is_maximum_address_fixed as u64,a.is_minimum_address_fixed as u64,(a.decode_type==AddressSpaceDecodeType::Subtractive)as u64,a.granularity,a.address_range.0,a.address_range.1,a.translation_offset,a.length],
+ _=>vec![99]
+}}
+fn observe(name:&str,bytes:&[u8]){
+ let result=std::panic::catch_unwind(||resource_descriptor_list(Object::Buffer(bytes.to_vec()).wrap()));
+ match result {Ok(Ok(items))=>println!("{{\"name\":\"{}\",\"result\":\"ok\",\"resources\":{:?}}}",name,items.into_iter().map(normalized).collect::<Vec<_>>()),Ok(Err(_))=>println!("{{\"name\":\"{}\",\"result\":\"error\"}}",name),Err(_)=>println!("{{\"name\":\"{}\",\"result\":\"panic\"}}",name)}
+}
+fn main(){std::panic::set_hook(Box::new(|_|{}));
+// GENERATED
+}

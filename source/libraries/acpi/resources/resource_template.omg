@@ -1,0 +1,70 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original strict template profile around pinned resource descriptor semantics.
+module resource_template;
+use resource_model::Outcome;
+use resource_model::Parsed;
+use resource_model::Resource;
+use resource_model::Template;
+use resource_parse::parse_one;
+data TemplateWalk [copy] {result:Template;ended:bool;}
+pub machine validate_template(input:&[u8;4096],length:u64)->Template {
+ transition length<=4096 {true -> scan(input,length) _ -> (Template{})}
+ state scan(input:&[u8;4096],length:u64) {
+  let mut walk:TemplateWalk=TemplateWalk{result:Template{outcome:Outcome::Success}};
+  let completed:u64=template_scan(input,0,length,&mut walk);
+  transition walk.result.outcome==Outcome::Success && !walk.ended {
+   true -> (Template{outcome:Outcome::MissingEndTag,next:walk.result.next,count:walk.result.count,unsupported:walk.result.unsupported})
+   _ -> (walk.result)
+  }
+ }
+}
+machine template_scan(input:&[u8;4096],index:u64,limit:u64,walk:&mut TemplateWalk)
+terminates by (index,limit)->Nat::BoundedDistance;
+->u64 {
+ let progressed:u64=template_step(input,index,limit,walk);
+ transition index<limit {true -> template_scan(input,index+1,limit,walk) _ -> (0)}
+}
+machine template_step(input:&[u8;4096],index:u64,limit:u64,walk:&mut TemplateWalk)->u64 {
+ transition index<limit && walk.result.outcome==Outcome::Success && !walk.ended && index==walk.result.next {
+  true -> parse(input,index,limit,walk) _ -> (0)
+ }
+ state parse(input:&[u8;4096],index:u64,limit:u64,walk:&mut TemplateWalk)->u64 {
+  let parsed:Parsed=parse_one(input,limit,index);
+  transition parsed.outcome==Outcome::Success {true -> item(input,limit,parsed,walk) _ -> failed(parsed.outcome,index,walk)}
+ }
+ state failed(outcome:Outcome,index:u64,walk:&mut TemplateWalk)->u64 {walk.result.outcome=outcome;walk.result.next=index;0}
+ state item(input:&[u8;4096],limit:u64,parsed:Parsed,walk:&mut TemplateWalk)->u64 {
+  transition parsed.resource {
+   Resource::EndTag{checksum} -> terminal(input,limit,parsed.next,checksum,walk)
+   Resource::Unsupported{large,tag,encoding} -> unsupported(parsed.next,walk)
+   _ -> ordinary(parsed.next,walk)
+  }
+ }
+ state ordinary(next:u64,walk:&mut TemplateWalk)->u64 {
+  let count:u64=walk.result.count;
+  transition count<4096 {true -> stored(next,count+1,walk) _ -> failed(Outcome::InvalidState,next,walk)}
+ }
+ state stored(next:u64,count:u64,walk:&mut TemplateWalk)->u64 {walk.result.next=next;walk.result.count=count;0}
+ state unsupported(next:u64,walk:&mut TemplateWalk)->u64 {
+  let count:u64=walk.result.count;let unknown:u64=walk.result.unsupported;
+  transition count<4096 && unknown<4096 {true -> unknown_stored(next,count+1,unknown+1,walk) _ -> failed(Outcome::InvalidState,next,walk)}
+ }
+ state unknown_stored(next:u64,count:u64,unknown:u64,walk:&mut TemplateWalk)->u64 {walk.result.next=next;walk.result.count=count;walk.result.unsupported=unknown;0}
+ state terminal(input:&[u8;4096],limit:u64,next:u64,checksum:u8,walk:&mut TemplateWalk)->u64 {
+  walk.ended=true;walk.result.next=next;walk.result.checksum=checksum;
+  transition next==limit {true -> checksum(input,limit,checksum,walk) _ -> failed(Outcome::TrailingData,next,walk)}
+ }
+ state checksum(input:&[u8;4096],limit:u64,checksum:u8,walk:&mut TemplateWalk)->u64 {
+  let sum:u64=checksum_scan(input,0,limit,0);
+  transition checksum==0 || sum==0 {true -> (0) _ -> failed(Outcome::BadChecksum,limit,walk)}
+ }
+}
+machine checksum_scan(input:&[u8;4096],index:u64,limit:u64,sum:u64)
+terminates by (index,limit)->Nat::BoundedDistance;
+->u64 {
+ let next:u64=checksum_byte(input,index,sum);
+ transition index<limit {true -> checksum_scan(input,index+1,limit,next) _ -> (sum)}
+}
+machine checksum_byte(input:&[u8;4096],index:u64,sum:u64)->u64 {
+ transition index<4096 && sum<=255 {true -> ((sum+(input[index]as u64))&255) _ -> (sum)}
+}

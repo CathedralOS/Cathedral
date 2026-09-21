@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified bounded view of pin Irqs mask expansion and ExtendedIRQ numbers.
+module resource_irq;
+use resource_model::Outcome;
+use resource_model::Interrupts;
+use resource_model::Span;
+use resource_model::NumberResult;
+use resource_bytes::relative;
+pub machine irq_at(input:&[u8;4096],length:u64,interrupts:Interrupts,index:u64)->NumberResult {
+ transition length<=4096 {
+  true -> representation(input,length,interrupts,index) _ -> (NumberResult{})
+ }
+ state representation(input:&[u8;4096],length:u64,interrupts:Interrupts,index:u64) {
+  transition interrupts {Interrupts::Mask{bits} -> mask(bits,index) Interrupts::Table{entries,count} -> table(input,length,entries,count,index)}
+ }
+ state mask(bits:u16,index:u64) {let value:NumberResult=mask_scan(bits,index,0,16,0,NumberResult{});value}
+ state table(input:&[u8;4096],length:u64,entries:Span,count:u64,index:u64) {
+  let start:u64=entries.start;let end:u64=entries.end;
+  transition start<=end && end<=length && count>0 && count<=255 && index<count {true -> extent(input,start,end,count,index) _ -> (NumberResult{})}
+ }
+ state extent(input:&[u8;4096],start:u64,end:u64,count:u64,index:u64) {
+  transition start<=end && count<=255 && index<255 {true -> read(input,start,end,count,index) _ -> (NumberResult{})}
+ }
+ state read(input:&[u8;4096],start:u64,end:u64,count:u64,index:u64) {
+  let value:NumberResult=relative(input,end,start,index*4,4);
+  transition end-start==count*4 {true -> (value) _ -> (NumberResult{})}
+ }
+}
+machine mask_scan(bits:u16,wanted:u64,bit:u64,limit:u64,count:u64,found:NumberResult)
+terminates by (bit,limit)->Nat::BoundedDistance;
+->NumberResult {
+ let next:NumberResult=mask_lookup(bits,wanted,bit,count,found);let next_count:u64=mask_count(bits,bit,count);
+ transition bit<limit {true -> mask_scan(bits,wanted,bit+1,limit,next_count,next) _ -> (found)}
+}
+machine mask_lookup(bits:u16,wanted:u64,bit:u64,count:u64,found:NumberResult)->NumberResult {
+ transition bit<16 {true -> selected(bits,wanted,bit,count,found) _ -> (found)}
+ state selected(bits:u16,wanted:u64,bit:u64,count:u64,found:NumberResult) {
+  transition ((bits as u64)>>bit)&1!=0 && count==wanted {true -> (NumberResult{outcome:Outcome::Success,value:bit}) _ -> (found)}
+ }
+}
+machine mask_count(bits:u16,bit:u64,count:u64)->u64 {
+ transition bit<16 && count<=16 {true -> selected(bits,bit,count) _ -> (count)}
+ state selected(bits:u16,bit:u64,count:u64) {transition ((bits as u64)>>bit)&1!=0 {true -> (count+1) _ -> (count)}}
+}

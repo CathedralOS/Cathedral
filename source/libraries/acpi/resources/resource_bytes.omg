@@ -1,0 +1,79 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Bounded initialized-byte adapter; no addresses or mapping authority.
+module resource_bytes;
+use acpi::fixed_bytes::read_u8;
+use acpi::fixed_bytes::read_u16;
+use acpi::fixed_bytes::read_u32;
+use acpi::fixed_bytes::read_u64;
+use acpi::fixed_bytes::U8Result;
+use acpi::fixed_bytes::U16Result;
+use acpi::fixed_bytes::U32Result;
+use acpi::fixed_bytes::U64Result;
+use resource_model::Outcome;
+use resource_model::NumberResult;
+use resource_model::Envelope;
+use resource_model::Source;
+use resource_model::SourceResult;
+use resource_model::Span;
+pub machine read(input:&[u8;4096],end:u64,at:u64,width:u64)->NumberResult {
+ transition width {1 -> byte(input,end,at) 2 -> word(input,end,at) 4 -> dword(input,end,at) 8 -> qword(input,end,at) _ -> (NumberResult{})}
+ state byte(input:&[u8;4096],end:u64,at:u64) {let r:U8Result=read_u8(input,end,at);transition r.error==0 {true -> (NumberResult{outcome:Outcome::Success,value:r.value as u64}) _ -> (NumberResult{outcome:Outcome::Truncated})}}
+ state word(input:&[u8;4096],end:u64,at:u64) {let r:U16Result=read_u16(input,end,at);transition r.error==0 {true -> (NumberResult{outcome:Outcome::Success,value:r.value as u64}) _ -> (NumberResult{outcome:Outcome::Truncated})}}
+ state dword(input:&[u8;4096],end:u64,at:u64) {let r:U32Result=read_u32(input,end,at);transition r.error==0 {true -> (NumberResult{outcome:Outcome::Success,value:r.value as u64}) _ -> (NumberResult{outcome:Outcome::Truncated})}}
+ state qword(input:&[u8;4096],end:u64,at:u64) {let r:U64Result=read_u64(input,end,at);transition r.error==0 {true -> (NumberResult{outcome:Outcome::Success,value:r.value}) _ -> (NumberResult{outcome:Outcome::Truncated})}}
+}
+// Internal decoder utility: only called after the full descriptor is bounded.
+// Its explicit relative checks also make direct calls safe, returning no bytes.
+pub machine relative(input:&[u8;4096],end:u64,at:u64,delta:u64,width:u64)->NumberResult {
+ transition end<=4096 && at<=end {true -> room(input,end,at,delta,width) _ -> (NumberResult{})}
+ state room(input:&[u8;4096],end:u64,at:u64,delta:u64,width:u64) {
+  transition delta<=end-at {true -> fetch(input,end,at+delta,width) _ -> (NumberResult{outcome:Outcome::Truncated})}
+ }
+ state fetch(input:&[u8;4096],end:u64,at:u64,width:u64) {let r:NumberResult=read(input,end,at,width);r}
+}
+pub machine envelope(input:&[u8;4096],length:u64,at:u64)->Envelope {
+ transition length<=4096 && at<=length {true -> lead(input,length,at) _ -> (Envelope{})}
+ state lead(input:&[u8;4096],length:u64,at:u64) {
+  let r:NumberResult=read(input,length,at,1);
+  transition r.outcome==Outcome::Success && at<4096 {true -> format(input,length,at,((r.value & 255) as u8)) _ -> (Envelope{outcome:Outcome::Truncated})}
+ }
+ state format(input:&[u8;4096],length:u64,at:u64,lead:u8) {
+  transition lead&128==0 {true -> extent(length,at,at+1,false,(lead>>3)&15,(lead&7)as u64) _ -> large(input,length,at,lead)}
+ }
+ state large(input:&[u8;4096],length:u64,at:u64,lead:u8) {
+  let r:NumberResult=relative(input,length,at,1,2);
+  transition r.outcome==Outcome::Success && at<=4093 {true -> extent(length,at,at+3,true,lead&127,r.value) _ -> (Envelope{outcome:Outcome::Truncated})}
+ }
+ state extent(length:u64,at:u64,body:u64,large:bool,tag:u8,size:u64) {
+  transition body<=length {true -> payload(length,at,body,large,tag,size) _ -> (Envelope{outcome:Outcome::Truncated})}
+ }
+ state payload(length:u64,at:u64,body:u64,large:bool,tag:u8,size:u64) {
+  transition size<=length-body {true -> (Envelope{outcome:Outcome::Success,large:large,tag:tag,start:at,body:body,end:body+size,length:size}) _ -> (Envelope{outcome:Outcome::Truncated})}
+ }
+}
+pub machine optional_source(input:&[u8;4096],end:u64,at:u64)->SourceResult {
+ transition end<=4096 && at<=end {true -> present(input,end,at) _ -> (SourceResult{})}
+ state present(input:&[u8;4096],end:u64,at:u64) {
+  transition at==end {true -> (SourceResult{outcome:Outcome::Success}) _ -> room(input,end,at)}
+ }
+ state room(input:&[u8;4096],end:u64,at:u64) {
+  transition end-at>=2 && at<4095 {true -> scan(input,end,at) _ -> (SourceResult{outcome:Outcome::BadEncoding})}
+ }
+ state scan(input:&[u8;4096],end:u64,at:u64) {
+  let index:NumberResult=read(input,end,at,1);
+  let good:bool=source_ascii_scan(input,at+1,end,true);
+  transition good {true -> (SourceResult{outcome:Outcome::Success,source:Source{present:true,index:((index.value & 255) as u8),name:Span{start:at+1,end:end-1}}}) _ -> (SourceResult{outcome:Outcome::BadEncoding})}
+ }
+}
+machine source_ascii_scan(input:&[u8;4096],at:u64,end:u64,prior:bool)
+terminates by (at,end)->Nat::BoundedDistance;
+->bool {
+ let valid:bool=source_ascii_byte(input,at,end);
+ transition at<end {true -> source_ascii_scan(input,at+1,end,prior && valid) _ -> (prior)}
+}
+machine source_ascii_byte(input:&[u8;4096],at:u64,end:u64)->bool {
+ transition at<end && at<4096 {true -> checked(input,at,end) _ -> (true)}
+ state checked(input:&[u8;4096],at:u64,end:u64) {
+  transition at+1==end {true -> (input[at]==0) _ -> (input[at]>0 && input[at]<128)}
+ }
+}
