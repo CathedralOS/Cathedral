@@ -4,7 +4,7 @@
 
 **Stage: inventoried, 2026-09-20.** This milestone covers the complete pinned
 Rust corpus and test-scenario metadata. It does not claim an Omega translation,
-compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 562 translated table/topology/AML/helper anchors and 1,019
+compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 563 translated table/topology/AML/helper anchors and 1,018
 pending anchors. Inventory completion and translation completion are different
 milestones. The bounded ACPI-001 slice is separately
 [tested by Omega semantic evaluation](headers.PORT.md): 65 original scenarios
@@ -179,3 +179,11 @@ labelled Rust observations pass. The current regression receipts are under
 remain historical with their original hashes. Generic opcode dispatch remains
 pending. The source-map count is unchanged: these are partial Object/interpreter
 components and an already translated bit-copy dependency.
+
+[Canonical object queries](aml/object-queries.PORT.md) add a single-budget mixed
+name/reference resolver, numeric ObjectType and validated String/Buffer/Package
+SizeOf components. The query suite passes 96 checked pairs, 306 existing
+regression pairs, three const pairs and 44 public Rust observations (41 numeric agreements, two explicit errors and
+one caught load panic). Namespace get/bind guards now stage IDs and counts as
+u64 locals to reject malformed maximum IDs on the pinned evaluator. Generic
+query opcode retirement and absent payload kinds remain pending.

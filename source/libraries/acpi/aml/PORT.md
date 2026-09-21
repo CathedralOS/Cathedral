@@ -69,5 +69,13 @@ When changing the pin: review license and manifest changes, hash and review ever
 full and transparent unwrap, validated stable-ID allocation, sibling-preserving
 payload copy and complete package-chain selection. The 160 checked pairs, five
 const pairs and 116 public immutable Rust observations pass; all 146 existing
-parser/executor/pipeline/field regression pairs also pass. Mutable byte backing
-and generic opcode integration remain pending.
+parser/executor/pipeline/field regression pairs also passed at that milestone.
+Those receipts retain their original model hashes.
+
+[Owned byte storage](byte-storage.PORT.md) now provides canonical Source/Owned
+String and Buffer cases, byte copies, indexed fields and affine Program ownership.
+Its 138 storage/composition pairs, 306 existing regression pairs and eight const
+pairs passed at the storage milestone. [Object queries](object-queries.PORT.md)
+add mixed name/reference resolution, numeric type reporting and validated size
+queries, with fresh namespace-guard regression evidence. Generic opcode
+integration remains pending.

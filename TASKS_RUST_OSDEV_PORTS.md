@@ -498,6 +498,15 @@ Current model-migration regression receipts live under
 original hashes as historical evidence. Generic opcode dispatch and complete
 AML resource accounting remain pending.
 
+[Canonical object queries](source/libraries/acpi/aml/object-queries.PORT.md) add
+mixed name/reference resolution under one inspection budget, numeric ObjectType
+and validated SizeOf components. All 96 checked pairs, 306 regression pairs,
+three const pairs and 44
+public Rust observations pass; 41 numeric results agree, while two explicit
+errors and one load panic remain recorded pin differences. Namespace get/bind
+maximum-ID guards now use staged u64 comparisons. Generic opcode integration
+and absent Object variants remain pending.
+
 ACPI-004 partial evidence: [static AML syntax and namespace](source/libraries/acpi/aml/PORT.md)
 passes 27 Omega scenarios with 27 body mutations and an 18-file source check.
 It covers NameString/package framing, literal/package values, static declarations,

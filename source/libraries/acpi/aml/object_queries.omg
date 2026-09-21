@@ -1,0 +1,131 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified resolve_name_path/object_type/do_size_of components from acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; copyright 2018 Isaac Woods.
+// Bounded initialized metadata only; no interpreter, handler or live services.
+module object_queries;
+use model::Outcome;
+use model::Value;
+use model::Namespace;
+use model::ObjectStore;
+use model::ReferenceState;
+use model::Lookup;
+use model::Path;
+use namespace::search;
+use object_references::package_element;
+use byte_storage::ByteOutcome;
+use byte_storage::ByteResult;
+use byte_storage::byte_length;
+
+pub data QueryResult [copy] {
+ case Value(object:u64,number:u64);
+ case ResolutionFailure(resolution_error:Outcome);
+ case UnsupportedValue;
+ case InvalidStorage(storage_error:ByteOutcome);
+}
+
+// Both lexical and object-ID edges consume the same inspection budget. Zero
+// budget never inspects an object. A repeated target is rejected before follow.
+pub machine resolve_object(space:&Namespace,object:u64,budget:u64)->ReferenceState {
+ let count:u64=space.object_count;let entries:u64=space.count;
+ transition count<=64 && entries<=32 && object<count && object<64 && budget<=64 {
+  true -> walk(space,object,budget)
+  _ -> (ReferenceState {outcome:Outcome::InvalidState,object:object,done:true})
+ }
+ state walk(space:&Namespace,object:u64,budget:u64)->ReferenceState {
+  let result:ReferenceState=oq_walk(space,ReferenceState {object:object},0,budget);
+  transition result.done {true -> (result) _ -> (ReferenceState {outcome:Outcome::WorkLimit,object:result.object,visited:result.visited,done:true})}
+ }
+}
+machine oq_walk(space:&Namespace,current:ReferenceState,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->ReferenceState {
+ let next:ReferenceState=oq_step(space,current,index,count);
+ transition index<count {true -> oq_walk(space,next,index+1,count) _ -> (current)}
+}
+machine oq_step(space:&Namespace,current:ReferenceState,index:u64,count:u64)->ReferenceState {
+ transition current.done || index>=count {true -> (current) _ -> inspect(space,current,current.object)}
+ state inspect(space:&Namespace,current:ReferenceState,object:u64)->ReferenceState {
+  transition object<space.object_count && object<64 {true -> payload(space,current,object) _ -> failure(current,Outcome::InvalidState)}
+ }
+ state payload(space:&Namespace,current:ReferenceState,object:u64)->ReferenceState {
+  let seen:u64=current.visited|((1 as u64)<<object);let value:Value=space.objects[object].value;
+  transition value {
+   Value::Reference {kind,object_id} -> target(space,object_id,seen)
+   Value::NameReference {name,scope} -> lookup(space,object,seen,name,scope)
+   _ -> (ReferenceState {object:object,visited:seen,done:true})
+  }
+ }
+ state lookup(space:&Namespace,object:u64,seen:u64,name:Path,scope:Path)->ReferenceState {
+  let copied:Namespace=Namespace {count:space.count,object_count:space.object_count,entries:space.entries,objects:space.objects};
+  let found:Lookup=search(copied,name,scope);
+  transition found.outcome==Outcome::Success {true -> target(space,found.object,seen) _ -> (ReferenceState {outcome:found.outcome,object:object,visited:seen,done:true})}
+ }
+ state target(space:&Namespace,object:u64,seen:u64)->ReferenceState {
+  transition object<space.object_count && object<64 {true -> cycle(object,seen) _ -> (ReferenceState {outcome:Outcome::InvalidState,object:object,visited:seen,done:true})}
+ }
+ state cycle(object:u64,seen:u64)->ReferenceState {
+  let mask:u64=(1 as u64)<<object;
+  transition seen&mask!=0 {true -> (ReferenceState {outcome:Outcome::ReferenceCycle,object:object,visited:seen,done:true}) _ -> (ReferenceState {object:object,visited:seen})}
+ }
+ state failure(current:ReferenceState,outcome:Outcome)->ReferenceState {
+  ReferenceState {outcome:outcome,object:current.object,visited:current.visited,done:true}
+ }
+}
+
+// Reports the canonical payload kind after resolution. It does not validate
+// unrelated payload bytes, method provenance or runtime service availability.
+pub machine object_type(space:&Namespace,object:u64,budget:u64)->QueryResult {
+ let resolved:ReferenceState=resolve_object(space,object,budget);
+ transition resolved.outcome==Outcome::Success {true -> value(space,resolved.object) _ -> (QueryResult::ResolutionFailure {resolution_error:resolved.outcome})}
+ state value(space:&Namespace,object:u64)->QueryResult {
+  transition object<space.object_count && object<64 {true -> classify(object,space.objects[object].value) _ -> (QueryResult::ResolutionFailure {resolution_error:Outcome::InvalidState})}
+ }
+ state classify(object:u64,value:Value)->QueryResult {
+  transition value {
+   Value::Uninitialized -> (QueryResult::Value {object:object,number:0})
+   Value::Integer {number} -> (QueryResult::Value {object:object,number:1})
+   Value::String {string_storage} -> (QueryResult::Value {object:object,number:2})
+   Value::Buffer {buffer_storage} -> (QueryResult::Value {object:object,number:3})
+   Value::Package {first,count} -> (QueryResult::Value {object:object,number:4})
+   Value::Device -> (QueryResult::Value {object:object,number:6})
+   Value::Event -> (QueryResult::Value {object:object,number:7})
+   Value::Method {flags,body} -> (QueryResult::Value {object:object,number:8})
+   Value::Mutex {sync_level} -> (QueryResult::Value {object:object,number:9})
+   Value::OperationRegion {space,base,length,scope} -> (QueryResult::Value {object:object,number:10})
+   Value::PowerResource {system_level,order} -> (QueryResult::Value {object:object,number:11})
+   Value::Processor {id,address,length} -> (QueryResult::Value {object:object,number:12})
+   Value::ThermalZone -> (QueryResult::Value {object:object,number:13})
+   Value::BufferField {backing_object,bit_offset,bit_length} -> (QueryResult::Value {object:object,number:14})
+   _ -> (QueryResult::ResolutionFailure {resolution_error:Outcome::InvalidState})
+  }
+ }
+}
+
+// Package size validates all advertised sibling links with a separate 64-node
+// bound. Byte size validates the full current owned/source payload via storage.
+pub machine size_of(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,budget:u64)->QueryResult {
+ let resolved:ReferenceState=resolve_object(&store.space,object,budget);
+ transition resolved.outcome==Outcome::Success {true -> value(input,length,unit,store,resolved.object) _ -> (QueryResult::ResolutionFailure {resolution_error:resolved.outcome})}
+ state value(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64)->QueryResult {
+  transition object<store.space.object_count && object<64 {true -> classify(input,length,unit,store,object,store.space.objects[object].value) _ -> (QueryResult::ResolutionFailure {resolution_error:Outcome::InvalidState})}
+ }
+ state classify(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,value:Value)->QueryResult {
+  transition value {
+   Value::String {string_storage} -> bytes(input,length,unit,store,object)
+   Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,object)
+   Value::Package {first,count} -> package(store,object,count)
+   _ -> (QueryResult::UnsupportedValue)
+  }
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64)->QueryResult {
+  let measured:ByteResult=byte_length(input,length,unit,store,object);
+  transition measured.outcome==ByteOutcome::Success {true -> (QueryResult::Value {object:object,number:measured.length}) _ -> (QueryResult::InvalidStorage {storage_error:measured.outcome})}
+ }
+ state package(store:&ObjectStore,object:u64,count:u64)->QueryResult {
+  transition count==0 {true -> (QueryResult::Value {object:object,number:0}) _ -> validate(store,object,count)}
+ }
+ state validate(store:&ObjectStore,object:u64,count:u64)->QueryResult {
+  let selected:ReferenceState=package_element(&store.space,object,0,64);
+  transition selected.outcome==Outcome::Success {true -> (QueryResult::Value {object:object,number:count}) _ -> (QueryResult::ResolutionFailure {resolution_error:selected.outcome})}
+ }
+}

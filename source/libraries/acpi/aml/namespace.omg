@@ -55,7 +55,8 @@ machine locate_step(space:Namespace,path:Path,index:u64,result:Lookup)->Lookup {
 }
 machine get_absolute(space:Namespace,path:Path)->Lookup {
  let found:Lookup=locate(space,path);let entry:Entry=entry_at(space,found.index);
- transition found.outcome==Outcome::Success && entry.has_object && entry.object<space.object_count {
+ let object:u64=entry.object;let count:u64=space.object_count;
+ transition found.outcome==Outcome::Success && entry.has_object && object<count {
   true -> (found) _ -> (Lookup {outcome:Outcome::MissingObject,path:path})
  }
 }
@@ -183,7 +184,8 @@ pub machine allocate_mut(space:&mut Namespace,value:Value)->Read {
 pub machine bind_mut(space:&mut Namespace,candidate:Entry,collision:bool)->Outcome {
  transition candidate.path.absolute {true -> valid(space,candidate,collision) _ -> (Outcome::NotAbsolute)}
  state valid(space:&mut Namespace,candidate:Entry,collision:bool)->Outcome {
-  transition path_valid(candidate.path) && candidate.path.count>0 && space.count<=32 && space.object_count<=64 && (!candidate.has_object || candidate.object<space.object_count) {
+  let object:u64=candidate.object;let count:u64=space.object_count;
+  transition path_valid(candidate.path) && candidate.path.count>0 && space.count<=32 && count<=64 && (!candidate.has_object || object<count) {
    true -> parent_level(space,candidate,collision) _ -> (Outcome::InvalidState)
   }
  }

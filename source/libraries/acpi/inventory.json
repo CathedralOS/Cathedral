@@ -898,7 +898,6 @@
         "2267:do_size_of": {
           "anchor": "fn do_size_of(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
           "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-005, ACPI-006; no translation/execution claimed.",
           "partition": [
             "aml_execution",
             "aml_syntax_namespace",
@@ -908,7 +907,15 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/aml/object_queries.omg",
+              "anchor": "pub machine size_of"
+            }
+          ],
+          "note": "Bounded component; scopes and absent Value payloads / opcode retirement remain separate.",
+          "reason": "Bounded component; scopes and absent Value payloads / opcode retirement remain separate."
         },
         "2283:do_index": {
           "anchor": "fn do_index(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
@@ -970,8 +977,7 @@
         },
         "2336:resolve_name_path": {
           "anchor": "fn resolve_name_path(&self, object: WrappedObject) -> Result<WrappedObject, AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "aml_syntax_namespace",
@@ -981,12 +987,18 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/aml/object_queries.omg",
+              "anchor": "pub machine resolve_object"
+            }
+          ],
+          "note": "Mixed lexical/ID resolution with one64-inspection budget and cycle bitmap; explicit bounded adaptation."
         },
         "2355:object_type": {
           "anchor": "fn object_type(&self, object: WrappedObject) -> Result<u64, AmlError> {",
           "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-005, ACPI-006; no translation/execution claimed.",
           "partition": [
             "aml_execution",
             "aml_syntax_namespace",
@@ -996,7 +1008,15 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/aml/object_queries.omg",
+              "anchor": "pub machine object_type"
+            }
+          ],
+          "note": "Bounded component; scopes and absent Value payloads / opcode retirement remain separate.",
+          "reason": "Bounded component; scopes and absent Value payloads / opcode retirement remain separate."
         },
         "236:evaluate": {
           "anchor": "pub fn evaluate(&self, path: AmlName, args: Vec<WrappedObject>) -> Result<WrappedObject, AmlError> {",

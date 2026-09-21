@@ -1,0 +1,72 @@
+{
+  "cases": [
+    "resolve_mixed_cycle",
+    "source_size_Buffer_4",
+    "namespace_bind_maximum"
+  ],
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "input_sha256": {
+    "source/libraries/acpi/aml/build.omg": "2129610bb9e275f63e87c5e736bb29114044d1a466cdc1d288e4c9103b076319",
+    "source/libraries/acpi/aml/byte_storage.omg": "045be1e6efc512f051231c3233f2a177473a15eb832f78111086f67a7b504f25",
+    "source/libraries/acpi/aml/bytes.omg": "66a5f91ebe3bba63c398a20dba184854f257d580279cde514ba00aa8216251be",
+    "source/libraries/acpi/aml/model.omg": "1fc2a3ceb403f0adef2022f76ac0c1187fc74b0cd794df4e7855d643838a10af",
+    "source/libraries/acpi/aml/names.omg": "130e45f58ef1d94758cf24711223471fdbbc682d6a91c0aab2e5120ccaa79601",
+    "source/libraries/acpi/aml/namespace.omg": "cc5f2e94526332970294ee9d423d6e58256d49a24ee2956dc7b40ea46545cdb5",
+    "source/libraries/acpi/aml/object_queries.omg": "288e8015e3abdae6c1c28f842fba56ec56b296f126c43333a616a47383cf8d73",
+    "source/libraries/acpi/aml/object_references.omg": "4c06bb925681f2e833ebb815b15e5e53d476f08810d0252e77a977af4134b703",
+    "source/libraries/acpi/interpreter/buffer_fields.omg": "98e1df3d821a88ba1d63c63189f3d9ac782f197b62cd04e6b71abd396042688a",
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/conversions.omg": "b3ee9811b5434883bfa2374c8ca6a746ad2a75ab4c9eacea3e8dd19b5510f714",
+    "source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196",
+    "tools/ports/acpi/aml/object-queries/cases.json": "4af9a2f41f4b95a07d218882dc82d01489aa0be753a259874ded028ce0e6e530",
+    "tools/ports/acpi/aml/object-queries/check.py": "c224ab74d9ae80e059833a285a15b8f74c2256d2d6dd8d30312a8ad3192e0b82",
+    "tools/ports/acpi/aml/object-queries/check_const.py": "0b5bd94934a9340d8ecb86c24bbd9f24a66845dbca1d4d95a4194b7f7feee319",
+    "tools/ports/acpi/aml/object-queries/check_regressions.py": "f524943b43cc2ea2c7019a0c5ba37f010b3952515a49de1e2f1ac693fe741d80",
+    "tools/ports/acpi/aml/object-queries/evidence.py": "9c4271765ee483d79b00aaafc0d34972f914eeb42bde2801378fb55fe6aa5078",
+    "tools/ports/acpi/aml/object-queries/fixtures.py": "caa0dbac8f5de32dee10947f98b94c572e5b575fd8baa71928f85c7888190c25",
+    "tools/ports/acpi/aml/object-queries/reference.py": "a5dc34567c6328db701c986b7a4f73848f33234c400a79723293341d87dfc971",
+    "tools/ports/acpi/aml/object-queries/verify_record.py": "cddcb26d80e16223f992d186325031cc9441423f132e4ab838552e8dc3ebe45d",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805"
+  },
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "proofs": [
+    {
+      "case": "resolve_mixed_cycle",
+      "control": false,
+      "output": "compiled 20 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-0ab4eb980fa5ec8b61da9f02f1140283735b6b01e6120f5d25106e4032fce159/source/main.omg; wrote_output=false\n",
+      "source_sha256": "84c7d697e68a2237dc6ca250e08985064916130ee6915b88c880d92b449a0bbc"
+    },
+    {
+      "case": "resolve_mixed_cycle",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `query-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "90bc7e4caafddb39256aa5229a79f46f979d341f37b4e4b4d3ef37adecfcbb51"
+    },
+    {
+      "case": "source_size_Buffer_4",
+      "control": false,
+      "output": "compiled 20 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-b592ac5aaae1f2b2e20810beba2f622c09efd9beeafc855f367258d50299fa01/source/main.omg; wrote_output=false\n",
+      "source_sha256": "008c4fb4cfd905bb596d47ee6c57705041ec67b9f2190e8fe70070af40c77787"
+    },
+    {
+      "case": "source_size_Buffer_4",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `query-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "0fb6544e97c71df802cae09768d118d35e987d3166272406ea336a0e8715fac5"
+    },
+    {
+      "case": "namespace_bind_maximum",
+      "control": false,
+      "output": "compiled 20 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-852030d5d28fd827cef885491a1555c15b95eebd09c93678c915b05ca0d07d63/source/main.omg; wrote_output=false\n",
+      "source_sha256": "12284d8f4e2f5cb96e44e7c7cb8b1831366194aedd6cafd1a206d82794d25119"
+    },
+    {
+      "case": "namespace_bind_maximum",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `query-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "51d6f1cfe6df0b1c996c0c39489a5ce5856b790df9fce2ad917d44d02bc7289b"
+    }
+  ],
+  "stage": "constant evaluation and checked requires; native/hardware not run"
+}

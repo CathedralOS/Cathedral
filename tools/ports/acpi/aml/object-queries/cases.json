@@ -1,0 +1,747 @@
+[
+  {
+    "name": "resolve_Named",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 1,
+    "seen": 3
+  },
+  {
+    "name": "type_Named",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:1,number:1}"
+  },
+  {
+    "name": "resolve_RefOf",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 1,
+    "seen": 3
+  },
+  {
+    "name": "type_RefOf",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:1,number:1}"
+  },
+  {
+    "name": "resolve_Local",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 1,
+    "seen": 3
+  },
+  {
+    "name": "type_Local",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:1,number:1}"
+  },
+  {
+    "name": "resolve_Arg",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 1,
+    "seen": 3
+  },
+  {
+    "name": "type_Arg",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:1,number:1}"
+  },
+  {
+    "name": "resolve_Index",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 1,
+    "seen": 3
+  },
+  {
+    "name": "type_Index",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:1,number:1}"
+  },
+  {
+    "name": "resolve_Unresolved",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 1,
+    "seen": 3
+  },
+  {
+    "name": "type_Unresolved",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:1,number:1}"
+  },
+  {
+    "name": "resolve_terminal",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Integer {number:42};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 0,
+    "seen": 1
+  },
+  {
+    "name": "resolve_uninitialized",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 0,
+    "seen": 1
+  },
+  {
+    "name": "resolve_zero_budget",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:18446744073709551615};\n",
+    "call": "resolve_object(&store.space,0,0)",
+    "outcome": "WorkLimit",
+    "object": 0,
+    "seen": 0
+  },
+  {
+    "name": "resolve_invalid_budget_65",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\n",
+    "call": "resolve_object(&store.space,0,65)",
+    "outcome": "InvalidState",
+    "object": 0,
+    "seen": 0
+  },
+  {
+    "name": "resolve_invalid_budget_18446744073709551615",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\n",
+    "call": "resolve_object(&store.space,0,18446744073709551615)",
+    "outcome": "InvalidState",
+    "object": 0,
+    "seen": 0
+  },
+  {
+    "name": "resolve_empty",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=0;let mut input:[u8;1024];\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "InvalidState",
+    "object": 0,
+    "seen": 0
+  },
+  {
+    "name": "resolve_count",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=65;let mut input:[u8;1024];\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "InvalidState",
+    "object": 0,
+    "seen": 0
+  },
+  {
+    "name": "resolve_start",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\n",
+    "call": "resolve_object(&store.space,64,64)",
+    "outcome": "InvalidState",
+    "object": 64,
+    "seen": 0
+  },
+  {
+    "name": "resolve_max_start",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\n",
+    "call": "resolve_object(&store.space,18446744073709551615,64)",
+    "outcome": "InvalidState",
+    "object": 18446744073709551615,
+    "seen": 0
+  },
+  {
+    "name": "resolve_bad_entries",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.count=33;",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "InvalidState",
+    "object": 0,
+    "seen": 0
+  },
+  {
+    "name": "resolve_dangling_64",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:64};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "InvalidState",
+    "object": 64,
+    "seen": 1
+  },
+  {
+    "name": "resolve_dangling_18446744073709551615",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:18446744073709551615};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "InvalidState",
+    "object": 18446744073709551615,
+    "seen": 1
+  },
+  {
+    "name": "resolve_self",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "ReferenceCycle",
+    "object": 0,
+    "seen": 1
+  },
+  {
+    "name": "resolve_two_cycle",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nstore.space.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "ReferenceCycle",
+    "object": 0,
+    "seen": 3
+  },
+  {
+    "name": "resolve_short_cycle_budget",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nstore.space.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\n",
+    "call": "resolve_object(&store.space,0,1)",
+    "outcome": "WorkLimit",
+    "object": 1,
+    "seen": 1
+  },
+  {
+    "name": "resolve_full_chain",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=64;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nstore.space.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:2};\nstore.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:3};\nstore.space.objects[3].value=Value::Reference {kind:ReferenceKind::Named,object_id:4};\nstore.space.objects[4].value=Value::Reference {kind:ReferenceKind::Named,object_id:5};\nstore.space.objects[5].value=Value::Reference {kind:ReferenceKind::Named,object_id:6};\nstore.space.objects[6].value=Value::Reference {kind:ReferenceKind::Named,object_id:7};\nstore.space.objects[7].value=Value::Reference {kind:ReferenceKind::Named,object_id:8};\nstore.space.objects[8].value=Value::Reference {kind:ReferenceKind::Named,object_id:9};\nstore.space.objects[9].value=Value::Reference {kind:ReferenceKind::Named,object_id:10};\nstore.space.objects[10].value=Value::Reference {kind:ReferenceKind::Named,object_id:11};\nstore.space.objects[11].value=Value::Reference {kind:ReferenceKind::Named,object_id:12};\nstore.space.objects[12].value=Value::Reference {kind:ReferenceKind::Named,object_id:13};\nstore.space.objects[13].value=Value::Reference {kind:ReferenceKind::Named,object_id:14};\nstore.space.objects[14].value=Value::Reference {kind:ReferenceKind::Named,object_id:15};\nstore.space.objects[15].value=Value::Reference {kind:ReferenceKind::Named,object_id:16};\nstore.space.objects[16].value=Value::Reference {kind:ReferenceKind::Named,object_id:17};\nstore.space.objects[17].value=Value::Reference {kind:ReferenceKind::Named,object_id:18};\nstore.space.objects[18].value=Value::Reference {kind:ReferenceKind::Named,object_id:19};\nstore.space.objects[19].value=Value::Reference {kind:ReferenceKind::Named,object_id:20};\nstore.space.objects[20].value=Value::Reference {kind:ReferenceKind::Named,object_id:21};\nstore.space.objects[21].value=Value::Reference {kind:ReferenceKind::Named,object_id:22};\nstore.space.objects[22].value=Value::Reference {kind:ReferenceKind::Named,object_id:23};\nstore.space.objects[23].value=Value::Reference {kind:ReferenceKind::Named,object_id:24};\nstore.space.objects[24].value=Value::Reference {kind:ReferenceKind::Named,object_id:25};\nstore.space.objects[25].value=Value::Reference {kind:ReferenceKind::Named,object_id:26};\nstore.space.objects[26].value=Value::Reference {kind:ReferenceKind::Named,object_id:27};\nstore.space.objects[27].value=Value::Reference {kind:ReferenceKind::Named,object_id:28};\nstore.space.objects[28].value=Value::Reference {kind:ReferenceKind::Named,object_id:29};\nstore.space.objects[29].value=Value::Reference {kind:ReferenceKind::Named,object_id:30};\nstore.space.objects[30].value=Value::Reference {kind:ReferenceKind::Named,object_id:31};\nstore.space.objects[31].value=Value::Reference {kind:ReferenceKind::Named,object_id:32};\nstore.space.objects[32].value=Value::Reference {kind:ReferenceKind::Named,object_id:33};\nstore.space.objects[33].value=Value::Reference {kind:ReferenceKind::Named,object_id:34};\nstore.space.objects[34].value=Value::Reference {kind:ReferenceKind::Named,object_id:35};\nstore.space.objects[35].value=Value::Reference {kind:ReferenceKind::Named,object_id:36};\nstore.space.objects[36].value=Value::Reference {kind:ReferenceKind::Named,object_id:37};\nstore.space.objects[37].value=Value::Reference {kind:ReferenceKind::Named,object_id:38};\nstore.space.objects[38].value=Value::Reference {kind:ReferenceKind::Named,object_id:39};\nstore.space.objects[39].value=Value::Reference {kind:ReferenceKind::Named,object_id:40};\nstore.space.objects[40].value=Value::Reference {kind:ReferenceKind::Named,object_id:41};\nstore.space.objects[41].value=Value::Reference {kind:ReferenceKind::Named,object_id:42};\nstore.space.objects[42].value=Value::Reference {kind:ReferenceKind::Named,object_id:43};\nstore.space.objects[43].value=Value::Reference {kind:ReferenceKind::Named,object_id:44};\nstore.space.objects[44].value=Value::Reference {kind:ReferenceKind::Named,object_id:45};\nstore.space.objects[45].value=Value::Reference {kind:ReferenceKind::Named,object_id:46};\nstore.space.objects[46].value=Value::Reference {kind:ReferenceKind::Named,object_id:47};\nstore.space.objects[47].value=Value::Reference {kind:ReferenceKind::Named,object_id:48};\nstore.space.objects[48].value=Value::Reference {kind:ReferenceKind::Named,object_id:49};\nstore.space.objects[49].value=Value::Reference {kind:ReferenceKind::Named,object_id:50};\nstore.space.objects[50].value=Value::Reference {kind:ReferenceKind::Named,object_id:51};\nstore.space.objects[51].value=Value::Reference {kind:ReferenceKind::Named,object_id:52};\nstore.space.objects[52].value=Value::Reference {kind:ReferenceKind::Named,object_id:53};\nstore.space.objects[53].value=Value::Reference {kind:ReferenceKind::Named,object_id:54};\nstore.space.objects[54].value=Value::Reference {kind:ReferenceKind::Named,object_id:55};\nstore.space.objects[55].value=Value::Reference {kind:ReferenceKind::Named,object_id:56};\nstore.space.objects[56].value=Value::Reference {kind:ReferenceKind::Named,object_id:57};\nstore.space.objects[57].value=Value::Reference {kind:ReferenceKind::Named,object_id:58};\nstore.space.objects[58].value=Value::Reference {kind:ReferenceKind::Named,object_id:59};\nstore.space.objects[59].value=Value::Reference {kind:ReferenceKind::Named,object_id:60};\nstore.space.objects[60].value=Value::Reference {kind:ReferenceKind::Named,object_id:61};\nstore.space.objects[61].value=Value::Reference {kind:ReferenceKind::Named,object_id:62};\nstore.space.objects[62].value=Value::Reference {kind:ReferenceKind::Named,object_id:63};\nstore.space.objects[63].value=Value::Integer {number:42};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 63,
+    "seen": 18446744073709551615
+  },
+  {
+    "name": "resolve_short_chain",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=64;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nstore.space.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:2};\nstore.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:3};\nstore.space.objects[3].value=Value::Reference {kind:ReferenceKind::Named,object_id:4};\nstore.space.objects[4].value=Value::Reference {kind:ReferenceKind::Named,object_id:5};\nstore.space.objects[5].value=Value::Reference {kind:ReferenceKind::Named,object_id:6};\nstore.space.objects[6].value=Value::Reference {kind:ReferenceKind::Named,object_id:7};\nstore.space.objects[7].value=Value::Reference {kind:ReferenceKind::Named,object_id:8};\nstore.space.objects[8].value=Value::Reference {kind:ReferenceKind::Named,object_id:9};\nstore.space.objects[9].value=Value::Reference {kind:ReferenceKind::Named,object_id:10};\nstore.space.objects[10].value=Value::Reference {kind:ReferenceKind::Named,object_id:11};\nstore.space.objects[11].value=Value::Reference {kind:ReferenceKind::Named,object_id:12};\nstore.space.objects[12].value=Value::Reference {kind:ReferenceKind::Named,object_id:13};\nstore.space.objects[13].value=Value::Reference {kind:ReferenceKind::Named,object_id:14};\nstore.space.objects[14].value=Value::Reference {kind:ReferenceKind::Named,object_id:15};\nstore.space.objects[15].value=Value::Reference {kind:ReferenceKind::Named,object_id:16};\nstore.space.objects[16].value=Value::Reference {kind:ReferenceKind::Named,object_id:17};\nstore.space.objects[17].value=Value::Reference {kind:ReferenceKind::Named,object_id:18};\nstore.space.objects[18].value=Value::Reference {kind:ReferenceKind::Named,object_id:19};\nstore.space.objects[19].value=Value::Reference {kind:ReferenceKind::Named,object_id:20};\nstore.space.objects[20].value=Value::Reference {kind:ReferenceKind::Named,object_id:21};\nstore.space.objects[21].value=Value::Reference {kind:ReferenceKind::Named,object_id:22};\nstore.space.objects[22].value=Value::Reference {kind:ReferenceKind::Named,object_id:23};\nstore.space.objects[23].value=Value::Reference {kind:ReferenceKind::Named,object_id:24};\nstore.space.objects[24].value=Value::Reference {kind:ReferenceKind::Named,object_id:25};\nstore.space.objects[25].value=Value::Reference {kind:ReferenceKind::Named,object_id:26};\nstore.space.objects[26].value=Value::Reference {kind:ReferenceKind::Named,object_id:27};\nstore.space.objects[27].value=Value::Reference {kind:ReferenceKind::Named,object_id:28};\nstore.space.objects[28].value=Value::Reference {kind:ReferenceKind::Named,object_id:29};\nstore.space.objects[29].value=Value::Reference {kind:ReferenceKind::Named,object_id:30};\nstore.space.objects[30].value=Value::Reference {kind:ReferenceKind::Named,object_id:31};\nstore.space.objects[31].value=Value::Reference {kind:ReferenceKind::Named,object_id:32};\nstore.space.objects[32].value=Value::Reference {kind:ReferenceKind::Named,object_id:33};\nstore.space.objects[33].value=Value::Reference {kind:ReferenceKind::Named,object_id:34};\nstore.space.objects[34].value=Value::Reference {kind:ReferenceKind::Named,object_id:35};\nstore.space.objects[35].value=Value::Reference {kind:ReferenceKind::Named,object_id:36};\nstore.space.objects[36].value=Value::Reference {kind:ReferenceKind::Named,object_id:37};\nstore.space.objects[37].value=Value::Reference {kind:ReferenceKind::Named,object_id:38};\nstore.space.objects[38].value=Value::Reference {kind:ReferenceKind::Named,object_id:39};\nstore.space.objects[39].value=Value::Reference {kind:ReferenceKind::Named,object_id:40};\nstore.space.objects[40].value=Value::Reference {kind:ReferenceKind::Named,object_id:41};\nstore.space.objects[41].value=Value::Reference {kind:ReferenceKind::Named,object_id:42};\nstore.space.objects[42].value=Value::Reference {kind:ReferenceKind::Named,object_id:43};\nstore.space.objects[43].value=Value::Reference {kind:ReferenceKind::Named,object_id:44};\nstore.space.objects[44].value=Value::Reference {kind:ReferenceKind::Named,object_id:45};\nstore.space.objects[45].value=Value::Reference {kind:ReferenceKind::Named,object_id:46};\nstore.space.objects[46].value=Value::Reference {kind:ReferenceKind::Named,object_id:47};\nstore.space.objects[47].value=Value::Reference {kind:ReferenceKind::Named,object_id:48};\nstore.space.objects[48].value=Value::Reference {kind:ReferenceKind::Named,object_id:49};\nstore.space.objects[49].value=Value::Reference {kind:ReferenceKind::Named,object_id:50};\nstore.space.objects[50].value=Value::Reference {kind:ReferenceKind::Named,object_id:51};\nstore.space.objects[51].value=Value::Reference {kind:ReferenceKind::Named,object_id:52};\nstore.space.objects[52].value=Value::Reference {kind:ReferenceKind::Named,object_id:53};\nstore.space.objects[53].value=Value::Reference {kind:ReferenceKind::Named,object_id:54};\nstore.space.objects[54].value=Value::Reference {kind:ReferenceKind::Named,object_id:55};\nstore.space.objects[55].value=Value::Reference {kind:ReferenceKind::Named,object_id:56};\nstore.space.objects[56].value=Value::Reference {kind:ReferenceKind::Named,object_id:57};\nstore.space.objects[57].value=Value::Reference {kind:ReferenceKind::Named,object_id:58};\nstore.space.objects[58].value=Value::Reference {kind:ReferenceKind::Named,object_id:59};\nstore.space.objects[59].value=Value::Reference {kind:ReferenceKind::Named,object_id:60};\nstore.space.objects[60].value=Value::Reference {kind:ReferenceKind::Named,object_id:61};\nstore.space.objects[61].value=Value::Reference {kind:ReferenceKind::Named,object_id:62};\nstore.space.objects[62].value=Value::Reference {kind:ReferenceKind::Named,object_id:63};\nstore.space.objects[63].value=Value::Integer {number:42};\n",
+    "call": "resolve_object(&store.space,0,63)",
+    "outcome": "WorkLimit",
+    "object": 63,
+    "seen": 9223372036854775807
+  },
+  {
+    "name": "resolve_full_cycle",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=64;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nstore.space.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:2};\nstore.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:3};\nstore.space.objects[3].value=Value::Reference {kind:ReferenceKind::Named,object_id:4};\nstore.space.objects[4].value=Value::Reference {kind:ReferenceKind::Named,object_id:5};\nstore.space.objects[5].value=Value::Reference {kind:ReferenceKind::Named,object_id:6};\nstore.space.objects[6].value=Value::Reference {kind:ReferenceKind::Named,object_id:7};\nstore.space.objects[7].value=Value::Reference {kind:ReferenceKind::Named,object_id:8};\nstore.space.objects[8].value=Value::Reference {kind:ReferenceKind::Named,object_id:9};\nstore.space.objects[9].value=Value::Reference {kind:ReferenceKind::Named,object_id:10};\nstore.space.objects[10].value=Value::Reference {kind:ReferenceKind::Named,object_id:11};\nstore.space.objects[11].value=Value::Reference {kind:ReferenceKind::Named,object_id:12};\nstore.space.objects[12].value=Value::Reference {kind:ReferenceKind::Named,object_id:13};\nstore.space.objects[13].value=Value::Reference {kind:ReferenceKind::Named,object_id:14};\nstore.space.objects[14].value=Value::Reference {kind:ReferenceKind::Named,object_id:15};\nstore.space.objects[15].value=Value::Reference {kind:ReferenceKind::Named,object_id:16};\nstore.space.objects[16].value=Value::Reference {kind:ReferenceKind::Named,object_id:17};\nstore.space.objects[17].value=Value::Reference {kind:ReferenceKind::Named,object_id:18};\nstore.space.objects[18].value=Value::Reference {kind:ReferenceKind::Named,object_id:19};\nstore.space.objects[19].value=Value::Reference {kind:ReferenceKind::Named,object_id:20};\nstore.space.objects[20].value=Value::Reference {kind:ReferenceKind::Named,object_id:21};\nstore.space.objects[21].value=Value::Reference {kind:ReferenceKind::Named,object_id:22};\nstore.space.objects[22].value=Value::Reference {kind:ReferenceKind::Named,object_id:23};\nstore.space.objects[23].value=Value::Reference {kind:ReferenceKind::Named,object_id:24};\nstore.space.objects[24].value=Value::Reference {kind:ReferenceKind::Named,object_id:25};\nstore.space.objects[25].value=Value::Reference {kind:ReferenceKind::Named,object_id:26};\nstore.space.objects[26].value=Value::Reference {kind:ReferenceKind::Named,object_id:27};\nstore.space.objects[27].value=Value::Reference {kind:ReferenceKind::Named,object_id:28};\nstore.space.objects[28].value=Value::Reference {kind:ReferenceKind::Named,object_id:29};\nstore.space.objects[29].value=Value::Reference {kind:ReferenceKind::Named,object_id:30};\nstore.space.objects[30].value=Value::Reference {kind:ReferenceKind::Named,object_id:31};\nstore.space.objects[31].value=Value::Reference {kind:ReferenceKind::Named,object_id:32};\nstore.space.objects[32].value=Value::Reference {kind:ReferenceKind::Named,object_id:33};\nstore.space.objects[33].value=Value::Reference {kind:ReferenceKind::Named,object_id:34};\nstore.space.objects[34].value=Value::Reference {kind:ReferenceKind::Named,object_id:35};\nstore.space.objects[35].value=Value::Reference {kind:ReferenceKind::Named,object_id:36};\nstore.space.objects[36].value=Value::Reference {kind:ReferenceKind::Named,object_id:37};\nstore.space.objects[37].value=Value::Reference {kind:ReferenceKind::Named,object_id:38};\nstore.space.objects[38].value=Value::Reference {kind:ReferenceKind::Named,object_id:39};\nstore.space.objects[39].value=Value::Reference {kind:ReferenceKind::Named,object_id:40};\nstore.space.objects[40].value=Value::Reference {kind:ReferenceKind::Named,object_id:41};\nstore.space.objects[41].value=Value::Reference {kind:ReferenceKind::Named,object_id:42};\nstore.space.objects[42].value=Value::Reference {kind:ReferenceKind::Named,object_id:43};\nstore.space.objects[43].value=Value::Reference {kind:ReferenceKind::Named,object_id:44};\nstore.space.objects[44].value=Value::Reference {kind:ReferenceKind::Named,object_id:45};\nstore.space.objects[45].value=Value::Reference {kind:ReferenceKind::Named,object_id:46};\nstore.space.objects[46].value=Value::Reference {kind:ReferenceKind::Named,object_id:47};\nstore.space.objects[47].value=Value::Reference {kind:ReferenceKind::Named,object_id:48};\nstore.space.objects[48].value=Value::Reference {kind:ReferenceKind::Named,object_id:49};\nstore.space.objects[49].value=Value::Reference {kind:ReferenceKind::Named,object_id:50};\nstore.space.objects[50].value=Value::Reference {kind:ReferenceKind::Named,object_id:51};\nstore.space.objects[51].value=Value::Reference {kind:ReferenceKind::Named,object_id:52};\nstore.space.objects[52].value=Value::Reference {kind:ReferenceKind::Named,object_id:53};\nstore.space.objects[53].value=Value::Reference {kind:ReferenceKind::Named,object_id:54};\nstore.space.objects[54].value=Value::Reference {kind:ReferenceKind::Named,object_id:55};\nstore.space.objects[55].value=Value::Reference {kind:ReferenceKind::Named,object_id:56};\nstore.space.objects[56].value=Value::Reference {kind:ReferenceKind::Named,object_id:57};\nstore.space.objects[57].value=Value::Reference {kind:ReferenceKind::Named,object_id:58};\nstore.space.objects[58].value=Value::Reference {kind:ReferenceKind::Named,object_id:59};\nstore.space.objects[59].value=Value::Reference {kind:ReferenceKind::Named,object_id:60};\nstore.space.objects[60].value=Value::Reference {kind:ReferenceKind::Named,object_id:61};\nstore.space.objects[61].value=Value::Reference {kind:ReferenceKind::Named,object_id:62};\nstore.space.objects[62].value=Value::Reference {kind:ReferenceKind::Named,object_id:63};\nstore.space.objects[63].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "ReferenceCycle",
+    "object": 0,
+    "seen": 18446744073709551615
+  },
+  {
+    "name": "resolve_name",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.count=1;store.space.entries[0].path=Path {absolute:true,count:1};store.space.entries[0].path.segments[0]=1600085848;store.space.entries[0].has_object=true;store.space.entries[0].object=1;\nlet mut path0:Path=Path {absolute:true,count:1};path0.segments[0]=1600085848;store.space.objects[0].value=Value::NameReference {name:path0,scope:Path {absolute:true}};\nstore.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 1,
+    "seen": 3
+  },
+  {
+    "name": "resolve_mixed",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=4;let mut input:[u8;1024];\nstore.space.count=1;store.space.entries[0].path=Path {absolute:true,count:1};store.space.entries[0].path.segments[0]=1600085848;store.space.entries[0].has_object=true;store.space.entries[0].object=2;\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet mut path1:Path=Path {absolute:true,count:1};path1.segments[0]=1600085848;store.space.objects[1].value=Value::NameReference {name:path1,scope:Path {absolute:true}};\nstore.space.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:3};\nstore.space.objects[3].value=Value::Integer {number:42};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 3,
+    "seen": 15
+  },
+  {
+    "name": "resolve_mixed_cycle",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=3;let mut input:[u8;1024];\nstore.space.count=1;store.space.entries[0].path=Path {absolute:true,count:1};store.space.entries[0].path.segments[0]=1600085848;store.space.entries[0].has_object=true;store.space.entries[0].object=2;\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet mut path1:Path=Path {absolute:true,count:1};path1.segments[0]=1600085848;store.space.objects[1].value=Value::NameReference {name:path1,scope:Path {absolute:true}};\nstore.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "ReferenceCycle",
+    "object": 0,
+    "seen": 7
+  },
+  {
+    "name": "resolve_lexical_cycle",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.count=1;store.space.entries[0].path=Path {absolute:true,count:1};store.space.entries[0].path.segments[0]=1600085848;store.space.entries[0].has_object=true;store.space.entries[0].object=0;\nlet mut path0:Path=Path {absolute:true,count:1};path0.segments[0]=1600085848;store.space.objects[0].value=Value::NameReference {name:path0,scope:Path {absolute:true}};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "ReferenceCycle",
+    "object": 0,
+    "seen": 1
+  },
+  {
+    "name": "resolve_name_missing",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nlet mut path0:Path=Path {absolute:true,count:1};path0.segments[0]=1600085848;store.space.objects[0].value=Value::NameReference {name:path0,scope:Path {absolute:true}};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "MissingObject",
+    "object": 0,
+    "seen": 1
+  },
+  {
+    "name": "resolve_bad_lexical_target",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.count=1;store.space.entries[0].path=Path {absolute:true,count:1};store.space.entries[0].path.segments[0]=1600085848;store.space.entries[0].has_object=true;store.space.entries[0].object=18446744073709551615;\nlet mut path0:Path=Path {absolute:true,count:1};path0.segments[0]=1600085848;store.space.objects[0].value=Value::NameReference {name:path0,scope:Path {absolute:true}};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "MissingObject",
+    "object": 0,
+    "seen": 1
+  },
+  {
+    "name": "resolve_bad_name",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nlet mut path0:Path=Path {absolute:true,count:1};path0.segments[0]=0;store.space.objects[0].value=Value::NameReference {name:path0,scope:Path {absolute:true}};\n",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "InvalidName",
+    "object": 0,
+    "seen": 1
+  },
+  {
+    "name": "resolve_ancestor_search",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=3;let mut input:[u8;1024];\nstore.space.count=3;store.space.entries[0].path=Path {absolute:true};store.space.entries[0].has_level=true;store.space.entries[1].path=Path {absolute:true,count:1};store.space.entries[1].path.segments[0]=1600073796;store.space.entries[1].has_level=true;store.space.entries[2].path=Path {absolute:true,count:1};store.space.entries[2].path.segments[0]=1600085848;store.space.entries[2].has_object=true;store.space.entries[2].object=1;\nstore.space.objects[1].value=Value::Integer {number:42};\nstore.space.objects[2].value=Value::Integer {number:42};\nlet mut path0:Path=Path {absolute:true,count:1};path0.segments[0]=1600085848;store.space.objects[0].value=Value::NameReference {name:path0,scope:Path {absolute:true}};\npath0.absolute=false;let declared:Path=store.space.entries[1].path;store.space.objects[0].value=Value::NameReference {name:path0,scope:declared};",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 1,
+    "seen": 3
+  },
+  {
+    "name": "resolve_nearest_scope",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=3;let mut input:[u8;1024];\nstore.space.count=3;store.space.entries[0].path=Path {absolute:true};store.space.entries[0].has_level=true;store.space.entries[1].path=Path {absolute:true,count:1};store.space.entries[1].path.segments[0]=1600073796;store.space.entries[1].has_level=true;store.space.entries[2].path=Path {absolute:true,count:1};store.space.entries[2].path.segments[0]=1600085848;store.space.entries[2].has_object=true;store.space.entries[2].object=1;\nstore.space.objects[1].value=Value::Integer {number:42};\nstore.space.objects[2].value=Value::Integer {number:42};\nlet mut path0:Path=Path {absolute:true,count:1};path0.segments[0]=1600085848;store.space.objects[0].value=Value::NameReference {name:path0,scope:Path {absolute:true}};\npath0.absolute=false;let declared:Path=store.space.entries[1].path;store.space.objects[0].value=Value::NameReference {name:path0,scope:declared};store.space.count=4;store.space.entries[3].path=Path {absolute:true,count:1};store.space.entries[3].path.segments[0]=1600085848;store.space.entries[3].has_object=true;store.space.entries[3].object=2;\nstore.space.entries[3].path.count=2;store.space.entries[3].path.segments[0]=1600073796;store.space.entries[3].path.segments[1]=1600085848;",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 2,
+    "seen": 5
+  },
+  {
+    "name": "resolve_parent_prefix",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=3;let mut input:[u8;1024];\nstore.space.count=3;store.space.entries[0].path=Path {absolute:true};store.space.entries[0].has_level=true;store.space.entries[1].path=Path {absolute:true,count:1};store.space.entries[1].path.segments[0]=1600073796;store.space.entries[1].has_level=true;store.space.entries[2].path=Path {absolute:true,count:1};store.space.entries[2].path.segments[0]=1600085848;store.space.entries[2].has_object=true;store.space.entries[2].object=1;\nstore.space.objects[1].value=Value::Integer {number:42};\nstore.space.objects[2].value=Value::Integer {number:42};\nlet mut path0:Path=Path {absolute:true,count:1};path0.segments[0]=1600085848;store.space.objects[0].value=Value::NameReference {name:path0,scope:Path {absolute:true}};\npath0.absolute=false;let declared:Path=store.space.entries[1].path;store.space.objects[0].value=Value::NameReference {name:path0,scope:declared};store.space.count=4;store.space.entries[3].path=Path {absolute:true,count:1};store.space.entries[3].path.segments[0]=1600085848;store.space.entries[3].has_object=true;store.space.entries[3].object=2;\nstore.space.entries[3].path.count=2;store.space.entries[3].path.segments[0]=1600073796;store.space.entries[3].path.segments[1]=1600085848;path0.parents=1;store.space.objects[0].value=Value::NameReference {name:path0,scope:declared};",
+    "call": "resolve_object(&store.space,0,64)",
+    "outcome": "Success",
+    "object": 1,
+    "seen": 3
+  },
+  {
+    "name": "resolve_zero_name_budget",
+    "kind": "resolve",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nlet mut path0:Path=Path {absolute:true,count:1};path0.segments[0]=1600085848;store.space.objects[0].value=Value::NameReference {name:path0,scope:Path {absolute:true}};\n",
+    "call": "resolve_object(&store.space,0,0)",
+    "outcome": "WorkLimit",
+    "object": 0,
+    "seen": 0
+  },
+  {
+    "name": "mixed_buffer_size",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=3;let mut input:[u8;1024];\nstore.space.count=1;store.space.entries[0].path=Path {absolute:true,count:1};store.space.entries[0].path.segments[0]=1600085848;store.space.entries[0].has_object=true;store.space.entries[0].object=2;\nstore.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet mut path1:Path=Path {absolute:true,count:1};path1.segments[0]=1600085848;store.space.objects[1].value=Value::NameReference {name:path1,scope:Path {absolute:true}};\nstore.space.objects[2].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:4,buffer_initializer:Span {unit:7,end:2}}};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::Value {object:2,number:4}"
+  },
+  {
+    "name": "payload_type_0",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Uninitialized;",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:0}"
+  },
+  {
+    "name": "unsupported_size_0",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Uninitialized;",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::UnsupportedValue"
+  },
+  {
+    "name": "payload_type_1",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Integer {number:42};",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:1}"
+  },
+  {
+    "name": "unsupported_size_1",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Integer {number:42};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::UnsupportedValue"
+  },
+  {
+    "name": "payload_type_2",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::String {string_storage:StringStorage::Owned {string_owner:99}};",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:2}"
+  },
+  {
+    "name": "payload_type_3",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:99}};",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:3}"
+  },
+  {
+    "name": "payload_type_4",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Package {first:99,count:999};",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:4}"
+  },
+  {
+    "name": "payload_type_6",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Device;",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:6}"
+  },
+  {
+    "name": "unsupported_size_6",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Device;",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::UnsupportedValue"
+  },
+  {
+    "name": "payload_type_7",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Event;",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:7}"
+  },
+  {
+    "name": "unsupported_size_7",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Event;",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::UnsupportedValue"
+  },
+  {
+    "name": "payload_type_8",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Method {flags:0,body:Span {}};",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:8}"
+  },
+  {
+    "name": "unsupported_size_8",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Method {flags:0,body:Span {}};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::UnsupportedValue"
+  },
+  {
+    "name": "payload_type_9",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Mutex {sync_level:0};",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:9}"
+  },
+  {
+    "name": "unsupported_size_9",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Mutex {sync_level:0};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::UnsupportedValue"
+  },
+  {
+    "name": "payload_type_10",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::OperationRegion {space:0,base:0,length:0,scope:Path {}};",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:10}"
+  },
+  {
+    "name": "unsupported_size_10",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::OperationRegion {space:0,base:0,length:0,scope:Path {}};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::UnsupportedValue"
+  },
+  {
+    "name": "payload_type_11",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::PowerResource {system_level:0,order:0};",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:11}"
+  },
+  {
+    "name": "unsupported_size_11",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::PowerResource {system_level:0,order:0};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::UnsupportedValue"
+  },
+  {
+    "name": "payload_type_12",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Processor {id:0,address:0,length:0};",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:12}"
+  },
+  {
+    "name": "unsupported_size_12",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Processor {id:0,address:0,length:0};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::UnsupportedValue"
+  },
+  {
+    "name": "payload_type_13",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::ThermalZone;",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:13}"
+  },
+  {
+    "name": "unsupported_size_13",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::ThermalZone;",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::UnsupportedValue"
+  },
+  {
+    "name": "payload_type_14",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::BufferField {backing_object:99,bit_offset:999,bit_length:999};",
+    "call": "object_type(&store.space,0,64)",
+    "expected": "QueryResult::Value {object:0,number:14}"
+  },
+  {
+    "name": "unsupported_size_14",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::BufferField {backing_object:99,bit_offset:999,bit_length:999};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::UnsupportedValue"
+  },
+  {
+    "name": "type_zero_budget",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\n",
+    "call": "object_type(&store.space,0,0)",
+    "expected": "QueryResult::ResolutionFailure {resolution_error:Outcome::WorkLimit}"
+  },
+  {
+    "name": "size_zero_budget",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\n",
+    "call": "size_of(&input,2,7,&store,0,0)",
+    "expected": "QueryResult::ResolutionFailure {resolution_error:Outcome::WorkLimit}"
+  },
+  {
+    "name": "source_size_Buffer_0",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:0,buffer_initializer:Span {unit:7,end:0}}};",
+    "call": "size_of(&input,0,7,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:0}"
+  },
+  {
+    "name": "source_size_Buffer_2",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:4,buffer_initializer:Span {unit:7,end:2}}};input[0]=65;input[1]=65;",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:4}"
+  },
+  {
+    "name": "source_size_Buffer_4",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:2,buffer_initializer:Span {unit:7,end:4}}};input[0]=65;input[1]=65;input[2]=65;input[3]=65;",
+    "call": "size_of(&input,4,7,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:4}"
+  },
+  {
+    "name": "source_size_Buffer_256",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:256,buffer_initializer:Span {unit:7,end:256}}};input[0]=65;input[1]=65;input[2]=65;input[3]=65;input[4]=65;input[5]=65;input[6]=65;input[7]=65;input[8]=65;input[9]=65;input[10]=65;input[11]=65;input[12]=65;input[13]=65;input[14]=65;input[15]=65;input[16]=65;input[17]=65;input[18]=65;input[19]=65;input[20]=65;input[21]=65;input[22]=65;input[23]=65;input[24]=65;input[25]=65;input[26]=65;input[27]=65;input[28]=65;input[29]=65;input[30]=65;input[31]=65;input[32]=65;input[33]=65;input[34]=65;input[35]=65;input[36]=65;input[37]=65;input[38]=65;input[39]=65;input[40]=65;input[41]=65;input[42]=65;input[43]=65;input[44]=65;input[45]=65;input[46]=65;input[47]=65;input[48]=65;input[49]=65;input[50]=65;input[51]=65;input[52]=65;input[53]=65;input[54]=65;input[55]=65;input[56]=65;input[57]=65;input[58]=65;input[59]=65;input[60]=65;input[61]=65;input[62]=65;input[63]=65;input[64]=65;input[65]=65;input[66]=65;input[67]=65;input[68]=65;input[69]=65;input[70]=65;input[71]=65;input[72]=65;input[73]=65;input[74]=65;input[75]=65;input[76]=65;input[77]=65;input[78]=65;input[79]=65;input[80]=65;input[81]=65;input[82]=65;input[83]=65;input[84]=65;input[85]=65;input[86]=65;input[87]=65;input[88]=65;input[89]=65;input[90]=65;input[91]=65;input[92]=65;input[93]=65;input[94]=65;input[95]=65;input[96]=65;input[97]=65;input[98]=65;input[99]=65;input[100]=65;input[101]=65;input[102]=65;input[103]=65;input[104]=65;input[105]=65;input[106]=65;input[107]=65;input[108]=65;input[109]=65;input[110]=65;input[111]=65;input[112]=65;input[113]=65;input[114]=65;input[115]=65;input[116]=65;input[117]=65;input[118]=65;input[119]=65;input[120]=65;input[121]=65;input[122]=65;input[123]=65;input[124]=65;input[125]=65;input[126]=65;input[127]=65;input[128]=65;input[129]=65;input[130]=65;input[131]=65;input[132]=65;input[133]=65;input[134]=65;input[135]=65;input[136]=65;input[137]=65;input[138]=65;input[139]=65;input[140]=65;input[141]=65;input[142]=65;input[143]=65;input[144]=65;input[145]=65;input[146]=65;input[147]=65;input[148]=65;input[149]=65;input[150]=65;input[151]=65;input[152]=65;input[153]=65;input[154]=65;input[155]=65;input[156]=65;input[157]=65;input[158]=65;input[159]=65;input[160]=65;input[161]=65;input[162]=65;input[163]=65;input[164]=65;input[165]=65;input[166]=65;input[167]=65;input[168]=65;input[169]=65;input[170]=65;input[171]=65;input[172]=65;input[173]=65;input[174]=65;input[175]=65;input[176]=65;input[177]=65;input[178]=65;input[179]=65;input[180]=65;input[181]=65;input[182]=65;input[183]=65;input[184]=65;input[185]=65;input[186]=65;input[187]=65;input[188]=65;input[189]=65;input[190]=65;input[191]=65;input[192]=65;input[193]=65;input[194]=65;input[195]=65;input[196]=65;input[197]=65;input[198]=65;input[199]=65;input[200]=65;input[201]=65;input[202]=65;input[203]=65;input[204]=65;input[205]=65;input[206]=65;input[207]=65;input[208]=65;input[209]=65;input[210]=65;input[211]=65;input[212]=65;input[213]=65;input[214]=65;input[215]=65;input[216]=65;input[217]=65;input[218]=65;input[219]=65;input[220]=65;input[221]=65;input[222]=65;input[223]=65;input[224]=65;input[225]=65;input[226]=65;input[227]=65;input[228]=65;input[229]=65;input[230]=65;input[231]=65;input[232]=65;input[233]=65;input[234]=65;input[235]=65;input[236]=65;input[237]=65;input[238]=65;input[239]=65;input[240]=65;input[241]=65;input[242]=65;input[243]=65;input[244]=65;input[245]=65;input[246]=65;input[247]=65;input[248]=65;input[249]=65;input[250]=65;input[251]=65;input[252]=65;input[253]=65;input[254]=65;input[255]=65;",
+    "call": "size_of(&input,256,7,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:256}"
+  },
+  {
+    "name": "owned_size_Buffer",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true,length:2};store.bytes.blocks[0].bytes[0]=65;store.bytes.blocks[0].bytes[1]=66;",
+    "call": "size_of(&input,0,999,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:2}"
+  },
+  {
+    "name": "bad_owned_Buffer",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::InvalidStorage {storage_error:ByteOutcome::InvalidState}"
+  },
+  {
+    "name": "source_size_String_0",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::String {string_storage:StringStorage::Source {string_source:Span {unit:7,end:0}}};",
+    "call": "size_of(&input,0,7,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:0}"
+  },
+  {
+    "name": "source_size_String_2",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::String {string_storage:StringStorage::Source {string_source:Span {unit:7,end:2}}};input[0]=65;input[1]=65;",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:2}"
+  },
+  {
+    "name": "source_size_String_4",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::String {string_storage:StringStorage::Source {string_source:Span {unit:7,end:4}}};input[0]=65;input[1]=65;input[2]=65;input[3]=65;",
+    "call": "size_of(&input,4,7,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:4}"
+  },
+  {
+    "name": "source_size_String_256",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::String {string_storage:StringStorage::Source {string_source:Span {unit:7,end:256}}};input[0]=65;input[1]=65;input[2]=65;input[3]=65;input[4]=65;input[5]=65;input[6]=65;input[7]=65;input[8]=65;input[9]=65;input[10]=65;input[11]=65;input[12]=65;input[13]=65;input[14]=65;input[15]=65;input[16]=65;input[17]=65;input[18]=65;input[19]=65;input[20]=65;input[21]=65;input[22]=65;input[23]=65;input[24]=65;input[25]=65;input[26]=65;input[27]=65;input[28]=65;input[29]=65;input[30]=65;input[31]=65;input[32]=65;input[33]=65;input[34]=65;input[35]=65;input[36]=65;input[37]=65;input[38]=65;input[39]=65;input[40]=65;input[41]=65;input[42]=65;input[43]=65;input[44]=65;input[45]=65;input[46]=65;input[47]=65;input[48]=65;input[49]=65;input[50]=65;input[51]=65;input[52]=65;input[53]=65;input[54]=65;input[55]=65;input[56]=65;input[57]=65;input[58]=65;input[59]=65;input[60]=65;input[61]=65;input[62]=65;input[63]=65;input[64]=65;input[65]=65;input[66]=65;input[67]=65;input[68]=65;input[69]=65;input[70]=65;input[71]=65;input[72]=65;input[73]=65;input[74]=65;input[75]=65;input[76]=65;input[77]=65;input[78]=65;input[79]=65;input[80]=65;input[81]=65;input[82]=65;input[83]=65;input[84]=65;input[85]=65;input[86]=65;input[87]=65;input[88]=65;input[89]=65;input[90]=65;input[91]=65;input[92]=65;input[93]=65;input[94]=65;input[95]=65;input[96]=65;input[97]=65;input[98]=65;input[99]=65;input[100]=65;input[101]=65;input[102]=65;input[103]=65;input[104]=65;input[105]=65;input[106]=65;input[107]=65;input[108]=65;input[109]=65;input[110]=65;input[111]=65;input[112]=65;input[113]=65;input[114]=65;input[115]=65;input[116]=65;input[117]=65;input[118]=65;input[119]=65;input[120]=65;input[121]=65;input[122]=65;input[123]=65;input[124]=65;input[125]=65;input[126]=65;input[127]=65;input[128]=65;input[129]=65;input[130]=65;input[131]=65;input[132]=65;input[133]=65;input[134]=65;input[135]=65;input[136]=65;input[137]=65;input[138]=65;input[139]=65;input[140]=65;input[141]=65;input[142]=65;input[143]=65;input[144]=65;input[145]=65;input[146]=65;input[147]=65;input[148]=65;input[149]=65;input[150]=65;input[151]=65;input[152]=65;input[153]=65;input[154]=65;input[155]=65;input[156]=65;input[157]=65;input[158]=65;input[159]=65;input[160]=65;input[161]=65;input[162]=65;input[163]=65;input[164]=65;input[165]=65;input[166]=65;input[167]=65;input[168]=65;input[169]=65;input[170]=65;input[171]=65;input[172]=65;input[173]=65;input[174]=65;input[175]=65;input[176]=65;input[177]=65;input[178]=65;input[179]=65;input[180]=65;input[181]=65;input[182]=65;input[183]=65;input[184]=65;input[185]=65;input[186]=65;input[187]=65;input[188]=65;input[189]=65;input[190]=65;input[191]=65;input[192]=65;input[193]=65;input[194]=65;input[195]=65;input[196]=65;input[197]=65;input[198]=65;input[199]=65;input[200]=65;input[201]=65;input[202]=65;input[203]=65;input[204]=65;input[205]=65;input[206]=65;input[207]=65;input[208]=65;input[209]=65;input[210]=65;input[211]=65;input[212]=65;input[213]=65;input[214]=65;input[215]=65;input[216]=65;input[217]=65;input[218]=65;input[219]=65;input[220]=65;input[221]=65;input[222]=65;input[223]=65;input[224]=65;input[225]=65;input[226]=65;input[227]=65;input[228]=65;input[229]=65;input[230]=65;input[231]=65;input[232]=65;input[233]=65;input[234]=65;input[235]=65;input[236]=65;input[237]=65;input[238]=65;input[239]=65;input[240]=65;input[241]=65;input[242]=65;input[243]=65;input[244]=65;input[245]=65;input[246]=65;input[247]=65;input[248]=65;input[249]=65;input[250]=65;input[251]=65;input[252]=65;input[253]=65;input[254]=65;input[255]=65;",
+    "call": "size_of(&input,256,7,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:256}"
+  },
+  {
+    "name": "owned_size_String",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::String {string_storage:StringStorage::Owned {string_owner:0}};store.bytes.blocks[0]=ByteBlock {initialized:true,length:2};store.bytes.blocks[0].bytes[0]=65;store.bytes.blocks[0].bytes[1]=66;",
+    "call": "size_of(&input,0,999,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:2}"
+  },
+  {
+    "name": "bad_owned_String",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::String {string_storage:StringStorage::Owned {string_owner:0}};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::InvalidStorage {storage_error:ByteOutcome::InvalidState}"
+  },
+  {
+    "name": "bad_source_unit",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:4,buffer_initializer:Span {unit:8,end:2}}};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::InvalidStorage {storage_error:ByteOutcome::Bounds}"
+  },
+  {
+    "name": "bad_string_encoding",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::String {string_storage:StringStorage::Source {string_source:Span {unit:7,end:2}}};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::InvalidStorage {storage_error:ByteOutcome::Encoding}"
+  },
+  {
+    "name": "oversized_source",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:257,buffer_initializer:Span {unit:7,end:2}}};",
+    "call": "size_of(&input,2,7,&store,0,64)",
+    "expected": "QueryResult::InvalidStorage {storage_error:ByteOutcome::Capacity}"
+  },
+  {
+    "name": "package_size_0",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Package {first:1,count:0};",
+    "call": "size_of(&input,0,0,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:0}"
+  },
+  {
+    "name": "package_size_1",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Package {first:1,count:1};store.space.objects[1].value=Value::Integer {number:42};\n",
+    "call": "size_of(&input,0,0,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:1}"
+  },
+  {
+    "name": "package_size_2",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=3;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Package {first:1,count:2};store.space.objects[1].value=Value::Integer {number:42};\nstore.space.objects[1].has_next=true;store.space.objects[1].next=2;store.space.objects[2].value=Value::Integer {number:42};\n",
+    "call": "size_of(&input,0,0,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:2}"
+  },
+  {
+    "name": "package_size_63",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=64;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Package {first:1,count:63};store.space.objects[1].value=Value::Integer {number:42};\nstore.space.objects[1].has_next=true;store.space.objects[1].next=2;store.space.objects[2].value=Value::Integer {number:42};\nstore.space.objects[2].has_next=true;store.space.objects[2].next=3;store.space.objects[3].value=Value::Integer {number:42};\nstore.space.objects[3].has_next=true;store.space.objects[3].next=4;store.space.objects[4].value=Value::Integer {number:42};\nstore.space.objects[4].has_next=true;store.space.objects[4].next=5;store.space.objects[5].value=Value::Integer {number:42};\nstore.space.objects[5].has_next=true;store.space.objects[5].next=6;store.space.objects[6].value=Value::Integer {number:42};\nstore.space.objects[6].has_next=true;store.space.objects[6].next=7;store.space.objects[7].value=Value::Integer {number:42};\nstore.space.objects[7].has_next=true;store.space.objects[7].next=8;store.space.objects[8].value=Value::Integer {number:42};\nstore.space.objects[8].has_next=true;store.space.objects[8].next=9;store.space.objects[9].value=Value::Integer {number:42};\nstore.space.objects[9].has_next=true;store.space.objects[9].next=10;store.space.objects[10].value=Value::Integer {number:42};\nstore.space.objects[10].has_next=true;store.space.objects[10].next=11;store.space.objects[11].value=Value::Integer {number:42};\nstore.space.objects[11].has_next=true;store.space.objects[11].next=12;store.space.objects[12].value=Value::Integer {number:42};\nstore.space.objects[12].has_next=true;store.space.objects[12].next=13;store.space.objects[13].value=Value::Integer {number:42};\nstore.space.objects[13].has_next=true;store.space.objects[13].next=14;store.space.objects[14].value=Value::Integer {number:42};\nstore.space.objects[14].has_next=true;store.space.objects[14].next=15;store.space.objects[15].value=Value::Integer {number:42};\nstore.space.objects[15].has_next=true;store.space.objects[15].next=16;store.space.objects[16].value=Value::Integer {number:42};\nstore.space.objects[16].has_next=true;store.space.objects[16].next=17;store.space.objects[17].value=Value::Integer {number:42};\nstore.space.objects[17].has_next=true;store.space.objects[17].next=18;store.space.objects[18].value=Value::Integer {number:42};\nstore.space.objects[18].has_next=true;store.space.objects[18].next=19;store.space.objects[19].value=Value::Integer {number:42};\nstore.space.objects[19].has_next=true;store.space.objects[19].next=20;store.space.objects[20].value=Value::Integer {number:42};\nstore.space.objects[20].has_next=true;store.space.objects[20].next=21;store.space.objects[21].value=Value::Integer {number:42};\nstore.space.objects[21].has_next=true;store.space.objects[21].next=22;store.space.objects[22].value=Value::Integer {number:42};\nstore.space.objects[22].has_next=true;store.space.objects[22].next=23;store.space.objects[23].value=Value::Integer {number:42};\nstore.space.objects[23].has_next=true;store.space.objects[23].next=24;store.space.objects[24].value=Value::Integer {number:42};\nstore.space.objects[24].has_next=true;store.space.objects[24].next=25;store.space.objects[25].value=Value::Integer {number:42};\nstore.space.objects[25].has_next=true;store.space.objects[25].next=26;store.space.objects[26].value=Value::Integer {number:42};\nstore.space.objects[26].has_next=true;store.space.objects[26].next=27;store.space.objects[27].value=Value::Integer {number:42};\nstore.space.objects[27].has_next=true;store.space.objects[27].next=28;store.space.objects[28].value=Value::Integer {number:42};\nstore.space.objects[28].has_next=true;store.space.objects[28].next=29;store.space.objects[29].value=Value::Integer {number:42};\nstore.space.objects[29].has_next=true;store.space.objects[29].next=30;store.space.objects[30].value=Value::Integer {number:42};\nstore.space.objects[30].has_next=true;store.space.objects[30].next=31;store.space.objects[31].value=Value::Integer {number:42};\nstore.space.objects[31].has_next=true;store.space.objects[31].next=32;store.space.objects[32].value=Value::Integer {number:42};\nstore.space.objects[32].has_next=true;store.space.objects[32].next=33;store.space.objects[33].value=Value::Integer {number:42};\nstore.space.objects[33].has_next=true;store.space.objects[33].next=34;store.space.objects[34].value=Value::Integer {number:42};\nstore.space.objects[34].has_next=true;store.space.objects[34].next=35;store.space.objects[35].value=Value::Integer {number:42};\nstore.space.objects[35].has_next=true;store.space.objects[35].next=36;store.space.objects[36].value=Value::Integer {number:42};\nstore.space.objects[36].has_next=true;store.space.objects[36].next=37;store.space.objects[37].value=Value::Integer {number:42};\nstore.space.objects[37].has_next=true;store.space.objects[37].next=38;store.space.objects[38].value=Value::Integer {number:42};\nstore.space.objects[38].has_next=true;store.space.objects[38].next=39;store.space.objects[39].value=Value::Integer {number:42};\nstore.space.objects[39].has_next=true;store.space.objects[39].next=40;store.space.objects[40].value=Value::Integer {number:42};\nstore.space.objects[40].has_next=true;store.space.objects[40].next=41;store.space.objects[41].value=Value::Integer {number:42};\nstore.space.objects[41].has_next=true;store.space.objects[41].next=42;store.space.objects[42].value=Value::Integer {number:42};\nstore.space.objects[42].has_next=true;store.space.objects[42].next=43;store.space.objects[43].value=Value::Integer {number:42};\nstore.space.objects[43].has_next=true;store.space.objects[43].next=44;store.space.objects[44].value=Value::Integer {number:42};\nstore.space.objects[44].has_next=true;store.space.objects[44].next=45;store.space.objects[45].value=Value::Integer {number:42};\nstore.space.objects[45].has_next=true;store.space.objects[45].next=46;store.space.objects[46].value=Value::Integer {number:42};\nstore.space.objects[46].has_next=true;store.space.objects[46].next=47;store.space.objects[47].value=Value::Integer {number:42};\nstore.space.objects[47].has_next=true;store.space.objects[47].next=48;store.space.objects[48].value=Value::Integer {number:42};\nstore.space.objects[48].has_next=true;store.space.objects[48].next=49;store.space.objects[49].value=Value::Integer {number:42};\nstore.space.objects[49].has_next=true;store.space.objects[49].next=50;store.space.objects[50].value=Value::Integer {number:42};\nstore.space.objects[50].has_next=true;store.space.objects[50].next=51;store.space.objects[51].value=Value::Integer {number:42};\nstore.space.objects[51].has_next=true;store.space.objects[51].next=52;store.space.objects[52].value=Value::Integer {number:42};\nstore.space.objects[52].has_next=true;store.space.objects[52].next=53;store.space.objects[53].value=Value::Integer {number:42};\nstore.space.objects[53].has_next=true;store.space.objects[53].next=54;store.space.objects[54].value=Value::Integer {number:42};\nstore.space.objects[54].has_next=true;store.space.objects[54].next=55;store.space.objects[55].value=Value::Integer {number:42};\nstore.space.objects[55].has_next=true;store.space.objects[55].next=56;store.space.objects[56].value=Value::Integer {number:42};\nstore.space.objects[56].has_next=true;store.space.objects[56].next=57;store.space.objects[57].value=Value::Integer {number:42};\nstore.space.objects[57].has_next=true;store.space.objects[57].next=58;store.space.objects[58].value=Value::Integer {number:42};\nstore.space.objects[58].has_next=true;store.space.objects[58].next=59;store.space.objects[59].value=Value::Integer {number:42};\nstore.space.objects[59].has_next=true;store.space.objects[59].next=60;store.space.objects[60].value=Value::Integer {number:42};\nstore.space.objects[60].has_next=true;store.space.objects[60].next=61;store.space.objects[61].value=Value::Integer {number:42};\nstore.space.objects[61].has_next=true;store.space.objects[61].next=62;store.space.objects[62].value=Value::Integer {number:42};\nstore.space.objects[62].has_next=true;store.space.objects[62].next=63;store.space.objects[63].value=Value::Integer {number:42};\n",
+    "call": "size_of(&input,0,0,&store,0,64)",
+    "expected": "QueryResult::Value {object:0,number:63}"
+  },
+  {
+    "name": "package_tail_extra",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=3;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Package {first:1,count:2};store.space.objects[1].has_next=true;store.space.objects[1].next=2;store.space.objects[2].has_next=true;",
+    "call": "size_of(&input,0,0,&store,0,64)",
+    "expected": "QueryResult::ResolutionFailure {resolution_error:Outcome::BadEncoding}"
+  },
+  {
+    "name": "package_tail_missing",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=3;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Package {first:1,count:2};store.space.objects[1].has_next=true;store.space.objects[1].next=2;store.space.objects[1].has_next=false;",
+    "call": "size_of(&input,0,0,&store,0,64)",
+    "expected": "QueryResult::ResolutionFailure {resolution_error:Outcome::BadEncoding}"
+  },
+  {
+    "name": "package_cycle",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=3;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Package {first:1,count:2};store.space.objects[1].has_next=true;store.space.objects[1].next=2;store.space.objects[1].next=1;",
+    "call": "size_of(&input,0,0,&store,0,64)",
+    "expected": "QueryResult::ResolutionFailure {resolution_error:Outcome::ReferenceCycle}"
+  },
+  {
+    "name": "package_dangling",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=3;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Package {first:1,count:2};store.space.objects[1].has_next=true;store.space.objects[1].next=2;store.space.objects[1].next=18446744073709551615;",
+    "call": "size_of(&input,0,0,&store,0,64)",
+    "expected": "QueryResult::ResolutionFailure {resolution_error:Outcome::InvalidState}"
+  },
+  {
+    "name": "package_capacity",
+    "kind": "query",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space.objects[0].value=Value::Package {first:1,count:65};",
+    "call": "size_of(&input,0,0,&store,0,64)",
+    "expected": "QueryResult::ResolutionFailure {resolution_error:Outcome::Capacity}"
+  },
+  {
+    "name": "namespace_bind_valid",
+    "kind": "outcome",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space=namespace::empty();store.space.object_count=1;store.space.objects[0].value=Value::Integer {number:42};\nlet mut target:Entry=Entry {has_object:true,object:0};target.path=Path {absolute:true,count:1};target.path.segments[0]=1600085848;",
+    "call": "namespace::bind_mut(&mut store.space,target,false)",
+    "outcome": "Success",
+    "check": "store.space.count==2 && store.space.entries[1].has_object && store.space.entries[1].object==0"
+  },
+  {
+    "name": "namespace_bind_past_count",
+    "kind": "outcome",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space=namespace::empty();store.space.object_count=1;store.space.objects[0].value=Value::Integer {number:42};\nlet mut target:Entry=Entry {has_object:true,object:1};target.path=Path {absolute:true,count:1};target.path.segments[0]=1600085848;",
+    "call": "namespace::bind_mut(&mut store.space,target,false)",
+    "outcome": "InvalidState",
+    "check": "store.space.count==1 && !store.space.entries[1].has_object"
+  },
+  {
+    "name": "namespace_bind_maximum",
+    "kind": "outcome",
+    "body": "let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;let mut input:[u8;1024];\nstore.space=namespace::empty();store.space.object_count=1;store.space.objects[0].value=Value::Integer {number:42};\nlet mut target:Entry=Entry {has_object:true,object:18446744073709551615};target.path=Path {absolute:true,count:1};target.path.segments[0]=1600085848;",
+    "call": "namespace::bind_mut(&mut store.space,target,false)",
+    "outcome": "InvalidState",
+    "check": "store.space.count==1 && !store.space.entries[1].has_object"
+  }
+]
