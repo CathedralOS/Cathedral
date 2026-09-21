@@ -105,11 +105,11 @@
   "current_regression": {
     "body_control_count": 18,
     "command": "python3 tools/ports/acpi/aml/fields/check_interpreted.py",
-    "note": "Original field source and fixture bodies unchanged; current parent AML adds declaration capture. Historical const results above retain their original closure hash.",
+    "note": "Original field source and assertion/control fixtures unchanged; current parent AML adds canonical ReferenceKind/Value::Reference and pure reference kernels. Historical const results above retain their original closure hash.",
     "record": "tools/ports/acpi/aml/fields/checked-verification.json",
-    "record_sha256": "5cb97f4936ebf3603555f2f58071ef1c2bd36a9f4fbb507a35886e9b0b046f15",
+    "record_sha256": "f847d78b5e09faaa8dfc00d13be76e30f0c55c5f2037821fc6fbce9c5f9744a0",
     "scenario_count": 18,
-    "source_closure_sha256": "669c1872d3ddf6b809511bc602868a400a5895e6468905996376085ffe59d410",
+    "source_closure_sha256": "ac884ee3d5c18da42ed0f161db67fae1d2ce3107c1ddeee2a7baac66d260d507",
     "stage": "checked-interpreter execution; native/hardware not run"
   },
   "inventory": {

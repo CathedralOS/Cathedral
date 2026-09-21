@@ -17,6 +17,8 @@ pub data Read [copy] { outcome: Outcome; value: u64; next: u64; offset: u64; }
 pub data Envelope [copy] { outcome: Outcome; body: u64; end: u64; offset: u64; }
 pub data Span [copy] { unit: u64; start: u64; end: u64; }
 pub data LevelKind [copy] { case Scope; case Device; case Processor; case PowerResource; case ThermalZone; case MethodLocals; }
+// Ordinary stable-ID reference metadata, never a borrow or object-access token.
+pub data ReferenceKind [copy] { case Named; case RefOf; case Local; case Arg; case Index; case Unresolved; }
 pub data Value [copy] {
  case Uninitialized;
  case Integer(number: u64);
@@ -24,6 +26,7 @@ pub data Value [copy] {
  case Buffer(size: u64, initializer: Span);
  case Package(first: u64, count: u64);
  case NameReference(name: Path, scope: Path);
+ case Reference(kind: ReferenceKind, object_id: u64);
  case Method(flags: u8, body: Span);
  case Device;
  case Processor(id: u8, address: u32, length: u8);

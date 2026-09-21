@@ -3,8 +3,8 @@
 Current stage: **tested** for the static subset below. All 27 semantic cases and
 27 body mutations pass. The historical constant-evaluator baseline source-checked
 as 18 files. After declaration capture, all 27 original assertion bodies and
-mutations pass through the checked interpreter; load-method/load-rollback also
-retain current constant proofs. The verification record separates these stages.
+mutations pass through the checked interpreter; load-method/load-rollback constant proofs retain their original hashes as
+historical evidence after the additive reference-model change. The verification record separates these stages.
 [Recorded verification](../../../../tools/ports/acpi/aml/verification.json)
 binds compiler, package and fixture hashes to those results.
 
@@ -62,3 +62,12 @@ Run `python3 tools/ports/acpi/aml/audit.py`, then `python3 tools/ports/acpi/aml/
 Validation is semantic evaluation, not native execution, Omega/Rust ABI agreement or execution of an AML interpreter. The harness records the compiler hash. Source hashes, license hashes and metadata-only upstream test provenance are audited separately. No firmware dump, `uacpi_examples.rs`, external global-lock example, or firmware-derived package fixture was copied.
 
 When changing the pin: review license and manifest changes, hash and review every AML source/test delta, reclassify all changed anchors, review opcode ranges and each validation difference above, regenerate original fixtures only after semantic review, and rerun both audits and body controls. An inventory snapshot alone cannot authorize a completion claim.
+
+## Canonical object references
+
+[Reference kernels](object-references.PORT.md) add six semantic reference cases,
+full and transparent unwrap, validated stable-ID allocation, sibling-preserving
+payload copy and complete package-chain selection. The 160 checked pairs, five
+const pairs and 116 public immutable Rust observations pass; all 146 existing
+parser/executor/pipeline/field regression pairs also pass. Mutable byte backing
+and generic opcode integration remain pending.

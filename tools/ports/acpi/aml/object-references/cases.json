@@ -1,0 +1,1602 @@
+[
+  {
+    "name": "rust_maximum_chain_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=64;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nspace.objects[3].value=Value::Reference {kind:ReferenceKind::Named,object_id:2};\nspace.objects[4].value=Value::Reference {kind:ReferenceKind::Named,object_id:3};\nspace.objects[5].value=Value::Reference {kind:ReferenceKind::Named,object_id:4};\nspace.objects[6].value=Value::Reference {kind:ReferenceKind::Named,object_id:5};\nspace.objects[7].value=Value::Reference {kind:ReferenceKind::Named,object_id:6};\nspace.objects[8].value=Value::Reference {kind:ReferenceKind::Named,object_id:7};\nspace.objects[9].value=Value::Reference {kind:ReferenceKind::Named,object_id:8};\nspace.objects[10].value=Value::Reference {kind:ReferenceKind::Named,object_id:9};\nspace.objects[11].value=Value::Reference {kind:ReferenceKind::Named,object_id:10};\nspace.objects[12].value=Value::Reference {kind:ReferenceKind::Named,object_id:11};\nspace.objects[13].value=Value::Reference {kind:ReferenceKind::Named,object_id:12};\nspace.objects[14].value=Value::Reference {kind:ReferenceKind::Named,object_id:13};\nspace.objects[15].value=Value::Reference {kind:ReferenceKind::Named,object_id:14};\nspace.objects[16].value=Value::Reference {kind:ReferenceKind::Named,object_id:15};\nspace.objects[17].value=Value::Reference {kind:ReferenceKind::Named,object_id:16};\nspace.objects[18].value=Value::Reference {kind:ReferenceKind::Named,object_id:17};\nspace.objects[19].value=Value::Reference {kind:ReferenceKind::Named,object_id:18};\nspace.objects[20].value=Value::Reference {kind:ReferenceKind::Named,object_id:19};\nspace.objects[21].value=Value::Reference {kind:ReferenceKind::Named,object_id:20};\nspace.objects[22].value=Value::Reference {kind:ReferenceKind::Named,object_id:21};\nspace.objects[23].value=Value::Reference {kind:ReferenceKind::Named,object_id:22};\nspace.objects[24].value=Value::Reference {kind:ReferenceKind::Named,object_id:23};\nspace.objects[25].value=Value::Reference {kind:ReferenceKind::Named,object_id:24};\nspace.objects[26].value=Value::Reference {kind:ReferenceKind::Named,object_id:25};\nspace.objects[27].value=Value::Reference {kind:ReferenceKind::Named,object_id:26};\nspace.objects[28].value=Value::Reference {kind:ReferenceKind::Named,object_id:27};\nspace.objects[29].value=Value::Reference {kind:ReferenceKind::Named,object_id:28};\nspace.objects[30].value=Value::Reference {kind:ReferenceKind::Named,object_id:29};\nspace.objects[31].value=Value::Reference {kind:ReferenceKind::Named,object_id:30};\nspace.objects[32].value=Value::Reference {kind:ReferenceKind::Named,object_id:31};\nspace.objects[33].value=Value::Reference {kind:ReferenceKind::Named,object_id:32};\nspace.objects[34].value=Value::Reference {kind:ReferenceKind::Named,object_id:33};\nspace.objects[35].value=Value::Reference {kind:ReferenceKind::Named,object_id:34};\nspace.objects[36].value=Value::Reference {kind:ReferenceKind::Named,object_id:35};\nspace.objects[37].value=Value::Reference {kind:ReferenceKind::Named,object_id:36};\nspace.objects[38].value=Value::Reference {kind:ReferenceKind::Named,object_id:37};\nspace.objects[39].value=Value::Reference {kind:ReferenceKind::Named,object_id:38};\nspace.objects[40].value=Value::Reference {kind:ReferenceKind::Named,object_id:39};\nspace.objects[41].value=Value::Reference {kind:ReferenceKind::Named,object_id:40};\nspace.objects[42].value=Value::Reference {kind:ReferenceKind::Named,object_id:41};\nspace.objects[43].value=Value::Reference {kind:ReferenceKind::Named,object_id:42};\nspace.objects[44].value=Value::Reference {kind:ReferenceKind::Named,object_id:43};\nspace.objects[45].value=Value::Reference {kind:ReferenceKind::Named,object_id:44};\nspace.objects[46].value=Value::Reference {kind:ReferenceKind::Named,object_id:45};\nspace.objects[47].value=Value::Reference {kind:ReferenceKind::Named,object_id:46};\nspace.objects[48].value=Value::Reference {kind:ReferenceKind::Named,object_id:47};\nspace.objects[49].value=Value::Reference {kind:ReferenceKind::Named,object_id:48};\nspace.objects[50].value=Value::Reference {kind:ReferenceKind::Named,object_id:49};\nspace.objects[51].value=Value::Reference {kind:ReferenceKind::Named,object_id:50};\nspace.objects[52].value=Value::Reference {kind:ReferenceKind::Named,object_id:51};\nspace.objects[53].value=Value::Reference {kind:ReferenceKind::Named,object_id:52};\nspace.objects[54].value=Value::Reference {kind:ReferenceKind::Named,object_id:53};\nspace.objects[55].value=Value::Reference {kind:ReferenceKind::Named,object_id:54};\nspace.objects[56].value=Value::Reference {kind:ReferenceKind::Named,object_id:55};\nspace.objects[57].value=Value::Reference {kind:ReferenceKind::Named,object_id:56};\nspace.objects[58].value=Value::Reference {kind:ReferenceKind::Named,object_id:57};\nspace.objects[59].value=Value::Reference {kind:ReferenceKind::Named,object_id:58};\nspace.objects[60].value=Value::Reference {kind:ReferenceKind::Named,object_id:59};\nspace.objects[61].value=Value::Reference {kind:ReferenceKind::Named,object_id:60};\nspace.objects[62].value=Value::Reference {kind:ReferenceKind::Named,object_id:61};\nspace.objects[63].value=Value::Reference {kind:ReferenceKind::Named,object_id:62};\nlet result:ReferenceState=object_references::unwrap_all(&space,63,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_maximum_chain_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=64;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nspace.objects[3].value=Value::Reference {kind:ReferenceKind::Named,object_id:2};\nspace.objects[4].value=Value::Reference {kind:ReferenceKind::Named,object_id:3};\nspace.objects[5].value=Value::Reference {kind:ReferenceKind::Named,object_id:4};\nspace.objects[6].value=Value::Reference {kind:ReferenceKind::Named,object_id:5};\nspace.objects[7].value=Value::Reference {kind:ReferenceKind::Named,object_id:6};\nspace.objects[8].value=Value::Reference {kind:ReferenceKind::Named,object_id:7};\nspace.objects[9].value=Value::Reference {kind:ReferenceKind::Named,object_id:8};\nspace.objects[10].value=Value::Reference {kind:ReferenceKind::Named,object_id:9};\nspace.objects[11].value=Value::Reference {kind:ReferenceKind::Named,object_id:10};\nspace.objects[12].value=Value::Reference {kind:ReferenceKind::Named,object_id:11};\nspace.objects[13].value=Value::Reference {kind:ReferenceKind::Named,object_id:12};\nspace.objects[14].value=Value::Reference {kind:ReferenceKind::Named,object_id:13};\nspace.objects[15].value=Value::Reference {kind:ReferenceKind::Named,object_id:14};\nspace.objects[16].value=Value::Reference {kind:ReferenceKind::Named,object_id:15};\nspace.objects[17].value=Value::Reference {kind:ReferenceKind::Named,object_id:16};\nspace.objects[18].value=Value::Reference {kind:ReferenceKind::Named,object_id:17};\nspace.objects[19].value=Value::Reference {kind:ReferenceKind::Named,object_id:18};\nspace.objects[20].value=Value::Reference {kind:ReferenceKind::Named,object_id:19};\nspace.objects[21].value=Value::Reference {kind:ReferenceKind::Named,object_id:20};\nspace.objects[22].value=Value::Reference {kind:ReferenceKind::Named,object_id:21};\nspace.objects[23].value=Value::Reference {kind:ReferenceKind::Named,object_id:22};\nspace.objects[24].value=Value::Reference {kind:ReferenceKind::Named,object_id:23};\nspace.objects[25].value=Value::Reference {kind:ReferenceKind::Named,object_id:24};\nspace.objects[26].value=Value::Reference {kind:ReferenceKind::Named,object_id:25};\nspace.objects[27].value=Value::Reference {kind:ReferenceKind::Named,object_id:26};\nspace.objects[28].value=Value::Reference {kind:ReferenceKind::Named,object_id:27};\nspace.objects[29].value=Value::Reference {kind:ReferenceKind::Named,object_id:28};\nspace.objects[30].value=Value::Reference {kind:ReferenceKind::Named,object_id:29};\nspace.objects[31].value=Value::Reference {kind:ReferenceKind::Named,object_id:30};\nspace.objects[32].value=Value::Reference {kind:ReferenceKind::Named,object_id:31};\nspace.objects[33].value=Value::Reference {kind:ReferenceKind::Named,object_id:32};\nspace.objects[34].value=Value::Reference {kind:ReferenceKind::Named,object_id:33};\nspace.objects[35].value=Value::Reference {kind:ReferenceKind::Named,object_id:34};\nspace.objects[36].value=Value::Reference {kind:ReferenceKind::Named,object_id:35};\nspace.objects[37].value=Value::Reference {kind:ReferenceKind::Named,object_id:36};\nspace.objects[38].value=Value::Reference {kind:ReferenceKind::Named,object_id:37};\nspace.objects[39].value=Value::Reference {kind:ReferenceKind::Named,object_id:38};\nspace.objects[40].value=Value::Reference {kind:ReferenceKind::Named,object_id:39};\nspace.objects[41].value=Value::Reference {kind:ReferenceKind::Named,object_id:40};\nspace.objects[42].value=Value::Reference {kind:ReferenceKind::Named,object_id:41};\nspace.objects[43].value=Value::Reference {kind:ReferenceKind::Named,object_id:42};\nspace.objects[44].value=Value::Reference {kind:ReferenceKind::Named,object_id:43};\nspace.objects[45].value=Value::Reference {kind:ReferenceKind::Named,object_id:44};\nspace.objects[46].value=Value::Reference {kind:ReferenceKind::Named,object_id:45};\nspace.objects[47].value=Value::Reference {kind:ReferenceKind::Named,object_id:46};\nspace.objects[48].value=Value::Reference {kind:ReferenceKind::Named,object_id:47};\nspace.objects[49].value=Value::Reference {kind:ReferenceKind::Named,object_id:48};\nspace.objects[50].value=Value::Reference {kind:ReferenceKind::Named,object_id:49};\nspace.objects[51].value=Value::Reference {kind:ReferenceKind::Named,object_id:50};\nspace.objects[52].value=Value::Reference {kind:ReferenceKind::Named,object_id:51};\nspace.objects[53].value=Value::Reference {kind:ReferenceKind::Named,object_id:52};\nspace.objects[54].value=Value::Reference {kind:ReferenceKind::Named,object_id:53};\nspace.objects[55].value=Value::Reference {kind:ReferenceKind::Named,object_id:54};\nspace.objects[56].value=Value::Reference {kind:ReferenceKind::Named,object_id:55};\nspace.objects[57].value=Value::Reference {kind:ReferenceKind::Named,object_id:56};\nspace.objects[58].value=Value::Reference {kind:ReferenceKind::Named,object_id:57};\nspace.objects[59].value=Value::Reference {kind:ReferenceKind::Named,object_id:58};\nspace.objects[60].value=Value::Reference {kind:ReferenceKind::Named,object_id:59};\nspace.objects[61].value=Value::Reference {kind:ReferenceKind::Named,object_id:60};\nspace.objects[62].value=Value::Reference {kind:ReferenceKind::Named,object_id:61};\nspace.objects[63].value=Value::Reference {kind:ReferenceKind::Named,object_id:62};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,63,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_terminal_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nlet result:ReferenceState=object_references::unwrap_all(&space,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_terminal_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_name_path_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nlet result:ReferenceState=object_references::unwrap_all(&space,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_name_path_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_single_0_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_single_0_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_named_terminal_0_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_named_terminal_0_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_0_0_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_0_0_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_0_1_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_0_1_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_0_2_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_0_2_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_0_3_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_0_3_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_0_4_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_0_4_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_0_5_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_0_5_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_single_1_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_single_1_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_named_terminal_1_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_named_terminal_1_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_1_0_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_1_0_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_1_1_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_1_1_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_1_2_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_1_2_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_1_3_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_1_3_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_1_4_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_1_4_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_1_5_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_1_5_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_single_2_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_single_2_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_named_terminal_2_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_named_terminal_2_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_2_0_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_2_0_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_2_1_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_2_1_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_2_2_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_2_2_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_2_3_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_2_3_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_2_4_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_2_4_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_2_5_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_2_5_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_single_3_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_single_3_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_named_terminal_3_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_named_terminal_3_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_3_0_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_3_0_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_3_1_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_3_1_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_3_2_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_3_2_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_3_3_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_3_3_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_3_4_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_3_4_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_3_5_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_3_5_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_single_4_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_single_4_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_named_terminal_4_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_named_terminal_4_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_4_0_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_4_0_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_4_1_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_4_1_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_4_2_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_4_2_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_4_3_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_4_3_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_4_4_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_4_4_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_4_5_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_4_5_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_single_5_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_single_5_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_named_terminal_5_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_named_terminal_5_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_5_0_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_5_0_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_5_1_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_5_1_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_5_2_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_5_2_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_5_3_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_5_3_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_5_4_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_5_4_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_5_5_all",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nlet result:ReferenceState=object_references::unwrap_all(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "rust_chain_5_5_transparent",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:0};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public WrappedObject unwrap; pointer identity mapped to stable ordinal"
+  },
+  {
+    "name": "zero_budget",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:9};\nlet result:ReferenceState=object_references::unwrap_all(&space,0,0);\n",
+    "check": "result.done && result.outcome==Outcome::WorkLimit && result.object==0 && result.visited==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::WorkLimit && result.object==0 && result.visited==0",
+      "result.done && result.outcome==Outcome::WorkLimit && result.object==1 && result.visited==0"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "edge_only_budget",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Integer {number:9};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,1,1);\n",
+    "check": "result.done && result.outcome==Outcome::WorkLimit && result.object==0 && result.visited==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::WorkLimit && result.object==0 && result.visited==2",
+      "result.done && result.outcome==Outcome::WorkLimit && result.object==1 && result.visited==2"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "budget_max",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:9};\nlet result:ReferenceState=object_references::unwrap_all(&space,0,18446744073709551615);\n",
+    "check": "result.done && result.outcome==Outcome::InvalidState && result.object==0 && result.visited==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::InvalidState && result.object==0 && result.visited==0",
+      "result.done && result.outcome==Outcome::InvalidState && result.object==1 && result.visited==0"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "budget_65",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:9};\nlet result:ReferenceState=object_references::unwrap_all(&space,0,65);\n",
+    "check": "result.done && result.outcome==Outcome::InvalidState && result.object==0 && result.visited==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::InvalidState && result.object==0 && result.visited==0",
+      "result.done && result.outcome==Outcome::InvalidState && result.object==1 && result.visited==0"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "empty_arena",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=0;\nlet result:ReferenceState=object_references::unwrap_all(&space,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::InvalidState && result.object==0 && result.visited==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::InvalidState && result.object==0 && result.visited==0",
+      "result.done && result.outcome==Outcome::InvalidState && result.object==1 && result.visited==0"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "bad_start",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nlet result:ReferenceState=object_references::unwrap_all(&space,64,64);\n",
+    "check": "result.done && result.outcome==Outcome::InvalidState && result.object==64 && result.visited==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::InvalidState && result.object==64 && result.visited==0",
+      "result.done && result.outcome==Outcome::InvalidState && result.object==65 && result.visited==0"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "bad_count",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=65;\nlet result:ReferenceState=object_references::unwrap_all(&space,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::InvalidState && result.object==0 && result.visited==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::InvalidState && result.object==0 && result.visited==0",
+      "result.done && result.outcome==Outcome::InvalidState && result.object==1 && result.visited==0"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "dangling",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:64};\nlet result:ReferenceState=object_references::unwrap_all(&space,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::InvalidState && result.object==64 && result.visited==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::InvalidState && result.object==64 && result.visited==1",
+      "result.done && result.outcome==Outcome::InvalidState && result.object==65 && result.visited==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "dangling_max",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:18446744073709551615};\nlet result:ReferenceState=object_references::unwrap_all(&space,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::InvalidState && result.object==18446744073709551615 && result.visited==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::InvalidState && result.object==18446744073709551615 && result.visited==1",
+      "result.done && result.outcome==Outcome::InvalidState && result.object==18446744073709551614 && result.visited==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "opaque_dangling",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:64};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,0,1);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0 && result.visited==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0 && result.visited==1",
+      "result.done && result.outcome==Outcome::Success && result.object==1 && result.visited==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "self_cycle",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,0,1);\n",
+    "check": "result.done && result.outcome==Outcome::ReferenceCycle && result.object==0 && result.visited==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::ReferenceCycle && result.object==0 && result.visited==1",
+      "result.done && result.outcome==Outcome::ReferenceCycle && result.object==1 && result.visited==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "two_cycle",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,0,2);\n",
+    "check": "result.done && result.outcome==Outcome::ReferenceCycle && result.object==0 && result.visited==3",
+    "mutation": [
+      "result.done && result.outcome==Outcome::ReferenceCycle && result.object==0 && result.visited==3",
+      "result.done && result.outcome==Outcome::ReferenceCycle && result.object==1 && result.visited==3"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "cycle_short_budget",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,0,1);\n",
+    "check": "result.done && result.outcome==Outcome::WorkLimit && result.object==1 && result.visited==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::WorkLimit && result.object==1 && result.visited==1",
+      "result.done && result.outcome==Outcome::WorkLimit && result.object==0 && result.visited==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "opaque_self",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};\nlet result:ReferenceState=object_references::unwrap_transparent(&space,0,1);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0 && result.visited==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0 && result.visited==1",
+      "result.done && result.outcome==Outcome::Success && result.object==1 && result.visited==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "uninitialized_terminal",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nlet result:ReferenceState=object_references::unwrap_all(&space,0,1);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0 && result.visited==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0 && result.visited==1",
+      "result.done && result.outcome==Outcome::Success && result.object==1 && result.visited==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "object_arena_only_path_count",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.count=18446744073709551615;\nspace.objects[0].value=Value::Integer {number:9};\nlet result:ReferenceState=object_references::unwrap_all(&space,0,1);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "full_cycle",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=64;\nspace.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:2};\nspace.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:3};\nspace.objects[3].value=Value::Reference {kind:ReferenceKind::Named,object_id:4};\nspace.objects[4].value=Value::Reference {kind:ReferenceKind::Named,object_id:5};\nspace.objects[5].value=Value::Reference {kind:ReferenceKind::Named,object_id:6};\nspace.objects[6].value=Value::Reference {kind:ReferenceKind::Named,object_id:7};\nspace.objects[7].value=Value::Reference {kind:ReferenceKind::Named,object_id:8};\nspace.objects[8].value=Value::Reference {kind:ReferenceKind::Named,object_id:9};\nspace.objects[9].value=Value::Reference {kind:ReferenceKind::Named,object_id:10};\nspace.objects[10].value=Value::Reference {kind:ReferenceKind::Named,object_id:11};\nspace.objects[11].value=Value::Reference {kind:ReferenceKind::Named,object_id:12};\nspace.objects[12].value=Value::Reference {kind:ReferenceKind::Named,object_id:13};\nspace.objects[13].value=Value::Reference {kind:ReferenceKind::Named,object_id:14};\nspace.objects[14].value=Value::Reference {kind:ReferenceKind::Named,object_id:15};\nspace.objects[15].value=Value::Reference {kind:ReferenceKind::Named,object_id:16};\nspace.objects[16].value=Value::Reference {kind:ReferenceKind::Named,object_id:17};\nspace.objects[17].value=Value::Reference {kind:ReferenceKind::Named,object_id:18};\nspace.objects[18].value=Value::Reference {kind:ReferenceKind::Named,object_id:19};\nspace.objects[19].value=Value::Reference {kind:ReferenceKind::Named,object_id:20};\nspace.objects[20].value=Value::Reference {kind:ReferenceKind::Named,object_id:21};\nspace.objects[21].value=Value::Reference {kind:ReferenceKind::Named,object_id:22};\nspace.objects[22].value=Value::Reference {kind:ReferenceKind::Named,object_id:23};\nspace.objects[23].value=Value::Reference {kind:ReferenceKind::Named,object_id:24};\nspace.objects[24].value=Value::Reference {kind:ReferenceKind::Named,object_id:25};\nspace.objects[25].value=Value::Reference {kind:ReferenceKind::Named,object_id:26};\nspace.objects[26].value=Value::Reference {kind:ReferenceKind::Named,object_id:27};\nspace.objects[27].value=Value::Reference {kind:ReferenceKind::Named,object_id:28};\nspace.objects[28].value=Value::Reference {kind:ReferenceKind::Named,object_id:29};\nspace.objects[29].value=Value::Reference {kind:ReferenceKind::Named,object_id:30};\nspace.objects[30].value=Value::Reference {kind:ReferenceKind::Named,object_id:31};\nspace.objects[31].value=Value::Reference {kind:ReferenceKind::Named,object_id:32};\nspace.objects[32].value=Value::Reference {kind:ReferenceKind::Named,object_id:33};\nspace.objects[33].value=Value::Reference {kind:ReferenceKind::Named,object_id:34};\nspace.objects[34].value=Value::Reference {kind:ReferenceKind::Named,object_id:35};\nspace.objects[35].value=Value::Reference {kind:ReferenceKind::Named,object_id:36};\nspace.objects[36].value=Value::Reference {kind:ReferenceKind::Named,object_id:37};\nspace.objects[37].value=Value::Reference {kind:ReferenceKind::Named,object_id:38};\nspace.objects[38].value=Value::Reference {kind:ReferenceKind::Named,object_id:39};\nspace.objects[39].value=Value::Reference {kind:ReferenceKind::Named,object_id:40};\nspace.objects[40].value=Value::Reference {kind:ReferenceKind::Named,object_id:41};\nspace.objects[41].value=Value::Reference {kind:ReferenceKind::Named,object_id:42};\nspace.objects[42].value=Value::Reference {kind:ReferenceKind::Named,object_id:43};\nspace.objects[43].value=Value::Reference {kind:ReferenceKind::Named,object_id:44};\nspace.objects[44].value=Value::Reference {kind:ReferenceKind::Named,object_id:45};\nspace.objects[45].value=Value::Reference {kind:ReferenceKind::Named,object_id:46};\nspace.objects[46].value=Value::Reference {kind:ReferenceKind::Named,object_id:47};\nspace.objects[47].value=Value::Reference {kind:ReferenceKind::Named,object_id:48};\nspace.objects[48].value=Value::Reference {kind:ReferenceKind::Named,object_id:49};\nspace.objects[49].value=Value::Reference {kind:ReferenceKind::Named,object_id:50};\nspace.objects[50].value=Value::Reference {kind:ReferenceKind::Named,object_id:51};\nspace.objects[51].value=Value::Reference {kind:ReferenceKind::Named,object_id:52};\nspace.objects[52].value=Value::Reference {kind:ReferenceKind::Named,object_id:53};\nspace.objects[53].value=Value::Reference {kind:ReferenceKind::Named,object_id:54};\nspace.objects[54].value=Value::Reference {kind:ReferenceKind::Named,object_id:55};\nspace.objects[55].value=Value::Reference {kind:ReferenceKind::Named,object_id:56};\nspace.objects[56].value=Value::Reference {kind:ReferenceKind::Named,object_id:57};\nspace.objects[57].value=Value::Reference {kind:ReferenceKind::Named,object_id:58};\nspace.objects[58].value=Value::Reference {kind:ReferenceKind::Named,object_id:59};\nspace.objects[59].value=Value::Reference {kind:ReferenceKind::Named,object_id:60};\nspace.objects[60].value=Value::Reference {kind:ReferenceKind::Named,object_id:61};\nspace.objects[61].value=Value::Reference {kind:ReferenceKind::Named,object_id:62};\nspace.objects[62].value=Value::Reference {kind:ReferenceKind::Named,object_id:63};\nspace.objects[63].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};\nlet result:ReferenceState=object_references::unwrap_all(&space,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::ReferenceCycle && result.object==0 && result.visited==18446744073709551615",
+    "mutation": [
+      "result.done && result.outcome==Outcome::ReferenceCycle && result.object==0 && result.visited==18446744073709551615",
+      "result.done && result.outcome==Outcome::ReferenceCycle && result.object==1 && result.visited==18446744073709551615"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "rust_package_index_0",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=4;\nspace.objects[0].value=Value::Integer {number:11};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Integer {number:22};\nspace.objects[0].has_next=true;space.objects[0].next=1;\nspace.objects[1].has_next=true;space.objects[1].next=2;\nspace.objects[3].value=Value::Package {first:0,count:3};\nlet result:ReferenceState=object_references::package_element(&space,3,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==0",
+      "result.done && result.outcome==Outcome::Success && result.object==1"
+    ],
+    "origin": "actual pinned public Package payload Vec::get selection; bounded linked representation adaptation"
+  },
+  {
+    "name": "rust_package_index_1",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=4;\nspace.objects[0].value=Value::Integer {number:11};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Integer {number:22};\nspace.objects[0].has_next=true;space.objects[0].next=1;\nspace.objects[1].has_next=true;space.objects[1].next=2;\nspace.objects[3].value=Value::Package {first:0,count:3};\nlet result:ReferenceState=object_references::package_element(&space,3,1,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "actual pinned public Package payload Vec::get selection; bounded linked representation adaptation"
+  },
+  {
+    "name": "rust_package_index_2",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=4;\nspace.objects[0].value=Value::Integer {number:11};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Integer {number:22};\nspace.objects[0].has_next=true;space.objects[0].next=1;\nspace.objects[1].has_next=true;space.objects[1].next=2;\nspace.objects[3].value=Value::Package {first:0,count:3};\nlet result:ReferenceState=object_references::package_element(&space,3,2,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==2",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==2",
+      "result.done && result.outcome==Outcome::Success && result.object==3"
+    ],
+    "origin": "actual pinned public Package payload Vec::get selection; bounded linked representation adaptation"
+  },
+  {
+    "name": "rust_package_index_3",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=4;\nspace.objects[0].value=Value::Integer {number:11};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Integer {number:22};\nspace.objects[0].has_next=true;space.objects[0].next=1;\nspace.objects[1].has_next=true;space.objects[1].next=2;\nspace.objects[3].value=Value::Package {first:0,count:3};\nlet result:ReferenceState=object_references::package_element(&space,3,3,64);\n",
+    "check": "result.done && result.outcome==Outcome::MissingObject && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::MissingObject && result.object==0",
+      "result.done && result.outcome==Outcome::MissingObject && result.object==1"
+    ],
+    "origin": "actual pinned public Package payload Vec::get selection; bounded linked representation adaptation"
+  },
+  {
+    "name": "rust_package_index_18446744073709551615",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=4;\nspace.objects[0].value=Value::Integer {number:11};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Integer {number:22};\nspace.objects[0].has_next=true;space.objects[0].next=1;\nspace.objects[1].has_next=true;space.objects[1].next=2;\nspace.objects[3].value=Value::Package {first:0,count:3};\nlet result:ReferenceState=object_references::package_element(&space,3,18446744073709551615,64);\n",
+    "check": "result.done && result.outcome==Outcome::MissingObject && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::MissingObject && result.object==0",
+      "result.done && result.outcome==Outcome::MissingObject && result.object==1"
+    ],
+    "origin": "actual pinned public Package payload Vec::get selection; bounded linked representation adaptation"
+  },
+  {
+    "name": "package_empty",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Package {first:0,count:0};\nlet result:ReferenceState=object_references::package_element(&space,0,0,0);\n",
+    "check": "result.done && result.outcome==Outcome::MissingObject && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::MissingObject && result.object==0",
+      "result.done && result.outcome==Outcome::MissingObject && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_missing_root",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=0;\nlet result:ReferenceState=object_references::package_element(&space,0,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::InvalidState && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::InvalidState && result.object==0",
+      "result.done && result.outcome==Outcome::InvalidState && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_wrong_type",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:9};\nlet result:ReferenceState=object_references::package_element(&space,0,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::InvalidState && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::InvalidState && result.object==0",
+      "result.done && result.outcome==Outcome::InvalidState && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_capacity",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Package {first:0,count:65};\nlet result:ReferenceState=object_references::package_element(&space,0,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::Capacity && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Capacity && result.object==0",
+      "result.done && result.outcome==Outcome::Capacity && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_count_max",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Package {first:0,count:18446744073709551615};\nlet result:ReferenceState=object_references::package_element(&space,0,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::Capacity && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Capacity && result.object==0",
+      "result.done && result.outcome==Outcome::Capacity && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_budget_max",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=4;\nspace.objects[0].value=Value::Integer {number:11};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Integer {number:22};\nspace.objects[0].has_next=true;space.objects[0].next=1;\nspace.objects[1].has_next=true;space.objects[1].next=2;\nspace.objects[3].value=Value::Package {first:0,count:3};\nlet result:ReferenceState=object_references::package_element(&space,3,0,18446744073709551615);\n",
+    "check": "result.done && result.outcome==Outcome::InvalidState && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::InvalidState && result.object==0",
+      "result.done && result.outcome==Outcome::InvalidState && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_low_budget",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=4;\nspace.objects[0].value=Value::Integer {number:11};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Integer {number:22};\nspace.objects[0].has_next=true;space.objects[0].next=1;\nspace.objects[1].has_next=true;space.objects[1].next=2;\nspace.objects[3].value=Value::Package {first:0,count:3};\nlet result:ReferenceState=object_references::package_element(&space,3,0,2);\n",
+    "check": "result.done && result.outcome==Outcome::WorkLimit && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::WorkLimit && result.object==0",
+      "result.done && result.outcome==Outcome::WorkLimit && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_dangling",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Package {first:64,count:1};\nlet result:ReferenceState=object_references::package_element(&space,0,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::InvalidState && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::InvalidState && result.object==0",
+      "result.done && result.outcome==Outcome::InvalidState && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_early_end",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Package {first:1,count:2};\nspace.objects[1].value=Value::Integer {number:9};\nlet result:ReferenceState=object_references::package_element(&space,0,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::BadEncoding && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::BadEncoding && result.object==0",
+      "result.done && result.outcome==Outcome::BadEncoding && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_extra_link",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Package {first:1,count:1};\nspace.objects[1].value=Value::Integer {number:9};\nspace.objects[1].has_next=true;space.objects[1].next=1;\nlet result:ReferenceState=object_references::package_element(&space,0,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::BadEncoding && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::BadEncoding && result.object==0",
+      "result.done && result.outcome==Outcome::BadEncoding && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_cycle",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Package {first:1,count:3};\nspace.objects[1].value=Value::Integer {number:9};\nspace.objects[2].value=Value::Integer {number:9};\nspace.objects[1].has_next=true;space.objects[1].next=2;\nspace.objects[2].has_next=true;space.objects[2].next=1;\nlet result:ReferenceState=object_references::package_element(&space,0,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::ReferenceCycle && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::ReferenceCycle && result.object==0",
+      "result.done && result.outcome==Outcome::ReferenceCycle && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_bad_tail_after_selection",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Package {first:1,count:2};\nspace.objects[1].value=Value::Integer {number:9};\nspace.objects[1].has_next=true;space.objects[1].next=64;\nlet result:ReferenceState=object_references::package_element(&space,0,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::InvalidState && result.object==0",
+    "mutation": [
+      "result.done && result.outcome==Outcome::InvalidState && result.object==0",
+      "result.done && result.outcome==Outcome::InvalidState && result.object==1"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_name_is_not_resolved",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=2;\nspace.objects[0].value=Value::Package {first:1,count:1};\nspace.objects[1].value=Value::NameReference {name:Path {absolute:true},scope:Path {absolute:true}};\nlet result:ReferenceState=object_references::package_element(&space,0,0,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==1",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==1",
+      "result.done && result.outcome==Outcome::Success && result.object==0"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "package_maximum",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=64;\nspace.objects[0].value=Value::Package {first:1,count:63};\nspace.objects[1].value=Value::Integer {number:1};\nspace.objects[1].has_next=true;space.objects[1].next=2;\nspace.objects[2].value=Value::Integer {number:2};\nspace.objects[2].has_next=true;space.objects[2].next=3;\nspace.objects[3].value=Value::Integer {number:3};\nspace.objects[3].has_next=true;space.objects[3].next=4;\nspace.objects[4].value=Value::Integer {number:4};\nspace.objects[4].has_next=true;space.objects[4].next=5;\nspace.objects[5].value=Value::Integer {number:5};\nspace.objects[5].has_next=true;space.objects[5].next=6;\nspace.objects[6].value=Value::Integer {number:6};\nspace.objects[6].has_next=true;space.objects[6].next=7;\nspace.objects[7].value=Value::Integer {number:7};\nspace.objects[7].has_next=true;space.objects[7].next=8;\nspace.objects[8].value=Value::Integer {number:8};\nspace.objects[8].has_next=true;space.objects[8].next=9;\nspace.objects[9].value=Value::Integer {number:9};\nspace.objects[9].has_next=true;space.objects[9].next=10;\nspace.objects[10].value=Value::Integer {number:10};\nspace.objects[10].has_next=true;space.objects[10].next=11;\nspace.objects[11].value=Value::Integer {number:11};\nspace.objects[11].has_next=true;space.objects[11].next=12;\nspace.objects[12].value=Value::Integer {number:12};\nspace.objects[12].has_next=true;space.objects[12].next=13;\nspace.objects[13].value=Value::Integer {number:13};\nspace.objects[13].has_next=true;space.objects[13].next=14;\nspace.objects[14].value=Value::Integer {number:14};\nspace.objects[14].has_next=true;space.objects[14].next=15;\nspace.objects[15].value=Value::Integer {number:15};\nspace.objects[15].has_next=true;space.objects[15].next=16;\nspace.objects[16].value=Value::Integer {number:16};\nspace.objects[16].has_next=true;space.objects[16].next=17;\nspace.objects[17].value=Value::Integer {number:17};\nspace.objects[17].has_next=true;space.objects[17].next=18;\nspace.objects[18].value=Value::Integer {number:18};\nspace.objects[18].has_next=true;space.objects[18].next=19;\nspace.objects[19].value=Value::Integer {number:19};\nspace.objects[19].has_next=true;space.objects[19].next=20;\nspace.objects[20].value=Value::Integer {number:20};\nspace.objects[20].has_next=true;space.objects[20].next=21;\nspace.objects[21].value=Value::Integer {number:21};\nspace.objects[21].has_next=true;space.objects[21].next=22;\nspace.objects[22].value=Value::Integer {number:22};\nspace.objects[22].has_next=true;space.objects[22].next=23;\nspace.objects[23].value=Value::Integer {number:23};\nspace.objects[23].has_next=true;space.objects[23].next=24;\nspace.objects[24].value=Value::Integer {number:24};\nspace.objects[24].has_next=true;space.objects[24].next=25;\nspace.objects[25].value=Value::Integer {number:25};\nspace.objects[25].has_next=true;space.objects[25].next=26;\nspace.objects[26].value=Value::Integer {number:26};\nspace.objects[26].has_next=true;space.objects[26].next=27;\nspace.objects[27].value=Value::Integer {number:27};\nspace.objects[27].has_next=true;space.objects[27].next=28;\nspace.objects[28].value=Value::Integer {number:28};\nspace.objects[28].has_next=true;space.objects[28].next=29;\nspace.objects[29].value=Value::Integer {number:29};\nspace.objects[29].has_next=true;space.objects[29].next=30;\nspace.objects[30].value=Value::Integer {number:30};\nspace.objects[30].has_next=true;space.objects[30].next=31;\nspace.objects[31].value=Value::Integer {number:31};\nspace.objects[31].has_next=true;space.objects[31].next=32;\nspace.objects[32].value=Value::Integer {number:32};\nspace.objects[32].has_next=true;space.objects[32].next=33;\nspace.objects[33].value=Value::Integer {number:33};\nspace.objects[33].has_next=true;space.objects[33].next=34;\nspace.objects[34].value=Value::Integer {number:34};\nspace.objects[34].has_next=true;space.objects[34].next=35;\nspace.objects[35].value=Value::Integer {number:35};\nspace.objects[35].has_next=true;space.objects[35].next=36;\nspace.objects[36].value=Value::Integer {number:36};\nspace.objects[36].has_next=true;space.objects[36].next=37;\nspace.objects[37].value=Value::Integer {number:37};\nspace.objects[37].has_next=true;space.objects[37].next=38;\nspace.objects[38].value=Value::Integer {number:38};\nspace.objects[38].has_next=true;space.objects[38].next=39;\nspace.objects[39].value=Value::Integer {number:39};\nspace.objects[39].has_next=true;space.objects[39].next=40;\nspace.objects[40].value=Value::Integer {number:40};\nspace.objects[40].has_next=true;space.objects[40].next=41;\nspace.objects[41].value=Value::Integer {number:41};\nspace.objects[41].has_next=true;space.objects[41].next=42;\nspace.objects[42].value=Value::Integer {number:42};\nspace.objects[42].has_next=true;space.objects[42].next=43;\nspace.objects[43].value=Value::Integer {number:43};\nspace.objects[43].has_next=true;space.objects[43].next=44;\nspace.objects[44].value=Value::Integer {number:44};\nspace.objects[44].has_next=true;space.objects[44].next=45;\nspace.objects[45].value=Value::Integer {number:45};\nspace.objects[45].has_next=true;space.objects[45].next=46;\nspace.objects[46].value=Value::Integer {number:46};\nspace.objects[46].has_next=true;space.objects[46].next=47;\nspace.objects[47].value=Value::Integer {number:47};\nspace.objects[47].has_next=true;space.objects[47].next=48;\nspace.objects[48].value=Value::Integer {number:48};\nspace.objects[48].has_next=true;space.objects[48].next=49;\nspace.objects[49].value=Value::Integer {number:49};\nspace.objects[49].has_next=true;space.objects[49].next=50;\nspace.objects[50].value=Value::Integer {number:50};\nspace.objects[50].has_next=true;space.objects[50].next=51;\nspace.objects[51].value=Value::Integer {number:51};\nspace.objects[51].has_next=true;space.objects[51].next=52;\nspace.objects[52].value=Value::Integer {number:52};\nspace.objects[52].has_next=true;space.objects[52].next=53;\nspace.objects[53].value=Value::Integer {number:53};\nspace.objects[53].has_next=true;space.objects[53].next=54;\nspace.objects[54].value=Value::Integer {number:54};\nspace.objects[54].has_next=true;space.objects[54].next=55;\nspace.objects[55].value=Value::Integer {number:55};\nspace.objects[55].has_next=true;space.objects[55].next=56;\nspace.objects[56].value=Value::Integer {number:56};\nspace.objects[56].has_next=true;space.objects[56].next=57;\nspace.objects[57].value=Value::Integer {number:57};\nspace.objects[57].has_next=true;space.objects[57].next=58;\nspace.objects[58].value=Value::Integer {number:58};\nspace.objects[58].has_next=true;space.objects[58].next=59;\nspace.objects[59].value=Value::Integer {number:59};\nspace.objects[59].has_next=true;space.objects[59].next=60;\nspace.objects[60].value=Value::Integer {number:60};\nspace.objects[60].has_next=true;space.objects[60].next=61;\nspace.objects[61].value=Value::Integer {number:61};\nspace.objects[61].has_next=true;space.objects[61].next=62;\nspace.objects[62].value=Value::Integer {number:62};\nspace.objects[62].has_next=true;space.objects[62].next=63;\nspace.objects[63].value=Value::Integer {number:63};\nlet result:ReferenceState=object_references::package_element(&space,0,62,64);\n",
+    "check": "result.done && result.outcome==Outcome::Success && result.object==63",
+    "mutation": [
+      "result.done && result.outcome==Outcome::Success && result.object==63",
+      "result.done && result.outcome==Outcome::Success && result.object==62"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "allocate_named",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:9};\nlet allocated:NamespaceResult=object_references::allocate_reference(space,ReferenceKind::Named,0);\nlet followed:ReferenceState=object_references::unwrap_all(&allocated.space,allocated.object,64);\nlet kind_ok:bool=oref_reference(&allocated.space,allocated.object,ReferenceKind::Named,0);\n",
+    "check": "kind_ok && allocated.outcome==Outcome::Success && allocated.object==1 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success",
+    "mutation": [
+      "kind_ok && allocated.outcome==Outcome::Success && allocated.object==1 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success",
+      "kind_ok && allocated.outcome==Outcome::Success && allocated.object==0 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success"
+    ],
+    "origin": "actual public Reference construction; fresh stable identity adaptation"
+  },
+  {
+    "name": "allocate_refof",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:9};\nlet allocated:NamespaceResult=object_references::allocate_reference(space,ReferenceKind::RefOf,0);\nlet followed:ReferenceState=object_references::unwrap_all(&allocated.space,allocated.object,64);\nlet kind_ok:bool=oref_reference(&allocated.space,allocated.object,ReferenceKind::RefOf,0);\n",
+    "check": "kind_ok && allocated.outcome==Outcome::Success && allocated.object==1 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success",
+    "mutation": [
+      "kind_ok && allocated.outcome==Outcome::Success && allocated.object==1 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success",
+      "kind_ok && allocated.outcome==Outcome::Success && allocated.object==0 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success"
+    ],
+    "origin": "actual public Reference construction; fresh stable identity adaptation"
+  },
+  {
+    "name": "allocate_local",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:9};\nlet allocated:NamespaceResult=object_references::allocate_reference(space,ReferenceKind::Local,0);\nlet followed:ReferenceState=object_references::unwrap_all(&allocated.space,allocated.object,64);\nlet kind_ok:bool=oref_reference(&allocated.space,allocated.object,ReferenceKind::Local,0);\n",
+    "check": "kind_ok && allocated.outcome==Outcome::Success && allocated.object==1 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success",
+    "mutation": [
+      "kind_ok && allocated.outcome==Outcome::Success && allocated.object==1 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success",
+      "kind_ok && allocated.outcome==Outcome::Success && allocated.object==0 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success"
+    ],
+    "origin": "actual public Reference construction; fresh stable identity adaptation"
+  },
+  {
+    "name": "allocate_arg",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:9};\nlet allocated:NamespaceResult=object_references::allocate_reference(space,ReferenceKind::Arg,0);\nlet followed:ReferenceState=object_references::unwrap_all(&allocated.space,allocated.object,64);\nlet kind_ok:bool=oref_reference(&allocated.space,allocated.object,ReferenceKind::Arg,0);\n",
+    "check": "kind_ok && allocated.outcome==Outcome::Success && allocated.object==1 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success",
+    "mutation": [
+      "kind_ok && allocated.outcome==Outcome::Success && allocated.object==1 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success",
+      "kind_ok && allocated.outcome==Outcome::Success && allocated.object==0 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success"
+    ],
+    "origin": "actual public Reference construction; fresh stable identity adaptation"
+  },
+  {
+    "name": "allocate_index",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:9};\nlet allocated:NamespaceResult=object_references::allocate_reference(space,ReferenceKind::Index,0);\nlet followed:ReferenceState=object_references::unwrap_all(&allocated.space,allocated.object,64);\nlet kind_ok:bool=oref_reference(&allocated.space,allocated.object,ReferenceKind::Index,0);\n",
+    "check": "kind_ok && allocated.outcome==Outcome::Success && allocated.object==1 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success",
+    "mutation": [
+      "kind_ok && allocated.outcome==Outcome::Success && allocated.object==1 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success",
+      "kind_ok && allocated.outcome==Outcome::Success && allocated.object==0 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success"
+    ],
+    "origin": "actual public Reference construction; fresh stable identity adaptation"
+  },
+  {
+    "name": "allocate_unresolved",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:9};\nlet allocated:NamespaceResult=object_references::allocate_reference(space,ReferenceKind::Unresolved,0);\nlet followed:ReferenceState=object_references::unwrap_all(&allocated.space,allocated.object,64);\nlet kind_ok:bool=oref_reference(&allocated.space,allocated.object,ReferenceKind::Unresolved,0);\n",
+    "check": "kind_ok && allocated.outcome==Outcome::Success && allocated.object==1 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success",
+    "mutation": [
+      "kind_ok && allocated.outcome==Outcome::Success && allocated.object==1 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success",
+      "kind_ok && allocated.outcome==Outcome::Success && allocated.object==0 && allocated.space.object_count==2 && followed.object==0 && followed.outcome==Outcome::Success"
+    ],
+    "origin": "actual public Reference construction; fresh stable identity adaptation"
+  },
+  {
+    "name": "allocation_full",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=64;\nspace.objects[0].value=Value::Integer {number:77};\nspace.objects[0].has_next=true;space.objects[0].next=21;\nlet result:NamespaceResult=object_references::allocate_reference(space,ReferenceKind::Named,0);\n",
+    "check": "result.outcome==Outcome::Capacity && result.space.object_count==64 && result.space.objects[0].has_next && result.space.objects[0].next==21",
+    "mutation": [
+      "result.outcome==Outcome::Capacity && result.space.object_count==64 && result.space.objects[0].has_next && result.space.objects[0].next==21",
+      "result.outcome==Outcome::Capacity && result.space.object_count==64 && result.space.objects[0].has_next && result.space.objects[0].next==22"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "allocation_bad_target",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:77};\nspace.objects[0].has_next=true;space.objects[0].next=21;\nlet result:NamespaceResult=object_references::allocate_reference(space,ReferenceKind::Named,64);\n",
+    "check": "result.outcome==Outcome::InvalidState && result.space.object_count==1 && result.space.objects[0].has_next && result.space.objects[0].next==21",
+    "mutation": [
+      "result.outcome==Outcome::InvalidState && result.space.object_count==1 && result.space.objects[0].has_next && result.space.objects[0].next==21",
+      "result.outcome==Outcome::InvalidState && result.space.object_count==1 && result.space.objects[0].has_next && result.space.objects[0].next==22"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "allocation_target_max",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:77};\nspace.objects[0].has_next=true;space.objects[0].next=21;\nlet result:NamespaceResult=object_references::allocate_reference(space,ReferenceKind::Named,18446744073709551615);\n",
+    "check": "result.outcome==Outcome::InvalidState && result.space.object_count==1 && result.space.objects[0].has_next && result.space.objects[0].next==21",
+    "mutation": [
+      "result.outcome==Outcome::InvalidState && result.space.object_count==1 && result.space.objects[0].has_next && result.space.objects[0].next==21",
+      "result.outcome==Outcome::InvalidState && result.space.object_count==1 && result.space.objects[0].has_next && result.space.objects[0].next==22"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "allocation_empty",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=0;\nspace.objects[0].value=Value::Integer {number:77};\nspace.objects[0].has_next=true;space.objects[0].next=21;\nlet result:NamespaceResult=object_references::allocate_reference(space,ReferenceKind::Named,0);\n",
+    "check": "result.outcome==Outcome::InvalidState && result.space.object_count==0 && result.space.objects[0].has_next && result.space.objects[0].next==21",
+    "mutation": [
+      "result.outcome==Outcome::InvalidState && result.space.object_count==0 && result.space.objects[0].has_next && result.space.objects[0].next==21",
+      "result.outcome==Outcome::InvalidState && result.space.object_count==0 && result.space.objects[0].has_next && result.space.objects[0].next==22"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "allocation_bad_count",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=65;\nspace.objects[0].value=Value::Integer {number:77};\nspace.objects[0].has_next=true;space.objects[0].next=21;\nlet result:NamespaceResult=object_references::allocate_reference(space,ReferenceKind::Named,0);\n",
+    "check": "result.outcome==Outcome::InvalidState && result.space.object_count==65 && result.space.objects[0].has_next && result.space.objects[0].next==21",
+    "mutation": [
+      "result.outcome==Outcome::InvalidState && result.space.object_count==65 && result.space.objects[0].has_next && result.space.objects[0].next==21",
+      "result.outcome==Outcome::InvalidState && result.space.object_count==65 && result.space.objects[0].has_next && result.space.objects[0].next==22"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "copy_integer",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Integer {number:18446744073709551615};\nspace.objects[1].value=Value::Integer {number:6};\nspace.objects[2].value=Value::Integer {number:7};\nspace.objects[0].has_next=true;space.objects[0].next=11;\nspace.objects[1].has_next=true;space.objects[1].next=22;\nlet result:NamespaceResult=object_references::copy_value(space,1,0);\nlet payload_ok:bool=oref_integer(&result.space,1,18446744073709551615);\n",
+    "check": "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==22",
+    "mutation": [
+      "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==22",
+      "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==23"
+    ],
+    "origin": "public Object::clone value/identity observations; namespace link-preservation policy"
+  },
+  {
+    "name": "copy_reference",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[1].value=Value::Integer {number:6};\nspace.objects[2].value=Value::Integer {number:7};\nspace.objects[0].has_next=true;space.objects[0].next=11;\nspace.objects[1].has_next=true;space.objects[1].next=22;\nlet result:NamespaceResult=object_references::copy_value(space,1,0);\nlet payload_ok:bool=oref_reference(&result.space,1,ReferenceKind::RefOf,0);\n",
+    "check": "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==22",
+    "mutation": [
+      "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==22",
+      "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==23"
+    ],
+    "origin": "public Object::clone value/identity observations; namespace link-preservation policy"
+  },
+  {
+    "name": "copy_package",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Package {first:2,count:1};\nspace.objects[1].value=Value::Integer {number:6};\nspace.objects[2].value=Value::Integer {number:7};\nspace.objects[0].has_next=true;space.objects[0].next=11;\nspace.objects[1].has_next=true;space.objects[1].next=22;\nlet result:NamespaceResult=object_references::copy_value(space,1,0);\nlet payload_ok:bool=oref_package(&result.space,1,2,1);\n",
+    "check": "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==22",
+    "mutation": [
+      "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==22",
+      "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==23"
+    ],
+    "origin": "public Object::clone value/identity observations; namespace link-preservation policy"
+  },
+  {
+    "name": "copy_method",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Method {flags:2,body:Span {unit:4,start:10,end:20}};\nspace.objects[1].value=Value::Integer {number:6};\nspace.objects[2].value=Value::Integer {number:7};\nspace.objects[0].has_next=true;space.objects[0].next=11;\nspace.objects[1].has_next=true;space.objects[1].next=22;\nlet result:NamespaceResult=object_references::copy_value(space,1,0);\nlet payload_ok:bool=oref_method(&result.space,1,2,4,10,20);\n",
+    "check": "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==22",
+    "mutation": [
+      "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==22",
+      "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==23"
+    ],
+    "origin": "public Object::clone value/identity observations; namespace link-preservation policy"
+  },
+  {
+    "name": "copy_uninitialized",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=3;\nspace.objects[0].value=Value::Uninitialized;\nspace.objects[1].value=Value::Integer {number:6};\nspace.objects[2].value=Value::Integer {number:7};\nspace.objects[0].has_next=true;space.objects[0].next=11;\nspace.objects[1].has_next=true;space.objects[1].next=22;\nlet result:NamespaceResult=object_references::copy_value(space,1,0);\nlet payload_ok:bool=oref_uninitialized(&result.space,1);\n",
+    "check": "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==22",
+    "mutation": [
+      "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==22",
+      "result.outcome==Outcome::Success && result.object==1 && result.space.object_count==3 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==11 && result.space.objects[1].has_next && result.space.objects[1].next==23"
+    ],
+    "origin": "public Object::clone value/identity observations; namespace link-preservation policy"
+  },
+  {
+    "name": "copy_self",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:44};\nspace.objects[0].has_next=true;space.objects[0].next=33;\nlet result:NamespaceResult=object_references::copy_value(space,0,0);\nlet payload_ok:bool=oref_integer(&result.space,0,44);\n",
+    "check": "result.outcome==Outcome::Success && result.space.object_count==1 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==33",
+    "mutation": [
+      "result.outcome==Outcome::Success && result.space.object_count==1 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==33",
+      "result.outcome==Outcome::Success && result.space.object_count==1 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==34"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "copy_bad_source",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:44};\nspace.objects[0].has_next=true;space.objects[0].next=33;\nlet result:NamespaceResult=object_references::copy_value(space,0,64);\nlet payload_ok:bool=oref_integer(&result.space,0,44);\n",
+    "check": "result.outcome==Outcome::InvalidState && result.space.object_count==1 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==33",
+    "mutation": [
+      "result.outcome==Outcome::InvalidState && result.space.object_count==1 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==33",
+      "result.outcome==Outcome::InvalidState && result.space.object_count==1 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==34"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "copy_bad_destination",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=1;\nspace.objects[0].value=Value::Integer {number:44};\nspace.objects[0].has_next=true;space.objects[0].next=33;\nlet result:NamespaceResult=object_references::copy_value(space,64,0);\nlet payload_ok:bool=oref_integer(&result.space,0,44);\n",
+    "check": "result.outcome==Outcome::InvalidState && result.space.object_count==1 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==33",
+    "mutation": [
+      "result.outcome==Outcome::InvalidState && result.space.object_count==1 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==33",
+      "result.outcome==Outcome::InvalidState && result.space.object_count==1 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==34"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "copy_bad_count",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=65;\nspace.objects[0].value=Value::Integer {number:44};\nspace.objects[0].has_next=true;space.objects[0].next=33;\nlet result:NamespaceResult=object_references::copy_value(space,0,0);\nlet payload_ok:bool=oref_integer(&result.space,0,44);\n",
+    "check": "result.outcome==Outcome::InvalidState && result.space.object_count==65 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==33",
+    "mutation": [
+      "result.outcome==Outcome::InvalidState && result.space.object_count==65 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==33",
+      "result.outcome==Outcome::InvalidState && result.space.object_count==65 && payload_ok && result.space.objects[0].has_next && result.space.objects[0].next==34"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  },
+  {
+    "name": "copy_package_shares_elements",
+    "body": "let mut space:Namespace=Namespace {};space.object_count=4;\nspace.objects[0].value=Value::Integer {number:11};\nspace.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};\nspace.objects[2].value=Value::Integer {number:22};\nspace.objects[0].has_next=true;space.objects[0].next=1;\nspace.objects[1].has_next=true;space.objects[1].next=2;\nspace.objects[3].value=Value::Package {first:0,count:3};\nspace.object_count=5;\nlet copied:NamespaceResult=object_references::copy_value(space,4,3);\nlet mut shared:Namespace=copied.space;shared.objects[0].value=Value::Integer {number:99};\nlet first:ReferenceState=object_references::package_element(&shared,3,0,64);\nlet second:ReferenceState=object_references::package_element(&shared,4,0,64);\nlet shared_value:bool=oref_integer(&shared,second.object,99);\n",
+    "check": "copied.outcome==Outcome::Success && first.outcome==Outcome::Success && second.outcome==Outcome::Success && first.object==second.object && shared_value",
+    "mutation": [
+      "copied.outcome==Outcome::Success && first.outcome==Outcome::Success && second.outcome==Outcome::Success && first.object==second.object && shared_value",
+      "copied.outcome==Outcome::Success && first.outcome==Outcome::Success && second.outcome==Outcome::Success && first.object!=second.object && shared_value"
+    ],
+    "origin": "public Object::Package clone retains child identity"
+  },
+  {
+    "name": "alias_rebinding_stable_ids",
+    "body": "let initial:Namespace=namespace::empty();\nlet mut first:Path=Path {absolute:true,count:1};first.segments[0]=1145258561;\nlet mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1212630597;\nlet inserted:NamespaceResult=namespace::insert(initial,first,Value::Integer {number:11});\nlet bound:NamespaceResult=namespace::bind(inserted.space,alias,inserted.object);\nlet rebound:NamespaceResult=namespace::insert(bound.space,first,Value::Integer {number:22});\nlet copied:NamespaceResult=object_references::copy_value(rebound.space,inserted.object,rebound.object);\nlet old:aml::model::Lookup=namespace::get(copied.space,alias);\nlet current:aml::model::Lookup=namespace::get(copied.space,first);\nlet old_value:bool=oref_integer(&copied.space,old.object,22);\n",
+    "check": "old.outcome==Outcome::Success && current.outcome==Outcome::Success && old.object==inserted.object && current.object==rebound.object && old.object!=current.object && old_value",
+    "mutation": [
+      "old.outcome==Outcome::Success && current.outcome==Outcome::Success && old.object==inserted.object && current.object==rebound.object && old.object!=current.object && old_value",
+      "old.outcome==Outcome::Success && current.outcome==Outcome::Success && old.object==inserted.object && current.object==rebound.object && old.object==current.object && old_value"
+    ],
+    "origin": "Cathedral bounded graph/identity policy"
+  }
+]

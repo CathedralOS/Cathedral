@@ -1,0 +1,160 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified WrappedObject reference/clone algorithms from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
+// Bounded stable IDs replace Arc identity; no ObjectToken, pointer or live service.
+module object_references;
+use model::Outcome;
+use model::Value;
+use model::ReferenceKind;
+use model::Object;
+use model::Namespace;
+use model::NamespaceResult;
+use model::ReferenceState;
+use namespace;
+
+pub machine unwrap_all(space:&Namespace,object:u64,budget:u64)->ReferenceState {
+ let result:ReferenceState=or_unwrap(space,object,budget,false);result
+}
+pub machine unwrap_transparent(space:&Namespace,object:u64,budget:u64)->ReferenceState {
+ let result:ReferenceState=or_unwrap(space,object,budget,true);result
+}
+machine or_unwrap(space:&Namespace,object:u64,budget:u64,transparent:bool)->ReferenceState {
+ let capacity:u64=space.object_count;
+ transition capacity<=64 && object<capacity && object<64 && budget<=64 {
+  true -> run(space,object,budget,transparent)
+  _ -> (ReferenceState {outcome:Outcome::InvalidState,object:object,done:true})
+ }
+ state run(space:&Namespace,object:u64,budget:u64,transparent:bool)->ReferenceState {
+  let initial:ReferenceState=ReferenceState {object:object};
+  let result:ReferenceState=or_reference_walk(space,initial,0,budget,transparent);
+  transition result.done {true -> (result) _ -> (ReferenceState {outcome:Outcome::WorkLimit,object:result.object,visited:result.visited,done:true})}
+ }
+}
+machine or_reference_walk(space:&Namespace,value:ReferenceState,index:u64,count:u64,transparent:bool)
+terminates by(index,count)->Nat::BoundedDistance;
+->ReferenceState {
+ let next:ReferenceState=or_reference_bounded_step(space,value,index,count,transparent);
+ transition index<count {true -> or_reference_walk(space,next,index+1,count,transparent) _ -> (value)}
+}
+machine or_reference_bounded_step(space:&Namespace,value:ReferenceState,index:u64,count:u64,transparent:bool)->ReferenceState {
+ transition index<count {true -> step(space,value,transparent) _ -> (value)}
+ state step(space:&Namespace,value:ReferenceState,transparent:bool)->ReferenceState {
+  let next:ReferenceState=or_reference_step(space,value,transparent);next
+ }
+}
+machine or_reference_step(space:&Namespace,value:ReferenceState,transparent:bool)->ReferenceState {
+ transition value.done {true -> (value) _ -> inspect(space,value,transparent,value.object)}
+ state inspect(space:&Namespace,value:ReferenceState,transparent:bool,index:u64)->ReferenceState {
+  transition index<space.object_count && index<64 {true -> payload(space,value,transparent,index) _ -> (ReferenceState {outcome:Outcome::InvalidState,object:index,visited:value.visited,done:true})}
+ }
+ state payload(space:&Namespace,value:ReferenceState,transparent:bool,index:u64)->ReferenceState {
+  let mask:u64=(1 as u64)<<index;let seen:u64=value.visited|mask;
+  let payload:Value=space.objects[index].value;
+  transition payload {
+   Value::Reference {kind,object_id} -> reference(space,index,object_id,seen,kind,transparent)
+   _ -> (ReferenceState {object:index,visited:seen,done:true})
+  }
+ }
+ state reference(space:&Namespace,from:u64,target:u64,seen:u64,kind:ReferenceKind,transparent:bool)->ReferenceState {
+  let follow:bool=!transparent || kind==ReferenceKind::Named || kind==ReferenceKind::Local || kind==ReferenceKind::Arg;
+  transition follow {true -> bounds(space,target,seen) _ -> (ReferenceState {object:from,visited:seen,done:true})}
+ }
+ state bounds(space:&Namespace,target:u64,seen:u64)->ReferenceState {
+  transition target<space.object_count && target<64 {true -> cycle(target,seen) _ -> (ReferenceState {outcome:Outcome::InvalidState,object:target,visited:seen,done:true})}
+ }
+ state cycle(target:u64,seen:u64)->ReferenceState {
+  let mask:u64=(1 as u64)<<target;
+  transition seen&mask!=0 {true -> (ReferenceState {outcome:Outcome::ReferenceCycle,object:target,visited:seen,done:true}) _ -> (ReferenceState {object:target,visited:seen})}
+ }
+}
+// Validates the target before allocating one fresh identity. Namespace entries
+// and existing objects are unchanged on failure; references do not rebind names.
+pub machine allocate_reference(space:Namespace,kind:ReferenceKind,target:u64)->NamespaceResult {
+ let count:u64=space.object_count;
+ transition count<=64 && target<count && target<64 {
+  true -> allocate(space,kind,target)
+  _ -> (NamespaceResult {outcome:Outcome::InvalidState,space:space})
+ }
+ state allocate(space:Namespace,kind:ReferenceKind,target:u64)->NamespaceResult {
+  let payload:Value=Value::Reference {kind:kind,object_id:target};
+  let result:NamespaceResult=namespace::allocate(space,payload);result
+ }
+}
+// The payload clone is shallow. Both sibling links stay attached to their
+// original object identities. Method-definition observations are separate:
+// this namespace-only operation does not establish executable method provenance.
+pub machine copy_value(space:Namespace,destination:u64,source:u64)->NamespaceResult {
+ let count:u64=space.object_count;
+ transition count<=64 && destination<count && source<count && destination<64 && source<64 {
+  true -> copy(space,destination,source)
+  _ -> (NamespaceResult {outcome:Outcome::InvalidState,space:space})
+ }
+ state copy(space:Namespace,destination:u64,source:u64)->NamespaceResult {
+  let payload:Value=space.objects[source].value;let mut out:Namespace=space;
+  out.objects[destination].value=payload;
+  NamespaceResult {space:out,object:destination}
+ }
+}
+// Complete advertised-chain validation precedes publishing a selected element.
+// This does not unwrap Reference values or resolve lexical NameReference values.
+pub machine package_element(space:&Namespace,package:u64,index:u64,budget:u64)->ReferenceState {
+ let capacity:u64=space.object_count;
+ transition capacity<=64 && package<capacity && package<64 && budget<=64 {
+  true -> payload(space,package,index,budget)
+  _ -> (ReferenceState {outcome:Outcome::InvalidState,done:true})
+ }
+ state payload(space:&Namespace,package:u64,index:u64,budget:u64)->ReferenceState {
+  let value:Value=space.objects[package].value;
+  transition value {Value::Package {first,count} -> length(space,first,count,index,budget) _ -> (ReferenceState {outcome:Outcome::InvalidState,done:true})}
+ }
+ state length(space:&Namespace,first:u64,count:u64,index:u64,budget:u64)->ReferenceState {
+  transition {count>64 -> (ReferenceState {outcome:Outcome::Capacity,done:true})
+   index>=count -> (ReferenceState {outcome:Outcome::MissingObject,done:true})
+   budget<count -> (ReferenceState {outcome:Outcome::WorkLimit,done:true})
+   _ -> walk(space,first,count,index)}
+ }
+ state walk(space:&Namespace,first:u64,count:u64,index:u64)->ReferenceState {
+  let initial:PackageWalk=PackageWalk {at:first};
+  let result:PackageWalk=or_package_walk(space,initial,0,count,index);
+  transition result.outcome==Outcome::Success && result.done {
+   true -> (ReferenceState {object:result.selected,visited:result.visited,done:true})
+   _ -> (ReferenceState {outcome:result.outcome,visited:result.visited,done:true})
+  }
+ }
+}
+data PackageWalk [copy] {outcome:Outcome;at:u64;visited:u64;selected:u64;done:bool;}
+machine or_package_walk(space:&Namespace,value:PackageWalk,index:u64,count:u64,selected:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->PackageWalk {
+ let next:PackageWalk=or_package_step(space,value,index,count,selected);
+ transition index<count {true -> or_package_walk(space,next,index+1,count,selected) _ -> (value)}
+}
+machine or_package_step(space:&Namespace,value:PackageWalk,index:u64,count:u64,selected:u64)->PackageWalk {
+ transition value.done || index>=count {true -> (value) _ -> bounds(space,value,index,count,selected,value.at)}
+ state bounds(space:&Namespace,value:PackageWalk,index:u64,count:u64,selected:u64,at:u64)->PackageWalk {
+  transition at<space.object_count && at<64 {true -> seen(space,value,index,count,selected,at) _ -> failure(value,Outcome::InvalidState)}
+ }
+ state seen(space:&Namespace,value:PackageWalk,index:u64,count:u64,selected:u64,at:u64)->PackageWalk {
+  let mask:u64=(1 as u64)<<at;
+  transition value.visited&mask==0 {true -> item(space,value,index,count,selected,at,mask) _ -> failure(value,Outcome::ReferenceCycle)}
+ }
+ state item(space:&Namespace,value:PackageWalk,index:u64,count:u64,selected:u64,at:u64,mask:u64)->PackageWalk {
+  let object:Object=space.objects[at];let mut next:PackageWalk=value;next.visited=value.visited|mask;
+  transition index==selected {true -> select(next,index,count,at,object) _ -> link(next,index,count,object)}
+ }
+ state select(value:PackageWalk,index:u64,count:u64,at:u64,object:Object)->PackageWalk {
+  let mut next:PackageWalk=value;next.selected=at;transition {_ -> link(next,index,count,object)}
+ }
+ state link(value:PackageWalk,index:u64,count:u64,object:Object)->PackageWalk {
+  transition index+1<count {true -> more(value,object) _ -> last(value,object)}
+ }
+ state more(value:PackageWalk,object:Object)->PackageWalk {
+  transition object.has_next {true -> advance(value,object.next) _ -> failure(value,Outcome::BadEncoding)}
+ }
+ state advance(value:PackageWalk,at:u64)->PackageWalk {let mut next:PackageWalk=value;next.at=at;next}
+ state last(value:PackageWalk,object:Object)->PackageWalk {
+  transition object.has_next {true -> failure(value,Outcome::BadEncoding) _ -> done(value)}
+ }
+ state done(value:PackageWalk)->PackageWalk {let mut next:PackageWalk=value;next.done=true;next}
+ state failure(value:PackageWalk,outcome:Outcome)->PackageWalk {let mut next:PackageWalk=value;next.outcome=outcome;next.done=true;next}
+}

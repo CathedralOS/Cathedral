@@ -467,10 +467,16 @@ The [loader-to-executor pipeline](source/libraries/acpi/pipeline/PORT.md) now
 captures method observations during declaration, rolls them back with failed
 loads and owns a single initialized source snapshot. All 22 pipeline pairs,
 27 original parser pairs, 79 executor pairs and 18 unchanged field-parser pairs
-pass the current checked-interpreter regression. Two parser const pairs and the
-frame-admission const pair also pass; historical full const evidence retains its
-original hashes. Multi-unit dispatch and full AML semantics remain pending;
+pass the current checked-interpreter regression. Earlier parser and
+frame-admission const proofs retain their original hashes as historical evidence
+after the additive reference-model change. Multi-unit dispatch and full AML semantics remain pending;
 ACPI-004/005/006 stay open.
+
+[Canonical object references](source/libraries/acpi/aml/object-references.PORT.md)
+add full/transparent unwrap, stable-ID reference allocation, payload copy and
+complete package-chain selection. All 160 checked pairs, five const pairs and
+116 public immutable Rust observations pass. Generic opcode integration and
+mutable backing remain ordinary implementation work.
 
 ACPI-004 partial evidence: [static AML syntax and namespace](source/libraries/acpi/aml/PORT.md)
 passes 27 Omega scenarios with 27 body mutations and an 18-file source check.

@@ -2746,8 +2746,7 @@
         },
         "132:unwrap_reference": {
           "anchor": "pub fn unwrap_reference(self) -> WrappedObject {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -2755,12 +2754,18 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "reason": "Canonical stable-ID equivalent for valid acyclic references; named bounded cycle/dangling/budget rejection policies added.",
+          "targets": [
+            {
+              "anchor": "pub machine unwrap_all",
+              "path": "source/libraries/acpi/aml/object_references.omg"
+            }
           ]
         },
         "145:unwrap_transparent_reference": {
           "anchor": "pub fn unwrap_transparent_reference(self) -> WrappedObject {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -2768,6 +2773,13 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "reason": "Canonical stable-ID equivalent for valid acyclic references; named bounded cycle/dangling/budget rejection policies added.",
+          "targets": [
+            {
+              "anchor": "pub machine unwrap_transparent",
+              "path": "source/libraries/acpi/aml/object_references.omg"
+            }
           ]
         },
         "14:Object": {
@@ -3243,8 +3255,7 @@
         },
         "487:ReferenceKind": {
           "anchor": "pub enum ReferenceKind {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-005, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "allocator_concurrency"
@@ -3252,6 +3263,13 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
+          ],
+          "reason": "Canonical stable-ID equivalent for valid acyclic references; named bounded cycle/dangling/budget rejection policies added.",
+          "targets": [
+            {
+              "anchor": "pub data ReferenceKind",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
           ]
         },
         "497:ObjectType": {

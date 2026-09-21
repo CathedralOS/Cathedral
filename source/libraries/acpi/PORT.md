@@ -4,7 +4,7 @@
 
 **Stage: inventoried, 2026-09-20.** This milestone covers the complete pinned
 Rust corpus and test-scenario metadata. It does not claim an Omega translation,
-compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 559 translated table/topology/AML/helper anchors and 1,022
+compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 562 translated table/topology/AML/helper anchors and 1,019
 pending anchors. Inventory completion and translation completion are different
 milestones. The bounded ACPI-001 slice is separately
 [tested by Omega semantic evaluation](headers.PORT.md): 65 original scenarios
@@ -162,3 +162,10 @@ Both pass against the exact pin and current source bytes. The first checks the
 partition/scenario metadata and license copies; the second checks Rust anchors
 and hashes. `--require-transcribed` intentionally fails while implementation
 is pending. No compiler binary/revision is attributed to this metadata audit.
+
+[Canonical AML reference kernels](aml/object-references.PORT.md) add full and
+transparent unwrap and six reference kinds, with stable-ID allocation, shallow
+payload copy and complete package-chain validation. Their 160 checked pairs,
+five const pairs and 116 actual public immutable Rust observations pass, alongside
+146 existing parser/executor/pipeline/field regression pairs. Generic opcode
+execution and owned mutable byte storage remain pending.

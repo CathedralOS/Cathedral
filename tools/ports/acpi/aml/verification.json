@@ -151,15 +151,20 @@
   "current_regression": {
     "body_control_count": 27,
     "command": "python3 tools/ports/acpi/pipeline/check.py --parser-regression --record tools/ports/acpi/pipeline/parser-verification.json",
-    "current_const_cases": [
-      "load-method",
-      "load-rollback"
-    ],
-    "current_const_record": "tools/ports/acpi/pipeline/const-verification.json",
-    "note": "All original parser assertion bodies and mutations unchanged. Historical const results retain their original package hash; two focused const pairs were rerun against the current package.",
-    "package_sha256": "8e54297df1b321a63e5b529bd615e4edc04e4fa61c8597f14a197a0a2bb41b60",
+    "historical_const_evidence": {
+      "cases": [
+        "load-method",
+        "load-rollback"
+      ],
+      "package_sha256": "8e54297df1b321a63e5b529bd615e4edc04e4fa61c8597f14a197a0a2bb41b60",
+      "record": "tools/ports/acpi/pipeline/const-verification.json",
+      "record_sha256": "088cc9fe8642cd8523d25682a86b69f3e1e22c7b1f5fecda6adc374a6e7c8458",
+      "stage": "Historical declaration-capture const evidence, before additive ReferenceKind/Value::Reference"
+    },
+    "note": "All original parser assertion/control bodies remain unchanged. Current checked evidence includes additive canonical ReferenceKind/Value::Reference and pure reference kernels. Both original and declaration-capture const proofs retain their old source hashes; new reference-kernel const proofs are recorded separately.",
+    "package_sha256": "70d84b2f200db0ba1bc2dfeac3abda9398780a8a3ca9fa8fd4ffb4de9530d333",
     "record": "tools/ports/acpi/pipeline/parser-verification.json",
-    "record_sha256": "1f5a715fb096fdf3e1b7eefe8a84d7fa63c57a3d2aa69ab354b3a6a82b7325aa",
+    "record_sha256": "3245355f6f563a097911b3f73830c26b08c5c9346e83084b9472160458a7e21c",
     "scenario_count": 27,
     "stage": "checked-interpreter execution; native/hardware not run"
   },
@@ -170,7 +175,7 @@
     "pending": 292,
     "translated": 28
   },
-  "kind": "Historical constant-evaluation baseline at package_sha256; current declaration-capture regression is recorded separately below",
+  "kind": "Historical constant-evaluation baseline at package_sha256; current additive-reference regression is recorded separately below",
   "metadata_only_upstream_test_assets": 33,
   "opcode_facts": 113,
   "package_hash_algorithm": "SHA-256 over sorted *.omg filename + NUL + file bytes",
