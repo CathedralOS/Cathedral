@@ -1,0 +1,88 @@
+{
+  "audit_sha256": "795fbef240ee6f43e4b96ef9050194cade3e7e35137129f01f65fcac639c61cc",
+  "fixtures_sha256": "3188cef204b8e21abd9c65fd295921aa3a654b70ff121a8ce7547fad4399db0b",
+  "primary": "https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#concatenate-concatenate-data",
+  "primary_table": "19.31",
+  "rows": [
+    {
+      "canonical_case": "Uninitialized",
+      "line": 2178,
+      "logical_length": 22,
+      "text": "[Uninitialized Object]",
+      "upstream_case": "Uninitialized"
+    },
+    {
+      "canonical_case": "Package",
+      "line": 2191,
+      "logical_length": 9,
+      "text": "[Package]",
+      "upstream_case": "Package"
+    },
+    {
+      "canonical_case": "BufferField",
+      "line": 2180,
+      "logical_length": 14,
+      "text": "[Buffer Field]",
+      "upstream_case": "BufferField"
+    },
+    {
+      "canonical_case": "Device",
+      "line": 2181,
+      "logical_length": 8,
+      "text": "[Device]",
+      "upstream_case": "Device"
+    },
+    {
+      "canonical_case": "Event",
+      "line": 2182,
+      "logical_length": 7,
+      "text": "[Event]",
+      "upstream_case": "Event"
+    },
+    {
+      "canonical_case": "Method",
+      "line": 2185,
+      "logical_length": 16,
+      "text": "[Control Method]",
+      "upstream_case": "Method"
+    },
+    {
+      "canonical_case": "Mutex",
+      "line": 2186,
+      "logical_length": 7,
+      "text": "[Mutex]",
+      "upstream_case": "Mutex"
+    },
+    {
+      "canonical_case": "OperationRegion",
+      "line": 2190,
+      "logical_length": 18,
+      "text": "[Operation Region]",
+      "upstream_case": "OpRegion"
+    },
+    {
+      "canonical_case": "PowerResource",
+      "line": 2192,
+      "logical_length": 16,
+      "text": "[Power Resource]",
+      "upstream_case": "PowerResource"
+    },
+    {
+      "canonical_case": "Processor",
+      "line": 2193,
+      "logical_length": 11,
+      "text": "[Processor]",
+      "upstream_case": "Processor"
+    },
+    {
+      "canonical_case": "ThermalZone",
+      "line": 2196,
+      "logical_length": 14,
+      "text": "[Thermal Zone]",
+      "upstream_case": "ThermalZone"
+    }
+  ],
+  "stage": "static primary/pinned label provenance audit only; no Rust execution and no private algorithm mirror",
+  "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "upstream_source_sha256": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df"
+}

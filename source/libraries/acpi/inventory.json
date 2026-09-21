@@ -888,9 +888,13 @@
             {
               "anchor": "pub machine concatenate(",
               "path": "source/libraries/acpi/aml/object_concat.omg"
+            },
+            {
+              "path": "source/libraries/acpi/aml/object_descriptions.omg",
+              "anchor": "pub machine describe("
             }
           ],
-          "note": "Basic Integer/String/Buffer concatenation after primary right-hand conversion. Other-type name formatting, reference/context policy, target coercion, object installation and opcode execution remain pending."
+          "note": "Basic Integer/String/Buffer concatenation and eleven represented nonbasic description labels are implemented as separate components. General nonbasic concatenation dispatch, missing canonical types, reference/context policy, target coercion, installation and opcode execution remain pending."
         },
         "2176:resolve_as_string": {
           "anchor": "fn resolve_as_string(obj: &Object) -> String {",
@@ -910,9 +914,13 @@
             {
               "anchor": "pub machine concatenate(",
               "path": "source/libraries/acpi/aml/object_concat.omg"
+            },
+            {
+              "path": "source/libraries/acpi/aml/object_descriptions.omg",
+              "anchor": "pub machine describe("
             }
           ],
-          "note": "Basic Integer/String/Buffer concatenation after primary right-hand conversion. Other-type name formatting, reference/context policy, target coercion, object installation and opcode execution remain pending."
+          "note": "Basic Integer/String/Buffer concatenation and eleven represented nonbasic description labels are implemented as separate components. General nonbasic concatenation dispatch, missing canonical types, reference/context policy, target coercion, installation and opcode execution remain pending."
         },
         "21:op_region": {
           "anchor": "pub mod op_region;",

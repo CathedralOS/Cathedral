@@ -677,6 +677,12 @@ pairs and three constant pairs pass, including exact 32/64-bit Boolean results,
 full right admission and malformed-tail errors. Operand/reference evaluation and
 context retirement remain pending; aggregate source counts are unchanged.
 
+[Direct object descriptions](source/libraries/acpi/aml/object-descriptions.PORT.md) supply the eleven represented nonbasic
+Concatenate labels without reading or validating object payloads. All 115 checked
+pairs, three constant pairs and eleven static pinned-label audits pass; receipts
+bind the final execution root and generated build text. General Concatenate
+dispatch and opcode execution remain pending; aggregate counts are unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

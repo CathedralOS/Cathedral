@@ -1,0 +1,74 @@
+{
+  "cases": [
+    "Uninitialized_63_True",
+    "BufferField_31_True",
+    "invalid_Device_count_max"
+  ],
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "input_sha256": {
+    "source/libraries/acpi/aml/build.omg": "2129610bb9e275f63e87c5e736bb29114044d1a466cdc1d288e4c9103b076319",
+    "source/libraries/acpi/aml/byte_storage.omg": "045be1e6efc512f051231c3233f2a177473a15eb832f78111086f67a7b504f25",
+    "source/libraries/acpi/aml/bytes.omg": "66a5f91ebe3bba63c398a20dba184854f257d580279cde514ba00aa8216251be",
+    "source/libraries/acpi/aml/model.omg": "1fc2a3ceb403f0adef2022f76ac0c1187fc74b0cd794df4e7855d643838a10af",
+    "source/libraries/acpi/aml/names.omg": "4d616001e6f0eef3f5233fb2e7df6b237e2cc89d1d565475f4dd0d03036f444e",
+    "source/libraries/acpi/aml/namespace.omg": "2cb9a7187ad787316f89e712c115906290e29a477e23ec0b4e29642935468d97",
+    "source/libraries/acpi/aml/object_conversions.omg": "b26ea6b3b0023fd656d78759f2a36d9de49872f7e78e01807cd6f18526e5c390",
+    "source/libraries/acpi/aml/object_descriptions.omg": "e334ac1e9e2dac58d1a112df9fe81ffd7e52c9bb07da32519b476dbd2d9fb1c7",
+    "source/libraries/acpi/aml/object_references.omg": "4c06bb925681f2e833ebb815b15e5e53d476f08810d0252e77a977af4134b703",
+    "source/libraries/acpi/interpreter/buffer_fields.omg": "98e1df3d821a88ba1d63c63189f3d9ac782f197b62cd04e6b71abd396042688a",
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/conversions.omg": "b3ee9811b5434883bfa2374c8ca6a746ad2a75ab4c9eacea3e8dd19b5510f714",
+    "source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196",
+    "source/libraries/acpi/interpreter/string_numbers.omg": "8553d26a77cd0cb482a24a45aa739b86c7fbed94fb61bc97eb4974de5c9db389",
+    "tools/ports/acpi/aml/object-descriptions/cases.json": "8185ff9b4dd3c603d003d1d849dab819bd00d2c6dc1347b24f1f73265b475625",
+    "tools/ports/acpi/aml/object-descriptions/check.py": "300269f8c3eb9e6d60bedd0dc37e910dba8448b49a6372379d4381fb5d4effcc",
+    "tools/ports/acpi/aml/object-descriptions/check_const.py": "6c0927c77931a67dd527de87a637ed821e548a0ffb71a32fe6c01a6c33a678d4",
+    "tools/ports/acpi/aml/object-descriptions/fixtures.py": "3188cef204b8e21abd9c65fd295921aa3a654b70ff121a8ce7547fad4399db0b",
+    "tools/ports/acpi/aml/object-descriptions/inventory.py": "d9291f5348f1f7d90a49d010aea898167efec8fb5bb3baf0e8c18f14a83d6649",
+    "tools/ports/acpi/aml/object-descriptions/labels.json": "2527e7ac38f1aaec2c55015fd7db00f0ee34281aac50038255db85e5825caf4b",
+    "tools/ports/acpi/aml/object-descriptions/reference.py": "0346624ca5e31eb905260443beaa9126e1a103f7a0137c37ffe05b763f5a20ac",
+    "tools/ports/acpi/aml/object-descriptions/verify_record.py": "e9422c219cf29fee7dba9b3c6e416490df67cc007198ede808fd4d16ee2628d3",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805"
+  },
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "proofs": [
+    {
+      "case": "Uninitialized_63_True",
+      "control": false,
+      "output": "compiled 22 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-2c211cd04323397e894f0b3937fcead0a83df10cac7a7e2b94eb4aa7d915112e/source/main.omg; wrote_output=false\n",
+      "source_sha256": "8224693441b0487339d38043ea5f7d3db4e918b8dfd850684e2f0e7e0a93cfb7"
+    },
+    {
+      "case": "Uninitialized_63_True",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `query-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "452b1e2bccd9b07b78edc96f2fc147826f56f6e79836a09a29caa29a7142c161"
+    },
+    {
+      "case": "BufferField_31_True",
+      "control": false,
+      "output": "compiled 22 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-b36edbeea8b2c10d3b126ab9c1144d0d3861a51bbf839decec3bd4d515ed2de9/source/main.omg; wrote_output=false\n",
+      "source_sha256": "1833ff7716c31db3ef72d6a5cc06cbda2a19b57df00f38cd08b65b4e4a5ca8e1"
+    },
+    {
+      "case": "BufferField_31_True",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `query-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "a0c04428999245e24a37a29c26f4d5201253cfcdc8b30b3fbcdc01dc0813fd54"
+    },
+    {
+      "case": "invalid_Device_count_max",
+      "control": false,
+      "output": "compiled 22 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-59fa3adee21c81270903dbf2c312b81a50de8332a670d7c2eecdc6a30ec0235a/source/main.omg; wrote_output=false\n",
+      "source_sha256": "e6d6ea1f798251b5035b4625b73b7568e944a8daef8c21fa09e0aaff30ec2957"
+    },
+    {
+      "case": "invalid_Device_count_max",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `query-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "cdc619083498ee85b45781a545492314a53f84c38518ebc8c86ab409e0ecf40e"
+    }
+  ],
+  "stage": "constant evaluation and checked requires; native/hardware not run"
+}

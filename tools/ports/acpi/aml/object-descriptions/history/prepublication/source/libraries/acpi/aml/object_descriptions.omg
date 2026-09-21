@@ -1,0 +1,90 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified type-label component from rust-osdev/acpi do_concat/resolve_as_string,
+// pin 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
+// ACPI 6.6 Table 19.31; direct case names only, no payload evaluation or authority.
+module object_descriptions;
+use model::ObjectStore;
+use model::Value;
+use object_conversions::ConversionFailure;
+pub data Description [copy] {
+ case Failure(reason:ConversionFailure);
+ case String(length:u64,bytes:[u8;256]);
+}
+pub machine describe(store:&ObjectStore,object:u64)->Description {
+ let count:u64=store.space.object_count;
+ transition count<=64 && object<count && object<64 {
+  true -> selected(store,object)
+  _ -> (Description::Failure {reason:ConversionFailure::InvalidState})
+ }
+ state selected(store:&ObjectStore,object:u64)->Description {
+  transition store.space.objects[object].value {
+   Value::Uninitialized -> label_uninitialized()
+   Value::Package {first,count} -> label_package()
+   Value::BufferField {backing_object,bit_offset,bit_length} -> label_bufferfield()
+   Value::Device -> label_device()
+   Value::Event -> label_event()
+   Value::Method {flags,body} -> label_method()
+   Value::Mutex {sync_level} -> label_mutex()
+   Value::OperationRegion {space,base,length,scope} -> label_operationregion()
+   Value::PowerResource {system_level,order} -> label_powerresource()
+   Value::Processor {id,address,length} -> label_processor()
+   Value::ThermalZone -> label_thermalzone()
+   _ -> (Description::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state label_uninitialized()->Description {
+  let mut bytes:[u8;256];
+  bytes[0]=91;bytes[1]=85;bytes[2]=110;bytes[3]=105;bytes[4]=110;bytes[5]=105;bytes[6]=116;bytes[7]=105;bytes[8]=97;bytes[9]=108;bytes[10]=105;bytes[11]=122;bytes[12]=101;bytes[13]=100;bytes[14]=32;bytes[15]=79;bytes[16]=98;bytes[17]=106;bytes[18]=101;bytes[19]=99;bytes[20]=116;bytes[21]=93;
+  Description::String {length:22,bytes:bytes}
+ }
+ state label_package()->Description {
+  let mut bytes:[u8;256];
+  bytes[0]=91;bytes[1]=80;bytes[2]=97;bytes[3]=99;bytes[4]=107;bytes[5]=97;bytes[6]=103;bytes[7]=101;bytes[8]=93;
+  Description::String {length:9,bytes:bytes}
+ }
+ state label_bufferfield()->Description {
+  let mut bytes:[u8;256];
+  bytes[0]=91;bytes[1]=66;bytes[2]=117;bytes[3]=102;bytes[4]=102;bytes[5]=101;bytes[6]=114;bytes[7]=32;bytes[8]=70;bytes[9]=105;bytes[10]=101;bytes[11]=108;bytes[12]=100;bytes[13]=93;
+  Description::String {length:14,bytes:bytes}
+ }
+ state label_device()->Description {
+  let mut bytes:[u8;256];
+  bytes[0]=91;bytes[1]=68;bytes[2]=101;bytes[3]=118;bytes[4]=105;bytes[5]=99;bytes[6]=101;bytes[7]=93;
+  Description::String {length:8,bytes:bytes}
+ }
+ state label_event()->Description {
+  let mut bytes:[u8;256];
+  bytes[0]=91;bytes[1]=69;bytes[2]=118;bytes[3]=101;bytes[4]=110;bytes[5]=116;bytes[6]=93;
+  Description::String {length:7,bytes:bytes}
+ }
+ state label_method()->Description {
+  let mut bytes:[u8;256];
+  bytes[0]=91;bytes[1]=67;bytes[2]=111;bytes[3]=110;bytes[4]=116;bytes[5]=114;bytes[6]=111;bytes[7]=108;bytes[8]=32;bytes[9]=77;bytes[10]=101;bytes[11]=116;bytes[12]=104;bytes[13]=111;bytes[14]=100;bytes[15]=93;
+  Description::String {length:16,bytes:bytes}
+ }
+ state label_mutex()->Description {
+  let mut bytes:[u8;256];
+  bytes[0]=91;bytes[1]=77;bytes[2]=117;bytes[3]=116;bytes[4]=101;bytes[5]=120;bytes[6]=93;
+  Description::String {length:7,bytes:bytes}
+ }
+ state label_operationregion()->Description {
+  let mut bytes:[u8;256];
+  bytes[0]=91;bytes[1]=79;bytes[2]=112;bytes[3]=101;bytes[4]=114;bytes[5]=97;bytes[6]=116;bytes[7]=105;bytes[8]=111;bytes[9]=110;bytes[10]=32;bytes[11]=82;bytes[12]=101;bytes[13]=103;bytes[14]=105;bytes[15]=111;bytes[16]=110;bytes[17]=93;
+  Description::String {length:18,bytes:bytes}
+ }
+ state label_powerresource()->Description {
+  let mut bytes:[u8;256];
+  bytes[0]=91;bytes[1]=80;bytes[2]=111;bytes[3]=119;bytes[4]=101;bytes[5]=114;bytes[6]=32;bytes[7]=82;bytes[8]=101;bytes[9]=115;bytes[10]=111;bytes[11]=117;bytes[12]=114;bytes[13]=99;bytes[14]=101;bytes[15]=93;
+  Description::String {length:16,bytes:bytes}
+ }
+ state label_processor()->Description {
+  let mut bytes:[u8;256];
+  bytes[0]=91;bytes[1]=80;bytes[2]=114;bytes[3]=111;bytes[4]=99;bytes[5]=101;bytes[6]=115;bytes[7]=115;bytes[8]=111;bytes[9]=114;bytes[10]=93;
+  Description::String {length:11,bytes:bytes}
+ }
+ state label_thermalzone()->Description {
+  let mut bytes:[u8;256];
+  bytes[0]=91;bytes[1]=84;bytes[2]=104;bytes[3]=101;bytes[4]=114;bytes[5]=109;bytes[6]=97;bytes[7]=108;bytes[8]=32;bytes[9]=90;bytes[10]=111;bytes[11]=110;bytes[12]=101;bytes[13]=93;
+  Description::String {length:14,bytes:bytes}
+ }
+}
