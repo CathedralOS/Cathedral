@@ -361,3 +361,10 @@ allocates one fresh RefOf wrapper preserving the selected element's identity.
 All 65 complete-store checked pairs, three bounded constant pairs and 19 public
 Index observations pass. Source evaluation, target Store and opcode retirement
 remain pending; aggregate counts are unchanged.
+
+[Direct BufferField source writes](aml/buffer-field-store.PORT.md) compose Integer/Buffer/String
+admission with atomic backing updates. All 226 complete-store checked pairs,
+three representative constant pairs and 116 public Store observations pass.
+The public record retains ten width differences and 24 String-source panics;
+shared source/backing identity is checked safely in Omega. Target/reference
+policy and opcode retirement remain pending; aggregate counts are unchanged.

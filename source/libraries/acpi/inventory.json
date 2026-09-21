@@ -1219,11 +1219,18 @@
             {
               "anchor": "pub machine prepare_buffer_extent(",
               "path": "source/libraries/acpi/aml/buffer_target_values.omg"
+            },
+            {
+              "path": "source/libraries/acpi/aml/buffer_field_store.omg",
+              "anchor": "pub machine store_value("
             }
           ],
           "note": "Partial only: primary Table 19.7 bounded numeric/String helpers and direct canonical Integer/String/Buffer conversion selection produce detached semantic results. Generic source/reference/Field resolution, existing-target extent policy, target storage and Store execution remain pending.",
           "buffer_extent_component": {
             "note": "Detached positive explicit extent1..256, direct Integer/nonemptyString preparation under primary Table19.7. No target presence/provenance, reference evaluation, mutation or Store; zero extent/emptyString/same-typeBuffer policies excluded explicitly. Pin replacement always resizes to raw source bytes."
+          },
+          "buffer_field_store_component": {
+            "note": "Direct Integer/Buffer/String source admission and atomic BufferField backing update now compose without allocation, retaining canonical source/backing identity. Target/reference policy, other destination types and opcode execution remain pending."
           }
         },
         "2488:do_copy_object": {

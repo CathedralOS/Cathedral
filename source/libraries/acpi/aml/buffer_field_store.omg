@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Direct BufferField Store component of rust-osdev/acpi do_store,
+// pin 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
+// Primary Integer/Buffer/String source policy; no target/reference evaluation.
+module buffer_field_store;
+use model::ObjectStore;
+use model::Value;
+use byte_storage::ByteRead;
+use byte_storage::ByteResult;
+use byte_storage::ByteOutcome;
+use byte_storage::read_bytes;
+use buffer_field_writes::write;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::conversions::integer_to_buffer;
+// Source is fully admitted and snapshotted before field/backing admission.
+// Every failure leaves the complete store unchanged. Result identifies backing.
+pub machine store_value(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,field:u64,source:u64,size:IntegerSize)->ByteResult {
+ let count:u64=store.space.object_count;
+ transition count<=64 && source<count && source<64 {true -> selected(input,length,unit,store,field,source,size,store.space.objects[source].value) _ -> (ByteResult {outcome:ByteOutcome::InvalidState})}
+ state selected(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,field:u64,source:u64,size:IntegerSize,value:Value)->ByteResult {
+  transition value {
+   Value::Integer {number} -> integer(input,length,unit,store,field,size,number)
+   Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,field,source)
+   Value::String {string_storage} -> bytes(input,length,unit,store,field,source)
+   _ -> (ByteResult {outcome:ByteOutcome::UnsupportedValue})
+  }
+ }
+ state integer(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,field:u64,size:IntegerSize,number:u64)->ByteResult {
+  let mut payload:[u8;256];let packed:IntegerResult=integer_to_buffer(size,number,&mut payload);
+  transition packed.error==0 {true -> apply(input,length,unit,store,field,payload,packed.value) _ -> (ByteResult {outcome:ByteOutcome::InvalidState})}
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,field:u64,source:u64)->ByteResult {
+  let payload:ByteRead=read_bytes(input,length,unit,store,source);
+  transition payload.outcome==ByteOutcome::Success {true -> apply(input,length,unit,store,field,payload.bytes,payload.length) _ -> (ByteResult {outcome:payload.outcome})}
+ }
+ state apply(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,field:u64,payload:[u8;256],payload_length:u64)->ByteResult {
+  let result:ByteResult=write(input,length,unit,store,field,&payload,payload_length);result
+ }
+}
