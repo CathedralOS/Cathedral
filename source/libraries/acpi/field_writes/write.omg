@@ -1,0 +1,87 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Partial single-pass do_field_write arithmetic from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; copyright 2018 Isaac Woods.
+// Payload is already converted to one logical field-sized vector, not an AML Buffer.
+module write;
+use access::geometry;
+use access::chunks;
+use access::model::Plan;
+use access::model::PlanResult;
+use access::model::Chunk;
+use access::model::Previous;
+use access::model::WordResult;
+use access::model::LockRequirement;
+use access::model::Error;
+use fields::field_model::DeclarationKind;
+use fields::field_model::Field;
+use integers::integers::IntegerSize;
+use integers::integers::IntegerResult;
+use integers::buffer_fields;
+use model::NativeWrite;
+use model::WriteResult;
+use model::WriteError;
+data Records [copy] {records:[NativeWrite;257];}
+pub machine assemble(kind:DeclarationKind,field:&Field,region_bytes:u64,size:IntegerSize,payload:&[u8;256],payload_length:u64,previous:&[Previous;257],supplied_count:u64)->WriteResult {
+ let geometry:PlanResult=geometry::plan(kind,field,region_bytes,size);
+ transition geometry {
+  PlanResult::Failure {error} -> (WriteResult::Failure {error:WriteError::Geometry {cause:error}})
+  PlanResult::Ready {plan} -> payload(&plan,payload,payload_length,previous,supplied_count)
+ }
+ state payload(plan:&Plan,payload:&[u8;256],payload_length:u64,previous:&[Previous;257],supplied_count:u64)->WriteResult {
+  let bits:u64=plan.bit_length;
+  transition bits<=2048 {true -> length(plan,payload,payload_length,previous,supplied_count,(bits+7)/8) _ -> (WriteResult::Failure {error:WriteError::PayloadLength})}
+ }
+ state length(plan:&Plan,payload:&[u8;256],payload_length:u64,previous:&[Previous;257],supplied_count:u64,expected:u64)->WriteResult {
+  transition payload_length<=256 && payload_length==expected {true -> count(plan,payload,payload_length,previous,supplied_count) _ -> (WriteResult::Failure {error:WriteError::PayloadLength})}
+ }
+ state count(plan:&Plan,payload:&[u8;256],payload_length:u64,previous:&[Previous;257],supplied_count:u64)->WriteResult {
+  let expected:u64=plan.count;
+  transition supplied_count<=257 && supplied_count==expected {true -> fill(plan,payload,payload_length,previous,supplied_count) _ -> (WriteResult::Failure {error:WriteError::CountMismatch})}
+ }
+ state fill(plan:&Plan,payload:&[u8;256],payload_length:u64,previous:&[Previous;257],count:u64)->WriteResult {
+  let initial:WriteResult=WriteResult::Writes {count:count,lock:plan.lock};
+  let completed:WriteResult=fill_chunks(initial,plan,payload,payload_length,previous,0,count);completed
+ }
+}
+machine fill_chunks(current:WriteResult,plan:&Plan,payload:&[u8;256],length:u64,previous:&[Previous;257],index:u64,limit:u64)
+terminates by(index,limit)->Nat::BoundedDistance;
+->WriteResult {
+ let next:WriteResult=fill_if(current,plan,payload,length,previous,index,limit);
+ transition index<limit {true -> fill_chunks(next,plan,payload,length,previous,index+1,limit) _ -> (current)}
+}
+machine fill_if(current:WriteResult,plan:&Plan,payload:&[u8;256],length:u64,previous:&[Previous;257],index:u64,limit:u64)->WriteResult {
+ transition index<limit {true -> bounded(current,plan,payload,length,previous,index) _ -> (current)}
+ state bounded(current:WriteResult,plan:&Plan,payload:&[u8;256],length:u64,previous:&[Previous;257],index:u64)->WriteResult {
+  transition index<257 {true -> shape(current,plan,payload,length,previous,index) _ -> (WriteResult::Failure {error:WriteError::Chunk {index:index,cause:Error::InvalidChunk}})}
+ }
+ state shape(current:WriteResult,plan:&Plan,payload:&[u8;256],length:u64,previous:&[Previous;257],index:u64)->WriteResult {
+  transition current {
+   WriteResult::Failure {error} -> (WriteResult::Failure {error:error})
+   WriteResult::Writes {count,records,lock} -> chunk(plan,payload,length,previous,index,count,records,lock)
+  }
+ }
+ state chunk(plan:&Plan,payload:&[u8;256],length:u64,previous:&[Previous;257],index:u64,count:u64,records:[NativeWrite;257],lock:LockRequirement)->WriteResult {
+  transition index<257 {true -> extract(plan,payload,length,previous[index],index,count,records,lock,plan.chunks[index]) _ -> (WriteResult::Failure {error:WriteError::Chunk {index:index,cause:Error::InvalidChunk}})}
+ }
+ state extract(plan:&Plan,payload:&[u8;256],length:u64,previous:Previous,index:u64,count:u64,records:[NativeWrite;257],lock:LockRequirement,chunk:Chunk)->WriteResult {
+  let bits:u64=chunk.bit_count;let size:IntegerSize=extraction_size(bits);
+  let value:IntegerResult=buffer_fields::field_to_integer(size,payload,length,chunk.field_bit,bits);
+  transition value.error==0 {true -> merge(plan,previous,index,count,records,lock,chunk,value.value) _ -> (WriteResult::Failure {error:WriteError::Chunk {index:index,cause:Error::InvalidChunk}})}
+ }
+ state merge(plan:&Plan,previous:Previous,index:u64,count:u64,records:[NativeWrite;257],lock:LockRequirement,chunk:Chunk,value:u64)->WriteResult {
+  let merged:WordResult=chunks::merge(chunk,plan.update,previous,value);
+  transition merged {
+   WordResult::Failure {error} -> (WriteResult::Failure {error:WriteError::Chunk {index:index,cause:error}})
+   WordResult::Word {value} -> store(index,count,records,lock,chunk,value)
+  }
+ }
+ state store(index:u64,count:u64,records:[NativeWrite;257],lock:LockRequirement,chunk:Chunk,value:u64)->WriteResult {
+  transition index<257 {true -> write(index,count,records,lock,chunk,value) _ -> (WriteResult::Failure {error:WriteError::Chunk {index:index,cause:Error::InvalidChunk}})}
+ }
+ state write(index:u64,count:u64,records:[NativeWrite;257],lock:LockRequirement,chunk:Chunk,value:u64)->WriteResult {
+  let mut next:Records=Records {records:records};next.records[index]=NativeWrite {offset:chunk.offset,width:chunk.width,value:value};
+  WriteResult::Writes {count:count,records:next.records,lock:lock}
+ }
+}
+// Extraction uses the smallest canonical integer size that covers this chunk.
+machine extraction_size(bits:u64)->IntegerSize {transition bits<=32 {true -> (IntegerSize::FourBytes) _ -> (IntegerSize::EightBytes)}}

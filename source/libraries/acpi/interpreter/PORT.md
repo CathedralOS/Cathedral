@@ -220,3 +220,10 @@ helpers with canonical byte storage and full Integer/Buffer result selection.
 The 281 checked pairs, three const pairs and 136 actual public Object observations
 cover fields through 2048 bits and strict bounds/encoding. The bounded upstream
 read anchor is translated; field opcode dispatch remains pending.
+
+[Detached normal Field write assembly](../field_writes/PORT.md) turns already-converted,
+exactly field-sized bits into complete native-width numeric write records. All
+454 checked pairs, three constant pairs and 126 actual public Rust probes pass.
+Geometry, payload/count checks, Preserve input requirements and unmet lock metadata
+are retained. Source conversion/repeated writes, provider access, Bank/Index and
+Store/evaluator integration remain pending; aggregate source counts are unchanged.

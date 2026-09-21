@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Detached write-word adaptation of rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; copyright 2018 Isaac Woods.
+module model;
+use access::model::Error;
+use access::model::LockRequirement;
+pub data WriteError [copy] {case Geometry(cause:Error);case PayloadLength;case CountMismatch;case Chunk(index:u64,cause:Error);}
+// Region-relative numeric recipe only; no permission, store, or observation.
+pub data NativeWrite [copy] {offset:u64;width:u64;value:u64;}
+pub data WriteResult [copy] {
+ case Failure(error:WriteError);
+ case Writes(count:u64,records:[NativeWrite;257],lock:LockRequirement);
+}

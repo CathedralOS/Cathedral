@@ -1,0 +1,2 @@
+use writes::write;use fields::field_model::Field;use fields::field_model::DeclarationKind;use integers::integers::IntegerSize;use access::model::Previous;
+data Main {payload:[u8;256];previous:[Previous;257];}machine Main::main(&mut self){let field:Field=Field {};_ = write::assemble(DeclarationKind::Field,&field,4,IntegerSize::EightBytes,&self.payload,0,&self.previous,0);}

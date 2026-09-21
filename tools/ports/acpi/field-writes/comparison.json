@@ -1,0 +1,514 @@
+{
+  "counts": {
+    "buffer_exact_byte_aligned_single_pass": 36,
+    "integer_single_pass": 90
+  },
+  "public_count": 126,
+  "rows": [
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_0_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_0_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_0_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_0_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_0_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_0_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_1_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_1_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_1_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_1_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_1_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_1_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_2_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_2_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_2_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_2_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_2_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_0_2_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_0_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_0_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_0_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_0_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_0_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_0_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_1_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_1_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_1_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_1_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_1_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_1_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_2_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_2_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_2_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_2_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_2_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_1_2_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_0_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_0_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_0_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_0_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_0_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_0_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_1_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_1_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_1_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_1_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_1_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_1_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_2_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_2_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_2_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_2_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_2_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_2_2_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_0_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_0_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_0_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_0_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_0_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_0_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_1_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_1_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_1_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_1_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_1_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_1_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_2_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_2_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_2_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_2_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_2_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_3_2_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_0_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_0_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_0_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_0_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_0_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_0_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_1_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_1_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_1_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_1_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_1_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_1_8_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_2_4_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_2_4_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_2_4_7_128"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_2_8_0_1"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_2_8_3_65"
+    },
+    {
+      "category": "integer_single_pass",
+      "name": "public_integer_4_2_8_7_128"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_1_0_8"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_1_0_64"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_1_0_2048"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_1_1_8"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_1_1_64"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_1_1_2048"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_1_2_8"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_1_2_64"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_1_2_2048"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_2_0_8"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_2_0_64"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_2_0_2048"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_2_1_8"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_2_1_64"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_2_1_2048"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_2_2_8"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_2_2_64"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_2_2_2048"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_3_0_8"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_3_0_64"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_3_0_2048"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_3_1_8"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_3_1_64"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_3_1_2048"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_3_2_8"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_3_2_64"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_3_2_2048"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_4_0_8"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_4_0_64"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_4_0_2048"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_4_1_8"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_4_1_64"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_4_1_2048"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_4_2_8"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_4_2_64"
+    },
+    {
+      "category": "buffer_exact_byte_aligned_single_pass",
+      "name": "public_buffer_4_2_2048"
+    }
+  ],
+  "stage": "actual public Store-to-Field callbacks compared to detached one-pass records; no conversion or hardware authority claim"
+}

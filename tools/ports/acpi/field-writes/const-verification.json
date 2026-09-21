@@ -1,0 +1,81 @@
+{
+  "build_sha256": "98c111472bc65b654219f4e6ff1888ad0d20cb656e837b2ae767563ccef1c263",
+  "compiler_path": "/tmp/cathedral-omega-eaa7993/release/omega",
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "control_count": 3,
+  "elapsed_seconds": 108.464,
+  "input_sha256": {
+    "source/libraries/acpi/aml/build.omg": "2129610bb9e275f63e87c5e736bb29114044d1a466cdc1d288e4c9103b076319",
+    "source/libraries/acpi/aml/fields/build.omg": "1bed0d77c834d0cc89726bbb6990da3a985af2e88c2c7634eaf089eb505fab0c",
+    "source/libraries/acpi/aml/fields/field_model.omg": "20516bb37529164d24f292aeae102189b761d41d22bdf48bf78aa460d78c7844",
+    "source/libraries/acpi/aml/fields/flags.omg": "5a284110c178c77ea64fff76e032f95639c55e949be512e7a48132822ac44431",
+    "source/libraries/acpi/aml/model.omg": "1fc2a3ceb403f0adef2022f76ac0c1187fc74b0cd794df4e7855d643838a10af",
+    "source/libraries/acpi/field_access/build.omg": "b019e82e212aebf76af70d6d0bcfd34ed870b54d191f15fec4c25854031ce771",
+    "source/libraries/acpi/field_access/chunks.omg": "ba275a44e316fff5313e1a7a3300d2eff92c164a33f0be1e2e6c6a57b1dfe22f",
+    "source/libraries/acpi/field_access/geometry.omg": "5e89cfe363b9f3b0ac0e20c66899d6e5ccc8fefb7acb0acdd7a340ad8ac90bf5",
+    "source/libraries/acpi/field_access/model.omg": "0846521cf92722e75541d12a728f1ee8e9d5f5b3bfcaf3c420cdeb4a26d2b94b",
+    "source/libraries/acpi/field_writes/build.omg": "2187ca4266d034650658d3c6b1c44ff48ac2b6bc1086f5f01dd09f4704674f9f",
+    "source/libraries/acpi/field_writes/model.omg": "76d00ca8db8744debb09659f4aba580832560d0445488a7d6482e316be326bf9",
+    "source/libraries/acpi/field_writes/write.omg": "b1fa4bd72c3c4da0b87844bc9e6bcfd3498e7bffa0479102abf9554ad79af484",
+    "source/libraries/acpi/interpreter/buffer_fields.omg": "98e1df3d821a88ba1d63c63189f3d9ac782f197b62cd04e6b71abd396042688a",
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196",
+    "tools/ports/acpi/field-writes/aml_encoding.py": "e46261542865a0d84870e9d97165d5cc67aa839a828073348dd1f3111b897e42",
+    "tools/ports/acpi/field-writes/cases.json": "25cea55eef957abc4be374db5feb047780a4b0c1f03fcc1417526cecb0ba4b05",
+    "tools/ports/acpi/field-writes/check.py": "4d3779edef048814505fca8ff16c1fd831ed63c1df0eecb2c00a2860d4c88708",
+    "tools/ports/acpi/field-writes/check_const.py": "5557a760d523279dbe8722825884040e69feee00e9f77c5e2a2be7a8cf32f427",
+    "tools/ports/acpi/field-writes/compare.py": "421b2bc66fe7d00deb946f642b66d7453c6fa18a90d264764836f595d9922411",
+    "tools/ports/acpi/field-writes/comparison.json": "c064536d9291444adff30a6ce56a77cfb38e86c05e4ba491d530ab8bffd9c694",
+    "tools/ports/acpi/field-writes/fixtures.py": "1f99ff3f5187032499edc2f930a1738e8d234f8fa097004e96478377e6c37bb7",
+    "tools/ports/acpi/field-writes/geometry_vectors.py": "6a1bd8dd2c3b8318e098f80ba38fb1d7b37a1b24da0c71dd17d6395f4529c682",
+    "tools/ports/acpi/field-writes/reference-verification.json": "4effc740aa1b71bc1c809ecd8277e72113ba3be76cd74824ec2e176d533aac6f",
+    "tools/ports/acpi/field-writes/reference.Cargo.lock": "f2c71e588655e39e9d2b2e609039440b66123bd5e1c47bf8a7cc48747e509f98",
+    "tools/ports/acpi/field-writes/reference.py": "8529bc12a9939732c6dee722acaf433fc86b50b022125e3c8d2fa76934e82dc3",
+    "tools/ports/acpi/field-writes/reference.rs": "141a25da30df40a79c3b7af449c0c464bddbd2ea1cd808b81c5dfa88296511d4",
+    "tools/ports/acpi/field-writes/vectors.py": "c68810209e98995881a2d34c0585cae2de0dc9605b9d1696c9f0ec133be5df57",
+    "tools/ports/acpi/field-writes/verify_record.py": "2732e295d8fcb1f77439f2ff9dd6ab8db433b3a23a67b69e5634ea8110c05749",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805"
+  },
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "positive_count": 3,
+  "proofs": [
+    {
+      "case": "geometry_2_1_17",
+      "control": false,
+      "output": "compiled 20 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-dd32a2acf1a3f097111ab15b40579053f4f869d21de7e693161a0be3af1d405b/source/main.omg; wrote_output=false\n",
+      "source_sha256": "5db137b906e991e8006eabdd7b02689b8d480437f7a8115fdaaf1fca4f3adb98"
+    },
+    {
+      "case": "geometry_2_1_17",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-field-writes-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "fed9180761dfa4118f14fce3ac016838f3b4df0df5596ca3c14f28c772d2f483"
+    },
+    {
+      "case": "late_missing",
+      "control": false,
+      "output": "compiled 20 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-5fd7f5cc1d0f8547d6548ddec0fa497886ee5c0fc4be219d52b58f6ad31dad84/source/main.omg; wrote_output=false\n",
+      "source_sha256": "c975e274b3411c407c7248fe571b4feb955626de915d3b1566670e7929bd20ae"
+    },
+    {
+      "case": "late_missing",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-field-writes-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "c80ecaf43b24b0ccaf2ad655b4121f36a7a0f0288758e53b76b0ba0ee40c168d"
+    },
+    {
+      "case": "count_capacity_1_18446744073709551615",
+      "control": false,
+      "output": "compiled 20 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-2cfe0bb8beb471a324cef0e30bf8604d7f360b92a58a569595ca8637b0d0452e/source/main.omg; wrote_output=false\n",
+      "source_sha256": "627c45a647f709fbcd9d2f9721d3455bcff7573bb630bb1190b3fd01ab892edb"
+    },
+    {
+      "case": "count_capacity_1_18446744073709551615",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-field-writes-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "c759f25a7d66c2753531be7b72e4b4e5e2691ba85a11332bf3c78466edd8c7ee"
+    }
+  ],
+  "stage": "constant evaluation and requires proof; no native or namespace evaluation"
+}

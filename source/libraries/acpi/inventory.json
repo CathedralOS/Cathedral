@@ -1223,9 +1223,17 @@
             {
               "anchor": "pub machine merge(",
               "path": "source/libraries/acpi/field_access/chunks.omg"
+            },
+            {
+              "anchor": "pub machine assemble(",
+              "path": "source/libraries/acpi/field_writes/write.omg"
+            },
+            {
+              "anchor": "pub data WriteResult [copy]",
+              "path": "source/libraries/acpi/field_writes/model.omg"
             }
           ],
-          "note": "Partial only: normal linear aligned access geometry and per-chunk extraction/update are implemented. Namespace/region lookup, source conversion, complete result assembly, lock/provider authority, Bank/Index, and actual native services remain outside this slice."
+          "note": "Partial: recomputed geometry, already-converted exact field-sized bits, normalized per-chunk merge, complete initialized detached write recipes and unmet lock metadata. Source conversion/repeated Buffer writes, region lookup, native reads/writes, GlobalLock, Bank/Index, Store and evaluator integration remain outside this slice."
         },
         "269:install_region_handler": {
           "anchor": "pub fn install_region_handler(&self, space: RegionSpace, handler: Box<R>) {",
@@ -3699,9 +3707,18 @@
             {
               "anchor": "pub machine copy_bits(",
               "path": "source/libraries/acpi/interpreter/buffer_fields.omg"
+            },
+            {
+              "anchor": "buffer_fields::field_to_integer(",
+              "path": "source/libraries/acpi/field_writes/write.omg"
+            },
+            {
+              "anchor": "chunks::merge(",
+              "path": "source/libraries/acpi/field_writes/write.omg"
             }
           ],
-          "note": "Additional Field decomposition: Partial scalar chunk extraction/merge only. General arbitrary-length byte-array copying is not implemented here. The field_values consumer reuses this helper for complete detached normal Field read assembly."
+          "note": "Additional Field decomposition: Partial scalar chunk extraction/merge only. General arbitrary-length byte-array copying is not implemented here. The field_values consumer reuses this helper for complete detached normal Field read assembly.",
+          "field_write_consumer": "The same lower-bit-first copy arithmetic is composed via existing field_to_integer extraction and chunks::merge; no whole upstream helper or object execution claim."
         },
         "588:align_down": {
           "anchor": "pub(crate) fn align_down(value: usize, align: usize) -> usize {",
@@ -3719,9 +3736,14 @@
             {
               "anchor": "(offset/8)&~(width-1)",
               "path": "source/libraries/acpi/field_access/geometry.omg"
+            },
+            {
+              "anchor": "geometry::plan(",
+              "path": "source/libraries/acpi/field_writes/write.omg"
             }
           ],
-          "note": "Specialized positive native power-of-two alignment is embedded in geometry; general align=0 helper semantics are not a public API here."
+          "note": "Specialized positive native power-of-two alignment is embedded in geometry; general align=0 helper semantics are not a public API here.",
+          "field_write_consumer": "Reuses aligned native geometry from the existing field_access planner; no new address or hardware authority."
         },
         "608:tests": {
           "anchor": "mod tests {",

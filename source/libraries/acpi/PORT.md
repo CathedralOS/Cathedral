@@ -269,3 +269,10 @@ All 281 checked pairs, three constant pairs and 136 actual public Object calls
 pass. One source anchor is translated; strict complete-field bounds and the
 pinned byte-versus-bit shape correction are documented. Runtime field dispatch
 and conversion integration remain pending.
+
+[Detached normal Field write assembly](field_writes/PORT.md) turns already-converted,
+exactly field-sized bits into complete native-width numeric write records. All
+454 checked pairs, three constant pairs and 126 actual public Rust probes pass.
+Geometry, payload/count checks, Preserve input requirements and unmet lock metadata
+are retained. Source conversion/repeated writes, provider access, Bank/Index and
+Store/evaluator integration remain pending; aggregate source counts are unchanged.

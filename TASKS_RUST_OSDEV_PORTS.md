@@ -603,6 +603,13 @@ three constant pairs and 136 actual public Object observations. Full field bound
 zero output tails and the primary 32/64-bit shape rule are enforced. One source
 anchor closes; reference/context dispatch and wider-field conversion stay open.
 
+[Detached normal Field write assembly](source/libraries/acpi/field_writes/PORT.md)
+produces complete single-pass write records from an already-converted field-sized
+bit vector. The 454 checked pairs, three constant pairs and 126 actual public Rust
+probes pass, including early/late missing Preserve values and full zero tails.
+Source conversion and repeated Buffer writes, provider/lock authority, Bank/Index
+and Store execution remain pending; no aggregate source anchor closes.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and
