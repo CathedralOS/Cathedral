@@ -211,3 +211,12 @@ MethodFlags/DeviceStatus anchors. All 448 actual public Rust observations agree
 with Omega across 56 checked pairs and one constant pair. Decoding retains each
 status bit independently; synchronization, firmware validity and enumeration
 policy remain caller responsibilities.
+
+[Byte literal preflight](interpreter/execution/byte-literals.PORT.md) adds
+StringPrefix and constant-size Buffer admission using the canonical parser and
+byte storage. It enforces active-block bounds and source-unit identity, normalizes
+BufferSize to the frame integer width, and publishes no value or cursor on failure.
+All 75 checked pairs, three constant pairs and 47 actual public Rust observations
+are retained against the current used source closure. Dynamic BufferSize,
+Package and generic executor dispatch remain pending; the aggregate source-map
+counts are unchanged.

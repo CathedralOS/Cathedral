@@ -518,6 +518,13 @@ adds pure metadata decoding, verified against 448 actual public Rust observation
 in 56 checked pairs and one constant pair. It does not implement synchronization
 or device-enumeration policy.
 
+[Byte literal preflight](source/libraries/acpi/interpreter/execution/byte-literals.PORT.md)
+adds bounded String and constant-size Buffer parsing/admission, with active-block
+limits, source identity and 32/64-bit BufferSize normalization. Its 75 checked
+pairs, three constant pairs and 47 actual public Rust observations retain exact
+source hashes. It allocates no caller object and does not yet wire executor
+decode/retirement, dynamic BufferSize or Package evaluation.
+
 ACPI-004 partial evidence: [static AML syntax and namespace](source/libraries/acpi/aml/PORT.md)
 passes 27 Omega scenarios with 27 body mutations and an 18-file source check.
 It covers NameString/package framing, literal/package values, static declarations,

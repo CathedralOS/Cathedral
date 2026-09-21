@@ -1854,7 +1854,24 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/interpreter/execution/byte_literals.omg",
+              "anchor": "pub machine preflight_byte_literal"
+            }
+          ],
+          "components": [
+            {
+              "upstream_lines": "1234-1244",
+              "meaning": "ASCII String source parsing and bounded byte admission; stricter than pinned UTF8 unwrap."
+            },
+            {
+              "upstream_lines": "1261-1269,718-743",
+              "meaning": "Constant BufferSize only; source envelope/width normalization, spec max(declared,initializer) and zero padding. Dynamic evaluation and retirement remain pending."
+            }
+          ],
+          "note": "Standalone byte_literals preflight parses ASCII String and constant-size Buffer with active-block bounds and frame integer-width normalization. Generic decode contribution/retirement remains pending."
         },
         "551:strip_end_tag": {
           "anchor": "fn strip_end_tag(buf: &[u8]) -> &[u8] {",

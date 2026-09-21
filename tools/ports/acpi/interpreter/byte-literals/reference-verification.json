@@ -1,0 +1,698 @@
+{
+  "binary_sha256": "5117fcc6bbb783ab7de3ac2142eb8cf055b42f694703902bbcd8eb79f10afb1e",
+  "fixtures_sha256": "120102083707096d6485970ed42f0877d2b022042f93769f055023d29986d6c9",
+  "generator_sha256": "0a2c3bed55ddb9d170009e758d5763257a66d974758c1085e504942ebb016ce4",
+  "rows": [
+    {
+      "agreement": true,
+      "expected": "string:",
+      "name": "string_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "14094d41494e00a40d00"
+    },
+    {
+      "agreement": true,
+      "expected": "string:41",
+      "name": "string_1",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:41"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140a4d41494e00a40d4100"
+    },
+    {
+      "agreement": true,
+      "expected": "string:4142",
+      "name": "string_2",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:4142"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140b4d41494e00a40d414200"
+    },
+    {
+      "agreement": true,
+      "expected": "string:4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b",
+      "name": "string_63",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "1449044d41494e00a40d4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b00"
+    },
+    {
+      "agreement": true,
+      "expected": "string:4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455",
+      "name": "string_255",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "1449104d41494e00a40d4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f50515253545500"
+    },
+    {
+      "agreement": true,
+      "expected": "string:4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f50515253545556",
+      "name": "string_256",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f50515253545556"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "144a104d41494e00a40d4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f505152535455565758595a4142434445464748494a4b4c4d4e4f5051525354555600"
+    },
+    {
+      "agreement": true,
+      "expected": "string:017f20",
+      "name": "string_ascii_extremes",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:017f20"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140c4d41494e00a40d017f2000"
+    },
+    {
+      "agreement": true,
+      "expected": "string:110e5c70",
+      "name": "string_opcode_data",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:110e5c70"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140d4d41494e00a40d110e5c7000"
+    },
+    {
+      "agreement": true,
+      "expected": "string:",
+      "name": "string_nul_stops",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140b4d41494e00a40d00ffff"
+    },
+    {
+      "agreement": true,
+      "expected": "string:4142",
+      "name": "string_offset",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:4142"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "14104d41494e00a40d414200ffffffffff"
+    },
+    {
+      "agreement": false,
+      "expected": null,
+      "name": "string_capacity",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:4141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141"
+      },
+      "omega_outcome": "Capacity",
+      "revision": 2,
+      "table_hex": "144b104d41494e00a40d414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414100"
+    },
+    {
+      "agreement": false,
+      "expected": null,
+      "name": "string_missing_nul",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:RunOutOfStream"
+      },
+      "omega_outcome": "Truncated",
+      "revision": 2,
+      "table_hex": "140a4d41494e00a40d4142"
+    },
+    {
+      "agreement": false,
+      "expected": null,
+      "name": "string_nonascii",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "panic": "true"
+      },
+      "omega_outcome": "BadEncoding",
+      "revision": 2,
+      "table_hex": "140b4d41494e00a40d418000"
+    },
+    {
+      "agreement": false,
+      "expected": null,
+      "name": "string_nonascii_late",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "panic": "true"
+      },
+      "omega_outcome": "BadEncoding",
+      "revision": 2,
+      "table_hex": "144a104d41494e00a40d414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141ff00"
+    },
+    {
+      "agreement": true,
+      "expected": "string:4142",
+      "name": "string_exact_frame",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:4142"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140b4d41494e00a40d414200"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:",
+      "name": "buffer_exact_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140a4d41494e00a4110200"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:00",
+      "name": "buffer_exact_1",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:00"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140b4d41494e00a411030100"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:0001",
+      "name": "buffer_exact_2",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:0001"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140d4d41494e00a411050a020001"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e",
+      "name": "buffer_exact_63",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "144c044d41494e00a41143040a3f000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfe",
+      "name": "buffer_exact_255",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfe"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "144c104d41494e00a41143100aff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfe"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff",
+      "name": "buffer_exact_256",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "144e104d41494e00a41145100b0001000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:",
+      "name": "buffer_zero_pad_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140a4d41494e00a4110200"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:00",
+      "name": "buffer_zero_pad_1",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:00"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140a4d41494e00a4110201"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "name": "buffer_zero_pad_255",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140b4d41494e00a411030aff"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "name": "buffer_zero_pad_256",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140c4d41494e00a411040b0001"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:01020300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "name": "buffer_partial_pad",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:01020300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140f4d41494e00a411070b0001010203"
+    },
+    {
+      "agreement": false,
+      "expected": "buffer:010203",
+      "name": "buffer_initializer_larger",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "panic": "true"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140d4d41494e00a4110501010203"
+    },
+    {
+      "agreement": false,
+      "expected": "buffer:010203",
+      "name": "buffer_zero_declared",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "panic": "true"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140d4d41494e00a4110500010203"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:110da4ff",
+      "name": "buffer_opcode_bytes",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:110da4ff"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140f4d41494e00a411070a04110da4ff"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:010203",
+      "name": "buffer_offset",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:010203"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "14134d41494e00a411060a03010203ffffffffff"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:0102",
+      "name": "buffer_pkg_width_1",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:0102"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140d4d41494e00a411050a020102"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:0102",
+      "name": "buffer_pkg_width_2",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:0102"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140e4d41494e00a41146000a020102"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:0102",
+      "name": "buffer_pkg_width_3",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:0102"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140f4d41494e00a4118700000a020102"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:0102",
+      "name": "buffer_pkg_width_4",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:0102"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "14104d41494e00a411c80000000a020102"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:010000",
+      "name": "buffer_size_width_1",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:010000"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140c4d41494e00a411040a0301"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:010000",
+      "name": "buffer_size_width_2",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:010000"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140d4d41494e00a411050b030001"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:010000",
+      "name": "buffer_size_width_4",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:010000"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140f4d41494e00a411070c0300000001"
+    },
+    {
+      "agreement": true,
+      "expected": "buffer:010000",
+      "name": "buffer_size_width_8",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:010000"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "14134d41494e00a4110b0e030000000000000001"
+    },
+    {
+      "agreement": false,
+      "expected": null,
+      "name": "buffer_capacity_size",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "omega_outcome": "Capacity",
+      "revision": 2,
+      "table_hex": "140c4d41494e00a411040b0101"
+    },
+    {
+      "agreement": false,
+      "expected": null,
+      "name": "buffer_capacity_initializer",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "panic": "true"
+      },
+      "omega_outcome": "Capacity",
+      "revision": 2,
+      "table_hex": "144d104d41494e00a4114410015a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a"
+    },
+    {
+      "agreement": false,
+      "expected": "buffer:0000",
+      "name": "buffer_revision",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:00"
+      },
+      "omega_outcome": "Success",
+      "revision": 2,
+      "table_hex": "140b4d41494e00a411035b30"
+    },
+    {
+      "agreement": false,
+      "expected": null,
+      "name": "buffer_dynamic_arg",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:ObjectNotOfExpectedType { expected: Integer, got: Uninitialized }"
+      },
+      "omega_outcome": "UnsupportedSyntax",
+      "revision": 2,
+      "table_hex": "140c4d41494e00a41104680102"
+    },
+    {
+      "agreement": false,
+      "expected": null,
+      "name": "buffer_dynamic_local",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:ObjectNotOfExpectedType { expected: Integer, got: Uninitialized }"
+      },
+      "omega_outcome": "UnsupportedSyntax",
+      "revision": 2,
+      "table_hex": "140c4d41494e00a41104600102"
+    },
+    {
+      "agreement": false,
+      "expected": null,
+      "name": "buffer_dynamic_name",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:ObjectDoesNotExist(AmlName([Segment(\"SIZE\")]))"
+      },
+      "omega_outcome": "UnsupportedSyntax",
+      "revision": 2,
+      "table_hex": "140f4d41494e00a4110753495a450102"
+    },
+    {
+      "agreement": false,
+      "expected": null,
+      "name": "buffer_dynamic_add",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "buffer:0102"
+      },
+      "omega_outcome": "UnsupportedSyntax",
+      "revision": 2,
+      "table_hex": "140f4d41494e00a41107720101000102"
+    },
+    {
+      "agreement": false,
+      "expected": null,
+      "name": "missing_size",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "uninitialized"
+      },
+      "omega_outcome": "Truncated",
+      "revision": 2,
+      "table_hex": "14094d41494e00a41101"
+    },
+    {
+      "agreement": false,
+      "expected": null,
+      "name": "utf8_valid_nonascii",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "string:c3a9"
+      },
+      "omega_outcome": "BadEncoding",
+      "revision": 2,
+      "table_hex": "140b4d41494e00a40dc3a900"
+    }
+  ],
+  "sources": {
+    "/Users/zcanann/Documents/projects/Cathedral/tools/ports/acpi/aml-public-execution/Cargo.lock": "ba4543d96562e5f411c8447ec4a23a08d224acb0e4af7c5e61e099a976dcf880",
+    "/Users/zcanann/Documents/projects/Cathedral/tools/ports/acpi/aml-public-execution/Cargo.toml": "5b8c17e5e61e7b2b2ff2b29f4ca5feb00639297abb742387a31ef2262f818642",
+    "/Users/zcanann/Documents/projects/Cathedral/tools/ports/acpi/aml-public-execution/src/main.rs": "ca6c249f592018b4407cb3b16f36460c758cdd24e1b3834dc681ac6d43b4fb83"
+  },
+  "stage": "actual public pinned Interpreter::load_table/evaluate; host-only, not an Omega execution claim",
+  "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "upstream_sha256": {
+    "src/address.rs": "38048355ffe9b7c956e3ebaf84effdadca7defffd70c07feb0587e1c85fbb20a",
+    "src/aml/mod.rs": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+    "src/aml/namespace.rs": "311f3d9b5fbcb08395dcde0b5dce5455e932ad4a8fb6c273580d80c507b2f347",
+    "src/aml/object.rs": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+    "src/aml/op_region.rs": "43f7430d7aa41625f944bf66ffccc7f9bed7d403ff1979a9a2c09dedba7bf69b",
+    "src/aml/pci_routing.rs": "4c2371d38c0a67cab28ab686c8ad6374577e012cd02f561d4730e2f7895dcc39",
+    "src/aml/resource.rs": "abca9e6c8c60e40730cc11b2304acf37e2171942097f8871f5f8a8c7911fae09",
+    "src/lib.rs": "09fcc41658affdc55f6d8c0cb2b29b642d908879a07ed735014b70c7935335c7",
+    "src/platform/interrupt.rs": "c9a95f11b49535cd2baee66bdb55944870df284d3bc65f7a0e34416c5631c2bf",
+    "src/platform/mod.rs": "e49bb52792f164f1001a397bee489dc9dda8f3501681072a21396f4d276c87b5",
+    "src/platform/numa.rs": "93371276644afdf0dee1cf8b8215bb24c54a485552f045705b88424e69139596",
+    "src/platform/pci.rs": "5ad4a415a5037a741a7312d950299640a83905d454ba0eb4d40925c47a90d0c0",
+    "src/registers.rs": "9d8ed68f84cf8659f7822b0edd97fd7153a99bcca39de44b3726c6d5c00990a8",
+    "src/rsdp.rs": "ca2389abeffce9de4e1e28a87b9097c195a737f4dfa0beca5d2ccb23067f824c",
+    "src/sdt/bgrt.rs": "33baf3f6d386a091dc7ad13fb902ed4a265bbebd9809dd122d107981ea5cf5bb",
+    "src/sdt/facs.rs": "6977a2857c78c2bb07e880f555a738278571c4e5e9e173cc1375ca600da161d8",
+    "src/sdt/fadt.rs": "3b213e82029458b0c4c2633b232f2e3f1b4f9f59c07c5ac201286fb54a7927b7",
+    "src/sdt/hpet.rs": "ad52bbf848ac167a26561838d2695579b780b174006d9b553f8b154e74e6aca5",
+    "src/sdt/madt.rs": "4decb527324cd1aec925b20adc517d56f88ea80cc8c1cd50741a15b7da927ac0",
+    "src/sdt/mcfg.rs": "c33d9c34b0e270f5a7b3bf1817853aa07e7cb800030eace6447b915b4651900b",
+    "src/sdt/mod.rs": "136cb4b65a02f8e0bb3949543ff4f55fdaa540117010540cc4fe770e400a7052",
+    "src/sdt/slit.rs": "46b271c98f0071b65ccccce36db98aa8d8e4a8929c99bf81cd0ad90e5703ba52",
+    "src/sdt/spcr.rs": "bcd71238ac0a4a08946380508cc4d72762eb93cd7935fc4cc5fbad8519721fbd",
+    "src/sdt/srat.rs": "a73a29fff2fc609f3012c096a1f860d2f577593ef7995f9518e2b34f05b87b66"
+  }
+}
