@@ -1,0 +1,75 @@
+{
+  "build_sha256": "1ace86f787aa097879d09744da664096e73e16f2bd3b3d72d202742f60f40e01",
+  "build_text": "machine build(builder:&mut Build){builder.application(\"cathedral-field-protocol-tests\");builder.freestanding=true;builder.depend_as(\"protocol\",Source::Path {location:\"/private/tmp/cathedral-field-protocol/source/libraries/acpi/field_protocol\"});builder.depend_as(\"access\",Source::Path {location:\"/private/tmp/cathedral-field-protocol/source/libraries/acpi/field_access\"});builder.depend_as(\"fields\",Source::Path {location:\"/private/tmp/cathedral-field-protocol/source/libraries/acpi/aml/fields\"});builder.depend_as(\"integers\",Source::Path {location:\"/private/tmp/cathedral-field-protocol/source/libraries/acpi/interpreter\"});builder.depend_as(\"aml\",Source::Path {location:\"/private/tmp/cathedral-field-protocol/source/libraries/acpi/aml\"});}",
+  "compiler_path": "/private/tmp/cathedral-field-protocol-target/release/omega",
+  "compiler_sha256": "b7d2a35f679a9ca872c983103b3fc425ec1fccc47c92b02a2c4144c912fe4275",
+  "control_count": 3,
+  "elapsed_seconds": 128.916,
+  "execution_root": "/private/tmp/cathedral-field-protocol",
+  "input_sha256": {
+    "source/libraries/acpi/aml/build.omg": "2129610bb9e275f63e87c5e736bb29114044d1a466cdc1d288e4c9103b076319",
+    "source/libraries/acpi/aml/fields/build.omg": "1bed0d77c834d0cc89726bbb6990da3a985af2e88c2c7634eaf089eb505fab0c",
+    "source/libraries/acpi/aml/fields/field_model.omg": "20516bb37529164d24f292aeae102189b761d41d22bdf48bf78aa460d78c7844",
+    "source/libraries/acpi/aml/fields/flags.omg": "5a284110c178c77ea64fff76e032f95639c55e949be512e7a48132822ac44431",
+    "source/libraries/acpi/aml/model.omg": "1fc2a3ceb403f0adef2022f76ac0c1187fc74b0cd794df4e7855d643838a10af",
+    "source/libraries/acpi/field_access/build.omg": "b019e82e212aebf76af70d6d0bcfd34ed870b54d191f15fec4c25854031ce771",
+    "source/libraries/acpi/field_access/chunks.omg": "ba275a44e316fff5313e1a7a3300d2eff92c164a33f0be1e2e6c6a57b1dfe22f",
+    "source/libraries/acpi/field_access/geometry.omg": "5e89cfe363b9f3b0ac0e20c66899d6e5ccc8fefb7acb0acdd7a340ad8ac90bf5",
+    "source/libraries/acpi/field_access/model.omg": "0846521cf92722e75541d12a728f1ee8e9d5f5b3bfcaf3c420cdeb4a26d2b94b",
+    "source/libraries/acpi/field_protocol/build.omg": "4506cbb18a5e956baab6285782e9a9304504736c6c0b8ca402a030723fda80b8",
+    "source/libraries/acpi/field_protocol/model.omg": "fd43af2f3d9baccf509607112d32da8940515bedb23ce6e5c48c12a3f648d9bc",
+    "source/libraries/acpi/field_protocol/protocol.omg": "2bb81642ca9876fb2f5bcfc08e0dfb03363331e49e4591c615a02bfdaa8024a6",
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196",
+    "tools/ports/acpi/field-protocol/cases.json": "07b157a920207b09167f601a57c27a7ccf31447c502cb9150f78bf5cbc6fa918",
+    "tools/ports/acpi/field-protocol/check.py": "bbd7bdd65bcbfafca1113a362cdb9ac9896e5c3a514b76287e21adb431fe976e",
+    "tools/ports/acpi/field-protocol/check_const.py": "532e330556993fdaaf86769a4933bff4efa42386dad9eb2b07db8a58da31c8b1",
+    "tools/ports/acpi/field-protocol/fixtures.py": "a0f57b3585a0563a90502b379c5d955342d2592edfecce369fa3bf5e835451c2",
+    "tools/ports/acpi/field-protocol/toolchain.json": "f28d02436e4cdd6aaeb893c248219899174c5a01c0870e56af6ec7d2c98e7aa8",
+    "tools/ports/acpi/field-protocol/vectors.py": "c8fa9a64ab17922044ad18a7d080623da04c8a1feac07bdb19f7d241bd9a4a70",
+    "tools/ports/acpi/field-protocol/verify_record.py": "6f9c4b47013760891aacae63de6058e27b7e640f612c00d5113f3e88745e1921",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805"
+  },
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "positive_count": 3,
+  "proofs": [
+    {
+      "case": "bank_read_0_0",
+      "control": false,
+      "output": "compiled 19 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-e5d314f3938409d890b0a0b33a78687d7fa9af04d5050ab3e9cec49d0593a03b/source/main.omg; wrote_output=false\n",
+      "source_sha256": "711c14eadd074e6096c68f9149f35079ea3efa5617af65a87da8ea9c0a769092"
+    },
+    {
+      "case": "bank_read_0_0",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-field-protocol-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "1edde5299ec6174781c4648a559b781f7abeba315037d62bd648113b0a1c8b54"
+    },
+    {
+      "case": "index_write_3_0",
+      "control": false,
+      "output": "compiled 19 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-03fad4e832cdefd886d23155d764cd19a1cace445e8a47d23ad48662cdddcd5e/source/main.omg; wrote_output=false\n",
+      "source_sha256": "d93cc98930cd608c8735976da238bef1762cc445b951be5dc40023dd3574dad8"
+    },
+    {
+      "case": "index_write_3_0",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-field-protocol-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "5ad6c2b94daa725c1c92a2cf676eb44ac7f8f3431c1ee533ebbe87891f2f1df8"
+    },
+    {
+      "case": "index_last_selector_overflow",
+      "control": false,
+      "output": "compiled 19 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-3f24d84ae3fd2763d70df73882070d82bce566d66954d8f6bd7b7e3a11327a6c/source/main.omg; wrote_output=false\n",
+      "source_sha256": "0c887ffb74bdb2a784be93b1d234b4153a90aeb337f5d858f0041d984da49480"
+    },
+    {
+      "case": "index_last_selector_overflow",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-field-protocol-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "7f0b37b278bc1b69fd15276b2ee1beb9f06248300bd887658a2cc9abd8663104"
+    }
+  ],
+  "stage": "constant evaluation and requires proof; no native/hardware"
+}
