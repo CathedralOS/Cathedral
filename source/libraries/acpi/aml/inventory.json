@@ -68,7 +68,7 @@
         "1831:parse_field_list": {
           "anchor": "fn parse_field_list(",
           "disposition": "pending",
-          "reason": "Partial: bounded FieldList metadata parsing and transactional normal Field namespace installation; IndexField/BankField installation and runtime access remain pending.",
+          "reason": "Partial: complete bounded FieldList metadata parsing and transactional normal Field, literal-BankValue BankField and IndexField namespace installation. Dynamic declaration execution and live field access remain pending.",
           "targets": [
             {
               "anchor": "pub machine parse_list(",
@@ -1060,7 +1060,7 @@
         "394:FieldUnit": {
           "anchor": "pub struct FieldUnit {",
           "disposition": "pending",
-          "reason": "Partial: canonical normal FieldUnit retains region object ID and complete declaration/field metadata. Index/Bank object installation and live access remain pending.",
+          "reason": "Canonical Region/Bank/Index FieldBinding identities and complete declaration/descriptor metadata are represented in one FieldUnit case. Aggregate live object/field behavior remains pending.",
           "targets": [
             {
               "anchor": "case FieldUnit(",
@@ -1135,15 +1135,11 @@
         "402:FieldUnitKind": {
           "anchor": "pub enum FieldUnitKind {",
           "disposition": "pending",
-          "reason": "Partial: canonical normal FieldUnit retains region object ID and complete declaration/field metadata. Index/Bank object installation and live access remain pending.",
+          "reason": "Canonical Region/Bank/Index FieldBinding identities and complete declaration/descriptor metadata are represented in one FieldUnit case. Aggregate live object/field behavior remains pending.",
           "targets": [
             {
-              "anchor": "case FieldUnit(",
+              "anchor": "pub data FieldBinding",
               "path": "source/libraries/acpi/aml/model.omg"
-            },
-            {
-              "anchor": "pub data Field [copy]",
-              "path": "source/libraries/acpi/aml/field_model.omg"
             }
           ]
         },

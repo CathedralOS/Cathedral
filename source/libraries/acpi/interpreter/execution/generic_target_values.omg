@@ -51,7 +51,7 @@ pub machine classify_target(store:&ObjectStore,selection:TargetSelection,operand
    Value::String {string_storage} -> (TargetAction::StoreNamed {object_id:id})
    Value::Buffer {buffer_storage} -> (TargetAction::StoreNamed {object_id:id})
    Value::Uninitialized -> (TargetAction::CopyTo {object_id:id,result_binding:Binding::Uninitialized})
-   Value::FieldUnit {region_object,declaration,field} -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedRegion})
+   Value::FieldUnit {binding,declaration,field} -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedRegion})
    Value::OperationRegion {space,base,length,scope} -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedRegion})
    _ -> (TargetAction::Failure {outcome:ExecutionOutcome::UnsupportedValue})
   }

@@ -79,7 +79,7 @@ machine validate_payload(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore
   Value::Package {first,count} -> package(store,first,count)
   Value::Reference {kind,object_id} -> reference(store,object_id)
   Value::Uninitialized -> (ExecutionOutcome::Uninitialized)
-  Value::FieldUnit {region_object,declaration,field} -> (ExecutionOutcome::UnresolvedRegion)
+  Value::FieldUnit {binding,declaration,field} -> (ExecutionOutcome::UnresolvedRegion)
   Value::OperationRegion {space,base,length,scope} -> (ExecutionOutcome::UnresolvedRegion)
   _ -> (ExecutionOutcome::UnsupportedValue)
  }
@@ -149,7 +149,7 @@ pub machine destination_allowed(store:&ObjectStore,id:u64)->ExecutionOutcome {
  let count:u64=store.space.object_count;
  transition count<=64 && id<count && id<64 {true -> value(store.space.objects[id].value) _ -> (ExecutionOutcome::MissingObject)}
  state value(value:Value)->ExecutionOutcome {
-  transition value {Value::Integer {number} -> (ExecutionOutcome::Success) Value::Uninitialized -> (ExecutionOutcome::Success) Value::String {string_storage} -> (ExecutionOutcome::Success) Value::Buffer {buffer_storage} -> (ExecutionOutcome::Success) Value::Package {first,count} -> (ExecutionOutcome::Success) Value::Reference {kind,object_id} -> (ExecutionOutcome::Success) Value::FieldUnit {region_object,declaration,field} -> (ExecutionOutcome::UnresolvedRegion) Value::OperationRegion {space,base,length,scope} -> (ExecutionOutcome::UnresolvedRegion) _ -> (ExecutionOutcome::UnsupportedValue)}
+  transition value {Value::Integer {number} -> (ExecutionOutcome::Success) Value::Uninitialized -> (ExecutionOutcome::Success) Value::String {string_storage} -> (ExecutionOutcome::Success) Value::Buffer {buffer_storage} -> (ExecutionOutcome::Success) Value::Package {first,count} -> (ExecutionOutcome::Success) Value::Reference {kind,object_id} -> (ExecutionOutcome::Success) Value::FieldUnit {binding,declaration,field} -> (ExecutionOutcome::UnresolvedRegion) Value::OperationRegion {space,base,length,scope} -> (ExecutionOutcome::UnresolvedRegion) _ -> (ExecutionOutcome::UnsupportedValue)}
  }
 }
 // Validate and stage source bytes before modifying destination, including self-copy.

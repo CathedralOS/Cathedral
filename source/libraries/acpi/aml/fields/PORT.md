@@ -1,10 +1,14 @@
 # Bounded AML field declaration metadata
 
-Status: **tested**. All 18 original syntax bodies and mutations pass through
-current forwarding entry points, alongside a shared-type field read/write pair
+Status: **tested at the preserved `24aed04` owner-migration checkpoint**.
+All 18 original syntax bodies and mutations pass through the forwarding entry
+points, alongside a shared-type field read/write pair
 and a FieldUnit execution-boundary pair. The
 [owner-migration record](../../../../../tools/ports/acpi/aml/fields/migration-verification.json)
-binds the current parent, child and affected consumer/execution source closure.
+binds that parent, child and affected consumer/execution source closure.
+The later [Bank/Index namespace extension](../field-indirect.PORT.md) changes the
+shared object model, so this full receipt remains historical. The four parser
+and metadata bodies retain their exact relocation hashes.
 
 The original 18 constant-evaluator cases and 18 controls, with a 19-file source
 check, retain their original hashes in the
@@ -19,8 +23,8 @@ parser and flag bodies live at `aml::field_declarations`, `aml::field_elements`
 and `aml::field_flags`. The [normal Field installer](../field-namespace.PORT.md)
 consumes those descriptions inside the static loader. The parsing entry points
 themselves install no namespace objects and perform no region/register access,
-locking or bank selection. Index/Bank installation, full ACPI-004 and field
-execution remain pending.
+locking or bank selection. Static Bank/Index installation is described in the
+separate extension; full ACPI-004 and field execution remain pending.
 
 The pin is [rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5](https://github.com/rust-osdev/acpi/tree/257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5), copyright 2018 Isaac Woods, MIT OR Apache-2.0. Exact texts remain in `licenses/rust-osdev/acpi/LICENCE-MIT` and `LICENCE-APACHE`. Omega metadata and validation are Cathedral adaptations. `inventory.json` independently binds both relevant pinned Rust files, retaining full interpreter operations as pending. `tools/ports/acpi/aml/fields/provenance.json` hashes the licenses, manifest and four reviewed upstream test assets; those tests are metadata only, not copied firmware or handler scripts.
 
@@ -50,10 +54,10 @@ The primary [ACPI 6.5 Errata A grammar, section 20.2.5.2](https://uefi.org/specs
 | Parser resolves live objects and inserts runtime FieldUnits | Produces uninstalled descriptions and retains unresolved names |
 | BankValue executes/converts a TermArg before parsing the list | Literal subset succeeds; dynamic remainder is explicitly pending |
 
-Lock/update rules are metadata. `nominal_width` preserves the pin's one-byte fallback for AnyAcc and BufferAcc; it is not a safe access plan for a particular region. Normal attribute bytes remain raw facts because validity depends on region/protocol context. Runtime register-width comparisons, bank/index operations, connection-resource decoding, global-lock handling, further field-kind namespace installation and actual field reads/writes remain pending. CreateField and CreateBit/Byte/Word/DWord/QWordField are separate executable syntax and remain outside this package.
+Lock/update rules are metadata. `nominal_width` preserves the pin's one-byte fallback for AnyAcc and BufferAcc; it is not a safe access plan for a particular region. Normal attribute bytes remain raw facts because validity depends on region/protocol context. Runtime register-width comparisons, bank/index operations, connection-resource decoding, global-lock handling, dynamic declaration operands and actual field reads/writes remain pending. CreateField and CreateBit/Byte/Word/DWord/QWordField are separate executable syntax and remain outside this package.
 
 ## Validation and update audit
 
-Run `python3 tools/ports/acpi/aml/fields/audit.py` and `python3 tools/ports/acpi/aml/fields/migration.py` for the current checked closure. `check.py` retains the separate constant-evaluator workflow. `fixtures.py` generates original cases with mutations inside expected behavior; each changed body must compute 1 and fail its zero-result contract. These are semantic evaluator checks, not native execution, AML handler execution or ABI observations.
+Run `python3 tools/ports/acpi/aml/fields/audit.py` and `python3 tools/ports/acpi/aml/fields/migration.py` to audit or freshly execute the selected checked closure. `check.py` retains the separate constant-evaluator workflow. `fixtures.py` generates original cases with mutations inside expected behavior; each changed body must compute 1 and fail its zero-result contract. These are semantic evaluator checks, not native execution, AML handler execution or ABI observations.
 
 For pin updates, recheck both full source hashes and every anchor, license/manifest deltas, field grammar and all adaptations above. Reclassify pending anchors only when their full operation is implemented. Review existing original assertions before regenerating and rerun positive and body-mutating cases against one unchanged parent/child source closure.

@@ -257,3 +257,9 @@ bound to their isolated worktree. Their production and fixture hashes match the
 integrated source at `3a74b52`. Positive-target empty String precedence and
 unequal Buffer extents remain the two narrow compatibility decisions; other
 ACPI-005 work continues.
+
+[BankField and IndexField namespace installation](field-indirect.PORT.md) extends
+the same canonical FieldUnit and namespace transaction with explicit region,
+selector and data identities. Static literal BankValue metadata is retained;
+dynamic declaration operands and live field evaluation remain open. Earlier
+normal-Field receipts describe the preserved `24aed04` checkpoint.

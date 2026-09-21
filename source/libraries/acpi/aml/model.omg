@@ -25,12 +25,18 @@ pub data ReferenceKind [copy] { case Named; case RefOf; case Local; case Arg; ca
 // containing ObjectStore object slot; they grant no independent access.
 pub data StringStorage [copy] { case Source(string_source:Span); case Owned(string_owner:u64); }
 pub data BufferStorage [copy] { case Source(declared_size:u64,buffer_initializer:Span); case Owned(buffer_owner:u64); }
+// Stable namespace object identities. These are inert links, never access grants.
+pub data FieldBinding [copy] {
+ case Region(region_object:u64);
+ case Bank(region_object:u64,selector_object:u64);
+ case Index(index_object:u64,data_object:u64);
+}
 pub data Value [copy] {
  case Uninitialized;
  case Integer(number: u64);
  case String(string_storage:StringStorage);
  case Buffer(buffer_storage:BufferStorage);
- case FieldUnit(region_object:u64,declaration:Declaration,field:Field);
+ case FieldUnit(binding:FieldBinding,declaration:Declaration,field:Field);
  case BufferField(backing_object:u64,bit_offset:u64,bit_length:u64);
  case Package(first: u64, count: u64);
  case NameReference(name: Path, scope: Path);

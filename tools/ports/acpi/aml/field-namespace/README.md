@@ -1,4 +1,26 @@
-# Normal Field namespace fixtures
+# Field declaration namespace fixtures
+
+The [BankField/IndexField extension](../../../../../source/libraries/acpi/aml/field-indirect.PORT.md)
+now generates 100 loader scenario/control pairs. Its new source-bound record is
+`indirect-verification.json`. The 38-pair normal Field receipt and the auxiliary
+constant/owner migration receipts below describe the preserved checkpoint
+`24aed04`; their original source hashes are historical after the binding change.
+
+All 100 extended loader pairs pass in 1189.721 seconds, with a maximum 320,898
+evaluator fuel units. The source and runner binary stayed unchanged throughout
+the run, and strict retained-input/result verification passes. Separate
+[binding boundary checks](../field-bindings/README.md) cover all three kinds in
+both Integer widths and the shared generic bridge comparator.
+
+```sh
+python3 tools/ports/acpi/aml/field-namespace/check.py \
+  --record tools/ports/acpi/aml/field-namespace/indirect-verification.json
+python3 tools/ports/acpi/aml/field-namespace/verify_record.py \
+  tools/ports/acpi/aml/field-namespace/indirect-verification.json
+```
+
+The earlier commands and evidence below belong to the normal-Field checkpoint.
+
 
 The canonical implementation and its admitted scope are recorded in
 [the port document](../../../../../source/libraries/acpi/aml/field-namespace.PORT.md).

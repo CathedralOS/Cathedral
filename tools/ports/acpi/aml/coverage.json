@@ -36,8 +36,12 @@
       "wire": 110
     },
     "BankField": {
-      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
-      "status": "pending",
+      "reason": "Transactional namespace installation with complete metadata and stable canonical bindings; dynamic BankValue and live field execution remain pending.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine load_field(",
+        "path": "source/libraries/acpi/aml/field_namespace.omg"
+      },
       "wire": 23431
     },
     "Break": {
@@ -261,8 +265,12 @@
       "wire": 136
     },
     "IndexField": {
-      "reason": "Wire fact only. Dynamic expression/control/target/method/field/table/handler semantics remain pending; loader returns UnsupportedSyntax outside its explicit static subset.",
-      "status": "pending",
+      "reason": "Transactional namespace installation with complete metadata and stable canonical bindings; dynamic BankValue and live field execution remain pending.",
+      "status": "static-subset",
+      "target": {
+        "anchor": "machine load_field(",
+        "path": "source/libraries/acpi/aml/field_namespace.omg"
+      },
       "wire": 23430
     },
     "LAnd": {

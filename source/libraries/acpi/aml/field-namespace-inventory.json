@@ -68,7 +68,7 @@
         "1831:parse_field_list": {
           "anchor": "fn parse_field_list(",
           "disposition": "pending",
-          "reason": "Complete bounded FieldList metadata parsing is reused; normal Field namespace installation is now connected to loader::load. IndexField and BankField installation and live evaluation remain pending, so the upstream general operation stays partial.",
+          "reason": "Partial: complete bounded FieldList metadata parsing and transactional normal Field, literal-BankValue BankField and IndexField namespace installation. Dynamic declaration execution and live field access remain pending.",
           "targets": [
             {
               "anchor": "pub machine parse_list(",
@@ -625,7 +625,7 @@
         "394:FieldUnit": {
           "anchor": "pub struct FieldUnit {",
           "disposition": "pending",
-          "reason": "Normal Field carries canonical region object identity and complete declaration/descriptor metadata. Index/Bank object bindings and live field evaluation remain pending.",
+          "reason": "Canonical Region/Bank/Index FieldBinding identities and complete declaration/descriptor metadata are represented in one FieldUnit case. Aggregate live object/field behavior remains pending.",
           "targets": [
             {
               "anchor": "case FieldUnit(",
@@ -656,10 +656,10 @@
         "402:FieldUnitKind": {
           "anchor": "pub enum FieldUnitKind {",
           "disposition": "pending",
-          "reason": "Normal Field carries canonical region object identity and complete declaration/descriptor metadata. Index/Bank object bindings and live field evaluation remain pending.",
+          "reason": "Canonical Region/Bank/Index FieldBinding identities and complete declaration/descriptor metadata are represented in one FieldUnit case. Aggregate live object/field behavior remains pending.",
           "targets": [
             {
-              "anchor": "case FieldUnit(",
+              "anchor": "pub data FieldBinding",
               "path": "source/libraries/acpi/aml/model.omg"
             }
           ]
