@@ -321,8 +321,8 @@ preserves acknowledged-effect counts. Interpreter retirement and providers
 remain pending.
 
 [Resumable Field-target retirement](interpreter/execution/write-retirement.PORT.md)
-is transcribed in the isolated write-execution branch. Its 24 whole-state pairs
-are authored, with focused checked verification running. Pending Store/scalar
+is transcribed in the isolated write-execution branch. Its 34 whole-state pairs
+are authored, with full checked verification running. Pending Store/scalar
 writes retain their expression result and optional second Divide target.
 Provider-facing pipeline composition and bytecode evidence remain pending;
 no tested integration claim is made yet.

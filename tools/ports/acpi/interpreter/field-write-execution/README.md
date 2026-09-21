@@ -14,7 +14,7 @@ python3 tools/ports/acpi/interpreter/field-write-execution/check.py \
   --verify /tmp/cathedral-write-retirement-smoke2.json
 ```
 
-Omit `--match` to select all 24 behavior/control pairs. Each intermediate step
+Omit `--match` to select all 34 behavior/control pairs. Each intermediate step
 compares the complete store and frame, including inactive arrays and every new
 write-continuation member. A control alters the expected inactive cache value.
 The checker uses the immutable Omega `eaa7993` runner without compiler changes.

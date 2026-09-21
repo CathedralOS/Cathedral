@@ -1,7 +1,7 @@
 # Resumable Field-target retirement
 
 Status: **transcribed; verification running**. This branch adds executor
-continuations for Store and scalar result targets. The 24 authored whole-state
+continuations for Store and scalar result targets. The 34 authored whole-state
 behavior/control pairs have not yet passed. Provider-facing pipeline composition
 and bytecode evidence remain pending. ACPI-005 stays open.
 
@@ -34,7 +34,7 @@ multi-payload Field writes remains part of pipeline implementation and research.
 their prior unresolved-Field behavior. The new `start_write_runtime` enables
 the mode and nested frames inherit it. `advance_write_runtime` charges one AML
 turn and pauses while a `DeferredWrite` is present. Polls and completion calls
-charge no additional turn. The cumulative 1024-turn limit remains intact.
+charge no additional turn. The cumulative 1034-turn limit remains intact.
 
 `DeferredWrite::Field` retains the selected object, source operand, expression
 result, Store-result policy, optional second target and its already-computed
@@ -57,6 +57,13 @@ Completing an absent continuation fails without publication. This is an ordinary
 internal data API: request identity and provider acknowledgement matching belong
 to the provider-facing owner, not this helper.
 
+The Runtime wrapper latches a late error after the pending write has been
+consumed, so subsequent advances retain that failure and cannot execute later
+AML. An invalid Store completion operand leaves the pending write intact and
+can be corrected without consuming fuel. Ordinary non-Field Store targets retain
+the legacy source operand identity for their expression contribution, including
+an object-backed Integer stored to a Local.
+
 ## Remaining integration
 
 There is no provider Session in this slice. Field metadata, source conversion,
@@ -78,8 +85,15 @@ The [owned fixture tool](../../../../../tools/ports/acpi/interpreter/field-write
 compares every ObjectStore and Frame member after each retirement/completion.
 The new continuation comparator includes both target/result alternatives and
 all retained scalar coordinates. Controls change an inactive lookup-cache slot.
-The 24 cases span both Integer sizes, converted Store results, invalid and
+The 34 cases span both Integer sizes, converted Store results, invalid and
 duplicate completion, disabled mode, full parent, Arg references, scalar result
 identity, both Divide targets, local/Field combinations and late target failure.
 No public Rust, constant-evaluation, native execution or hardware result is
 claimed by unexecuted expectations.
+
+Review of the first transcribed checkpoint `2d61769` found the missing Runtime
+error latch and changed ordinary Store contribution described above. Its small
+two-pair check was deliberately stopped before claiming any result. The updated
+34-pair corpus includes eight whole-Runtime cases: late failure followed by
+advance, invalid completion followed by a valid retry, pending polls and a
+second suspended Divide target. The full run binds the corrected sources.

@@ -51,9 +51,9 @@ machine field_target(store:&ObjectStore,frame:&Frame,target:Target)->FieldTarget
 
 pub machine retire_store(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,source:Operand)->ExecutionOutcome {
  let normalized:Operand=normalized_operand(store,frame.size,source);
- let after:AfterWrite=AfterWrite {result:normalized,stored:true};
+ let after:AfterWrite=AfterWrite {result:source,stored:true};
  let outcome:ExecutionOutcome=write(input,store,frame,target,normalized,after);
- transition outcome==ExecutionOutcome::Success {true -> pending(store,frame,target,normalized) _ -> (outcome)}
+ transition outcome==ExecutionOutcome::Success {true -> pending(store,frame,target,source) _ -> (outcome)}
  state pending(store:&ObjectStore,frame:&mut Frame,target:Target,source:Operand)->ExecutionOutcome {
   transition frame.deferred_write {DeferredWrite::None -> target(store,frame,target,source) _ -> (ExecutionOutcome::Success)}
  }

@@ -246,10 +246,25 @@ pub machine complete_retired_write(input:&[u8;1024],store:&mut ObjectStore,runti
   true -> frame(input,store,runtime,written,runtime.count-1) _ -> (ExecutionOutcome::InvalidState)
  }
  state frame(input:&[u8;1024],store:&mut ObjectStore,runtime:&mut Runtime,written:Operand,index:u64)->ExecutionOutcome {
-  transition index<4 {true -> complete(input,store,runtime,written,index) _ -> (ExecutionOutcome::InvalidState)}
+  transition index<4 {true -> pending(input,store,runtime,written,index) _ -> (ExecutionOutcome::InvalidState)}
+ }
+ state pending(input:&[u8;1024],store:&mut ObjectStore,runtime:&mut Runtime,written:Operand,index:u64)->ExecutionOutcome {
+  transition runtime.frames[index].deferred_write {
+   DeferredWrite::None -> (ExecutionOutcome::InvalidState)
+   _ -> complete(input,store,runtime,written,index)
+  }
  }
  state complete(input:&[u8;1024],store:&mut ObjectStore,runtime:&mut Runtime,written:Operand,index:u64)->ExecutionOutcome {
-  let outcome:ExecutionOutcome=complete_field_write(input,store,&mut runtime.frames[index],written);outcome
+  let outcome:ExecutionOutcome=complete_field_write(input,store,&mut runtime.frames[index],written);
+  transition outcome==ExecutionOutcome::Success {true -> (outcome) _ -> failed(runtime,outcome,index)}
+ }
+ state failed(runtime:&mut Runtime,outcome:ExecutionOutcome,index:u64)->ExecutionOutcome {
+  // A rejected operand leaves the pending write intact and may be corrected.
+  // A consumed continuation's late-target/contribution error is terminal.
+  transition runtime.frames[index].deferred_write {DeferredWrite::None -> latch(runtime,outcome) _ -> (outcome)}
+ }
+ state latch(runtime:&mut Runtime,outcome:ExecutionOutcome)->ExecutionOutcome {
+  runtime.outcome=outcome;outcome
  }
 }
 pub machine write_runtime_result(store:&ObjectStore,runtime:&Runtime)->ExecutionResult {

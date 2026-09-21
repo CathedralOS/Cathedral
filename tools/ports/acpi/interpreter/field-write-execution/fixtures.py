@@ -25,6 +25,7 @@ def cases():
         add('parent_full',[(retire,'InvalidState','')],setup='frame.operations[0].count=1;')
         add('arg_field',[(retire,'Success',pending()),(complete(8),'Success',contributed(8))],setup='frame.arguments[0]=Binding::Shared {shared_id:3};',operation='operation.first_target=Target::Argument {argument_index:0};')
         add('default_completion',[(complete(9),'InvalidState','')])
+        add('ordinary_source_identity',[(retire,'Success','expected_frame.locals[0]=Binding::Integer {number:999};expected_frame.operations[0].count=1;expected_frame.operations[0].operands[0]=Operand::Object {object_id:2};')],operation='operation.operands[0]=Operand::Object {object_id:2};operation.first_target=Target::Local {local_index:0};')
         divide='operation.opcode=0x78;operation.value_arity=2;operation.target_arity=2;operation.operands[0]=Operand::Integer {number:10};operation.operands[1]=Operand::Integer {number:3};'
         second='Target::Named {object_id:1}'
         first_pending=pending(source=1,result=3,stored=False,second=True,target=second,value=3)
@@ -36,6 +37,18 @@ def cases():
         second='Target::Named {object_id:64}'
         add('divide_late_failure',[(retire,'Success',pending(source=1,result=3,stored=False,second=True,target=second,value=3)),(complete(88),'MissingObject','expected_frame.deferred_write=DeferredWrite::None;')],operation=divide+f'operation.second_target={second};')
         add('scalar_result',[(retire,'Success',pending(source=9,result=9,stored=False)),(complete(2),'Success',contributed(9))],operation='operation.opcode=0x72;operation.value_arity=2;operation.operands[0]=Operand::Integer {number:4};operation.operands[1]=Operand::Integer {number:5};')
+        runtime_complete=lambda n:f'complete_retired_write(&input,&mut store,&mut runtime,Operand::Integer {{number:{n}}})'
+        advance='advance_write_runtime(&input,&mut store,&definitions,&mut runtime)'
+        second='Target::Named {object_id:64}'
+        add('runtime_late_failure',[(retire,'Success',pending(source=1,result=3,stored=False,second=True,target=second,value=3)),(runtime_complete(88),'MissingObject','expected_frame.deferred_write=DeferredWrite::None;expected_runtime.outcome=ExecutionOutcome::MissingObject;'),(advance,'MissingObject','')],operation=divide+f'operation.second_target={second};')
+        rows[-1]['runtime']=True
+        add('runtime_retry',[(retire,'Success',pending()),('complete_retired_write(&input,&mut store,&mut runtime,Operand::Uninitialized)','Uninitialized',''),(runtime_complete(7),'Success',contributed(7)),(runtime_complete(7),'InvalidState','')])
+        rows[-1]['runtime']=True
+        add('runtime_pending_poll',[(retire,'Success',pending()),(advance,'Success','')])
+        rows[-1]['runtime']=True
+        second='Target::Named {object_id:1}'
+        add('runtime_second_pending',[(retire,'Success',pending(source=1,result=3,stored=False,second=True,target=second,value=3)),(runtime_complete(88),'Success',second_pending),(advance,'Success',''),(runtime_complete(99),'Success',contributed(3))],operation=divide+f'operation.second_target={second};')
+        rows[-1]['runtime']=True
     return rows
 
 DEFERRED = '''
@@ -60,6 +73,7 @@ def render(match=''):
     source=source.replace(' let arrays:bool=ba_frame_arrays(a,b,0,16,true);',' let arrays:bool=ba_frame_arrays(a,b,0,16,true);let pending:bool=fw_deferred(a.deferred_write,b.deferred_write);')
     source=source.replace(' scope && body && result && arrays &&',' pending && a.field_writes==b.field_writes && scope && body && result && arrays &&')
     source+='\nuse execution::execution_model::DeferredWrite;\nuse execution::retire::retire_operation;\nuse execution::write_retirement::complete_field_write;\n'+DEFERRED
+    source+=RUNTIME
     names=[]
     for row in rows:
         for control in (False,True):
@@ -75,14 +89,41 @@ def render(match=''):
  {row['setup']}
  let mut operation:Operation=Operation {{opcode:0x70,value_arity:1,target_arity:1,first_target:Target::Named {{object_id:0}}}};
  operation.operands[0]=Operand::Integer {{number:42}};{row['operation']}
- let expected_store:ObjectStore=store;let mut expected_frame:Frame=frame;
+ let expected_store:ObjectStore=store;
 '''
+            runtime=row.get('runtime',False)
+            if runtime:
+                source+=' let definitions:[MethodDefinition;64];let mut runtime:Runtime=Runtime {count:1,steps:9};runtime.frames[0]=frame;let mut expected_runtime:Runtime=runtime;\n'
+            else:
+                source+=' let mut expected_frame:Frame=frame;\n'
             checks=[]
             for i,(call,outcome,expected) in enumerate(row['steps']):
+                if runtime:
+                    call=call.replace('&mut frame','&mut runtime.frames[0]')
+                    expected=expected.replace('expected_frame','expected_runtime.frames[0]')
                 source+=f' let outcome_{i}:ExecutionOutcome={call};{expected}\n'
                 if control and i==len(row['steps'])-1:
-                    source+=' expected_frame.lookup_cache[15].object_id=72;\n'
-                source+=f' let store_{i}:bool=fx_store(&store,&expected_store);let frame_{i}:bool=ba_frame(&frame,&expected_frame);\n'
+                    source+=(' expected_runtime.frames[0]' if runtime else ' expected_frame')+'.lookup_cache[15].object_id=72;\n'
+                comparison='fw_runtime(&runtime,&expected_runtime)' if runtime else 'ba_frame(&frame,&expected_frame)'
+                source+=f' let store_{i}:bool=fx_store(&store,&expected_store);let frame_{i}:bool={comparison};\n'
                 checks.append(f'outcome_{i}==ExecutionOutcome::{outcome} && store_{i} && frame_{i}')
             source+=' transition '+ ' && '.join(checks)+' {true -> (0) _ -> (1)}\n}\n'
     return rows,source,names
+
+RUNTIME = """
+use execution::runtime_model::Runtime;
+use aml::model::MethodDefinition;
+use execution::engine::complete_retired_write;
+use execution::engine::advance_write_runtime;
+machine fw_runtime(a:&Runtime,b:&Runtime)->bool {
+ let frames:bool=fw_runtime_frames(&a.frames,&b.frames,0,4,true);let result:bool=ba_operand(a.result,b.result);
+ frames && result && a.outcome==b.outcome && a.count==b.count && a.unit==b.unit && a.length==b.length && a.steps==b.steps && a.finished==b.finished && a.has_result==b.has_result && a.fault_offset==b.fault_offset
+}
+machine fw_runtime_frames(a:&[Frame;4],b:&[Frame;4],i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=fw_runtime_frame(a,b,i,n);transition i<n {true -> fw_runtime_frames(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine fw_runtime_frame(a:&[Frame;4],b:&[Frame;4],i:u64,n:u64)->bool {
+ transition i<n && i<4 {true -> selected(a.frames[i],b.frames[i]) _ -> (true)}
+ state selected(a:Frame,b:Frame)->bool {let same:bool=ba_frame(&a,&b);same}
+}
+""".replace('a.frames[i]','a[i]').replace('b.frames[i]','b[i]')
