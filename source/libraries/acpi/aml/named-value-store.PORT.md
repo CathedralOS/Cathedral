@@ -1,6 +1,10 @@
 # Direct named-value Store
 
-Status: tested — 305 checked behavior/control pairs, three constant pairs and 297 actual public Rust observations pass at the final repository path.
+Original milestone: 305 checked behavior/control pairs, three constant pairs and
+297 actual public Rust observations passed at the final repository path. Those
+receipts retain their original inputs. The [scalar extension](named-value-store-scalar.PORT.md)
+now reruns all 305 object-source cases within 504 checked pairs and six constant
+pairs, and adds destination admission plus an allocation-free Integer entry.
 
 `named_value_store::store_value(input, length, unit, store, destination, source,
 size)` operates on two already-allocated direct canonical object IDs. The caller

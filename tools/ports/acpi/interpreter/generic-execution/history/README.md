@@ -12,5 +12,17 @@ recovered from Git by matching each recorded SHA-256. All46/33/51/45 source inpu
 were recovered. These receipts remain historical; they are not current generic
 runtime proof.
 
-Current replay receipts will be written outside this history directory. No native
-or hardware execution is claimed by either archive.
+The canonical replay was committed at
+`c4a8b03e2ff50b8e0eb69231f80e31554511291f`: 259 checked scenario/control pairs and
+one constant-evaluator pair. Its exact inputs and receipts are preserved in Git.
+The top-level verifier deliberately requires the recorded canonical root and
+matching current inputs. After later source changes, verify the committed
+milestone without rewriting its receipts:
+
+```
+python3 tools/ports/acpi/interpreter/generic-execution/history/verify_checkpoint.py
+```
+
+This checks the committed source, fixture, driver, document and receipt hashes.
+It does not rerun the compiler or claim that the milestone tests exercised later
+source changes. No native or hardware execution is claimed by these records.

@@ -1,6 +1,10 @@
 # Direct named-value Store checks
 
-Status: tested at the final repository path: 305 checked pairs, three constant pairs and 297 public Rust observations. See the
+Historical milestone: 305 checked pairs, three constant pairs and 297 public Rust
+observations passed at the final repository path. These receipts bind the original
+source before the scalar extension. Current checks, including all original 305
+cases, are in [named-value-store-scalar](../named-value-store-scalar/README.md).
+See the
 [port record](../../../../../source/libraries/acpi/aml/named-value-store.PORT.md)
 for exact admission, exclusions and destination-block publication policy.
 

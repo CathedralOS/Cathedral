@@ -19,30 +19,50 @@ use object_conversions::ConversionFailure;
 use integer_helpers::integers::IntegerSize;
 pub data StoreResult [copy] {case Failure(reason:ConversionFailure);case Stored(object:u64);}
 
-// Destination admission precedes source conversion. All preparation occurs on
-// the unchanged store, including self-stores; only completed results publish.
-pub machine store_value(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize)->StoreResult {
+use integer_helpers::integers::normalize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::implicit_strings::from_integer;
+use integer_helpers::implicit_strings::StringResult;
+use integer_helpers::conversions::integer_to_buffer;
+use integer_helpers::conversions::mid;
+
+// Ordinary read-only metadata. A Target does not authorize publication and is
+// never accepted as admission evidence by either mutation entry point.
+pub data DestinationResult [copy] {
+ case Failure(reason:ConversionFailure);
+ case Target(target:ConversionTarget,extent:u64);
+}
+pub machine admit_destination(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,destination:u64)->DestinationResult {
  let count:u64=store.space.object_count;
  transition count<=64 && destination<count && destination<64 {
-  true -> target(input,length,unit,store,destination,source,size,store.space.objects[destination].value)
-  _ -> (StoreResult::Failure {reason:ConversionFailure::InvalidState})
+  true -> target(input,length,unit,store,destination,store.space.objects[destination].value)
+  _ -> (DestinationResult::Failure {reason:ConversionFailure::InvalidState})
  }
- state target(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,value:Value)->StoreResult {
+ state target(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,destination:u64,value:Value)->DestinationResult {
   transition value {
-   Value::Integer {number} -> prepare(input,length,unit,store,destination,source,size,ConversionTarget::Integer,0)
-   Value::String {string_storage} -> bytes(input,length,unit,store,destination,source,size,ConversionTarget::String)
-   Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,destination,source,size,ConversionTarget::Buffer)
-   _ -> (StoreResult::Failure {reason:ConversionFailure::UnsupportedValue})
+   Value::Integer {number} -> (DestinationResult::Target {target:ConversionTarget::Integer,extent:0})
+   Value::String {string_storage} -> bytes(input,length,unit,store,destination,ConversionTarget::String)
+   Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,destination,ConversionTarget::Buffer)
+   _ -> (DestinationResult::Failure {reason:ConversionFailure::UnsupportedValue})
   }
  }
- state bytes(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,target:ConversionTarget)->StoreResult {
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,destination:u64,target:ConversionTarget)->DestinationResult {
   let admitted:ByteRead=read_bytes(input,length,unit,store,destination);
   transition admitted.outcome==ByteOutcome::Success {
-   true -> prepare(input,length,unit,store,destination,source,size,target,admitted.length)
+   true -> (DestinationResult::Target {target:target,extent:admitted.length})
    _ -> failed(admitted.outcome)
   }
  }
- state failed(outcome:ByteOutcome)->StoreResult {let reason:ConversionFailure=storage_failure(outcome);StoreResult::Failure {reason:reason}}
+ state failed(outcome:ByteOutcome)->DestinationResult {let reason:ConversionFailure=storage_failure(outcome);DestinationResult::Failure {reason:reason}}
+}
+// Destination admission precedes source conversion. Both public writers perform
+// it on the current store, including after any earlier caller observation.
+pub machine store_value(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize)->StoreResult {
+ let admitted:DestinationResult=admit_destination(input,length,unit,store,destination);
+ transition admitted {
+  DestinationResult::Failure {reason} -> (StoreResult::Failure {reason:reason})
+  DestinationResult::Target {target,extent} -> prepare(input,length,unit,store,destination,source,size,target,extent)
+ }
  state prepare(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,target:ConversionTarget,extent:u64)->StoreResult {
   transition target==ConversionTarget::Buffer {
    true -> buffer(input,length,unit,store,destination,source,size,extent)
@@ -56,6 +76,42 @@ pub machine store_value(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectSt
  state ordinary(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,target:ConversionTarget)->StoreResult {
   let prepared:ImplicitResult=convert(input,length,unit,store,source,size,target);
   let result:StoreResult=publish(store,destination,target,prepared);result
+ }
+}
+// An already-evaluated scalar is normalized here; it needs no object slot or
+// synthetic source store. It cannot establish an alias or target authority.
+pub machine store_integer(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,number:u64,size:IntegerSize)->StoreResult {
+ let admitted:DestinationResult=admit_destination(input,length,unit,store,destination);
+ transition admitted {
+  DestinationResult::Failure {reason} -> (StoreResult::Failure {reason:reason})
+  DestinationResult::Target {target,extent} -> prepare(store,destination,number,size,target,extent)
+ }
+ state prepare(store:&mut ObjectStore,destination:u64,number:u64,size:IntegerSize,target:ConversionTarget,extent:u64)->StoreResult {
+  let prepared:ImplicitResult=prepare_integer(number,size,target,extent);
+  let result:StoreResult=publish(store,destination,target,prepared);result
+ }
+}
+machine prepare_integer(number:u64,size:IntegerSize,target:ConversionTarget,extent:u64)->ImplicitResult {
+ transition target {
+  ConversionTarget::Integer -> integer(number,size)
+  ConversionTarget::String -> string(number,size)
+  ConversionTarget::Buffer -> bounded(number,size,extent)
+ }
+ state integer(number:u64,size:IntegerSize)->ImplicitResult {let value:u64=normalize(size,number);ImplicitResult::Integer {number:value}}
+ state string(number:u64,size:IntegerSize)->ImplicitResult {
+  let formatted:StringResult=from_integer(size,number);
+  transition formatted {StringResult::String {length,bytes} -> (ImplicitResult::String {length:length,bytes:bytes}) StringResult::Capacity -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity})}
+ }
+ state bounded(number:u64,size:IntegerSize,extent:u64)->ImplicitResult {
+  transition {extent==0 -> (ImplicitResult::Failure {reason:ConversionFailure::Bounds}) extent>256 -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity}) _ -> buffer(number,size,extent)}
+ }
+ state buffer(number:u64,size:IntegerSize,extent:u64)->ImplicitResult {
+  let mut bytes:[u8;256];let packed:IntegerResult=integer_to_buffer(size,number,&mut bytes);
+  transition packed.error==0 {true -> fit(bytes,packed.value,extent) _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state fit(bytes:[u8;256],count:u64,extent:u64)->ImplicitResult {
+  let mut output:[u8;256];let copied:IntegerResult=mid(&bytes,count,0,extent,&mut output);
+  transition copied.error==0 {true -> (ImplicitResult::Buffer {length:extent,bytes:output}) _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})}
  }
 }
 // This private publisher only receives canonical helper results, never a caller

@@ -209,9 +209,16 @@ aggregate source counts are unchanged.
 
 [Generic method execution](../interpreter/execution/generic.PORT.md) transports preloaded Integer/String/Buffer/Package/reference data through methods,
 Return, Store and CopyObject using stable ObjectStore IDs and private bindings.
-Canonical replay passes 55 generic, 79 unchanged integer and 22 unchanged pipeline
+At checkpoint `c4a8b03`, canonical replay passed 55 generic, 79 unchanged integer and 22 unchanged pipeline
 pairs, plus 103 boundary pairs and one constant-evaluator pair. Argument writes
 preserve the primary binding rules; byte copies own their backing, while Package
 children remain explicitly shallow. Dynamic literals, conversion opcodes, general
 reference/field evaluation and services remain pending. ACPI-005 stays partial;
 aggregate source counts are unchanged.
+
+[Scalar named Store](named-value-store-scalar.PORT.md) adds current-store destination admission and an inline Integer entry without
+a temporary object allocation. All 504 checked pairs and six constant pairs pass,
+including the unchanged 305 object-source cases and complete-store failure
+preservation. Existing target types and positive Buffer extents are retained.
+Generic named-target routing remains a separate pending integration; aggregate
+source counts are unchanged.

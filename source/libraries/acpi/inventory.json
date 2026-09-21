@@ -1268,6 +1268,14 @@
             {
               "path": "source/libraries/acpi/interpreter/execution/generic.PORT.md",
               "anchor": "## Scope"
+            },
+            {
+              "path": "source/libraries/acpi/aml/named_value_store.omg",
+              "anchor": "pub machine store_integer("
+            },
+            {
+              "path": "source/libraries/acpi/aml/named_value_store.omg",
+              "anchor": "pub machine admit_destination("
             }
           ],
           "note": "Partial execution now covers preloaded Local/Arg data replacement, explicit-reference Arg write-through and existing Integer/Uninitialized named targets. Detached canonical implicit conversion helpers and atomic basic named-value storage are verified separately; their generic target/opcode composition, general fields and excluded Buffer policies remain pending.",
@@ -1283,6 +1291,9 @@
           "generic_execution_component": {
             "note": "Preloaded canonical data transport, bounded calls/Return, byte-owning copies, private Local/Arg bindings and explicit-reference Arg write-through. Named Store remains Integer/Uninitialized in this milestone. Package child sharing is a local shallow-copy profile. Dynamic literals, implicit conversions, general reference/field evaluation, services and full upstream semantics remain pending.",
             "evidence": "source/libraries/acpi/interpreter/execution/generic.PORT.md"
+          },
+          "scalar_named_store_component": {
+            "note": "Already-evaluated Integer input normalizes and converts into current admitted Integer/String/positive-extent Buffer destinations without allocating a source slot. Read-only destination metadata conveys no write authority; both writers re-admit current storage.504 checked pairs and6 constant pairs include unchanged305 object-source cases. Generic StoreNamed action/opcode integration remains pending."
           }
         },
         "2488:do_copy_object": {
@@ -3476,6 +3487,14 @@
             {
               "path": "source/libraries/acpi/aml/named_value_store.omg",
               "anchor": "pub machine store_value("
+            },
+            {
+              "path": "source/libraries/acpi/aml/named_value_store.omg",
+              "anchor": "pub machine store_integer("
+            },
+            {
+              "path": "source/libraries/acpi/aml/named_value_store.omg",
+              "anchor": "pub machine admit_destination("
             }
           ],
           "buffer_extent_component": {
@@ -3483,6 +3502,9 @@
           },
           "named_value_store_component": {
             "note": "Already-allocated direct basic destination admission, canonical detached conversion and atomic value/block replacement preserve identity and all unrelated store state. Integer/String self-stores are safe; positive Buffer Integer/nonemptyString profile only. Namespace/reference target selection, excluded Buffer policies and opcode retirement remain pending."
+          },
+          "scalar_named_store_component": {
+            "note": "Already-evaluated Integer input normalizes and converts into current admitted Integer/String/positive-extent Buffer destinations without allocating a source slot. Read-only destination metadata conveys no write authority; both writers re-admit current storage.504 checked pairs and6 constant pairs include unchanged305 object-source cases. Generic StoreNamed action/opcode integration remains pending."
           }
         },
         "346:typ": {

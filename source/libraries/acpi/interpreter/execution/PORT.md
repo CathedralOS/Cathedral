@@ -1,12 +1,14 @@
 # AML method execution — partial ACPI-005
 
-The current implementation is described by [generic execution](generic.PORT.md).
+The generic execution baseline at `c4a8b03` is described by [generic execution](generic.PORT.md).
 It passes ObjectStore through the pipeline and transports canonical data using
 Operand/Binding metadata. The original integer contract and verification below
 are retained as historical milestone documentation; their integer-only API,
 allocation limits and old receipt hashes do not describe the current executor.
-Current source-bound regression receipts and exact archived prior inputs live in
+Checkpoint source-bound regression receipts and exact archived prior inputs live in
 `tools/ports/acpi/interpreter/generic-execution/manifest.json` and `history/`.
+After later changes, `history/verify_checkpoint.py` checks the exact committed
+inputs and receipts; it makes no fresh execution claim for the current tree.
 
 ## Historical integer milestone: scope and status
 
