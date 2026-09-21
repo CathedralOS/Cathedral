@@ -1,9 +1,10 @@
 # Explicit ToInteger execution
 
-Status: 25 complete Frame/ObjectStore retirement behavior/control pairs passed
-in the isolated ToInteger worktree. Actual bytecode verification is pending a
-fixture correction: three negative controls attempted the out-of-range literal
-`u64::MAX + 1`. ACPI-005 and aggregate upstream anchors remain open.
+Status: 43 actual bytecode and 25 complete Frame/ObjectStore retirement
+behavior/control pairs passed in the isolated ToInteger worktree. The 25-pair
+receipt retains checkpoint `9ce6ca1`; the later bytecode receipt binds its own
+corrected generator and unchanged production source. Both evidence sets pass
+exact input verification. ACPI-005 and aggregate upstream anchors remain open.
 
 This modified composition maps `src/aml/mod.rs:2057 do_to_integer` at rust-osdev/acpi
 `257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5` to `to_integer_execution.omg`, opcode

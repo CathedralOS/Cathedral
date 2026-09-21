@@ -77,7 +77,10 @@ def bridge_cases():
 def render(group,match=''):
     rows=execution_cases() if group=='execution' else bridge_cases()
     rows=[r for r in rows if any(part in r['name'] for part in match.split(','))];assert rows
-    if group=='execution':source,names=ns.base.render(rows)
+    if group=='execution':
+        source,names=ns.base.render(rows)
+        # Keep the negative expectation distinct while remaining within u64.
+        source=source.replace(f'row.number={MAX+1};','row.number=0;')
     else:
         source,names=ns.render_bridge(rows)
         source+='\nuse execution::to_integer_execution::retire_to_integer;\n'

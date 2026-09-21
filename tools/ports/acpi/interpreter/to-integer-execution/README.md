@@ -31,3 +31,22 @@ The runner is built from the clean Omega pin
 hashes, generated bodies/build text, selected entry points, unchanged-input
 checks and runner hash. Checked interpretation is distinct from constant/native
 execution. No firmware or hardware access occurs.
+
+The bridge checkpoint is `9ce6ca1`. The corrected generator emits identical
+bridge bodies and selections; its only body changes are three execution-control
+expectations, which now use zero instead of MAX+1. The unused alternate-root
+option was removed so snapshot hashing and the compiled root cannot diverge.
+Reconstruct the original 25-pair evidence independently of later changes:
+
+```sh
+python3 tools/ports/acpi/interpreter/to-integer-execution/history/verify_checkpoint.py --source-ref 9ce6ca1
+```
+
+All 131 archived inputs, generated bridge/build text and 50 selected outcomes
+verify. This historical check executes no Omega code.
+
+The corrected full bytecode run passed all 43 behavior/control pairs with
+unchanged production and fixture inputs. Its exact receipt verifier passed.
+Together with the source-bound 25 bridge pairs, this supplies 68 scenarios and
+68 negative controls; the two milestones retain their separate source identities.
+No production change was needed for the original invalid test literal.
