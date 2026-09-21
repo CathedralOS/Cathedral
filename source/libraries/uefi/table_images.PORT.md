@@ -47,10 +47,10 @@ SHA-256 `2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4`.
   recorded in [CONFORMANCE.md](../../contracts/uefi/raw/CONFORMANCE.md).
 - `omega:callback-field-materialization`: native table slots need
   private callback field destinations. Omega's [native realization implementation
-  note](../../../../../Omega/omega-rust/omega/compiler/native-realization/README.md)
+  note](../../../../Omega/omega-rust/omega/compiler/native-realization/README.md)
   explicitly limits the bounded route to one direct callback parameter and says
   field destinations and multiple callbacks need further work. The
-  [private-callback contract](../../../../../Omega/wiki/spec/build/private_callbacks.md)
+  [private-callback contract](../../../../Omega/wiki/spec/build/private_callbacks.md)
   requires exact named callback selection, placement and lifetime/custody. Integer
   fixture IDs do not implement that seam. Calling policy and lifetime contracts
   still require ordinary authored work; their absence alone is not a blocker.
