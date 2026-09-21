@@ -233,7 +233,7 @@ region-relative footprints, initialized chunk plans, read-shape metadata and
 scalar extraction/update arithmetic. Its 451 checked pairs, three constant pairs
 and 362 actual public synthetic-memory observations retain source-bound evidence.
 Requested GlobalLock and Preserve-read requirements remain explicit; plans convey
-no access permission. Bank/Index, complete result assembly and runtime/provider
+no access permission. Bank/Index and runtime/provider
 integration remain pending, so aggregate source-map counts are unchanged.
 
 [Implicit String-to-Integer conversion](interpreter/implicit-integer.PORT.md) adds
@@ -250,3 +250,9 @@ ObjectStore preflight with 207 checked pairs, three constant pairs, 100 actual
 public Object calls and 66 actual explicit Interpreter observations. All four
 aggregate source anchors remain pending: reference/context/target integration
 and wider BufferField conversion are not claimed.
+
+[Detached normal Field read assembly](field_values/PORT.md) recomputes geometry
+and constructs complete Integer/Buffer results from supplied numeric words. All
+301 checked pairs, three const pairs and 259 actual public Rust reads pass.
+Outputs retain unmet lock requirements and exact zero tails. Region access and
+object/evaluator integration remain pending; aggregate source counts are unchanged.

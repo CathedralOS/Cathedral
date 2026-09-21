@@ -1,0 +1,74 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Partial pure do_field_read assembly from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; copyright 2018 Isaac Woods.
+// No region access, lock acquisition, evaluator integration or object installation.
+module read;
+use access::geometry;
+use access::chunks;
+use access::model::Plan;
+use access::model::PlanResult;
+use access::model::ReadShape;
+use access::model::LockRequirement;
+use access::model::WordResult;
+use access::model::Chunk;
+use fields::field_model::DeclarationKind;
+use fields::field_model::Field;
+use integers::integers::IntegerSize;
+use integers::integers::IntegerResult;
+use integers::conversions;
+use integers::buffer_fields;
+use model::ReadResult;
+use model::ReadError;
+data Bytes [copy] {bytes:[u8;256];}
+pub machine assemble(kind:DeclarationKind,field:&Field,region_bytes:u64,size:IntegerSize,words:&[u64;257],supplied_count:u64)->ReadResult {
+ let geometry:PlanResult=geometry::plan(kind,field,region_bytes,size);
+ transition geometry {
+  PlanResult::Failure {error} -> (ReadResult::Failure {error:ReadError::Geometry {cause:error}})
+  PlanResult::Ready {plan} -> count(&plan,words,supplied_count)
+ }
+ state count(plan:&Plan,words:&[u64;257],supplied_count:u64)->ReadResult {
+  let expected:u64=plan.count;
+  transition supplied_count<=257 && supplied_count==expected {true -> fill(plan,words,supplied_count) _ -> (ReadResult::Failure {error:ReadError::CountMismatch})}
+ }
+ state fill(plan:&Plan,words:&[u64;257],count:u64)->ReadResult {
+  let mut output:Bytes=Bytes {};
+  let complete:bool=fill_chunks(plan,words,&mut output.bytes,0,count,true);
+  transition complete {true -> shape(plan,output) _ -> (ReadResult::Failure {error:ReadError::InternalChunk})}
+ }
+ state shape(plan:&Plan,output:Bytes)->ReadResult {
+  transition plan.shape {
+   ReadShape::Integer {size} -> integer(plan,&output.bytes,size)
+   ReadShape::Buffer {bytes} -> buffer(plan,output,bytes)
+  }
+ }
+ state integer(plan:&Plan,bytes:&[u8;256],size:IntegerSize)->ReadResult {
+  let value:IntegerResult=buffer_fields::field_to_integer(size,bytes,256,0,plan.bit_length);
+  transition value.error==0 {true -> (ReadResult::Integer {value:value.value,size:size,lock:plan.lock}) _ -> (ReadResult::Failure {error:ReadError::InternalChunk})}
+ }
+ state buffer(plan:&Plan,output:Bytes,length:u64)->ReadResult {
+  transition length<=256 {true -> (ReadResult::Buffer {length:length,bytes:output.bytes,lock:plan.lock}) _ -> (ReadResult::Failure {error:ReadError::InternalChunk})}
+ }
+
+}
+machine fill_chunks(plan:&Plan,words:&[u64;257],output:&mut [u8;256],index:u64,count:u64,prior:bool)
+terminates by(index,count)->Nat::BoundedDistance;
+->bool {
+ let complete:bool=fill_if(plan,words,output,index,count);
+ transition index<count {true -> fill_chunks(plan,words,output,index+1,count,prior && complete) _ -> (prior)}
+}
+machine fill_if(plan:&Plan,words:&[u64;257],output:&mut [u8;256],index:u64,count:u64)->bool {
+ transition index<count {true -> step(plan,words,output,index) _ -> (true)}
+ state step(plan:&Plan,words:&[u64;257],output:&mut [u8;256],index:u64)->bool {let copied:bool=fill_chunk(plan,words,output,index);copied}
+}
+machine fill_chunk(plan:&Plan,words:&[u64;257],output:&mut [u8;256],index:u64)->bool {
+ transition index<257 {true -> extract(plan.chunks[index],words[index],output) _ -> (false)}
+ state extract(chunk:Chunk,raw:u64,output:&mut [u8;256])->bool {
+  let extracted:WordResult=chunks::extract(chunk,raw);
+  transition extracted {WordResult::Word {value} -> encoded(chunk,value,output) _ -> (false)}
+ }
+ state encoded(chunk:Chunk,value:u64,output:&mut [u8;256])->bool {
+  let mut input:Bytes=Bytes {};let encoded:IntegerResult=conversions::integer_to_buffer(IntegerSize::EightBytes,value,&mut input.bytes);
+  let copied:u8=buffer_fields::copy_bits(&input.bytes,8,0,output,256,chunk.field_bit,chunk.bit_count);
+  encoded.error==0 && copied==0
+ }
+}

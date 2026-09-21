@@ -206,3 +206,9 @@ connects the existing byte/numeric helpers to direct ObjectStore IDs, with 207
 checked pairs, three const pairs and 166 actual public Rust observations. It
 returns detached Integer/byte results after complete validation; execution and
 target writes remain pending.
+
+[Detached normal Field read assembly](../field_values/PORT.md) adds complete
+Integer/Buffer result construction from validated numeric words, with 301 checked
+pairs, three const pairs and 259 actual public Rust read observations. It preserves
+lock requirements without granting access. Live reads, field dispatch, Bank/Index
+and object installation remain pending.

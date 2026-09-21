@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Detached read-result adaptation of rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; copyright 2018 Isaac Woods.
+module model;
+use access::model::Error;
+use access::model::LockRequirement;
+use integers::integers::IntegerSize;
+pub data ReadError [copy] {case Geometry(cause:Error);case CountMismatch;case InternalChunk;}
+// Numeric data only. An unmet lock requirement is never a held-lock receipt.
+pub data ReadResult [copy] {
+ case Failure(error:ReadError);
+ case Integer(value:u64,size:IntegerSize,lock:LockRequirement);
+ case Buffer(length:u64,bytes:[u8;256],lock:LockRequirement);
+}

@@ -1,0 +1,854 @@
+{
+  "files": {
+    "src/aml/mod.rs": {
+      "disposition": "pending",
+      "reason": "Bounded detached normal Field read assembly only; this file contains additional interpreter/runtime/object behavior.",
+      "sha256": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+      "symbols": {
+        "104:BaseInterpreter": {
+          "anchor": "pub struct BaseInterpreter<H, R>",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "110:namespace": {
+          "anchor": "pub namespace: Spinlock<Namespace>,",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "111:object_token": {
+          "anchor": "pub object_token: Spinlock<ObjectToken>,",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "1161:DEF_ELSE_OP": {
+          "anchor": "const DEF_ELSE_OP: u8 = 0xa1;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "128:NoSendInterpreter": {
+          "anchor": "pub type NoSendInterpreter<H> = BaseInterpreter<H, dyn RegionHandler>;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "131:Interpreter": {
+          "anchor": "pub type Interpreter<H> = BaseInterpreter<H, dyn RegionHandler + Send + Sync>;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "138:INTERPRETER_REVISION": {
+          "anchor": "const INTERPRETER_REVISION: u64 = 1;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "143:MAX_NAME_PATH_INDIRECTIONS": {
+          "anchor": "const MAX_NAME_PATH_INDIRECTIONS: usize = 8;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "1482:in": {
+          "anchor": "warn!(\"Wrong data field type in IndexField: {:?}\", data);",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "153:new": {
+          "anchor": "pub fn new(",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "177:new_from_platform": {
+          "anchor": "pub fn new_from_platform(platform: &AcpiPlatform<H>) -> Result<BaseInterpreter<H, R>, AcpiError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "178:load_table": {
+          "anchor": "fn load_table<H, R>(interpreter: &BaseInterpreter<H, R>, table: AmlTable) -> Result<(), AcpiError>",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "1831:parse_field_list": {
+          "anchor": "fn parse_field_list(",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "1839:RESERVED_FIELD": {
+          "anchor": "const RESERVED_FIELD: u8 = 0x00;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "1840:ACCESS_FIELD": {
+          "anchor": "const ACCESS_FIELD: u8 = 0x01;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "1841:CONNECT_FIELD": {
+          "anchor": "const CONNECT_FIELD: u8 = 0x02;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "1842:EXTENDED_ACCESS_FIELD": {
+          "anchor": "const EXTENDED_ACCESS_FIELD: u8 = 0x03;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "1896:do_binary_maths": {
+          "anchor": "fn do_binary_maths(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "1931:do_unary_maths": {
+          "anchor": "fn do_unary_maths(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "1972:do_logical_op": {
+          "anchor": "fn do_logical_op(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "19:namespace": {
+          "anchor": "pub mod namespace;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2024:do_to_buffer": {
+          "anchor": "fn do_to_buffer(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2057:do_to_integer": {
+          "anchor": "fn do_to_integer(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2068:do_to_string": {
+          "anchor": "fn do_to_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2096:do_to_dec_hex_string": {
+          "anchor": "fn do_to_dec_hex_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "20:object": {
+          "anchor": "pub mod object;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2137:do_mid": {
+          "anchor": "fn do_mid(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2171:do_concat": {
+          "anchor": "fn do_concat(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2176:resolve_as_string": {
+          "anchor": "fn resolve_as_string(obj: &Object) -> String {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "21:op_region": {
+          "anchor": "pub mod op_region;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2233:do_from_bcd": {
+          "anchor": "fn do_from_bcd(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2250:do_to_bcd": {
+          "anchor": "fn do_to_bcd(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2267:do_size_of": {
+          "anchor": "fn do_size_of(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2283:do_index": {
+          "anchor": "fn do_index(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "228:load_table": {
+          "anchor": "pub fn load_table(&self, stream: &[u8]) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "22:pci_routing": {
+          "anchor": "pub mod pci_routing;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2336:resolve_name_path": {
+          "anchor": "fn resolve_name_path(&self, object: WrappedObject) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2355:object_type": {
+          "anchor": "fn object_type(&self, object: WrappedObject) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "236:evaluate": {
+          "anchor": "pub fn evaluate(&self, path: AmlName, args: Vec<WrappedObject>) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2383:do_deref_of": {
+          "anchor": "fn do_deref_of(&self, object: WrappedObject, current_scope: &AmlName) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "23:resource": {
+          "anchor": "pub mod resource;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2406:do_store": {
+          "anchor": "fn do_store(&self, target: WrappedObject, object: WrappedObject) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2488:do_copy_object": {
+          "anchor": "fn do_copy_object(&self, target: WrappedObject, object: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2519:do_field_read": {
+          "anchor": "fn do_field_read(&self, field: &FieldUnit) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Partial: recomputed geometry, exact supplied numeric-word count, normalized bit assembly and semantic Integer/Buffer output implemented. Region lookup, native read callbacks, GlobalLock acquisition, Bank/Index and object/evaluator integration remain outside this pure slice.",
+          "targets": [
+            {
+              "anchor": "pub machine assemble(",
+              "path": "source/libraries/acpi/field_values/read.omg"
+            }
+          ]
+        },
+        "251:evaluate_if_present": {
+          "anchor": "pub fn evaluate_if_present(",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2527:Output": {
+          "anchor": "enum Output {",
+          "disposition": "pending",
+          "reason": "Adapted semantic Integer/Buffer result plus explicit Failure and unmet lock metadata; upstream allocation and WrappedObject publication are not translated here.",
+          "targets": [
+            {
+              "anchor": "pub data ReadResult [copy]",
+              "path": "source/libraries/acpi/field_values/model.omg"
+            }
+          ]
+        },
+        "2612:do_field_write": {
+          "anchor": "fn do_field_write(&self, field: &FieldUnit, value: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "269:install_region_handler": {
+          "anchor": "pub fn install_region_handler(&self, space: RegionSpace, handler: Box<R>) {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2714:do_native_region_read": {
+          "anchor": "fn do_native_region_read(&self, region: &OpRegion, offset: usize, length: usize) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2770:do_native_region_write": {
+          "anchor": "fn do_native_region_write(",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "278:initialize_namespace": {
+          "anchor": "pub fn initialize_namespace(&self) {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2835:pci_address_for_device": {
+          "anchor": "fn pci_address_for_device(&self, path: &AmlName) -> Result<PciAddress, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2862:MethodContext": {
+          "anchor": "struct MethodContext {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2873:Block": {
+          "anchor": "struct Block {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2880:stream": {
+          "anchor": "fn stream(&self) -> &[u8] {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2886:BlockKind": {
+          "anchor": "pub enum BlockKind {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2907:ResolveBehaviour": {
+          "anchor": "enum ResolveBehaviour {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2937:OpInFlight": {
+          "anchor": "struct OpInFlight {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2945:Argument": {
+          "anchor": "enum Argument {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2957:new": {
+          "anchor": "pub fn new(op: Opcode, resolve_behaviour: &'static [ResolveBehaviour]) -> OpInFlight {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2964:new_dynamic": {
+          "anchor": "pub fn new_dynamic(",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2974:new_with_dynamic": {
+          "anchor": "pub fn new_with_dynamic(",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2987:new_with": {
+          "anchor": "pub fn new_with(",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "2996:resolve_behaviour": {
+          "anchor": "fn resolve_behaviour(&self) -> ResolveBehaviour {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3008:new_from_table": {
+          "anchor": "unsafe fn new_from_table(stream: &[u8]) -> MethodContext {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3021:new_from_method": {
+          "anchor": "fn new_from_method(",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3053:contribute_arg": {
+          "anchor": "fn contribute_arg(&mut self, arg: Argument) {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3062:start": {
+          "anchor": "fn start(&mut self, op: OpInFlight) {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3073:retire_op": {
+          "anchor": "fn retire_op(&mut self, op: OpInFlight) {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3077:start_new_block": {
+          "anchor": "fn start_new_block(&mut self, kind: BlockKind, length: usize) {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3087:opcode": {
+          "anchor": "fn opcode(&mut self) -> Result<Opcode, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3227:pkglength": {
+          "anchor": "fn pkglength(&mut self) -> Result<usize, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3243:namestring": {
+          "anchor": "fn namestring(&mut self) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3255:NULL_NAME": {
+          "anchor": "const NULL_NAME: u8 = 0x00;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3256:DUAL_NAME_PREFIX": {
+          "anchor": "const DUAL_NAME_PREFIX: u8 = 0x2e;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3257:MULTI_NAME_PREFIX": {
+          "anchor": "const MULTI_NAME_PREFIX: u8 = 0x2f;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3305:next": {
+          "anchor": "fn next(&mut self) -> Result<u8, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3316:next_u16": {
+          "anchor": "fn next_u16(&mut self) -> Result<u16, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3320:next_u32": {
+          "anchor": "fn next_u32(&mut self) -> Result<u32, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3324:next_u64": {
+          "anchor": "fn next_u64(&mut self) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3337:peek": {
+          "anchor": "fn peek(&self) -> Result<u8, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3347:Opcode": {
+          "anchor": "enum Opcode {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3465:Operation": {
+          "anchor": "pub enum Operation {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3492:AmlError": {
+          "anchor": "pub enum AmlError {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "354:acquire_global_lock": {
+          "anchor": "pub fn acquire_global_lock(&self, timeout: u16) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3568:IntegerSize": {
+          "anchor": "pub enum IntegerSize {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3569:FourBytes": {
+          "anchor": "FourBytes = 4,",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3570:EightBytes": {
+          "anchor": "EightBytes = 8,",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "3574:from_revision": {
+          "anchor": "pub fn from_revision(revision: u8) -> IntegerSize {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "389:try_do_acquire_firmware_lock": {
+          "anchor": "fn try_do_acquire_firmware_lock(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "415:release_global_lock": {
+          "anchor": "pub fn release_global_lock(&self) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "438:do_release_firmware_lock": {
+          "anchor": "fn do_release_firmware_lock(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "457:do_execute_method": {
+          "anchor": "fn do_execute_method(&self, mut context: MethodContext) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "551:strip_end_tag": {
+          "anchor": "fn strip_end_tag(buf: &[u8]) -> &[u8] {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "749:produced": {
+          "anchor": "\"Invalid argument type produced for package element\".to_string(),",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "781:produced": {
+          "anchor": "\"Invalid argument type produced for package element\".to_string(),",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "816:DEF_ELSE_OP": {
+          "anchor": "const DEF_ELSE_OP: u8 = 0xa1;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        }
+      }
+    },
+    "src/aml/object.rs": {
+      "disposition": "pending",
+      "reason": "Bounded detached normal Field read assembly only; this file contains additional interpreter/runtime/object behavior.",
+      "sha256": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+      "symbols": {
+        "102:create_interpreter_token": {
+          "anchor": "pub(super) unsafe fn create_interpreter_token() -> ObjectToken {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "108:WrappedObject": {
+          "anchor": "pub struct WrappedObject(Arc<UnsafeCell<Object>>);",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "111:new": {
+          "anchor": "pub fn new(object: Object) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "11:NativeMethod": {
+          "anchor": "type NativeMethod = dyn Fn(&[WrappedObject]) -> Result<WrappedObject, AmlError>;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "124:gain_mut": {
+          "anchor": "pub unsafe fn gain_mut<'r, 'a, 't>(&'a self, _token: &'t ObjectToken) -> &'r mut Object",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "132:unwrap_reference": {
+          "anchor": "pub fn unwrap_reference(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "145:unwrap_transparent_reference": {
+          "anchor": "pub fn unwrap_transparent_reference(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "14:Object": {
+          "anchor": "pub enum Object {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "160:Target": {
+          "anchor": "type Target = Object;",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "162:deref": {
+          "anchor": "fn deref(&self) -> &Self::Target {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "174:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "180:wrap": {
+          "anchor": "pub fn wrap(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "187:as_integer": {
+          "anchor": "pub fn as_integer(&self) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "195:as_string": {
+          "anchor": "pub fn as_string(&self) -> Result<Cow<'_, str>, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "203:as_buffer": {
+          "anchor": "pub fn as_buffer(&self) -> Result<&[u8], AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "214:to_integer": {
+          "anchor": "pub fn to_integer(&self, integer_size: IntegerSize) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "252:to_buffer": {
+          "anchor": "pub fn to_buffer(&self, integer_size: IntegerSize) -> Result<Vec<u8>, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "264:read_buffer_field": {
+          "anchor": "pub fn read_buffer_field(&self, integer_size: IntegerSize) -> Result<Object, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "291:write_buffer_field": {
+          "anchor": "pub fn write_buffer_field(&mut self, value: &[u8], token: &ObjectToken) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "317:replace_with_implicit_casting": {
+          "anchor": "pub fn replace_with_implicit_casting(&mut self, new: Object) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "346:typ": {
+          "anchor": "pub fn typ(&self) -> ObjectType {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "377:aml_cmp": {
+          "anchor": "pub fn aml_cmp(&self, other: &Object) -> Result<Ordering, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "38:native_method": {
+          "anchor": "pub fn native_method<F>(num_args: u8, f: F) -> Object",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "394:FieldUnit": {
+          "anchor": "pub struct FieldUnit {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "395:kind": {
+          "anchor": "pub kind: FieldUnitKind,",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "396:flags": {
+          "anchor": "pub flags: FieldFlags,",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "397:bit_index": {
+          "anchor": "pub bit_index: usize,",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "398:bit_length": {
+          "anchor": "pub bit_length: usize,",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "402:FieldUnitKind": {
+          "anchor": "pub enum FieldUnitKind {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "409:FieldFlags": {
+          "anchor": "pub struct FieldFlags(pub u8);",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "412:FieldAccessType": {
+          "anchor": "pub enum FieldAccessType {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "422:FieldUpdateRule": {
+          "anchor": "pub enum FieldUpdateRule {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "429:access_type": {
+          "anchor": "pub fn access_type(&self) -> Result<FieldAccessType, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "441:access_type_bytes": {
+          "anchor": "pub fn access_type_bytes(&self) -> Result<usize, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "455:lock_rule": {
+          "anchor": "pub fn lock_rule(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "459:update_rule": {
+          "anchor": "pub fn update_rule(&self) -> FieldUpdateRule {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "470:MethodFlags": {
+          "anchor": "pub struct MethodFlags(pub u8);",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "473:arg_count": {
+          "anchor": "pub fn arg_count(&self) -> usize {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "477:serialize": {
+          "anchor": "pub fn serialize(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "481:sync_level": {
+          "anchor": "pub fn sync_level(&self) -> u8 {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "487:ReferenceKind": {
+          "anchor": "pub enum ReferenceKind {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "497:ObjectType": {
+          "anchor": "pub enum ObjectType {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "49:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "519:DeviceStatus": {
+          "anchor": "pub struct DeviceStatus(pub u64);",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "522:present": {
+          "anchor": "pub fn present(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "526:enabled": {
+          "anchor": "pub fn enabled(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "530:show_in_ui": {
+          "anchor": "pub fn show_in_ui(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "534:functioning": {
+          "anchor": "pub fn functioning(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "540:battery_present": {
+          "anchor": "pub fn battery_present(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "548:copy_bits": {
+          "anchor": "pub(crate) fn copy_bits(",
+          "disposition": "pending",
+          "reason": "Reuses existing canonical interpreter/buffer_fields::copy_bits to assemble validated detached words. This slice does not replace or claim the whole upstream helper/evaluator.",
+          "targets": [
+            {
+              "anchor": "buffer_fields::copy_bits(",
+              "path": "source/libraries/acpi/field_values/read.omg"
+            },
+            {
+              "anchor": "pub machine copy_bits(",
+              "path": "source/libraries/acpi/interpreter/buffer_fields.omg"
+            }
+          ]
+        },
+        "588:align_down": {
+          "anchor": "pub(crate) fn align_down(value: usize, align: usize) -> usize {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "608:tests": {
+          "anchor": "mod tests {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "612:test_copy_bits": {
+          "anchor": "fn test_copy_bits() {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "621:buffer_to_integer": {
+          "anchor": "fn buffer_to_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "626:buffer_field_to_integer": {
+          "anchor": "fn buffer_field_to_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "627:BUFFER": {
+          "anchor": "const BUFFER: [u8; 5] = [0xffu8; 5];",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "635:buffer_field_to_4_byte_integer": {
+          "anchor": "fn buffer_field_to_4_byte_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "637:BUFFER": {
+          "anchor": "const BUFFER: [u8; 5] = [0x0f, 0x00, 0x00, 0x00, 0xf0];",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "649:buffer_field_to_8_byte_integer": {
+          "anchor": "fn buffer_field_to_8_byte_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "650:BUFFER": {
+          "anchor": "const BUFFER: [u8; 6] = [0x0f, 0x00, 0x00, 0x00, 0xf0, 0xff];",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        },
+        "95:ObjectToken": {
+          "anchor": "pub struct ObjectToken {",
+          "disposition": "pending",
+          "reason": "Outside this detached read assembly slice; no whole interpreter/object completion claim."
+        }
+      }
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "partial_implementation": {
+    "entry": "source/libraries/acpi/field_values/read.omg assemble",
+    "primary": [
+      "https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#field-declare-field-objects",
+      "https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#data-type-conversion-rules"
+    ],
+    "reuse": [
+      "field_access geometry/chunks and canonical Error/LockRequirement",
+      "aml/fields Field, DeclarationKind and existing access metadata",
+      "interpreter IntegerSize, integer_to_buffer, copy_bits and field_to_integer"
+    ],
+    "source": "src/aml/mod.rs:2519 do_field_read",
+    "status": "partial; whole-method anchors intentionally remain pending"
+  },
+  "slice": "normal-linear-field-read-assembly",
+  "upstream": {
+    "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+    "roots": [
+      "src/aml/mod.rs",
+      "src/aml/object.rs"
+    ],
+    "url": "https://github.com/rust-osdev/acpi"
+  }
+}

@@ -544,8 +544,8 @@ syntax/resource-limit milestones.
 [Normal Field geometry](source/libraries/acpi/field_access/PORT.md) adds aligned
 access footprints, bounded chunk plans and scalar extract/merge arithmetic, with
 451 checked pairs, three constant pairs and 362 public synthetic-memory
-observations. Lock and Preserve-read requirements are inert facts. Full result
-assembly, Bank/Index protocols and evaluator/provider integration remain pending.
+observations. Lock and Preserve-read requirements are inert facts. Bank/Index
+protocols and evaluator/provider integration remain pending.
 [Resource descriptor parsing](source/libraries/acpi/resources/PORT.md) adds 210
 checked-interpreter pairs, four const pairs and 187 actual public Rust observations,
 including 64 normalized supported-result agreements.
@@ -583,6 +583,12 @@ adds direct ObjectStore conversion with semantic results, complete byte validati
 and named String policies. All 207 checked pairs and three const pairs pass,
 with 100 public Object calls and 66 explicit Interpreter observations. Generic
 reference/context/target integration and wider BufferFields remain pending.
+
+[Detached normal Field read assembly](source/libraries/acpi/field_values/PORT.md)
+constructs complete Integer/Buffer data from exactly counted numeric words after
+recomputing geometry. All 301 checked pairs, three const pairs and 259 public Rust
+read observations pass, including the explicit pinned Buffer allocation correction.
+Lock/provider authority, Bank/Index and evaluator integration remain pending.
 
 ## Phase 5 — only after the corpus above is healthy
 
