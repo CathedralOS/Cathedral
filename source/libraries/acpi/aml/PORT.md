@@ -109,3 +109,10 @@ primary implicit conversion from the left operand's type, then compare normalize
 Integers or complete String/Buffer bytes. All 278 checked pairs and three constant
 pairs pass, including unsigned ordering and full storage validation. Reference
 and field evaluation, logical truth operators and opcode retirement remain open.
+
+[Direct basic-data Concatenate](object-concat.PORT.md) composes all Integer/String/Buffer
+pairings with primary right-hand conversion, little-endian integer encoding and
+complete admission before combined capacity checks. All 314 checked pairs and
+three constant pairs pass. Other-object descriptions, reference/field policies,
+object installation and opcode retirement remain pending; aggregate counts are
+unchanged.

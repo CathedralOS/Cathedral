@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Primary basic-data Concatenate policy over licensed rust-osdev/acpi helpers.
+// Direct Integer/String/Buffer IDs only; other object type-name formatting and
+// reference/field evaluation are separate caller policies.
+module object_concat;
+use model::ObjectStore;
+use model::Value;
+use implicit_conversions::convert;
+use implicit_conversions::ConversionTarget;
+use implicit_conversions::ImplicitResult;
+use object_conversions::ConversionFailure;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::byte_concat;
+pub data Concatenated [copy] {
+ case Failure(reason:ConversionFailure);
+ case Buffer(length:u64,bytes:[u8;256]);
+ case String(length:u64,bytes:[u8;256]);
+}
+pub machine concatenate(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize)->Concatenated {
+ let count:u64=store.space.object_count;
+ transition count<=64 && left<count && left<64 {true -> kind(input,length,unit,store,left,right,size,store.space.objects[left].value) _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})}
+ state kind(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize,value:Value)->Concatenated {
+  transition value {
+   Value::Integer {number} -> selected(input,length,unit,store,left,right,size,ConversionTarget::Integer)
+   Value::Buffer {buffer_storage} -> selected(input,length,unit,store,left,right,size,ConversionTarget::Buffer)
+   Value::String {string_storage} -> selected(input,length,unit,store,left,right,size,ConversionTarget::String)
+   _ -> (Concatenated::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state selected(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize,target:ConversionTarget)->Concatenated {
+  let a:ImplicitResult=convert(input,length,unit,store,left,size,target);
+  transition a {ImplicitResult::Failure {reason} -> (Concatenated::Failure {reason:reason}) _ -> other(input,length,unit,store,right,size,target,a)}
+ }
+ state other(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,right:u64,size:IntegerSize,target:ConversionTarget,a:ImplicitResult)->Concatenated {
+  let b:ImplicitResult=convert(input,length,unit,store,right,size,target);
+  transition b {ImplicitResult::Failure {reason} -> (Concatenated::Failure {reason:reason}) _ -> append(a,b,size)}
+ }
+ state append(a:ImplicitResult,b:ImplicitResult,size:IntegerSize)->Concatenated {let result:Concatenated=oct_append(a,b,size);result}
+}
+machine oct_append(a:ImplicitResult,b:ImplicitResult,size:IntegerSize)->Concatenated {
+ transition a {
+  ImplicitResult::Integer {number} -> integer(number,b,size)
+  ImplicitResult::Buffer {length,bytes} -> buffer(&bytes,length,b)
+  ImplicitResult::String {length,bytes} -> string(&bytes,length,b)
+  _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})
+ }
+ state integer(a:u64,b:ImplicitResult,size:IntegerSize)->Concatenated {
+  transition b {ImplicitResult::Integer {number} -> numbers(a,number,size) _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state numbers(a:u64,b:u64,size:IntegerSize)->Concatenated {
+  let mut output:[u8;256];let copied:IntegerResult=byte_concat::concat_integers(size,a,b,&mut output,256);
+  let result:Concatenated=oct_result(copied,output,false);result
+ }
+ state buffer(a:&[u8;256],length:u64,b:ImplicitResult)->Concatenated {
+  transition b {ImplicitResult::Buffer {length as right_length,bytes} -> buffers(a,length,&bytes,right_length) _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state buffers(a:&[u8;256],a_length:u64,b:&[u8;256],b_length:u64)->Concatenated {
+  let mut output:[u8;256];let copied:IntegerResult=byte_concat::concat_buffers(a,a_length,b,b_length,&mut output,256);
+  let result:Concatenated=oct_result(copied,output,false);result
+ }
+ state string(a:&[u8;256],length:u64,b:ImplicitResult)->Concatenated {
+  transition b {ImplicitResult::String {length as right_length,bytes} -> strings(a,length,&bytes,right_length) _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state strings(a:&[u8;256],a_length:u64,b:&[u8;256],b_length:u64)->Concatenated {
+  let mut output:[u8;256];let copied:IntegerResult=byte_concat::concat_strings(a,a_length,b,b_length,&mut output,256);
+  let result:Concatenated=oct_result(copied,output,true);result
+ }
+}
+machine oct_result(copied:IntegerResult,bytes:[u8;256],string:bool)->Concatenated {
+ transition {copied.error==0 -> success(copied.value,bytes,string) copied.error==4 -> (Concatenated::Failure {reason:ConversionFailure::Capacity}) copied.error==7 -> (Concatenated::Failure {reason:ConversionFailure::Encoding}) _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})}
+ state success(length:u64,bytes:[u8;256],string:bool)->Concatenated {
+  transition string {true -> (Concatenated::String {length:length,bytes:bytes}) _ -> (Concatenated::Buffer {length:length,bytes:bytes})}
+ }
+}

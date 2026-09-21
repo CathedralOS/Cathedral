@@ -624,6 +624,13 @@ Empty-source and terminator choices are documented primary-profile interpretatio
 Repeated execution, provider/lock access and Store integration remain pending;
 aggregate source counts are unchanged.
 
+[Direct basic-data Concatenate](source/libraries/acpi/aml/object-concat.PORT.md) composes all Integer/String/Buffer
+pairings with primary right-hand conversion, little-endian integer encoding and
+complete admission before combined capacity checks. All 314 checked pairs and
+three constant pairs pass. Other-object descriptions, reference/field policies,
+object installation and opcode retirement remain pending; aggregate counts are
+unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

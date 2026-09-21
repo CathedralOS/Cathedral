@@ -854,7 +854,14 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine concatenate(",
+              "path": "source/libraries/acpi/aml/object_concat.omg"
+            }
+          ],
+          "note": "Basic Integer/String/Buffer concatenation after primary right-hand conversion. Other-type name formatting, reference/context policy, target coercion, object installation and opcode execution remain pending."
         },
         "2176:resolve_as_string": {
           "anchor": "fn resolve_as_string(obj: &Object) -> String {",
@@ -869,7 +876,14 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine concatenate(",
+              "path": "source/libraries/acpi/aml/object_concat.omg"
+            }
+          ],
+          "note": "Basic Integer/String/Buffer concatenation after primary right-hand conversion. Other-type name formatting, reference/context policy, target coercion, object installation and opcode execution remain pending."
         },
         "21:op_region": {
           "anchor": "pub mod op_region;",
