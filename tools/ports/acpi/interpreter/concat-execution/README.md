@@ -7,10 +7,10 @@ supplies expectations; no alternate Rust implementation is used.
 
 ```sh
 python3 tools/ports/acpi/interpreter/concat-execution/check.py \
-  --match inline_inline_64,target_named_integer_64,target_field_64,target_field_disabled_64,last_slot_local_rollback_64,self_string_64,aml_inline_inline_64,aml_self_64,aml_nested_64 \
-  --record /tmp/cathedral-concat-execution-smoke9.json
+  --match inline_inline_64,target_named_integer_64,target_field_64,target_field_disabled_64,last_slot_local_rollback_64,self_string_64,aml_inline_inline_64,aml_self_64,aml_nested_64,malformed_right_before_fit_64,cycle_64 \
+  --record /tmp/cathedral-concat-execution-smoke11.json
 python3 tools/ports/acpi/interpreter/concat-execution/check.py \
-  --verify /tmp/cathedral-concat-execution-smoke9.json
+  --verify /tmp/cathedral-concat-execution-smoke11.json
 ```
 
 Omit `--match` for the complete corpus. The checker binds all ACPI Omega inputs,

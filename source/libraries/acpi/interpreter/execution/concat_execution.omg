@@ -17,7 +17,7 @@ use aml::object_concat::Concatenated;
 use aml::inline_concat;
 use execution_model::ExecutionOutcome;
 use execution_model::Operand;
-use execution_model::ValueResult;
+use execution_model::OperandResult;
 use execution_model::Frame;
 use execution_model::Target;
 use execution_model::Binding;
@@ -33,10 +33,10 @@ use integer_helpers::integers::IntegerSize;
 
 data ConcatStage [copy] {store:ObjectStore;frame:Frame;}
 pub machine retire_concat(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,left:Operand,right:Operand,target:Target)->ExecutionOutcome {
- let a:ValueResult=resolve(store,frame.size,left);
+ let a:OperandResult=resolve(store,frame.size,left);
  transition a.outcome==ExecutionOutcome::Success {true -> right(input,store,frame,a.operand,right,target) _ -> (a.outcome)}
  state right(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,left:Operand,right:Operand,target:Target)->ExecutionOutcome {
-  let b:ValueResult=resolve(store,frame.size,right);
+  let b:OperandResult=resolve(store,frame.size,right);
   transition b.outcome==ExecutionOutcome::Success {true -> prepare(input,store,frame,left,b.operand,target) _ -> (b.outcome)}
  }
  state prepare(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,left:Operand,right:Operand,target:Target)->ExecutionOutcome {
@@ -61,18 +61,18 @@ pub machine retire_concat(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Fra
  }
  state publish(store:&mut ObjectStore,frame:&mut Frame,staged:ConcatStage)->ExecutionOutcome {store=staged.store;frame=staged.frame;ExecutionOutcome::Success}
 }
-machine resolve(store:&ObjectStore,size:IntegerSize,operand:Operand)->ValueResult {
+machine resolve(store:&ObjectStore,size:IntegerSize,operand:Operand)->OperandResult {
  transition operand {
-  Operand::Uninitialized -> (ValueResult {outcome:ExecutionOutcome::Uninitialized})
+  Operand::Uninitialized -> (OperandResult {outcome:ExecutionOutcome::Uninitialized})
   Operand::Integer {number} -> normalized(store,size,operand)
   Operand::Object {object_id} -> object(store,size,object_id)
  }
- state object(store:&ObjectStore,size:IntegerSize,id:u64)->ValueResult {
+ state object(store:&ObjectStore,size:IntegerSize,id:u64)->OperandResult {
   let found:ReferenceState=unwrap_transparent(&store.space,id,64);
   transition found.outcome==Outcome::Success {true -> normalized(store,size,Operand::Object {object_id:found.object}) _ -> failed(found.outcome)}
  }
- state normalized(store:&ObjectStore,size:IntegerSize,operand:Operand)->ValueResult {let value:Operand=normalized_operand(store,size,operand);ValueResult {operand:value}}
- state failed(outcome:Outcome)->ValueResult {let error:ExecutionOutcome=object_outcome(outcome);ValueResult {outcome:error}}
+ state normalized(store:&ObjectStore,size:IntegerSize,operand:Operand)->OperandResult {let value:Operand=normalized_operand(store,size,operand);OperandResult {operand:value}}
+ state failed(outcome:Outcome)->OperandResult {let error:ExecutionOutcome=object_outcome(outcome);OperandResult {outcome:error}}
 }
 machine concatenate(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,left:Operand,right:Operand)->Concatenated {
  transition left {

@@ -3,7 +3,7 @@
 Status: **transcribed**. Opcode `0x73` now has two value operands, one target,
 and an isolated retirement implementation. The authored 110 behavior/control
 pairs comprise 86 complete-state retirement cases and 24 actual AML cases.
-Checked validation has not yet completed. ACPI-005 and complete upstream anchors
+An eleven-pair focused checked validation is running; it has not yet completed. ACPI-005 and complete upstream anchors
 remain pending; this is not a passing integration claim.
 
 ## Basis and scope
@@ -94,3 +94,10 @@ fail the assertion body. Their presence is not evidence of successful execution.
 The immutable Omega runner is used without compiler changes. Public Rust
 Concatenate observations in prior components remain historical; no new public,
 constant-evaluation, native or hardware result is claimed here.
+
+The initial nine-pair run at `5b32747` was stopped before any result because
+review found a record-type mismatch: the new resolver needs `OperandResult`,
+not the existing Value metadata carrier. Review also corrected the malformed
+String expectation to Encoding and the transparent-cycle expectation to the
+existing adapter's InvalidState mapping. The production error mapping was not
+changed to satisfy tests. The updated focused selection includes both errors.

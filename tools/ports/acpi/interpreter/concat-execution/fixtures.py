@@ -55,7 +55,7 @@ def cases():
         add('empty_buffer',('buffer',b''),('inline',0))
         add('full_string',('string',b'a'*128),('string',b'b'*128))
         add('overflow',('string',b'a'*256),('string',b'b'),error='Capacity')
-        add('malformed_right_before_fit',('string',b'a'*256),('string',b'b'),setup='store.bytes.blocks[1].bytes[0]=0;',error='BadEncoding')
+        add('malformed_right_before_fit',('string',b'a'*256),('string',b'b'),setup='store.bytes.blocks[1].bytes[0]=0;',error='Encoding')
         for target in ['local','local_cell','argument','arg_ref','named_integer','named_string','named_buffer','field','arg_field','field_disabled','debug','stale_named','stale_cell','stale_ref']:
             add('target_'+target,target=target,error={'field_disabled':'UnresolvedRegion','debug':'UnresolvedService','stale_named':'MissingObject','stale_cell':'MissingObject','stale_ref':'MissingObject'}.get(target))
         add('self_string',('string',b'A'),('string',b'B'),target='self')
@@ -69,7 +69,7 @@ def cases():
         add('missing_source',left='Operand::Object {object_id:64}',error='InvalidState')
         add('transparent',setup='store.space.objects[3].value=Value::Reference {kind:ReferenceKind::Named,object_id:0};',left='Operand::Object {object_id:3}')
         add('explicit_reference',setup='store.space.objects[3].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};',left='Operand::Object {object_id:3}',error='UnsupportedValue')
-        add('cycle',setup='store.space.objects[3].value=Value::Reference {kind:ReferenceKind::Named,object_id:3};',left='Operand::Object {object_id:3}',error='ReferenceCycle')
+        add('cycle',setup='store.space.objects[3].value=Value::Reference {kind:ReferenceKind::Named,object_id:3};',left='Operand::Object {object_id:3}',error='InvalidState')
     for size in (32,64):
         basic=[('inline',0x123456789abcdef0),('string',b'F0'),('buffer',b'\x12\x34')]
         for a in basic:
