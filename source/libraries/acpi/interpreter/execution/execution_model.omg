@@ -34,6 +34,9 @@ pub data Operation [copy] {
     body_end: u64; predicate: u64; parent_end: u64; method_id: u64; method_body: Span; method_flags: u8;
 }
 pub data NameCache [copy] { at: u64; next: u64; object_id: u64; entry_index: u64; }
+// An ordinary decoded-value continuation, never a provider capability.
+// Legacy frames leave reads disabled and continue to reject unresolved fields.
+pub data DeferredRead [copy] {case None;case Field(object:u64,at:u64,next:u64);}
 pub data Frame [copy] {
     scope: Path; body: Span; source_length:u64; size: IntegerSize; pc: u64; end: u64;
     arguments: [Binding; 7]; locals: [Binding; 8];
@@ -41,5 +44,6 @@ pub data Frame [copy] {
     operation_count: u64; operations: [Operation; 16];
     cache_count: u64; lookup_cache: [NameCache; 16];
     returned: bool; has_return_value:bool; return_value: Operand;
+    field_reads:bool; deferred_read:DeferredRead;
 }
 pub data FrameResult [copy] { outcome: ExecutionOutcome; frame: Frame; }

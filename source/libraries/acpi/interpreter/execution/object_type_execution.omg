@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-// ObjectType operand-role integration over canonical object_queries::object_type.
+// ObjectType/SizeOf operand-role integration over canonical object query helpers.
 // ACPI 6.6 19.6.97 and 20.2.5.4; pinned acpi mod.rs ObjectType dispatch.
 module object_type_execution;
 use aml::model::ObjectStore;
@@ -19,6 +19,8 @@ use aml::names::parent;
 use aml::namespace::locate;
 use aml::object_queries::QueryResult;
 use aml::object_queries::object_type;
+use aml::object_queries::size_of;
+use generic_values::bytes_outcome;
 use execution_model::ExecutionOutcome;
 use execution_model::Binding;
 use execution_model::Frame;
@@ -28,69 +30,87 @@ pub data ObjectTypeResult [copy] {outcome:ExecutionOutcome;number:u64;next:u64;}
 // Metadata inspection is read-only. Cursor and operand publication belong to
 // decode_execution and occur only after this complete descriptor succeeds.
 pub machine inspect_object_type(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64)->ObjectTypeResult {
+ let result:ObjectTypeResult=inspect_metadata(input,store,frame,at,false);result
+}
+pub machine inspect_size_of(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64)->ObjectTypeResult {
+ let result:ObjectTypeResult=inspect_metadata(input,store,frame,at,true);result
+}
+// Both operations admit the same bounded metadata syntax. SizeOf never obtains
+// an ordinary TermArg value to discover the size of a Method or FieldUnit.
+machine inspect_metadata(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64,sizing:bool)->ObjectTypeResult {
  let token:Read=opcode(input,frame.end,at);
  let outcome:ExecutionOutcome=decode_outcome(token.outcome);
- transition outcome==ExecutionOutcome::Success {true -> token(input,store,frame,at,token) _ -> (ObjectTypeResult {outcome:outcome})}
- state token(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64,token:Read)->ObjectTypeResult {
+ transition outcome==ExecutionOutcome::Success {true -> token(input,store,frame,at,token,sizing) _ -> (ObjectTypeResult {outcome:outcome})}
+ state token(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64,token:Read,sizing:bool)->ObjectTypeResult {
   let code:u64=token.value;
   let named:bool=lead_char(code) || code==0x5c || code==0x5e || code==0x2e || code==0x2f;
   transition {
-   code>=0x60 && code<=0x67 -> local(store,frame,code-0x60,token.next)
-   code>=0x68 && code<=0x6e -> argument(store,frame,code-0x68,token.next)
-   code==0x5b31 -> (ObjectTypeResult {number:16,next:token.next})
-   named -> named(input,store,frame,at)
+   code>=0x60 && code<=0x67 -> local(input,store,frame,code-0x60,token.next,sizing)
+   code>=0x68 && code<=0x6e -> argument(input,store,frame,code-0x68,token.next,sizing)
+   code==0x5b31 -> scalar(16,token.next,sizing)
+   named -> named(input,store,frame,at,sizing)
    code==0 -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidTarget})
    _ -> (ObjectTypeResult {outcome:ExecutionOutcome::UnsupportedOpcode})
   }
  }
- state local(store:&ObjectStore,frame:&Frame,index:u64,next:u64)->ObjectTypeResult {
-  transition index<8 {true -> binding(store,frame.locals[index],next) _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidTarget})}
+ state local(input:&[u8;1024],store:&ObjectStore,frame:&Frame,index:u64,next:u64,sizing:bool)->ObjectTypeResult {
+  transition index<8 {true -> binding(input,store,frame,frame.locals[index],next,sizing) _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidTarget})}
  }
- state argument(store:&ObjectStore,frame:&Frame,index:u64,next:u64)->ObjectTypeResult {
-  transition index<7 {true -> binding(store,frame.arguments[index],next) _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidTarget})}
+ state argument(input:&[u8;1024],store:&ObjectStore,frame:&Frame,index:u64,next:u64,sizing:bool)->ObjectTypeResult {
+  transition index<7 {true -> binding(input,store,frame,frame.arguments[index],next,sizing) _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidTarget})}
  }
- state binding(store:&ObjectStore,value:Binding,next:u64)->ObjectTypeResult {let result:ObjectTypeResult=ote_binding(store,value,next);result}
- state named(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64)->ObjectTypeResult {
+ state binding(input:&[u8;1024],store:&ObjectStore,frame:&Frame,value:Binding,next:u64,sizing:bool)->ObjectTypeResult {let result:ObjectTypeResult=ote_binding(input,store,frame,value,next,sizing);result}
+ state named(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64,sizing:bool)->ObjectTypeResult {
   let name:PathResult=namestring(input,frame.end,at);
   let outcome:ExecutionOutcome=decode_outcome(name.outcome);
-  transition outcome==ExecutionOutcome::Success {true -> lookup(store,frame.scope,name) _ -> (ObjectTypeResult {outcome:outcome})}
+  transition outcome==ExecutionOutcome::Success {true -> lookup(input,store,frame,name,sizing) _ -> (ObjectTypeResult {outcome:outcome})}
  }
- state lookup(store:&ObjectStore,scope:Path,name:PathResult)->ObjectTypeResult {
-  let found:Lookup=ote_lookup(&store.space,name.value,scope);
+ state lookup(input:&[u8;1024],store:&ObjectStore,frame:&Frame,name:PathResult,sizing:bool)->ObjectTypeResult {
+  let found:Lookup=ote_lookup(&store.space,name.value,frame.scope);
   let outcome:ExecutionOutcome=ote_resolution_outcome(found.outcome);
-  transition outcome==ExecutionOutcome::Success {true -> selected_entry(store,found.index,name.next) _ -> (ObjectTypeResult {outcome:outcome})}
+  transition outcome==ExecutionOutcome::Success {true -> selected_entry(input,store,frame,found.index,name.next,sizing) _ -> (ObjectTypeResult {outcome:outcome})}
  }
- state selected_entry(store:&ObjectStore,index:u64,next:u64)->ObjectTypeResult {
+ state selected_entry(input:&[u8;1024],store:&ObjectStore,frame:&Frame,index:u64,next:u64,sizing:bool)->ObjectTypeResult {
   let count:u64=store.space.count;
-  transition count<=32 && index<count && index<32 {true -> selected(store,store.space.entries[index],next) _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidState})}
+  transition count<=32 && index<count && index<32 {true -> selected(input,store,frame,store.space.entries[index],next,sizing) _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidState})}
  }
- state selected(store:&ObjectStore,entry:Entry,next:u64)->ObjectTypeResult {
-  transition {entry.has_object -> object(store,entry.object,next)
-   entry.has_level && entry.level==LevelKind::Scope -> (ObjectTypeResult {number:0,next:next})
+ state selected(input:&[u8;1024],store:&ObjectStore,frame:&Frame,entry:Entry,next:u64,sizing:bool)->ObjectTypeResult {
+  transition {entry.has_object -> object(input,store,frame,entry.object,next,sizing)
+   entry.has_level && entry.level==LevelKind::Scope -> scalar(0,next,sizing)
    _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidState})}
  }
- state object(store:&ObjectStore,id:u64,next:u64)->ObjectTypeResult {let result:ObjectTypeResult=ote_object(store,id,next);result}
+ state scalar(number:u64,next:u64,sizing:bool)->ObjectTypeResult {let result:ObjectTypeResult=ote_scalar(number,next,sizing);result}
+ state object(input:&[u8;1024],store:&ObjectStore,frame:&Frame,id:u64,next:u64,sizing:bool)->ObjectTypeResult {let result:ObjectTypeResult=ote_object(input,store,frame,id,next,sizing);result}
 }
-// These are execution carriers with no canonical object slot. Object-backed
-// values, including all reference descriptors, use the one canonical mapping.
-machine ote_binding(store:&ObjectStore,value:Binding,next:u64)->ObjectTypeResult {
+// Execution carriers have no canonical object slot. SizeOf rejects these kinds;
+// object-backed values use the canonical query without an extra unwrap budget.
+machine ote_binding(input:&[u8;1024],store:&ObjectStore,frame:&Frame,value:Binding,next:u64,sizing:bool)->ObjectTypeResult {
  transition value {
-  Binding::Uninitialized -> (ObjectTypeResult {number:0,next:next})
-  Binding::Integer {number} -> (ObjectTypeResult {number:1,next:next})
-  Binding::Shared {shared_id} -> object(store,shared_id,next)
-  Binding::Cell {cell_id} -> object(store,cell_id,next)
+  Binding::Uninitialized -> scalar(0,next,sizing)
+  Binding::Integer {number} -> scalar(1,next,sizing)
+  Binding::Shared {shared_id} -> object(input,store,frame,shared_id,next,sizing)
+  Binding::Cell {cell_id} -> object(input,store,frame,cell_id,next,sizing)
  }
- state object(store:&ObjectStore,id:u64,next:u64)->ObjectTypeResult {let result:ObjectTypeResult=ote_object(store,id,next);result}
+ state scalar(number:u64,next:u64,sizing:bool)->ObjectTypeResult {let result:ObjectTypeResult=ote_scalar(number,next,sizing);result}
+ state object(input:&[u8;1024],store:&ObjectStore,frame:&Frame,id:u64,next:u64,sizing:bool)->ObjectTypeResult {let result:ObjectTypeResult=ote_object(input,store,frame,id,next,sizing);result}
 }
-machine ote_object(store:&ObjectStore,id:u64,next:u64)->ObjectTypeResult {
- let found:QueryResult=object_type(&store.space,id,64);
+machine ote_scalar(number:u64,next:u64,sizing:bool)->ObjectTypeResult {
+ transition sizing {true -> (ObjectTypeResult {outcome:ExecutionOutcome::UnsupportedValue}) _ -> (ObjectTypeResult {number:number,next:next})}
+}
+machine ote_object(input:&[u8;1024],store:&ObjectStore,frame:&Frame,id:u64,next:u64,sizing:bool)->ObjectTypeResult {
+ transition sizing {true -> size(input,store,frame,id,next) _ -> type(store,id,next)}
+ state type(store:&ObjectStore,id:u64,next:u64)->ObjectTypeResult {let found:QueryResult=object_type(&store.space,id,64);let result:ObjectTypeResult=ote_result(found,next);result}
+ state size(input:&[u8;1024],store:&ObjectStore,frame:&Frame,id:u64,next:u64)->ObjectTypeResult {let found:QueryResult=size_of(input,frame.source_length,frame.body.unit,store,id,64);let result:ObjectTypeResult=ote_result(found,next);result}
+}
+machine ote_result(found:QueryResult,next:u64)->ObjectTypeResult {
  transition found {
   QueryResult::Value {object,number} -> (ObjectTypeResult {number:number,next:next})
   QueryResult::ResolutionFailure {resolution_error} -> failure(resolution_error)
   QueryResult::UnsupportedValue -> (ObjectTypeResult {outcome:ExecutionOutcome::UnsupportedValue})
-  QueryResult::InvalidStorage {storage_error} -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidState})
+  QueryResult::InvalidStorage {storage_error} -> storage(storage_error)
  }
  state failure(reason:Outcome)->ObjectTypeResult {let outcome:ExecutionOutcome=ote_resolution_outcome(reason);ObjectTypeResult {outcome:outcome}}
+ state storage(reason:aml::byte_storage::ByteOutcome)->ObjectTypeResult {let outcome:ExecutionOutcome=bytes_outcome(reason);ObjectTypeResult {outcome:outcome}}
 }
 // Running method scopes need not be namespace levels. Search each canonical
 // resolved path with locate so a nearer typeless scope shadows outer objects.

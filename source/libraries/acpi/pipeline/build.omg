@@ -1,6 +1,8 @@
 machine build(builder: &mut Build) {
     builder.package("cathedral-acpi-pipeline");
     builder.depend_as("aml", Source::Path { location: "../aml" });
+    builder.depend_as("field_access", Source::Path { location: "../field_access" });
+    builder.depend_as("field_values", Source::Path { location: "../field_values" });
     builder.depend_as("execution", Source::Path { location: "../interpreter/execution" });
     builder.depend_as("integer_helpers", Source::Path { location: "../interpreter" });
 }

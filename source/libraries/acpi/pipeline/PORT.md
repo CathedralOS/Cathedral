@@ -1,5 +1,12 @@
 # AML declaration capture and single-source execution
 
+This draft branch also retains a **transcribed, unverified** Field-read,
+Mid and SizeOf composition. Its 16-pair run stopped before checked execution
+after two authored read-transition defects were identified. The
+[composition checkpoint](../../../../tools/ports/acpi/pipeline/field-mid-integration/README.md)
+records the exact source and stopped evidence. Existing results below describe
+their original narrower versions, not successful execution of this draft.
+
 This package connects the bounded static loader to the bounded generic method
 executor. It adds no hardware access, firmware invocation, physical mapping or
 production boot import. ACPI-005 interpreter coverage remains pending; the bounded Program resource

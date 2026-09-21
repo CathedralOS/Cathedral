@@ -8,3 +8,4 @@ pub data Runtime [copy] {
     unit: u64; length: u64; steps: u64; finished: bool; has_result:bool; result: Operand;
     fault_offset: u64;
 }
+pub data RuntimeStart [copy] {case Failure(outcome:ExecutionOutcome);case Ready(runtime:Runtime);}

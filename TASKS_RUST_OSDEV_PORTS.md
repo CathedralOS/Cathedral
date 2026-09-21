@@ -825,6 +825,12 @@ replacement, Field metadata without region access, Field-target rejection,
 Owned Local sources and seeded RefOf/Index argument redirection. Component
 receipts retain their original source identities.
 
+Draft branch checkpoint: the [Field read/Mid/SizeOf composition](tools/ports/acpi/pipeline/field-mid-integration/README.md)
+retains 16 authored pairs but no execution pass. Its original run was stopped
+before CHECKED after two invalid cross-machine transitions were found in the
+read pipeline. ACPI-005 remains open; this is implementation work, not an owner
+blocker, and does not change any completed standalone claim.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and
