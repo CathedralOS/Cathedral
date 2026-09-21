@@ -1,0 +1,31 @@
+{
+  "behavior_control_pairs": 75,
+  "constant_control_pairs": 3,
+  "dependency_notice": "Copied baseline frozen before latest shared names/namespace guard changes; rebase and rerun before publication.",
+  "files_sha256": {
+    "canonical-baseline.json": "acdf1273ed2ea9f9d049f01fcdce8132aa797e1fcc03d092961fc8b71c5470a6",
+    "source/libraries/acpi/interpreter/execution/byte-literals-inventory.json": "016a09048a27ef1e77ed5e8adf9cb8c0749e18f58f589db5b66b95f927808777",
+    "source/libraries/acpi/interpreter/execution/byte-literals.PORT.md": "15d11dd88266314f13b512968252adcf1ba5bcc5eb87e4100835f4e00f854bbc",
+    "source/libraries/acpi/interpreter/execution/byte_literals.omg": "27d23a96b05e9bd383c6735e5148288cf52026c77d1e9294c2644f098bcfaf66",
+    "tools/ports/acpi/interpreter/byte-literals/README.md": "40941c9720300afbf4af6061d233bcc29147fa240b29efa0add53109372cc8fd",
+    "tools/ports/acpi/interpreter/byte-literals/cases.json": "d05f5c017e04475f1ef82644b10c0eb0dc6f3cdbf673635b4d17fd9dc9cddec4",
+    "tools/ports/acpi/interpreter/byte-literals/check.py": "f9fdac1309cdf01ddacd5685dfe637213e5dcd5f298056978a3d53ad9351bdf0",
+    "tools/ports/acpi/interpreter/byte-literals/check_const.py": "83365595db02caa66ab12a9ac632ceea7a51432d03cdcae607d29d5685a3b5b4",
+    "tools/ports/acpi/interpreter/byte-literals/const-verification.json": "2bb901bdb8282da3531e86c6c85ee8301987ce5378e1175402e8615e9a8126a5",
+    "tools/ports/acpi/interpreter/byte-literals/fixtures.py": "120102083707096d6485970ed42f0877d2b022042f93769f055023d29986d6c9",
+    "tools/ports/acpi/interpreter/byte-literals/inventory.py": "20f10a8a2858da7d71cedf1de9a8bc351110010b9e3d3675c00f2efa03e52288",
+    "tools/ports/acpi/interpreter/byte-literals/reference-verification.json": "cd343265ea79f919378588dcd197b1611de93c22811710475c32b31a0fac71d7",
+    "tools/ports/acpi/interpreter/byte-literals/reference.py": "3303d68d50594a9dd02ac5e6683d54ec7c1e1523f836fb08dccfcf60ed013293",
+    "tools/ports/acpi/interpreter/byte-literals/verification.json": "2f4b7647c54c2cd5973236c42e26444e19f623dc5b987f7c9d2231fcb309889b",
+    "tools/ports/acpi/interpreter/byte-literals/verify_record.py": "f3638fda707e495732745e70cfcdc5afb5402d2d09c0232e3427a3d6edd6f6ff"
+  },
+  "format": "cathedral-byte-literal-scratch-release-v1",
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "public_errors": 4,
+  "public_observations": 47,
+  "public_panics": 5,
+  "public_same_value_agreements": 32,
+  "runner_sha256": "e6d0aee6b4dddbbf34a60cffbe8f158643cc5c4d100f9e20f0481f75f52890be",
+  "stage": "scratch-only pure literal preflight; no runtime integration or publication",
+  "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5"
+}

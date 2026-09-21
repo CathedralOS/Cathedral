@@ -1,0 +1,73 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified AML StringPrefix/Buffer handling from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5, copyright 2018 Isaac Woods.
+// Pure literal preflight; no execution, allocation or namespace publication.
+module byte_literals;
+use aml::model::Outcome;
+use aml::model::Value;
+use aml::model::ValueRead;
+use aml::model::Read;
+use aml::model::Path;
+use aml::model::BufferStorage;
+use aml::model::ObjectStore;
+use aml::values::atom;
+use aml::bytes::read_le;
+use aml::byte_storage::ByteRead;
+use aml::byte_storage::ByteOutcome;
+use aml::byte_storage::read_bytes;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::normalize;
+
+// source_length/unit identify one retained immutable snapshot; frame_end is a
+// possibly smaller active block limit. Failures publish no Value or next cursor.
+pub machine preflight_byte_literal(input:&[u8;1024],source_length:u64,source_unit:u64,
+ frame_unit:u64,frame_end:u64,at:u64,size:IntegerSize)->ValueRead {
+ transition {
+  source_length>1024 || frame_end>source_length || at>frame_end || source_unit!=frame_unit -> (ValueRead {outcome:Outcome::InvalidState,offset:at})
+  at==frame_end -> (ValueRead {outcome:Outcome::Truncated,offset:at})
+  _ -> token(input,source_length,source_unit,frame_end,at,size)
+ }
+ state token(input:&[u8;1024],length:u64,unit:u64,end:u64,at:u64,size:IntegerSize)->ValueRead {
+  let token:Read=read_le(input,end,at,1);
+  transition token.value==0x0d || token.value==0x11 {
+   true -> parse(input,length,unit,end,at,size)
+   _ -> (ValueRead {outcome:Outcome::UnsupportedSyntax,offset:at})
+  }
+ }
+ state parse(input:&[u8;1024],length:u64,unit:u64,end:u64,at:u64,size:IntegerSize)->ValueRead {
+  let parsed:ValueRead=atom(input,end,at,unit,Path {},false);
+  let next:u64=parsed.next;
+  transition {
+   parsed.outcome!=Outcome::Success -> (ValueRead {outcome:parsed.outcome,offset:parsed.offset})
+   next<=at || next>end -> (ValueRead {outcome:Outcome::InvalidState,offset:at})
+   _ -> validate(input,length,unit,at,size,parsed)
+  }
+ }
+ state validate(input:&[u8;1024],length:u64,unit:u64,at:u64,size:IntegerSize,parsed:ValueRead)->ValueRead {
+  let value:Value=literal_width(parsed.value,size);
+  // Reuse the canonical byte validator. This detached local is neither a
+  // caller object nor a published stable identity, and it cannot escape.
+  let mut temporary:ObjectStore=ObjectStore {};
+  temporary.space.object_count=1;temporary.space.objects[0].value=value;
+  let bytes:ByteRead=read_bytes(input,length,unit,&temporary,0);
+  transition bytes.outcome {
+   ByteOutcome::Success -> (ValueRead {value:value,next:parsed.next})
+   ByteOutcome::Capacity -> (ValueRead {outcome:Outcome::Capacity,offset:at})
+   ByteOutcome::Encoding -> (ValueRead {outcome:Outcome::BadEncoding,offset:at})
+   _ -> (ValueRead {outcome:Outcome::InvalidState,offset:at})
+  }
+ }
+}
+machine literal_width(value:Value,size:IntegerSize)->Value {
+ transition value {Value::Buffer {buffer_storage} -> buffer(buffer_storage,size) _ -> (value)}
+ state buffer(storage:BufferStorage,size:IntegerSize)->Value {
+  transition storage {
+   BufferStorage::Source {declared_size,buffer_initializer} -> normalized(declared_size,buffer_initializer,size)
+   _ -> (Value::Uninitialized)
+  }
+ }
+ state normalized(declared:u64,span:aml::model::Span,size:IntegerSize)->Value {
+  let length:u64=normalize(size,declared);
+  Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:length,buffer_initializer:span}}
+ }
+}
