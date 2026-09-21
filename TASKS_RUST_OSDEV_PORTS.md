@@ -678,6 +678,12 @@ three constant pairs pass. Other-object descriptions, reference/field policies,
 object installation and opcode retirement remain pending; aggregate counts are
 unchanged.
 
+[Concatenate opcode retirement](source/libraries/acpi/interpreter/execution/concat.PORT.md) is transcribed in an
+isolated branch with 110 authored behavior/control pairs, including 24 actual
+AML methods. It adds fresh owned results, staged targets and optional Field
+continuation without temporary Integer source objects. Validation is pending;
+no tested execution result or whole-operator completion is claimed.
+
 [Atomic BufferField byte writes](source/libraries/acpi/aml/buffer-field-writes.PORT.md) stage already-converted payloads,
 validate the full field and backing, and publish only after String encoding checks.
 All 189 whole-store behavior/control pairs, three representative constant pairs

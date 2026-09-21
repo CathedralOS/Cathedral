@@ -153,7 +153,21 @@
         "2171:do_concat": {
           "anchor": "fn do_concat(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
           "disposition": "pending",
-          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted. Partial Concatenate opcode retirement and inline-Integer composition are transcribed; validation remains pending. See concat.PORT.md for direct-description versus bytecode boundaries.",
+          "targets": [
+            {
+              "anchor": "pub machine retire_concat",
+              "path": "source/libraries/acpi/interpreter/execution/concat_execution.omg"
+            },
+            {
+              "anchor": "pub machine integer_left",
+              "path": "source/libraries/acpi/aml/inline_concat.omg"
+            },
+            {
+              "anchor": "pub machine integer_right",
+              "path": "source/libraries/acpi/aml/inline_concat.omg"
+            }
+          ]
         },
         "2176:resolve_as_string": {
           "anchor": "fn resolve_as_string(obj: &Object) -> String {",
@@ -247,6 +261,10 @@
             },
             {
               "anchor": "pub machine retire_store",
+              "path": "source/libraries/acpi/interpreter/execution/write_retirement.omg"
+            },
+            {
+              "anchor": "pub machine retire_result",
               "path": "source/libraries/acpi/interpreter/execution/write_retirement.omg"
             }
           ]

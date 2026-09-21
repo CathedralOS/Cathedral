@@ -29,10 +29,12 @@ use control::return_operand;
 use control::enter_block;
 use operator_specs::compute_integer;
 use to_integer_execution::retire_to_integer;
+use concat_execution::retire_concat;
 use integer_helpers::integers::IntegerResult;
 use write_retirement;
 pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operation:Operation)->ExecutionOutcome {
  transition operation.opcode {
+  0x73 -> concat(input,space,frame,operation)
   0xa4 -> returned(input,space,frame,operation.operands[0])
   0xa0 -> branch(input,space,frame,operation.opcode,operation.body_end,operation.parent_end,operation.predicate,operation.operands[0])
   0xa2 -> branch(input,space,frame,operation.opcode,operation.body_end,operation.parent_end,operation.predicate,operation.operands[0])
@@ -42,6 +44,9 @@ pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut 
   0x75 -> increment(input,space,frame,operation.opcode,operation.target_arity,operation.first_target,operation.second_target)
   0x76 -> increment(input,space,frame,operation.opcode,operation.target_arity,operation.first_target,operation.second_target)
   _ -> scalar_a(input,space,frame,operation.opcode,operation.value_arity,operation.target_arity,operation.first_target,operation.second_target,operation.operands[0],operation.operands[1])
+ }
+ state concat(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operation:Operation)->ExecutionOutcome {
+  let result:ExecutionOutcome=retire_concat(input,space,frame,operation.operands[0],operation.operands[1],operation.first_target);result
  }
  state integer_conversion_retirement(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operand:Operand,target:Target)->ExecutionOutcome {
   let result:ExecutionOutcome=retire_to_integer(input,space,frame,operand,target);result

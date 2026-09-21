@@ -1,0 +1,96 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Inline-Integer composition of the licensed rust-osdev/acpi Concatenate port.
+// Pin257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5, copyright2018 Isaac Woods.
+// Primary ACPI6.6 Tables19.7/19.30/19.31; no temporary caller object allocation.
+module inline_concat;
+use model::ObjectStore;
+use model::Value;
+use object_concat::Concatenated;
+use object_conversions::ConversionFailure;
+use implicit_conversions::convert;
+use implicit_conversions::ConversionTarget;
+use implicit_conversions::ImplicitResult;
+use object_descriptions::describe;
+use object_descriptions::Description;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::byte_concat;
+use integer_helpers::conversions::integer_to_buffer;
+use integer_helpers::implicit_strings::from_integer;
+use integer_helpers::implicit_strings::StringResult;
+
+pub machine integers(size:IntegerSize,left:u64,right:u64)->Concatenated {
+ let mut bytes:[u8;256];let copied:IntegerResult=byte_concat::concat_integers(size,left,right,&mut bytes,256);
+ let result:Concatenated=output(copied,bytes,false);result
+}
+pub machine integer_left(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize)->Concatenated {
+ let converted:ImplicitResult=convert(input,length,unit,store,right,size,ConversionTarget::Integer);
+ transition converted {
+  ImplicitResult::Integer {number} -> append(size,left,number)
+  ImplicitResult::Failure {reason} -> (Concatenated::Failure {reason:reason})
+  _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})
+ }
+ state append(size:IntegerSize,left:u64,right:u64)->Concatenated {let result:Concatenated=integers(size,left,right);result}
+}
+pub machine integer_right(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize)->Concatenated {
+ let count:u64=store.space.object_count;
+ transition count<=64 && left<count && left<64 {true -> kind(input,length,unit,store,left,right,size) _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})}
+ state kind(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize)->Concatenated {
+  transition store.space.objects[left].value {
+   Value::Integer {number} -> numbers(size,number,right)
+   Value::Buffer {buffer_storage} -> basic(input,length,unit,store,left,right,size,ConversionTarget::Buffer)
+   Value::String {string_storage} -> basic(input,length,unit,store,left,right,size,ConversionTarget::String)
+   _ -> description(store,left,right,size)
+  }
+ }
+ state numbers(size:IntegerSize,left:u64,right:u64)->Concatenated {let result:Concatenated=integers(size,left,right);result}
+ state basic(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize,target:ConversionTarget)->Concatenated {
+  let a:ImplicitResult=convert(input,length,unit,store,left,size,target);let result:Concatenated=append_integer(a,right,size);result
+ }
+ state description(store:&ObjectStore,left:u64,right:u64,size:IntegerSize)->Concatenated {
+  let label:Description=describe(store,left);
+  transition label {
+   Description::Failure {reason} -> (Concatenated::Failure {reason:reason})
+   Description::String {length,bytes} -> described(length,bytes,right,size)
+  }
+ }
+ state described(length:u64,bytes:[u8;256],right:u64,size:IntegerSize)->Concatenated {
+  let result:Concatenated=append_integer(ImplicitResult::String {length:length,bytes:bytes},right,size);result
+ }
+}
+machine append_integer(left:ImplicitResult,right:u64,size:IntegerSize)->Concatenated {
+ transition left {
+  ImplicitResult::Failure {reason} -> (Concatenated::Failure {reason:reason})
+  ImplicitResult::Buffer {length,bytes} -> buffer(&bytes,length,right,size)
+  ImplicitResult::String {length,bytes} -> string(&bytes,length,right,size)
+  _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})
+ }
+ state buffer(left:&[u8;256],length:u64,right:u64,size:IntegerSize)->Concatenated {
+  let mut encoded:[u8;256];let converted:IntegerResult=integer_to_buffer(size,right,&mut encoded);
+  transition converted.error==0 {true -> append_buffer(left,length,&encoded,converted.value) _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state append_buffer(left:&[u8;256],length:u64,right:&[u8;256],count:u64)->Concatenated {
+  let mut bytes:[u8;256];let copied:IntegerResult=byte_concat::concat_buffers(left,length,right,count,&mut bytes,256);
+  let result:Concatenated=output(copied,bytes,false);result
+ }
+ state string(left:&[u8;256],length:u64,right:u64,size:IntegerSize)->Concatenated {
+  let converted:StringResult=from_integer(size,right);
+  transition converted {
+   StringResult::String {length as count,bytes} -> append_string(left,length,&bytes,count)
+   _ -> (Concatenated::Failure {reason:ConversionFailure::Capacity})
+  }
+ }
+ state append_string(left:&[u8;256],length:u64,right:&[u8;256],count:u64)->Concatenated {
+  let mut bytes:[u8;256];let copied:IntegerResult=byte_concat::concat_strings(left,length,right,count,&mut bytes,256);
+  let result:Concatenated=output(copied,bytes,true);result
+ }
+}
+machine output(copied:IntegerResult,bytes:[u8;256],string:bool)->Concatenated {
+ transition {copied.error==0 -> success(copied.value,bytes,string)
+  copied.error==4 -> (Concatenated::Failure {reason:ConversionFailure::Capacity})
+  copied.error==7 -> (Concatenated::Failure {reason:ConversionFailure::Encoding})
+  _ -> (Concatenated::Failure {reason:ConversionFailure::InvalidState})}
+ state success(length:u64,bytes:[u8;256],string:bool)->Concatenated {
+  transition string {true -> (Concatenated::String {length:length,bytes:bytes}) _ -> (Concatenated::Buffer {length:length,bytes:bytes})}
+ }
+}

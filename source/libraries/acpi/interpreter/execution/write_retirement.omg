@@ -84,6 +84,19 @@ pub machine retire_scalar(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Fra
  state contribute(frame:&mut Frame,result:Operand)->ExecutionOutcome {let outcome:ExecutionOutcome=contribute_operand(frame,result);outcome}
 }
 
+// A non-Store operation retains its own already-admitted result through the
+// optional target write. Object results use the same Field continuation as
+// scalar results, without applying Store's completion-result policy.
+pub machine retire_result(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,result:Operand)->ExecutionOutcome {
+ let after:AfterWrite=AfterWrite {result:result};
+ let outcome:ExecutionOutcome=write(input,store,frame,target,result,after);
+ transition outcome==ExecutionOutcome::Success {true -> pending(frame,result) _ -> (outcome)}
+ state pending(frame:&mut Frame,result:Operand)->ExecutionOutcome {
+  transition frame.deferred_write {DeferredWrite::None -> contribute(frame,result) _ -> (ExecutionOutcome::Success)}
+ }
+ state contribute(frame:&mut Frame,result:Operand)->ExecutionOutcome {let outcome:ExecutionOutcome=contribute_operand(frame,result);outcome}
+}
+
 machine write(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,source:Operand,after:AfterWrite)->ExecutionOutcome {
  transition frame.deferred_write {DeferredWrite::None -> select(input,store,frame,target,source,after) _ -> (ExecutionOutcome::InvalidState)}
  state select(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,source:Operand,after:AfterWrite)->ExecutionOutcome {
