@@ -189,3 +189,8 @@ identity and retirement composition, preserving raw-word occupancy and recursive
 self-link exclusion. All 384 whole-tree references, 430 Omega bodies and nine
 controls pass, with 181 actual public mapped Rust calls and 203 adapted recursive
 observations. The representative current const pair also passes.
+
+[Encryption-profile recursive constructor observations](encrypted-constructor.PORT.md)
+complete the ordered frame/entry comparison with 610 checked cases, ten controls
+and two current constant-evaluation pairs. Virtual recursive geometry precedes
+current-bit physical admission; accumulated-mask entry decoding remains distinct.

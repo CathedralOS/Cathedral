@@ -1,0 +1,71 @@
+{
+  "stage": "actual constant evaluation of compact helper bodies; native not run",
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "source_sha256": {
+    "source/drivers/facts/build.omg": "5b9efdc91a651778e5eb5f83e3608d54ac84232f141eaf5ff30556416b4ac3c7",
+    "source/drivers/facts/x86_page_table_entry.omg": "58cee2e2eeb0b832a29dec499708920b567d21228f5c9745bda0302e2d275cf3",
+    "source/libraries/x86_64/addresses.omg": "19f0ba1efac0a2ecae59f56f21e97384f31176e0531b7256f2c0335cbe0a0528",
+    "source/libraries/x86_64/build.omg": "aafea7e8ba28988f761b36f06a7effe73361103f93488df5bdce34199541ee97",
+    "source/libraries/x86_64/encrypted_recursive_constructor.omg": "22e17849f901e24d242598919dfd62106fa3fd05f587c064ec2a3093a61caf27",
+    "source/libraries/x86_64/mapper_topology.omg": "815d86386ae0c9b213881b49fee736bb652541c9fede78046e46491a0cbdf40b",
+    "source/libraries/x86_64/memory_encryption.omg": "7ba9b802cc1cffc51d31eb2b5303b0b51bbb4bbaa57c27a82207adc8d30c240c",
+    "source/libraries/x86_64/page_entries.omg": "a72210cd599eefb13332f8bff746d1ca5ebf65d3ebea385407e3acaa2a29786c",
+    "source/libraries/x86_64/pages.omg": "d72d8422d1e564b5605267c17482a481ced9d47429482fd48d1e8289c066d864",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805",
+    "tools/ports/x86_64-encrypted-constructor/.gitignore": "02e7b40893c74a993a139de7b0f85d8cf2eaea57d544effd576920a514872af4",
+    "tools/ports/x86_64-encrypted-constructor/Cargo.lock": "179efcab189978851606b22697f8ee88c47abc91a95cf27b4e6c45347e5001c4",
+    "tools/ports/x86_64-encrypted-constructor/Cargo.toml": "ddc6b91e9e1899d9efcb14e812141e065b14e8bb0fd66e1488e7a5f4f2d79306",
+    "tools/ports/x86_64-encrypted-constructor/README.md": "4fd33a616be614138c66075aecb8d7138b5ced26e45e01ff904c67a2a15c3e84",
+    "tools/ports/x86_64-encrypted-constructor/build.omg": "c347f5357f47b655fea933a4a3fe32456ba7ec141a7831f59c1ec47dd43bedfc",
+    "tools/ports/x86_64-encrypted-constructor/cases/batch-00.omg": "c46f4bd8e2e6aabbb605db3f34d8e5c81a6b13265cf7e80990192ccfd3d96782",
+    "tools/ports/x86_64-encrypted-constructor/cases/batch-01.omg": "3fd1781c89dcfb8c3b6043e3209ec03a2ca5cef636d0341e7b716139d9c4078a",
+    "tools/ports/x86_64-encrypted-constructor/cases/batch-02.omg": "e09713a888a5e342f4c0fc65d834baab7d5a32d2b8793b59173f86ecdf63a4c7",
+    "tools/ports/x86_64-encrypted-constructor/cases/batch-03.omg": "80def2353f28e709c179f462b9092874e45adf0eff0ab1fc976f8a9411a9bf07",
+    "tools/ports/x86_64-encrypted-constructor/cases/batch-04.omg": "755056eef5e365436745860f1a0045fda75127d1be97474bb6339dc48b0a3b07",
+    "tools/ports/x86_64-encrypted-constructor/cases/batch-05.omg": "c2826bb9314e561e3970a6247ade1e660261d8fba6fa7658eb5c39c976c9b4ac",
+    "tools/ports/x86_64-encrypted-constructor/cases/batch-06.omg": "863a37743fa25cecc9fc8f87ce91afaf86e5077304585c096a1c25942f627555",
+    "tools/ports/x86_64-encrypted-constructor/cases/batch-07.omg": "21b74a0605fe201451084e56f48ccb09e363fac230ed6f93122320e7911d811e",
+    "tools/ports/x86_64-encrypted-constructor/cases/batch-08.omg": "92e4a10fc4d9b8ad8aa7261a8934349c927c5c48ec0eac008837a0d09aad2fff",
+    "tools/ports/x86_64-encrypted-constructor/cases/batch-09.omg": "26f9f9d2d5dec025668acc1a78926aba832e590466245c0e728ed26856e7891f",
+    "tools/ports/x86_64-encrypted-constructor/check.py": "7b1f0f39b77dd7e0d7395ac031114794d003029be564a760c4c0a7669f7a63f0",
+    "tools/ports/x86_64-encrypted-constructor/check_const.py": "3ef5676c0483efffb216e2114625f9868256efba2cd6f2dced19a1f3875443b3",
+    "tools/ports/x86_64-encrypted-constructor/check_interpreted.py": "32e224a6b8690855a7ab7a820bf5c9a7a529c0d32d7b2b719d64b267f69e9f52",
+    "tools/ports/x86_64-encrypted-constructor/compact_selections.json": "60a9dc9993e878502c11025cb35e6ad62674bef34b959c6ce37f3243da078f25",
+    "tools/ports/x86_64-encrypted-constructor/compact_suite.omg": "6e076e3652d1e614f76e63171e0415ffec543abf0af9c643b8e088c53a8401d1",
+    "tools/ports/x86_64-encrypted-constructor/generate.py": "d3a179026fb10ec928861162cde0ebd7c0a76ba73b182115abcfbca03bf90e4f",
+    "tools/ports/x86_64-encrypted-constructor/generate_compact.py": "e55b29a35cedf53443885963dedb27030eca2a603788af59aeaeb591d0c14d87",
+    "tools/ports/x86_64-encrypted-constructor/generate_reference.py": "f354778c63168a7622d9925c54eb420f4582fce04922087aec9ea12fd707485c",
+    "tools/ports/x86_64-encrypted-constructor/map_inventory.py": "274bd320072391f8d3e402581d7d5e0afd54e6f044a84f616d2ffca38a04dd08",
+    "tools/ports/x86_64-encrypted-constructor/reference.jsonl": "9d8ab0ede786083fc8bce706b71e515e0270d4a9ee23c14a8418ac0c65fabd2a",
+    "tools/ports/x86_64-encrypted-constructor/src/main.rs": "024e93438ae71ca54e40a94e8d6ca025554671e6988cf464574b9de381c0adb0",
+    "tools/ports/x86_64-encrypted-constructor/src/pinned.rs": "42f4a5bc12637b0bb08d5e9a5161b629b7749909d9c453e6c75b9dbd67c3356a",
+    "tools/ports/x86_64-encrypted-constructor/verify_record.py": "c769d28710ba01d22a3c1ff5ae4562db6d825eb952c1b3c321de98c34773ed75"
+  },
+  "runs": [
+    {
+      "name": "p0_positive",
+      "control": false,
+      "source_sha256": "5e9c4543ded7fd40e02f86663771622658c6095e95aea43433e0875dd37f9328",
+      "output": "compiled 17 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-c2da95f7692f5cedf9c152334f93c3ee7e5a939881ee56ebd2ac232eaac90167/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "name": "p0_control",
+      "control": true,
+      "source_sha256": "74e020e94412642d0d6faf2f22a4612325ca1c656d3d117d8996df0240c88f75",
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-encrypted-constructor-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_success from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "name": "p9_positive",
+      "control": false,
+      "source_sha256": "7286b1ad6c82b394601b1bbc0b787604237f4b3ac454ab94ebe9855b70656df8",
+      "output": "compiled 17 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-93b040867430a1397e4f1011a7a9e755b70a77943585bfa3461a332eb826a562/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "name": "p9_control",
+      "control": true,
+      "source_sha256": "c19ad338159d283ccdf584a03b44070e1c236b93b53ac2e7015092c40b6296c8",
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-encrypted-constructor-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_success from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  "Suite::p0_positive=0",
+  "Suite::p0_control=1",
+  "Suite::p1_positive=0",
+  "Suite::p1_control=1",
+  "Suite::p2_positive=0",
+  "Suite::p2_control=1",
+  "Suite::p3_positive=0",
+  "Suite::p3_control=1",
+  "Suite::p4_positive=0",
+  "Suite::p4_control=1",
+  "Suite::p5_positive=0",
+  "Suite::p5_control=1",
+  "Suite::p6_positive=0",
+  "Suite::p6_control=1",
+  "Suite::p7_positive=0",
+  "Suite::p7_control=1",
+  "Suite::p8_positive=0",
+  "Suite::p8_control=1",
+  "Suite::p9_positive=0",
+  "Suite::p9_control=1"
+]

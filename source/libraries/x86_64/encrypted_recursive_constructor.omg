@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Numeric observation composition of pinned RecursivePageTable::new.
+// No recursive pointer, table access or actual CR3 read.
+module encrypted_recursive_constructor;
+use mapper_topology;
+use mapper_topology::RecursiveObservation;
+use addresses;
+use memory_encryption::State;
+use page_entries;
+
+pub machine observe_recursive(profile:State,table_address:u64,observed_cr3_frame:u64,recursive_entry_word:u64)->RecursiveObservation {
+ let physical_mask:u64=profile.bit_mask & addresses::PHYSICAL_MAX;
+ let removed:u64=page_entries::ADDRESS_MASK & ~profile.address_mask;
+ // The constructor checks recursive virtual geometry before reading CR3.
+ let geometry:RecursiveObservation=mapper_topology::observe_recursive(table_address,0,1);
+ transition geometry {
+  RecursiveObservation::Observed {recursive_index,physical_frame} -> admitted(physical_mask,removed,table_address,observed_cr3_frame,recursive_entry_word)
+  _ -> (geometry)
+ }
+ state admitted(physical_mask:u64,removed:u64,address:u64,observed:u64,word:u64)->RecursiveObservation {
+  let valid:bool=addresses::physical_valid(observed,physical_mask);
+  transition valid {
+   true -> compare(removed,address,observed,word)
+   _ -> (RecursiveObservation::InvalidObservedFrame)
+  }
+ }
+ state compare(removed:u64,address:u64,observed:u64,word:u64)->RecursiveObservation {
+  // Remove only address positions excluded by the profile. The existing helper
+  // preserves PRESENT-before-HUGE classification and frame equality.
+  mapper_topology::observe_recursive(address,observed,word & ~removed)
+ }
+}

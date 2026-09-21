@@ -291,7 +291,7 @@ on their default physical profile.
 [Explicit-profile translation](source/libraries/x86_64/encrypted-translation.PORT.md)
 adds 330 actual Rust/Omega observations, seven boundary assertions and nine body
 mutations for generic mapped translation and captured child identities.
-Remaining encryption-profile frame/range and constructor
+Remaining encryption-profile frame/range
 compositions are ordinary implementation work; the closure audit lists them.
 [Encryption-aware register expressions](source/libraries/x86_64/encrypted-registers.PORT.md)
 pass 100 Rust reference rows, 800 Omega calls and twelve body controls, preserving
@@ -310,6 +310,10 @@ and 159 adapted recursive-body observations across eleven configurations.
 passes 384 Rust tree references, 430 checked-interpreter bodies and nine controls,
 plus a representative const pair. It preserves raw occupancy, decoded retirement
 addresses, partial effects and recursive-slot exclusion.
+[Profile-aware constructor observations](source/libraries/x86_64/encrypted-constructor.PORT.md)
+pass 610 adapted Rust-check/Omega cases, ten controls and two const pairs. Virtual
+geometry, current-bit frame admission and accumulated-mask entry decoding keep
+the pinned order; no recursive page-table object is constructed.
 The full-source closure review found no remaining pure representation family:
 X86-001 is complete at the documented numeric/schema boundary. Native layout,
 instruction/provider and proof limits remain separate; X86-002 stays open for
