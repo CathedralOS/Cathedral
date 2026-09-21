@@ -49,7 +49,7 @@ none are erased by an omission overlay.
 | `do_from_bcd`, `do_to_bcd` | `bcd.omg` | Checked pure BCD conversions; context/op retirement pending. |
 | `copy_bits` | `buffer_fields.omg::copy_bits` | Arbitrary bit offsets, partial-byte preservation, source zero extension. Preflight destination range; fixed capacity and disjoint borrows. |
 | `read_buffer_field`, `to_integer` | `field_to_integer`, `buffer_to_integer` | Pure bit extraction and little-endian integer result; no shared object resolution. String parsing is supplied by the separate [string/number helpers](string_numbers.PORT.md); generic Object dispatch remains pending. |
-| `do_to_buffer`, `Object::to_buffer` | `integer_to_buffer`, `string_to_buffer` | Four/eight integer bytes. Explicit string conversion includes terminator except empty string; implicit conversion excludes it. Buffer identity is caller-owned, not an object clone API. |
+| `do_to_buffer`, `Object::to_buffer` | `integer_to_buffer`, `string_to_buffer` | Four/eight integer bytes. The primary String conversion includes the terminator except for an empty String. The helper's `explicit=false` branch reproduces pinned `Object::to_buffer` bytes without the terminator; it is a compatibility choice, not the primary implicit-conversion rule. Buffer identity is caller-owned, not an object clone API. |
 | `do_to_string` | `buffer_to_string` | Bounded ASCII bytes before first NUL or maximum; logical length excludes NUL. |
 | `do_mid` | `mid` | Initialized byte window with clamped output length; no string/object dispatch or target store. |
 
@@ -91,6 +91,12 @@ ASL scenarios are not reported as passing.
   within the supplied String extent rejects. Buffer-to-string stops before NUL
   and rejects non-ASCII before the stop, leaving output unchanged on error.
   The pin uses Rust UTF-8 and includes a found NUL in `do_to_string` output.
+- [ACPI 6.6 Table 19.7](https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#data-type-conversion-rules)
+  also includes the String terminator in String-to-Buffer conversion. The helper's
+  `explicit=false` spelling describes its pinned Object-method branch; callers
+  must not use that flag as a general implicit-versus-explicit ACPI policy switch.
+  Implicit String-to-Integer uses hexadecimal digits without a `0x` prefix;
+  `StrictDecimalHex` implements the separate explicit ToInteger profile.
 - `mid` clamps to `length - index`, then to requested length. An out-of-range
   index produces empty output. The pin computes `min(index+length,
   index+source_length)`, which can overrun or overflow. No addition involving
