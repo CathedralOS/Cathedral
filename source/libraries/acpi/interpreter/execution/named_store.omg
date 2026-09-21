@@ -1,0 +1,71 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified do_store composition from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
+// ACPI 6.6 19.3.5.5/19.3.5.8: named fixed-type result conversion.
+module named_store;
+use aml::model::ObjectStore;
+use aml::model::Outcome;
+use aml::model::ReferenceState;
+use aml::object_references::unwrap_transparent;
+use aml::object_conversions::ConversionFailure;
+use aml::named_value_store::DestinationResult;
+use aml::named_value_store::StoreResult;
+use aml::named_value_store::admit_destination;
+use aml::named_value_store::store_integer;
+use aml::named_value_store::store_value;
+use execution_model::Operand;
+use execution_model::ExecutionOutcome;
+use integer_helpers::integers::IntegerSize;
+
+// Selection is inert: re-admit the current destination before inspecting the
+// source. Transparent carriers may resolve to data; explicit RefOf/Index values
+// retain their type and are rejected by the canonical conversion kernel.
+pub machine store_named_operand(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,destination:u64,operand:Operand)->ExecutionOutcome {
+ let admitted:DestinationResult=admit_destination(input,length,unit,store,destination);
+ transition admitted {
+  DestinationResult::Failure {reason} -> failure(reason)
+  DestinationResult::Target {target,extent} -> source(input,length,unit,size,store,destination,operand)
+ }
+ state failure(reason:ConversionFailure)->ExecutionOutcome {let result:ExecutionOutcome=conversion_outcome(reason);result}
+ state source(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,destination:u64,operand:Operand)->ExecutionOutcome {
+  transition operand {
+   Operand::Uninitialized -> (ExecutionOutcome::Uninitialized)
+   Operand::Integer {number} -> integer(input,length,unit,size,store,destination,number)
+   Operand::Object {object_id} -> object(input,length,unit,size,store,destination,object_id)
+  }
+ }
+ state integer(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,destination:u64,number:u64)->ExecutionOutcome {
+  let stored:StoreResult=store_integer(input,length,unit,store,destination,number,size);
+  let result:ExecutionOutcome=store_outcome(stored);result
+ }
+ state object(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,destination:u64,id:u64)->ExecutionOutcome {
+  let found:ReferenceState=unwrap_transparent(&store.space,id,64);
+  transition found.outcome {
+   Outcome::Success -> resolved(input,length,unit,size,store,destination,found.object)
+   Outcome::ReferenceCycle -> (ExecutionOutcome::ReferenceCycle)
+   Outcome::WorkLimit -> (ExecutionOutcome::WorkLimit)
+   _ -> (ExecutionOutcome::InvalidState)
+  }
+ }
+ state resolved(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,destination:u64,id:u64)->ExecutionOutcome {
+  let stored:StoreResult=store_value(input,length,unit,store,destination,id,size);
+  let result:ExecutionOutcome=store_outcome(stored);result
+ }
+}
+machine store_outcome(result:StoreResult)->ExecutionOutcome {
+ transition result {StoreResult::Stored {object} -> (ExecutionOutcome::Success) StoreResult::Failure {reason} -> failure(reason)}
+ state failure(reason:ConversionFailure)->ExecutionOutcome {let result:ExecutionOutcome=conversion_outcome(reason);result}
+}
+pub machine conversion_outcome(reason:ConversionFailure)->ExecutionOutcome {
+ transition reason {
+  ConversionFailure::InvalidState -> (ExecutionOutcome::InvalidState)
+  ConversionFailure::UnsupportedValue -> (ExecutionOutcome::UnsupportedValue)
+  ConversionFailure::Bounds -> (ExecutionOutcome::Bounds)
+  ConversionFailure::Capacity -> (ExecutionOutcome::Capacity)
+  ConversionFailure::Empty -> (ExecutionOutcome::Empty)
+  ConversionFailure::Encoding -> (ExecutionOutcome::Encoding)
+  ConversionFailure::Overflow -> (ExecutionOutcome::Overflow)
+  ConversionFailure::ReferenceCycle -> (ExecutionOutcome::ReferenceCycle)
+  ConversionFailure::WorkLimit -> (ExecutionOutcome::WorkLimit)
+ }
+}

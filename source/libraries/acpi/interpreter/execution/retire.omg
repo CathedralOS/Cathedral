@@ -52,7 +52,20 @@ pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut 
  state branch_value(input:&[u8;1024],frame:&mut Frame,opcode:u64,body_end:u64,parent_end:u64,predicate:u64,number:u64)->ExecutionOutcome {let result:ExecutionOutcome=retire_branch(input,frame,opcode,body_end,parent_end,predicate,number);result}
  state copy(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,target:Target,operand:Operand,is_copy:bool)->ExecutionOutcome {
   let result:ExecutionOutcome=write_generic_target(input,space,frame,target,operand,is_copy);
-  transition result==ExecutionOutcome::Success {true -> contribute(frame,operand) _ -> (result)}
+  transition result==ExecutionOutcome::Success {true -> copied(space,frame,target,operand,is_copy) _ -> (result)}
+ }
+ // ACPI 6.6 19.6.132: Store's expression result is the data written. Named
+ // implicit conversion may change its type; CopyObject still contributes the
+ // copied source. Arithmetic operators retain their own result contracts.
+ state copied(space:&ObjectStore,frame:&mut Frame,target:Target,operand:Operand,is_copy:bool)->ExecutionOutcome {
+  transition is_copy {true -> contribute(frame,operand) _ -> stored(space,frame,target,operand)}
+ }
+ state stored(space:&ObjectStore,frame:&mut Frame,target:Target,operand:Operand)->ExecutionOutcome {
+  transition target {Target::Named {object_id} -> named_result(space,frame,object_id) _ -> contribute(frame,operand)}
+ }
+ state named_result(space:&ObjectStore,frame:&mut Frame,id:u64)->ExecutionOutcome {
+  let operand:Operand=normalized_operand(space,frame.size,Operand::Object {object_id:id});
+  let result:ExecutionOutcome=contribute_operand(frame,operand);result
  }
  state contribute(frame:&mut Frame,operand:Operand)->ExecutionOutcome {let result:ExecutionOutcome=contribute_operand(frame,operand);result}
  state increment(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,opcode:u64,targets:u64,first:Target,second:Target)->ExecutionOutcome {

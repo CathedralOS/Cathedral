@@ -213,7 +213,7 @@
         "2406:do_store": {
           "anchor": "fn do_store(&self, target: WrappedObject, object: WrappedObject) -> Result<WrappedObject, AmlError> {",
           "disposition": "pending",
-          "reason": "Partially adapted for canonical preloaded data and bounded frames. Primary binding isolation corrects observed pin aliases; unsupported opcodes/targets remain explicit. See generic.PORT.md.",
+          "reason": "Partial generic execution and named basic-data implicit conversion through canonical Store kernels; named Store expression results follow ACPI 6.6 19.6.132 rather than the pin's source result. Field targets, wider Buffer behavior and general references remain implementation work; see generic.PORT.md and named-store.PORT.md.",
           "targets": [
             {
               "anchor": "pub machine write_generic_target",
@@ -226,6 +226,14 @@
             {
               "anchor": "pub machine read_generic_target",
               "path": "source/libraries/acpi/interpreter/execution/generic_targets.omg"
+            },
+            {
+              "anchor": "pub machine store_named_operand",
+              "path": "source/libraries/acpi/interpreter/execution/named_store.omg"
+            },
+            {
+              "anchor": "pub machine retire_operation",
+              "path": "source/libraries/acpi/interpreter/execution/retire.omg"
             }
           ]
         },
@@ -936,7 +944,17 @@
         "317:replace_with_implicit_casting": {
           "anchor": "pub fn replace_with_implicit_casting(&mut self, new: Object) -> Result<(), AmlError> {",
           "disposition": "pending",
-          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+          "reason": "Primary fixed-type conversion integration; pinned raw transmutation/resize differences and bounded Buffer exclusions remain documented in named-store.PORT.md.",
+          "targets": [
+            {
+              "anchor": "pub machine store_named_operand",
+              "path": "source/libraries/acpi/interpreter/execution/named_store.omg"
+            },
+            {
+              "anchor": "pub machine store_value",
+              "path": "source/libraries/acpi/aml/named_value_store.omg"
+            }
+          ]
         },
         "346:typ": {
           "anchor": "pub fn typ(&self) -> ObjectType {",

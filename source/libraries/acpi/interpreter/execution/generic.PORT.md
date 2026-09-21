@@ -28,9 +28,9 @@ object sibling links. Ordinary argument assignment replaces its binding, leaving
 the caller's incoming object intact. Explicit-reference argument assignment
 selects the referenced cell and preserves the argument reference. Reads and
 writable target selection are separate operations. Read-only target classification
-returns semantic NoWrite, Replace(binding), CopyTo(ID, retained binding), or
-Failure cases. A shallow dispatcher applies the selected action through the
-same copy kernels. These cases are inert policy decisions: they do not bypass
+returns semantic NoWrite, Replace(binding), CopyTo(ID, retained binding),
+StoreNamed(ID), or Failure cases. A shallow dispatcher applies the selected
+action through the canonical copy or named-conversion kernel. These cases are inert policy decisions: they do not bypass
 object bounds, destination admission, or source validation, and are not writable
 capabilities.
 
@@ -54,8 +54,10 @@ general dynamic-declaration teardown are pending work.
 
 Generic transport, calls, Return, and CopyObject support preloaded Integer,
 String, Buffer, Package and admitted Reference data. Local/Arg Store replacement
-uses the same data-copy mechanics. Named Store remains Integer/Uninitialized;
-implicit cross-type conversions are explicitly unsupported. CopyObject may
+uses the same data-copy mechanics. Named Store now composes the canonical basic-data conversion kernels through
+[the named Store integration](named-store.PORT.md). Integer/String/Buffer targets
+retain their type; Uninitialized destinations use the existing copy path.
+The bounded Buffer exclusions remain explicit in that port record. CopyObject may
 replace an ordinary named data object's type, while keeping its identity.
 Method, permanent field and service destinations reject. MethodDefinition
 observations remain untouched; this component cannot make a copied method
@@ -68,7 +70,7 @@ admission validates the complete advertised chain before accepting it; values
 inside children remain inert and are not eagerly evaluated.
 
 RefOf/DerefOf/Index bytecode, dynamic String/Buffer/Package literals, method-local
-Name declarations, implicit conversion tables, conversion opcodes, services,
+Name declarations, general operand conversion, conversion opcodes, services,
 region accesses and synchronization remain outside this initial dispatch slice.
 Existing lexical NameReference resolution is not confused with object-reference
 unwrapping; mixed resolution is a separately owned helper.
@@ -148,7 +150,7 @@ coverage.
 
 ## Verification
 
-The canonical source passes eight checked-interpreter receipts covering 259
+At checkpoint `c4a8b03`, the canonical source passed eight checked-interpreter receipts covering 259
 scenario/control pairs: 55 generic, 79 original integer and 22 original pipeline
 cases, plus 15 external-argument admission/rollback, six decoder failures, four
 public-entry carrier/value assertions, fourteen complete Frame/ObjectStore
@@ -159,7 +161,8 @@ passes.
 
 `tools/ports/acpi/interpreter/generic-execution/manifest.json` binds canonical
 execution root, complete recorded source snapshot, generated build text/hash,
-fixture inputs and current receipts. Its read-only verifier reproduces the
+fixture inputs and current receipts. Its checkpoint history verifier retains those exact committed inputs. The named
+Store integration supplies fresh changed-source regression receipts. The original read-only verifier reproduces the
 generic/integer/pipeline fixtures and const pair, verifies static focused
 fixtures and exact selected/observed result names. The runner uses clean Omega
 `eaa7993a23623cd8fabf45350340479c5c9c7879`; compiler SHA-256

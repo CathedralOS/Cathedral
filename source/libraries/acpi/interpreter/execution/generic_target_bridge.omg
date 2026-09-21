@@ -28,9 +28,9 @@ pub machine write_generic_target(input:&[u8;1024],store:&mut ObjectStore,frame:&
  let count:u64=store.space.object_count;
  let binding:Binding=prospective_binding(count,action,normalized);
  let mut outcome:ExecutionOutcome=ExecutionOutcome::InvalidState;
- mutate_selected(input,length,unit,store,action,normalized,&mut outcome);
+ mutate_selected(input,length,unit,size,store,action,normalized,&mut outcome);
  let published:ExecutionOutcome=publish_target(frame,selection,BindingResult {outcome:outcome,binding:binding});published
 }
-machine mutate_selected(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,action:TargetAction,operand:Operand,outcome:&mut ExecutionOutcome) {
- let result:BindingResult=apply_target_action(input,length,unit,store,action,operand);outcome=result.outcome;
+machine mutate_selected(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,action:TargetAction,operand:Operand,outcome:&mut ExecutionOutcome) {
+ let result:BindingResult=apply_target_action(input,length,unit,size,store,action,operand);outcome=result.outcome;
 }

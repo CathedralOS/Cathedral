@@ -12,6 +12,7 @@ pub machine prospective_binding(object_count:u64,action:TargetAction,normalized:
   TargetAction::NoWrite -> (Binding::Uninitialized)
   TargetAction::Failure {outcome} -> (Binding::Uninitialized)
   TargetAction::CopyTo {object_id,result_binding} -> (result_binding)
+  TargetAction::StoreNamed {object_id} -> (Binding::Uninitialized)
   TargetAction::Replace {binding} -> replacement(object_count,binding,normalized)
  }
  state replacement(count:u64,binding:Binding,normalized:Operand)->Binding {

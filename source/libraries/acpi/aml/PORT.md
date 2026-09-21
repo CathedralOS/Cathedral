@@ -204,8 +204,8 @@ Aggregate source counts are unchanged.
 and publishes only after success. All 305 whole-store checked pairs, three constant
 pairs and 297 actual public Store observations pass. Destination identity and links
 are retained; full-value byte storage is reset or replaced atomically. The bounded
-Buffer exclusions, generic target selection and opcode retirement remain pending;
-aggregate source counts are unchanged.
+Buffer exclusions remain partial; subsequent executor integration is described
+below. These component receipts retain their original scope and source counts.
 
 [Generic method execution](../interpreter/execution/generic.PORT.md) transports preloaded Integer/String/Buffer/Package/reference data through methods,
 Return, Store and CopyObject using stable ObjectStore IDs and private bindings.
@@ -220,5 +220,15 @@ aggregate source counts are unchanged.
 a temporary object allocation. All 504 checked pairs and six constant pairs pass,
 including the unchanged 305 object-source cases and complete-store failure
 preservation. Existing target types and positive Buffer extents are retained.
-Generic named-target routing remains a separate pending integration; aggregate
-source counts are unchanged.
+Generic named-target routing is implemented in the subsequent
+[executor integration](../interpreter/execution/named-store.PORT.md);
+the scalar receipts retain their original scope and source counts are unchanged.
+
+[Named Store executor integration](../interpreter/execution/named-store.PORT.md) composes the canonical conversion kernels into Store and arithmetic named targets,
+preserving destination types and atomic failure behavior. Named Store expressions
+now contribute converted stored data, following ACPI 6.6 §19.6.132. All 255
+checked behavior/control pairs pass: 44 bytecode, 30 complete-state bridge, 25
+target-dispatch, 55 generic, 79 integer and 22 pipeline pairs. CopyObject and
+Local/Arg bindings retain their existing contracts. Broader bytecodes, field
+evaluation and resource accounting remain pending; ACPI-005 and aggregate source
+anchors stay open.

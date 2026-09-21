@@ -13,6 +13,7 @@ pub data ExecutionOutcome [copy] {
     case ArgumentCount; case Capacity; case WorkLimit; case Depth;
     case MissingObject; case InvalidTarget; case DivideByZero; case SourceUnit;
     case ControlOutsideLoop; case MethodDefinition;
+    case Bounds; case Empty; case Encoding; case Overflow; case ReferenceCycle;
 }
 // Slot is only the legacy integer result projection; it never drives generic execution.
 pub data Operand [copy] { case Uninitialized; case Integer(number:u64); case Object(object_id:u64); }

@@ -10,6 +10,7 @@ use execution::generic_target_model::TargetSelection;
 use execution::generic_target_model::TargetAction;
 use execution::generic_target_values::classify_target;
 use execution::generic_target_values::apply_target_action;
+use integer_helpers::integers::IntegerSize;
 data Suite {}
 machine ta_classify(row:u64,wanted:u64)->i32 {
  let store:ObjectStore=ta_store(row);let selected:TargetSelection=ta_selection(row);let operand:Operand=ta_operand(row);let copying:bool=ta_copy(row);
@@ -36,6 +37,7 @@ machine ta_selection(row:u64)->TargetSelection {transition row {
 machine ta_operand(row:u64)->Operand {transition row {11 -> (Operand::Object {object_id:1}) 17 -> (Operand::Object {object_id:18446744073709551615}) 18 -> (Operand::Uninitialized) _ -> (Operand::Integer {number:22})}}
 machine ta_copy(row:u64)->bool {row==1 || row==3 || row==9 || row==15}
 machine ta_action(action:TargetAction)->u64 {transition action {
+ TargetAction::StoreNamed {object_id} -> (40)
  TargetAction::NoWrite -> (1)
  TargetAction::Replace {binding} -> replaced(binding)
  TargetAction::CopyTo {object_id,result_binding} -> copied(object_id,result_binding)
@@ -49,7 +51,7 @@ machine ta_action(action:TargetAction)->u64 {transition action {
 }
 machine ta_dispatch(row:u64,wanted:u64)->i32 {
  let input:[u8;1024];let mut store:ObjectStore=ta_store(0);let action:TargetAction=ta_for_dispatch(row);
- let result:BindingResult=apply_target_action(&input,0,7,&mut store,action,Operand::Integer {number:22});
+ let result:BindingResult=apply_target_action(&input,0,7,IntegerSize::EightBytes,&mut store,action,Operand::Integer {number:22});
  let valid:bool=ta_dispatched(result,row);let number:u64=ta_number(store.space.objects[0].value);
  transition valid && number==wanted && store.space.object_count==4 {true -> (0) _ -> (1)}
 }
@@ -88,10 +90,10 @@ machine Suite::classify_8_0(&mut self)->i32 {let result:i32=ta_classify(8,101);r
 machine Suite::classify_8_1(&mut self)->i32 {let result:i32=ta_classify(8,102);result}
 machine Suite::classify_9_0(&mut self)->i32 {let result:i32=ta_classify(9,20);result}
 machine Suite::classify_9_1(&mut self)->i32 {let result:i32=ta_classify(9,21);result}
-machine Suite::classify_10_0(&mut self)->i32 {let result:i32=ta_classify(10,20);result}
-machine Suite::classify_10_1(&mut self)->i32 {let result:i32=ta_classify(10,21);result}
-machine Suite::classify_11_0(&mut self)->i32 {let result:i32=ta_classify(11,33);result}
-machine Suite::classify_11_1(&mut self)->i32 {let result:i32=ta_classify(11,34);result}
+machine Suite::classify_10_0(&mut self)->i32 {let result:i32=ta_classify(10,40);result}
+machine Suite::classify_10_1(&mut self)->i32 {let result:i32=ta_classify(10,41);result}
+machine Suite::classify_11_0(&mut self)->i32 {let result:i32=ta_classify(11,40);result}
+machine Suite::classify_11_1(&mut self)->i32 {let result:i32=ta_classify(11,41);result}
 machine Suite::classify_12_0(&mut self)->i32 {let result:i32=ta_classify(12,22);result}
 machine Suite::classify_12_1(&mut self)->i32 {let result:i32=ta_classify(12,23);result}
 machine Suite::classify_13_0(&mut self)->i32 {let result:i32=ta_classify(13,34);result}
@@ -102,10 +104,10 @@ machine Suite::classify_15_0(&mut self)->i32 {let result:i32=ta_classify(15,29);
 machine Suite::classify_15_1(&mut self)->i32 {let result:i32=ta_classify(15,30);result}
 machine Suite::classify_16_0(&mut self)->i32 {let result:i32=ta_classify(16,35);result}
 machine Suite::classify_16_1(&mut self)->i32 {let result:i32=ta_classify(16,36);result}
-machine Suite::classify_17_0(&mut self)->i32 {let result:i32=ta_classify(17,36);result}
-machine Suite::classify_17_1(&mut self)->i32 {let result:i32=ta_classify(17,37);result}
-machine Suite::classify_18_0(&mut self)->i32 {let result:i32=ta_classify(18,33);result}
-machine Suite::classify_18_1(&mut self)->i32 {let result:i32=ta_classify(18,34);result}
+machine Suite::classify_17_0(&mut self)->i32 {let result:i32=ta_classify(17,40);result}
+machine Suite::classify_17_1(&mut self)->i32 {let result:i32=ta_classify(17,41);result}
+machine Suite::classify_18_0(&mut self)->i32 {let result:i32=ta_classify(18,40);result}
+machine Suite::classify_18_1(&mut self)->i32 {let result:i32=ta_classify(18,41);result}
 machine Suite::classify_19_0(&mut self)->i32 {let result:i32=ta_classify(19,32);result}
 machine Suite::classify_19_1(&mut self)->i32 {let result:i32=ta_classify(19,33);result}
 machine Suite::dispatch_0_0(&mut self)->i32 {let result:i32=ta_dispatch(0,11);result}

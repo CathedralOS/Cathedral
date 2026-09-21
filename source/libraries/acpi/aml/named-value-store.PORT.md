@@ -11,7 +11,9 @@ size)` operates on two already-allocated direct canonical object IDs. The caller
 selects fixed named-target semantics; an ordinary ID does not establish a name
 binding or this target policy. The failure-first result is `StoreResult::Failure`
 with canonical `ConversionFailure`, or `StoreResult::Stored(object)`. Stored is a
-destination identity receipt, not the source value of an AML Store expression.
+destination identity receipt, not a complete AML Store expression result.
+The later [executor integration](../interpreter/execution/named-store.PORT.md)
+uses successful named publication to select the converted expression result.
 Canonical ObjectStore, Value, storage locators and ByteBlock remain unchanged.
 
 [ACPI 6.6 §19.3.5.5](https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#implicit-result-object-conversion)

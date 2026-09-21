@@ -6,9 +6,15 @@ use execution_model::Binding;
 use execution_model::BindingResult;
 use generic_target_model::TargetAction;
 use generic_values::copy_integer_into;
+use named_store::store_named_operand;
+use execution_model::Operand;
+use integer_helpers::integers::IntegerSize;
 // The scalar has already been normalized to the active AML IntegerSize.
-pub machine apply_integer_action(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,action:TargetAction,number:u64)->BindingResult {
- transition action {TargetAction::NoWrite -> (BindingResult {}) TargetAction::Failure {outcome} -> (BindingResult {outcome:outcome}) TargetAction::Replace {binding} -> replacement(input,length,unit,store,binding,number) TargetAction::CopyTo {object_id,result_binding} -> copy(input,length,unit,store,object_id,result_binding,number)}
+pub machine apply_integer_action(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,action:TargetAction,number:u64)->BindingResult {
+ transition action {TargetAction::StoreNamed {object_id} -> named(input,length,unit,size,store,object_id,number) TargetAction::NoWrite -> (BindingResult {}) TargetAction::Failure {outcome} -> (BindingResult {outcome:outcome}) TargetAction::Replace {binding} -> replacement(input,length,unit,store,binding,number) TargetAction::CopyTo {object_id,result_binding} -> copy(input,length,unit,store,object_id,result_binding,number)}
+ state named(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,id:u64,number:u64)->BindingResult {
+  let outcome:ExecutionOutcome=store_named_operand(input,length,unit,size,store,id,Operand::Integer {number:number});BindingResult {outcome:outcome}
+ }
  state replacement(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,binding:Binding,number:u64)->BindingResult {
   transition binding {Binding::Cell {cell_id} -> copy(input,length,unit,store,cell_id,binding,number) _ -> (BindingResult {binding:Binding::Integer {number:number}})}
  }

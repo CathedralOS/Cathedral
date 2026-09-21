@@ -19,11 +19,12 @@ use generic_values::normalized_operand;
 use generic_values::copied_binding;
 use generic_values::copy_into;
 use integer_helpers::integers::IntegerSize;
+use named_store::store_named_operand;
 // All policy selection is read-only. Mutation receives one small selected action.
 pub machine apply_selected(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,selection:TargetSelection,incoming:Operand,copy:bool)->BindingResult {
  let operand:Operand=normalized_operand(store,size,incoming);
  let action:TargetAction=classify_target(store,selection,operand,copy);
- let result:BindingResult=apply_target_action(input,length,unit,store,action,operand);result
+ let result:BindingResult=apply_target_action(input,length,unit,size,store,action,operand);result
 }
 pub machine classify_target(store:&ObjectStore,selection:TargetSelection,operand:Operand,copy:bool)->TargetAction {
  transition selection {
@@ -45,21 +46,24 @@ pub machine classify_target(store:&ObjectStore,selection:TargetSelection,operand
   transition count<=64 && id<count && id<64 {true -> named_kind(store,id,operand,store.space.objects[id].value) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::MissingObject})}
  }
  state named_kind(store:&ObjectStore,id:u64,operand:Operand,value:Value)->TargetAction {
-  transition value {Value::Integer {number} -> scalar_source(store,id,operand) Value::Uninitialized -> (TargetAction::CopyTo {object_id:id,result_binding:Binding::Uninitialized}) Value::OperationRegion {space,base,length,scope} -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedRegion}) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::UnsupportedValue})}
- }
- state scalar_source(store:&ObjectStore,id:u64,operand:Operand)->TargetAction {
-  let found:ValueResult=read_value(store,operand);
-  transition found.outcome==ExecutionOutcome::Success {true -> scalar_value(id,found.value) _ -> (TargetAction::Failure {outcome:found.outcome})}
- }
- state scalar_value(id:u64,value:Value)->TargetAction {
-  transition value {Value::Integer {number} -> (TargetAction::CopyTo {object_id:id,result_binding:Binding::Uninitialized}) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::UnsupportedValue})}
+  transition value {
+   Value::Integer {number} -> (TargetAction::StoreNamed {object_id:id})
+   Value::String {string_storage} -> (TargetAction::StoreNamed {object_id:id})
+   Value::Buffer {buffer_storage} -> (TargetAction::StoreNamed {object_id:id})
+   Value::Uninitialized -> (TargetAction::CopyTo {object_id:id,result_binding:Binding::Uninitialized})
+   Value::OperationRegion {space,base,length,scope} -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedRegion})
+   _ -> (TargetAction::Failure {outcome:ExecutionOutcome::UnsupportedValue})
+  }
  }
 }
 machine target_from_argument(action:ArgumentAction)->TargetAction {
  transition action {ArgumentAction::Failure {outcome} -> (TargetAction::Failure {outcome:outcome}) ArgumentAction::Replace {binding} -> (TargetAction::Replace {binding:binding}) ArgumentAction::CopyReferent {binding,object_id} -> (TargetAction::CopyTo {object_id:object_id,result_binding:binding})}
 }
-pub machine apply_target_action(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,action:TargetAction,operand:Operand)->BindingResult {
- transition action {TargetAction::Failure {outcome} -> (BindingResult {outcome:outcome}) TargetAction::NoWrite -> (BindingResult {}) TargetAction::Replace {binding} -> replace(input,length,unit,store,binding,operand) TargetAction::CopyTo {object_id,result_binding} -> copy(input,length,unit,store,object_id,result_binding,operand)}
+pub machine apply_target_action(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,action:TargetAction,operand:Operand)->BindingResult {
+ transition action {TargetAction::StoreNamed {object_id} -> named(input,length,unit,size,store,object_id,operand) TargetAction::Failure {outcome} -> (BindingResult {outcome:outcome}) TargetAction::NoWrite -> (BindingResult {}) TargetAction::Replace {binding} -> replace(input,length,unit,store,binding,operand) TargetAction::CopyTo {object_id,result_binding} -> copy(input,length,unit,store,object_id,result_binding,operand)}
+ state named(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,id:u64,operand:Operand)->BindingResult {
+  let outcome:ExecutionOutcome=store_named_operand(input,length,unit,size,store,id,operand);BindingResult {outcome:outcome}
+ }
  state replace(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,binding:Binding,operand:Operand)->BindingResult {let result:BindingResult=copied_binding(input,length,unit,store,binding,operand);result}
  state copy(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,id:u64,binding:Binding,operand:Operand)->BindingResult {let outcome:ExecutionOutcome=copy_into(input,length,unit,store,id,operand);BindingResult {outcome:outcome,binding:binding}}
 }

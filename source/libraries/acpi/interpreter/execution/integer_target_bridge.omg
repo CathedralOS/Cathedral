@@ -17,6 +17,6 @@ pub machine write_integer_target(input:&[u8;1024],store:&mut ObjectStore,frame:&
  let normalized:u64=normalize(frame.size,number);let length:u64=frame.source_length;let unit:u64=frame.body.unit;
  let selection:TargetSelection=select_target(frame,target);
  let action:TargetAction=classify_target(store,selection,Operand::Integer {number:normalized},copy);
- let result:BindingResult=apply_integer_action(input,length,unit,store,action,normalized);
+ let result:BindingResult=apply_integer_action(input,length,unit,frame.size,store,action,normalized);
  let outcome:ExecutionOutcome=publish_target(frame,selection,result);outcome
 }

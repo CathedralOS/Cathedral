@@ -21,5 +21,6 @@ pub data TargetAction [copy] {
  case NoWrite;
  case Replace(binding:Binding);
  case CopyTo(object_id:u64,result_binding:Binding);
+ case StoreNamed(object_id:u64);
  case Failure(outcome:ExecutionOutcome);
 }
