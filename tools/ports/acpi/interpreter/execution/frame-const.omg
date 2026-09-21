@@ -3,7 +3,7 @@
 use aml::model::Value;
 use aml::model::Path;
 use aml::model::Span;
-use execution::execution_model::MethodDefinition;
+use aml::model::MethodDefinition;
 use execution::execution_model::FrameResult;
 use execution::execution_model::ExecutionOutcome;
 use execution::frames::observed_frame;

@@ -18,6 +18,7 @@ span must belong to that unit and lie inside its initialized bytes. Multi-unit
 source ownership/dispatch remains pending.
 
 `definitions` is a borrowed `[MethodDefinition;64]` indexed by stable object ID.
+The shared observation type now lives in `aml::model`.
 Each present observation records that ID, original absolute method-name path
 (the initial execution scope), flags and retained source span. The caller must capture it when declaring the
 method and retain it independently of subsequent names/aliases/rebinding. The
@@ -25,8 +26,10 @@ executor checks ID, flags and the complete live Method span against it, validate
 the scope/span, and uses its scope for initial and nested calls. Missing or
 mismatched observations return MethodDefinition. Current entry paths and alias
 flags never establish definition scope. These are inert caller-supplied semantic
-observations, not unforgeable provenance or authority tokens: automatic capture
-and retained source ownership through the static loader are pending integration.
+observations, not unforgeable provenance or authority tokens. The
+[single-source pipeline](../../pipeline/PORT.md) now captures them at declaration
+and retains its own initialized source snapshot; the low-level entry still
+requires caller-retained source and observations.
 A caller that supplies fabricated definition observations is outside this API
 contract; the executor cannot reconstruct historical scope from a bare namespace.
 
@@ -154,7 +157,7 @@ fresh const proof of the final executor.
 controls pass on the fixed source, including both maximum span offsets,
 cross-scope method aliases, original-name replacement/removal, a non-alias `bind`
 entry and missing definition observations. The complete retained-package run took
-214.096 seconds. The largest observed evaluator usage was 71,787 units;
+280.577 seconds after the shared declaration-observation type move. The largest observed evaluator usage was 71,787 units;
 every run reports zero filesystem operation attempts.
 [Retained evidence](../../../../../tools/ports/acpi/interpreter/execution/verification.json)
 binds current source/fixture hashes, all selected machine outcomes, the dependency
@@ -171,5 +174,5 @@ The retained Cargo lock reproduces its dependency selection offline.
 
 Omega native ABI/artifacts, iASL/external interpreter comparison, firmware/hardware
 and production integration are not run. Full generic values/references, packages,
-fields, conversions, dynamic namespace behavior, definition-observation capture,
+fields, conversions and dynamic namespace behavior,
 multi-unit source lifetime management and external service policy remain pending.

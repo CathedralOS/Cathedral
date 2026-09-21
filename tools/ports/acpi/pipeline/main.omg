@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral synthetic AML; no firmware or external sample input.
+use aml::model::Outcome;
+use aml::model::Path;
+use aml::model::Span;
+use aml::model::Value;
+use aml::model::Namespace;
+use aml::model::NamespaceResult;
+use aml::model::Lookup;
+use aml::model::MethodDefinition;
+use aml::model::MethodDefinitions;
+use aml::model::ObservedLoad;
+use aml::namespace::empty;
+use aml::namespace::get;
+use aml::namespace::bind;
+use aml::loader::load_with_definitions;
+use pipeline::program::Program;
+use pipeline::program::Prepared;
+use pipeline::program::prepare_program;
+use pipeline::program::run_program;
+use execution::engine::ExecutionResult;
+use execution::engine::run_method;
+use execution::execution_model::ExecutionOutcome;
+use integer_helpers::integers::IntegerSize;
+machine test_result() -> i32 {
+let mut input: [u8;1024];
+input[0] = 20;
+input[1] = 13;
+input[2] = 77;
+input[3] = 65;
+input[4] = 73;
+input[5] = 78;
+input[7] = 164;
+input[8] = 114;
+input[9] = 10;
+input[10] = 40;
+input[11] = 10;
+input[12] = 2;
+let prepared: Prepared = prepare_program(input,14,7,64,128);
+let mut program: Program = prepared.program;
+let mut target_path: Path = Path { absolute:true,count:1 };
+target_path.segments[0] = 1313423693;
+let arguments: [Value;7];
+let result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);
+transition prepared.outcome == Outcome::Success && result.outcome == ExecutionOutcome::Success && result.value.initialized && result.value.number == 42 { true -> (0) _ -> (1) }
+}
+const TEST_RESULT:i32=test_result();
+machine require_ok(value:i32) requires value==0;{}
+data Main{}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

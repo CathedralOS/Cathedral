@@ -1,7 +1,10 @@
 # Bounded static AML syntax and namespace layer
 
 Current stage: **tested** for the static subset below. All 27 semantic cases and
-27 body mutations pass; the complete package source-checks as 18 files.
+27 body mutations pass. The historical constant-evaluator baseline source-checked
+as 18 files. After declaration capture, all 27 original assertion bodies and
+mutations pass through the checked interpreter; load-method/load-rollback also
+retain current constant proofs. The verification record separates these stages.
 [Recorded verification](../../../../tools/ports/acpi/aml/verification.json)
 binds compiler, package and fixture hashes to those results.
 
@@ -32,7 +35,7 @@ All records are ordinary initialized data, not validated authority types. Namesp
 
 The public namespace functions take ordinary `Namespace` values. `get` performs exact absolute lookup; `search` resolves a name against its declaration scope and applies ancestor search only to a single unqualified segment. A successful `Lookup.object` identifies an existing object. Consumers must check `object < object_count` before reading it with `object_at`. `references::resolve_reference` follows package name references using their retained declaration scopes.
 
-Declaration `insert` creates a fresh object identity, so it must not implement interpreter Store. The [integer method executor](../interpreter/execution/PORT.md) updates the existing checked slot with `object_set`, preserving the `Object.has_next`/`next` package linkage and alias identity. Method bodies retain only flags and a `Span`; the execution caller must supply matching immutable bytes, validate the unit and span bounds, and establish its own frame, argument and work policies. The executor accepts a separate method-definition observation table for original declaration scope; automatic capture through this loader remains pending. This package supplies no unit-to-input registry, method-local teardown, runtime object conversion, or execution service.
+Declaration `insert` creates a fresh object identity, so it must not implement interpreter Store. The [integer method executor](../interpreter/execution/PORT.md) updates the existing checked slot with `object_set`, preserving the `Object.has_next`/`next` package linkage and alias identity. Method bodies retain only flags and a `Span`; the execution caller must supply matching immutable bytes, validate the unit and span bounds, and establish its own frame, argument and work policies. The executor accepts a separate method-definition observation table for original declaration scope; `load_with_definitions` now captures it at declaration and rolls back namespace and observations together. The [single-source pipeline](../pipeline/PORT.md) owns the source bytes and executes against that snapshot. This package supplies no unit-to-input registry, method-local teardown, runtime object conversion, or execution service.
 
 ## Pin behavior, validation differences and specification
 

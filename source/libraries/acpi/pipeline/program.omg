@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// One owned initialized AML source snapshot and its transactional namespace.
+// Ordinary data, with no firmware, mapping or invocation authority.
+module program;
+use aml::model::Outcome;
+use aml::model::Namespace;
+use aml::model::MethodDefinitions;
+use aml::model::ObservedLoad;
+use aml::model::Path;
+use aml::model::Value;
+use aml::namespace::empty;
+use aml::loader::load_with_definitions;
+use execution::engine::ExecutionResult;
+use execution::engine::run_method;
+use execution::execution_model::ExecutionOutcome;
+use integer_helpers::integers::IntegerSize;
+
+pub data Program [copy] {
+    loaded: bool;
+    source: [u8; 1024]; length: u64; unit: u64;
+    space: Namespace; definitions: MethodDefinitions;
+}
+pub data Prepared [copy] { outcome: Outcome; offset: u64; program: Program; }
+// Capture the entire initialized array by value. Later mutation of the caller's
+// array cannot replace bytes behind retained spans in this program snapshot.
+pub machine prepare_program(input: [u8; 1024], length: u64, unit: u64, term_budget: u64, value_budget: u64) -> Prepared {
+    let start: Namespace = empty();
+    let definitions: MethodDefinitions = MethodDefinitions {};
+    let observed: ObservedLoad = load_with_definitions(&input, length, unit, start, definitions, term_budget, value_budget);
+    let program: Program = Program { loaded: observed.load.outcome == Outcome::Success, source: input, length: length, unit: unit, space: observed.load.space, definitions: observed.definitions };
+    Prepared { outcome: observed.load.outcome, offset: observed.load.offset, program: program }
+}
+// No replacement-source or reload parameter exists. All methods in this initial
+// wrapper must refer to this one retained unit. Multi-unit dispatch stays absent.
+pub machine run_program(program: &mut Program, path: Path, arguments: &[Value; 7], count: u64, size: IntegerSize, budget: u64) -> ExecutionResult {
+    transition { !program.loaded -> (ExecutionResult { outcome: ExecutionOutcome::InvalidState })
+        program.length > 1024 -> (ExecutionResult { outcome: ExecutionOutcome::Capacity })
+        _ -> execute(program, path, arguments, count, size, budget) }
+    state execute(program: &mut Program, path: Path, arguments: &[Value; 7], count: u64, size: IntegerSize, budget: u64) -> ExecutionResult {
+        let result: ExecutionResult = run_method(&program.source, program.length, program.unit, &mut program.space, &program.definitions.entries, path, arguments, count, size, budget); result
+    }
+}

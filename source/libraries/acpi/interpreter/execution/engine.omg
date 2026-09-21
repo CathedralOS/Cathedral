@@ -14,7 +14,7 @@ use execution_model::Slot;
 use execution_model::Operation;
 use runtime_model::Runtime;
 use frames::observed_frame;
-use execution_model::MethodDefinition;
+use aml::model::MethodDefinition;
 use execution_names::execution_lookup;
 use decode_execution::decode_term;
 use decode_execution::decode_target;

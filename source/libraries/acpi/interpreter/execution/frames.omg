@@ -13,7 +13,7 @@ use execution_model::Slot;
 use execution_model::SlotResult;
 use execution_model::Frame;
 use execution_model::FrameResult;
-use execution_model::MethodDefinition;
+use aml::model::MethodDefinition;
 pub machine scalar_slot(size: IntegerSize, value: Value) -> SlotResult {
     transition value {
         Value::Integer { number } -> scalar(size, number)

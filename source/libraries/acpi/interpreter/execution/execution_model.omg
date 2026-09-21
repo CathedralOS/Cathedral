@@ -35,7 +35,3 @@ pub data Frame [copy] {
     returned: bool; return_value: Slot;
 }
 pub data FrameResult [copy] { outcome: ExecutionOutcome; frame: Frame; }
-
-// Caller-retained definition observation, indexed by stable object ID.
-// Captured at declaration time; current name/alias bindings do not prove scope.
-pub data MethodDefinition [copy] { present: bool; object_id: u64; scope: Path; flags: u8; body: Span; }

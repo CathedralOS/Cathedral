@@ -132,7 +132,7 @@ def render(row,evaluate=True):
  entries=[*objects,*row['aliases']]
  out=['// SPDX-License-Identifier: MIT OR Apache-2.0','// '+row['origin'],
  'use aml::model::Value;','use aml::model::Path;','use aml::model::Span;','use aml::model::Namespace;','use aml::model::Object;','use aml::model::Entry;',
- 'use integer_helpers::integers::IntegerSize;','use execution::engine::run_method;','use execution::engine::ExecutionResult;','use execution::execution_model::ExecutionOutcome;', 'use execution::execution_model::MethodDefinition;',
+ 'use integer_helpers::integers::IntegerSize;','use execution::engine::run_method;','use execution::engine::ExecutionResult;','use execution::execution_model::ExecutionOutcome;', 'use aml::model::MethodDefinition;',
  'machine namespace_integer(value: Value, expected: u64) -> bool { transition value { Value::Integer { number } -> (number == expected) _ -> (false) } }',
  'machine test_result() -> i32 {','    let mut input: [u8; 1024];']
  out +=[f'    input[{i}] = {v};'for i,v in enumerate(data)if v]

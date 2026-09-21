@@ -48,3 +48,11 @@ pub data External [copy] { path: Path; object_type: u8; argument_count: u8; offs
 pub data LoadState [copy] { outcome: Outcome; offset: u64; space: Namespace; at: u64; end: u64; unit: u64; scope: Path; depth: u64; frames: [ScopeFrame; 8]; done: bool; value_budget: u64; external_count: u64; externals: [External; 32]; }
 
 pub data ReferenceState [copy] { outcome: Outcome; object: u64; visited: u64; done: bool; }
+
+// Caller-retained definition observation, indexed by stable object ID.
+// Captured at declaration time; current name/alias bindings do not prove scope.
+pub data MethodDefinition [copy] { present: bool; object_id: u64; scope: Path; flags: u8; body: Span; }
+
+// Persistent declaration-time observations; ordinary initialized metadata.
+pub data MethodDefinitions [copy] { entries: [MethodDefinition; 64]; }
+pub data ObservedLoad [copy] { load: LoadState; definitions: MethodDefinitions; }

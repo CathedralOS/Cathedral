@@ -102,6 +102,16 @@
   },
   "compiler_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
   "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "current_regression": {
+    "body_control_count": 18,
+    "command": "python3 tools/ports/acpi/aml/fields/check_interpreted.py",
+    "note": "Original field source and fixture bodies unchanged; current parent AML adds declaration capture. Historical const results above retain their original closure hash.",
+    "record": "tools/ports/acpi/aml/fields/checked-verification.json",
+    "record_sha256": "5cb97f4936ebf3603555f2f58071ef1c2bd36a9f4fbb507a35886e9b0b046f15",
+    "scenario_count": 18,
+    "source_closure_sha256": "669c1872d3ddf6b809511bc602868a400a5895e6468905996376085ffe59d410",
+    "stage": "checked-interpreter execution; native/hardware not run"
+  },
   "inventory": {
     "anchors": 158,
     "blocked": 0,
@@ -110,7 +120,7 @@
     "pinned_files": 2,
     "translated": 7
   },
-  "kind": "observed Omega semantic evaluation only; inert field descriptions",
+  "kind": "Historical constant-evaluation baseline at source_closure_sha256; current additive-parent regression is recorded separately below",
   "limits": [
     "No namespace installation, register resolution or runtime FieldUnit storage",
     "No native ABI or field I/O validation",

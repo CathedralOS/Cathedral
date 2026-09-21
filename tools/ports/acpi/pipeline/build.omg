@@ -1,0 +1,8 @@
+machine build(builder: &mut Build) {
+    builder.application("cathedral-acpi-pipeline-tests");
+    builder.freestanding = true;
+    builder.depend_as("pipeline", Source::Path { location: "../../../../source/libraries/acpi/pipeline" });
+    builder.depend_as("aml", Source::Path { location: "../../../../source/libraries/acpi/aml" });
+    builder.depend_as("execution", Source::Path { location: "../../../../source/libraries/acpi/interpreter/execution" });
+    builder.depend_as("integer_helpers", Source::Path { location: "../../../../source/libraries/acpi/interpreter" });
+}

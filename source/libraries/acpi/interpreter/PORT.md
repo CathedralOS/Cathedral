@@ -17,8 +17,8 @@ The neighboring [AML syntax package](../aml/PORT.md) owns parsing and namespace
 construction. This package currently has no dependency on it. Its scalar and
 fixed-array parameters must not be mistaken for a complete `Object` translation.
 The child executor integrates its retained source spans and object arena with
-caller-supplied method-definition observations. Automatic observation capture
-through the loader remains pending.
+method-definition observations. The [single-source pipeline](../pipeline/PORT.md)
+now captures these at declaration and owns their immutable source snapshot.
 
 ## Pin and licensing
 
@@ -143,7 +143,7 @@ a changed-body control; the complete final bytecode suite uses the distinct
 checked-interpreter stage. See its PORT for exact hashes and evidence.
 
 Complete ACPI-005 still needs generic values/conversions and references, packages,
-fields, dynamic namespace binding, loader definition capture, multi-unit source
+fields, dynamic namespace binding, multi-unit source
 management and comprehensive upstream semantic scenarios. Current loops are bounded but do not establish the
 whole ACPI-006 resource-limit milestone. Large cases may also exceed the
 compiler evaluator's own work budget; that is separate from a runtime profile.

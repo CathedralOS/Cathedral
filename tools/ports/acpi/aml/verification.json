@@ -1,16 +1,183 @@
 {
-  "kind": "observed Omega semantic checks; no native execution, ABI agreement or full AML interpreter claim",
+  "boundaries": [
+    "Static namespace loader only",
+    "Method bodies retained unparsed",
+    "No live handlers, table mappings or production boot import",
+    "Resource limits are Cathedral policy, not ACPI maxima"
+  ],
+  "cases": {
+    "bytes-endian": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "60344c972874dcc64f6f412e74e031d94181533c32f11943b690e62f105cff11",
+      "positive": "passed"
+    },
+    "integer-widths": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "dfbe2f5da67d948cb0b83ec7c87d36e0604e0405bb469955c2072da511339a8d",
+      "positive": "passed"
+    },
+    "load-alias": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "3d7fa2653f40333ae67c85cde284ba95e03eb898a5f446dc96e82177300c54b4",
+      "positive": "passed"
+    },
+    "load-capacity-work": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "9f2e9dc5381f6609b88baea4721c9448025e57d901ccf40488d57876b9e60557",
+      "positive": "passed"
+    },
+    "load-depth": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "bb844f3ebc54e775bc049b297ff6de72ed7e3106cd9db77025e5bbe3ed984c53",
+      "positive": "passed"
+    },
+    "load-forward-reference": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "7e3f7b7a1b8e2f215352ba6ae68ef9150e12a6843b7c60321b25634b8303578e",
+      "positive": "passed"
+    },
+    "load-inert-objects": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "624ba7f12aa5745bfe29e2304897548bfd1b2dd3ae48bf0482f8ae80defe9201",
+      "positive": "passed"
+    },
+    "load-method": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "7e1bcc94427e851601a7216acc05bb9929b343af249d2c823e0ba8762f8f5888",
+      "positive": "passed"
+    },
+    "load-rollback": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "24807a402dd1fb6d85a0f1c3c3fef317ba1aadac61cfcf5e020a74ce6001c2b5",
+      "positive": "passed"
+    },
+    "load-root-scope": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "01908f9016257ecc74255e6438ecf80d9396d8cb9a87c1a4af02c507fe49849c",
+      "positive": "passed"
+    },
+    "load-scoped-records": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "9bb8d4a541bdd0a72d3359212694db232eba69ed1b0f5449273b64efb126c978",
+      "positive": "passed"
+    },
+    "name-capacity": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "603cd1b226a355522064146ac2fc3283cc9a264004871bc234af4f03aa038506",
+      "positive": "passed"
+    },
+    "names-forms": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "ab54dc8326d08bb724852f0de764dead9663cdcdd43f06b2354d6339021f24ed",
+      "positive": "passed"
+    },
+    "names-invalid": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "e961c8f01bc298af38cfa17745640ca960998c788b6492b4eb9ea6a923f6c7d3",
+      "positive": "passed"
+    },
+    "namespace-alias": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "b69c3c42525ab13447c673169f8d0aadd6f08e0a071834504816794cf81c496f",
+      "positive": "passed"
+    },
+    "namespace-errors": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "fdab9f479184c4f14d08d3df56787e2c79c54ff5620aaa94515af6e075400d67",
+      "positive": "passed"
+    },
+    "namespace-shadow": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "1aebd1708b19dc3af6128ea73f84ebb7e15b1070bbca8bf601bd54e1c758550c",
+      "positive": "passed"
+    },
+    "opcode-prefix": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "95a0719fdd66b955e762e1ab52aecbab040e057901ed083846abda33c3074566",
+      "positive": "passed"
+    },
+    "package-length": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "0d78e70bb2c69e84c3511f72b6bac7224b9615ae6a341c53b21366e923c04d9f",
+      "positive": "passed"
+    },
+    "reference-cycle": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "96af07a96452a64d0b36a9db69f963e5af23578b42f043ded7247e8d36e4731a",
+      "positive": "passed"
+    },
+    "string-validation": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "fbe3e6b0f67ca8ce4ce8b91c5b4cd6f9f2ab5e31e07976c0d21ca7d06f0ae29e",
+      "positive": "passed"
+    },
+    "values-buffer": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "7fe5ebaf611b2f5d59e0ddcb1130aeab6b329074611900782417d1fce3d38788",
+      "positive": "passed"
+    },
+    "values-capacity-work": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "edaa006db380226ddf6a635171d23ad08234a544735b726778d08c11910b6b16",
+      "positive": "passed"
+    },
+    "values-depth": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "951b745bf34a0151bf7b7af85c1ad665048d003143ef70db5419a4c9275b83bc",
+      "positive": "passed"
+    },
+    "values-extra": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "1305b0cfe2fb6eeebee93c613536e0f3f8a1c6c05f3f9cb294984a20a8a4f453",
+      "positive": "passed"
+    },
+    "values-nested": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "a4f7df2d4868ee2e7c2d5c07c4c9db3fc1db7399644fe5aa191314de028544d6",
+      "positive": "passed"
+    },
+    "variable-package": {
+      "body_mutation": "computed 1; rejected by requires result == 0",
+      "fixture_sha256": "6e8ff194e1481e285236082332337d578cb4c38debf311a3cde4da1022fe6c3c",
+      "positive": "passed"
+    }
+  },
+  "commands": [
+    "python3 tools/ports/acpi/aml/check.py --jobs 4 (original 23-case manifest)",
+    "python3 tools/ports/acpi/aml/check.py --case integer-widths --case string-validation --case variable-package --case name-capacity --jobs 2"
+  ],
   "compiler_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
   "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
-  "package_sha256": "403fba2b75f2951d4d9b8df48dda77d34c3c052191ba81c438c5114db9212190",
-  "package_hash_algorithm": "SHA-256 over sorted *.omg filename + NUL + file bytes",
-  "source_check": {
-    "command": "/tmp/cathedral-omega-eaa7993/release/omega --check tools/ports/acpi/aml/source-check.omg",
-    "source_files": 18,
-    "wrote_output": false
+  "current_regression": {
+    "body_control_count": 27,
+    "command": "python3 tools/ports/acpi/pipeline/check.py --parser-regression --record tools/ports/acpi/pipeline/parser-verification.json",
+    "current_const_cases": [
+      "load-method",
+      "load-rollback"
+    ],
+    "current_const_record": "tools/ports/acpi/pipeline/const-verification.json",
+    "note": "All original parser assertion bodies and mutations unchanged. Historical const results retain their original package hash; two focused const pairs were rerun against the current package.",
+    "package_sha256": "8e54297df1b321a63e5b529bd615e4edc04e4fa61c8597f14a197a0a2bb41b60",
+    "record": "tools/ports/acpi/pipeline/parser-verification.json",
+    "record_sha256": "1f5a715fb096fdf3e1b7eefe8a84d7fa63c57a3d2aa69ab354b3a6a82b7325aa",
+    "scenario_count": 27,
+    "stage": "checked-interpreter execution; native/hardware not run"
   },
+  "inventory": {
+    "blocked": 0,
+    "files": 6,
+    "omitted": 0,
+    "pending": 292,
+    "translated": 28
+  },
+  "kind": "Historical constant-evaluation baseline at package_sha256; current declaration-capture regression is recorded separately below",
+  "metadata_only_upstream_test_assets": 33,
+  "opcode_facts": 113,
+  "package_hash_algorithm": "SHA-256 over sorted *.omg filename + NUL + file bytes",
+  "package_sha256": "403fba2b75f2951d4d9b8df48dda77d34c3c052191ba81c438c5114db9212190",
   "runs": [
     {
+      "body_mutation_rejections": 23,
       "cases": [
         "bytes-endian",
         "load-alias",
@@ -36,176 +203,24 @@
         "values-extra",
         "values-nested"
       ],
-      "positive_count": 23,
-      "body_mutation_rejections": 23,
-      "log_sha256": "96ae2501b7ac9ef5dd325aad5aaf1ce0cbcfbc2796cf726464ab996499ffd1c8"
+      "log_sha256": "96ae2501b7ac9ef5dd325aad5aaf1ce0cbcfbc2796cf726464ab996499ffd1c8",
+      "positive_count": 23
     },
     {
+      "body_mutation_rejections": 4,
       "cases": [
         "integer-widths",
         "name-capacity",
         "string-validation",
         "variable-package"
       ],
-      "positive_count": 4,
-      "body_mutation_rejections": 4,
-      "log_sha256": "298e0829d21ef173c7994be5d366d4a0c222556ad3020589520c9be579012567"
+      "log_sha256": "298e0829d21ef173c7994be5d366d4a0c222556ad3020589520c9be579012567",
+      "positive_count": 4
     }
   ],
-  "commands": [
-    "python3 tools/ports/acpi/aml/check.py --jobs 4 (original 23-case manifest)",
-    "python3 tools/ports/acpi/aml/check.py --case integer-widths --case string-validation --case variable-package --case name-capacity --jobs 2"
-  ],
-  "cases": {
-    "bytes-endian": {
-      "fixture_sha256": "60344c972874dcc64f6f412e74e031d94181533c32f11943b690e62f105cff11",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "integer-widths": {
-      "fixture_sha256": "dfbe2f5da67d948cb0b83ec7c87d36e0604e0405bb469955c2072da511339a8d",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "load-alias": {
-      "fixture_sha256": "3d7fa2653f40333ae67c85cde284ba95e03eb898a5f446dc96e82177300c54b4",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "load-capacity-work": {
-      "fixture_sha256": "9f2e9dc5381f6609b88baea4721c9448025e57d901ccf40488d57876b9e60557",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "load-depth": {
-      "fixture_sha256": "bb844f3ebc54e775bc049b297ff6de72ed7e3106cd9db77025e5bbe3ed984c53",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "load-forward-reference": {
-      "fixture_sha256": "7e3f7b7a1b8e2f215352ba6ae68ef9150e12a6843b7c60321b25634b8303578e",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "load-inert-objects": {
-      "fixture_sha256": "624ba7f12aa5745bfe29e2304897548bfd1b2dd3ae48bf0482f8ae80defe9201",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "load-method": {
-      "fixture_sha256": "7e1bcc94427e851601a7216acc05bb9929b343af249d2c823e0ba8762f8f5888",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "load-rollback": {
-      "fixture_sha256": "24807a402dd1fb6d85a0f1c3c3fef317ba1aadac61cfcf5e020a74ce6001c2b5",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "load-root-scope": {
-      "fixture_sha256": "01908f9016257ecc74255e6438ecf80d9396d8cb9a87c1a4af02c507fe49849c",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "load-scoped-records": {
-      "fixture_sha256": "9bb8d4a541bdd0a72d3359212694db232eba69ed1b0f5449273b64efb126c978",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "name-capacity": {
-      "fixture_sha256": "603cd1b226a355522064146ac2fc3283cc9a264004871bc234af4f03aa038506",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "names-forms": {
-      "fixture_sha256": "ab54dc8326d08bb724852f0de764dead9663cdcdd43f06b2354d6339021f24ed",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "names-invalid": {
-      "fixture_sha256": "e961c8f01bc298af38cfa17745640ca960998c788b6492b4eb9ea6a923f6c7d3",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "namespace-alias": {
-      "fixture_sha256": "b69c3c42525ab13447c673169f8d0aadd6f08e0a071834504816794cf81c496f",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "namespace-errors": {
-      "fixture_sha256": "fdab9f479184c4f14d08d3df56787e2c79c54ff5620aaa94515af6e075400d67",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "namespace-shadow": {
-      "fixture_sha256": "1aebd1708b19dc3af6128ea73f84ebb7e15b1070bbca8bf601bd54e1c758550c",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "opcode-prefix": {
-      "fixture_sha256": "95a0719fdd66b955e762e1ab52aecbab040e057901ed083846abda33c3074566",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "package-length": {
-      "fixture_sha256": "0d78e70bb2c69e84c3511f72b6bac7224b9615ae6a341c53b21366e923c04d9f",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "reference-cycle": {
-      "fixture_sha256": "96af07a96452a64d0b36a9db69f963e5af23578b42f043ded7247e8d36e4731a",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "string-validation": {
-      "fixture_sha256": "fbe3e6b0f67ca8ce4ce8b91c5b4cd6f9f2ab5e31e07976c0d21ca7d06f0ae29e",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "values-buffer": {
-      "fixture_sha256": "7fe5ebaf611b2f5d59e0ddcb1130aeab6b329074611900782417d1fce3d38788",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "values-capacity-work": {
-      "fixture_sha256": "edaa006db380226ddf6a635171d23ad08234a544735b726778d08c11910b6b16",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "values-depth": {
-      "fixture_sha256": "951b745bf34a0151bf7b7af85c1ad665048d003143ef70db5419a4c9275b83bc",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "values-extra": {
-      "fixture_sha256": "1305b0cfe2fb6eeebee93c613536e0f3f8a1c6c05f3f9cb294984a20a8a4f453",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "values-nested": {
-      "fixture_sha256": "a4f7df2d4868ee2e7c2d5c07c4c9db3fc1db7399644fe5aa191314de028544d6",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    },
-    "variable-package": {
-      "fixture_sha256": "6e8ff194e1481e285236082332337d578cb4c38debf311a3cde4da1022fe6c3c",
-      "positive": "passed",
-      "body_mutation": "computed 1; rejected by requires result == 0"
-    }
-  },
-  "inventory": {
-    "files": 6,
-    "translated": 28,
-    "pending": 292,
-    "blocked": 0,
-    "omitted": 0
-  },
-  "opcode_facts": 113,
-  "metadata_only_upstream_test_assets": 33,
-  "boundaries": [
-    "Static namespace loader only",
-    "Method bodies retained unparsed",
-    "No live handlers, table mappings or production boot import",
-    "Resource limits are Cathedral policy, not ACPI maxima"
-  ]
+  "source_check": {
+    "command": "/tmp/cathedral-omega-eaa7993/release/omega --check tools/ports/acpi/aml/source-check.omg",
+    "source_files": 18,
+    "wrote_output": false
+  }
 }

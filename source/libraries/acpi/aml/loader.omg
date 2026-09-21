@@ -17,6 +17,9 @@ use model::LevelKind;
 use model::ScopeFrame;
 use model::External;
 use model::LoadState;
+use model::MethodDefinition;
+use model::MethodDefinitions;
+use model::ObservedLoad;
 use bytes::read_le;
 use bytes::opcode;
 use bytes::envelope;
@@ -35,10 +38,10 @@ machine fail(value:&mut LoadState,outcome:Outcome,offset:u64)->Outcome {value.ou
 
 
 
-machine load_step(input:&[u8;1024],value:&mut LoadState)->Outcome {
- transition value.done {true -> (value.outcome) _ -> active(input,value)}
- state active(input:&[u8;1024],value:&mut LoadState)->Outcome {
-  transition value.at==value.end {true -> leave(value) _ -> token(input,value)}
+machine load_step(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodDefinitions)->Outcome {
+ transition value.done {true -> (value.outcome) _ -> active(input,value,definitions)}
+ state active(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodDefinitions)->Outcome {
+  transition value.at==value.end {true -> leave(value) _ -> token(input,value,definitions)}
  }
  state leave(value:&mut LoadState)->Outcome {
   transition value.depth>0 && value.depth<=8 {true -> pop(value) _ -> complete(value)}
@@ -47,16 +50,16 @@ machine load_step(input:&[u8;1024],value:&mut LoadState)->Outcome {
   let index:u64=value.depth-1;let frame:ScopeFrame=scope_frame(value,index);value.depth=index;value.scope=frame.scope;value.end=frame.end;Outcome::Success
  }
  state complete(value:&mut LoadState)->Outcome {value.done=true;Outcome::Success}
- state token(input:&[u8;1024],value:&mut LoadState)->Outcome {
+ state token(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodDefinitions)->Outcome {
   let op:Read=opcode(input,value.end,value.at);
-  transition op.outcome==Outcome::Success {true -> dispatch(input,value,op) _ -> call_fail_0(value,op.outcome,op.offset)}
+  transition op.outcome==Outcome::Success {true -> dispatch(input,value,definitions,op) _ -> call_fail_0(value,op.outcome,op.offset)}
  }
- state dispatch(input:&[u8;1024],value:&mut LoadState,op:Read)->Outcome {
+ state dispatch(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodDefinitions,op:Read)->Outcome {
   transition op.value {
    0x06 -> call_alias_declaration_1(input,value,op.next)
    0x08 -> call_name_declaration_2(input,value,op.next)
    0x10 -> call_scoped_3(input,value,op,LevelKind::Scope)
-   0x14 -> call_method_4(input,value,op.next)
+   0x14 -> call_method_4(input,value,definitions,op.next)
    0x15 -> call_external_5(input,value,op.next)
    0x5b01 -> call_mutex_6(input,value,op.next)
    0x5b02 -> call_event_7(input,value,op.next)
@@ -78,7 +81,7 @@ machine load_step(input:&[u8;1024],value:&mut LoadState)->Outcome {
 
  state call_scoped_3(input:&[u8;1024],value:&mut LoadState,op:Read,kind:LevelKind) -> Outcome {let result:Outcome=scoped(input,value,op,kind);result}
 
- state call_method_4(input:&[u8;1024],value:&mut LoadState,at:u64) -> Outcome {let result:Outcome=method(input,value,at);result}
+ state call_method_4(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodDefinitions,at:u64) -> Outcome {let result:Outcome=method(input,value,definitions,at);result}
 
  state call_external_5(input:&[u8;1024],value:&mut LoadState,at:u64) -> Outcome {let result:Outcome=external(input,value,at);result}
 
@@ -146,20 +149,22 @@ machine alias_declaration(input:&[u8;1024],value:&mut LoadState,at:u64)->Outcome
 
  state call_fail_1(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
 }
-machine method(input:&[u8;1024],value:&mut LoadState,at:u64)->Outcome {
+machine method(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodDefinitions,at:u64)->Outcome {
  let package:Envelope=envelope(input,value.end,at);
- transition package.outcome==Outcome::Success {true -> name(input,value,package) _ -> call_fail_0(value,package.outcome,package.offset)}
- state name(input:&[u8;1024],value:&mut LoadState,package:Envelope)->Outcome {
+ transition package.outcome==Outcome::Success {true -> name(input,value,definitions,package) _ -> call_fail_0(value,package.outcome,package.offset)}
+ state name(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodDefinitions,package:Envelope)->Outcome {
   let name:PathResult=declared_name(input,package.end,package.body,value.scope);
-  transition name.outcome==Outcome::Success {true -> flags(input,value,package,name) _ -> call_fail_1(value,name.outcome,name.offset)}
+  transition name.outcome==Outcome::Success {true -> flags(input,value,definitions,package,name) _ -> call_fail_1(value,name.outcome,name.offset)}
  }
- state flags(input:&[u8;1024],value:&mut LoadState,package:Envelope,name:PathResult)->Outcome {
+ state flags(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodDefinitions,package:Envelope,name:PathResult)->Outcome {
   let flags:Read=read_le(input,package.end,name.next,1);
-  transition flags.outcome==Outcome::Success {true -> put(value,package,name,flags) _ -> call_fail_2(value,flags.outcome,flags.offset)}
+  transition flags.outcome==Outcome::Success {true -> put(value,definitions,package,name,flags) _ -> call_fail_2(value,flags.outcome,flags.offset)}
  }
- state put(value:&mut LoadState,package:Envelope,name:PathResult,flags:Read)->Outcome {
+ state put(value:&mut LoadState,definitions:&mut MethodDefinitions,package:Envelope,name:PathResult,flags:Read)->Outcome {
   let object:Value=Value::Method {flags:(flags.value&255) as u8,body:Span {unit:value.unit,start:flags.next,end:package.end}};
-  let inserted:NamespaceResult=insert(value.space,name.value,object);let result:Outcome=namespace_result(value,inserted,package.end);result
+  let inserted:NamespaceResult=insert(value.space,name.value,object);
+  let observation:MethodDefinition=MethodDefinition {present:true,object_id:inserted.object,scope:name.value,flags:(flags.value&255) as u8,body:Span {unit:value.unit,start:flags.next,end:package.end}};
+  let result:Outcome=loader_commit_method(value,definitions,inserted,observation,package.end);result
  }
 
  state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
@@ -167,6 +172,20 @@ machine method(input:&[u8;1024],value:&mut LoadState,at:u64)->Outcome {
  state call_fail_1(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
 
  state call_fail_2(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
+}
+// No namespace or observation is committed until the fresh ID slot is free.
+machine loader_commit_method(value:&mut LoadState,definitions:&mut MethodDefinitions,inserted:NamespaceResult,observation:MethodDefinition,next:u64)->Outcome {
+ transition inserted.outcome==Outcome::Success {true -> index(value,definitions,inserted,observation,next,inserted.object) _ -> rejected(value,inserted.outcome)}
+ state index(value:&mut LoadState,definitions:&mut MethodDefinitions,inserted:NamespaceResult,observation:MethodDefinition,next:u64,index:u64)->Outcome {
+  transition index<64 {true -> available(value,definitions,inserted,observation,next,index) _ -> rejected(value,Outcome::Capacity)}
+ }
+ state available(value:&mut LoadState,definitions:&mut MethodDefinitions,inserted:NamespaceResult,observation:MethodDefinition,next:u64,index:u64)->Outcome {
+  transition !definitions.entries[index].present {true -> commit(value,definitions,inserted,observation,next,index) _ -> rejected(value,Outcome::InvalidState)}
+ }
+ state commit(value:&mut LoadState,definitions:&mut MethodDefinitions,inserted:NamespaceResult,observation:MethodDefinition,next:u64,index:u64)->Outcome {
+  definitions.entries[index]=observation;value.space=inserted.space;value.at=next;Outcome::Success
+ }
+ state rejected(value:&mut LoadState,outcome:Outcome)->Outcome {let result:Outcome=fail(value,outcome,value.at);result}
 }
 machine event(input:&[u8;1024],value:&mut LoadState,at:u64)->Outcome {
  let name:PathResult=declared_name(input,value.end,at,value.scope);
@@ -352,13 +371,13 @@ machine scoped_name(input:&[u8;1024],end:u64,at:u64,scope:Path,kind:LevelKind)->
  }
 }
 
-pub machine load(input:&[u8;1024],length:u64,unit:u64,space:Namespace,term_budget:u64,value_budget:u64)->LoadState {
+machine loader_capture(input:&[u8;1024],length:u64,unit:u64,space:Namespace,definitions:&mut MethodDefinitions,term_budget:u64,value_budget:u64)->LoadState {
  transition length<=1024 && term_budget<=1024 && value_budget<=1024 {
-  true -> run(input,length,unit,space,term_budget,value_budget) _ -> (LoadState {outcome:Outcome::Capacity,space:space,done:true})
+  true -> run(input,length,unit,space,definitions,term_budget,value_budget) _ -> (LoadState {outcome:Outcome::Capacity,space:space,done:true})
  }
- state run(input:&[u8;1024],length:u64,unit:u64,space:Namespace,term_budget:u64,value_budget:u64)->LoadState {
+ state run(input:&[u8;1024],length:u64,unit:u64,space:Namespace,definitions:&mut MethodDefinitions,term_budget:u64,value_budget:u64)->LoadState {
   let scope:Path=root();let mut current:LoadState=LoadState {space:space,end:length,unit:unit,scope:scope,value_budget:value_budget};
-  let outcome:Outcome=load_loop(input,&mut current,0,term_budget);
+  let outcome:Outcome=load_loop(input,&mut current,definitions,0,term_budget);
   transition current.done {true -> result(space,current) _ -> exhausted(space,current)}
  }
  state result(original:Namespace,current:LoadState)->LoadState {
@@ -369,13 +388,27 @@ pub machine load(input:&[u8;1024],length:u64,unit:u64,space:Namespace,term_budge
  }
  state rollback(original:Namespace,current:LoadState)->LoadState {let mut out:LoadState=current;out.space=original;out.external_count=0;out}
 }
-machine load_loop(input:&[u8;1024],value:&mut LoadState,index:u64,count:u64)
+machine load_loop(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodDefinitions,index:u64,count:u64)
 terminates by (index,count) -> Nat::BoundedDistance;
 -> Outcome {
- let next:Outcome=load_tick(input,value,index,count);
- transition index<count {true -> load_loop(input,value,index+1,count) _ -> (value.outcome)}
+ let next:Outcome=load_tick(input,value,definitions,index,count);
+ transition index<count {true -> load_loop(input,value,definitions,index+1,count) _ -> (value.outcome)}
 }
-machine load_tick(input:&[u8;1024],value:&mut LoadState,index:u64,count:u64)->Outcome {
- transition index<count {true -> tick(input,value) _ -> (value.outcome)}
- state tick(input:&[u8;1024],value:&mut LoadState)->Outcome {let result:Outcome=load_step(input,value);result}
+machine load_tick(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodDefinitions,index:u64,count:u64)->Outcome {
+ transition index<count {true -> tick(input,value,definitions) _ -> (value.outcome)}
+ state tick(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodDefinitions)->Outcome {let result:Outcome=load_step(input,value,definitions);result}
+}
+
+// Compatibility entry: newly captured observations are intentionally discarded.
+// Existing namespace-only callers retain the original signature and outcomes.
+pub machine load(input:&[u8;1024],length:u64,unit:u64,space:Namespace,term_budget:u64,value_budget:u64)->LoadState {
+ let mut definitions:MethodDefinitions;
+ let result:LoadState=loader_capture(input,length,unit,space,&mut definitions,term_budget,value_budget);result
+}
+// Callers retain matching immutable source units. The namespace and sidecar are
+// one transaction; errors return both original inputs, never partial captures.
+pub machine load_with_definitions(input:&[u8;1024],length:u64,unit:u64,space:Namespace,definitions:MethodDefinitions,term_budget:u64,value_budget:u64)->ObservedLoad {
+ let mut candidate:MethodDefinitions=definitions;
+ let loaded:LoadState=loader_capture(input,length,unit,space,&mut candidate,term_budget,value_budget);
+ transition loaded.outcome==Outcome::Success {true -> (ObservedLoad {load:loaded,definitions:candidate}) _ -> (ObservedLoad {load:loaded,definitions:definitions})}
 }

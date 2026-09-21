@@ -1,8 +1,12 @@
 # Bounded AML field declaration metadata
 
-Status: **tested**. All 18 semantic cases and 18 body-mutating controls pass,
-with a 19-file source check. [Verification record](../../../../../tools/ports/acpi/aml/fields/verification.json)
-binds the exact compiler, fixtures and unchanged parent/child source closure.
+Status: **tested**. The historical 18 constant-evaluator cases and 18 body
+controls, with a 19-file source check, retain their original source hashes in
+the [verification record](../../../../../tools/ports/acpi/aml/fields/verification.json).
+After the parent method-capture change, all 18 unchanged assertion bodies and
+mutations pass again through the checked interpreter. The
+[current closure record](../../../../../tools/ports/acpi/aml/fields/checked-verification.json)
+binds those current dependencies; no field source or fixture body changed.
 
 This independent `cathedral-acpi-field-syntax` package extends staged ACPI-004 syntax coverage. It depends on the accepted parent AML byte/name/literal helpers and does not modify its loader, namespace or `Value` cases. It produces descriptions; it does not install FieldUnits, resolve region/register objects, acquire locks, allocate field storage, select banks, or access hardware. Full ACPI-004 and field execution remain pending.
 

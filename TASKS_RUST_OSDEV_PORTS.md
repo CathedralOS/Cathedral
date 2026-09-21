@@ -412,10 +412,17 @@ It executes integer method bytes, nested calls, existing named/alias targets and
 bounded If/Else/While/Break/Continue with shared fuel. Current frame-admission
 constant proof and its mutation control also pass; full bytecode evidence is the
 distinct checked-interpreter stage. Definition observations preserve original
-scope across aliases/rebinding. Automatic loader capture, generic values, fields,
+scope across aliases/rebinding. Generic values, fields,
 packages, dynamic declarations and multi-unit source management remain pending.
-Unresolved region/synchronization/service results grant no live access. ACPI-005/006
-stay open.
+Unresolved region/synchronization/service results grant no live access.
+The [loader-to-executor pipeline](source/libraries/acpi/pipeline/PORT.md) now
+captures method observations during declaration, rolls them back with failed
+loads and owns a single initialized source snapshot. All 22 pipeline pairs,
+27 original parser pairs, 79 executor pairs and 18 unchanged field-parser pairs
+pass the current checked-interpreter regression. Two parser const pairs and the
+frame-admission const pair also pass; historical full const evidence retains its
+original hashes. Multi-unit dispatch and full AML semantics remain pending;
+ACPI-004/005/006 stay open.
 
 ACPI-004 partial evidence: [static AML syntax and namespace](source/libraries/acpi/aml/PORT.md)
 passes 27 Omega scenarios with 27 body mutations and an 18-file source check.

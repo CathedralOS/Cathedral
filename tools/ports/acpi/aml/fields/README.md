@@ -11,4 +11,6 @@ The checker evaluates independently authored metadata cases, then changes one ex
 
 `coverage.json` maps each field form and pending execution boundary. `compiler-notes.md` and `reproduce-field-comparison.py` retain the observed unsigned record-operand comparison mismatch and the checked scalar source form used by the parser.
 
-`verification.json` records the completed baseline: 18 positive semantic cases, 18 rejected body mutations, the 19-file source check, compiler/closure hashes, and per-fixture hashes. The accepted parent AML source remained unchanged.
+`verification.json` preserves the historical constant-evaluation baseline: 18 positive semantic cases, 18 rejected body mutations, the 19-file source check, compiler/closure hashes, and per-fixture hashes. The parent AML source remained unchanged during that historical run.
+
+After the parent added method declaration capture, `checked-verification.json` records all 18 unchanged assertion bodies and 18 original mutations executed through the checked interpreter against the current parent/child closure. Run `python3 tools/ports/acpi/aml/fields/check_interpreted.py`, then `python3 tools/ports/acpi/aml/fields/verify_interpreted.py`. This consumer requires the exact pinned runner built by the execution/pipeline harness; its binary hash is checked. Current regression execution is distinct from the historical const proofs and from native execution.

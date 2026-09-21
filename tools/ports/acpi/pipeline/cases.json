@@ -1,0 +1,222 @@
+[
+  {
+    "name": "load_run_add",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,14,7,64,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);\n",
+    "check": "prepared.outcome == Outcome::Success && result.outcome == ExecutionOutcome::Success && result.value.initialized && result.value.number == 42",
+    "mutation": [
+      "result.value.number == 42",
+      "result.value.number == 43"
+    ],
+    "description": "Real Method declaration captures scope/body and executes Add/Return"
+  },
+  {
+    "name": "owned_source_copy",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,14,7,64,128);\nlet mut program: Program = prepared.program;\ninput[10] = 99;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);\n",
+    "check": "prepared.outcome == Outcome::Success && result.outcome == ExecutionOutcome::Success && result.value.initialized && result.value.number == 42",
+    "mutation": [
+      "result.value.number == 42",
+      "result.value.number == 43"
+    ],
+    "description": "Mutating caller input after prepare does not replace owned method bytes"
+  },
+  {
+    "name": "nested_method",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 11;\ninput[2] = 70;\ninput[3] = 79;\ninput[4] = 79;\ninput[5] = 95;\ninput[6] = 1;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 104;\ninput[10] = 1;\ninput[12] = 20;\ninput[13] = 13;\ninput[14] = 77;\ninput[15] = 65;\ninput[16] = 73;\ninput[17] = 78;\ninput[19] = 164;\ninput[20] = 70;\ninput[21] = 79;\ninput[22] = 79;\ninput[23] = 95;\ninput[24] = 10;\ninput[25] = 41;\nlet prepared: Prepared = prepare_program(input,26,7,64,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);\n",
+    "check": "prepared.outcome == Outcome::Success && result.outcome == ExecutionOutcome::Success && result.value.initialized && result.value.number == 42",
+    "mutation": [
+      "result.value.number == 42",
+      "result.value.number == 43"
+    ],
+    "description": "Method arity and both captured source spans feed nested call"
+  },
+  {
+    "name": "cross_scope_alias",
+    "body": "let mut input: [u8;1024];\ninput[0] = 16;\ninput[1] = 24;\ninput[2] = 68;\ninput[3] = 48;\ninput[4] = 95;\ninput[5] = 95;\ninput[6] = 8;\ninput[7] = 88;\ninput[8] = 95;\ninput[9] = 95;\ninput[10] = 95;\ninput[11] = 10;\ninput[12] = 11;\ninput[13] = 20;\ninput[14] = 11;\ninput[15] = 70;\ninput[16] = 79;\ninput[17] = 79;\ninput[18] = 95;\ninput[20] = 164;\ninput[21] = 88;\ninput[22] = 95;\ninput[23] = 95;\ninput[24] = 95;\ninput[25] = 16;\ninput[26] = 27;\ninput[27] = 68;\ninput[28] = 49;\ninput[29] = 95;\ninput[30] = 95;\ninput[31] = 8;\ninput[32] = 88;\ninput[33] = 95;\ninput[34] = 95;\ninput[35] = 95;\ninput[36] = 10;\ninput[37] = 22;\ninput[38] = 6;\ninput[39] = 92;\ninput[40] = 46;\ninput[41] = 68;\ninput[42] = 48;\ninput[43] = 95;\ninput[44] = 95;\ninput[45] = 70;\ninput[46] = 79;\ninput[47] = 79;\ninput[48] = 95;\ninput[49] = 65;\ninput[50] = 76;\ninput[51] = 73;\ninput[52] = 83;\ninput[53] = 20;\ninput[54] = 17;\ninput[55] = 77;\ninput[56] = 65;\ninput[57] = 73;\ninput[58] = 78;\ninput[60] = 164;\ninput[61] = 92;\ninput[62] = 46;\ninput[63] = 68;\ninput[64] = 49;\ninput[65] = 95;\ninput[66] = 95;\ninput[67] = 65;\ninput[68] = 76;\ninput[69] = 73;\ninput[70] = 83;\nlet prepared: Prepared = prepare_program(input,71,7,64,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);\n",
+    "check": "prepared.outcome == Outcome::Success && result.outcome == ExecutionOutcome::Success && result.value.initialized && result.value.number == 11",
+    "mutation": [
+      "result.value.number == 11",
+      "result.value.number == 12"
+    ],
+    "description": "Alias invocation resolves X from declaration D0, not invocation alias D1"
+  },
+  {
+    "name": "alias_original_rebound",
+    "body": "let mut input: [u8;1024];\ninput[0] = 16;\ninput[1] = 24;\ninput[2] = 68;\ninput[3] = 48;\ninput[4] = 95;\ninput[5] = 95;\ninput[6] = 8;\ninput[7] = 88;\ninput[8] = 95;\ninput[9] = 95;\ninput[10] = 95;\ninput[11] = 10;\ninput[12] = 11;\ninput[13] = 20;\ninput[14] = 11;\ninput[15] = 70;\ninput[16] = 79;\ninput[17] = 79;\ninput[18] = 95;\ninput[20] = 164;\ninput[21] = 88;\ninput[22] = 95;\ninput[23] = 95;\ninput[24] = 95;\ninput[25] = 16;\ninput[26] = 27;\ninput[27] = 68;\ninput[28] = 49;\ninput[29] = 95;\ninput[30] = 95;\ninput[31] = 8;\ninput[32] = 88;\ninput[33] = 95;\ninput[34] = 95;\ninput[35] = 95;\ninput[36] = 10;\ninput[37] = 22;\ninput[38] = 6;\ninput[39] = 92;\ninput[40] = 46;\ninput[41] = 68;\ninput[42] = 48;\ninput[43] = 95;\ninput[44] = 95;\ninput[45] = 70;\ninput[46] = 79;\ninput[47] = 79;\ninput[48] = 95;\ninput[49] = 65;\ninput[50] = 76;\ninput[51] = 73;\ninput[52] = 83;\ninput[53] = 8;\ninput[54] = 92;\ninput[55] = 46;\ninput[56] = 68;\ninput[57] = 48;\ninput[58] = 95;\ninput[59] = 95;\ninput[60] = 70;\ninput[61] = 79;\ninput[62] = 79;\ninput[63] = 95;\ninput[64] = 10;\ninput[65] = 99;\ninput[66] = 20;\ninput[67] = 17;\ninput[68] = 77;\ninput[69] = 65;\ninput[70] = 73;\ninput[71] = 78;\ninput[73] = 164;\ninput[74] = 92;\ninput[75] = 46;\ninput[76] = 68;\ninput[77] = 49;\ninput[78] = 95;\ninput[79] = 95;\ninput[80] = 65;\ninput[81] = 76;\ninput[82] = 73;\ninput[83] = 83;\nlet prepared: Prepared = prepare_program(input,84,7,64,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);\n",
+    "check": "prepared.outcome == Outcome::Success && result.outcome == ExecutionOutcome::Success && result.value.initialized && result.value.number == 11",
+    "mutation": [
+      "result.value.number == 11",
+      "result.value.number == 12"
+    ],
+    "description": "Original declaration scope survives source Name rebinding after Alias"
+  },
+  {
+    "name": "method_redeclaration",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 9;\ninput[2] = 70;\ninput[3] = 79;\ninput[4] = 79;\ninput[5] = 95;\ninput[7] = 164;\ninput[8] = 10;\ninput[9] = 11;\ninput[10] = 6;\ninput[11] = 70;\ninput[12] = 79;\ninput[13] = 79;\ninput[14] = 95;\ninput[15] = 79;\ninput[16] = 76;\ninput[17] = 68;\ninput[18] = 78;\ninput[19] = 20;\ninput[20] = 9;\ninput[21] = 70;\ninput[22] = 79;\ninput[23] = 79;\ninput[24] = 95;\ninput[26] = 164;\ninput[27] = 10;\ninput[28] = 22;\ninput[29] = 20;\ninput[30] = 17;\ninput[31] = 77;\ninput[32] = 65;\ninput[33] = 73;\ninput[34] = 78;\ninput[36] = 164;\ninput[37] = 114;\ninput[38] = 79;\ninput[39] = 76;\ninput[40] = 68;\ninput[41] = 78;\ninput[42] = 70;\ninput[43] = 79;\ninput[44] = 79;\ninput[45] = 95;\nlet prepared: Prepared = prepare_program(input,47,7,64,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);\n",
+    "check": "prepared.outcome == Outcome::Success && result.outcome == ExecutionOutcome::Success && result.value.initialized && result.value.number == 33",
+    "mutation": [
+      "result.value.number == 33",
+      "result.value.number == 34"
+    ],
+    "description": "Fresh method ID gets new observation; old alias retains old body and observation"
+  },
+  {
+    "name": "serialized_boundary",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 8;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[6] = 8;\ninput[7] = 164;\ninput[8] = 1;\nlet prepared: Prepared = prepare_program(input,9,7,64,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);\n",
+    "check": "prepared.outcome == Outcome::Success && result.outcome == ExecutionOutcome::UnresolvedSynchronization",
+    "mutation": [
+      "result.outcome == ExecutionOutcome::UnresolvedSynchronization",
+      "result.outcome == ExecutionOutcome::Success"
+    ],
+    "description": "Loader captures flags; executor explicitly rejects serialized method"
+  },
+  {
+    "name": "source_unit_mismatch",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,14,7,64,128);\nlet mut program: Program = prepared.program;\nprogram.unit = 8;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);\n",
+    "check": "prepared.outcome == Outcome::Success && result.outcome == ExecutionOutcome::SourceUnit",
+    "mutation": [
+      "result.outcome == ExecutionOutcome::SourceUnit",
+      "result.outcome == ExecutionOutcome::Success"
+    ],
+    "description": "Mismatched retained source unit is rejected before byte execution"
+  },
+  {
+    "name": "method_payload_mismatch",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,14,7,64,128);\nlet mut program: Program = prepared.program;\nprogram.space.objects[0].value = Value::Method { body: Span { unit:7,start:0,end:0 } };\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);\n",
+    "check": "prepared.outcome == Outcome::Success && result.outcome == ExecutionOutcome::MethodDefinition",
+    "mutation": [
+      "result.outcome == ExecutionOutcome::MethodDefinition",
+      "result.outcome == ExecutionOutcome::Success"
+    ],
+    "description": "Changed live Method payload does not silently rewrite captured observation"
+  },
+  {
+    "name": "maximum_source_unit",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,14,18446744073709551615,64,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);\n",
+    "check": "prepared.outcome == Outcome::Success && result.outcome == ExecutionOutcome::Success && result.value.initialized && result.value.number == 42",
+    "mutation": [
+      "result.value.number == 42",
+      "result.value.number == 43"
+    ],
+    "description": "Opaque u64 maximum source identity remains exact data"
+  },
+  {
+    "name": "rollback_unsupported",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\ninput[14] = 114;\nlet prepared: Prepared = prepare_program(input,15,7,64,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
+    "check": "prepared.outcome == Outcome::UnsupportedSyntax && !program.loaded && program.space.object_count == 0 && !program.definitions.entries[0].present && result.outcome == ExecutionOutcome::InvalidState",
+    "mutation": [
+      "program.space.object_count == 0",
+      "program.space.object_count == 1"
+    ],
+    "description": "Failed static load rolls namespace and captured definitions back; failed program cannot execute"
+  },
+  {
+    "name": "rollback_after_capture",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,14,7,1,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
+    "check": "prepared.outcome == Outcome::WorkLimit && !program.loaded && program.space.object_count == 0 && !program.definitions.entries[0].present && result.outcome == ExecutionOutcome::InvalidState",
+    "mutation": [
+      "program.space.object_count == 0",
+      "program.space.object_count == 1"
+    ],
+    "description": "Failed static load rolls namespace and captured definitions back; failed program cannot execute"
+  },
+  {
+    "name": "zero_load_budget",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,14,7,0,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
+    "check": "prepared.outcome == Outcome::WorkLimit && !program.loaded && program.space.object_count == 0 && !program.definitions.entries[0].present && result.outcome == ExecutionOutcome::InvalidState",
+    "mutation": [
+      "program.space.object_count == 0",
+      "program.space.object_count == 1"
+    ],
+    "description": "Failed static load rolls namespace and captured definitions back; failed program cannot execute"
+  },
+  {
+    "name": "input_capacity",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,1025,7,64,128);\n",
+    "check": "prepared.outcome == Outcome::Capacity && !prepared.program.loaded && !prepared.program.definitions.entries[0].present",
+    "mutation": [
+      "prepared.outcome == Outcome::Capacity",
+      "prepared.outcome == Outcome::Success"
+    ],
+    "description": "Capacity rejection does not install namespace or method observations"
+  },
+  {
+    "name": "input_maximum",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,18446744073709551615,7,64,128);\n",
+    "check": "prepared.outcome == Outcome::Capacity && !prepared.program.loaded && !prepared.program.definitions.entries[0].present",
+    "mutation": [
+      "prepared.outcome == Outcome::Capacity",
+      "prepared.outcome == Outcome::Success"
+    ],
+    "description": "Capacity rejection does not install namespace or method observations"
+  },
+  {
+    "name": "budget_maximum",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,14,7,18446744073709551615,128);\n",
+    "check": "prepared.outcome == Outcome::Capacity && !prepared.program.loaded && !prepared.program.definitions.entries[0].present",
+    "mutation": [
+      "prepared.outcome == Outcome::Capacity",
+      "prepared.outcome == Outcome::Success"
+    ],
+    "description": "Capacity rejection does not install namespace or method observations"
+  },
+  {
+    "name": "last_object_slot",
+    "body": "let initial_space:Namespace=empty();\nlet mut initial_bytes: [u8;1024];\ninitial_bytes[0] = 8;\ninitial_bytes[1] = 80;\ninitial_bytes[2] = 75;\ninitial_bytes[3] = 71;\ninitial_bytes[4] = 48;\ninitial_bytes[5] = 18;\ninitial_bytes[6] = 65;\ninitial_bytes[7] = 4;\ninitial_bytes[8] = 62;\nlet mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 9;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 10;\ninput[9] = 42;\nlet initial: ObservedLoad = load_with_definitions(&initial_bytes,71,6,initial_space,MethodDefinitions {},4,128);\nlet loaded: ObservedLoad = load_with_definitions(&input,10,7,initial.load.space,initial.definitions,8,128);\n",
+    "check": "initial.load.outcome == Outcome::Success && loaded.load.outcome == Outcome::Success && loaded.load.space.object_count == 64 && loaded.definitions.entries[63].present && loaded.definitions.entries[63].object_id == 63",
+    "mutation": [
+      "loaded.load.space.object_count == 64",
+      "loaded.load.space.object_count == 63"
+    ],
+    "description": "Fresh Method slot63 is usable; later allocation failure rolls it and its observation back"
+  },
+  {
+    "name": "object_capacity_rollback",
+    "body": "let initial_space:Namespace=empty();\nlet mut initial_bytes: [u8;1024];\ninitial_bytes[0] = 8;\ninitial_bytes[1] = 80;\ninitial_bytes[2] = 75;\ninitial_bytes[3] = 71;\ninitial_bytes[4] = 48;\ninitial_bytes[5] = 18;\ninitial_bytes[6] = 65;\ninitial_bytes[7] = 4;\ninitial_bytes[8] = 62;\nlet mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 9;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 10;\ninput[9] = 42;\ninput[10] = 20;\ninput[11] = 8;\ninput[12] = 78;\ninput[13] = 69;\ninput[14] = 88;\ninput[15] = 84;\ninput[17] = 164;\ninput[18] = 1;\nlet initial: ObservedLoad = load_with_definitions(&initial_bytes,71,6,initial_space,MethodDefinitions {},4,128);\nlet loaded: ObservedLoad = load_with_definitions(&input,19,7,initial.load.space,initial.definitions,8,128);\n",
+    "check": "initial.load.outcome == Outcome::Success && loaded.load.outcome == Outcome::Capacity && loaded.load.space.object_count == 63 && !loaded.definitions.entries[63].present",
+    "mutation": [
+      "loaded.load.space.object_count == 63",
+      "loaded.load.space.object_count == 64"
+    ],
+    "description": "Fresh Method slot63 is usable; later allocation failure rolls it and its observation back"
+  },
+  {
+    "name": "occupied_observation_slot",
+    "body": "let initial_space:Namespace=empty();\nlet mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 9;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 10;\ninput[9] = 42;\nlet mut old_path: Path = Path { absolute:true,count:1 };\nold_path.segments[0] = 1313098831;\nlet mut occupied: MethodDefinitions;\noccupied.entries[0] = MethodDefinition { present:true,object_id:0,scope:old_path,body:Span {unit:99,start:3,end:4} };\nlet loaded: ObservedLoad = load_with_definitions(&input,10,7,initial_space,occupied,4,128);\n",
+    "check": "loaded.load.outcome == Outcome::InvalidState && loaded.load.space.object_count == 0 && loaded.definitions.entries[0].present && loaded.definitions.entries[0].body.unit == 99",
+    "mutation": [
+      "loaded.definitions.entries[0].body.unit == 99",
+      "loaded.definitions.entries[0].body.unit == 7"
+    ],
+    "description": "An occupied observation slot is rejected before committing the tentative namespace insertion; original sidecar is preserved"
+  },
+  {
+    "name": "incremental_rollback",
+    "body": "let initial_space:Namespace=empty();\nlet mut first_bytes: [u8;1024];\nfirst_bytes[0] = 20;\nfirst_bytes[1] = 9;\nfirst_bytes[2] = 79;\nfirst_bytes[3] = 76;\nfirst_bytes[4] = 68;\nfirst_bytes[5] = 78;\nfirst_bytes[7] = 164;\nfirst_bytes[8] = 10;\nfirst_bytes[9] = 11;\nlet mut second_bytes: [u8;1024];\nsecond_bytes[0] = 20;\nsecond_bytes[1] = 9;\nsecond_bytes[2] = 78;\nsecond_bytes[3] = 69;\nsecond_bytes[4] = 87;\nsecond_bytes[5] = 78;\nsecond_bytes[7] = 164;\nsecond_bytes[8] = 10;\nsecond_bytes[9] = 22;\nsecond_bytes[10] = 114;\nlet first: ObservedLoad = load_with_definitions(&first_bytes,10,6,initial_space,MethodDefinitions {},4,128);\nlet second: ObservedLoad = load_with_definitions(&second_bytes,11,7,first.load.space,first.definitions,8,128);\nlet mut program: Program = Program { loaded:true,source:first_bytes,length:10,unit:6,space:second.load.space,definitions:second.definitions };\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313098831;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
+    "check": "first.load.outcome == Outcome::Success && second.load.outcome == Outcome::UnsupportedSyntax && second.definitions.entries[0].present && second.definitions.entries[0].body.unit == 6 && result.outcome == ExecutionOutcome::Success && !second.definitions.entries[1].present && result.value.number == 11",
+    "mutation": [
+      "result.value.number == 11",
+      "result.value.number == 12"
+    ],
+    "description": "Lowlevel incremental loader preserves declaration observations; rollback retains callable prior source, while absent multiunit dispatch rejects calls into another source unit"
+  },
+  {
+    "name": "incremental_source_unit",
+    "body": "let initial_space:Namespace=empty();\nlet mut first_bytes: [u8;1024];\nfirst_bytes[0] = 20;\nfirst_bytes[1] = 9;\nfirst_bytes[2] = 79;\nfirst_bytes[3] = 76;\nfirst_bytes[4] = 68;\nfirst_bytes[5] = 78;\nfirst_bytes[7] = 164;\nfirst_bytes[8] = 10;\nfirst_bytes[9] = 11;\nlet mut second_bytes: [u8;1024];\nsecond_bytes[0] = 20;\nsecond_bytes[1] = 11;\nsecond_bytes[2] = 77;\nsecond_bytes[3] = 65;\nsecond_bytes[4] = 73;\nsecond_bytes[5] = 78;\nsecond_bytes[7] = 164;\nsecond_bytes[8] = 79;\nsecond_bytes[9] = 76;\nsecond_bytes[10] = 68;\nsecond_bytes[11] = 78;\nlet first: ObservedLoad = load_with_definitions(&first_bytes,10,6,initial_space,MethodDefinitions {},4,128);\nlet second: ObservedLoad = load_with_definitions(&second_bytes,12,7,first.load.space,first.definitions,8,128);\nlet mut program: Program = Program { loaded:true,source:second_bytes,length:12,unit:7,space:second.load.space,definitions:second.definitions };\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
+    "check": "first.load.outcome == Outcome::Success && second.load.outcome == Outcome::Success && second.definitions.entries[0].present && second.definitions.entries[0].body.unit == 6 && result.outcome == ExecutionOutcome::SourceUnit && second.definitions.entries[1].present && second.definitions.entries[1].body.unit == 7",
+    "mutation": [
+      "result.outcome == ExecutionOutcome::SourceUnit",
+      "result.outcome == ExecutionOutcome::Success"
+    ],
+    "description": "Lowlevel incremental loader preserves declaration observations; rollback retains callable prior source, while absent multiunit dispatch rejects calls into another source unit"
+  },
+  {
+    "name": "persistent_namespace",
+    "body": "let mut input: [u8;1024];\ninput[0] = 8;\ninput[1] = 88;\ninput[2] = 95;\ninput[3] = 95;\ninput[4] = 95;\ninput[6] = 20;\ninput[7] = 16;\ninput[8] = 77;\ninput[9] = 65;\ninput[10] = 73;\ninput[11] = 78;\ninput[13] = 117;\ninput[14] = 88;\ninput[15] = 95;\ninput[16] = 95;\ninput[17] = 95;\ninput[18] = 164;\ninput[19] = 88;\ninput[20] = 95;\ninput[21] = 95;\ninput[22] = 95;\nlet prepared: Prepared = prepare_program(input,23,7,8,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments:[Value;7];\nlet first:ExecutionResult=run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\nlet second:ExecutionResult=run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
+    "check": "prepared.outcome == Outcome::Success && first.outcome == ExecutionOutcome::Success && first.value.number == 1 && second.outcome == ExecutionOutcome::Success && second.value.number == 2 && program.definitions.entries[1].present",
+    "mutation": [
+      "second.value.number == 2",
+      "second.value.number == 3"
+    ],
+    "description": "Repeated calls mutate the retained namespace without reloading source or replacing observations"
+  }
+]
