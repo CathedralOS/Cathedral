@@ -1,0 +1,161 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pinned mapper leaf/child branches with explicit encryption state.
+// Detached effects only; reuse canonical plans and preserve default APIs.
+module encrypted_mapping_plans;
+use addresses;
+use memory_encryption;
+use memory_encryption::State;
+use mapping_plans::FrameSupply;
+use mapping_plans::ChildPlan;
+use mapping_plans::LeafPlan;
+use mapping_plans::supported_size;
+
+// Current physical admission differs from the accumulated PTE extraction mask.
+machine frame_valid_kernel(address_mask: u64, physical_mask: u64, address: u64, size: u64) -> bool {
+    let mask: u64 = physical_mask & addresses::PHYSICAL_MAX;
+    let physical: bool = addresses::physical_valid(address, mask);
+    physical && supported_size(size) && size > 0 && address % size == 0
+}
+machine forced_flags(recursive: bool) -> u64 {
+    transition recursive { true -> (3) _ -> (0) }
+}
+
+// Pure create_next_table branch: a failure may retain a preceding flag write.
+machine prepare_child_kernel(address_mask: u64, physical_mask: u64, recursive: bool, word: u64, insert_flags: u64, supply: FrameSupply) -> ChildPlan {
+    transition word == 0 { true -> allocate(address_mask, physical_mask, recursive, insert_flags, supply) _ -> existing(address_mask, physical_mask, recursive, word, insert_flags) }
+    state allocate(address_mask: u64, physical_mask: u64, recursive: bool, flags: u64, supply: FrameSupply) -> ChildPlan {
+        transition supply {
+            FrameSupply::Unavailable -> (ChildPlan::AllocationFailed { word: 0, write: false })
+            FrameSupply::Supplied { address } -> frame(address_mask, physical_mask, recursive, address, flags)
+        }
+    }
+    state frame(address_mask: u64, physical_mask: u64, recursive: bool, address: u64, flags: u64) -> ChildPlan {
+        transition frame_valid_kernel(address_mask, physical_mask, address, 4096) {
+            true -> input_flags(address_mask, physical_mask, recursive, address, flags)
+            _ -> (ChildPlan::InvalidSuppliedFrame { word: 0, write: false })
+        }
+    }
+    state input_flags(address_mask: u64, physical_mask: u64, recursive: bool, address: u64, flags: u64) -> ChildPlan {
+        let huge: bool = (flags & 128) != 0;
+        let forced: u64 = forced_flags(recursive);
+        transition huge {
+            true -> (ChildPlan::InvalidHugeInput { word: 0, write: false })
+            _ -> classify(address_mask, physical_mask, recursive, address | flags | forced, true, true)
+        }
+    }
+    state existing(address_mask: u64, physical_mask: u64, recursive: bool, word: u64, flags: u64) -> ChildPlan {
+        let old_flags: u64 = word & ~address_mask;
+        let write: bool = flags != 0 && (old_flags & flags) != flags;
+        transition write { true -> classify(address_mask, physical_mask, recursive, word | flags, true, false) _ -> classify(address_mask, physical_mask, recursive, word, false, false) }
+    }
+    state classify(address_mask: u64, physical_mask: u64, recursive: bool, word: u64, write: bool, created: bool) -> ChildPlan {
+        let present: bool = (word & 1) != 0;
+        let huge: bool = (word & 128) != 0;
+        let address: u64 = word & address_mask;
+        transition {
+            !recursive && !present -> (ChildPlan::MissingPresent { word: word, write: write })
+            huge -> (ChildPlan::HugeParent { word: word, write: write })
+            _ -> (ChildPlan::Ready { word: word, write: write, address: address, zero_child: created })
+        }
+    }
+}
+
+// Leaf operations assume parent traversal has already supplied the selected
+// word. Their results are detached edits; Ready does not settle invalidation.
+machine map_leaf_kernel(address_mask: u64, physical_mask: u64, word: u64, frame: u64, size: u64, flags: u64) -> LeafPlan {
+    transition size > 0 && supported_size(size) && frame_valid_kernel(address_mask, physical_mask, frame, size) {
+        true -> geometry(address_mask, physical_mask, word, frame, size, flags) _ -> (LeafPlan::InvalidGeometry { word: word, write: false })
+    }
+    state geometry(address_mask: u64, physical_mask: u64, word: u64, frame: u64, size: u64, flags: u64) -> LeafPlan {
+        transition size > 0 && frame % size == 0 {
+            true -> unused(address_mask, physical_mask, word, frame, size, flags) _ -> (LeafPlan::InvalidGeometry { word: word, write: false })
+        }
+    }
+    state unused(address_mask: u64, physical_mask: u64, word: u64, frame: u64, size: u64, flags: u64) -> LeafPlan {
+        transition word != 0 {
+            true -> (LeafPlan::AlreadyMapped { word: word, write: false, requested_frame: frame })
+            _ -> compose(address_mask, physical_mask, frame, size, flags)
+        }
+    }
+    state compose(address_mask: u64, physical_mask: u64, frame: u64, size: u64, flags: u64) -> LeafPlan {
+        let huge: bool = (flags & 128) != 0;
+        transition { size == 4096 && huge -> (LeafPlan::InvalidHugeInput { word: 0, write: false })
+            size == 4096 -> (LeafPlan::Ready { word: frame | flags, write: true, frame: frame })
+            _ -> (LeafPlan::Ready { word: frame | flags | 128, write: true, frame: frame }) }
+    }
+}
+machine unmap_leaf_kernel(address_mask: u64, physical_mask: u64, word: u64, size: u64) -> LeafPlan {
+    transition size > 0 && supported_size(size) {
+        true -> present(address_mask, physical_mask, word, size) _ -> (LeafPlan::InvalidGeometry { word: word, write: false })
+    }
+    state present(address_mask: u64, physical_mask: u64, word: u64, size: u64) -> LeafPlan {
+        let present: bool = (word & 1) != 0;
+        let huge: bool = (word & 128) != 0;
+        let wrong_role: bool = (size == 4096 && huge) || (size != 4096 && !huge);
+        transition { !present -> (LeafPlan::PageNotMapped { word: word, write: false })
+            wrong_role -> (LeafPlan::ParentHugePage { word: word, write: false })
+            _ -> aligned(address_mask, physical_mask, word, size) }
+    }
+    state aligned(address_mask: u64, physical_mask: u64, word: u64, size: u64) -> LeafPlan {
+        let frame: u64 = word & address_mask;
+        transition size > 0 && frame % size == 0 {
+            true -> (LeafPlan::Ready { word: 0, write: true, frame: frame })
+            _ -> (LeafPlan::InvalidFrameAddress { word: word, write: false, address: frame }) }
+    }
+}
+machine update_leaf_flags_kernel(address_mask: u64, physical_mask: u64, word: u64, size: u64, flags: u64) -> LeafPlan {
+    let frame: u64 = word & address_mask;
+    let valid: bool = supported_size(size);
+    transition { !valid -> (LeafPlan::InvalidGeometry { word: word, write: false })
+        word == 0 -> (LeafPlan::PageNotMapped { word: word, write: false })
+        size == 4096 -> (LeafPlan::Ready { word: frame | flags, write: true, frame: frame })
+        _ -> (LeafPlan::Ready { word: frame | flags | 128, write: true, frame: frame }) }
+}
+machine translate_leaf_kernel(address_mask: u64, physical_mask: u64, word: u64, size: u64) -> LeafPlan {
+    let frame: u64 = word & address_mask;
+    let valid: bool = supported_size(size);
+    transition { !valid -> (LeafPlan::InvalidGeometry { word: word, write: false })
+        word == 0 -> (LeafPlan::PageNotMapped { word: word, write: false })
+        _ -> alignment(address_mask, physical_mask, word, size, frame) }
+    state alignment(address_mask: u64, physical_mask: u64, word: u64, size: u64, frame: u64) -> LeafPlan {
+        transition size > 0 && frame % size == 0 {
+            true -> (LeafPlan::Ready { word: word, write: false, frame: frame })
+            _ -> (LeafPlan::InvalidFrameAddress { word: word, write: false, address: frame }) }
+    }
+}
+
+pub machine frame_valid(profile: State, address: u64, size: u64) -> bool {
+    let address_mask: u64 = profile.address_mask;
+    let physical_mask: u64 = profile.bit_mask;
+    let result: bool = frame_valid_kernel(address_mask, physical_mask, address, size); result
+}
+
+pub machine prepare_child(profile: State, recursive: bool, word: u64, insert_flags: u64, supply: FrameSupply) -> ChildPlan {
+    let address_mask: u64 = profile.address_mask;
+    let physical_mask: u64 = profile.bit_mask;
+    let result: ChildPlan = prepare_child_kernel(address_mask, physical_mask, recursive, word, insert_flags, supply); result
+}
+
+pub machine map_leaf(profile: State, word: u64, frame: u64, size: u64, flags: u64) -> LeafPlan {
+    let address_mask: u64 = profile.address_mask;
+    let physical_mask: u64 = profile.bit_mask;
+    let result: LeafPlan = map_leaf_kernel(address_mask, physical_mask, word, frame, size, flags); result
+}
+
+pub machine unmap_leaf(profile: State, word: u64, size: u64) -> LeafPlan {
+    let address_mask: u64 = profile.address_mask;
+    let physical_mask: u64 = profile.bit_mask;
+    let result: LeafPlan = unmap_leaf_kernel(address_mask, physical_mask, word, size); result
+}
+
+pub machine update_leaf_flags(profile: State, word: u64, size: u64, flags: u64) -> LeafPlan {
+    let address_mask: u64 = profile.address_mask;
+    let physical_mask: u64 = profile.bit_mask;
+    let result: LeafPlan = update_leaf_flags_kernel(address_mask, physical_mask, word, size, flags); result
+}
+
+pub machine translate_leaf(profile: State, word: u64, size: u64) -> LeafPlan {
+    let address_mask: u64 = profile.address_mask;
+    let physical_mask: u64 = profile.bit_mask;
+    let result: LeafPlan = translate_leaf_kernel(address_mask, physical_mask, word, size); result
+}

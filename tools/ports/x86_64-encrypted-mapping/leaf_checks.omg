@@ -1,0 +1,24 @@
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+use x86::encrypted_mapping_plans;
+use x86::mapping_plans::ChildPlan;
+use x86::mapping_plans::LeafPlan;
+use x86::mapping_plans::FrameSupply;
+machine child(profile: State) -> bool {
+ let result: ChildPlan = encrypted_mapping_plans::prepare_child(profile,false,140737488420867,140737488355331,FrameSupply::Unavailable);
+ transition result { ChildPlan::Ready {address,zero_child} -> (address==65536 && !zero_child && !result.write && result.word==140737488420867) _ -> (false) }
+}
+machine leaf(profile: State) -> bool {
+ let result: LeafPlan = encrypted_mapping_plans::update_leaf_flags(profile,140737488363521,4096,3);
+ transition result { LeafPlan::Ready {frame} -> (frame==8192 && result.word==8195 && result.write) _ -> (false) }
+}
+machine test_result() -> i32 {
+ let profile: State = memory_encryption::initial();
+ let configured: bool = memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:47});
+ transition configured && child(profile) && leaf(profile) && !encrypted_mapping_plans::frame_valid(profile,140737488355328,4096) { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

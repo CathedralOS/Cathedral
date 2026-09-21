@@ -12137,7 +12137,6 @@
     "slice_inventories_reviewed": 23,
     "default_profile_new_families": [],
     "remaining": [
-      "encryption-profile-mapped-recursive-routes",
       "encryption-profile-cleanup",
       "encryption-profile-frames-ranges",
       "encryption-profile-recursive-constructor"
@@ -12147,7 +12146,8 @@
       "encryption-profile-mapped-generic-translation": "source/libraries/x86_64/encrypted-translation.PORT.md",
       "encryption-profile-cr3-apic": "source/libraries/x86_64/encrypted-registers.PORT.md",
       "encryption-profile-translated-address": "source/libraries/x86_64/encrypted-projection.PORT.md",
-      "encryption-profile-recursive-generic-translation": "source/libraries/x86_64/encrypted-recursive-translation.PORT.md"
+      "encryption-profile-recursive-generic-translation": "source/libraries/x86_64/encrypted-recursive-translation.PORT.md",
+      "encryption-profile-mapped-recursive-routes": "source/libraries/x86_64/encrypted-mapping.PORT.md"
     },
     "representation_milestone": "X86-001 complete at pure numeric/schema boundary; native layout and authority limits separate"
   }

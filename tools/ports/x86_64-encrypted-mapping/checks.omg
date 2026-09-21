@@ -1,0 +1,82 @@
+module checks;
+use x86::encrypted_mapping_routes;
+use x86::encrypted_recursive_routes;
+use x86::memory_encryption::State;
+use x86::mapping_routes::CapturedPath;
+use x86::mapping_routes::AllocationInputs;
+use x86::mapping_routes::Request;
+use x86::mapping_routes::RoutePlan;
+use x86::mapping_routes::Outcome;
+use x86::mapping_plans::ChildPlan;
+use x86::mapping_plans::LeafPlan;
+pub data Expected [copy] {
+    words: [u64; 4]; ids: [u64; 4]; indices: [u16; 4];
+    writes: u8; zeros: u8; calls: u8; visited: u8;
+    code: u8; location: u8; payload: u64; result_word: u64; result_write: bool;
+}
+data Code [copy] { code: u8; location: u8; payload: u64; word: u64; write: bool; }
+machine child_code(child: ChildPlan) -> Code {
+    let word: u64 = child.word;
+    let write: bool = child.write;
+    transition child {
+        ChildPlan::AllocationFailed -> (Code { code: 6, location: 1, word: word, write: write })
+        ChildPlan::InvalidSuppliedFrame -> (Code { code: 9, location: 1, word: word, write: write })
+        ChildPlan::InvalidHugeInput -> (Code { code: 5, location: 1, word: word, write: write })
+        ChildPlan::MissingPresent -> (Code { code: 7, location: 1, word: word, write: write })
+        ChildPlan::HugeParent -> (Code { code: 2, location: 1, word: word, write: write })
+        _ -> (Code { code: 255 })
+    }
+}
+machine leaf_code(leaf: LeafPlan) -> Code {
+    let word: u64 = leaf.word;
+    let write: bool = leaf.write;
+    transition leaf {
+        LeafPlan::InvalidGeometry -> (Code { code: 9, location: 2, word: word, write: write })
+        LeafPlan::InvalidHugeInput -> (Code { code: 5, location: 2, word: word, write: write })
+        LeafPlan::PageNotMapped -> (Code { code: 1, location: 2, word: word, write: write })
+        LeafPlan::ParentHugePage -> (Code { code: 2, location: 2, word: word, write: write })
+        LeafPlan::InvalidFrameAddress { address } -> (Code { code: 3, location: 2, payload: address, word: word, write: write })
+        LeafPlan::AlreadyMapped { requested_frame } -> (Code { code: 4, location: 2, payload: requested_frame, word: word, write: write })
+        LeafPlan::Ready { frame } -> (Code { code: 0, location: 2, payload: frame, word: word, write: write })
+    }
+}
+machine outcome_code(outcome: Outcome) -> Code {
+    transition outcome {
+        Outcome::InvalidInput -> (Code { code: 8 })
+        Outcome::ParentNotMapped -> (Code { code: 1 })
+        Outcome::ParentHugePage -> (Code { code: 2 })
+        Outcome::ChildFailure { child } -> child_status(child)
+        Outcome::Leaf { leaf } -> leaf_status(leaf)
+        _ -> (Code { code: 255 })
+    }
+    state child_status(child: ChildPlan) -> Code { let result: Code = child_code(child); result }
+    state leaf_status(leaf: LeafPlan) -> Code { let result: Code = leaf_code(leaf); result }
+}
+pub machine mapped_route(profile: State, path: CapturedPath, allocations: AllocationInputs, page: u64, size: u64, request: Request, expected: Expected) -> bool {
+    let result: RoutePlan = encrypted_mapping_routes::plan(profile, &path, &allocations, page, size, request);
+    let code: Code = outcome_code(result.outcome);
+    result.edits.words[0] == expected.words[0] && result.edits.words[1] == expected.words[1] &&
+    result.edits.words[2] == expected.words[2] && result.edits.words[3] == expected.words[3] &&
+    result.edits.table_ids[0] == expected.ids[0] && result.edits.table_ids[1] == expected.ids[1] &&
+    result.edits.table_ids[2] == expected.ids[2] && result.edits.table_ids[3] == expected.ids[3] &&
+    result.edits.indices[0] == expected.indices[0] && result.edits.indices[1] == expected.indices[1] &&
+    result.edits.indices[2] == expected.indices[2] && result.edits.indices[3] == expected.indices[3] &&
+    result.edits.write_mask == expected.writes && result.edits.zero_mask == expected.zeros &&
+    result.edits.allocation_calls == expected.calls && result.edits.visited == expected.visited &&
+    code.code == expected.code && code.location == expected.location && code.payload == expected.payload &&
+    code.word == expected.result_word && code.write == expected.result_write
+}
+pub machine recursive_route(profile: State, path: CapturedPath, allocations: AllocationInputs, page: u64, size: u64, request: Request, expected: Expected) -> bool {
+    let result: RoutePlan = encrypted_recursive_routes::plan(profile, &path, &allocations, page, size, request);
+    let code: Code = outcome_code(result.outcome);
+    result.edits.words[0] == expected.words[0] && result.edits.words[1] == expected.words[1] &&
+    result.edits.words[2] == expected.words[2] && result.edits.words[3] == expected.words[3] &&
+    result.edits.table_ids[0] == expected.ids[0] && result.edits.table_ids[1] == expected.ids[1] &&
+    result.edits.table_ids[2] == expected.ids[2] && result.edits.table_ids[3] == expected.ids[3] &&
+    result.edits.indices[0] == expected.indices[0] && result.edits.indices[1] == expected.indices[1] &&
+    result.edits.indices[2] == expected.indices[2] && result.edits.indices[3] == expected.indices[3] &&
+    result.edits.write_mask == expected.writes && result.edits.zero_mask == expected.zeros &&
+    result.edits.allocation_calls == expected.calls && result.edits.visited == expected.visited &&
+    code.code == expected.code && code.location == expected.location && code.payload == expected.payload &&
+    code.word == expected.result_word && code.write == expected.result_write
+}

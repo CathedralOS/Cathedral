@@ -1,0 +1,62 @@
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+use x86::encrypted_mapping_plans;
+use x86::encrypted_mapping_routes;
+use x86::encrypted_recursive_routes;
+use x86::mapping_routes::CapturedPath;
+use x86::mapping_routes::AllocationInputs;
+use x86::mapping_routes::Request;
+use x86::mapping_routes::RoutePlan;
+use x86::mapping_routes::Outcome;
+use x86::mapping_plans::FrameSupply;
+use x86::mapping_plans::ChildPlan;
+use x86::mapping_plans::LeafPlan;
+
+machine invalid_requested_frame(profile: State) -> bool {
+ let path: CapturedPath = CapturedPath {};
+ let allocations: AllocationInputs = AllocationInputs {};
+ let result: RoutePlan = encrypted_mapping_routes::plan(profile,&path,&allocations,0,4096,Request::Map {frame:140737488355328,flags:3,parent_flags:3});
+ transition result.outcome { Outcome::InvalidInput -> (result.edits.write_mask==0 && result.edits.allocation_calls==0 && result.edits.visited==0) _ -> (false) }
+}
+machine invalid_allocation_after_write(profile: State) -> bool {
+ let path: CapturedPath = CapturedPath { table_ids:[262144,65536,0,0],words:[65537,0,0,0] };
+ let allocations: AllocationInputs = AllocationInputs { frames:[FrameSupply::Supplied {address:140737488355328},FrameSupply::Unavailable,FrameSupply::Unavailable] };
+ let result: RoutePlan = encrypted_mapping_routes::plan(profile,&path,&allocations,0,4096,Request::Map {frame:3221225472,flags:3,parent_flags:3});
+ let common: bool = result.edits.words[0]==65539 && result.edits.words[1]==0 && result.edits.write_mask==1 && result.edits.zero_mask==0 && result.edits.allocation_calls==1 && result.edits.visited==2;
+ transition result.outcome { Outcome::ChildFailure {child} -> failed(child,common) _ -> (false) }
+ state failed(child: ChildPlan, common: bool) -> bool {
+  transition child { ChildPlan::InvalidSuppliedFrame -> (common && child.word==0 && !child.write) _ -> (false) }
+ }
+}
+machine identity_mismatch_after_or(profile: State) -> bool {
+ let path: CapturedPath = CapturedPath { table_ids:[262144,65536,131072,196608],words:[65537,131073,196609,0] };
+ let allocations: AllocationInputs = AllocationInputs {};
+ let result: RoutePlan = encrypted_recursive_routes::plan(profile,&path,&allocations,0,4096,Request::Map {frame:3221225472,flags:3,parent_flags:262145});
+ let common: bool = result.edits.words[0]==327681 && result.edits.words[1]==131073 && result.edits.write_mask==1 && result.edits.zero_mask==0 && result.edits.allocation_calls==0 && result.edits.visited==1;
+ transition result.outcome { Outcome::CaptureMismatch {expected,supplied} -> (common && expected==327680 && supplied==65536) _ -> (false) }
+}
+machine new_contaminated_identity(profile: State) -> bool {
+ let path: CapturedPath = CapturedPath {};
+ let allocations: AllocationInputs = AllocationInputs { frames:[FrameSupply::Supplied {address:65536},FrameSupply::Unavailable,FrameSupply::Unavailable] };
+ let result: RoutePlan = encrypted_mapping_routes::plan(profile,&path,&allocations,0,4096,Request::Map {frame:3221225472,flags:3,parent_flags:262147});
+ let common: bool = result.edits.words[0]==327683 && result.edits.table_ids[1]==327680 && result.edits.write_mask==1 && result.edits.zero_mask==2 && result.edits.allocation_calls==2 && result.edits.visited==2;
+ transition result.outcome { Outcome::ChildFailure {child} -> failed(child,common) _ -> (false) }
+ state failed(child: ChildPlan, common: bool) -> bool { transition child { ChildPlan::AllocationFailed -> (common) _ -> (false) } }
+}
+machine malformed_geometry(profile: State) -> bool {
+ let child: ChildPlan = encrypted_mapping_plans::prepare_child(profile,false,0,3,FrameSupply::Supplied {address:65537});
+ let leaf: LeafPlan = encrypted_mapping_plans::map_leaf(profile,0,65536,0,3);
+ let invalid_frame: bool = !encrypted_mapping_plans::frame_valid(profile,65536,0);
+ transition child { ChildPlan::InvalidSuppliedFrame -> leaf_case(leaf,invalid_frame) _ -> (false) }
+ state leaf_case(leaf: LeafPlan, invalid_frame: bool) -> bool { transition leaf { LeafPlan::InvalidGeometry -> (invalid_frame) _ -> (false) } }
+}
+machine test_result() -> i32 {
+ let profile: State = memory_encryption::initial();
+ let configured: bool = memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:47});
+ transition configured && invalid_requested_frame(profile) && invalid_allocation_after_write(profile) && identity_mismatch_after_or(profile) && new_contaminated_identity(profile) && malformed_geometry(profile) { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

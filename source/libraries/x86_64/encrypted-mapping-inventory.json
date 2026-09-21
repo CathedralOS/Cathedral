@@ -1,0 +1,815 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/x86_64",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/paging/mapper/mapped_page_table.rs",
+      "src/structures/paging/mapper/recursive_page_table.rs"
+    ]
+  },
+  "files": {
+    "src/structures/paging/mapper/mapped_page_table.rs": {
+      "sha256": "e250c729f0588d1ce129c1c68ab43337f2f44328d2b38fe896cbeeacc1bc4ff2",
+      "disposition": "translated",
+      "reason": "Only explicit-encryption leaf/child/route arithmetic, reusing canonical types; no live mapper/allocator/flush interface.",
+      "symbols": {
+        "15:MappedPageTable": {
+          "anchor": "pub struct MappedPageTable<'a, P: PageTableFrameMapping> {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "31:new": {
+          "anchor": "pub unsafe fn new(level_4_table: &'a mut PageTable, page_table_frame_mapping: P) -> Self {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "39:level_4_table": {
+          "anchor": "pub fn level_4_table(&self) -> &PageTable {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "44:level_4_table_mut": {
+          "anchor": "pub fn level_4_table_mut(&mut self) -> &mut PageTable {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "49:page_table_frame_mapping": {
+          "anchor": "pub fn page_table_frame_mapping(&self) -> &P {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "56:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "82:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "108:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "126:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "143:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "151:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "159:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "176:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "207:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "236:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "258:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "275:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "295:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "303:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "321:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "357:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "383:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "408:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "425:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "445:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "468:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "487:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "551:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "566:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "573:clean_up": {
+          "anchor": "unsafe fn clean_up<P: PageTableFrameMapping>(",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "644:PageTableWalker": {
+          "anchor": "struct PageTableWalker<P: PageTableFrameMapping> {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "650:new": {
+          "anchor": "pub unsafe fn new(page_table_frame_mapping: P) -> Self {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "662:next_table": {
+          "anchor": "fn next_table<'b>(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "state existing("
+            }
+          ]
+        },
+        "680:next_table_mut": {
+          "anchor": "fn next_table_mut<'b>(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+              "anchor": "state existing("
+            }
+          ]
+        },
+        "701:create_next_table": {
+          "anchor": "fn create_next_table<'b, A>(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_plans.omg",
+              "anchor": "pub machine prepare_child("
+            }
+          ]
+        },
+        "742:PageTableWalkError": {
+          "anchor": "enum PageTableWalkError {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "748:PageTableCreateError": {
+          "anchor": "enum PageTableCreateError {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "755:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "765:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "775:from": {
+          "anchor": "fn from(err: PageTableCreateError) -> Self {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "785:from": {
+          "anchor": "fn from(err: FrameError) -> Self {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "795:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "805:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "815:from": {
+          "anchor": "fn from(err: PageTableWalkError) -> Self {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "832:PageTableFrameMapping": {
+          "anchor": "pub unsafe trait PageTableFrameMapping {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "834:frame_to_pointer": {
+          "anchor": "fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable;",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "839:frame_to_pointer": {
+          "anchor": "fn frame_to_pointer(&self, frame: PhysFrame) -> *mut PageTable {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/encrypted_mapping_routes.omg",
+          "anchor": "pub machine plan("
+        }
+      ]
+    },
+    "src/structures/paging/mapper/recursive_page_table.rs": {
+      "sha256": "e6a796d07b191d4857c931c7b4daf156a707c51fba675af6d9f1cee62c970e6f",
+      "disposition": "translated",
+      "reason": "Only explicit-encryption leaf/child/route arithmetic, reusing canonical types; no live mapper/allocator/flush interface.",
+      "symbols": {
+        "31:RecursivePageTable": {
+          "anchor": "pub struct RecursivePageTable<'a> {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "57:new": {
+          "anchor": "pub fn new(table: &'a mut PageTable) -> Result<Self, InvalidPageTable> {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "85:new_unchecked": {
+          "anchor": "pub unsafe fn new_unchecked(table: &'a mut PageTable, recursive_index: PageTableIndex) -> Self {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "93:level_4_table": {
+          "anchor": "pub fn level_4_table(&self) -> &PageTable {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "98:level_4_table_mut": {
+          "anchor": "pub fn level_4_table_mut(&mut self) -> &mut PageTable {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "117:create_next_table": {
+          "anchor": "unsafe fn create_next_table<'b, A, S: PageSize>(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_plans.omg",
+              "anchor": "pub machine prepare_child("
+            }
+          ]
+        },
+        "129:inner": {
+          "anchor": "fn inner<'b, A, S: PageSize>(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_mapping_plans.omg",
+              "anchor": "pub machine prepare_child("
+            }
+          ]
+        },
+        "173:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "205:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "235:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "257:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "274:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "282:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "290:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size1GiB>) -> Result<PhysFrame<Size1GiB>, TranslateError> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "311:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "353:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "389:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "418:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "435:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "458:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "466:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size2MiB>) -> Result<PhysFrame<Size2MiB>, TranslateError> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "494:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "545:unmap": {
+          "anchor": "fn unmap(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "582:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "616:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "633:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "656:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "685:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<Size4KiB>) -> Result<PhysFrame<Size4KiB>, TranslateError> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile component using accumulated PTE decoding and current physical admission, with exact source decisions and retained effects.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+              "anchor": "pub machine plan("
+            }
+          ]
+        },
+        "720:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "793:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "808:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "815:clean_up": {
+          "anchor": "fn clean_up(",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "890:InvalidPageTable": {
+          "anchor": "pub enum InvalidPageTable {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "905:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "916:p3_ptr": {
+          "anchor": "fn p3_ptr<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> *mut PageTable {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "921:p3_page": {
+          "anchor": "fn p3_page<S: PageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "931:p2_ptr": {
+          "anchor": "fn p2_ptr<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) -> *mut PageTable {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "936:p2_page": {
+          "anchor": "fn p2_page<S: NotGiantPageSize>(page: Page<S>, recursive_index: PageTableIndex) -> Page {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "946:p1_ptr": {
+          "anchor": "fn p1_ptr(page: Page<Size4KiB>, recursive_index: PageTableIndex) -> *mut PageTable {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        },
+        "951:p1_page": {
+          "anchor": "fn p1_page(page: Page<Size4KiB>, recursive_index: PageTableIndex) -> Page {",
+          "disposition": "omitted",
+          "reason": "Canonical default/numeric representation or separate generic translation, cleanup, topology, formatting and live authority boundary. This slice is not whole-file completion."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/encrypted_recursive_routes.omg",
+          "anchor": "pub machine plan("
+        }
+      ]
+    }
+  },
+  "mask_basis": [
+    {
+      "path": "src/addr.rs",
+      "sha256": "8370e442e48677438615f9f0ac4a7e2fbf1a9aadec875348cc68a9e916031721"
+    },
+    {
+      "path": "src/structures/paging/page_table.rs",
+      "sha256": "c22af38b260fc7d51d7a1c156f3d8788b0e539563bbbd72ea7d417e513c89f42"
+    },
+    {
+      "path": "src/structures/mem_encrypt.rs",
+      "sha256": "fb97af17b5d33745593bc21b5e7235ae57262895122bd8ff86cea781c3a6e4cb"
+    }
+  ],
+  "canonical_dependencies": [
+    "memory_encryption::State",
+    "mapping_routes::Request",
+    "mapping_routes::CapturedPath",
+    "mapping_routes::AllocationInputs",
+    "mapping_routes::Edits",
+    "mapping_routes::Outcome",
+    "mapping_routes::RoutePlan",
+    "mapping_plans::FrameSupply",
+    "mapping_plans::ChildPlan",
+    "mapping_plans::LeafPlan"
+  ],
+  "reference": {
+    "profiles": 11,
+    "routes": 318,
+    "actual_public_mapped_calls": 159,
+    "source_body_mirrors": 318,
+    "method_bodies": 42,
+    "public_reference": "tools/ports/x86_64-encrypted-mapping/src/public_mapped.rs",
+    "instrumented_references": [
+      "tools/ports/x86_64-encrypted-mapping/src/mapped.rs",
+      "tools/ports/x86_64-encrypted-mapping/src/recursive.rs"
+    ],
+    "adaptations": [
+      "Actual public mapped calls use stable distinct owned initialized tables and a checked numeric ID registry, never installed as a root.",
+      "Copied mapped/recursive method bodies receive borrowed snapshots instead of self root and raw topology dereferences.",
+      "Instrumented entries execute actual pinned PTE APIs; complete clearing executes actual PageTable::zero.",
+      "Copied private child/walker branches and error conversions retained; unsafe allocator trait replaced only in mirrors by safe numeric observation queue.",
+      "Actual public mapped final words, zero observations, allocation calls and return/panic payloads cross-check their mirrors. Setter counts and deepest access are measured by mirrors only.",
+      "Each configured profile runs in a fresh process before construction of any typed address/table."
+    ],
+    "not_claimed": [
+      "Live recursive mapper",
+      "Hardware execution",
+      "Native Omega code or ABI",
+      "Caller profile/capture provenance",
+      "Exact public typed construction of rejected ordinary numeric inputs"
+    ]
+  },
+  "extra_policies": [
+    "Reject current-bit or malformed requested frames before route effects.",
+    "Reject invalid allocation observation at its consumption point, retaining earlier effects.",
+    "Capture mismatch after address-bit flag OR retains the preceding parent write.",
+    "New child snapshot ID follows the resulting accumulated-mask address, even with raw flag address contamination."
+  ]
+}

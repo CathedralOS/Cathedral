@@ -1,0 +1,58 @@
+use checks;
+use checks::Expected;
+use x86::mapping_routes::CapturedPath;
+use x86::mapping_routes::AllocationInputs;
+use x86::mapping_routes::Request;
+use x86::mapping_plans::FrameSupply;
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+machine row0() -> bool {
+    let profile: State = memory_encryption::initial();
+    let configured0: bool = memory_encryption::configure(&mut profile, Configuration::EncryptedBit { position:47 });
+    let result: bool = checks::recursive_route(profile, CapturedPath { table_ids:[262144, 65536, 131072, 196608], words:[140737488420865, 140737488486401, 140737488551937, 140740709580801] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 4096, Request::SetParent { level:3, table_flags:3 }, Expected { words:[140737488420865, 131075, 140737488551937, 140740709580801], ids:[262144, 65536, 131072, 196608], indices:[292, 13, 0, 0], writes:2, zeros:0, calls:0, visited:2, code:0, location:2, payload:131072, result_word:131075, result_write:true });
+    result
+}
+machine row1() -> bool {
+    let profile: State = memory_encryption::initial();
+    let configured0: bool = memory_encryption::configure(&mut profile, Configuration::EncryptedBit { position:47 });
+    let result: bool = checks::recursive_route(profile, CapturedPath { table_ids:[262144, 65536, 131072, 196608], words:[140737488420865, 140737488486401, 140737488551937, 140740709580801] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 4096, Request::SetParent { level:2, table_flags:3 }, Expected { words:[140737488420865, 140737488486401, 196611, 140740709580801], ids:[262144, 65536, 131072, 196608], indices:[292, 13, 0, 0], writes:4, zeros:0, calls:0, visited:3, code:0, location:2, payload:196608, result_word:196611, result_write:true });
+    result
+}
+machine row2() -> bool {
+    let profile: State = memory_encryption::initial();
+    let configured0: bool = memory_encryption::configure(&mut profile, Configuration::EncryptedBit { position:47 });
+    let result: bool = checks::recursive_route(profile, CapturedPath { table_ids:[262144, 0, 131072, 196608], words:[0, 140737488486401, 140737488551937, 140740709580801] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 4096, Request::Update { new_flags:3 }, Expected { words:[0, 140737488486401, 140737488551937, 140740709580801], ids:[262144, 0, 131072, 196608], indices:[292, 13, 0, 0], writes:0, zeros:0, calls:0, visited:1, code:1, location:0, payload:0, result_word:0, result_write:false });
+    result
+}
+machine row3() -> bool {
+    let profile: State = memory_encryption::initial();
+    let configured0: bool = memory_encryption::configure(&mut profile, Configuration::EncryptedBit { position:47 });
+    let result: bool = checks::recursive_route(profile, CapturedPath { table_ids:[262144, 65536, 131072, 196608], words:[140737488420864, 140737488486401, 140737488551937, 140740709580801] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 4096, Request::Update { new_flags:3 }, Expected { words:[140737488420864, 140737488486401, 140737488551937, 3221225475], ids:[262144, 65536, 131072, 196608], indices:[292, 13, 0, 0], writes:8, zeros:0, calls:0, visited:4, code:0, location:2, payload:3221225472, result_word:3221225475, result_write:true });
+    result
+}
+machine row4() -> bool {
+    let profile: State = memory_encryption::initial();
+    let configured0: bool = memory_encryption::configure(&mut profile, Configuration::EncryptedBit { position:47 });
+    let result: bool = checks::recursive_route(profile, CapturedPath { table_ids:[262144, 65536, 131072, 196608], words:[140737488420992, 140737488486401, 140737488551937, 140740709580801] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 4096, Request::Update { new_flags:3 }, Expected { words:[140737488420992, 140737488486401, 140737488551937, 3221225475], ids:[262144, 65536, 131072, 196608], indices:[292, 13, 0, 0], writes:8, zeros:0, calls:0, visited:4, code:0, location:2, payload:3221225472, result_word:3221225475, result_write:true });
+    result
+}
+machine row5() -> bool {
+    let profile: State = memory_encryption::initial();
+    let configured0: bool = memory_encryption::configure(&mut profile, Configuration::EncryptedBit { position:47 });
+    let result: bool = checks::recursive_route(profile, CapturedPath { table_ids:[262144, 65536, 0, 196608], words:[140737488420865, 0, 140737488551937, 140740709580801] }, AllocationInputs { frames:[FrameSupply::Unavailable, FrameSupply::Unavailable, FrameSupply::Unavailable] }, 18446623141389139968, 4096, Request::Update { new_flags:3 }, Expected { words:[140737488420865, 0, 140737488551937, 140740709580801], ids:[262144, 65536, 0, 196608], indices:[292, 13, 0, 0], writes:0, zeros:0, calls:0, visited:2, code:1, location:0, payload:0, result_word:0, result_write:false });
+    result
+}
+machine test_result() -> i32 {
+    let check0: bool = row0();
+    let check1: bool = row1();
+    let check2: bool = row2();
+    let check3: bool = row3();
+    let check4: bool = row4();
+    let check5: bool = row5();
+    transition check0 && check1 && check2 && check3 && check4 && check5 { true -> (0) _ -> (1) }
+}
+const TEST_RESULT: i32 = test_result();
+machine require_success(value: i32) requires value == 0; {}
+data Main {}
+machine Main::main(&mut self) { require_success(TEST_RESULT); }

@@ -291,7 +291,7 @@ on their default physical profile.
 [Explicit-profile translation](source/libraries/x86_64/encrypted-translation.PORT.md)
 adds 330 actual Rust/Omega observations, seven boundary assertions and nine body
 mutations for generic mapped translation and captured child identities.
-Remaining encryption-profile routes, cleanup, frame/range and constructor
+Remaining encryption-profile cleanup, frame/range and constructor
 compositions are ordinary implementation work; the closure audit lists them.
 [Encryption-aware register expressions](source/libraries/x86_64/encrypted-registers.PORT.md)
 pass 100 Rust reference rows, 800 Omega calls and twelve body controls, preserving
@@ -302,6 +302,10 @@ including an offset inside a huge frame that reaches the configured bit.
 [Profile-aware recursive translation](source/libraries/x86_64/encrypted-recursive-translation.PORT.md)
 adds 330 adapted Rust-body/Omega observations, one invalid-input check and eight
 body controls, preserving recursive whole-word checks and leaf-HUGE errors.
+[Profile-aware mapper routes](source/libraries/x86_64/encrypted-mapping.PORT.md)
+pass 318 checked-interpreter route cases, direct leaf checks, five additional
+policies and ten controls. Rust evidence includes 159 actual public mapped calls
+and 159 adapted recursive-body observations across eleven configurations.
 The full-source closure review found no remaining pure representation family:
 X86-001 is complete at the documented numeric/schema boundary. Native layout,
 instruction/provider and proof limits remain separate; X86-002 stays open for

@@ -1,0 +1,133 @@
+[
+  {
+    "name": "disabled",
+    "configs": [],
+    "address_mask": 4503599627366400,
+    "bit_mask": 0,
+    "marker": 0
+  },
+  {
+    "name": "encrypted0",
+    "configs": [
+      [
+        0,
+        false
+      ]
+    ],
+    "address_mask": 4503599627366400,
+    "bit_mask": 1,
+    "marker": 1
+  },
+  {
+    "name": "encrypted7",
+    "configs": [
+      [
+        7,
+        false
+      ]
+    ],
+    "address_mask": 4503599627366400,
+    "bit_mask": 128,
+    "marker": 128
+  },
+  {
+    "name": "encrypted12",
+    "configs": [
+      [
+        12,
+        false
+      ]
+    ],
+    "address_mask": 4503599627362304,
+    "bit_mask": 4096,
+    "marker": 4096
+  },
+  {
+    "name": "encrypted21",
+    "configs": [
+      [
+        21,
+        false
+      ]
+    ],
+    "address_mask": 4503599625269248,
+    "bit_mask": 2097152,
+    "marker": 2097152
+  },
+  {
+    "name": "encrypted30",
+    "configs": [
+      [
+        30,
+        false
+      ]
+    ],
+    "address_mask": 4503598553624576,
+    "bit_mask": 1073741824,
+    "marker": 1073741824
+  },
+  {
+    "name": "encrypted47",
+    "configs": [
+      [
+        47,
+        false
+      ]
+    ],
+    "address_mask": 4362862139011072,
+    "bit_mask": 140737488355328,
+    "marker": 140737488355328
+  },
+  {
+    "name": "shared47",
+    "configs": [
+      [
+        47,
+        true
+      ]
+    ],
+    "address_mask": 4362862139011072,
+    "bit_mask": 140737488355328,
+    "marker": 140737488355328
+  },
+  {
+    "name": "encrypted51",
+    "configs": [
+      [
+        51,
+        false
+      ]
+    ],
+    "address_mask": 2251799813681152,
+    "bit_mask": 2251799813685248,
+    "marker": 2251799813685248
+  },
+  {
+    "name": "shared63",
+    "configs": [
+      [
+        63,
+        true
+      ]
+    ],
+    "address_mask": 4503599627366400,
+    "bit_mask": 9223372036854775808,
+    "marker": 9223372036854775808
+  },
+  {
+    "name": "repeated47-48",
+    "configs": [
+      [
+        47,
+        false
+      ],
+      [
+        48,
+        true
+      ]
+    ],
+    "address_mask": 4081387162300416,
+    "bit_mask": 281474976710656,
+    "marker": 422212465065984
+  }
+]

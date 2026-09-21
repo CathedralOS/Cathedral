@@ -1,0 +1,200 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pure orchestration of pinned x86_64 RecursivePageTable Mapper methods.
+// Reuses canonical capture/request/effect types; see encrypted-mapping.PORT.md.
+// Captures, allocations and edits are numeric proposals, never live custody.
+module encrypted_recursive_routes;
+use memory_encryption::State;
+use encrypted_mapping_plans;
+use pages;
+use page_entries;
+use mapping_plans;
+use mapping_plans::FrameSupply;
+use mapping_plans::ChildPlan;
+use mapping_plans::LeafPlan;
+
+use mapping_routes::Request;
+use mapping_routes::CapturedPath;
+use mapping_routes::AllocationInputs;
+use mapping_routes::Edits;
+use mapping_routes::Outcome;
+use mapping_routes::RoutePlan;
+
+pub machine plan(profile: State, path: &CapturedPath, allocations: &AllocationInputs, page: u64, size: u64, request: Request) -> RoutePlan {
+    let address_mask: u64 = profile.address_mask;
+    let physical_mask: u64 = profile.bit_mask;
+    let valid_page: bool = pages::start_valid(page, size, false);
+    let valid_request: bool = request_valid(address_mask, physical_mask, request, size);
+    transition valid_page && valid_request {
+        true -> begin(address_mask, physical_mask, path, allocations, page, size, request)
+        _ -> (RoutePlan {})
+    }
+    state begin(address_mask: u64, physical_mask: u64, path: &CapturedPath, allocations: &AllocationInputs, page: u64, size: u64, request: Request) -> RoutePlan {
+        let edits: Edits = Edits { table_ids: path.table_ids, words: path.words,
+            indices: [((page >> 39) & 511) as u16, ((page >> 30) & 511) as u16,
+                ((page >> 21) & 511) as u16, ((page >> 12) & 511) as u16] };
+        let target: u8 = target_index(size, request);
+        let outcome: Outcome = route(address_mask, physical_mask, path, allocations, &mut edits, size, request, target);
+        RoutePlan { edits: edits, outcome: outcome }
+    }
+}
+machine request_valid(address_mask: u64, physical_mask: u64, request: Request, size: u64) -> bool {
+    transition request {
+        Request::Map { frame, flags, parent_flags } -> frame_valid(address_mask, physical_mask, frame, size)
+        Request::SetParent { level, table_flags } -> (level >= 2 && level <= 4)
+        _ -> (true)
+    }
+    state frame_valid(address_mask: u64, physical_mask: u64, frame: u64, size: u64) -> bool {
+        let profile: State = State { address_mask: address_mask, bit_mask: physical_mask };
+        let valid: bool = encrypted_mapping_plans::frame_valid(profile, frame, size);
+        valid
+    }
+}
+machine target_index(size: u64, request: Request) -> u8 {
+    transition request {
+        Request::SetParent { level, table_flags } -> parent(level)
+        _ -> leaf(size)
+    }
+    state leaf(size: u64) -> u8 {
+        transition size { 1073741824 -> (1) 2097152 -> (2) _ -> (3) }
+    }
+    state parent(level: u8) -> u8 {
+        transition level <= 4 { true -> (4 - level) _ -> (4) }
+    }
+}
+machine route(address_mask: u64, physical_mask: u64, path: &CapturedPath, allocations: &AllocationInputs, edits: &mut Edits, size: u64, request: Request, target: u8) -> Outcome {
+    let leaf: u8 = target_index(size, Request::Translate);
+    transition {
+        target > leaf -> (Outcome::ParentHugePage)
+        target == leaf && is_parent_request(request) -> (Outcome::ParentHugePage)
+        target == 0 -> complete(address_mask, physical_mask, edits, size, request, 0)
+        _ -> first(address_mask, physical_mask, path, allocations, edits, size, request, target)
+    }
+    state first(address_mask: u64, physical_mask: u64, path: &CapturedPath, allocations: &AllocationInputs, edits: &mut Edits, size: u64, request: Request, target: u8) -> Outcome {
+        let result: Outcome = parent_step(address_mask, physical_mask, path, allocations, edits, request, 0);
+        transition result {
+            Outcome::Continue -> second(address_mask, physical_mask, path, allocations, edits, size, request, target)
+            _ -> (result)
+        }
+    }
+    state second(address_mask: u64, physical_mask: u64, path: &CapturedPath, allocations: &AllocationInputs, edits: &mut Edits, size: u64, request: Request, target: u8) -> Outcome {
+        transition target == 1 { true -> complete(address_mask, physical_mask, edits, size, request, 1) _ -> descend_second(address_mask, physical_mask, path, allocations, edits, size, request, target) }
+    }
+    state descend_second(address_mask: u64, physical_mask: u64, path: &CapturedPath, allocations: &AllocationInputs, edits: &mut Edits, size: u64, request: Request, target: u8) -> Outcome {
+        let result: Outcome = parent_step(address_mask, physical_mask, path, allocations, edits, request, 1);
+        transition result { Outcome::Continue -> third(address_mask, physical_mask, path, allocations, edits, size, request, target) _ -> (result) }
+    }
+    state third(address_mask: u64, physical_mask: u64, path: &CapturedPath, allocations: &AllocationInputs, edits: &mut Edits, size: u64, request: Request, target: u8) -> Outcome {
+        transition target == 2 { true -> complete(address_mask, physical_mask, edits, size, request, 2) _ -> descend_third(address_mask, physical_mask, path, allocations, edits, size, request) }
+    }
+    state descend_third(address_mask: u64, physical_mask: u64, path: &CapturedPath, allocations: &AllocationInputs, edits: &mut Edits, size: u64, request: Request) -> Outcome {
+        let result: Outcome = parent_step(address_mask, physical_mask, path, allocations, edits, request, 2);
+        transition result { Outcome::Continue -> complete(address_mask, physical_mask, edits, size, request, 3) _ -> (result) }
+    }
+    state complete(address_mask: u64, physical_mask: u64, edits: &mut Edits, size: u64, request: Request, index: u8 [0..=3]) -> Outcome {
+        let result: Outcome = finish(address_mask, physical_mask, edits, size, request, index);
+        result
+    }
+}
+machine is_parent_request(request: Request) -> bool {
+    transition request { Request::SetParent { level, table_flags } -> (true) _ -> (false) }
+}
+machine parent_step(address_mask: u64, physical_mask: u64, path: &CapturedPath, allocations: &AllocationInputs, edits: &mut Edits, request: Request, index: u8 [0..=2]) -> Outcome {
+    edits.visited = index + 1;
+    let word: u64 = edits.words[index];
+    transition request {
+        Request::Map { frame, flags, parent_flags } -> mapping(address_mask, physical_mask, path, allocations, edits, index, word, parent_flags)
+        Request::Unmap -> existing(address_mask, physical_mask, path, edits, index, word)
+        _ -> nonzero(address_mask, physical_mask, path, edits, index, word)
+    }
+    state mapping(address_mask: u64, physical_mask: u64, path: &CapturedPath, allocations: &AllocationInputs, edits: &mut Edits, index: u8 [0..=2], word: u64, flags: u64) -> Outcome {
+        let supplied: FrameSupply = allocation(allocations, edits, word);
+        let profile: State = State { address_mask: address_mask, bit_mask: physical_mask };
+        let child: ChildPlan = encrypted_mapping_plans::prepare_child(profile, true, word, flags, supplied);
+        record_word(edits, index, child.word, child.write);
+        transition child {
+            ChildPlan::Ready { address, zero_child } -> ready_child(address_mask, physical_mask, path, edits, index, address, zero_child)
+            _ -> (Outcome::ChildFailure { child: child })
+        }
+    }
+    state nonzero(address_mask: u64, physical_mask: u64, path: &CapturedPath, edits: &mut Edits, index: u8 [0..=2], word: u64) -> Outcome {
+        let address: u64 = word & address_mask;
+        transition word == 0 {
+            true -> (Outcome::ParentNotMapped)
+            _ -> ready_child(address_mask, physical_mask, path, edits, index, address, false)
+        }
+    }
+    state existing(address_mask: u64, physical_mask: u64, path: &CapturedPath, edits: &mut Edits, index: u8 [0..=2], word: u64) -> Outcome {
+        let address: u64 = word & address_mask;
+        let present: bool = (word & 1) != 0;
+        let huge: bool = (word & 128) != 0;
+        transition {
+            !present -> (Outcome::ParentNotMapped)
+            huge -> (Outcome::ParentHugePage)
+            _ -> ready_child(address_mask, physical_mask, path, edits, index, address, false)
+        }
+    }
+    state ready_child(address_mask: u64, physical_mask: u64, path: &CapturedPath, edits: &mut Edits, index: u8 [0..=2], address: u64, zero: bool) -> Outcome {
+        let result: Outcome = child_ready(path, edits, index, address, zero);
+        result
+    }
+}
+machine allocation(allocations: &AllocationInputs, edits: &mut Edits, word: u64) -> FrameSupply {
+    let count: u8 = edits.allocation_calls;
+    transition word == 0 && count < 3 {
+        true -> consume(allocations, edits, count)
+        _ -> (FrameSupply::Unavailable)
+    }
+    state consume(allocations: &AllocationInputs, edits: &mut Edits, count: u8 [0..=2]) -> FrameSupply {
+        let supplied: FrameSupply = allocations.frames[count];
+        edits.allocation_calls = count + 1;
+        supplied
+    }
+}
+machine record_word(edits: &mut Edits, index: u8 [0..=3], word: u64, write: bool) {
+    edits.words[index] = word;
+    transition write { true -> record(edits, index) _ -> {} }
+    state record(edits: &mut Edits, index: u8 [0..=3]) {
+        edits.write_mask = edits.write_mask | ((1 as u8) << index);
+    }
+}
+machine child_ready(path: &CapturedPath, edits: &mut Edits, index: u8 [0..=2], address: u64, zero: bool) -> Outcome {
+    let next: u8 [1..=3] = index + 1;
+    transition zero {
+        true -> cleared(edits, next, address)
+        _ -> capture(path, edits, next, address)
+    }
+    state cleared(edits: &mut Edits, next: u8 [1..=3], address: u64) -> Outcome {
+        edits.table_ids[next] = address;
+        edits.words[next] = 0;
+        edits.zero_mask = edits.zero_mask | ((1 as u8) << next);
+        Outcome::Continue
+    }
+    state capture(path: &CapturedPath, edits: &mut Edits, next: u8 [1..=3], address: u64) -> Outcome {
+        let supplied: u64 = path.table_ids[next];
+        transition supplied == address {
+            true -> (Outcome::Continue)
+            _ -> (Outcome::CaptureMismatch { expected: address, supplied: supplied })
+        }
+    }
+}
+machine finish(address_mask: u64, physical_mask: u64, edits: &mut Edits, size: u64, request: Request, index: u8 [0..=3]) -> Outcome {
+    edits.visited = index + 1;
+    let word: u64 = edits.words[index];
+    let leaf: LeafPlan = leaf_decision(address_mask, physical_mask, word, size, request);
+    record_word(edits, index, leaf.word, leaf.write);
+    Outcome::Leaf { leaf: leaf }
+}
+machine leaf_decision(address_mask: u64, physical_mask: u64, word: u64, size: u64, request: Request) -> LeafPlan {
+    transition request {
+        Request::Map { frame, flags, parent_flags } -> mapping(address_mask, physical_mask, word, size, frame, flags)
+        Request::Unmap -> unmapping(address_mask, physical_mask, word, size)
+        Request::Update { new_flags } -> updating(address_mask, physical_mask, word, size, new_flags)
+        Request::SetParent { level, table_flags } -> updating(address_mask, physical_mask, word, 4096, table_flags)
+        _ -> translating(address_mask, physical_mask, word, size)
+    }
+    state mapping(address_mask: u64, physical_mask: u64, word: u64, size: u64, frame: u64, flags: u64) -> LeafPlan { let profile: State = State { address_mask: address_mask, bit_mask: physical_mask };  let result: LeafPlan = encrypted_mapping_plans::map_leaf(profile, word, frame, size, flags); result }
+    state unmapping(address_mask: u64, physical_mask: u64, word: u64, size: u64) -> LeafPlan { let profile: State = State { address_mask: address_mask, bit_mask: physical_mask };  let result: LeafPlan = encrypted_mapping_plans::unmap_leaf(profile, word, size); result }
+    state updating(address_mask: u64, physical_mask: u64, word: u64, size: u64, flags: u64) -> LeafPlan { let profile: State = State { address_mask: address_mask, bit_mask: physical_mask };  let result: LeafPlan = encrypted_mapping_plans::update_leaf_flags(profile, word, size, flags); result }
+    state translating(address_mask: u64, physical_mask: u64, word: u64, size: u64) -> LeafPlan { let profile: State = State { address_mask: address_mask, bit_mask: physical_mask };  let result: LeafPlan = encrypted_mapping_plans::translate_leaf(profile, word, size); result }
+}
+

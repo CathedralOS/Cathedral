@@ -177,3 +177,9 @@ including offsets inside a huge frame that hit the configured bit.
 completes generic translation composition with 330 adapted private Rust-body
 observations, 55 Omega fixtures, one boundary assertion and eight controls.
 Its whole-word ancestor rules and separate leaf-HUGE failure remain distinct.
+
+[Encryption-profile mapper routes](encrypted-mapping.PORT.md) complete leaf,
+child and mapped/recursive route composition. All 318 Omega cases, direct leaf
+checks, five additional policies and ten controls pass in checked execution.
+The Rust witnesses include 159 actual public mapped calls and 159 explicitly
+adapted recursive-body observations, across eleven isolated configurations.
