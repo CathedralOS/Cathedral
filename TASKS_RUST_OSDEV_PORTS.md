@@ -644,6 +644,12 @@ before empty selection and full zero output tails. Parameter evaluation,
 reference policy, target writes and opcode retirement remain pending; aggregate
 source counts are unchanged.
 
+[Direct Buffer ToString](source/libraries/acpi/aml/object-to-string.PORT.md) admits complete backing before selecting the
+ASCII prefix ending at NUL or the requested maximum. All 195 checked pairs and
+three constant pairs pass. The 44 public Rust observations retain 33 agreements
+and 11 documented NUL/UTF-8 differences. Reference evaluation, target writes and
+opcode execution remain pending; aggregate source counts are unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

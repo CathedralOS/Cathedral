@@ -794,7 +794,14 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine to_string(",
+              "path": "source/libraries/acpi/aml/object_to_string.omg"
+            }
+          ],
+          "note": "Direct Buffer ObjectStore admission and bounded ASCII String composition only. Complete backing admission precedes prefix selection; NUL excluded. No reference evaluation, allocation, target Store or context retirement; aggregate remains pending. Pin includes NUL and accepts valid UTF8."
         },
         "2096:do_to_dec_hex_string": {
           "anchor": "fn do_to_dec_hex_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",

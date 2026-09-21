@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pure component of rust-osdev/acpi do_to_string, pinned
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
+// ACPI 6.6 ToString: detached bounded ASCII String, excluding NUL.
+module object_to_string;
+use model::ObjectStore;
+use model::Value;
+use byte_storage::ByteRead;
+use byte_storage::ByteOutcome;
+use byte_storage::read_bytes;
+use object_conversions::ConversionFailure;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::conversions::buffer_to_string;
+pub data StringResult [copy] {
+ case Failure(reason:ConversionFailure);
+ case String(length:u64,bytes:[u8;256]);
+}
+// Direct Buffer slot only; maximum is an already-evaluated unsigned Integer.
+// No integer-width normalization, reference resolution, allocation or Store.
+// Admit complete backing storage before selecting/validating the ASCII prefix.
+pub machine to_string(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,maximum:u64)->StringResult {
+ let count:u64=store.space.object_count;
+ transition count<=64 && object<count && object<64 {true -> selected(input,length,unit,store,object,maximum) _ -> (StringResult::Failure {reason:ConversionFailure::InvalidState})}
+ state selected(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,maximum:u64)->StringResult {
+  let value:Value=store.space.objects[object].value;
+  transition value {Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,object,maximum) _ -> (StringResult::Failure {reason:ConversionFailure::UnsupportedValue})}
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,maximum:u64)->StringResult {
+  let snapshot:ByteRead=read_bytes(input,length,unit,store,object);
+  let failure:StringResult=storage_failure(snapshot.outcome);
+  transition snapshot.outcome==ByteOutcome::Success {true -> convert(snapshot,maximum) _ -> (failure)}
+ }
+ state convert(snapshot:ByteRead,maximum:u64)->StringResult {
+  let count:u64=snapshot.length;let mut output:[u8;256];
+  let result:IntegerResult=buffer_to_string(&snapshot.bytes,count,maximum,&mut output);
+  let failure:StringResult=numeric_failure(result.error);
+  transition result.error==0 {true -> (StringResult::String {length:result.value,bytes:output}) _ -> (failure)}
+ }
+}
+machine storage_failure(outcome:ByteOutcome)->StringResult {
+ transition outcome {
+  ByteOutcome::Capacity -> (StringResult::Failure {reason:ConversionFailure::Capacity})
+  ByteOutcome::Bounds -> (StringResult::Failure {reason:ConversionFailure::Bounds})
+  ByteOutcome::Encoding -> (StringResult::Failure {reason:ConversionFailure::Encoding})
+  ByteOutcome::UnsupportedValue -> (StringResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  ByteOutcome::ReferenceCycle -> (StringResult::Failure {reason:ConversionFailure::ReferenceCycle})
+  ByteOutcome::WorkLimit -> (StringResult::Failure {reason:ConversionFailure::WorkLimit})
+  _ -> (StringResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+}
+machine numeric_failure(error:u8)->StringResult {
+ transition error {
+  4 -> (StringResult::Failure {reason:ConversionFailure::Capacity})
+  7 -> (StringResult::Failure {reason:ConversionFailure::Encoding})
+  _ -> (StringResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+}
