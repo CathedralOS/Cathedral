@@ -3,4 +3,7 @@ machine build(builder: &mut Build) {
     builder.depend_as("aml", Source::Path { location: "../aml" });
     builder.depend_as("execution", Source::Path { location: "../interpreter/execution" });
     builder.depend_as("integer_helpers", Source::Path { location: "../interpreter" });
+    builder.depend_as("field_access", Source::Path { location: "../field_access" });
+    builder.depend_as("write_values", Source::Path { location: "../field_writes" });
+    builder.depend_as("field_sources", Source::Path { location: "../field_sources" });
 }

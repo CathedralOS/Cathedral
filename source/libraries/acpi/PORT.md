@@ -327,6 +327,14 @@ writes retain their expression result and optional second Divide target.
 Provider-facing pipeline composition and bytecode evidence remain pending;
 no tested integration claim is made yet.
 
+[Retained normal Field write pipeline](pipeline/field-writes.PORT.md)
+is transcribed in an isolated branch, composing actual AML target retirement,
+repeated source payloads and matching native acknowledgements. Its 68 authored
+pairs include 20 complete-session rejection cases; eight selected pairs are
+undergoing checked validation. No passing integration result is claimed yet.
+Ordinary Field Store uses the documented admitted-source result policy. Live
+providers and combined read/write scheduling remain pending.
+
 [Direct basic-data Concatenate](aml/object-concat.PORT.md) composes all Integer/String/Buffer
 pairings with primary right-hand conversion, little-endian integer encoding and
 complete admission before combined capacity checks. All 314 checked pairs and

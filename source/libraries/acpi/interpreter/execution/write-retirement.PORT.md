@@ -24,9 +24,10 @@ The implementation was preceded by review of the
 [Store](https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#store-store-an-object)
 and [conversion rules](https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#data-type-conversion-rules).
 Divide writes its remainder before its quotient and retains the quotient as its
-expression result. Store contributes its converted written data; an extra
-hardware read is not part of retirement. Selection of that data for complete
-multi-payload Field writes remains part of pipeline implementation and research.
+expression result. The completion owner selects the admitted Store result; an extra hardware read
+is not part of retirement. The isolated [write pipeline](../../pipeline/field-writes.PORT.md)
+documents its admitted-source compatibility policy for complete multi-payload
+writes, including an empty String. This helper does not select a last payload.
 
 ## Representation and execution
 
@@ -34,7 +35,7 @@ multi-payload Field writes remains part of pipeline implementation and research.
 their prior unresolved-Field behavior. The new `start_write_runtime` enables
 the mode and nested frames inherit it. `advance_write_runtime` charges one AML
 turn and pauses while a `DeferredWrite` is present. Polls and completion calls
-charge no additional turn. The cumulative 1034-turn limit remains intact.
+charge no additional turn. The cumulative 1024-turn limit remains intact.
 
 `DeferredWrite::Field` retains the selected object, source operand, expression
 result, Store-result policy, optional second target and its already-computed
@@ -48,8 +49,8 @@ generic or Integer target bridges. Local replacement, named conversion,
 CopyObject and explicit ToInteger replacement retain their prior policies.
 This work adds no general reference opcode or implicit physical access.
 
-`complete_field_write` and its Runtime wrapper accept the completed converted
-Store operand, validate it and resume the remaining target or final contribution.
+`complete_field_write` and its Runtime wrapper accept the completion owner's admitted
+Store-result operand, validate it and resume the remaining target or final contribution.
 Scalar results retain their computed value independently of the completed Field
 payload. A second target failure retains prior local/namespace effects. The
 future provider owner must also retain earlier external acknowledgements.

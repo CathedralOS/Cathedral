@@ -116,3 +116,9 @@ value while preserving prior execution effects and diagnostics. The completed
 [ACPI-006 resource audit](resource-limits.PORT.md) records the precise bounded Program profile
 and low-level API boundary. No upstream source anchor is promoted by this
 original composition.
+
+The isolated [retained Field write pipeline](field-writes.PORT.md) is transcribed
+and undergoing checked validation. It composes normal-Field Store/scalar target
+retirement with source sequences and synthetic provider requests. This remains a
+separate unverified profile; earlier synchronous pipeline receipts keep their
+original source identities.

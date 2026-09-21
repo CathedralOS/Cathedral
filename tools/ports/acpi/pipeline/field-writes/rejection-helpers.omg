@@ -1,0 +1,150 @@
+// Test-only complete Session comparison, including initialized inactive slots.
+use execution::execution_model::DeferredWrite;
+use execution::engine::ExecutionResult;
+use pipeline::field_writes::Fault;
+use pipeline::field_writes::Transfer;
+use write_values::transfer_model::WriteTransfer;
+use write_values::transfer_model::TransferFailure;
+use write_values::model::WriteError;
+use write_values::transfer;
+use access::model::Plan;
+use access::model::PlanResult;
+use access::model::Chunk;
+use access::model::ReadShape;
+use access::model::Error;
+use aml::object_conversions::ConversionFailure;
+
+machine fw_deferred(a:DeferredWrite,b:DeferredWrite)->bool {
+ transition a {DeferredWrite::None -> none(b)
+  DeferredWrite::Field {object,source,result,stored,has_second,second_target,second_value} -> field(b,object,source,result,stored,has_second,second_target,second_value)}
+ state none(b:DeferredWrite)->bool {transition b {DeferredWrite::None -> (true) _ -> (false)}}
+ state field(b:DeferredWrite,id:u64,source:Operand,result:Operand,stored:bool,has_second:bool,second_target:Target,second_value:u64)->bool {
+  transition b {DeferredWrite::Field {object,source as other_source,result as other_result,stored as other_stored,has_second as other_second,second_target as other_target,second_value as other_value} -> same(id,source,result,stored,has_second,second_target,second_value,object,other_source,other_result,other_stored,other_second,other_target,other_value) _ -> (false)}
+ }
+ state same(id:u64,source:Operand,result:Operand,stored:bool,has_second:bool,target:Target,value:u64,other_id:u64,other_source:Operand,other_result:Operand,other_stored:bool,other_second:bool,other_target:Target,other_value:u64)->bool {
+  let source_same:bool=ba_operand(source,other_source);let result_same:bool=ba_operand(result,other_result);let target_same:bool=ba_target(target,other_target);
+  id==other_id && stored==other_stored && has_second==other_second && value==other_value && source_same && result_same && target_same
+ }
+}
+
+use execution::runtime_model::Runtime;
+use aml::model::MethodDefinition;
+use execution::engine::complete_retired_write;
+use execution::engine::advance_write_runtime;
+machine fw_runtime(a:&Runtime,b:&Runtime)->bool {
+ let frames:bool=fw_runtime_frames(&a.frames,&b.frames,0,4,true);let result:bool=ba_operand(a.result,b.result);
+ frames && result && a.outcome==b.outcome && a.count==b.count && a.unit==b.unit && a.length==b.length && a.steps==b.steps && a.finished==b.finished && a.has_result==b.has_result && a.fault_offset==b.fault_offset
+}
+machine fw_runtime_frames(a:&[Frame;4],b:&[Frame;4],i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=fw_runtime_frame(a,b,i,n);transition i<n {true -> fw_runtime_frames(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine fw_runtime_frame(a:&[Frame;4],b:&[Frame;4],i:u64,n:u64)->bool {
+ transition i<n && i<4 {true -> selected(a[i],b[i]) _ -> (true)}
+ state selected(a:Frame,b:Frame)->bool {let same:bool=ba_frame(&a,&b);same}
+}
+machine same_chunk(a:Chunk,b:Chunk)->bool {a.offset==b.offset && a.width==b.width && a.field_bit==b.field_bit && a.native_bit==b.native_bit && a.bit_count==b.bit_count && a.mask==b.mask && a.partial==b.partial}
+machine same_chunks(a:&[Chunk;257],b:&[Chunk;257],index:u64,count:u64,prior:bool)
+terminates by(index,count)->Nat::BoundedDistance;
+->bool {let good:bool=chunk_at(a,b,index);transition index<count {true -> same_chunks(a,b,index+1,count,prior && good) _ -> (prior)}}
+machine chunk_at(a:&[Chunk;257],b:&[Chunk;257],index:u64)->bool {transition index<257 {true -> compare(a[index],b[index]) _ -> (true)} state compare(a:Chunk,b:Chunk)->bool {let same:bool=same_chunk(a,b);same}}
+machine same_shape(a:ReadShape,b:ReadShape)->bool {
+ transition a {ReadShape::Integer {size} -> integer(size,b) ReadShape::Buffer {bytes} -> buffer(bytes,b)}
+ state integer(expected:IntegerSize,other:ReadShape)->bool {transition other {ReadShape::Integer {size} -> (size==expected) _ -> (false)}}
+ state buffer(expected:u64,other:ReadShape)->bool {transition other {ReadShape::Buffer {bytes} -> (bytes==expected) _ -> (false)}}
+}
+machine good_plan(result:PlanResult,expected:&Plan)->bool {
+ transition result {PlanResult::Ready {plan} -> compare(&plan,expected) _ -> (false)}
+ state compare(plan:&Plan,expected:&Plan)->bool {
+  let rows:bool=same_chunks(&plan.chunks,&expected.chunks,0,257,true);let shape:bool=same_shape(plan.shape,expected.shape);
+  plan.access==expected.access && plan.update==expected.update && plan.lock==expected.lock && shape && plan.bit_offset==expected.bit_offset && plan.bit_length==expected.bit_length && plan.region_bytes==expected.region_bytes && plan.start==expected.start && plan.end==expected.end && plan.width==expected.width && plan.count==expected.count && plan.preserve_reads==expected.preserve_reads && rows
+ }
+}
+machine same_error(actual:WriteError,expected:WriteError)->bool {
+ transition actual {
+  WriteError::Geometry {cause} -> geometry(expected,cause)
+  WriteError::PayloadLength -> payload(expected)
+  WriteError::CountMismatch -> count(expected)
+  WriteError::Chunk {index,cause} -> chunk(expected,index,cause)
+ }
+ state geometry(expected:WriteError,actual:Error)->bool {transition expected {WriteError::Geometry {cause} -> (cause==actual) _ -> (false)}}
+ state payload(expected:WriteError)->bool {transition expected {WriteError::PayloadLength -> (true) _ -> (false)}}
+ state count(expected:WriteError)->bool {transition expected {WriteError::CountMismatch -> (true) _ -> (false)}}
+ state chunk(expected:WriteError,index:u64,cause:Error)->bool {let wanted_index:u64=index;let wanted_cause:Error=cause;transition expected {WriteError::Chunk {index,cause} -> (index==wanted_index && cause==wanted_cause) _ -> (false)}}
+}
+machine same_failure(a:TransferFailure,b:TransferFailure)->bool {
+ transition a {TransferFailure::InvalidState -> invalid(b) TransferFailure::UnmetLock -> lock(b)
+  TransferFailure::Admission {error} -> admission(error,b) TransferFailure::Provider {cause} -> provider(cause,b)}
+ state invalid(b:TransferFailure)->bool {transition b {TransferFailure::InvalidState -> (true) _ -> (false)}}
+ state lock(b:TransferFailure)->bool {transition b {TransferFailure::UnmetLock -> (true) _ -> (false)}}
+ state admission(a:WriteError,b:TransferFailure)->bool {transition b {TransferFailure::Admission {error} -> compare(a,error) _ -> (false)}}
+ state compare(a:WriteError,b:WriteError)->bool {let same:bool=same_error(a,b);same}
+ state provider(a:ProviderFailure,b:TransferFailure)->bool {transition b {TransferFailure::Provider {cause} -> (a==cause) _ -> (false)}}
+}
+machine same_transfer(a:&WriteTransfer,b:&WriteTransfer)->bool {
+ let failure:bool=same_failure(a.failure,b.failure);let field:bool=fx_field(a.field,b.field);
+ let bytes:bool=fx_bytes_equal(&a.payload,&b.payload,0,256,true);
+ let plan:bool=good_plan(PlanResult::Ready {plan:a.plan},&b.plan);
+ let request:bool=transfer::same_request(a.request,b.request);
+ a.state==b.state && failure && field && bytes && plan && request && a.region_bytes==b.region_bytes && a.size==b.size && a.length==b.length && a.correlation==b.correlation && a.issued==b.issued && a.reads==b.reads && a.writes==b.writes
+}
+
+machine fw_fault(a:Fault,b:Fault)->bool {
+ transition a {
+  Fault::InvalidState -> invalid(b)
+  Fault::Execution {outcome} -> execution(outcome,b)
+  Fault::Geometry {cause} -> geometry(cause,b)
+  Fault::UnsupportedSpace -> space(b)
+  Fault::UnmetLock -> lock(b)
+  Fault::BaseAlignment -> alignment(b)
+  Fault::AddressOverflow -> overflow(b)
+  Fault::Transfer {cause} -> transfer(cause,b)
+  Fault::Source {cause} -> source(cause,b)
+ }
+ state invalid(b:Fault)->bool {transition b {Fault::InvalidState -> (true) _ -> (false)}}
+ state execution(a:ExecutionOutcome,b:Fault)->bool {transition b {Fault::Execution {outcome} -> (a==outcome) _ -> (false)}}
+ state geometry(a:Error,b:Fault)->bool {transition b {Fault::Geometry {cause} -> (a==cause) _ -> (false)}}
+ state space(b:Fault)->bool {transition b {Fault::UnsupportedSpace -> (true) _ -> (false)}}
+ state lock(b:Fault)->bool {transition b {Fault::UnmetLock -> (true) _ -> (false)}}
+ state alignment(b:Fault)->bool {transition b {Fault::BaseAlignment -> (true) _ -> (false)}}
+ state overflow(b:Fault)->bool {transition b {Fault::AddressOverflow -> (true) _ -> (false)}}
+ state transfer(a:TransferFailure,b:Fault)->bool {transition b {Fault::Transfer {cause} -> same(a,cause) _ -> (false)}}
+ state same(a:TransferFailure,b:TransferFailure)->bool {let good:bool=same_failure(a,b);good}
+ state source(a:ConversionFailure,b:Fault)->bool {transition b {Fault::Source {cause} -> (a==cause) _ -> (false)}}
+}
+machine fw_transfer(a:&Transfer,b:&Transfer)->bool {
+ let declaration:bool=fx_declaration(a.definition.declaration,b.definition.declaration);
+ let field:bool=fx_field(a.definition.field,b.definition.field);
+ let source:bool=ba_operand(a.source,b.source);let core:bool=same_transfer(&a.core,&b.core);
+ let request:bool=same_request(a.request,b.request);
+ declaration && field && source && core && request && a.definition.object==b.definition.object && a.definition.region==b.definition.region && a.region==b.region && a.base==b.base && a.region_bytes==b.region_bytes && a.size==b.size && a.ordinal==b.ordinal && a.total==b.total
+}
+machine fw_source(a:&[u8;1024],b:&[u8;1024],i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=fw_source_at(a,b,i);transition i<n {true -> fw_source(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine fw_source_at(a:&[u8;1024],b:&[u8;1024],i:u64)->bool {transition i<1024 {true -> (a[i]==b[i]) _ -> (true)}}
+machine fw_definitions(a:&[MethodDefinition;64],b:&[MethodDefinition;64],i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=fw_definition(a,b,i);transition i<n {true -> fw_definitions(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine fw_definition(a:&[MethodDefinition;64],b:&[MethodDefinition;64],i:u64)->bool {
+ transition i<64 {true -> entry(a[i],b[i]) _ -> (true)}
+ state entry(a:MethodDefinition,b:MethodDefinition)->bool {let scope:bool=fx_path(a.scope,b.scope);let body:bool=fx_span(a.body,b.body);scope && body && a.present==b.present && a.object_id==b.object_id && a.flags==b.flags}
+}
+machine fw_program(a:&Program,b:&Program)->bool {
+ let source:bool=fw_source(&a.source,&b.source,0,1024,true);let store:bool=fx_store(&a.store,&b.store);
+ let definitions:bool=fw_definitions(&a.definitions.entries,&b.definitions.entries,0,64,true);
+ source && store && definitions && a.loaded==b.loaded && a.length==b.length && a.unit==b.unit
+}
+machine fw_execution_result(a:ExecutionResult,b:ExecutionResult)->bool {
+ let operand:bool=ba_operand(a.operand,b.operand);
+ operand && a.outcome==b.outcome && a.value.initialized==b.value.initialized && a.value.number==b.value.number && a.has_value==b.has_value && a.steps==b.steps && a.fault_offset==b.fault_offset
+}
+machine fw_session(a:&Session,b:&Session)->bool {
+ let fault:bool=fw_fault(a.fault,b.fault);let program:bool=fw_program(&a.program,&b.program);
+ let runtime:bool=fw_runtime(&a.runtime,&b.runtime);let incoming:bool=ba_operand(a.incoming,b.incoming);
+ let transfer:bool=fw_transfer(&a.transfer,&b.transfer);let result:bool=fw_execution_result(a.result,b.result);
+ fault && program && runtime && incoming && transfer && result && a.state==b.state && a.outcome==b.outcome && a.correlation==b.correlation && a.fuel_limit==b.fuel_limit && a.issued==b.issued && a.accepted==b.accepted && a.reads==b.reads && a.writes==b.writes && a.payloads==b.payloads && a.result_objects==b.result_objects && a.result_bytes==b.result_bytes
+}
+machine fw_snapshot(a:&Session)->Session {
+ let program:Program=Program {loaded:a.program.loaded,source:a.program.source,length:a.program.length,unit:a.program.unit,store:a.program.store,definitions:a.program.definitions};
+ Session {state:a.state,outcome:a.outcome,fault:a.fault,program:program,runtime:a.runtime,correlation:a.correlation,fuel_limit:a.fuel_limit,issued:a.issued,accepted:a.accepted,reads:a.reads,writes:a.writes,payloads:a.payloads,incoming:a.incoming,transfer:a.transfer,result_objects:a.result_objects,result_bytes:a.result_bytes,result:a.result}
+}
