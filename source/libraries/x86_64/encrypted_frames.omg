@@ -1,0 +1,169 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified numeric frame.rs algorithms from x86_64 cc35c876d3badb57df54a66e22f7768a52be95f2.
+// Explicit detached profile and numeric cursor observations, never frame authority.
+module encrypted_frames;
+use addresses;
+use addresses::NumberResult;
+use addresses::OverflowingStep;
+use pages;
+use memory_encryption;
+use memory_encryption::State;
+
+pub data IteratorResult [copy] { start:u64; end:u64; selection:NumberResult; failed:bool; }
+pub machine start_valid(profile:State,address:u64,size:u64)->bool {
+ let mask:u64=profile.bit_mask & addresses::PHYSICAL_MAX;
+ let physical:bool=addresses::physical_valid(address,mask);
+ let geometry:bool=pages::start_valid(address,size,true);physical && geometry
+}
+pub machine from_start(profile:State,address:u64,size:u64)->NumberResult {
+ let valid:bool=start_valid(profile,address,size);
+ transition valid {true -> (NumberResult::Value {value:address}) _ -> (NumberResult::Rejected)}
+}
+pub machine containing(profile:State,address:u64,size:u64)->NumberResult {
+ let mask:u64=profile.bit_mask & addresses::PHYSICAL_MAX;
+ let valid:bool=pages::page_size_valid(size);
+ transition valid {true -> align(address,size,mask) _ -> (NumberResult::Rejected)}
+ state align(address:u64,size:u64,mask:u64)->NumberResult {let result:NumberResult=addresses::physical_align(address,size,false,mask);result}
+}
+pub machine from_pfn(profile:State,pfn:u64,size:u64)->NumberResult {
+ let valid:bool=pages::page_size_valid(size);
+ transition valid && size>0 {true -> bounded(profile,pfn,size) _ -> (NumberResult::Rejected)}
+ state bounded(profile:State,pfn:u64,size:u64)->NumberResult {
+  transition pfn<=addresses::INTEGER_MAX/size {true -> product(profile,pfn*size) _ -> (NumberResult::Rejected)}
+ }
+ state product(profile:State,address:u64)->NumberResult {let result:NumberResult=memory_encryption::physical_check(&profile,address);result}
+}
+pub machine pfn(profile:State,address:u64,size:u64)->NumberResult {
+ let valid:bool=start_valid(profile,address,size);
+ transition valid && size>0 {true -> (NumberResult::Value {value:address/size}) _ -> (NumberResult::Rejected)}
+}
+pub machine arithmetic(profile:State,address:u64,size:u64,count:u64,backwards:bool)->NumberResult {
+ let valid:bool=start_valid(profile,address,size);
+ transition valid && size>0 {true -> bounded(profile,address,size,count,backwards) _ -> (NumberResult::Rejected)}
+ state bounded(profile:State,address:u64,size:u64,count:u64,backwards:bool)->NumberResult {
+  transition count<=addresses::INTEGER_MAX/size {true -> calculate(profile,address,count*size,backwards) _ -> (NumberResult::Rejected)}
+ }
+ state calculate(profile:State,address:u64,bytes:u64,backwards:bool)->NumberResult {
+  let mask:u64=profile.bit_mask & addresses::PHYSICAL_MAX;
+  transition backwards {true -> subtract(address,bytes,mask) _ -> add(address,bytes,mask)}
+ }
+ state subtract(address:u64,bytes:u64,mask:u64)->NumberResult {let result:NumberResult=addresses::physical_sub(address,bytes,mask);result}
+ state add(address:u64,bytes:u64,mask:u64)->NumberResult {let result:NumberResult=addresses::physical_add(address,bytes,mask);result}
+}
+pub machine arithmetic_overflowing(profile:State,address:u64,size:u64,count:u64,backwards:bool)->OverflowingStep {
+ let result:NumberResult=arithmetic(profile,address,size,count,backwards);
+ transition result {NumberResult::Value {value} -> (OverflowingStep {value:value}) _ -> (OverflowingStep {value:address,overflow:true})}
+}
+pub machine difference(profile:State,end:u64,start:u64,size:u64)->NumberResult {
+ let first:bool=start_valid(profile,start,size);let last:bool=start_valid(profile,end,size);
+ transition first && last && size>0 && end>=start {true -> (NumberResult::Value {value:(end-start)/size}) _ -> (NumberResult::Rejected)}
+}
+pub machine range_count(profile:State,start:u64,end:u64,size:u64,inclusive:bool)->NumberResult {
+ let first:bool=start_valid(profile,start,size);let last:bool=start_valid(profile,end,size);
+ transition first && last {true -> count(start,end,size,inclusive) _ -> (NumberResult::Rejected)}
+ state count(start:u64,end:u64,size:u64,inclusive:bool)->NumberResult {
+  let result:NumberResult=pages::range_count(start,end,size,inclusive,true);result
+ }
+}
+pub machine range_bytes(profile:State,start:u64,end:u64,size:u64,inclusive:bool)->NumberResult {
+ let count:NumberResult=range_count(profile,start,end,size,inclusive);
+ transition count {NumberResult::Value {value} -> multiply(value,size) _ -> (NumberResult::Rejected)}
+ state multiply(count:u64,size:u64)->NumberResult {
+  transition size>0 && count<=addresses::INTEGER_MAX/size {true -> (NumberResult::Value {value:count*size}) _ -> (NumberResult::Rejected)}
+ }
+}
+// Bounded numeric selection does not execute a successor update. It never skips
+// excluded address bands and is deliberately distinct from iterator_step below.
+pub machine range_at(profile:State,start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool)->NumberResult {
+ let count:NumberResult=range_count(profile,start,end,size,inclusive);
+ transition count {NumberResult::Value {value} -> bounded(profile,start,size,index,reverse,value) _ -> (NumberResult::Rejected)}
+ state bounded(profile:State,start:u64,size:u64,index:u64,reverse:bool,count:u64)->NumberResult {
+  transition index<count {true -> choose(profile,start,size,index,reverse,count-index-1) _ -> (NumberResult::Rejected)}
+ }
+ state choose(profile:State,start:u64,size:u64,index:u64,reverse:bool,back:u64)->NumberResult {
+  transition reverse {true -> select(profile,start,size,back) _ -> select(profile,start,size,index)}
+ }
+ state select(profile:State,start:u64,size:u64,index:u64)->NumberResult {let result:NumberResult=arithmetic(profile,start,size,index,false);result}
+}
+// Equivalent detached nth/nth_back cursor ordering. Failed models a caught
+// panic/rejected arithmetic; Rejected without failed means exhausted. Numeric
+// cursor updates completed before a failure are retained in the result.
+pub machine iterator_step(profile:State,start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool)->IteratorResult {
+ let count:NumberResult=range_count(profile,start,end,size,inclusive);
+ transition count {NumberResult::Value {value} -> admitted(profile,start,end,size,inclusive,index,reverse,value) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ state admitted(profile:State,start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool,count:u64)->IteratorResult {
+  transition count==0 {true -> (IteratorResult {start:start,end:end}) _ -> select(profile,start,end,size,inclusive,index,reverse,count)}
+ }
+ state select(profile:State,start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool,count:u64)->IteratorResult {
+  transition index<count {true -> within(profile,start,end,size,inclusive,index,reverse) _ -> exhaust(profile,start,end,size,inclusive,count-1,reverse)}
+ }
+ state within(profile:State,start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool)->IteratorResult {
+  let result:IteratorResult=ef_iterator_within(profile,start,end,size,inclusive,index,reverse);result
+ }
+ state exhaust(profile:State,start:u64,end:u64,size:u64,inclusive:bool,last:u64,reverse:bool)->IteratorResult {
+  let selected:IteratorResult=ef_iterator_within(profile,start,end,size,inclusive,last,reverse);
+  transition selected.failed {true -> (selected) _ -> finish(profile,selected,size,inclusive,reverse)}
+ }
+ state finish(profile:State,selected:IteratorResult,size:u64,inclusive:bool,reverse:bool)->IteratorResult {
+  transition selected.selection {NumberResult::Value {value} -> next(profile,selected.start,selected.end,size,inclusive,reverse) _ -> (selected)}
+ }
+ state next(profile:State,start:u64,end:u64,size:u64,inclusive:bool,reverse:bool)->IteratorResult {
+  let result:IteratorResult=ef_iterator_next(profile,start,end,size,inclusive,reverse);result
+ }
+}
+machine ef_iterator_within(profile:State,start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool)->IteratorResult {
+ transition reverse {true -> back(profile,start,end,size,inclusive,index) _ -> front(profile,start,end,size,inclusive,index)}
+ state front(profile:State,start:u64,end:u64,size:u64,inclusive:bool,index:u64)->IteratorResult {
+  let moved:NumberResult=arithmetic(profile,start,size,index,false);
+  transition moved {NumberResult::Value {value} -> next(profile,value,end,size,inclusive,false) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+ state back(profile:State,start:u64,end:u64,size:u64,inclusive:bool,index:u64)->IteratorResult {
+  let moved:NumberResult=arithmetic(profile,end,size,index,true);
+  transition moved {NumberResult::Value {value} -> next(profile,start,value,size,inclusive,true) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+ state next(profile:State,start:u64,end:u64,size:u64,inclusive:bool,reverse:bool)->IteratorResult {
+  let result:IteratorResult=ef_iterator_next(profile,start,end,size,inclusive,reverse);result
+ }
+}
+machine ef_iterator_next(profile:State,start:u64,end:u64,size:u64,inclusive:bool,reverse:bool)->IteratorResult {
+ transition start>end || (!inclusive && start==end) {true -> (IteratorResult {start:start,end:end}) _ -> direction(profile,start,end,size,inclusive,reverse)}
+ state direction(profile:State,start:u64,end:u64,size:u64,inclusive:bool,reverse:bool)->IteratorResult {
+  transition reverse {true -> backwards(profile,start,end,size,inclusive) _ -> forward(profile,start,end,size,inclusive)}
+ }
+ state backwards(profile:State,start:u64,end:u64,size:u64,inclusive:bool)->IteratorResult {
+  transition inclusive && end==0 {true -> advance_front(profile,start,end,size,end) _ -> decrement(profile,start,end,size,inclusive)}
+ }
+ state decrement(profile:State,start:u64,end:u64,size:u64,inclusive:bool)->IteratorResult {
+  let moved:NumberResult=arithmetic(profile,end,size,1,true);
+  transition moved {NumberResult::Value {value} -> back_result(start,end,value,inclusive) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+ state back_result(start:u64,old_end:u64,end:u64,inclusive:bool)->IteratorResult {
+  transition inclusive {true -> (IteratorResult {start:start,end:end,selection:NumberResult::Value {value:old_end}}) _ -> (IteratorResult {start:start,end:end,selection:NumberResult::Value {value:end}})}
+ }
+ state forward(profile:State,start:u64,end:u64,size:u64,inclusive:bool)->IteratorResult {
+  transition inclusive {true -> maximum(profile,start,end,size) _ -> advance_front(profile,start,end,size,start)}
+ }
+ state maximum(profile:State,start:u64,end:u64,size:u64)->IteratorResult {
+  let top:NumberResult=memory_encryption::physical_truncate(&profile,addresses::INTEGER_MAX);
+  transition top {NumberResult::Value {value} -> top_address(profile,start,end,size,value) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+ state top_address(profile:State,start:u64,end:u64,size:u64,top:u64)->IteratorResult {
+  let mask:u64=profile.bit_mask & addresses::PHYSICAL_MAX;
+  transition size>0 {true -> subtract_top(profile,start,end,size,top,mask,size-1) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+ state subtract_top(profile:State,start:u64,end:u64,size:u64,top:u64,mask:u64,amount:u64)->IteratorResult {
+  let maximum:NumberResult=addresses::physical_sub(top,amount,mask);
+  transition maximum {NumberResult::Value {value} -> compare(profile,start,end,size,value) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+ state compare(profile:State,start:u64,end:u64,size:u64,maximum:u64)->IteratorResult {
+  transition start<maximum {true -> advance_front(profile,start,end,size,start) _ -> decrement_last(profile,start,end,size)}
+ }
+ state decrement_last(profile:State,start:u64,end:u64,size:u64)->IteratorResult {
+  let moved:NumberResult=arithmetic(profile,end,size,1,true);
+  transition moved {NumberResult::Value {value} -> (IteratorResult {start:start,end:value,selection:NumberResult::Value {value:start}}) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+ state advance_front(profile:State,start:u64,end:u64,size:u64,selected:u64)->IteratorResult {
+  let moved:NumberResult=arithmetic(profile,start,size,1,false);
+  transition moved {NumberResult::Value {value} -> (IteratorResult {start:value,end:end,selection:NumberResult::Value {value:selected}}) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+}

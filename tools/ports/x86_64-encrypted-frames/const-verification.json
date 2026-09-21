@@ -1,0 +1,222 @@
+{
+  "cases": [
+    {
+      "case": {
+        "case_id": 532,
+        "checked_multiplication": false,
+        "end": 0,
+        "inclusive": false,
+        "index": 0,
+        "ok": false,
+        "op": "containing",
+        "origin": "actual pinned public Rust",
+        "profile": "e0",
+        "reverse": false,
+        "rust_ok": false,
+        "rust_panicked": true,
+        "rust_value": 0,
+        "size": 4096,
+        "start": 1,
+        "value": 0
+      },
+      "observations": [
+        {
+          "control": false,
+          "fixture_sha256": "c481bc411b0f050adae1eec40d3cb4bc67b613b3f3e810c60bbd2c55bd165b69",
+          "output": "compiled 16 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-ddc5431f038b58928e811e47bc77759d9e36076dfd6ed1a17d78c1b7d8a87814/source/main.omg; wrote_output=false\n"
+        },
+        {
+          "control": true,
+          "fixture_sha256": "a2449bffe2c0d2822db5e4b25ef8b1ac5a69d27e2096942262ad6e4e1ac1389e",
+          "output": "cannot check prepared project: checked compilation failed for package `cathedral-encrypted-frames-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+        }
+      ]
+    },
+    {
+      "case": {
+        "case_id": 6486,
+        "checked_multiplication": false,
+        "end": 0,
+        "inclusive": false,
+        "index": 0,
+        "ok": true,
+        "op": "from_start",
+        "origin": "actual pinned public Rust",
+        "profile": "e47_s48_e47",
+        "reverse": false,
+        "rust_ok": true,
+        "rust_panicked": false,
+        "rust_value": 281474976710656,
+        "size": 4096,
+        "start": 281474976710656,
+        "value": 281474976710656
+      },
+      "observations": [
+        {
+          "control": false,
+          "fixture_sha256": "e963094b5bbf066fd313a12708687985eece59c7fafe8ada21ba1ebe4224153e",
+          "output": "compiled 16 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-de317c231dcf74228bb7cd6ead68eec6cbe8f06f302b99ccf5fa0a8903743625/source/main.omg; wrote_output=false\n"
+        },
+        {
+          "control": true,
+          "fixture_sha256": "50f9ee56ef963ca4a67dd6808fcbf48bc8d14040921efb1ee7074d9ea6d43f66",
+          "output": "cannot check prepared project: checked compilation failed for package `cathedral-encrypted-frames-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+        }
+      ]
+    },
+    {
+      "case": {
+        "case_id": 2735,
+        "checked_multiplication": false,
+        "end": 0,
+        "inclusive": false,
+        "index": 1,
+        "ok": false,
+        "op": "arithmetic",
+        "origin": "actual pinned public Rust",
+        "profile": "e47",
+        "reverse": false,
+        "rust_ok": false,
+        "rust_panicked": true,
+        "rust_value": 0,
+        "size": 4096,
+        "start": 140737488351232,
+        "value": 0
+      },
+      "observations": [
+        {
+          "control": false,
+          "fixture_sha256": "00ce84b4b7911720d37b804c46fc00a1e3964119b75a4554286afe190f5aa1f2",
+          "output": "compiled 16 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-68d4f01f4279c584dd7aac7081e91b26729e75746b9f3807126fa3562d1bafa1/source/main.omg; wrote_output=false\n"
+        },
+        {
+          "control": true,
+          "fixture_sha256": "b9b4a86baa64e4981a342c3fefed79adbb9466a32c406d99c1ef123d7ba265c7",
+          "output": "cannot check prepared project: checked compilation failed for package `cathedral-encrypted-frames-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+        }
+      ]
+    },
+    {
+      "case": {
+        "case_id": 624,
+        "end": 0,
+        "failed": true,
+        "inclusive": true,
+        "index": 0,
+        "ok": false,
+        "op": "iterator",
+        "origin": "actual pinned public Rust",
+        "out_end": 0,
+        "out_start": 0,
+        "profile": "e0",
+        "reverse": false,
+        "size": 4096,
+        "start": 0,
+        "value": 0
+      },
+      "observations": [
+        {
+          "control": false,
+          "fixture_sha256": "aed721f0718dc9e622e1ed4578baceda1c6f5e32b3ac1ebed84822fdb5c13091",
+          "output": "compiled 16 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-077b37832eec0b93f1cd64138f638add96fe972b0c9a7c1943706bb74dd821e1/source/main.omg; wrote_output=false\n"
+        },
+        {
+          "control": true,
+          "fixture_sha256": "ca0cb50efdf451f56640e6b485742e2eb89fbc27abd0b91a5fef00a3d81fa268",
+          "output": "cannot check prepared project: checked compilation failed for package `cathedral-encrypted-frames-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+        }
+      ]
+    },
+    {
+      "case": {
+        "case_id": 648,
+        "end": 12288,
+        "failed": true,
+        "inclusive": true,
+        "index": 2,
+        "ok": false,
+        "op": "iterator",
+        "origin": "actual pinned public Rust",
+        "out_end": 12288,
+        "out_start": 8192,
+        "profile": "e0",
+        "reverse": false,
+        "size": 4096,
+        "start": 0,
+        "value": 0
+      },
+      "observations": [
+        {
+          "control": false,
+          "fixture_sha256": "65b27ade1188d45aff40d3554f7cc3e3f0ea2760a63d21da8232efddbf16bc3d",
+          "output": "compiled 16 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-4594906adb0b62a6f3f77bb040206785c9bbd2841b433e3d199eb64f9e68cf6f/source/main.omg; wrote_output=false\n"
+        },
+        {
+          "control": true,
+          "fixture_sha256": "9dd8edaf7aab359091e39338bc1840c0cd4073cc8dc2f65ef544233686386b46",
+          "output": "cannot check prepared project: checked compilation failed for package `cathedral-encrypted-frames-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+        }
+      ]
+    },
+    {
+      "case": {
+        "case_id": 2845,
+        "end": 4362862139011072,
+        "failed": false,
+        "inclusive": true,
+        "index": 0,
+        "ok": true,
+        "op": "iterator",
+        "origin": "actual pinned public Rust",
+        "out_end": 4362862139006976,
+        "out_start": 4362862139011072,
+        "profile": "e47",
+        "reverse": false,
+        "size": 4096,
+        "start": 4362862139011072,
+        "value": 4362862139011072
+      },
+      "observations": [
+        {
+          "control": false,
+          "fixture_sha256": "f4c027f7f6df4c2a219bf9556c85729923625756377a32874d1afe98de2c56eb",
+          "output": "compiled 16 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-e31b15c7e382f8a867797861fdb04e5e5c8c0d58778b537f7c34a40a753a7c67/source/main.omg; wrote_output=false\n"
+        },
+        {
+          "control": true,
+          "fixture_sha256": "a5626ff20d4004df6c0cea5862fc7427c5c8a0b5ffe0dea06dcf39f7d60419d5",
+          "output": "cannot check prepared project: checked compilation failed for package `cathedral-encrypted-frames-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+        }
+      ]
+    }
+  ],
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "elapsed_seconds": 259.406,
+  "format": "cathedral-encrypted-frames-const-v1",
+  "source_sha256": {
+    "source/drivers/facts/build.omg": "5b9efdc91a651778e5eb5f83e3608d54ac84232f141eaf5ff30556416b4ac3c7",
+    "source/drivers/facts/x86_page_table_entry.omg": "58cee2e2eeb0b832a29dec499708920b567d21228f5c9745bda0302e2d275cf3",
+    "source/libraries/x86_64/addresses.omg": "19f0ba1efac0a2ecae59f56f21e97384f31176e0531b7256f2c0335cbe0a0528",
+    "source/libraries/x86_64/build.omg": "aafea7e8ba28988f761b36f06a7effe73361103f93488df5bdce34199541ee97",
+    "source/libraries/x86_64/encrypted_frames.omg": "fe088a851dffd5405de5737f129c44cfa5110f0e2acf27b17f04fd713535d216",
+    "source/libraries/x86_64/memory_encryption.omg": "7ba9b802cc1cffc51d31eb2b5303b0b51bbb4bbaa57c27a82207adc8d30c240c",
+    "source/libraries/x86_64/page_entries.omg": "a72210cd599eefb13332f8bff746d1ca5ebf65d3ebea385407e3acaa2a29786c",
+    "source/libraries/x86_64/pages.omg": "d72d8422d1e564b5605267c17482a481ced9d47429482fd48d1e8289c066d864",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805",
+    "tools/ports/x86_64-encrypted-frames/Cargo.lock": "0248844eb6e8671f62038bf743b82f89cb48fbf00a40021fb8ba8b0bd03a95cf",
+    "tools/ports/x86_64-encrypted-frames/Cargo.toml": "611b3ff3caab0e611274c09c58e6a1488913b8893b0bd85f2f38ed71c9767bd6",
+    "tools/ports/x86_64-encrypted-frames/build.omg": "816720f4edb87cb6a09e977e6b06239d3078f53706edaa7ee6d9cca045ad595c",
+    "tools/ports/x86_64-encrypted-frames/check.py": "019d5ad37525f222e2592ba1428d4858e220c49af92e9739642da5c9e0e1f56a",
+    "tools/ports/x86_64-encrypted-frames/check_const.py": "3833861ccb39743f2ad7008b3d11bb30cafe9c45144002f5db6108b1fe71d7f1",
+    "tools/ports/x86_64-encrypted-frames/compact.py": "f5e2e4c456d38f25f625b38009a35ca728a4459ce8fa991cf94ffc95ff0f9288",
+    "tools/ports/x86_64-encrypted-frames/generate.py": "9b93da350fd7d744cb19946af02bf3ad367ac2142ca8ef0da6627a948daa7349",
+    "tools/ports/x86_64-encrypted-frames/main.omg": "97e4b5bfca60b6c200f295da5f76dfe0c2758dbfd075319ea11025c7eca3612b",
+    "tools/ports/x86_64-encrypted-frames/map_inventory.py": "758e9ed1c08bd49945d4a743ac32fdd6304bbaecdd29a15172c0cb71ec561d26",
+    "tools/ports/x86_64-encrypted-frames/reference.jsonl": "16b2252f3a808c809b15803d91e0751de39e589110f173362311042044f527f6",
+    "tools/ports/x86_64-encrypted-frames/src/main.rs": "98a323452efa3d5f2d7569f951ce1ec977fba748a954911956c230fc3ca4b960",
+    "tools/ports/x86_64-encrypted-frames/vectors.json": "5b2a65791eb81141283c2d96bb62653faa0b1765604ba1ac9ec474ec03093b33",
+    "tools/ports/x86_64-encrypted-frames/verify_record.py": "66f81052f5c931101c066f6b92e917549ea11ebbeb97e35049a2783470ac8415"
+  },
+  "stage": "Omega constant evaluation and requires checking; native/hardware not run"
+}

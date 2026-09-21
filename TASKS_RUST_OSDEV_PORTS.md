@@ -291,8 +291,8 @@ on their default physical profile.
 [Explicit-profile translation](source/libraries/x86_64/encrypted-translation.PORT.md)
 adds 330 actual Rust/Omega observations, seven boundary assertions and nine body
 mutations for generic mapped translation and captured child identities.
-Remaining encryption-profile frame/range
-compositions are ordinary implementation work; the closure audit lists them.
+Remaining virtual page-range iterator transitions are ordinary work;
+the closure audit lists their exact source anchors.
 [Encryption-aware register expressions](source/libraries/x86_64/encrypted-registers.PORT.md)
 pass 100 Rust reference rows, 800 Omega calls and twelve body controls, preserving
 strict CR3 rejection versus APIC truncation and typed-frame operand admission.
@@ -314,10 +314,16 @@ addresses, partial effects and recursive-slot exclusion.
 pass 610 adapted Rust-check/Omega cases, ten controls and two const pairs. Virtual
 geometry, current-bit frame admission and accumulated-mask entry decoding keep
 the pinned order; no recursive page-table object is constructed.
+[Profile-aware physical frames](source/libraries/x86_64/encrypted-frames.PORT.md)
+pass 7,048 cases in 156 checked groups with 156 controls and six const pairs.
+The 7,008 public Rust observations span thirteen isolated profiles; forty
+additional cases cover invalid geometry. PFNs, arithmetic, range selection and
+physical iterator cursor updates preserve current-bit admission and failure
+ordering, with checked multiplication overflow as an explicit policy.
 The full-source closure review found no remaining pure representation family:
 X86-001 is complete at the documented numeric/schema boundary. Native layout,
 instruction/provider and proof limits remain separate; X86-002 stays open for
-the remaining encryption-profile algorithm compositions.
+virtual iterator cursor transitions.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors
@@ -462,12 +468,14 @@ BankField and all five FieldList forms. Dynamic BankValue/BufferSize bodies rema
 explicitly unparsed or opaque; field namespace installation and full interpreter
 behavior remain pending. The separate integer executor does not complete these
 syntax/resource-limit milestones.
-[Resource descriptor parsing](source/libraries/acpi/resources/PORT.md) adds 117
-checked-interpreter pairs, four const pairs and 102 actual public Rust observations.
+[Resource descriptor parsing](source/libraries/acpi/resources/PORT.md) adds 210
+checked-interpreter pairs, four const pairs and 187 actual public Rust observations,
+including 64 normalized supported-result agreements.
 It checks bounded envelopes, strict EndTag/checksum behavior, IRQ/DMA/I/O,
-FixedMemory32, address and ExtendedIRQ descriptors, with explicit unsupported
-spans for other defined families. GPIO/serial decoding and aggregate resource
-completion remain pending. ACPI-004/006 stay open.
+FixedMemory32, address, ExtendedIRQ, GPIO and I²C descriptors. Aggregate dispatch
+covers every pin-supported family; other defined families retain explicit
+unsupported spans. Numeric connection facts grant no hardware or namespace
+authority. Runtime resource integration remains pending; ACPI-004/006 stay open.
 
 ## Phase 5 — only after the corpus above is healthy
 

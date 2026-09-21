@@ -1,0 +1,536 @@
+{
+  "files": {
+    "src/structures/paging/frame.rs": {
+      "disposition": "translated",
+      "reason": "Numeric expression/state-transition component with checked admission and explicit iterator failures; nominal/trait/proof infrastructure deliberately outside the component.",
+      "sha256": "ef176a88a1b52eb33a2843f98286ac79946d77c5b4afa5959c5dc750af876880",
+      "symbols": {
+        "112:from_pfn_unchecked": {
+          "anchor": "pub unsafe fn from_pfn_unchecked(pfn: u64) -> Self {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "122:containing_address": {
+          "anchor": "pub fn containing_address(address: PhysAddr) -> Self {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine containing(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "132:start_address": {
+          "anchor": "pub fn start_address(self) -> PhysAddr {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine from_start(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "139:size": {
+          "anchor": "pub fn size(self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine start_valid(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "14:PhysFrame": {
+          "anchor": "pub struct PhysFrame<S: PageSize = Size4KiB> {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "160:pfn": {
+          "anchor": "pub fn pfn(self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine pfn(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "167:range": {
+          "anchor": "pub fn range(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRange<S> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine range_count(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "16:start_address": {
+          "anchor": "pub(crate) start_address: PhysAddr,",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "174:range_inclusive": {
+          "anchor": "pub fn range_inclusive(start: PhysFrame<S>, end: PhysFrame<S>) -> PhysFrameRangeInclusive<S> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine range_count(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "180:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "190:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "192:add": {
+          "anchor": "fn add(self, rhs: u64) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine arithmetic(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "199:add_assign": {
+          "anchor": "fn add_assign(&mut self, rhs: u64) {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine arithmetic(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "205:Output": {
+          "anchor": "type Output = Self;",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "207:sub": {
+          "anchor": "fn sub(self, rhs: u64) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine arithmetic(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "214:sub_assign": {
+          "anchor": "fn sub_assign(&mut self, rhs: u64) {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine arithmetic(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "220:Output": {
+          "anchor": "type Output = u64;",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "222:sub": {
+          "anchor": "fn sub(self, rhs: PhysFrame<S>) -> Self::Output {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine difference(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "230:PhysFrameRange": {
+          "anchor": "pub struct PhysFrameRange<S: PageSize = Size4KiB> {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "232:start": {
+          "anchor": "pub start: PhysFrame<S>,",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "234:end": {
+          "anchor": "pub end: PhysFrame<S>,",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "240:is_empty": {
+          "anchor": "pub fn is_empty(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine range_count(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "246:len": {
+          "anchor": "pub fn len(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine range_count(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "256:size": {
+          "anchor": "pub fn size(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine range_bytes(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "262:Item": {
+          "anchor": "type Item = PhysFrame<S>;",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "265:next": {
+          "anchor": "fn next(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine iterator_step(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "26:from_start_address": {
+          "anchor": "pub fn from_start_address(address: PhysAddr) -> Result<Self, AddressNotAligned> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine from_start(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "275:nth": {
+          "anchor": "fn nth(&mut self, n: usize) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine iterator_step(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "298:size_hint": {
+          "anchor": "fn size_hint(&self) -> (usize, Option<usize>) {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine range_count(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "308:next_back": {
+          "anchor": "fn next_back(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine iterator_step(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "317:nth_back": {
+          "anchor": "fn nth_back(&mut self, n: usize) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine iterator_step(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "342:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "357:PfnNotValid": {
+          "anchor": "pub struct PfnNotValid(pub u64);",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "361:fmt": {
+          "anchor": "fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "371:PhysFrameRangeInclusive": {
+          "anchor": "pub struct PhysFrameRangeInclusive<S: PageSize = Size4KiB> {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "373:start": {
+          "anchor": "pub start: PhysFrame<S>,",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "375:end": {
+          "anchor": "pub end: PhysFrame<S>,",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "381:is_empty": {
+          "anchor": "pub fn is_empty(&self) -> bool {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine range_count(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "387:len": {
+          "anchor": "pub fn len(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine range_count(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "397:size": {
+          "anchor": "pub fn size(&self) -> u64 {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine range_bytes(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "403:Item": {
+          "anchor": "type Item = PhysFrame<S>;",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "406:next": {
+          "anchor": "fn next(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine iterator_step(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "425:nth": {
+          "anchor": "fn nth(&mut self, n: usize) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine iterator_step(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "42:from_start_address_unchecked": {
+          "anchor": "pub unsafe fn from_start_address_unchecked(start_address: PhysAddr) -> Self {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "448:size_hint": {
+          "anchor": "fn size_hint(&self) -> (usize, Option<usize>) {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine range_count(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "458:next_back": {
+          "anchor": "fn next_back(&mut self) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine iterator_step(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "476:nth_back": {
+          "anchor": "fn nth_back(&mut self, n: usize) -> Option<Self::Item> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine iterator_step(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "501:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "511:any": {
+          "anchor": "fn any() -> Self {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "517:tests": {
+          "anchor": "mod tests {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "520:test_frame_range_len": {
+          "anchor": "pub fn test_frame_range_len() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "534:proofs": {
+          "anchor": "mod proofs {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "538:phys_frame_range_next": {
+          "anchor": "fn phys_frame_range_next() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "555:phys_frame_range_inclusive_next": {
+          "anchor": "fn phys_frame_range_inclusive_next() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "572:phys_frame_range_next_back": {
+          "anchor": "fn phys_frame_range_next_back() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "589:phys_frame_range_inclusive_next_back": {
+          "anchor": "fn phys_frame_range_inclusive_next_back() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "607:phys_frame_range_nth_0": {
+          "anchor": "fn phys_frame_range_nth_0() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "620:phys_frame_range_nth": {
+          "anchor": "fn phys_frame_range_nth() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "637:phys_frame_range_inclusive_nth_0": {
+          "anchor": "fn phys_frame_range_inclusive_nth_0() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "650:phys_frame_range_inclusive_nth": {
+          "anchor": "fn phys_frame_range_inclusive_nth() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "65:from_pfn": {
+          "anchor": "pub fn from_pfn(pfn: u64) -> Self {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine from_pfn(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        },
+        "667:phys_frame_range_nth_back_0": {
+          "anchor": "fn phys_frame_range_nth_back_0() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "680:phys_frame_range_nth_back": {
+          "anchor": "fn phys_frame_range_nth_back() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "697:phys_frame_range_inclusive_nth_back_0": {
+          "anchor": "fn phys_frame_range_inclusive_nth_back_0() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "710:phys_frame_range_inclusive_nth_back": {
+          "anchor": "fn phys_frame_range_inclusive_nth_back() {",
+          "disposition": "omitted",
+          "reason": "Nominal wrapper/field identity, formatting, unchecked construction, trait-associated plumbing, or Kani arbitrary/universal proof infrastructure remains outside this numeric component. Prior default-profile inventory retains its separate scope."
+        },
+        "88:try_from_pfn": {
+          "anchor": "pub fn try_from_pfn(pfn: u64) -> Result<Self, PfnNotValid> {",
+          "disposition": "translated",
+          "reason": "Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.",
+          "targets": [
+            {
+              "anchor": "pub machine from_pfn(",
+              "path": "source/libraries/x86_64/encrypted_frames.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "module encrypted_frames;",
+          "path": "source/libraries/x86_64/encrypted_frames.omg"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "scope": "Explicit current-encryption-bit frame numeric algorithms and detached iterator state transitions. No frame identity, native representation, backing, mapping or Kani universal proof.",
+  "upstream": {
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/paging/frame.rs"
+    ],
+    "url": "https://github.com/rust-osdev/x86_64"
+  }
+}

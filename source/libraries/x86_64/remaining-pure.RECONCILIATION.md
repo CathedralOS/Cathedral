@@ -128,13 +128,17 @@ from live provider integration before completing the overall X86-001/002 tasks.
 
 ## Subsequent encryption-profile closure review
 
-A fresh read-only review checked all 41 pinned source hashes and reconciled 23
-slice inventories. It found no additional default-profile pure family. The
+The latest read-only review checked all 41 pinned source hashes and reconciled
+27 library slice inventories plus fact overlays. One pure family remains beyond
+the earlier bounded-selection profile: virtual PageRange/PageRangeInclusive
+mutable next/nth/next_back/nth_back transitions, including pre-yield cursor changes,
+canonical-gap failures and retained partial state. This is ordinary implementation
+work and keeps X86-002 open. The
 unoverlaid `gdt.rs:127:MAX` anchor is a const-generic parameter represented by
 checked owned-table capacity, not a missing hardware constant.
 
-Encryption support still changes ordinary pure compositions. These are queued
-implementation and test work, with no compiler blocker:
+Encryption support changes the following ordinary pure compositions. All now
+have completed component evidence below, with no compiler blocker:
 
 - Mapped/recursive leaf, child and routes: profile-dependent frames, flag
   replacement, redundant writes, capture IDs and typed allocation validation.
@@ -162,7 +166,7 @@ separate from this finite numeric implementation queue.
 The generic mapped-translation component now passes 330 actual Rust/Omega
 observations and nine body controls: [explicit-profile translation](encrypted-translation.PORT.md).
 Its separate captured-path API validates profile-decoded child identities.
-The other profile compositions above remain queued or under implementation.
+The remaining profile compositions are documented in the component records below.
 
 [Encryption-profile register expressions](encrypted-registers.PORT.md) now pass
 100 Rust rows, 800 Omega calls and twelve controls. CR3/APIC composition is
@@ -194,3 +198,16 @@ observations. The representative current const pair also passes.
 complete the ordered frame/entry comparison with 610 checked cases, ten controls
 and two current constant-evaluation pairs. Virtual recursive geometry precedes
 current-bit physical admission; accumulated-mask entry decoding remains distinct.
+
+The virtual iterator anchors are page.rs:379/389/433/442 and
+535/554/598/616. Existing pages::range_at remains a checked selection API and
+does not imply those stateful iterator effects. A separate slice is in progress.
+
+[Encryption-profile physical frames](encrypted-frames.PORT.md) complete current-bit
+admission, PFNs, arithmetic, range selection and detached physical iterator
+transitions. All 7,048 cases pass in 156 checked groups with 156 controls; six
+constant-evaluation pairs also pass. The 7,008 actual public Rust observations
+use thirteen isolated profiles; forty additional cases reject invalid geometry.
+Cursor mutations before arithmetic failure and inclusive endpoint behavior are
+preserved. Checked multiplication deliberately rejects pinned release overflow.
+Only the virtual page iterator family remains in the ordinary pure queue.
