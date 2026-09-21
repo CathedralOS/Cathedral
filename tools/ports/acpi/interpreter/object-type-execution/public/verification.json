@@ -1,0 +1,627 @@
+{
+  "agreements": 27,
+  "binary": "/tmp/cathedral-object-type-public/release/cathedral-acpi-public-execution",
+  "binary_sha256": "3344274bcdd91348fc09e988e934f63aae5485e238fb7318c1592fe880d07a75",
+  "build_source": "[package]\nname=\"cathedral-acpi-public-execution\"\nversion=\"0.0.0\"\nedition=\"2024\"\npublish=false\n[dependencies]\nacpi={path=\"/Users/zcanann/Documents/Projects/Cathedral/reference_code/rust-osdev/acpi\"}\n",
+  "omitted": {
+    "argument_reference_descriptor": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "lexical_reference_descriptor": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "local_reference_descriptor": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "malformed_buffer_field_metadata": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "malformed_method_body_metadata": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "malformed_owned_buffer_metadata": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "malformed_package_metadata": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "named_uninitialized": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "reference_arg": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "reference_cycle": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "reference_dangling": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "reference_index": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "reference_local": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "reference_named": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "reference_refof": "Direct canonical metadata edit has no corresponding public API fixture.",
+    "reference_unresolved": "Direct canonical metadata edit has no corresponding public API fixture."
+  },
+  "rows": {
+    "alias_preserves_identity": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:2"
+      },
+      "omega_expected": {
+        "result": "integer:2"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5f0d414200064f424a5f414c535f140c4d41494e00a48e414c535f"
+    },
+    "argument_inline_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:1"
+      },
+      "omega_expected": {
+        "result": "integer:1"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "140943414c5f01a48e68140c4d41494e00a443414c5fff"
+    },
+    "argument_inline_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:1"
+      },
+      "omega_expected": {
+        "result": "integer:1"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "140943414c5f01a48e68140c4d41494e00a443414c5fff"
+    },
+    "argument_shared_buffer_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:3"
+      },
+      "omega_expected": {
+        "result": "integer:3"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5f11050a024142140943414c5f01a48e68140f4d41494e00a443414c5f4f424a5f"
+    },
+    "argument_shared_buffer_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:3"
+      },
+      "omega_expected": {
+        "result": "integer:3"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5f11050a024142140943414c5f01a48e68140f4d41494e00a443414c5f4f424a5f"
+    },
+    "argument_uninitialized_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:0"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "14094d41494e00a48e68"
+    },
+    "argument_uninitialized_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:0"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "14094d41494e00a48e68"
+    },
+    "debug_metadata_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:16"
+      },
+      "omega_expected": {
+        "result": "integer:16"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "140a4d41494e00a48e5b31"
+    },
+    "debug_metadata_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:16"
+      },
+      "omega_expected": {
+        "result": "integer:16"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "140a4d41494e00a48e5b31"
+    },
+    "excluded_derefof": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:3"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "UnsupportedOpcode",
+      "table_hex": "084f424a5f11050a024142140d4d41494e00a48e834f424a5f"
+    },
+    "excluded_index": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:14"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "UnsupportedOpcode",
+      "table_hex": "084f424a5f11050a024142140f4d41494e00a48e884f424a5f0000"
+    },
+    "excluded_literal": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:1"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "UnsupportedOpcode",
+      "table_hex": "084f424a5f11050a02414214094d41494e00a48e01"
+    },
+    "excluded_refof": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:3"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "UnsupportedOpcode",
+      "table_hex": "084f424a5f11050a024142140d4d41494e00a48e714f424a5f"
+    },
+    "legacy_processor_code12": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:12"
+      },
+      "omega_expected": {
+        "result": "integer:12"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "5b830b4f424a5f000000000000140c4d41494e00a48e4f424a5f"
+    },
+    "local_private_integer_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:1"
+      },
+      "omega_expected": {
+        "result": "integer:1"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "140c4d41494e0070ff60a48e60"
+    },
+    "local_private_integer_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:1"
+      },
+      "omega_expected": {
+        "result": "integer:1"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "140c4d41494e0070ff60a48e60"
+    },
+    "local_private_string_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:2"
+      },
+      "omega_expected": {
+        "result": "integer:2"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5f0d414200140f4d41494e009d4f424a5f60a48e60"
+    },
+    "local_private_string_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:2"
+      },
+      "omega_expected": {
+        "result": "integer:2"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5f0d414200140f4d41494e009d4f424a5f60a48e60"
+    },
+    "local_uninitialized_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:0"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "14094d41494e00a48e60"
+    },
+    "local_uninitialized_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:0"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "14094d41494e00a48e60"
+    },
+    "named_buffer_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:3"
+      },
+      "omega_expected": {
+        "result": "integer:3"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5f11050a024142140c4d41494e00a48e4f424a5f"
+    },
+    "named_buffer_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:3"
+      },
+      "omega_expected": {
+        "result": "integer:3"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5f11050a024142140c4d41494e00a48e4f424a5f"
+    },
+    "named_integer_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:1"
+      },
+      "omega_expected": {
+        "result": "integer:1"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5fff140c4d41494e00a48e4f424a5f"
+    },
+    "named_integer_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:1"
+      },
+      "omega_expected": {
+        "result": "integer:1"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5fff140c4d41494e00a48e4f424a5f"
+    },
+    "named_package_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:4"
+      },
+      "omega_expected": {
+        "result": "integer:4"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5f1204010a09140c4d41494e00a48e4f424a5f"
+    },
+    "named_package_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:4"
+      },
+      "omega_expected": {
+        "result": "integer:4"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5f1204010a09140c4d41494e00a48e4f424a5f"
+    },
+    "named_string_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:2"
+      },
+      "omega_expected": {
+        "result": "integer:2"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5f0d414200140c4d41494e00a48e4f424a5f"
+    },
+    "named_string_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:2"
+      },
+      "omega_expected": {
+        "result": "integer:2"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5f0d414200140c4d41494e00a48e4f424a5f"
+    },
+    "near_scope_shadows_outer_object": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:1"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "084f424a5f0a2a10185343505f10054f424a5f140c43414c5f00a48e4f424a5f14114d41494e00a45c2e5343505f43414c5f"
+    },
+    "null_name": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:1"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "InvalidTarget",
+      "table_hex": "14094d41494e00a48e00"
+    },
+    "parameterized_method_not_invoked_32": {
+      "agrees_on_value_and_state": true,
+      "bits": 32,
+      "observed": {
+        "after:FLAG": "integer:7",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:8"
+      },
+      "omega_expected": {
+        "after:FLAG": "integer:7",
+        "result": "integer:8"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "08464c41470a07140f43414c5f03700a63464c4147a401140c4d41494e00a48e43414c5f"
+    },
+    "parameterized_method_not_invoked_64": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "after:FLAG": "integer:7",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:8"
+      },
+      "omega_expected": {
+        "after:FLAG": "integer:7",
+        "result": "integer:8"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "08464c41470a07140f43414c5f03700a63464c4147a401140c4d41494e00a48e43414c5f"
+    },
+    "region_metadata_no_access": {
+      "agrees_on_value_and_state": true,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:10"
+      },
+      "omega_expected": {
+        "result": "integer:10"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "5b804f424a5f00000a10140c4d41494e00a48e4f424a5f"
+    },
+    "root_scope": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "panic": "true"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "140a4d41494e00a48e5c00"
+    },
+    "truncated_operand": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "uninitialized"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "Truncated",
+      "table_hex": "14084d41494e00a48e"
+    },
+    "typeless_scope": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:ObjectDoesNotExist(AmlName([Segment(\"SCP_\")]))"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "Success",
+      "table_hex": "10055343505f140c4d41494e00a48e5343505f"
+    },
+    "unknown_name": {
+      "agrees_on_value_and_state": false,
+      "bits": 64,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "error:ObjectDoesNotExist(AmlName([Segment(\"OBJ_\")]))"
+      },
+      "omega_expected": {
+        "result": "integer:0"
+      },
+      "omega_outcome": "MissingObject",
+      "table_hex": "140c4d41494e00a48e4f424a5f"
+    }
+  },
+  "rustc": "rustc 1.100.0-nightly (a69a63265 2026-09-03)",
+  "source_sha256": {
+    "tools/ports/acpi/aml-public-execution/Cargo.lock": "ba4543d96562e5f411c8447ec4a23a08d224acb0e4af7c5e61e099a976dcf880",
+    "tools/ports/acpi/aml-public-execution/Cargo.toml": "5b8c17e5e61e7b2b2ff2b29f4ca5feb00639297abb742387a31ef2262f818642",
+    "tools/ports/acpi/aml-public-execution/src/main.rs": "ca6c249f592018b4407cb3b16f36460c758cdd24e1b3834dc681ac6d43b4fb83",
+    "tools/ports/acpi/interpreter/execution/fixtures.py": "1ad5198b0b0935ec471968c3a44a3d4c7c692aaa8f9cda5b45680046a87da868",
+    "tools/ports/acpi/interpreter/generic-execution/decoder_fixtures.py": "6f719cf60526dcda69421ec057786fbfc4f2907842e7d88aeec016c05607ad87",
+    "tools/ports/acpi/interpreter/generic-execution/fixtures.py": "984afe7f99ca61d7a18ec0163ebd16658a694131309e9ced06813fef73db08ff",
+    "tools/ports/acpi/interpreter/object-type-execution/fixtures.py": "84c374c53f262b952a1231a21fec37d93f153b9714cdd060c2b3304abf75f222",
+    "tools/ports/acpi/interpreter/object-type-execution/public/check.py": "93b2fdfbfe92141198202f796c0d5dcdbb8f3e9d6badc5c0c006023b60244920"
+  },
+  "source_unchanged": true,
+  "stage": "Pinned public Rust Interpreter::load_table/evaluate; no Omega native or hardware claim",
+  "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "upstream_sha256": {
+    "Cargo.toml": "437a679d0f958db2171af775e0a1368ac35edd4cc0a48ec8b449233750db61cf",
+    "src/address.rs": "38048355ffe9b7c956e3ebaf84effdadca7defffd70c07feb0587e1c85fbb20a",
+    "src/aml/mod.rs": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+    "src/aml/namespace.rs": "311f3d9b5fbcb08395dcde0b5dce5455e932ad4a8fb6c273580d80c507b2f347",
+    "src/aml/object.rs": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+    "src/aml/op_region.rs": "43f7430d7aa41625f944bf66ffccc7f9bed7d403ff1979a9a2c09dedba7bf69b",
+    "src/aml/pci_routing.rs": "4c2371d38c0a67cab28ab686c8ad6374577e012cd02f561d4730e2f7895dcc39",
+    "src/aml/resource.rs": "abca9e6c8c60e40730cc11b2304acf37e2171942097f8871f5f8a8c7911fae09",
+    "src/lib.rs": "09fcc41658affdc55f6d8c0cb2b29b642d908879a07ed735014b70c7935335c7",
+    "src/platform/interrupt.rs": "c9a95f11b49535cd2baee66bdb55944870df284d3bc65f7a0e34416c5631c2bf",
+    "src/platform/mod.rs": "e49bb52792f164f1001a397bee489dc9dda8f3501681072a21396f4d276c87b5",
+    "src/platform/numa.rs": "93371276644afdf0dee1cf8b8215bb24c54a485552f045705b88424e69139596",
+    "src/platform/pci.rs": "5ad4a415a5037a741a7312d950299640a83905d454ba0eb4d40925c47a90d0c0",
+    "src/registers.rs": "9d8ed68f84cf8659f7822b0edd97fd7153a99bcca39de44b3726c6d5c00990a8",
+    "src/rsdp.rs": "ca2389abeffce9de4e1e28a87b9097c195a737f4dfa0beca5d2ccb23067f824c",
+    "src/sdt/bgrt.rs": "33baf3f6d386a091dc7ad13fb902ed4a265bbebd9809dd122d107981ea5cf5bb",
+    "src/sdt/facs.rs": "6977a2857c78c2bb07e880f555a738278571c4e5e9e173cc1375ca600da161d8",
+    "src/sdt/fadt.rs": "3b213e82029458b0c4c2633b232f2e3f1b4f9f59c07c5ac201286fb54a7927b7",
+    "src/sdt/hpet.rs": "ad52bbf848ac167a26561838d2695579b780b174006d9b553f8b154e74e6aca5",
+    "src/sdt/madt.rs": "4decb527324cd1aec925b20adc517d56f88ea80cc8c1cd50741a15b7da927ac0",
+    "src/sdt/mcfg.rs": "c33d9c34b0e270f5a7b3bf1817853aa07e7cb800030eace6447b915b4651900b",
+    "src/sdt/mod.rs": "136cb4b65a02f8e0bb3949543ff4f55fdaa540117010540cc4fe770e400a7052",
+    "src/sdt/slit.rs": "46b271c98f0071b65ccccce36db98aa8d8e4a8929c99bf81cd0ad90e5703ba52",
+    "src/sdt/spcr.rs": "bcd71238ac0a4a08946380508cc4d72762eb93cd7935fc4cc5fbad8519721fbd",
+    "src/sdt/srat.rs": "a73a29fff2fc609f3012c096a1f860d2f577593ef7995f9518e2b34f05b87b66"
+  },
+  "upstream_source": "/Users/zcanann/Documents/Projects/Cathedral/reference_code/rust-osdev/acpi"
+}

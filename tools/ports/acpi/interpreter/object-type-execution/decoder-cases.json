@@ -1,0 +1,110 @@
+[
+  {
+    "name": "decoder_local_zero_32",
+    "input": "8e60",
+    "outcome": "Success",
+    "result": 0,
+    "setup": "",
+    "frame_setup": "",
+    "bits": 32
+  },
+  {
+    "name": "decoder_inline_integer_32",
+    "input": "8e68",
+    "outcome": "Success",
+    "result": 1,
+    "setup": "",
+    "frame_setup": "frame.arguments[0]=Binding::Integer {number:99};",
+    "bits": 32
+  },
+  {
+    "name": "decoder_local_zero_64",
+    "input": "8e60",
+    "outcome": "Success",
+    "result": 0,
+    "setup": "",
+    "frame_setup": "",
+    "bits": 64
+  },
+  {
+    "name": "decoder_inline_integer_64",
+    "input": "8e68",
+    "outcome": "Success",
+    "result": 1,
+    "setup": "",
+    "frame_setup": "frame.arguments[0]=Binding::Integer {number:99};",
+    "bits": 64
+  },
+  {
+    "name": "decoder_named_no_store_write",
+    "input": "8e4f424a5f",
+    "outcome": "Success",
+    "result": 1,
+    "setup": "",
+    "frame_setup": "",
+    "bits": 64
+  },
+  {
+    "name": "decoder_debug_no_service",
+    "input": "8e5b31",
+    "outcome": "Success",
+    "result": 16,
+    "setup": "",
+    "frame_setup": "",
+    "bits": 64
+  },
+  {
+    "name": "decoder_missing_no_publication",
+    "input": "8e4241445f",
+    "outcome": "MissingObject",
+    "result": 0,
+    "setup": "",
+    "frame_setup": "",
+    "bits": 64
+  },
+  {
+    "name": "decoder_truncated_no_publication",
+    "input": "8e4f424a",
+    "outcome": "Truncated",
+    "result": 0,
+    "setup": "",
+    "frame_setup": "",
+    "bits": 64
+  },
+  {
+    "name": "decoder_excluded_no_publication",
+    "input": "8e714f424a5f",
+    "outcome": "UnsupportedOpcode",
+    "result": 0,
+    "setup": "",
+    "frame_setup": "",
+    "bits": 64
+  },
+  {
+    "name": "decoder_cycle_no_publication",
+    "input": "8e4f424a5f",
+    "outcome": "ReferenceCycle",
+    "result": 0,
+    "setup": "store.space.objects[0].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};",
+    "frame_setup": "",
+    "bits": 64
+  },
+  {
+    "name": "decoder_bad_id_no_publication",
+    "input": "8e4f424a5f",
+    "outcome": "InvalidState",
+    "result": 0,
+    "setup": "store.space.entries[0].object=18446744073709551615;",
+    "frame_setup": "",
+    "bits": 64
+  },
+  {
+    "name": "decoder_full_operand_no_publication",
+    "input": "8e4f424a5f",
+    "outcome": "InvalidState",
+    "result": 0,
+    "setup": "",
+    "frame_setup": "frame.operations[0].count=1;frame.operations[0].operands[0]=Operand::Integer {number:71};",
+    "bits": 64
+  }
+]

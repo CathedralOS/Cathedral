@@ -1,0 +1,134 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// ObjectType operand-role integration over canonical object_queries::object_type.
+// ACPI 6.6 19.6.97 and 20.2.5.4; pinned acpi mod.rs ObjectType dispatch.
+module object_type_execution;
+use aml::model::ObjectStore;
+use aml::model::Namespace;
+use aml::model::Outcome;
+use aml::model::Read;
+use aml::model::Path;
+use aml::model::PathResult;
+use aml::model::Lookup;
+use aml::model::Entry;
+use aml::model::LevelKind;
+use aml::bytes::opcode;
+use aml::names::lead_char;
+use aml::names::namestring;
+use aml::names::resolve;
+use aml::names::parent;
+use aml::namespace::locate;
+use aml::object_queries::QueryResult;
+use aml::object_queries::object_type;
+use execution_model::ExecutionOutcome;
+use execution_model::Binding;
+use execution_model::Frame;
+use execution_names::decode_outcome;
+
+pub data ObjectTypeResult [copy] {outcome:ExecutionOutcome;number:u64;next:u64;}
+// Metadata inspection is read-only. Cursor and operand publication belong to
+// decode_execution and occur only after this complete descriptor succeeds.
+pub machine inspect_object_type(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64)->ObjectTypeResult {
+ let token:Read=opcode(input,frame.end,at);
+ let outcome:ExecutionOutcome=decode_outcome(token.outcome);
+ transition outcome==ExecutionOutcome::Success {true -> token(input,store,frame,at,token) _ -> (ObjectTypeResult {outcome:outcome})}
+ state token(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64,token:Read)->ObjectTypeResult {
+  let code:u64=token.value;
+  let named:bool=lead_char(code) || code==0x5c || code==0x5e || code==0x2e || code==0x2f;
+  transition {
+   code>=0x60 && code<=0x67 -> local(store,frame,code-0x60,token.next)
+   code>=0x68 && code<=0x6e -> argument(store,frame,code-0x68,token.next)
+   code==0x5b31 -> (ObjectTypeResult {number:16,next:token.next})
+   named -> named(input,store,frame,at)
+   code==0 -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidTarget})
+   _ -> (ObjectTypeResult {outcome:ExecutionOutcome::UnsupportedOpcode})
+  }
+ }
+ state local(store:&ObjectStore,frame:&Frame,index:u64,next:u64)->ObjectTypeResult {
+  transition index<8 {true -> binding(store,frame.locals[index],next) _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidTarget})}
+ }
+ state argument(store:&ObjectStore,frame:&Frame,index:u64,next:u64)->ObjectTypeResult {
+  transition index<7 {true -> binding(store,frame.arguments[index],next) _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidTarget})}
+ }
+ state binding(store:&ObjectStore,value:Binding,next:u64)->ObjectTypeResult {let result:ObjectTypeResult=ote_binding(store,value,next);result}
+ state named(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64)->ObjectTypeResult {
+  let name:PathResult=namestring(input,frame.end,at);
+  let outcome:ExecutionOutcome=decode_outcome(name.outcome);
+  transition outcome==ExecutionOutcome::Success {true -> lookup(store,frame.scope,name) _ -> (ObjectTypeResult {outcome:outcome})}
+ }
+ state lookup(store:&ObjectStore,scope:Path,name:PathResult)->ObjectTypeResult {
+  let found:Lookup=ote_lookup(&store.space,name.value,scope);
+  let outcome:ExecutionOutcome=ote_resolution_outcome(found.outcome);
+  transition outcome==ExecutionOutcome::Success {true -> selected_entry(store,found.index,name.next) _ -> (ObjectTypeResult {outcome:outcome})}
+ }
+ state selected_entry(store:&ObjectStore,index:u64,next:u64)->ObjectTypeResult {
+  let count:u64=store.space.count;
+  transition count<=32 && index<count && index<32 {true -> selected(store,store.space.entries[index],next) _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidState})}
+ }
+ state selected(store:&ObjectStore,entry:Entry,next:u64)->ObjectTypeResult {
+  transition {entry.has_object -> object(store,entry.object,next)
+   entry.has_level && entry.level==LevelKind::Scope -> (ObjectTypeResult {number:0,next:next})
+   _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidState})}
+ }
+ state object(store:&ObjectStore,id:u64,next:u64)->ObjectTypeResult {let result:ObjectTypeResult=ote_object(store,id,next);result}
+}
+// These are execution carriers with no canonical object slot. Object-backed
+// values, including all reference descriptors, use the one canonical mapping.
+machine ote_binding(store:&ObjectStore,value:Binding,next:u64)->ObjectTypeResult {
+ transition value {
+  Binding::Uninitialized -> (ObjectTypeResult {number:0,next:next})
+  Binding::Integer {number} -> (ObjectTypeResult {number:1,next:next})
+  Binding::Shared {shared_id} -> object(store,shared_id,next)
+  Binding::Cell {cell_id} -> object(store,cell_id,next)
+ }
+ state object(store:&ObjectStore,id:u64,next:u64)->ObjectTypeResult {let result:ObjectTypeResult=ote_object(store,id,next);result}
+}
+machine ote_object(store:&ObjectStore,id:u64,next:u64)->ObjectTypeResult {
+ let found:QueryResult=object_type(&store.space,id,64);
+ transition found {
+  QueryResult::Value {object,number} -> (ObjectTypeResult {number:number,next:next})
+  QueryResult::ResolutionFailure {resolution_error} -> failure(resolution_error)
+  QueryResult::UnsupportedValue -> (ObjectTypeResult {outcome:ExecutionOutcome::UnsupportedValue})
+  QueryResult::InvalidStorage {storage_error} -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidState})
+ }
+ state failure(reason:Outcome)->ObjectTypeResult {let outcome:ExecutionOutcome=ote_resolution_outcome(reason);ObjectTypeResult {outcome:outcome}}
+}
+// Running method scopes need not be namespace levels. Search each canonical
+// resolved path with locate so a nearer typeless scope shadows outer objects.
+machine ote_lookup(space:&Namespace,name:Path,scope:Path)->Lookup {
+ transition !name.absolute && name.parents==0 && name.count==1 {
+  true -> ancestors(space,name,scope)
+  _ -> exact(space,name,scope)
+ }
+ state ancestors(space:&Namespace,name:Path,scope:Path)->Lookup {let result:Lookup=ote_lookup_scan(space,name,scope,0,17);result}
+ state exact(space:&Namespace,name:Path,scope:Path)->Lookup {let result:Lookup=ote_lookup_once(space,name,scope);result}
+}
+machine ote_lookup_scan(space:&Namespace,name:Path,scope:Path,index:u64,limit:u64)
+terminates by(index,limit)->Nat::BoundedDistance;
+->Lookup {
+ let found:Lookup=ote_lookup_once(space,name,scope);
+ let upper:PathResult=parent(scope);
+ transition {found.outcome!=Outcome::MissingLevel || scope.count==0 -> (found)
+  upper.outcome!=Outcome::Success -> (Lookup {outcome:Outcome::WorkLimit})
+  index<limit -> ote_lookup_scan(space,name,upper.value,index+1,limit)
+  _ -> (Lookup {outcome:Outcome::WorkLimit})}
+}
+machine ote_lookup_once(space:&Namespace,name:Path,scope:Path)->Lookup {
+ let path:PathResult=resolve(name,scope);
+ transition path.outcome==Outcome::Success {true -> at_path(space,path.value) _ -> (Lookup {outcome:path.outcome})}
+ state at_path(space:&Namespace,path:Path)->Lookup {
+  let copied:Namespace=Namespace {count:space.count,object_count:space.object_count,entries:space.entries,objects:space.objects};
+  let found:Lookup=locate(copied,path);found
+ }
+}
+machine ote_resolution_outcome(reason:Outcome)->ExecutionOutcome {
+ transition reason {
+  Outcome::Success -> (ExecutionOutcome::Success)
+  Outcome::MissingObject -> (ExecutionOutcome::MissingObject)
+  Outcome::MissingLevel -> (ExecutionOutcome::MissingObject)
+  Outcome::ReferenceCycle -> (ExecutionOutcome::ReferenceCycle)
+  Outcome::WorkLimit -> (ExecutionOutcome::WorkLimit)
+  Outcome::Capacity -> (ExecutionOutcome::Capacity)
+  Outcome::InvalidState -> (ExecutionOutcome::InvalidState)
+  _ -> (ExecutionOutcome::BadEncoding)
+ }
+}
