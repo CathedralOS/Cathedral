@@ -2,8 +2,9 @@
 
 The [port contract](../../../../../source/libraries/acpi/interpreter/execution/mid.PORT.md)
 defines primary slicing/conversion behavior, owned expression results and atomic
-retirement. Nine focused retirement pairs passed; full checked execution is in
-progress, and the complete corpus alone is not a pass.
+retirement. All 315 checked behavior/control pairs passed, as did the separate
+nine-pair focused run. Exact input/generated-source/build/entry/binary verification
+passes for both retained receipts.
 
 The complete corpus has 315 positive/control pairs: 74 new bytecode, 42 new
 complete-state retirement, 79 unchanged integer, 55 generic, 22 pipeline and
@@ -38,3 +39,6 @@ service-trap Rust source and pinned Cargo lock, builds offline, and binds the
 rebuilt binary. Ten canonical-edit/Debug fixtures are explicitly omitted. Earlier
 pure Mid receipts retain their unchanged helper source identity. No native Omega,
 constant-evaluation or hardware execution claim is added here.
+
+The full six-package run completed in 6,423.661 seconds with three workers
+(15,130.065 summed package time; maximum evaluator fuel 525,289).

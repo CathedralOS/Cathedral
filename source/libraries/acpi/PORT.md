@@ -334,9 +334,8 @@ reference policy, target writes and opcode retirement remain pending; aggregate
 source counts are unchanged.
 
 [Mid opcode execution](interpreter/execution/mid.PORT.md) adds scalar/byte operand conversion, independent owned
-expression results and staged target publication. Nine focused retirement pairs
-pass; its full 116 new and 199 retained regression pairs remain under checked
-verification. The 64 public Rust observations
+expression results and staged target publication. All 116 new and 199 retained
+regression pairs pass with exact source/binary verification. The 64 public Rust observations
 retain 33 value/state agreements and explicit pin differences. This remains
 a partial ACPI-005 component.
 

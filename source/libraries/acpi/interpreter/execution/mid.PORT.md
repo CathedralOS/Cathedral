@@ -1,11 +1,11 @@
 # Mid opcode execution
 
-Status: **tested in nine focused retirement pairs; full verification in progress**. This isolated extension
+Status: **tested: all 315 behavior/control pairs pass**. This extension
 adds opcode `0x9e` with three operands and one target. The retained corpus has
 74 Program scenarios and 42 complete-store/frame retirement scenarios, plus
 199 unchanged integer, generic, pipeline and ToInteger regression scenarios.
-The nine selected pairs passed with their changed-expectation controls; full
-corpus coverage is not yet established.
+Every full-corpus positive and changed-expectation control passed, with exact
+source/generated-body/entry/build/runner verification.
 
 `mid_execution.omg` adapts rust-osdev/acpi
 [`257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5`, `src/aml/mod.rs:2137`](https://github.com/rust-osdev/acpi/blob/257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5/src/aml/mod.rs#L2137),
@@ -70,7 +70,7 @@ binds 141 source/tool inputs and the exact runner binary. Its nine pairs cover
 Null, named Integer conversion, fresh Local binding, argument RefOf redirection,
 four originally invalid destination identities and full-parent failure. Complete
 authored/dependency checking and execution passed in 617.596 seconds, with maximum
-fuel 525,283. This selected run does not establish the entire 315-pair corpus.
+fuel 525,283. This selected run remains separate evidence from the completed full corpus.
 
 The unchanged public Rust harness observed 64 encoded cases with zero forbidden
 service calls: 33 exact value/state agreements and 31 separately retained
@@ -83,3 +83,11 @@ verifies exact AML, source hashes and rebuilt binary identity. No private Rust
 implementation is mirrored and no firmware or device access occurs.
 
 No new constant-evaluator, native Omega or hardware result is claimed.
+
+The [full receipt](../../../../../tools/ports/acpi/interpreter/mid-execution/checked-verification.json)
+passed all 315 pairs across six packages with three workers in 6,423.661 seconds
+(15,130.065 summed package time), with 141 exact input hashes and maximum evaluator
+fuel 525,289. Its 74 new bytecode and 42 complete-state retirement pairs include
+all authored boundary cases; the other 199 preserve existing integer, generic,
+pipeline and ToInteger behaviors. These are checked interpretation results, not
+native Omega execution.
