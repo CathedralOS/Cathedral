@@ -29,7 +29,8 @@ Completed slices: [tested numeric address algorithms](addresses.PORT.md),
 [numeric mapper topology](mapper-topology.PORT.md),
 [explicit memory-encryption state](memory-encryption.PORT.md),
 [encryption-profile captured translation](encrypted-translation.PORT.md),
-[encryption-profile register expressions](encrypted-registers.PORT.md), and
+[encryption-profile register expressions](encrypted-registers.PORT.md),
+[encryption-profile address projection](encrypted-projection.PORT.md), and
 [CPUID observation predicates](instruction-observations.PORT.md).
 The [remaining pure-work audit](remaining-pure.RECONCILIATION.md) reconciles all
 41 files and identifies the concrete unfinished algorithm families.

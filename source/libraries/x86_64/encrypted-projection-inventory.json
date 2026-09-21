@@ -1,0 +1,236 @@
+{
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "url": "https://github.com/rust-osdev/x86_64",
+    "revision": "cc35c876d3badb57df54a66e22f7768a52be95f2",
+    "roots": [
+      "src/structures/paging/mapper/mod.rs"
+    ]
+  },
+  "files": {
+    "src/structures/paging/mapper/mod.rs": {
+      "sha256": "9b33e4f767f0eb77560cc7daf0826feadd176d0ced292ada00329a0695f67b6e",
+      "disposition": "pending",
+      "reason": "Explicit encryption profile for the Translate default physical addition; other mapper components retain separate inventories.",
+      "symbols": {
+        "3:self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};": {
+          "anchor": "pub use self::mapped_page_table::{MappedPageTable, PageTableFrameMapping};",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "5:self::offset_page_table::OffsetPageTable;": {
+          "anchor": "pub use self::offset_page_table::OffsetPageTable;",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "7:self::recursive_page_table::{InvalidPageTable, RecursivePageTable};": {
+          "anchor": "pub use self::recursive_page_table::{InvalidPageTable, RecursivePageTable};",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "17:mapped_page_table": {
+          "anchor": "mod mapped_page_table;",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "18:offset_page_table": {
+          "anchor": "mod offset_page_table;",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "20:recursive_page_table": {
+          "anchor": "mod recursive_page_table;",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "23:MapperAllSizes": {
+          "anchor": "pub trait MapperAllSizes: Mapper<Size4KiB> + Mapper<Size2MiB> + Mapper<Size1GiB> {}",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "28:Translate": {
+          "anchor": "pub trait Translate {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "36:translate": {
+          "anchor": "fn translate(&self, addr: VirtAddr) -> TranslateResult;",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "45:translate_addr": {
+          "anchor": "fn translate_addr(&self, addr: VirtAddr) -> Option<PhysAddr> {",
+          "disposition": "translated",
+          "reason": "Numeric Translate default physical addition with explicit encryption profile; typed frame geometry checked and arbitrary offsets preserved. No live mapping.",
+          "targets": [
+            {
+              "path": "source/libraries/x86_64/encrypted_address_projection.omg",
+              "anchor": "pub machine translated_address_pinned"
+            }
+          ]
+        },
+        "58:TranslateResult": {
+          "anchor": "pub enum TranslateResult {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "80:MappedFrame": {
+          "anchor": "pub enum MappedFrame {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "91:start_address": {
+          "anchor": "pub const fn start_address(&self) -> PhysAddr {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "100:size": {
+          "anchor": "pub const fn size(&self) -> u64 {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "110:Mapper": {
+          "anchor": "pub trait Mapper<S: PageSize> {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "179:map_to": {
+          "anchor": "unsafe fn map_to<A>(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "270:map_to_with_table_flags": {
+          "anchor": "unsafe fn map_to_with_table_flags<A>(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "285:unmap": {
+          "anchor": "fn unmap(&mut self, page: Page<S>) -> Result<(PhysFrame<S>, MapperFlush<S>), UnmapError>;",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "298:update_flags": {
+          "anchor": "unsafe fn update_flags(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "313:set_flags_p4_entry": {
+          "anchor": "unsafe fn set_flags_p4_entry(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "328:set_flags_p3_entry": {
+          "anchor": "unsafe fn set_flags_p3_entry(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "343:set_flags_p2_entry": {
+          "anchor": "unsafe fn set_flags_p2_entry(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "353:translate_page": {
+          "anchor": "fn translate_page(&self, page: Page<S>) -> Result<PhysFrame<S>, TranslateError>;",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "362:identity_map": {
+          "anchor": "unsafe fn identity_map<A>(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "390:MapperFlush": {
+          "anchor": "pub struct MapperFlush<S: PageSize>(Page<S>);",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "398:new": {
+          "anchor": "pub fn new(page: Page<S>) -> Self {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "405:flush": {
+          "anchor": "pub fn flush(self) {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "411:ignore": {
+          "anchor": "pub fn ignore(self) {}",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "415:page": {
+          "anchor": "pub fn page(&self) -> Page<S> {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "427:MapperFlushAll": {
+          "anchor": "pub struct MapperFlushAll(());",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "435:new": {
+          "anchor": "pub fn new() -> Self {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "442:flush_all": {
+          "anchor": "pub fn flush_all(self) {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "448:ignore": {
+          "anchor": "pub fn ignore(self) {}",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "453:MapToError": {
+          "anchor": "pub enum MapToError<S: PageSize> {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "466:UnmapError": {
+          "anchor": "pub enum UnmapError {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "478:FlagUpdateError": {
+          "anchor": "pub enum FlagUpdateError {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "488:TranslateError": {
+          "anchor": "pub enum TranslateError {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "498:_ASSERT_OBJECT_SAFE": {
+          "anchor": "static _ASSERT_OBJECT_SAFE: Option<&(dyn Translate + Sync)> = None;",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "501:CleanUp": {
+          "anchor": "pub trait CleanUp {",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "509:clean_up": {
+          "anchor": "unsafe fn clean_up<D>(&mut self, frame_deallocator: &mut D)",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        },
+        "534:clean_up_addr_range": {
+          "anchor": "unsafe fn clean_up_addr_range<D>(",
+          "disposition": "pending",
+          "reason": "Outside this extension; see existing route, topology and cleanup slices for their own scopes."
+        }
+      },
+      "targets": [
+        {
+          "path": "source/libraries/x86_64/encrypted_address_projection.omg",
+          "anchor": "pub machine translated_address_pinned"
+        }
+      ]
+    }
+  }
+}

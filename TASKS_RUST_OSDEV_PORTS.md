@@ -296,6 +296,9 @@ compositions are ordinary implementation work; the closure audit lists them.
 [Encryption-aware register expressions](source/libraries/x86_64/encrypted-registers.PORT.md)
 pass 100 Rust reference rows, 800 Omega calls and twelve body controls, preserving
 strict CR3 rejection versus APIC truncation and typed-frame operand admission.
+[Profile-aware address projection](source/libraries/x86_64/encrypted-projection.PORT.md)
+adds 240 actual Translate-default/Rust–Omega cases and eight body controls,
+including an offset inside a huge frame that reaches the configured bit.
 The full-source closure review found no remaining pure representation family:
 X86-001 is complete at the documented numeric/schema boundary. Native layout,
 instruction/provider and proof limits remain separate; X86-002 stays open for

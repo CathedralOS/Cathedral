@@ -168,3 +168,7 @@ The other profile compositions above remain queued or under implementation.
 100 Rust rows, 800 Omega calls and twelve controls. CR3/APIC composition is
 complete. No additional pure representation family remains; X86-001 can close
 at its numeric/schema boundary while X86-002 retains the algorithm queue.
+
+[Encryption-profile address projection](encrypted-projection.PORT.md) completes
+the Translate-default addition component with 240 cases and eight controls,
+including offsets inside a huge frame that hit the configured bit.

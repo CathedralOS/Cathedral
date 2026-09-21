@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Explicit-profile Translate::translate_addr default arithmetic from x86_64
+// cc35c876d3badb57df54a66e22f7768a52be95f2. No live mapping or access authority.
+module encrypted_address_projection;
+use memory_encryption::State;
+use translation::Translation;
+use addresses;
+use addresses::NumberResult;
+use pages;
+
+// The pinned default accepts any offset, even >=size; validate the typed frame
+// shape then use the existing masked physical addition. A bit inside a huge
+// frame's offset may therefore reject even when its frame base was valid.
+pub machine translated_address_pinned(profile: &State, observation: Translation) -> NumberResult {
+    transition observation {
+        Translation::Mapped { frame, size, offset, flags } -> shape(profile, frame, size, offset)
+        _ -> (NumberResult::Rejected)
+    }
+    state shape(profile: &State, frame: u64, size: u64, offset: u64) -> NumberResult {
+        let valid: bool = pages::start_valid(frame, size, true);
+        transition valid {
+            true -> add(profile, frame, offset)
+            _ -> (NumberResult::Rejected)
+        }
+    }
+    state add(profile: &State, frame: u64, offset: u64) -> NumberResult {
+        let mask: u64 = profile.bit_mask & addresses::PHYSICAL_MAX;
+        let result: NumberResult = addresses::physical_add(frame, offset, mask);
+        result
+    }
+}
