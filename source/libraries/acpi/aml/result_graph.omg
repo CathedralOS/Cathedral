@@ -1,0 +1,134 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Cathedral result-profile composition over canonical rust-osdev/acpi-derived
+// objects. The pin has no corresponding resource quota. See result-graph.PORT.md.
+module result_graph;
+use model::ObjectStore;
+use model::Value;
+use model::ReferenceKind;
+use model::ReferenceState;
+use model::Outcome;
+use model::Path;
+use names::path_valid;
+use object_references::package_element;
+use object_conversions::ConversionFailure;
+use byte_storage::ByteOutcome;
+use byte_storage::ByteResult;
+use byte_storage::byte_length;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::find_set_right;
+
+pub data GraphResult [copy] {
+ case Failure(reason:ConversionFailure);
+ case Admitted(objects:u64,bytes:u64,visited:u64);
+}
+data Walk [copy] {
+ failed:bool;reason:ConversionFailure;pending:u64;visited:u64;
+ objects:u64;bytes:u64;
+}
+// Quotas count distinct reachable object IDs and their logical byte lengths.
+// They do not count a serialized expansion of shared/cyclic package graphs.
+pub machine limits_valid(objects:u64,bytes:u64)->bool {objects<=64 && bytes<=16384}
+pub machine check_graph(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,root:u64,objects:u64,bytes:u64)->GraphResult {
+ let capacity:u64=store.space.object_count;
+ transition {
+  length>1024 || capacity>64 || objects>64 || bytes>16384 -> (GraphResult::Failure {reason:ConversionFailure::Capacity})
+  root>=capacity || root>=64 -> (GraphResult::Failure {reason:ConversionFailure::InvalidState})
+  _ -> start(input,length,unit,store,root,objects,bytes)
+ }
+ state start(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,root:u64,objects:u64,bytes:u64)->GraphResult {
+  let initial:Walk=Walk {pending:(1 as u64)<<root};
+  let walked:Walk=rg_scan(input,length,unit,store,bytes,initial,0,objects);
+  transition {walked.failed -> (GraphResult::Failure {reason:walked.reason})
+   walked.pending!=0 -> (GraphResult::Failure {reason:ConversionFailure::WorkLimit})
+   _ -> (GraphResult::Admitted {objects:walked.objects,bytes:walked.bytes,visited:walked.visited})}
+ }
+}
+machine rg_scan(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,bytes:u64,prior:Walk,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->Walk {
+ let next:Walk=rg_step(input,length,unit,store,bytes,prior,index,count);
+ transition {next.failed || next.pending==0 -> (next)
+  index<count -> rg_scan(input,length,unit,store,bytes,next,index+1,count)
+  _ -> (next)}
+}
+machine rg_step(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,bytes:u64,prior:Walk,index:u64,count:u64)->Walk {
+ transition {prior.failed || prior.pending==0 || index>=count -> (prior)
+  _ -> select(input,length,unit,store,bytes,prior)}
+ state select(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,bytes:u64,prior:Walk)->Walk {
+  let bit:u64=find_set_right(IntegerSize::EightBytes,prior.pending);
+  transition bit>0 && bit<=64 {true -> object(input,length,unit,store,bytes,prior,bit-1) _ -> failed(prior,ConversionFailure::InvalidState)}
+ }
+ state object(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,bytes:u64,prior:Walk,id:u64)->Walk {
+  transition id<store.space.object_count && id<64 && prior.objects<64 {true -> payload(input,length,unit,store,bytes,prior,id) _ -> failed(prior,ConversionFailure::InvalidState)}
+ }
+ state payload(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,bytes:u64,prior:Walk,id:u64)->Walk {
+  let mask:u64=(1 as u64)<<id;let mut next:Walk=prior;
+  next.pending=prior.pending&~mask;next.visited=prior.visited|mask;next.objects=prior.objects+1;
+  let checked:Walk=rg_inspect(input,length,unit,store,bytes,next,id,store.space.objects[id].value);checked
+ }
+
+ state failed(prior:Walk,reason:ConversionFailure)->Walk {let result:Walk=rg_fail(prior,reason);result}
+}
+machine rg_inspect(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,budget:u64,prior:Walk,id:u64,value:Value)->Walk {
+ transition value {
+  Value::Uninitialized -> (prior)
+  Value::Integer {number} -> (prior)
+  Value::String {string_storage} -> bytes(input,length,unit,store,budget,prior,id)
+  Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,budget,prior,id)
+  Value::Package {first,count} -> package(store,prior,id,count)
+  Value::Reference {kind,object_id} -> reference(store,prior,kind,object_id)
+  Value::NameReference {name,scope} -> lexical(prior,name,scope)
+  _ -> failed(prior,ConversionFailure::UnsupportedValue)
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,budget:u64,prior:Walk,id:u64)->Walk {
+  let found:ByteResult=byte_length(input,length,unit,store,id);
+  transition found.outcome==ByteOutcome::Success {true -> charge(prior,budget,found.length) _ -> bytes_failed(prior,found.outcome)}
+ }
+ state charge(prior:Walk,budget:u64,length:u64)->Walk {
+  transition prior.bytes<=budget && length<=budget-prior.bytes {true -> charged(prior,length) _ -> failed(prior,ConversionFailure::Capacity)}
+ }
+ state charged(prior:Walk,length:u64)->Walk {let mut next:Walk=prior;next.bytes=prior.bytes+length;next}
+ state package(store:&ObjectStore,prior:Walk,id:u64,count:u64)->Walk {
+  transition {count>64 -> failed(prior,ConversionFailure::Capacity) count==0 -> (prior) _ -> members(store,prior,id)}
+ }
+ state members(store:&ObjectStore,prior:Walk,id:u64)->Walk {
+  let found:ReferenceState=package_element(&store.space,id,0,64);
+  transition found.outcome==Outcome::Success {true -> queued(prior,found.visited) _ -> package_failed(prior,found.outcome)}
+ }
+ state reference(store:&ObjectStore,prior:Walk,kind:ReferenceKind,id:u64)->Walk {
+  transition {id<store.space.object_count && id<64 -> enqueue_reference(prior,id)
+   _ -> failed(prior,ConversionFailure::InvalidState)}
+ }
+ state enqueue_reference(prior:Walk,id:u64)->Walk {let next:Walk=rg_enqueue(prior,(1 as u64)<<id);next}
+ state lexical(prior:Walk,name:Path,scope:Path)->Walk {
+  let name_valid:bool=path_valid(name);let scope_valid:bool=path_valid(scope);
+  transition name_valid && scope_valid && scope.absolute {true -> (prior) _ -> failed(prior,ConversionFailure::InvalidState)}
+ }
+
+ state failed(prior:Walk,reason:ConversionFailure)->Walk {let result:Walk=rg_fail(prior,reason);result}
+
+ state queued(prior:Walk,mask:u64)->Walk {let result:Walk=rg_enqueue(prior,mask);result}
+ state bytes_failed(prior:Walk,outcome:ByteOutcome)->Walk {let result:Walk=rg_byte_failure(prior,outcome);result}
+ state package_failed(prior:Walk,outcome:Outcome)->Walk {let result:Walk=rg_package_failure(prior,outcome);result}
+}
+machine rg_enqueue(prior:Walk,mask:u64)->Walk {let mut next:Walk=prior;next.pending=prior.pending|(mask&~prior.visited);next}
+machine rg_fail(prior:Walk,reason:ConversionFailure)->Walk {let mut next:Walk=prior;next.failed=true;next.reason=reason;next}
+machine rg_package_failure(prior:Walk,outcome:Outcome)->Walk {
+ transition outcome {Outcome::Capacity -> failed(prior,ConversionFailure::Capacity)
+  Outcome::ReferenceCycle -> failed(prior,ConversionFailure::ReferenceCycle)
+  Outcome::WorkLimit -> failed(prior,ConversionFailure::WorkLimit)
+  _ -> failed(prior,ConversionFailure::InvalidState)}
+
+ state failed(prior:Walk,reason:ConversionFailure)->Walk {let result:Walk=rg_fail(prior,reason);result}
+}
+machine rg_byte_failure(prior:Walk,outcome:ByteOutcome)->Walk {
+ transition outcome {ByteOutcome::Capacity -> failed(prior,ConversionFailure::Capacity)
+  ByteOutcome::Bounds -> failed(prior,ConversionFailure::Bounds)
+  ByteOutcome::Encoding -> failed(prior,ConversionFailure::Encoding)
+  ByteOutcome::UnsupportedValue -> failed(prior,ConversionFailure::UnsupportedValue)
+  ByteOutcome::ReferenceCycle -> failed(prior,ConversionFailure::ReferenceCycle)
+  ByteOutcome::WorkLimit -> failed(prior,ConversionFailure::WorkLimit)
+  _ -> failed(prior,ConversionFailure::InvalidState)}
+
+ state failed(prior:Walk,reason:ConversionFailure)->Walk {let result:Walk=rg_fail(prior,reason);result}
+}
