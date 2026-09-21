@@ -3,6 +3,8 @@
 // Original upstream copyright 2018 Isaac Woods; bounded Omega adaptation 2026.
 // See PORT.md and licenses/rust-osdev/acpi for provenance and changes.
 module model;
+use field_model::Declaration;
+use field_model::Field;
 pub data Outcome [copy] {
  case Success; case Truncated; case BadEncoding; case UnsupportedSyntax;
  case Capacity; case Depth; case WorkLimit; case InvalidName; case AboveRoot;
@@ -28,6 +30,7 @@ pub data Value [copy] {
  case Integer(number: u64);
  case String(string_storage:StringStorage);
  case Buffer(buffer_storage:BufferStorage);
+ case FieldUnit(region_object:u64,declaration:Declaration,field:Field);
  case BufferField(backing_object:u64,bit_offset:u64,bit_length:u64);
  case Package(first: u64, count: u64);
  case NameReference(name: Path, scope: Path);

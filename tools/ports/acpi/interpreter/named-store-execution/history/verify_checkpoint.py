@@ -128,7 +128,12 @@ def verify_observations(receipt, selections, pairs):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-ref', required=True, help='Git commit containing the completed receipts and their source checkpoint')
+    parser.add_argument('--integrated', action='store_true', help='Verify the later 58/38 combined-source milestone')
     args = parser.parse_args()
+    suites = ((
+        ('integrated-execution-verification.json', 'named-execution', 58),
+        ('integrated-bridge-verification.json', 'named-bridge', 38),
+    ) if args.integrated else RECEIPTS)
     revision = subprocess.check_output(
         ['git', '-C', str(ROOT), 'rev-parse', '--verify', '--end-of-options', args.source_ref + '^{commit}'],
         text=True).strip()
@@ -141,7 +146,7 @@ def main():
             cache[path] = subprocess.check_output(['git', '-C', str(ROOT), 'show', revision + ':' + path])
         return cache[path]
 
-    records = [(name, kind, pairs, json.loads(blob(DIRECTORY + name))) for name, kind, pairs in RECEIPTS]
+    records = [(name, kind, pairs, json.loads(blob(DIRECTORY + name))) for name, kind, pairs in suites]
     toolchain = json.loads(blob(DIRECTORY + 'toolchain.json'))
     require(toolchain['source_revision'] == PIN and toolchain['source_clean'] is True, 'toolchain source pin/cleanliness')
     require(toolchain['runner_sha256'] == RUNNER_SHA256 and toolchain['smoke_passed'] is True, 'audited runner identity')
@@ -182,8 +187,9 @@ def main():
             require(build == receipt['build_source'] and digest(build.encode()) == receipt['build_sha256'], name + ': generated build differs')
             verify_observations(receipt, selections, pairs)
             print(f'PASS historical receipt: {name}; {pairs} behavior/control pairs')
-    require(sum(pairs for _, _, pairs in RECEIPTS) == 255, 'milestone pair count changed')
-    print(f'PASS checkpoint {revision}: 6 receipts, 255 behavior/control pairs; {len(cache)} Git blobs verified')
+    total = sum(pairs for _, _, pairs in suites)
+    require(total == (96 if args.integrated else 255), 'milestone pair count changed')
+    print(f'PASS checkpoint {revision}: {len(suites)} receipts, {total} behavior/control pairs; {len(cache)} Git blobs verified')
     print('Historical input/observation integrity only; no current-source or new compiler/runtime execution claim')
 
 

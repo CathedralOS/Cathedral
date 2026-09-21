@@ -61,3 +61,13 @@ destination object identity for successful named String/Buffer results. They
 run with the Program result-graph boundary enabled. Their new receipts are
 separate from the six historical checkpoint receipts. All 96 pairs passed, and
 both exact current-input receipt verifications passed before checkpointing.
+
+The combined-source milestone is committed at `884afb3`. Subsequent Field/model
+or opcode changes make its broad snapshots historical; retain the exact evidence:
+
+```sh
+python3 tools/ports/acpi/interpreter/named-store-execution/history/verify_checkpoint.py --integrated --source-ref 884afb3
+```
+
+This regenerates both archived fixtures and checks all source hashes and retained
+results. It does not claim fresh execution of later integrated code.

@@ -20,6 +20,7 @@ pub machine scalar_slot(size: IntegerSize, value: Value) -> SlotResult {
     transition value {
         Value::Integer { number } -> scalar(size, number)
         Value::Uninitialized -> (SlotResult { outcome: ExecutionOutcome::Uninitialized })
+        Value::FieldUnit {region_object,declaration,field} -> (SlotResult {outcome:ExecutionOutcome::UnresolvedRegion})
         Value::OperationRegion { space, base, length, scope } -> (SlotResult { outcome: ExecutionOutcome::UnresolvedRegion })
         _ -> (SlotResult { outcome: ExecutionOutcome::UnsupportedValue })
     }

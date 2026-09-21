@@ -1,0 +1,87 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified normal Field installation from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5, src/aml/mod.rs:1412,1831.
+// Copyright 2018 Isaac Woods. Bounded inert metadata; no region handler.
+module field_namespace;
+use model::Outcome;
+use model::Read;
+use model::Value;
+use model::Entry;
+use model::Namespace;
+use model::Lookup;
+use model::LoadState;
+use field_model::DeclarationKind;
+use field_model::Declaration;
+use field_model::DeclarationResult;
+use field_model::ListState;
+use field_model::Field;
+use field_declarations::parse_declaration;
+use namespace::search;
+use namespace::allocate_mut;
+use namespace::bind_mut;
+
+// The loader owns this entry. Parse the complete declaration and resolve its
+// region once before installing any names. Scope and source spans stay inert.
+machine load_field(input:&[u8;1024],load:&mut LoadState)->Outcome {
+ let parsed:DeclarationResult=parse_declaration(input,load.end,load.at,load.unit,load.scope,18446744073709551615,load.value_budget);
+ transition parsed.outcome==Outcome::Success {
+  true -> kind(load,parsed)
+  _ -> fail(load,parsed.outcome,parsed.offset)
+ }
+ state kind(load:&mut LoadState,parsed:DeclarationResult)->Outcome {
+  transition parsed.declaration.kind==DeclarationKind::Field {
+   true -> region(load,parsed)
+   _ -> fail(load,Outcome::UnsupportedSyntax,load.at)
+  }
+ }
+ state region(load:&mut LoadState,parsed:DeclarationResult)->Outcome {
+  let found:Lookup=search(load.space,parsed.declaration.primary_name,parsed.declaration.scope);
+  let id:u64=found.object;let count:u64=load.space.object_count;
+  transition {found.outcome!=Outcome::Success -> fail(load,found.outcome,load.at)
+   id<count && id<64 && count<=64 -> object(load,parsed,id)
+   _ -> fail(load,Outcome::InvalidState,load.at)}
+ }
+ state object(load:&mut LoadState,parsed:DeclarationResult,id:u64)->Outcome {
+  transition load.space.objects[id].value {
+   Value::OperationRegion {space,base,length,scope} -> stage(load,parsed,id)
+   _ -> fail(load,Outcome::UnsupportedSyntax,load.at)
+  }
+ }
+ state stage(load:&mut LoadState,parsed:DeclarationResult,region:u64)->Outcome {
+  let mut candidate:Namespace=load.space;
+  let outcome:Outcome=install_fields(&mut candidate,region,parsed.declaration,&parsed.list,0,parsed.list.count,Outcome::Success);
+  transition outcome==Outcome::Success {true -> commit(load,candidate,parsed.next) _ -> fail(load,outcome,load.at)}
+ }
+ state commit(load:&mut LoadState,candidate:Namespace,next:u64)->Outcome {
+  load.space=candidate;load.at=next;Outcome::Success
+ }
+ state fail(load:&mut LoadState,outcome:Outcome,offset:u64)->Outcome {
+  load.outcome=outcome;load.offset=offset;load.done=true;outcome
+ }
+}
+
+machine install_fields(space:&mut Namespace,region:u64,declaration:Declaration,list:&ListState,index:u64,count:u64,prior:Outcome)
+terminates by(index,count)->Nat::BoundedDistance;
+->Outcome {
+ let outcome:Outcome=install_field_step(space,region,declaration,list,index,count,prior);
+ transition {outcome!=Outcome::Success -> (outcome)
+  index<count -> install_fields(space,region,declaration,list,index+1,count,outcome)
+  _ -> (outcome)}
+}
+machine install_field_step(space:&mut Namespace,region:u64,declaration:Declaration,list:&ListState,index:u64,count:u64,prior:Outcome)->Outcome {
+ transition {prior!=Outcome::Success -> (prior)
+  count>32 -> (Outcome::Capacity)
+  index<count && index<32 -> selected(space,region,declaration,list.fields[index])
+  _ -> (Outcome::Success)}
+ state selected(space:&mut Namespace,region:u64,declaration:Declaration,field:Field)->Outcome {
+  let value:Value=Value::FieldUnit {region_object:region,declaration:declaration,field:field};
+  let allocated:Read=allocate_mut(space,value);
+  transition allocated.outcome==Outcome::Success {true -> bind(space,field,allocated.value) _ -> (allocated.outcome)}
+ }
+ state bind(space:&mut Namespace,field:Field,id:u64)->Outcome {
+  // Preserve the existing loader's pinned replacement policy. A redefinition
+  // allocates a fresh ID; aliases and earlier region bindings retain old IDs.
+  let entry:Entry=Entry {path:field.name,has_object:true,object:id};
+  let outcome:Outcome=bind_mut(space,entry,false);outcome
+ }
+}

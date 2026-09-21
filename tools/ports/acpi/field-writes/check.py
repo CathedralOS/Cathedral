@@ -12,8 +12,8 @@ def snapshot():
  paths=list(HERE.glob('*.py'))+[HERE/'reference.rs',HERE/'reference.Cargo.lock',HERE/'reference-verification.json',HERE/'cases.json',HERE/'comparison.json']
  paths += list((ROOT/'source/libraries/acpi/field_writes').glob('*.omg'))
  paths += [ROOT/'source/libraries/acpi/field_access'/name for name in ['build.omg','model.omg','geometry.omg','chunks.omg']]
- paths += [ROOT/'source/libraries/acpi/aml'/name for name in ['build.omg','model.omg']]
- paths += [ROOT/'source/libraries/acpi/aml/fields'/name for name in ['build.omg','field_model.omg','flags.omg']]
+ paths += list((ROOT/'source/libraries/acpi/aml').glob('*.omg'))
+ paths += list((ROOT/'source/libraries/acpi/aml/fields').glob('*.omg'))
  paths += [ROOT/'source/libraries/acpi/interpreter'/name for name in ['build.omg','integers.omg','buffer_fields.omg']]
  paths += [ROOT/'tools/ports/acpi/interpreter/execution'/name for name in ['checked_runner.rs','runner.Cargo.lock']]
  return {str(path.relative_to(ROOT)):sha(path)for path in sorted(paths)}

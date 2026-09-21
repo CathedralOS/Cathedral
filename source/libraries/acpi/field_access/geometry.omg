@@ -5,13 +5,13 @@
 // pure decomposition only; no region lookup, lock acquisition or native access.
 module geometry;
 use aml::model::Outcome;
-use fields::field_model::Field;
-use fields::field_model::Access;
-use fields::field_model::AccessResult;
-use fields::field_model::AccessType;
-use fields::field_model::UpdateRule;
-use fields::field_model::Connection;
-use fields::field_model::DeclarationKind;
+use aml::field_model::Field;
+use aml::field_model::Access;
+use aml::field_model::AccessResult;
+use aml::field_model::AccessType;
+use aml::field_model::UpdateRule;
+use aml::field_model::Connection;
+use aml::field_model::DeclarationKind;
 use fields::flags;
 use integers::integers::IntegerSize;
 use integers::integers::integer_bits;

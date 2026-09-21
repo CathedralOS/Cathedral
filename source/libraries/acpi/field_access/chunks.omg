@@ -3,7 +3,7 @@
 // Upstream copyright 2018 Isaac Woods; Cathedral detached adaptation 2026.
 // Detached bit extraction/update arithmetic; no read or write service.
 module chunks;
-use fields::field_model::UpdateRule;
+use aml::field_model::UpdateRule;
 use model::Chunk;
 use model::Previous;
 use model::WordResult;

@@ -1,0 +1,4953 @@
+[
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "FLD0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 13,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                809782342
+              ]
+            },
+            "source": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "normal_field",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b5245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "ZERO",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 13,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 0,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                1330791770
+              ]
+            },
+            "source": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "zero_width_metadata",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b52454730015a45524f00"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "F000",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 38,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 49,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 38,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 49,
+              "kind": "Byte",
+              "locked": true,
+              "update": "WriteAsOnes"
+            },
+            "bit_length": 5,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                808464454
+              ]
+            },
+            "source": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "F001",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 38,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 49,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 38,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 49,
+              "kind": "Byte",
+              "locked": true,
+              "update": "WriteAsOnes"
+            },
+            "bit_length": 8,
+            "bit_offset": 8,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                825241670
+              ]
+            },
+            "source": {
+              "end": 20,
+              "start": 15,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "F002",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 38,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 49,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 38,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 119,
+              "attribute_mode": 1,
+              "extended": false,
+              "flags": 50,
+              "kind": "Word",
+              "locked": true,
+              "update": "WriteAsOnes"
+            },
+            "bit_length": 16,
+            "bit_offset": 16,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                842018886
+              ]
+            },
+            "source": {
+              "end": 28,
+              "start": 23,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "F003",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 38,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 49,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 38,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 32,
+              "attribute": 14,
+              "attribute_mode": 0,
+              "extended": true,
+              "flags": 52,
+              "kind": "QWord",
+              "locked": true,
+              "update": "WriteAsOnes"
+            },
+            "bit_length": 64,
+            "bit_offset": 32,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                858796102
+              ]
+            },
+            "source": {
+              "end": 38,
+              "start": 32,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "offset_access_and_extended",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b81245245473031463030300500034630303108014277463030321003040e20463030334004"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "A000",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 30,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 30,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "connection_name": {
+                "absolute": false,
+                "parents": 0,
+                "segments": [
+                  810438467
+                ]
+              },
+              "kind": "Name"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                808464449
+              ]
+            },
+            "source": {
+              "end": 18,
+              "start": 13,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A001",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 30,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 30,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 16,
+            "bit_offset": 8,
+            "connection": {
+              "buffer_encoding": {
+                "end": 25,
+                "start": 19,
+                "unit": 7
+              },
+              "declared_size": 2,
+              "initializer": {
+                "end": 25,
+                "start": 23,
+                "unit": 7
+              },
+              "kind": "Buffer",
+              "size_known": true
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                825241665
+              ]
+            },
+            "source": {
+              "end": 30,
+              "start": 25,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "connection_name_then_buffer",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b811c524547300102434f4e3041303030080211050a02aabb4130303110"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "DYN0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 18,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 18,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "buffer_encoding": {
+                "end": 13,
+                "start": 9,
+                "unit": 7
+              },
+              "declared_size": 0,
+              "initializer": {
+                "end": 0,
+                "start": 0,
+                "unit": 0
+              },
+              "kind": "Buffer",
+              "size_known": false
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                810441028
+              ]
+            },
+            "source": {
+              "end": 18,
+              "start": 13,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "connection_deferred_buffer",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b8110524547300102110360aa44594e3008"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "DEV0.FLD0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 19,
+              "start": 14,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                810960196
+              ]
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 19,
+              "start": 6,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                810960196,
+                809782342
+              ]
+            },
+            "source": {
+              "end": 19,
+              "start": 14,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        },
+        {
+          "level": true,
+          "level_kind": "Device",
+          "path": "DEV0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "ancestor_region_scope",
+    "terms": 64,
+    "values": 64,
+    "wire": "1012444556305b810b5245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "DEV0.FLD0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 20,
+              "start": 15,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                810960196
+              ]
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 20,
+              "start": 6,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                810960196,
+                809782342
+              ]
+            },
+            "source": {
+              "end": 20,
+              "start": 15,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        },
+        {
+          "level": true,
+          "level_kind": "Device",
+          "path": "DEV0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "absolute_region",
+    "terms": 64,
+    "values": 64,
+    "wire": "1013444556305b810c5c5245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "DEV0.FLD0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 20,
+              "start": 15,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 1,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                810960196
+              ]
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 20,
+              "start": 6,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                810960196,
+                809782342
+              ]
+            },
+            "source": {
+              "end": 20,
+              "start": 15,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        },
+        {
+          "level": true,
+          "level_kind": "Device",
+          "path": "DEV0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "parent_region",
+    "terms": 64,
+    "values": 64,
+    "wire": "1013444556305b810c5e5245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "FLD0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                1397312577
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 13,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                809782342
+              ]
+            },
+            "source": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        },
+        {
+          "alias": true,
+          "object": 0,
+          "path": "ALIS"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "region_alias",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b414c495301464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "FLD0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 13,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                809782342
+              ]
+            },
+            "source": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        },
+        {
+          "object": 1,
+          "path": "FLD0"
+        },
+        {
+          "alias": true,
+          "object": 1,
+          "path": "FALS"
+        }
+      ],
+      "objects": 2,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        },
+        "1": {
+          "kind": "integer",
+          "number": 77
+        }
+      }
+    },
+    "name": "field_rebinding_retains_alias",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b5245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "SAME",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 18,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 18,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                1162690899
+              ]
+            },
+            "source": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "SAME",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 18,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 18,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 16,
+            "bit_offset": 8,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                1162690899
+              ]
+            },
+            "source": {
+              "end": 18,
+              "start": 13,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "duplicate_field_names_pin_policy",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b8110524547300153414d450853414d4510"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "FLD0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 13,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                809782342
+              ]
+            },
+            "source": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        },
+        {
+          "level": true,
+          "level_kind": "Device",
+          "path": "FLD0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "field_binding_preserves_level",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b5245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "REG0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 18,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 18,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "source": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "F001",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 18,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 18,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 8,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                825241670
+              ]
+            },
+            "source": {
+              "end": 18,
+              "start": 13,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "field_list_replaces_region_name",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b8110524547300152454730084630303108"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "FLD0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 13,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                809782342
+              ]
+            },
+            "source": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "REG0",
+        "value": {
+          "base": 8192,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      },
+      {
+        "path": "NEW0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 39,
+              "start": 34,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 39,
+              "start": 26,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                811025742
+              ]
+            },
+            "source": {
+              "end": 39,
+              "start": 34,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 2
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "region_rebinding_retains_original_identity",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b5245473001464c4430085b8052454730000b00200b00015b810b52454730014e45573008"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "empty_field_list",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b81065245473001"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "empty_list_zero_value_budget",
+    "terms": 64,
+    "values": 0,
+    "wire": "5b81065245473001"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "FLD0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 13,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                809782342
+              ]
+            },
+            "source": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "exact_loader_turn_budget",
+    "terms": 2,
+    "values": 64,
+    "wire": "5b810b5245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "WorkLimit",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "loader_turn_exhaustion_rolls_back",
+    "terms": 1,
+    "values": 64,
+    "wire": "5b810b5245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "WorkLimit",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "field_element_exhaustion",
+    "terms": 64,
+    "values": 1,
+    "wire": "5b8110524547300146303030084630303108"
+  },
+  {
+    "definitions": false,
+    "error": "Truncated",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "late_malformed_element",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810d524547300146303030080102"
+  },
+  {
+    "definitions": false,
+    "error": "BadEncoding",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "invalid_flags",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b5245473060464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "InvalidName",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "invalid_field_name",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b52454730013142414408"
+  },
+  {
+    "definitions": false,
+    "error": "BadEncoding",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "invalid_pkg_reserved_bits",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b815000"
+  },
+  {
+    "definitions": false,
+    "error": "BadEncoding",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "truncated_envelope",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b5245473001464c4430"
+  },
+  {
+    "definitions": false,
+    "error": "MissingObject",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "missing_region",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b4d49535301464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "UnsupportedSyntax",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "kind": "integer",
+          "number": 9
+        }
+      }
+    },
+    "name": "wrong_region_kind",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b5245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "UnsupportedSyntax",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "kind": "reference",
+          "object_id": 0,
+          "reference_kind": "RefOf"
+        }
+      }
+    },
+    "name": "reference_not_region",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b5245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "UnsupportedSyntax",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "later_opcode_failure_rolls_back",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b5245473001464c44300872"
+  },
+  {
+    "definitions": false,
+    "error": "UnsupportedSyntax",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "index_field_stays_unsupported",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b860f524547305245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "UnsupportedSyntax",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "bank_field_stays_unsupported",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b871052454730524547300101464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "FLD0",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 13,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 8,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                809782342
+              ]
+            },
+            "source": {
+              "end": 13,
+              "start": 8,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 63,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "last_object_slot",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b5245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "Capacity",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 63,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "object_exhaustion_atomic_declaration",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b8110524547300146303030084630303108"
+  },
+  {
+    "definitions": false,
+    "error": "Capacity",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 64,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "objects_already_full",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b810b5245473001464c443008"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "A000",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 0,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                808464449
+              ]
+            },
+            "source": {
+              "end": 14,
+              "start": 9,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A001",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 1,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                825241665
+              ]
+            },
+            "source": {
+              "end": 19,
+              "start": 14,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A002",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 2,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                842018881
+              ]
+            },
+            "source": {
+              "end": 24,
+              "start": 19,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A003",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 3,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                858796097
+              ]
+            },
+            "source": {
+              "end": 29,
+              "start": 24,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A004",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 4,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                875573313
+              ]
+            },
+            "source": {
+              "end": 34,
+              "start": 29,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A005",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 5,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                892350529
+              ]
+            },
+            "source": {
+              "end": 39,
+              "start": 34,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A006",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 6,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                909127745
+              ]
+            },
+            "source": {
+              "end": 44,
+              "start": 39,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A007",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 7,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                925904961
+              ]
+            },
+            "source": {
+              "end": 49,
+              "start": 44,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A008",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 8,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                942682177
+              ]
+            },
+            "source": {
+              "end": 54,
+              "start": 49,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A009",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 9,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                959459393
+              ]
+            },
+            "source": {
+              "end": 59,
+              "start": 54,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A010",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 10,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                808529985
+              ]
+            },
+            "source": {
+              "end": 64,
+              "start": 59,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A011",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 11,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                825307201
+              ]
+            },
+            "source": {
+              "end": 69,
+              "start": 64,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A012",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 12,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                842084417
+              ]
+            },
+            "source": {
+              "end": 74,
+              "start": 69,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A013",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 13,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                858861633
+              ]
+            },
+            "source": {
+              "end": 79,
+              "start": 74,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A014",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 14,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                875638849
+              ]
+            },
+            "source": {
+              "end": 84,
+              "start": 79,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A015",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 15,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                892416065
+              ]
+            },
+            "source": {
+              "end": 89,
+              "start": 84,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A016",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 16,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                909193281
+              ]
+            },
+            "source": {
+              "end": 94,
+              "start": 89,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A017",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 17,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                925970497
+              ]
+            },
+            "source": {
+              "end": 99,
+              "start": 94,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A018",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 18,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                942747713
+              ]
+            },
+            "source": {
+              "end": 104,
+              "start": 99,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A019",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 19,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                959524929
+              ]
+            },
+            "source": {
+              "end": 109,
+              "start": 104,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A020",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 20,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                808595521
+              ]
+            },
+            "source": {
+              "end": 114,
+              "start": 109,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A021",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 21,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                825372737
+              ]
+            },
+            "source": {
+              "end": 119,
+              "start": 114,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A022",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 22,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                842149953
+              ]
+            },
+            "source": {
+              "end": 124,
+              "start": 119,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A023",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 23,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                858927169
+              ]
+            },
+            "source": {
+              "end": 129,
+              "start": 124,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A024",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 24,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                875704385
+              ]
+            },
+            "source": {
+              "end": 134,
+              "start": 129,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A025",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 25,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                892481601
+              ]
+            },
+            "source": {
+              "end": 139,
+              "start": 134,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A026",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 26,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                909258817
+              ]
+            },
+            "source": {
+              "end": 144,
+              "start": 139,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A027",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 27,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                926036033
+              ]
+            },
+            "source": {
+              "end": 149,
+              "start": 144,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A028",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 28,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                942813249
+              ]
+            },
+            "source": {
+              "end": 154,
+              "start": 149,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      },
+      {
+        "path": "A029",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 159,
+              "start": 9,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 159,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 1,
+            "bit_offset": 29,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                959590465
+              ]
+            },
+            "source": {
+              "end": 159,
+              "start": 154,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "last_namespace_slot",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b814d095245473001413030300141303031014130303201413030330141303034014130303501413030360141303037014130303801413030390141303130014130313101413031320141303133014130313401413031350141303136014130313701413031380141303139014130323001413032310141303232014130323301413032340141303235014130323601413032370141303238014130323901"
+  },
+  {
+    "definitions": false,
+    "error": "Capacity",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "namespace_exhaustion_atomic_declaration",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b81420a52454730014130303001413030310141303032014130303301413030340141303035014130303601413030370141303038014130303901413031300141303131014130313201413031330141303134014130313501413031360141303137014130313801413031390141303230014130323101413032320141303233014130323401413032350141303236014130323701413032380141303239014130333001"
+  },
+  {
+    "definitions": false,
+    "error": "Capacity",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "descriptor_capacity",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b814c0a5245473001413030300141303031014130303201413030330141303034014130303501413030360141303037014130303801413030390141303130014130313101413031320141303133014130313401413031350141303136014130313701413031380141303139014130323001413032310141303232014130323301413032340141303235014130323601413032370141303238014130323901413033300141303331014130333201"
+  },
+  {
+    "definitions": true,
+    "error": "UnsupportedSyntax",
+    "expected": [],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "method_and_field_rollback",
+    "terms": 64,
+    "values": 64,
+    "wire": "14084d41494e00a4015b810b5245473001464c44300872"
+  },
+  {
+    "definitions": false,
+    "error": "Success",
+    "expected": [
+      {
+        "path": "WIDE",
+        "value": {
+          "declaration": {
+            "bank_value": 0,
+            "field_list": {
+              "end": 21,
+              "start": 8,
+              "unit": 7
+            },
+            "flags": 1,
+            "kind": "Field",
+            "primary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": [
+                809977170
+              ]
+            },
+            "scope": {
+              "absolute": true,
+              "parents": 0,
+              "segments": []
+            },
+            "secondary_name": {
+              "absolute": false,
+              "parents": 0,
+              "segments": []
+            },
+            "source": {
+              "end": 21,
+              "start": 0,
+              "unit": 7
+            }
+          },
+          "field": {
+            "access": {
+              "access_length": 0,
+              "attribute": 0,
+              "attribute_mode": 0,
+              "extended": false,
+              "flags": 1,
+              "kind": "Byte",
+              "locked": false,
+              "update": "Preserve"
+            },
+            "bit_length": 268435455,
+            "bit_offset": 268435455,
+            "connection": {
+              "kind": "None"
+            },
+            "name": {
+              "absolute": true,
+              "parents": 0,
+              "segments": [
+                1162103127
+              ]
+            },
+            "source": {
+              "end": 21,
+              "start": 13,
+              "unit": 7
+            }
+          },
+          "kind": "field",
+          "region": 0
+        }
+      }
+    ],
+    "initial": {
+      "entries": [
+        {
+          "level": true,
+          "path": ""
+        },
+        {
+          "object": 0,
+          "path": "REG0"
+        }
+      ],
+      "objects": 1,
+      "values": {
+        "0": {
+          "base": 4096,
+          "kind": "region",
+          "length": 256,
+          "scope": "",
+          "space": 0
+        }
+      }
+    },
+    "name": "large_metadata_extent",
+    "terms": 64,
+    "values": 64,
+    "wire": "5b8113524547300100cfffffff57494445cfffffff"
+  }
+]

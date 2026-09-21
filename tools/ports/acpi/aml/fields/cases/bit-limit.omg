@@ -4,15 +4,15 @@ use aml::model::Outcome;
 use aml::model::Path;
 use aml::model::Span;
 use aml::model::Read;
-use fields::field_model::Access;
-use fields::field_model::AccessType;
-use fields::field_model::UpdateRule;
-use fields::field_model::AccessResult;
-use fields::field_model::Connection;
-use fields::field_model::ListState;
-use fields::field_model::DeclarationKind;
-use fields::field_model::DeclarationResult;
-use fields::field_model::Pending;
+use aml::field_model::Access;
+use aml::field_model::AccessType;
+use aml::field_model::UpdateRule;
+use aml::field_model::AccessResult;
+use aml::field_model::Connection;
+use aml::field_model::ListState;
+use aml::field_model::DeclarationKind;
+use aml::field_model::DeclarationResult;
+use aml::field_model::Pending;
 use fields::field_list::parse_list;
 
 machine test()->u64 {

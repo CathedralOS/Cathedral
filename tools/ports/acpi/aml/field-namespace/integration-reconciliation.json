@@ -1,0 +1,81 @@
+{
+  "isolated_source_ref": "24aed04e800d3b8bb1c41cdb921a3b682a8a2758",
+  "receipts": {
+    "tools/ports/acpi/aml/field-namespace/checked-verification.json": {
+      "absent_at_source_ref": [],
+      "unrecorded_current_sources_in_recorded_package_directories": [
+        "source/libraries/acpi/aml/result_graph.omg"
+      ],
+      "different_current_inputs": [
+        "source/libraries/acpi/aml/buffer_target_values.omg",
+        "source/libraries/acpi/aml/named_value_store.omg"
+      ],
+      "historical_auxiliary_inputs_different_at_source_ref": [],
+      "unchanged_recorded_inputs": 43
+    },
+    "tools/ports/acpi/aml/field-namespace/constant-verification.json": {
+      "absent_at_source_ref": [],
+      "unrecorded_current_sources_in_recorded_package_directories": [
+        "source/libraries/acpi/aml/result_graph.omg"
+      ],
+      "different_current_inputs": [
+        "source/libraries/acpi/aml/buffer_target_values.omg",
+        "source/libraries/acpi/aml/named_value_store.omg",
+        "tools/ports/acpi/aml/field-namespace/cases.json",
+        "tools/ports/acpi/aml/field-namespace/fixtures.py",
+        "tools/ports/acpi/aml/field-namespace/main.omg",
+        "tools/ports/acpi/aml/field-namespace/verify_record.py"
+      ],
+      "historical_auxiliary_inputs_different_at_source_ref": [
+        "tools/ports/acpi/aml/field-namespace/cases.json",
+        "tools/ports/acpi/aml/field-namespace/fixtures.py",
+        "tools/ports/acpi/aml/field-namespace/main.omg",
+        "tools/ports/acpi/aml/field-namespace/verify_record.py"
+      ],
+      "unchanged_recorded_inputs": 39
+    },
+    "tools/ports/acpi/aml/fields/migration-verification.json": {
+      "absent_at_source_ref": [],
+      "unrecorded_current_sources_in_recorded_package_directories": [
+        "source/libraries/acpi/aml/result_graph.omg",
+        "source/libraries/acpi/interpreter/execution/named_store.omg"
+      ],
+      "different_current_inputs": [
+        "source/libraries/acpi/aml/buffer_target_values.omg",
+        "source/libraries/acpi/aml/named_value_store.omg",
+        "source/libraries/acpi/interpreter/execution/execution_model.omg",
+        "source/libraries/acpi/interpreter/execution/generic_binding_plan.omg",
+        "source/libraries/acpi/interpreter/execution/generic_target_bridge.omg",
+        "source/libraries/acpi/interpreter/execution/generic_target_model.omg",
+        "source/libraries/acpi/interpreter/execution/generic_target_values.omg",
+        "source/libraries/acpi/interpreter/execution/integer_target_bridge.omg",
+        "source/libraries/acpi/interpreter/execution/integer_target_values.omg",
+        "source/libraries/acpi/interpreter/execution/retire.omg",
+        "source/libraries/acpi/pipeline/program.omg"
+      ],
+      "historical_auxiliary_inputs_different_at_source_ref": [],
+      "unchanged_recorded_inputs": 130
+    },
+    "tools/ports/acpi/field-protocol/owner-migration-verification.json": {
+      "absent_at_source_ref": [],
+      "unrecorded_current_sources_in_recorded_package_directories": [
+        "source/libraries/acpi/aml/result_graph.omg",
+        "source/libraries/acpi/interpreter/bcd.omg",
+        "source/libraries/acpi/interpreter/buffer_fields.omg",
+        "source/libraries/acpi/interpreter/byte_comparison.omg",
+        "source/libraries/acpi/interpreter/byte_concat.omg",
+        "source/libraries/acpi/interpreter/conversions.omg",
+        "source/libraries/acpi/interpreter/implicit_integer.omg",
+        "source/libraries/acpi/interpreter/implicit_strings.omg",
+        "source/libraries/acpi/interpreter/string_numbers.omg"
+      ],
+      "different_current_inputs": [
+        "source/libraries/acpi/aml/buffer_target_values.omg",
+        "source/libraries/acpi/aml/named_value_store.omg"
+      ],
+      "historical_auxiliary_inputs_different_at_source_ref": [],
+      "unchanged_recorded_inputs": 59
+    }
+  },
+  "stage": "input reconciliation only; no new execution"
+}

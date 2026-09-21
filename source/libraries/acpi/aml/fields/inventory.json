@@ -72,7 +72,7 @@
           "targets": [
             {
               "anchor": "pub machine parse_list(",
-              "path": "source/libraries/acpi/aml/fields/field_list.omg"
+              "path": "source/libraries/acpi/aml/field_elements.omg"
             }
           ]
         },
@@ -655,7 +655,7 @@
           "targets": [
             {
               "anchor": "pub machine decode_flags(",
-              "path": "source/libraries/acpi/aml/fields/flags.omg"
+              "path": "source/libraries/acpi/aml/field_flags.omg"
             }
           ]
         },
@@ -666,7 +666,7 @@
           "targets": [
             {
               "anchor": "pub data AccessType",
-              "path": "source/libraries/acpi/aml/fields/field_model.omg"
+              "path": "source/libraries/acpi/aml/field_model.omg"
             }
           ]
         },
@@ -677,7 +677,7 @@
           "targets": [
             {
               "anchor": "pub data UpdateRule",
-              "path": "source/libraries/acpi/aml/fields/field_model.omg"
+              "path": "source/libraries/acpi/aml/field_model.omg"
             }
           ]
         },
@@ -688,7 +688,7 @@
           "targets": [
             {
               "anchor": "pub machine decode_flags(",
-              "path": "source/libraries/acpi/aml/fields/flags.omg"
+              "path": "source/libraries/acpi/aml/field_flags.omg"
             }
           ]
         },
@@ -699,7 +699,7 @@
           "targets": [
             {
               "anchor": "pub machine nominal_width(",
-              "path": "source/libraries/acpi/aml/fields/flags.omg"
+              "path": "source/libraries/acpi/aml/field_flags.omg"
             }
           ]
         },
@@ -710,7 +710,7 @@
           "targets": [
             {
               "anchor": "pub machine decode_flags(",
-              "path": "source/libraries/acpi/aml/fields/flags.omg"
+              "path": "source/libraries/acpi/aml/field_flags.omg"
             }
           ]
         },
@@ -721,7 +721,7 @@
           "targets": [
             {
               "anchor": "pub machine decode_flags(",
-              "path": "source/libraries/acpi/aml/fields/flags.omg"
+              "path": "source/libraries/acpi/aml/field_flags.omg"
             }
           ]
         },

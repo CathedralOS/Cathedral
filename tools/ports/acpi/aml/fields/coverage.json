@@ -5,7 +5,7 @@
       "status": "metadata",
       "target": {
         "anchor": "machine access_field(",
-        "path": "source/libraries/acpi/aml/fields/field_list.omg"
+        "path": "source/libraries/acpi/aml/field_elements.omg"
       }
     },
     "BankField": {
@@ -13,7 +13,7 @@
       "status": "literal-subset",
       "target": {
         "anchor": "0x5b87 -> body(",
-        "path": "source/libraries/acpi/aml/fields/declarations.omg"
+        "path": "source/libraries/acpi/aml/field_declarations.omg"
       }
     },
     "BankValue.TermArg": {
@@ -21,7 +21,7 @@
       "status": "pending",
       "target": {
         "anchor": "state bank_pending(",
-        "path": "source/libraries/acpi/aml/fields/declarations.omg"
+        "path": "source/libraries/acpi/aml/field_declarations.omg"
       }
     },
     "ConnectField.Buffer": {
@@ -29,7 +29,7 @@
       "status": "bounded-envelope",
       "target": {
         "anchor": "state pending(",
-        "path": "source/libraries/acpi/aml/fields/field_list.omg"
+        "path": "source/libraries/acpi/aml/field_elements.omg"
       }
     },
     "ConnectField.Name": {
@@ -37,7 +37,7 @@
       "status": "metadata",
       "target": {
         "anchor": "state install_name(",
-        "path": "source/libraries/acpi/aml/fields/field_list.omg"
+        "path": "source/libraries/acpi/aml/field_elements.omg"
       }
     },
     "CreateField.family": {
@@ -53,7 +53,7 @@
       "status": "metadata",
       "target": {
         "anchor": "pub machine change_access(",
-        "path": "source/libraries/acpi/aml/fields/flags.omg"
+        "path": "source/libraries/acpi/aml/field_flags.omg"
       }
     },
     "Field": {
@@ -61,7 +61,7 @@
       "status": "metadata",
       "target": {
         "anchor": "pub machine parse_declaration(",
-        "path": "source/libraries/acpi/aml/fields/declarations.omg"
+        "path": "source/libraries/acpi/aml/field_declarations.omg"
       }
     },
     "FieldUnit.runtime": {
@@ -69,7 +69,7 @@
       "status": "pending",
       "target": {
         "anchor": "pub data Field",
-        "path": "source/libraries/acpi/aml/fields/field_model.omg"
+        "path": "source/libraries/acpi/aml/field_model.omg"
       }
     },
     "IndexField": {
@@ -77,7 +77,7 @@
       "status": "metadata",
       "target": {
         "anchor": "0x5b86 -> body(",
-        "path": "source/libraries/acpi/aml/fields/declarations.omg"
+        "path": "source/libraries/acpi/aml/field_declarations.omg"
       }
     },
     "NamedField": {
@@ -85,7 +85,7 @@
       "status": "metadata",
       "target": {
         "anchor": "machine named_field(",
-        "path": "source/libraries/acpi/aml/fields/field_list.omg"
+        "path": "source/libraries/acpi/aml/field_elements.omg"
       }
     },
     "ReservedField": {
@@ -93,7 +93,7 @@
       "status": "metadata",
       "target": {
         "anchor": "machine reserved_field(",
-        "path": "source/libraries/acpi/aml/fields/field_list.omg"
+        "path": "source/libraries/acpi/aml/field_elements.omg"
       }
     }
   },

@@ -1,44 +1,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-// FieldFlags adapted from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
-// Upstream copyright 2018 Isaac Woods; Cathedral bounded metadata adaptation 2026.
+// Compatibility entries into the canonical AML-owned field flags.
 module flags;
-use aml::model::Outcome;
+use aml::field_flags;
 use aml::model::Read;
-use field_model::AccessType;
-use field_model::UpdateRule;
-use field_model::Access;
-use field_model::AccessResult;
-pub machine decode_flags(raw:u8)->AccessResult {
- let code:u8=raw&15;let update:u8=(raw>>5)&3;
- transition raw<128 && code<=5 && update<=2 {
-  true -> valid(raw,code,update) _ -> (AccessResult {outcome:Outcome::BadEncoding})
- }
- state valid(raw:u8,code:u8,update:u8)->AccessResult {
-  let kind:AccessType=access_kind(code);let rule:UpdateRule=update_kind(update);
-  AccessResult {access:Access {flags:raw,kind:kind,locked:(raw&16)!=0,update:rule}}
- }
-}
-machine access_kind(code:u8)->AccessType {
- transition code {1 -> (AccessType::Byte) 2 -> (AccessType::Word) 3 -> (AccessType::DWord) 4 -> (AccessType::QWord) 5 -> (AccessType::Buffer) _ -> (AccessType::Any)}
-}
-machine update_kind(code:u8)->UpdateRule {transition code {1 -> (UpdateRule::WriteAsOnes) 2 -> (UpdateRule::WriteAsZeros) _ -> (UpdateRule::Preserve)}}
-// Pin-compatible nominal width only; AnyAcc and BufferAcc return one. No I/O plan.
-pub machine nominal_width(raw:u8)->Read {
- let checked:AccessResult=decode_flags(raw);
- transition checked.outcome==Outcome::Success {true -> width(checked.access.kind) _ -> (Read {outcome:checked.outcome})}
- state width(kind:AccessType)->Read {transition kind {AccessType::Word -> (Read {value:2}) AccessType::DWord -> (Read {value:4}) AccessType::QWord -> (Read {value:8}) _ -> (Read {value:1})}}
-}
-// AccessType upper bits retain attribute mode; reserved bits 4:5 must be zero.
+use aml::field_model::Access;
+use aml::field_model::AccessResult;
+pub machine decode_flags(raw:u8)->AccessResult {let result:AccessResult=field_flags::decode_flags(raw);result}
+pub machine nominal_width(raw:u8)->Read {let result:Read=field_flags::nominal_width(raw);result}
 pub machine change_access(current:Access,type_byte:u8,attribute:u8,extended:bool,length:u8)->AccessResult {
- let code:u8=type_byte&15;let reserved:u8=type_byte&48;
- let valid_extended:bool=!extended || attribute==11 || attribute==14 || attribute==15;
- transition code<=5 && reserved==0 && valid_extended {
-  true -> apply(current,type_byte,attribute,extended,length,code) _ -> (AccessResult {outcome:Outcome::BadEncoding})
- }
- state apply(current:Access,type_byte:u8,attribute:u8,extended:bool,length:u8,code:u8)->AccessResult {
-  let mut value:Access=current;let kind:AccessType=access_kind(code);
-  value.flags=(current.flags&240)|code;value.kind=kind;value.attribute=attribute;
-  value.attribute_mode=type_byte>>6;value.extended=extended;value.access_length=length;
-  AccessResult {access:value}
- }
+ let result:AccessResult=field_flags::change_access(current,type_byte,attribute,extended,length);result
 }

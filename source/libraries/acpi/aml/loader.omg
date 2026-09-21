@@ -30,6 +30,7 @@ use namespace::bind;
 use namespace::insert;
 use namespace::alias;
 use namespace::add_level;
+use field_namespace::load_field;
 use values::integer;
 use values::parse_value;
 machine fail(value:&mut LoadState,outcome:Outcome,offset:u64)->Outcome {value.outcome=outcome;value.offset=offset;value.done=true;outcome}
@@ -64,6 +65,7 @@ machine load_step(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodD
    0x5b01 -> call_mutex_6(input,value,op.next)
    0x5b02 -> call_event_7(input,value,op.next)
    0x5b80 -> call_region_8(input,value,op.next)
+   0x5b81 -> field(input,value)
    0x5b82 -> call_scoped_9(input,value,op,LevelKind::Device)
    0x5b83 -> call_scoped_10(input,value,op,LevelKind::Processor)
    0x5b84 -> call_scoped_11(input,value,op,LevelKind::PowerResource)
@@ -72,6 +74,8 @@ machine load_step(input:&[u8;1024],value:&mut LoadState,definitions:&mut MethodD
    _ -> call_fail_14(value,Outcome::UnsupportedSyntax,value.at)
   }
  }
+
+ state field(input:&[u8;1024],value:&mut LoadState)->Outcome {let result:Outcome=load_field(input,value);result}
 
  state call_fail_0(value:&mut LoadState,outcome:Outcome,offset:u64) -> Outcome {let result:Outcome=fail(value,outcome,offset);result}
 

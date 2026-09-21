@@ -1,2 +1,2 @@
-use values::read;use fields::field_model::Field;use fields::field_model::DeclarationKind;use integers::integers::IntegerSize;
+use values::read;use aml::field_model::Field;use aml::field_model::DeclarationKind;use integers::integers::IntegerSize;
 data Main {words:[u64;257];}machine Main::main(&mut self){let field:Field=Field {};_ = read::assemble(DeclarationKind::Field,&field,4,IntegerSize::EightBytes,&self.words,0);}

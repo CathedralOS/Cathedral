@@ -1,0 +1,37 @@
+{
+  "base": "0e2ecf0",
+  "files": [
+    {
+      "after": "source/libraries/acpi/aml/field_model.omg",
+      "before": "source/libraries/acpi/aml/fields/field_model.omg",
+      "new_module": "field_model",
+      "old_module": "field_model",
+      "original_sha256": "20516bb37529164d24f292aeae102189b761d41d22bdf48bf78aa460d78c7844",
+      "relocated_sha256": "c1e8f5437ce85cdef00e75cd89a050266f92f1db4fd120781cbb35d89c1c5321"
+    },
+    {
+      "after": "source/libraries/acpi/aml/field_flags.omg",
+      "before": "source/libraries/acpi/aml/fields/flags.omg",
+      "new_module": "field_flags",
+      "old_module": "flags",
+      "original_sha256": "5a284110c178c77ea64fff76e032f95639c55e949be512e7a48132822ac44431",
+      "relocated_sha256": "691b6df40716f6d908b8f726efbcc4da6ab7d2297417c5070c9895fc4bddae84"
+    },
+    {
+      "after": "source/libraries/acpi/aml/field_elements.omg",
+      "before": "source/libraries/acpi/aml/fields/field_list.omg",
+      "new_module": "field_elements",
+      "old_module": "field_list",
+      "original_sha256": "57ae85b79e3efdd00a44e7a670e6972713f9542cf5d052b14dbe17f205a01f64",
+      "relocated_sha256": "53b2ca082a54c29c50f69ea24fa8fefc9fa51af77672b61cb31f34bc0e7dce45"
+    },
+    {
+      "after": "source/libraries/acpi/aml/field_declarations.omg",
+      "before": "source/libraries/acpi/aml/fields/declarations.omg",
+      "new_module": "field_declarations",
+      "old_module": "declarations",
+      "original_sha256": "e698e66463da5b111b58d9b3bc74b67c21359cacc4b9b34d0410e1e524a4bca2",
+      "relocated_sha256": "3612ba8133523e416f90b84a9e36af5714e735495feae772b64fb29580a667c9"
+    }
+  ]
+}

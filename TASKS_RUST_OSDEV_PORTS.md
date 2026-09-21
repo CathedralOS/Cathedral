@@ -539,9 +539,17 @@ object reclamation.
 [Field declaration metadata](source/libraries/acpi/aml/fields/PORT.md) adds 18
 semantic cases, 18 body mutations and a 19-file source check for Field, IndexField,
 BankField and all five FieldList forms. Dynamic BankValue/BufferSize bodies remain
-explicitly unparsed or opaque; field namespace installation and full interpreter
-behavior remain pending. The separate integer executor does not complete these
-syntax/resource-limit milestones.
+explicitly unparsed or opaque. Those original parser receipts are historical after
+the shared metadata owner moves into the AML package.
+[Normal Field namespace installation](source/libraries/acpi/aml/field-namespace.PORT.md)
+adds staged installation into the canonical object/namespace store, complete
+access/connection metadata, stable region identity and whole-load rollback.
+All 38 checked loader pairs, one constant pair, 20 metadata/consumer pairs and
+three selected upstream protocol owner-migration pairs pass in the recorded
+isolated worktree. The original parser/protocol receipts remain historical.
+IndexField/BankField installation and full interpreter behavior remain ordinary
+implementation work; ACPI-004 stays open. The separate integer executor does not
+complete these syntax/resource-limit milestones.
 [Normal Field geometry](source/libraries/acpi/field_access/PORT.md) adds aligned
 access footprints, bounded chunk plans and scalar extract/merge arithmetic, with
 451 checked pairs, three constant pairs and 362 public synthetic-memory

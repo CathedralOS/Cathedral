@@ -87,6 +87,7 @@ pub machine object_type(space:&Namespace,object:u64,budget:u64)->QueryResult {
    Value::String {string_storage} -> (QueryResult::Value {object:object,number:2})
    Value::Buffer {buffer_storage} -> (QueryResult::Value {object:object,number:3})
    Value::Package {first,count} -> (QueryResult::Value {object:object,number:4})
+   Value::FieldUnit {region_object,declaration,field} -> (QueryResult::Value {object:object,number:5})
    Value::Device -> (QueryResult::Value {object:object,number:6})
    Value::Event -> (QueryResult::Value {object:object,number:7})
    Value::Method {flags,body} -> (QueryResult::Value {object:object,number:8})
