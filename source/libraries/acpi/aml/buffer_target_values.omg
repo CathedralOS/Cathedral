@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Pure target-sized component alongside rust-osdev/acpi Object::
 // replace_with_implicit_casting, pin 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
-// Copyright 2018 Isaac Woods. ACPI 6.6 Table 19.7 Integer/nonempty String profile.
+// Copyright 2018 Isaac Woods. ACPI 6.6 Table 19.7 existing Buffer extent profile.
 module buffer_target_values;
 use model::ObjectStore;
 use model::Value;
@@ -15,15 +15,15 @@ use integer_helpers::integers::IntegerResult;
 use integer_helpers::conversions::integer_to_buffer;
 use integer_helpers::conversions::mid;
 
-// extent 1..256 is ordinary caller-supplied geometry, not evidence of a target.
+// extent 0..256 is ordinary caller-supplied geometry, not evidence of a target.
 // ID/count -> extent -> source type -> full String admission -> preparation.
-// Bounds for zero extent and Empty for empty String are local profile exclusions.
+// Empty String at a positive extent remains a local profile exclusion.
 // No lookup, allocation, reference evaluation, target mutation or Store execution.
 pub machine prepare_buffer_extent(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,extent:u64)->ImplicitResult {
  let count:u64=store.space.object_count;
  transition count<=64 && source<count && source<64 {true -> bounded(input,length,unit,store,source,size,extent) _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})}
  state bounded(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,extent:u64)->ImplicitResult {
-  transition {extent==0 -> (ImplicitResult::Failure {reason:ConversionFailure::Bounds}) extent>256 -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity}) _ -> selected(input,length,unit,store,source,size,extent)}
+  transition {extent>256 -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity}) _ -> selected(input,length,unit,store,source,size,extent)}
  }
  state selected(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,extent:u64)->ImplicitResult {
   transition store.space.objects[source].value {
@@ -43,7 +43,7 @@ pub machine prepare_buffer_extent(input:&[u8;1024],length:u64,unit:u64,store:&Ob
  }
  state nonempty(bytes:ByteRead,extent:u64)->ImplicitResult {
   let count:u64=bytes.length;
-  transition count>0 {true -> string_value(bytes,count,extent) _ -> (ImplicitResult::Failure {reason:ConversionFailure::Empty})}
+  transition count>0 || extent==0 {true -> string_value(bytes,count,extent) _ -> (ImplicitResult::Failure {reason:ConversionFailure::Empty})}
  }
  state string_value(bytes:ByteRead,count:u64,extent:u64)->ImplicitResult {let result:ImplicitResult=fit(&bytes.bytes,count,extent);result}
 }

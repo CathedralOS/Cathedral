@@ -1,5 +1,9 @@
 # Equal-extent named Buffer Store
 
+The later [zero-length Buffer conversion extension](zero-buffer-store.PORT.md)
+admits Integer/String stores into existing empty Buffers. The profile and
+source-bound receipts below record this earlier milestone, before that extension.
+
 Status: tested in the isolated worktree at
 `/private/tmp/cathedral-acpi-buffer-store`: 97 new and 504 regression
 behavior/control pairs pass; both exact-input verifiers and the inventory audit

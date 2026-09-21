@@ -1,5 +1,9 @@
 # Scalar named Store and destination admission
 
+The later [zero-length Buffer conversion extension](zero-buffer-store.PORT.md)
+admits Integer/String stores into existing empty Buffers. The profile and
+source-bound receipts below record this earlier milestone, before that extension.
+
 The receipts below are historical milestone evidence. The later
 [equal-extent Buffer extension](named-buffer-store.PORT.md) changes two
 object-source self-store exclusions and supplies a new regression receipt;

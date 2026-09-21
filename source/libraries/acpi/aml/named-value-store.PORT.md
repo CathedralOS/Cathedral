@@ -1,5 +1,9 @@
 # Direct named-value Store
 
+The later [zero-length Buffer conversion extension](zero-buffer-store.PORT.md)
+admits Integer/String stores into existing empty Buffers. The profile and
+source-bound receipts below record this earlier milestone, before that extension.
+
 This records the original profile. The subsequent
 [equal-extent Buffer extension](named-buffer-store.PORT.md) admits Buffer sources
 when both logical lengths match, including empty and self-stores. Its new
