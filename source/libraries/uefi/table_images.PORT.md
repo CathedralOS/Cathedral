@@ -1,6 +1,6 @@
 # UEFI table producer/consumer fixtures — UEFI-010
 
-Status: **tested** for the pure fixed byte-image model; **blocked** for native
+Status: **tested** for the pure fixed byte-image model; **open** for native
 producer/consumer ABI compatibility. Independently authored Cathedral fixtures;
 no Rust implementation or firmware image is copied. Numeric geometry comes from
 the pinned UEFI table corpus documented in
@@ -39,18 +39,18 @@ to reject result 1. These are semantic-evaluator tests, not native execution.
 Verified compiler: clean Omega `eaa7993a23623cd8fabf45350340479c5c9c7879`,
 SHA-256 `2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4`.
 
-## Remaining language/design boundaries
+## Remaining implementation dependencies
 
-- `PORT-BLOCKED[omega:layout-reflection-capacity]`: a complete native
+- `omega:layout-reflection-capacity`: a complete native
   `BootServices` plan has 45 fields; the current source layout carrier admits
   32. The existing reproducible table-layout failures and fresh validation are
   recorded in [CONFORMANCE.md](../../contracts/uefi/raw/CONFORMANCE.md).
-- `PORT-BLOCKED[omega:callback-field-materialization]`: native table slots need
+- `omega:callback-field-materialization`: native table slots need
   private callback field destinations. Omega's [native realization implementation
-  note](../../../../Omega/omega-rust/omega/compiler/native-realization/README.md)
+  note](../../../../../Omega/omega-rust/omega/compiler/native-realization/README.md)
   explicitly limits the bounded route to one direct callback parameter and says
   field destinations and multiple callbacks need further work. The
-  [private-callback contract](../../../../Omega/wiki/spec/build/private_callbacks.md)
+  [private-callback contract](../../../../../Omega/wiki/spec/build/private_callbacks.md)
   requires exact named callback selection, placement and lifetime/custody. Integer
   fixture IDs do not implement that seam. Calling policy and lifetime contracts
   still require ordinary authored work; their absence alone is not a blocker.
@@ -58,6 +58,11 @@ SHA-256 `2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4`.
   `tools/ports/uefi-images/blocked/slice_length_probe.omg`: the literal
   `"123456789"` reports length zero during this constant evaluation. Fixed-array
   fixtures avoid that path, so it does not block the completed byte model.
+
+These are compiler engineering dependencies, not unsettled language-design or
+owner decisions. Omega already specifies the required callback contracts. The
+porting queue excludes changes to Omega, so its native leg stays open while the
+compiler implements those contracts.
 
 The task remains unchecked because matching explicitly encoded byte images
 does not demonstrate that independently emitted native producer and consumer
