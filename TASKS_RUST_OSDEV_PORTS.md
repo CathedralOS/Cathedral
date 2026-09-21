@@ -637,6 +637,13 @@ All 189 whole-store behavior/control pairs, three representative constant pairs
 and 89 actual public Object method observations pass. One bounded source anchor
 closes; source conversion, target handling and Store execution remain pending.
 
+[Direct Buffer/String Mid](source/libraries/acpi/aml/object-mid.PORT.md) validates complete canonical backing,
+preserves the source type and slices without overflowing index + requested length.
+All 315 checked pairs and three constant pairs pass, including malformed tails
+before empty selection and full zero output tails. Parameter evaluation,
+reference policy, target writes and opcode retirement remain pending; aggregate
+source counts are unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

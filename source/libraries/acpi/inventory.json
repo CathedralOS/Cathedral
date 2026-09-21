@@ -839,7 +839,14 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine extract(",
+              "path": "source/libraries/acpi/aml/object_mid.omg"
+            }
+          ],
+          "note": "Direct Buffer/String Mid preserves result type, validates complete backing, clamps the selected extent without overflow and zeros unused tails. Parameter evaluation/normalization, reference/context policy, target coercion, object installation and opcode execution remain pending."
         },
         "2171:do_concat": {
           "anchor": "fn do_concat(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",

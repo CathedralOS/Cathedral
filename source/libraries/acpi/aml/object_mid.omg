@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Detached primary Mid composition over rust-osdev/acpi adaptations.
+// Copyright 2018 Isaac Woods; Omega adaptation 2026. See object-mid.PORT.md.
+module object_mid;
+use model::ObjectStore;
+use model::Value;
+use byte_storage::read_bytes;
+use byte_storage::ByteRead;
+use byte_storage::ByteOutcome;
+use byte_storage::ByteKind;
+use object_conversions::ConversionFailure;
+use integer_helpers::conversions::mid;
+use integer_helpers::integers::IntegerResult;
+pub data Portion [copy] {
+ case Failure(reason:ConversionFailure);
+ case Buffer(length:u64,bytes:[u8;256]);
+ case String(length:u64,bytes:[u8;256]);
+}
+// Index and requested are already evaluated unsigned AML Integer values.
+// Evaluation, width normalization and reference resolution belong to the caller.
+pub machine extract(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,index:u64,requested:u64)->Portion {
+ let count:u64=store.space.object_count;
+ transition count<=64 && source<count && source<64 {true -> kind(input,length,unit,store,source,index,requested) _ -> (Portion::Failure {reason:ConversionFailure::InvalidState})}
+ state kind(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,index:u64,requested:u64)->Portion {
+  transition store.space.objects[source].value {
+   Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,source,index,requested)
+   Value::String {string_storage} -> bytes(input,length,unit,store,source,index,requested)
+   _ -> (Portion::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,source:u64,index:u64,requested:u64)->Portion {
+  let read:ByteRead=read_bytes(input,length,unit,store,source);
+  transition read.outcome==ByteOutcome::Success {true -> copy(read,index,requested) _ -> failed(read.outcome)}
+ }
+ state failed(error:ByteOutcome)->Portion {let reason:ConversionFailure=om_storage_failure(error);Portion::Failure {reason:reason}}
+ state copy(read:ByteRead,index:u64,requested:u64)->Portion {
+  let mut output:[u8;256];let copied:IntegerResult=mid(&read.bytes,read.length,index,requested,&mut output);
+  transition copied.error==0 {true -> result(read.kind,copied.value,output) _ -> (Portion::Failure {reason:ConversionFailure::Capacity})}
+ }
+ state result(kind:ByteKind,length:u64,bytes:[u8;256])->Portion {
+  transition kind {ByteKind::Buffer -> (Portion::Buffer {length:length,bytes:bytes}) ByteKind::String -> (Portion::String {length:length,bytes:bytes})}
+ }
+}
+machine om_storage_failure(error:ByteOutcome)->ConversionFailure {
+ transition error {ByteOutcome::Capacity -> (ConversionFailure::Capacity) ByteOutcome::Bounds -> (ConversionFailure::Bounds)
+ ByteOutcome::Encoding -> (ConversionFailure::Encoding) ByteOutcome::UnsupportedValue -> (ConversionFailure::UnsupportedValue)
+ ByteOutcome::ReferenceCycle -> (ConversionFailure::ReferenceCycle) ByteOutcome::WorkLimit -> (ConversionFailure::WorkLimit)
+ _ -> (ConversionFailure::InvalidState)}
+}
