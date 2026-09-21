@@ -103,3 +103,9 @@ and field bounds and returns an Integer or a zero-tailed Buffer through 2048 bit
 The primary width test uses 32/64 bits, correcting the pin's byte-width comparison.
 Outer reference resolution, opcode integration and the existing conversion
 adapter's wider-field policy remain separate work.
+
+[Direct object comparisons](object-comparison.PORT.md) select the right operand's
+primary implicit conversion from the left operand's type, then compare normalized
+Integers or complete String/Buffer bytes. All 278 checked pairs and three constant
+pairs pass, including unsigned ordering and full storage validation. Reference
+and field evaluation, logical truth operators and opcode retirement remain open.

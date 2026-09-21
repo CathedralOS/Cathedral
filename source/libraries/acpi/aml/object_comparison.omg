@@ -1,0 +1,74 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Primary AML comparison policy over the licensed rust-osdev/acpi helper port.
+// Direct IDs only; callers supply reference/field evaluation separately.
+module object_comparison;
+use model::ObjectStore;
+use model::Value;
+use implicit_conversions::convert;
+use implicit_conversions::ConversionTarget;
+use implicit_conversions::ImplicitResult;
+use object_conversions::ConversionFailure;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::byte_comparison;
+use integer_helpers::byte_comparison::Comparison;
+use integer_helpers::byte_comparison::BufferOrdering;
+pub data ObjectComparison [copy] {
+ case Failure(reason:ConversionFailure);
+ case Less;
+ case Equal;
+ case Greater;
+}
+pub machine compare(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize)->ObjectComparison {
+ let count:u64=store.space.object_count;
+ transition count<=64 && left<count && left<64 {true -> kind(input,length,unit,store,left,right,size,store.space.objects[left].value) _ -> (ObjectComparison::Failure {reason:ConversionFailure::InvalidState})}
+ state kind(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize,value:Value)->ObjectComparison {
+  transition value {
+   Value::Integer {number} -> selected(input,length,unit,store,left,right,size,ConversionTarget::Integer)
+   Value::Buffer {buffer_storage} -> selected(input,length,unit,store,left,right,size,ConversionTarget::Buffer)
+   Value::String {string_storage} -> selected(input,length,unit,store,left,right,size,ConversionTarget::String)
+   _ -> (ObjectComparison::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state selected(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,left:u64,right:u64,size:IntegerSize,target:ConversionTarget)->ObjectComparison {
+  let a:ImplicitResult=convert(input,length,unit,store,left,size,target);
+  transition a {ImplicitResult::Failure {reason} -> (ObjectComparison::Failure {reason:reason}) _ -> other(input,length,unit,store,right,size,target,a)}
+ }
+ state other(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,right:u64,size:IntegerSize,target:ConversionTarget,a:ImplicitResult)->ObjectComparison {
+  let b:ImplicitResult=convert(input,length,unit,store,right,size,target);
+  transition b {ImplicitResult::Failure {reason} -> (ObjectComparison::Failure {reason:reason}) _ -> order(a,b)}
+ }
+ state order(a:ImplicitResult,b:ImplicitResult)->ObjectComparison {let result:ObjectComparison=oc_order(a,b);result}
+}
+machine oc_order(a:ImplicitResult,b:ImplicitResult)->ObjectComparison {
+ transition a {
+  ImplicitResult::Integer {number} -> integer(number,b)
+  ImplicitResult::Buffer {length,bytes} -> buffer(&bytes,length,b)
+  ImplicitResult::String {length,bytes} -> string(&bytes,length,b)
+  _ -> (ObjectComparison::Failure {reason:ConversionFailure::InvalidState})
+ }
+ state integer(a:u64,b:ImplicitResult)->ObjectComparison {
+  transition b {ImplicitResult::Integer {number} -> numbers(a,number) _ -> (ObjectComparison::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state numbers(a:u64,b:u64)->ObjectComparison {transition {a<b -> (ObjectComparison::Less) a>b -> (ObjectComparison::Greater) _ -> (ObjectComparison::Equal)}}
+ state buffer(a:&[u8;256],length:u64,b:ImplicitResult)->ObjectComparison {
+  transition b {ImplicitResult::Buffer {length as right_length,bytes} -> buffers(a,length,&bytes,right_length) _ -> (ObjectComparison::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state buffers(a:&[u8;256],a_length:u64,b:&[u8;256],b_length:u64)->ObjectComparison {
+  let order:Comparison=byte_comparison::compare_buffers(a,a_length,b,b_length,BufferOrdering::Lexicographic);let result:ObjectComparison=oc_bytes(order);result
+ }
+ state string(a:&[u8;256],length:u64,b:ImplicitResult)->ObjectComparison {
+  transition b {ImplicitResult::String {length as right_length,bytes} -> strings(a,length,&bytes,right_length) _ -> (ObjectComparison::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ state strings(a:&[u8;256],a_length:u64,b:&[u8;256],b_length:u64)->ObjectComparison {
+  let order:Comparison=byte_comparison::compare_strings(a,a_length,b,b_length);let result:ObjectComparison=oc_bytes(order);result
+ }
+}
+machine oc_bytes(order:Comparison)->ObjectComparison {
+ transition order {
+  Comparison::Less -> (ObjectComparison::Less)
+  Comparison::Equal -> (ObjectComparison::Equal)
+  Comparison::Greater -> (ObjectComparison::Greater)
+  Comparison::Capacity -> (ObjectComparison::Failure {reason:ConversionFailure::Capacity})
+  Comparison::Encoding -> (ObjectComparison::Failure {reason:ConversionFailure::Encoding})
+ }
+}

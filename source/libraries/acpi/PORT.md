@@ -276,3 +276,9 @@ exactly field-sized bits into complete native-width numeric write records. All
 Geometry, payload/count checks, Preserve input requirements and unmet lock metadata
 are retained. Source conversion/repeated writes, provider access, Bank/Index and
 Store/evaluator integration remain pending; aggregate source counts are unchanged.
+
+[Direct object comparisons](aml/object-comparison.PORT.md) compose primary
+right-hand conversion with unsigned Integer and lexical String/Buffer ordering.
+The 278 checked pairs and three constant pairs verify all type combinations and
+complete source admission. Reference/field evaluation, logical truth operations
+and runtime integration remain pending; aggregate source counts are unchanged.

@@ -713,7 +713,14 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine compare(",
+              "path": "source/libraries/acpi/aml/object_comparison.omg"
+            }
+          ],
+          "note": "Direct Integer/String/Buffer comparison after primary right-hand conversion to the left type. Reference/Field evaluation, truth operators, Boolean result construction and context execution remain pending; pinned Buffer length-first ordering intentionally differs."
         },
         "19:namespace": {
           "anchor": "pub mod namespace;",
@@ -3215,7 +3222,14 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine compare(",
+              "path": "source/libraries/acpi/aml/object_comparison.omg"
+            }
+          ],
+          "note": "Direct Integer/String/Buffer comparison after primary right-hand conversion to the left type. Reference/Field evaluation, truth operators, Boolean result construction and context execution remain pending; pinned Buffer length-first ordering intentionally differs."
         },
         "38:native_method": {
           "anchor": "pub fn native_method<F>(num_args: u8, f: F) -> Object",

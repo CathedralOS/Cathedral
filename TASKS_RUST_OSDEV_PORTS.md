@@ -610,6 +610,12 @@ probes pass, including early/late missing Preserve values and full zero tails.
 Source conversion and repeated Buffer writes, provider/lock authority, Bank/Index
 and Store execution remain pending; no aggregate source anchor closes.
 
+[Direct object comparisons](source/libraries/acpi/aml/object-comparison.PORT.md)
+add primary right-hand conversion selected by the left object's type, with 278
+checked pairs and three constant pairs. Complete validation precedes unsigned
+Integer or lexical byte ordering. Reference/field evaluation, logical truth
+operators and opcode retirement remain pending; aggregate anchors stay open.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and
