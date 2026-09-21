@@ -1966,8 +1966,8 @@
         },
         "156:remove_level": {
           "anchor": "pub fn remove_level(&mut self, path: AmlName) -> Result<(), AmlError> {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-004, ACPI-006; no translation/execution claimed.",
+          "disposition": "translated",
+          "reason": "Bounded transactional flat-entry subtree removal, preserving parent-level same-path object and stable object IDs; stricter structural admission. No AML Unload implementation or reclamation.",
           "partition": [
             "aml_syntax_namespace",
             "allocator_concurrency"
@@ -1975,6 +1975,12 @@
           "queue_tasks": [
             "ACPI-004",
             "ACPI-006"
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine remove_level",
+              "path": "source/libraries/acpi/aml/namespace_removal.omg"
+            }
           ]
         },
         "169:insert": {

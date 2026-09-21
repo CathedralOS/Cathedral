@@ -530,6 +530,11 @@ passes 27 Omega scenarios with 27 body mutations and an 18-file source check.
 It covers NameString/package framing, literal/package values, static declarations,
 retained method bodies, stable aliases, scoped lazy references and transactional
 loader errors under explicit capacities/budgets.
+[Namespace-level removal](source/libraries/acpi/aml/namespace-removal.PORT.md)
+adds validated transactional subtree removal with same-path object/alias and
+stable-ID preservation. All 44 checked pairs, two constant pairs and 12 public
+Rust observations pass. This pure operation does not implement AML Unload or
+object reclamation.
 [Field declaration metadata](source/libraries/acpi/aml/fields/PORT.md) adds 18
 semantic cases, 18 body mutations and a 19-file source check for Field, IndexField,
 BankField and all five FieldList forms. Dynamic BankValue/BufferSize bodies remain

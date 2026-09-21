@@ -1,0 +1,285 @@
+{
+  "files": {
+    "src/aml/namespace.rs": {
+      "disposition": "pending",
+      "reason": "Awaiting source review.",
+      "sha256": "311f3d9b5fbcb08395dcde0b5dce5455e932ad4a8fb6c273580d80c507b2f347",
+      "symbols": {
+        "139:add_level": {
+          "anchor": "pub fn add_level(&mut self, path: AmlName, kind: NamespaceLevelKind) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "156:remove_level": {
+          "anchor": "pub fn remove_level(&mut self, path: AmlName) -> Result<(), AmlError> {",
+          "disposition": "translated",
+          "reason": "Bounded transactional flat-entry subtree removal, preserving parent-level same-path object and stable object IDs; stricter structural admission. No AML Unload implementation or reclamation.",
+          "targets": [
+            {
+              "anchor": "pub machine remove_level",
+              "path": "source/libraries/acpi/aml/namespace_removal.omg"
+            }
+          ]
+        },
+        "169:insert": {
+          "anchor": "pub fn insert(&mut self, path: AmlName, object: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "186:create_alias": {
+          "anchor": "pub fn create_alias(&mut self, path: AmlName, object: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "196:get": {
+          "anchor": "pub fn get(&mut self, path: AmlName) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "209:search": {
+          "anchor": "pub fn search(&self, path: &AmlName, starting_scope: &AmlName) -> Result<(AmlName, WrappedObject), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "20:Namespace": {
+          "anchor": "pub struct Namespace {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "252:search_for_level": {
+          "anchor": "pub fn search_for_level(&self, level_name: &AmlName, starting_scope: &AmlName) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "26:new": {
+          "anchor": "pub fn new(global_lock_mutex: Handle) -> Namespace {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "280:get_level_for_path": {
+          "anchor": "fn get_level_for_path(&self, path: &AmlName) -> Result<(&NamespaceLevel, NameSeg), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "307:get_level_for_path_mut": {
+          "anchor": "fn get_level_for_path_mut(&mut self, path: &AmlName) -> Result<(&mut NamespaceLevel, NameSeg), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "339:traverse": {
+          "anchor": "pub fn traverse<F>(&mut self, mut f: F) -> Result<(), AmlError>",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "343:traverse_level": {
+          "anchor": "fn traverse_level<F>(level: &NamespaceLevel, scope: &AmlName, f: &mut F) -> Result<(), AmlError>",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "367:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "368:STEM": {
+          "anchor": "const STEM: &str = \"\u2502   \";",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "369:BRANCH": {
+          "anchor": "const BRANCH: &str = \"\u251c\u2500\u2500 \";",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "370:END": {
+          "anchor": "const END: &str = \"\u2514\u2500\u2500 \";",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "372:print_level": {
+          "anchor": "fn print_level(f: &mut fmt::Formatter<'_>, level: &NamespaceLevel, indent_stack: String) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "413:NamespaceLevelKind": {
+          "anchor": "pub enum NamespaceLevelKind {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "423:NamespaceLevel": {
+          "anchor": "pub struct NamespaceLevel {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "424:kind": {
+          "anchor": "pub kind: NamespaceLevelKind,",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "425:values": {
+          "anchor": "pub values: BTreeMap<NameSeg, (ObjectFlags, WrappedObject)>,",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "426:children": {
+          "anchor": "pub children: BTreeMap<NameSeg, NamespaceLevel>,",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "430:ObjectFlags": {
+          "anchor": "pub struct ObjectFlags(u8);",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "433:new": {
+          "anchor": "pub fn new(is_alias: bool) -> ObjectFlags {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "439:is_alias": {
+          "anchor": "pub fn is_alias(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "445:new": {
+          "anchor": "pub fn new(kind: NamespaceLevelKind) -> NamespaceLevel {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "451:AmlName": {
+          "anchor": "pub struct AmlName(Vec<NameComponent>);",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "454:NameComponent": {
+          "anchor": "pub enum NameComponent {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "461:root": {
+          "anchor": "pub fn root() -> AmlName {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "465:from_name_seg": {
+          "anchor": "pub fn from_name_seg(seg: NameSeg) -> AmlName {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "469:from_components": {
+          "anchor": "pub fn from_components(components: Vec<NameComponent>) -> AmlName {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "473:as_string": {
+          "anchor": "pub fn as_string(&self) -> String {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "487:is_normal": {
+          "anchor": "pub fn is_normal(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "491:is_absolute": {
+          "anchor": "pub fn is_absolute(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "497:search_rules_apply": {
+          "anchor": "pub fn search_rules_apply(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "507:normalize": {
+          "anchor": "pub fn normalize(self) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "540:parent": {
+          "anchor": "pub fn parent(&self) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "557:require_absolute": {
+          "anchor": "pub fn require_absolute(&self) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "563:normalize_absolute": {
+          "anchor": "pub fn normalize_absolute(self) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "570:resolve": {
+          "anchor": "pub fn resolve(&self, scope: &AmlName) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "584:Err": {
+          "anchor": "type Err = AmlError;",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "586:from_str": {
+          "anchor": "fn from_str(mut string: &str) -> Result<Self, Self::Err> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "617:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "623:NameSeg": {
+          "anchor": "pub struct NameSeg(pub(crate) [u8; 4]);",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "626:from_bytes": {
+          "anchor": "pub fn from_bytes(bytes: [u8; 4]) -> Result<NameSeg, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "642:as_str": {
+          "anchor": "pub fn as_str(&self) -> &str {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "649:Err": {
+          "anchor": "type Err = AmlError;",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "651:from_str": {
+          "anchor": "fn from_str(s: &str) -> Result<Self, Self::Err> {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "679:is_lead_name_char": {
+          "anchor": "pub fn is_lead_name_char(c: u8) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "683:is_name_char": {
+          "anchor": "pub fn is_name_char(c: u8) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        },
+        "688:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this namespace-removal slice."
+        }
+      }
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+    "roots": [
+      "src/aml/namespace.rs"
+    ],
+    "url": "https://github.com/rust-osdev/acpi"
+  }
+}

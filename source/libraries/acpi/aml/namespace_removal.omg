@@ -1,0 +1,132 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Namespace::remove_level, rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Copyright 2018 Isaac Woods. Bounded flat namespace adaptation.
+module namespace_removal;
+use model::Namespace;
+use model::Entry;
+use model::Path;
+use model::PathResult;
+use model::LevelKind;
+use model::Outcome;
+use names::path_valid;
+use names::path_equal;
+use names::parent;
+use names::root;
+
+// Remove only the level and its descendants. An object at the same path belongs
+// to the parent level and survives. Object slots/IDs and byte backing never move.
+// Preflight covers the entire active namespace; every failure is nonmutating.
+pub machine remove_level(space:&mut Namespace,path:Path)->Outcome {
+ let entries:u64=space.count;let objects:u64=space.object_count;
+ transition entries>0 && entries<=32 && objects<=64 {
+  true -> path(space,path,entries,objects) _ -> (Outcome::InvalidState)
+ }
+ state path(space:&mut Namespace,path:Path,entries:u64,objects:u64)->Outcome {
+  transition path.absolute {true -> valid_path(space,path,entries,objects) _ -> (Outcome::NotAbsolute)}
+ }
+ state valid_path(space:&mut Namespace,path:Path,entries:u64,objects:u64)->Outcome {
+  let valid:bool=path_valid(path);
+  transition valid {true -> structure(space,path,entries,objects) _ -> (Outcome::InvalidName)}
+ }
+ state structure(space:&mut Namespace,path:Path,entries:u64,objects:u64)->Outcome {
+  let valid:bool=nr_validate(space,0,entries,objects,true);
+  let root_path:Path=root();let rooted:bool=nr_has_level(space,root_path,0,entries,false);
+  transition valid && rooted {true -> root_case(space,path,entries) _ -> (Outcome::InvalidState)}
+ }
+ state root_case(space:&mut Namespace,path:Path,entries:u64)->Outcome {
+  let count:u64=path.count;
+  transition count==0 {true -> (Outcome::Success) _ -> parent_case(space,path,entries)}
+ }
+ state parent_case(space:&mut Namespace,path:Path,entries:u64)->Outcome {
+  let up:PathResult=parent(path);let exists:bool=nr_has_level(space,up.value,0,entries,false);
+  transition up.outcome==Outcome::Success && exists {true -> target(space,path,entries) _ -> (Outcome::MissingLevel)}
+ }
+ state target(space:&mut Namespace,path:Path,entries:u64)->Outcome {
+  let exists:bool=nr_has_level(space,path,0,entries,false);
+  transition exists {true -> stage(space,path,entries) _ -> (Outcome::Success)}
+ }
+ state stage(space:&mut Namespace,path:Path,entries:u64)->Outcome {
+  let mut staged:[Entry;32];let count:u64=nr_filter(space,path,&mut staged,0,entries,0);
+  space.entries=staged;space.count=count;Outcome::Success
+ }
+}
+machine nr_has_level(space:&Namespace,path:Path,index:u64,count:u64,found:bool)
+terminates by(index,count)->Nat::BoundedDistance;
+->bool {
+ let next:bool=nr_level_at(space,path,index,count,found);
+ transition index<count {true -> nr_has_level(space,path,index+1,count,next) _ -> (found)}
+}
+machine nr_level_at(space:&Namespace,path:Path,index:u64,count:u64,found:bool)->bool {
+ transition index<count && index<32 && !found {true -> check(space.entries[index],path) _ -> (found)}
+ state check(entry:Entry,path:Path)->bool {entry.has_level && path_equal(entry.path,path)}
+}
+machine nr_validate(space:&Namespace,index:u64,count:u64,objects:u64,valid:bool)
+terminates by(index,count)->Nat::BoundedDistance;
+->bool {
+ let next:bool=nr_validate_at(space,index,count,objects,valid);
+ transition index<count {true -> nr_validate(space,index+1,count,objects,next) _ -> (valid)}
+}
+machine nr_validate_at(space:&Namespace,index:u64,count:u64,objects:u64,valid:bool)->bool {
+ transition index<count && index<32 && valid {true -> inspect_entry(space,space.entries[index],index,count,objects) _ -> (valid)}
+ state inspect_entry(space:&Namespace,value:Entry,index:u64,count:u64,objects:u64)->bool {
+  let id:u64=value.object;let valid:bool=path_valid(value.path);
+  transition value.path.absolute && valid && (value.has_level || value.has_object) && (!value.has_object || id<objects) {
+   true -> hierarchy(space,value,index,count) _ -> (false)
+  }
+ }
+ state hierarchy(space:&Namespace,value:Entry,index:u64,count:u64)->bool {
+  let size:u64=value.path.count;
+  transition size==0 {true -> unique(space,value.path,index) _ -> parent_check(space,value.path,index,count)}
+ }
+ state parent_check(space:&Namespace,path:Path,index:u64,count:u64)->bool {
+  let up:PathResult=parent(path);let exists:bool=nr_has_level(space,up.value,0,count,false);
+  transition up.outcome==Outcome::Success && exists {true -> unique(space,path,index) _ -> (false)}
+ }
+ state unique(space:&Namespace,path:Path,index:u64)->bool {let same:bool=nr_duplicate(space,path,0,index,false);!same}
+}
+machine nr_duplicate(space:&Namespace,path:Path,index:u64,count:u64,found:bool)
+terminates by(index,count)->Nat::BoundedDistance;
+->bool {
+ let next:bool=nr_duplicate_at(space,path,index,count,found);
+ transition index<count {true -> nr_duplicate(space,path,index+1,count,next) _ -> (found)}
+}
+machine nr_duplicate_at(space:&Namespace,path:Path,index:u64,count:u64,found:bool)->bool {
+ transition index<count && index<32 && !found {true -> compare(space.entries[index].path,path) _ -> (found)}
+ state compare(left:Path,right:Path)->bool {path_equal(left,right)}
+}
+machine nr_prefix(prefix:Path,path:Path)->bool {
+ let a:u64=prefix.count;let b:u64=path.count;
+ transition a<=b && b<=16 {true -> scan(prefix,path,a) _ -> (false)}
+ state scan(prefix:Path,path:Path,count:u64)->bool {let result:bool=nr_prefix_loop(prefix,path,0,count,true);result}
+}
+machine nr_prefix_loop(prefix:Path,path:Path,index:u64,count:u64,same:bool)
+terminates by(index,count)->Nat::BoundedDistance;
+->bool {
+ let next:bool=nr_prefix_at(prefix,path,index,count,same);
+ transition index<count {true -> nr_prefix_loop(prefix,path,index+1,count,next) _ -> (same)}
+}
+machine nr_prefix_at(prefix:Path,path:Path,index:u64,count:u64,same:bool)->bool {
+ transition index<count && index<16 && same {true -> (prefix.segments[index]==path.segments[index]) _ -> (same)}
+}
+machine nr_filter(space:&Namespace,path:Path,out:&mut [Entry;32],index:u64,count:u64,kept:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->u64 {
+ let next:u64=nr_filter_at(space,path,out,index,count,kept);
+ transition index<count {true -> nr_filter(space,path,out,index+1,count,next) _ -> (kept)}
+}
+machine nr_filter_at(space:&Namespace,path:Path,out:&mut [Entry;32],index:u64,count:u64,kept:u64)->u64 {
+ transition index<count && index<32 {true -> inspect_entry(path,out,space.entries[index],kept) _ -> (kept)}
+ state inspect_entry(path:Path,out:&mut [Entry;32],value:Entry,kept:u64)->u64 {
+  let inside:bool=nr_prefix(path,value.path);let same:bool=path_equal(path,value.path);
+  transition { !inside -> retain(out,value,kept) same && value.has_object -> clear_level(out,value,kept) _ -> (kept)}
+ }
+ state clear_level(out:&mut [Entry;32],value:Entry,kept:u64)->u64 {
+  let mut changed:Entry=value;changed.has_level=false;changed.level=LevelKind::Scope;
+  let result:u64=nr_keep(out,changed,kept);result
+ }
+ state retain(out:&mut [Entry;32],value:Entry,kept:u64)->u64 {let result:u64=nr_keep(out,value,kept);result}
+}
+machine nr_keep(out:&mut [Entry;32],value:Entry,kept:u64)->u64 {
+ transition kept<32 {true -> put(out,value,kept) _ -> (kept)}
+ state put(out:&mut [Entry;32],value:Entry,kept:u64)->u64 {out[kept]=value;kept+1}
+}

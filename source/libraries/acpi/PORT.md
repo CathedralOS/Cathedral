@@ -4,7 +4,7 @@
 
 **Stage: inventoried, 2026-09-20.** This milestone covers the complete pinned
 Rust corpus and test-scenario metadata. It does not claim an Omega translation,
-compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 586 translated table/topology/AML/helper anchors, two omitted Rust formatting hooks and 993
+compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 587 translated table/topology/AML/helper anchors, two omitted Rust formatting hooks and 992
 pending anchors. Inventory completion and translation completion are different
 milestones. The bounded ACPI-001 slice is separately
 [tested by Omega semantic evaluation](headers.PORT.md): 65 original scenarios
@@ -220,3 +220,10 @@ All 75 checked pairs, three constant pairs and 47 actual public Rust observation
 are retained against the current used source closure. Dynamic BufferSize,
 Package and generic executor dispatch remain pending; the aggregate source-map
 counts are unchanged.
+
+[Namespace-level removal](aml/namespace-removal.PORT.md) adds transactional
+subtree entry removal while preserving a same-path object, external aliases and
+stable object storage. Its 44 checked pairs, two constant pairs and 12 actual
+public Rust observations pass, including full 32-entry and depth-16 cases.
+Malformed flat namespaces fail before mutation; no-op requests preserve all slots.
+Object reclamation and AML Unload remain separate lifecycle work.

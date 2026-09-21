@@ -1,0 +1,349 @@
+[
+  {
+    "name": "subtree_preserves_same_path_object",
+    "target": "AAAA",
+    "kept": [
+      0,
+      1,
+      5,
+      6,
+      7,
+      8
+    ],
+    "clear": 1,
+    "outcome": "Success"
+  },
+  {
+    "name": "nested_subtree",
+    "target": "AAAA.BBBB",
+    "kept": [
+      0,
+      1,
+      2,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "clear": 2,
+    "outcome": "Success"
+  },
+  {
+    "name": "other_subtree",
+    "target": "OTHR",
+    "kept": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      7,
+      8
+    ],
+    "clear": 5,
+    "outcome": "Success"
+  },
+  {
+    "name": "root_noop",
+    "target": "",
+    "outcome": "Success"
+  },
+  {
+    "name": "object_only_noop",
+    "target": "ONLY",
+    "outcome": "Success"
+  },
+  {
+    "name": "leaf_object_noop",
+    "target": "AAAA.KEEP",
+    "outcome": "Success"
+  },
+  {
+    "name": "missing_child_noop",
+    "target": "NONE",
+    "outcome": "Success"
+  },
+  {
+    "name": "alias_only_noop",
+    "target": "ALIA",
+    "outcome": "Success"
+  },
+  {
+    "name": "missing_parent",
+    "target": "NONE.SUB_",
+    "outcome": "MissingLevel"
+  },
+  {
+    "name": "leaf_level_only",
+    "target": "AAAA.KEEP",
+    "mutate": "s.entries[4].has_object=false;s.entries[4].has_level=true;",
+    "kept": [
+      0,
+      1,
+      2,
+      3,
+      5,
+      6,
+      7,
+      8
+    ],
+    "outcome": "Success"
+  },
+  {
+    "name": "root_child_level_only",
+    "target": "OTHR",
+    "mutate": "s.entries[5].has_object=false;",
+    "kept": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      7,
+      8
+    ],
+    "outcome": "Success"
+  },
+  {
+    "name": "bad_count_0",
+    "target": "AAAA",
+    "mutate": "s.count=0;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "bad_count_33",
+    "target": "AAAA",
+    "mutate": "s.count=33;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "bad_count_9223372036854775808",
+    "target": "AAAA",
+    "mutate": "s.count=9223372036854775808;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "bad_count_18446744073709551615",
+    "target": "AAAA",
+    "mutate": "s.count=18446744073709551615;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "bad_object_count_65",
+    "target": "AAAA",
+    "mutate": "s.object_count=65;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "bad_object_count_9223372036854775808",
+    "target": "AAAA",
+    "mutate": "s.object_count=9223372036854775808;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "bad_object_count_18446744073709551615",
+    "target": "AAAA",
+    "mutate": "s.object_count=18446744073709551615;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "bad_path_count_17",
+    "target": "AAAA",
+    "path_mutate": "p.count=17;",
+    "outcome": "InvalidName"
+  },
+  {
+    "name": "bad_path_count_9223372036854775808",
+    "target": "AAAA",
+    "path_mutate": "p.count=9223372036854775808;",
+    "outcome": "InvalidName"
+  },
+  {
+    "name": "bad_path_count_18446744073709551615",
+    "target": "AAAA",
+    "path_mutate": "p.count=18446744073709551615;",
+    "outcome": "InvalidName"
+  },
+  {
+    "name": "bad_path_parents_1",
+    "target": "AAAA",
+    "path_mutate": "p.parents=1;",
+    "outcome": "InvalidName"
+  },
+  {
+    "name": "bad_path_parents_17",
+    "target": "AAAA",
+    "path_mutate": "p.parents=17;",
+    "outcome": "InvalidName"
+  },
+  {
+    "name": "bad_path_parents_9223372036854775808",
+    "target": "AAAA",
+    "path_mutate": "p.parents=9223372036854775808;",
+    "outcome": "InvalidName"
+  },
+  {
+    "name": "bad_path_parents_18446744073709551615",
+    "target": "AAAA",
+    "path_mutate": "p.parents=18446744073709551615;",
+    "outcome": "InvalidName"
+  },
+  {
+    "name": "relative_path",
+    "target": "AAAA",
+    "path_mutate": "p.absolute=false;",
+    "outcome": "NotAbsolute"
+  },
+  {
+    "name": "bad_target_segment",
+    "target": "AAAA",
+    "path_mutate": "p.segments[0]=0;",
+    "outcome": "InvalidName"
+  },
+  {
+    "name": "entry_relative",
+    "target": "AAAA",
+    "mutate": "s.entries[8].path.absolute=false;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "entry_bad_segment",
+    "target": "AAAA",
+    "mutate": "s.entries[8].path.segments[0]=0;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "entry_count_max",
+    "target": "AAAA",
+    "mutate": "s.entries[8].path.count=18446744073709551615;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "entry_parents_max",
+    "target": "AAAA",
+    "mutate": "s.entries[8].path.parents=18446744073709551615;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "entry_id_max",
+    "target": "AAAA",
+    "mutate": "s.entries[8].object=18446744073709551615;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "entry_id_count",
+    "target": "AAAA",
+    "mutate": "s.entries[8].object=7;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "entry_empty",
+    "target": "AAAA",
+    "mutate": "s.entries[8].has_object=false;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "duplicate_path",
+    "target": "AAAA",
+    "mutate": "s.entries[8].path=s.entries[7].path;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "missing_root",
+    "target": "AAAA",
+    "mutate": "s.entries[0].has_level=false;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "orphan",
+    "target": "AAAA",
+    "mutate": "s.entries[1].has_level=false;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "unrelated_invalid_entry_before_noop",
+    "target": "",
+    "mutate": "s.entries[8].object=18446744073709551615;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "full_subtree",
+    "target": "AAAA",
+    "seed": "full",
+    "kept": [
+      0,
+      1
+    ],
+    "clear": 1,
+    "outcome": "Success"
+  },
+  {
+    "name": "full_level_only",
+    "target": "AAAA",
+    "seed": "full",
+    "mutate": "s.entries[1].has_object=false;",
+    "kept": [
+      0
+    ],
+    "outcome": "Success"
+  },
+  {
+    "name": "full_invalid_last_object",
+    "target": "AAAA",
+    "seed": "full",
+    "mutate": "s.entries[31].object=64;",
+    "outcome": "InvalidState"
+  },
+  {
+    "name": "full_root_noop",
+    "target": "",
+    "seed": "full",
+    "outcome": "Success"
+  },
+  {
+    "name": "deep_subtree",
+    "target": "AAAA.BAAA.CAAA.DAAA.EAAA.FAAA.GAAA.HAAA",
+    "seed": "deep",
+    "kept": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "clear": 8,
+    "outcome": "Success"
+  },
+  {
+    "name": "deep_leaf",
+    "target": "AAAA.BAAA.CAAA.DAAA.EAAA.FAAA.GAAA.HAAA.IAAA.JAAA.KAAA.LAAA.MAAA.NAAA.OAAA.PAAA",
+    "seed": "deep",
+    "kept": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "clear": 16,
+    "outcome": "Success"
+  }
+]
