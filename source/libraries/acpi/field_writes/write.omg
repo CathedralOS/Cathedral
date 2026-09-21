@@ -14,13 +14,45 @@ use access::model::LockRequirement;
 use access::model::Error;
 use aml::field_model::DeclarationKind;
 use aml::field_model::Field;
+use aml::field_model::UpdateRule;
 use integers::integers::IntegerSize;
 use integers::integers::IntegerResult;
 use integers::buffer_fields;
 use model::NativeWrite;
 use model::WriteResult;
 use model::WriteError;
+use model::ChunkWriteResult;
 data Records [copy] {records:[NativeWrite;257];}
+// Re-admit the complete field footprint before selecting one native chunk.
+// The caller supplies only this chunk's prior word, never a batch of reads.
+pub machine assemble_chunk(kind:DeclarationKind,field:&Field,region_bytes:u64,size:IntegerSize,payload:&[u8;256],payload_length:u64,index:u64,previous:Previous)->ChunkWriteResult {
+ let geometry:PlanResult=geometry::plan(kind,field,region_bytes,size);
+ transition geometry {
+  PlanResult::Failure {error} -> (ChunkWriteResult::Failure {error:WriteError::Geometry {cause:error}})
+  PlanResult::Ready {plan} -> payload(&plan,payload,payload_length,index,previous)
+ }
+ state payload(plan:&Plan,payload:&[u8;256],payload_length:u64,index:u64,previous:Previous)->ChunkWriteResult {
+  let bits:u64=plan.bit_length;
+  transition bits<=2048 {true -> length(plan,payload,payload_length,index,previous,(bits+7)/8) _ -> (ChunkWriteResult::Failure {error:WriteError::PayloadLength})}
+ }
+ state length(plan:&Plan,payload:&[u8;256],payload_length:u64,index:u64,previous:Previous,expected:u64)->ChunkWriteResult {
+  transition payload_length<=256 && payload_length==expected {true -> selected(plan,payload,payload_length,index,previous) _ -> (ChunkWriteResult::Failure {error:WriteError::PayloadLength})}
+ }
+ state selected(plan:&Plan,payload:&[u8;256],payload_length:u64,index:u64,previous:Previous)->ChunkWriteResult {
+  let count:u64=plan.count;
+  transition count<=257 && index<count && index<257 {
+   true -> compose(plan.chunks[index],plan.update,plan.lock,payload,payload_length,index,previous)
+   _ -> (ChunkWriteResult::Failure {error:WriteError::Chunk {index:index,cause:Error::InvalidChunk}})
+  }
+ }
+ state compose(chunk:Chunk,update:UpdateRule,lock:LockRequirement,payload:&[u8;256],payload_length:u64,index:u64,previous:Previous)->ChunkWriteResult {
+  let merged:WordResult=chunk_value(chunk,update,payload,payload_length,previous);
+  transition merged {
+   WordResult::Failure {error} -> (ChunkWriteResult::Failure {error:WriteError::Chunk {index:index,cause:error}})
+   WordResult::Word {value} -> (ChunkWriteResult::Write {record:NativeWrite {offset:chunk.offset,width:chunk.width,value:value},lock:lock})
+  }
+ }
+}
 pub machine assemble(kind:DeclarationKind,field:&Field,region_bytes:u64,size:IntegerSize,payload:&[u8;256],payload_length:u64,previous:&[Previous;257],supplied_count:u64)->WriteResult {
  let geometry:PlanResult=geometry::plan(kind,field,region_bytes,size);
  transition geometry {
@@ -64,12 +96,7 @@ machine fill_if(current:WriteResult,plan:&Plan,payload:&[u8;256],length:u64,prev
   transition index<257 {true -> extract(plan,payload,length,previous[index],index,count,records,lock,plan.chunks[index]) _ -> (WriteResult::Failure {error:WriteError::Chunk {index:index,cause:Error::InvalidChunk}})}
  }
  state extract(plan:&Plan,payload:&[u8;256],length:u64,previous:Previous,index:u64,count:u64,records:[NativeWrite;257],lock:LockRequirement,chunk:Chunk)->WriteResult {
-  let bits:u64=chunk.bit_count;let size:IntegerSize=extraction_size(bits);
-  let value:IntegerResult=buffer_fields::field_to_integer(size,payload,length,chunk.field_bit,bits);
-  transition value.error==0 {true -> merge(plan,previous,index,count,records,lock,chunk,value.value) _ -> (WriteResult::Failure {error:WriteError::Chunk {index:index,cause:Error::InvalidChunk}})}
- }
- state merge(plan:&Plan,previous:Previous,index:u64,count:u64,records:[NativeWrite;257],lock:LockRequirement,chunk:Chunk,value:u64)->WriteResult {
-  let merged:WordResult=chunks::merge(chunk,plan.update,previous,value);
+  let merged:WordResult=chunk_value(chunk,plan.update,payload,length,previous);
   transition merged {
    WordResult::Failure {error} -> (WriteResult::Failure {error:WriteError::Chunk {index:index,cause:error}})
    WordResult::Word {value} -> store(index,count,records,lock,chunk,value)
@@ -81,6 +108,15 @@ machine fill_if(current:WriteResult,plan:&Plan,payload:&[u8;256],length:u64,prev
  state write(index:u64,count:u64,records:[NativeWrite;257],lock:LockRequirement,chunk:Chunk,value:u64)->WriteResult {
   let mut next:Records=Records {records:records};next.records[index]=NativeWrite {offset:chunk.offset,width:chunk.width,value:value};
   WriteResult::Writes {count:count,records:next.records,lock:lock}
+ }
+}
+// Both public forms share the same extraction and surrounding-bit merge.
+machine chunk_value(chunk:Chunk,update:UpdateRule,payload:&[u8;256],length:u64,previous:Previous)->WordResult {
+ let bits:u64=chunk.bit_count;let size:IntegerSize=extraction_size(bits);
+ let value:IntegerResult=buffer_fields::field_to_integer(size,payload,length,chunk.field_bit,bits);
+ transition value.error==0 {true -> merge(chunk,update,previous,value.value) _ -> (WordResult::Failure {error:Error::InvalidChunk})}
+ state merge(chunk:Chunk,update:UpdateRule,previous:Previous,value:u64)->WordResult {
+  let merged:WordResult=chunks::merge(chunk,update,previous,value);merged
  }
 }
 // Extraction uses the smallest canonical integer size that covers this chunk.

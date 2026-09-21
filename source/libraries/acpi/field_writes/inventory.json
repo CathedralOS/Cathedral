@@ -238,7 +238,7 @@
         "2612:do_field_write": {
           "anchor": "fn do_field_write(&self, field: &FieldUnit, value: WrappedObject) -> Result<(), AmlError> {",
           "disposition": "pending",
-          "reason": "Partial: recomputed geometry, already-converted exact field-sized bits, normalized per-chunk merge, complete initialized detached write recipes and unmet lock metadata. Source conversion/repeated Buffer writes, region lookup, native reads/writes, GlobalLock, Bank/Index, Store and evaluator integration remain outside this slice.",
+          "reason": "Partial: recomputed geometry, already-converted exact field-sized bits, normalized per-chunk merge, complete initialized detached write recipes and one selected native chunk and unmet lock metadata. Source conversion/repeated Buffer writes, region lookup, native reads/writes, GlobalLock, Bank/Index, Store and evaluator integration remain outside this slice.",
           "targets": [
             {
               "anchor": "pub machine assemble(",
@@ -247,6 +247,10 @@
             {
               "anchor": "pub data WriteResult [copy]",
               "path": "source/libraries/acpi/field_writes/model.omg"
+            },
+            {
+              "anchor": "pub machine assemble_chunk(",
+              "path": "source/libraries/acpi/field_writes/write.omg"
             }
           ]
         },
@@ -833,14 +837,14 @@
   },
   "format": "cathedral-port-inventory-v1",
   "partial_implementation": {
-    "entry": "source/libraries/acpi/field_writes/write.omg assemble",
+    "entry": "source/libraries/acpi/field_writes/write.omg assemble and assemble_chunk",
     "primary": [
       "https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#field-declare-field-objects",
       "https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#data-type-conversion-rules"
     ],
     "reuse": [
       "field_access geometry/chunks and canonical Previous/Error/LockRequirement",
-      "aml/fields Field, DeclarationKind and existing access metadata",
+      "aml/field_model Field, DeclarationKind and existing access metadata",
       "interpreter IntegerSize and field_to_integer"
     ],
     "source": "src/aml/mod.rs:2612 do_field_write",

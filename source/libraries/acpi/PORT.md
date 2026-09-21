@@ -287,6 +287,12 @@ Geometry, payload/count checks, Preserve input requirements and unmet lock metad
 are retained. Source conversion/repeated writes, provider access, Bank/Index and
 Store/evaluator integration remain pending; aggregate source counts are unchanged.
 
+[Selected normal Field write chunks](field_writes/chunks.PORT.md) expose one
+native-word recipe while sharing the bulk extraction/merge implementation. The
+separate source-bound corpus passes 175 chunk pairs and the 454 original bulk
+pairs, with 126 public Rust observations replayed. This supports later per-chunk Preserve sequencing; provider execution and
+Store retirement remain pending.
+
 [Direct object comparisons](aml/object-comparison.PORT.md) compose primary
 right-hand conversion with unsigned Integer and lexical String/Buffer ordering.
 The 278 checked pairs and three constant pairs verify all type combinations and

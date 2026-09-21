@@ -630,6 +630,13 @@ probes pass, including early/late missing Preserve values and full zero tails.
 Source conversion and repeated Buffer writes, provider/lock authority, Bank/Index
 and Store execution remain pending; no aggregate source anchor closes.
 
+[Selected normal Field write chunks](source/libraries/acpi/field_writes/chunks.PORT.md)
+add one native-word recipe with complete geometry admission and the same shared
+extraction/merge as bulk assembly. All 175 new chunk pairs and 454 retained bulk
+pairs pass, with exact source/binary verification and 126 public Rust replays.
+Provider ordering, acknowledgment and
+partial-effect handling remain future interpreter work; ACPI-005 stays open.
+
 [Direct object comparisons](source/libraries/acpi/aml/object-comparison.PORT.md)
 add primary right-hand conversion selected by the left object's type, with 278
 checked pairs and three constant pairs. Complete validation precedes unsigned

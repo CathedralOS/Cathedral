@@ -1,12 +1,16 @@
 # Detached normal Field single-pass write assembly
 
-Status: **published and tested at the final repository paths**. All 454 checked
+Historical bulk status: **published and tested at the recorded repository paths**. All 454 checked
 positives and 454 changed-body controls passed in 715.718 seconds wall time
 (2084.641 seconds summed batch time, three independent processes).
 Three constant positives and rejecting controls passed in 108.464 seconds.
 All 126 public observations reproduce. The verifier passes 31 current input hashes,
 all 27 recorded upstream hashes, exact upstream HEAD and generated source/build
 recipes. This bounded data algorithm does not complete `do_field_write`.
+
+The [single-chunk extension](chunks.PORT.md) shares the extraction/merge kernel
+and retains a separate receipt for its current source closure. The numbers above
+describe the original bulk implementation, not a rerun of the later extension.
 
 Modified source derives from rust-osdev/acpi
 [`aml/mod.rs:2612` at 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5](https://github.com/rust-osdev/acpi/blob/257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5/src/aml/mod.rs#L2612),

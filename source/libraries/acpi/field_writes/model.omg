@@ -11,3 +11,9 @@ pub data WriteResult [copy] {
  case Failure(error:WriteError);
  case Writes(count:u64,records:[NativeWrite;257],lock:LockRequirement);
 }
+// One selected numeric recipe, for callers that interleave each Preserve read
+// with its corresponding write. This result establishes no access permission.
+pub data ChunkWriteResult [copy] {
+ case Failure(error:WriteError);
+ case Write(record:NativeWrite,lock:LockRequirement);
+}

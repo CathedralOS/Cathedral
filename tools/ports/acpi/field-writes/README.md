@@ -1,8 +1,12 @@
 # Detached Field single-pass write evidence
 
-Published bounded implementation; all final-path checks pass. API, partial
+Historical published bounded implementation; its recorded final-path checks pass. API, partial
 source mapping and primary conversion boundaries are in
 `source/libraries/acpi/field_writes/PORT.md`.
+
+The later [single-chunk extension](../field-write-chunks/README.md) owns separate
+current-source evidence after extracting the shared merge kernel. This directory's
+original receipts are retained without relabeling their source identity.
 
 ```sh
 python3 tools/ports/acpi/field-writes/fixtures.py
