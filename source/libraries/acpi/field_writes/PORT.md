@@ -4,13 +4,16 @@ Historical bulk status: **published and tested at the recorded repository paths*
 positives and 454 changed-body controls passed in 715.718 seconds wall time
 (2084.641 seconds summed batch time, three independent processes).
 Three constant positives and rejecting controls passed in 108.464 seconds.
-All 126 public observations reproduce. The verifier passes 31 current input hashes,
+All 126 public observations reproduce. The retained verifier binds 31 input hashes,
 all 27 recorded upstream hashes, exact upstream HEAD and generated source/build
 recipes. This bounded data algorithm does not complete `do_field_write`.
 
 The [single-chunk extension](chunks.PORT.md) shares the extraction/merge kernel
-and retains a separate receipt for its current source closure. The numbers above
+and retains a separate receipt for its own source closure. The numbers above
 describe the original bulk implementation, not a rerun of the later extension.
+The [single-payload continuation](transfer.PORT.md) now sequences relative native
+requests and acknowledgements through the same unchanged merge kernel, with
+102 new and eight selected original behavior/control pairs.
 
 Modified source derives from rust-osdev/acpi
 [`aml/mod.rs:2612` at 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5](https://github.com/rust-osdev/acpi/blob/257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5/src/aml/mod.rs#L2612),

@@ -1,0 +1,29 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Detached sequencing of rust-osdev/acpi do_field_write, pin257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Copyright 2018 Isaac Woods. Ordinary relative requests confer no access authority.
+module transfer_model;
+use aml::field_model::Field;
+use access::model::Plan;
+use integers::integers::IntegerSize;
+use model::WriteError;
+pub data TransferState [copy] {case Failed;case Reading;case Writing;case Finished;}
+pub data ProviderFailure [copy] {case Fault;case Denied;case Cancelled;}
+pub data TransferFailure [copy] {case InvalidState;case Admission(error:WriteError);case UnmetLock;case Provider(cause:ProviderFailure);}
+pub data RequestKind [copy] {case Read;case Write;}
+pub data Request [copy] {kind:RequestKind;correlation:u64;serial:u64;chunk:u64;offset:u64;width:u64;value:u64;}
+pub data Completion [copy] {
+ case Failure(request:Request,cause:ProviderFailure);
+ case Word(request:Request,value:u64);
+ case Written(request:Request);
+}
+pub data Acceptance [copy] {case Rejected;case Accepted;}
+pub data WriteTransfer [copy] {
+ state:TransferState;failure:TransferFailure;field:Field;region_bytes:u64;size:IntegerSize;
+ payload:[u8;256];length:u64;plan:Plan;correlation:u64;issued:u64;reads:u64;writes:u64;
+ request:Request;
+}
+pub data TransferProgress [copy] {
+ case Failure(reason:TransferFailure,reads:u64,writes:u64);
+ case Pending(request:Request);
+ case Finished(reads:u64,writes:u64);
+}

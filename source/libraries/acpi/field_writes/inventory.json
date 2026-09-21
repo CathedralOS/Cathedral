@@ -837,7 +837,7 @@
   },
   "format": "cathedral-port-inventory-v1",
   "partial_implementation": {
-    "entry": "source/libraries/acpi/field_writes/write.omg assemble and assemble_chunk",
+    "entry": "source/libraries/acpi/field_writes/write.omg assemble and assemble_chunk; transfer.omg begin/progress/complete and transfer_model.omg",
     "primary": [
       "https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#field-declare-field-objects",
       "https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#data-type-conversion-rules"
@@ -845,7 +845,8 @@
     "reuse": [
       "field_access geometry/chunks and canonical Previous/Error/LockRequirement",
       "aml/field_model Field, DeclarationKind and existing access metadata",
-      "interpreter IntegerSize and field_to_integer"
+      "interpreter IntegerSize and field_to_integer",
+      "write.omg package-private chunk_value for retained-plan sequencing"
     ],
     "source": "src/aml/mod.rs:2612 do_field_write",
     "status": "partial; whole-method anchors intentionally remain pending"

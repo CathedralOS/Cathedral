@@ -313,6 +313,13 @@ expose the shared Integer conversion without a temporary namespace object. All
 168 scalar pairs and 315 original object-source pairs pass with exact source and
 binary verification. Interpreter Field writes and provider integration remain pending.
 
+[Single-payload Field write sequencing](field_writes/transfer.PORT.md) retains
+one admitted payload, orders Preserve reads before their writes, and advances
+only on matching acknowledgements. All 102 continuation pairs and eight selected
+unchanged assembly pairs pass with exact source/binary verification. Failure
+preserves acknowledged-effect counts. Interpreter retirement and providers
+remain pending.
+
 [Direct basic-data Concatenate](aml/object-concat.PORT.md) composes all Integer/String/Buffer
 pairings with primary right-hand conversion, little-endian integer encoding and
 complete admission before combined capacity checks. All 314 checked pairs and

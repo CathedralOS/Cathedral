@@ -1,0 +1,155 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified normal-Field do_field_write sequencing from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5, src/aml/mod.rs:2612.
+// Copyright 2018 Isaac Woods. One detached payload; no provider or AML execution.
+module transfer;
+use aml::field_model::Field;
+use aml::field_model::DeclarationKind;
+use aml::field_model::UpdateRule;
+use access::geometry;
+use access::model::Plan;
+use access::model::PlanResult;
+use access::model::Chunk;
+use access::model::WordResult;
+use access::model::Previous;
+use access::model::LockRequirement;
+use integers::integers::IntegerSize;
+use model::ChunkWriteResult;
+use model::WriteError;
+use write::assemble_chunk;
+use write::chunk_value;
+use transfer_model::TransferState;
+use transfer_model::TransferFailure;
+use transfer_model::RequestKind;
+use transfer_model::Request;
+use transfer_model::Completion;
+use transfer_model::Acceptance;
+use transfer_model::WriteTransfer;
+use transfer_model::TransferProgress;
+
+// Admission checks the complete footprint and exact payload before issuing any
+// relative request. Lock-requiring transfers await a future admitted adapter.
+pub machine begin(kind:DeclarationKind,field:&Field,region_bytes:u64,size:IntegerSize,payload:&[u8;256],length:u64,correlation:u64)->WriteTransfer {
+ let planned:PlanResult=geometry::plan(kind,field,region_bytes,size);
+ transition planned {
+  PlanResult::Failure {error} -> (WriteTransfer {failure:TransferFailure::Admission {error:WriteError::Geometry {cause:error}}})
+  PlanResult::Ready {plan} -> payload(field,region_bytes,size,payload,length,correlation,plan)
+ }
+ state payload(field:&Field,region_bytes:u64,size:IntegerSize,payload:&[u8;256],length:u64,correlation:u64,plan:Plan)->WriteTransfer {
+  let admitted:ChunkWriteResult=assemble_chunk(DeclarationKind::Field,field,region_bytes,size,payload,length,0,Previous::Value {word:0});
+  transition admitted {
+   ChunkWriteResult::Failure {error} -> (WriteTransfer {failure:TransferFailure::Admission {error:error}})
+   ChunkWriteResult::Write {record,lock} -> lock(field,region_bytes,size,payload,length,correlation,plan,lock)
+  }
+ }
+ state lock(field:&Field,region_bytes:u64,size:IntegerSize,payload:&[u8;256],length:u64,correlation:u64,plan:Plan,lock:LockRequirement)->WriteTransfer {
+  transition lock==LockRequirement::NotRequested {true -> start(field,region_bytes,size,payload,length,correlation,plan) _ -> (WriteTransfer {failure:TransferFailure::UnmetLock})}
+ }
+ state start(field:&Field,region_bytes:u64,size:IntegerSize,payload:&[u8;256],length:u64,correlation:u64,plan:Plan)->WriteTransfer {
+  let mut transfer:WriteTransfer=WriteTransfer {field:field,region_bytes:region_bytes,size:size,payload:payload,length:length,plan:plan,correlation:correlation};
+  prepare(&mut transfer);transfer
+ }
+}
+pub machine progress(transfer:&WriteTransfer)->TransferProgress {
+ transition transfer.state {
+  TransferState::Failed -> (TransferProgress::Failure {reason:transfer.failure,reads:transfer.reads,writes:transfer.writes})
+  TransferState::Finished -> (TransferProgress::Finished {reads:transfer.reads,writes:transfer.writes})
+  _ -> (TransferProgress::Pending {request:transfer.request})
+ }
+}
+pub machine same_request(a:Request,b:Request)->bool {
+ a.kind==b.kind && a.correlation==b.correlation && a.serial==b.serial && a.chunk==b.chunk && a.offset==b.offset && a.width==b.width && a.value==b.value
+}
+// Rejected kind, identity, duplicate and closed-transfer responses mutate no
+// state. A matching provider failure is accepted and terminal; prior ack counts
+// remain visible and never imply rollback or absence of effects from a failed call.
+pub machine complete(transfer:&mut WriteTransfer,completion:Completion)->Acceptance {
+ transition transfer.state==TransferState::Reading || transfer.state==TransferState::Writing {
+  true -> active(transfer,completion)
+  _ -> (Acceptance::Rejected)
+ }
+ state active(transfer:&mut WriteTransfer,completion:Completion)->Acceptance {
+  transition completion {
+   Completion::Failure {request,cause} -> failed(transfer,request,cause)
+   Completion::Word {request,value} -> read(transfer,request,value)
+   Completion::Written {request} -> written(transfer,request)
+  }
+ }
+ state failed(transfer:&mut WriteTransfer,request:Request,cause:transfer_model::ProviderFailure)->Acceptance {
+  let same:bool=same_request(transfer.request,request);
+  transition same {true -> fail(transfer,cause) _ -> (Acceptance::Rejected)}
+ }
+ state fail(transfer:&mut WriteTransfer,cause:transfer_model::ProviderFailure)->Acceptance {
+  transfer.state=TransferState::Failed;transfer.failure=TransferFailure::Provider {cause:cause};Acceptance::Accepted
+ }
+ state read(transfer:&mut WriteTransfer,request:Request,value:u64)->Acceptance {
+  let same:bool=same_request(transfer.request,request);
+  transition same && transfer.state==TransferState::Reading && transfer.reads<257 {
+   true -> read_word(transfer,value) _ -> (Acceptance::Rejected)
+  }
+ }
+ state read_word(transfer:&mut WriteTransfer,value:u64)->Acceptance {
+  transfer.reads=transfer.reads+1;issue_write(transfer,Previous::Value {word:value});Acceptance::Accepted
+ }
+ state written(transfer:&mut WriteTransfer,request:Request)->Acceptance {
+  let same:bool=same_request(transfer.request,request);
+  transition same && transfer.state==TransferState::Writing && transfer.writes<257 {
+   true -> next(transfer) _ -> (Acceptance::Rejected)
+  }
+ }
+ state next(transfer:&mut WriteTransfer)->Acceptance {
+  transfer.writes=transfer.writes+1;prepare(transfer);Acceptance::Accepted
+ }
+}
+machine prepare(transfer:&mut WriteTransfer) {
+ let count:u64=transfer.plan.count;let index:u64=transfer.writes;
+ transition count>0 && count<=257 && index<=count {
+  true -> selected(transfer,index,count) _ -> invalid(transfer)
+ }
+ state selected(transfer:&mut WriteTransfer,index:u64,count:u64) {
+  transition index==count {true -> finished(transfer) _ -> bounded(transfer,index)}
+ }
+ state finished(transfer:&mut WriteTransfer) {transfer.state=TransferState::Finished;}
+ state bounded(transfer:&mut WriteTransfer,index:u64) {
+  transition index<257 {true -> chunk(transfer,index) _ -> invalid(transfer)}
+ }
+ state chunk(transfer:&mut WriteTransfer,index:u64) {
+  transition transfer.plan.update==UpdateRule::Preserve && transfer.plan.chunks[index].partial {
+   true -> read(transfer,index) _ -> write(transfer)
+  }
+ }
+ state read(transfer:&mut WriteTransfer,index:u64) {
+  transition index<257 && transfer.issued<514 {true -> issue(transfer,index) _ -> invalid(transfer)}
+ }
+ state issue(transfer:&mut WriteTransfer,index:u64) {
+  let serial:u64=transfer.issued;let offset:u64=transfer.plan.chunks[index].offset;let width:u64=transfer.plan.chunks[index].width;
+  transfer.request=Request {kind:RequestKind::Read,correlation:transfer.correlation,serial:serial,chunk:index,offset:offset,width:width};
+  transfer.issued=serial+1;transfer.state=TransferState::Reading;
+ }
+ state write(transfer:&mut WriteTransfer) {issue_write(transfer,Previous::Absent);}
+ state invalid(transfer:&mut WriteTransfer) {transfer.state=TransferState::Failed;transfer.failure=TransferFailure::InvalidState;}
+}
+machine issue_write(transfer:&mut WriteTransfer,previous:Previous) {
+ let index:u64=transfer.writes;let count:u64=transfer.plan.count;
+ transition count<=257 && index<count && index<257 && transfer.issued<514 && transfer.plan.lock==LockRequirement::NotRequested {
+  true -> chunk(transfer,previous,index) _ -> invalid(transfer)
+ }
+ // The retained plan/payload were admitted once by begin. Reuse the same
+ // package-private merge kernel as bulk/single-chunk assembly; do not re-plan
+ // the entire field for each acknowledgement.
+ state chunk(transfer:&mut WriteTransfer,previous:Previous,index:u64) {
+  let chunk:Chunk=transfer.plan.chunks[index];
+  let composed:WordResult=chunk_value(chunk,transfer.plan.update,&transfer.payload,transfer.length,previous);
+  transition composed {
+   WordResult::Failure {error} -> failed(transfer,WriteError::Chunk {index:index,cause:error})
+   WordResult::Word {value} -> issue(transfer,chunk.offset,chunk.width,value)
+  }
+ }
+ state failed(transfer:&mut WriteTransfer,error:WriteError) {transfer.state=TransferState::Failed;transfer.failure=TransferFailure::Admission {error:error};}
+ state issue(transfer:&mut WriteTransfer,offset:u64,width:u64,value:u64) {
+  let serial:u64=transfer.issued;
+  transfer.request=Request {kind:RequestKind::Write,correlation:transfer.correlation,serial:serial,chunk:transfer.writes,offset:offset,width:width,value:value};
+  transfer.issued=serial+1;transfer.state=TransferState::Writing;
+ }
+ state invalid(transfer:&mut WriteTransfer) {transfer.state=TransferState::Failed;transfer.failure=TransferFailure::InvalidState;}
+}
