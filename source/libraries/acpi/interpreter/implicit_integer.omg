@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// ACPI 6.6 Table 19.7 String-to-Integer rule; bounded initialized ASCII profile.
+// Companion to the licensed rust-osdev/acpi conversion port. See implicit-integer.PORT.md.
+module implicit_integer;
+use integers::IntegerSize;
+pub data Conversion [copy] {
+ case Failure(reason:Error);
+ case Integer(value:u64);
+}
+pub data Error [copy] { case Capacity; case Empty; case Encoding; }
+
+// Logical extent excludes a terminator. Validate the complete String first.
+// No whitespace/prefix skipping. A non-hex first character produces zero.
+pub machine from_string(size:IntegerSize,input:&[u8;256],length:u64)->Conversion {
+ transition {length>256 -> (Conversion::Failure {reason:Error::Capacity}) length==0 -> (Conversion::Failure {reason:Error::Empty}) _ -> validate(size,input,length)}
+ state validate(size:IntegerSize,input:&[u8;256],length:u64)->Conversion {
+  let valid:bool=ii_ascii(input,0,length,true);
+  transition valid {true -> convert(size,input,length) _ -> (Conversion::Failure {reason:Error::Encoding})}
+ }
+ state convert(size:IntegerSize,input:&[u8;256],length:u64)->Conversion {
+  let limit:u64=ii_limit(size);let count:u64=ii_min(length,limit);
+  let parsed:Digits=ii_parse(input,0,count,Digits {});Conversion::Integer {value:parsed.value}
+ }
+}
+machine ii_limit(size:IntegerSize)->u64 {transition size {IntegerSize::FourBytes -> (8) IntegerSize::EightBytes -> (16)}}
+machine ii_min(a:u64,b:u64)->u64 {transition a<b {true -> (a) _ -> (b)}}
+machine ii_ascii(input:&[u8;256],index:u64,count:u64,valid:bool)
+terminates by(index,count)->Nat::BoundedDistance;
+->bool {
+ let next:bool=ii_ascii_at(input,index,count,valid);
+ transition index<count {true -> ii_ascii(input,index+1,count,next) _ -> (valid)}
+}
+machine ii_ascii_at(input:&[u8;256],index:u64,count:u64,valid:bool)->bool {
+ transition index<count && index<256 && valid {true -> (input[index]!=0 && input[index]<128) _ -> (valid)}
+}
+machine ii_digit(byte:u8)->u64 {
+ transition {byte>=48 && byte<=57 -> ((byte as u64)-48) byte>=65 && byte<=70 -> ((byte as u64)-55) byte>=97 && byte<=102 -> ((byte as u64)-87) _ -> (16)}
+}
+data Digits [copy] {value:u64;stopped:bool;}
+machine ii_parse(input:&[u8;256],index:u64,count:u64,prior:Digits)
+terminates by(index,count)->Nat::BoundedDistance;
+->Digits {
+ let next:Digits=ii_parse_at(input,index,count,prior);
+ transition index<count {true -> ii_parse(input,index+1,count,next) _ -> (prior)}
+}
+machine ii_parse_at(input:&[u8;256],index:u64,count:u64,prior:Digits)->Digits {
+ transition index<count && index<16 && !prior.stopped {true -> digit(input[index],prior.value) _ -> (prior)}
+ state digit(byte:u8,value:u64)->Digits {
+  let d:u64=ii_digit(byte);
+  transition d<16 {true -> accumulate(value,d) _ -> (Digits {value:value,stopped:true})}
+ }
+ state accumulate(value:u64,d:u64)->Digits {
+  let w:u64 in Wrapping=value as u64 in Wrapping;let digit:u64 in Wrapping=d as u64 in Wrapping;
+  Digits {value:((w<<4)|digit) as u64}
+ }
+}

@@ -188,3 +188,9 @@ String ordering and explicit primary lexicographic versus pinned length-first
 Buffer ordering. All 81 checked-interpreter pairs and four const pairs pass;
 62 public Rust comparisons retain the documented profile differences. Implicit
 right-hand conversion and complete generic logical opcodes remain pending.
+
+The [implicit String-to-Integer helper](implicit-integer.PORT.md) implements the
+primary hexadecimal prefix rule with 8/16-digit stopping. Its 630 checked pairs
+and three constant pairs cover complete ASCII admission and width limits. It is
+separate from the existing explicit decimal/hex parser; generic implicit operand
+and named-target conversion dispatch remain pending.

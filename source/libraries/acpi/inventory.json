@@ -1076,7 +1076,14 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/interpreter/implicit_integer.omg",
+              "anchor": "pub machine from_string("
+            }
+          ],
+          "note": "Partial only: primary Table 19.7 bounded String-to-Integer conversion helper exists. Generic source resolution, conversion selection, target storage and Store execution remain pending."
         },
         "2488:do_copy_object": {
           "anchor": "fn do_copy_object(&self, target: WrappedObject, object: WrappedObject) -> Result<(), AmlError> {",

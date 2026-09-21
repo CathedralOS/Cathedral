@@ -235,3 +235,8 @@ and 362 actual public synthetic-memory observations retain source-bound evidence
 Requested GlobalLock and Preserve-read requirements remain explicit; plans convey
 no access permission. Bank/Index, complete result assembly and runtime/provider
 integration remain pending, so aggregate source-map counts are unchanged.
+
+[Implicit String-to-Integer conversion](interpreter/implicit-integer.PORT.md) adds
+the primary Table 19.7 hexadecimal prefix rule, with 630 checked pairs and three
+constant pairs. This pure helper does not change upstream anchor counts or finish
+implicit operand/target conversion dispatch.

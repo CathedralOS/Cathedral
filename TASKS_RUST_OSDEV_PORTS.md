@@ -567,6 +567,12 @@ before comparison; maximum-count regressions and fresh 96 query/27 parser pairs
 pass, while prior source-bound receipts remain historical. Evaluating the supplied objects and installing
 interrupts remain separate caller boundaries; generic AML integration stays open.
 
+[Implicit String-to-Integer conversion](source/libraries/acpi/interpreter/implicit-integer.PORT.md)
+adds the primary hexadecimal prefix rule with 8/16-digit stopping, distinct from
+the explicit decimal/hex parser. The 630 checked pairs and three const pairs
+cover all first bytes, widths and malformed extents. This is a pure helper;
+implicit operand/target dispatch and the ACPI-005 aggregate remain pending.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and
