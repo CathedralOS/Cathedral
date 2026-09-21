@@ -70,6 +70,37 @@ pub machine store_value(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectSt
   }
  }
  state buffer(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,extent:u64)->StoreResult {
+  let count:u64=store.space.object_count;
+  transition count<=64 && source<count && source<64 {true -> buffer_source(input,length,unit,store,destination,source,size,extent) _ -> (StoreResult::Failure {reason:ConversionFailure::InvalidState})}
+ }
+ // Table 19.14 requires same-type named copying. This bounded slice admits
+ // equal Buffer extents (including zero); differing extents remain excluded.
+ // It does not infer a resize rule from Integer/String conversion geometry.
+ state buffer_source(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,extent:u64)->StoreResult {
+  transition store.space.objects[source].value {
+   Value::Buffer {buffer_storage} -> buffer_copy(input,length,unit,store,destination,source,size,extent)
+   _ -> buffer_conversion(input,length,unit,store,destination,source,size,extent)
+  }
+ }
+ state buffer_copy(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,extent:u64)->StoreResult {
+  let prepared:ImplicitResult=convert(input,length,unit,store,source,size,ConversionTarget::Buffer);
+  transition prepared {
+   ImplicitResult::Failure {reason} -> (StoreResult::Failure {reason:reason})
+   ImplicitResult::Buffer {length,bytes} -> same_extent(store,destination,extent,length,bytes)
+   _ -> (StoreResult::Failure {reason:ConversionFailure::InvalidState})
+  }
+ }
+ state same_extent(store:&mut ObjectStore,destination:u64,extent:u64,length:u64,bytes:[u8;256])->StoreResult {
+  transition {
+   length==extent -> publish_copy(store,destination,length,bytes)
+   extent==0 -> (StoreResult::Failure {reason:ConversionFailure::Bounds})
+   _ -> (StoreResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state publish_copy(store:&mut ObjectStore,destination:u64,length:u64,bytes:[u8;256])->StoreResult {
+  let result:StoreResult=publish(store,destination,ConversionTarget::Buffer,ImplicitResult::Buffer {length:length,bytes:bytes});result
+ }
+ state buffer_conversion(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,extent:u64)->StoreResult {
   let prepared:ImplicitResult=prepare_buffer_extent(input,length,unit,store,source,size,extent);
   let result:StoreResult=publish(store,destination,ConversionTarget::Buffer,prepared);result
  }

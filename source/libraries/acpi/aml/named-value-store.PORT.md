@@ -1,5 +1,10 @@
 # Direct named-value Store
 
+This records the original profile. The subsequent
+[equal-extent Buffer extension](named-buffer-store.PORT.md) admits Buffer sources
+when both logical lengths match, including empty and self-stores. Its new
+receipts are separate from this milestone's historical evidence.
+
 Original milestone: 305 checked behavior/control pairs, three constant pairs and
 297 actual public Rust observations passed at the final repository path. Those
 receipts retain their original inputs. The [scalar extension](named-value-store-scalar.PORT.md)

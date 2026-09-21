@@ -1,5 +1,9 @@
 # Positive-extent Buffer value preparation
 
+Same-type Buffer copying is now handled by the separate
+[equal-extent named Store branch](named-buffer-store.PORT.md). This conversion
+helper and its original Integer/String profile remain unchanged.
+
 Status: tested. Final repository-path replay passed 204 checked behavior/control
 pairs, three constant pairs and 54 public observations; current receipts verified.
 

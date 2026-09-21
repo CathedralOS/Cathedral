@@ -1,6 +1,11 @@
 # Scalar named Store and destination admission
 
-Status: tested and frozen at the canonical repository path: 504 checked behavior/control pairs and six constant pairs pass; exact current-input verifier and inventory audit pass.
+The receipts below are historical milestone evidence. The later
+[equal-extent Buffer extension](named-buffer-store.PORT.md) changes two
+object-source self-store exclusions and supplies a new regression receipt;
+scalar conversion and direct admission semantics are unchanged.
+
+Historical scalar milestone: tested at the canonical repository path with 504 checked behavior/control pairs and six constant pairs; the exact-input verifier and inventory audit passed at that checkpoint.
 
 The existing `named_value_store::store_value` direct-object API retains its destination-first admission, source conversion, failure atomicity, and local Buffer exclusions. This extension adds `store_integer(input, length, unit, store, destination, number, size)` for an already-evaluated unsigned scalar without a fabricated source slot or temporary ObjectStore. IntegerSize normalization happens inside this entry. The existing canonical ImplicitResult and private publisher perform the final typed publication; there is no second Value representation or new byte arena.
 
