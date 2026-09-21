@@ -1,0 +1,46 @@
+{
+  "purpose": "Draft transcription; original success/failure records preserved byte-for-byte. Field read behavior has no passing claim.",
+  "files": {
+    "regressions213.json": {
+      "copied_from": "/tmp/cathedral-field-reads-current-regressions213.json",
+      "sha256": "1e818d860c7628368b5ec96e52f8dd1b8204fbcf8a4fc8ac26e9b680fc56f8eb"
+    },
+    "original-tiny1-failed.json": {
+      "copied_from": "/tmp/cathedral-field-reads-current-tiny1-failed.json",
+      "sha256": "3a91cfbaa28693c63a832d4dbefd1edc79eb420853f2fa1a0c1574fdd598b1f6"
+    },
+    "lean-tiny1-failed.json": {
+      "copied_from": "/tmp/cathedral-field-reads-lean-tiny1-failed.json",
+      "sha256": "be7c8d0383fc319e75ea33bcd2b7945e64ad7ea61d99a9c6ce55379284cef38f"
+    },
+    "lean-comparison.json": {
+      "copied_from": "/tmp/cathedral-field-reads-lean-comparison.json",
+      "sha256": "0bf327eb5469dcb8817bf38f517dfd468c57384ad8812e68da4c6c9e01ddb7f4"
+    },
+    "lean-decoder.patch": {
+      "copied_from": "/tmp/cathedral-field-reads-decoder-lean/decoder.patch",
+      "sha256": "06142787e7298a52b6ca516150a7f68340411ecf31e6b8e04bf1402bbee9487f"
+    },
+    "lean-decoder-notes.md": {
+      "copied_from": "/tmp/cathedral-field-reads-decoder-lean/NOTES.md",
+      "sha256": "35d71cd1b52b815942adb43d7863f9a3b93d4672155393dfaa60bbf8d4763143"
+    },
+    "original-main.omg": {
+      "copied_from": "/tmp/cathedral-field-read-check-inputs/current-tiny1/main.omg",
+      "sha256": "df6bf81bdb8cccdb1f1f29f2cc0d11674ec8eb4274d9839a192295f4f3f5da14"
+    },
+    "original-build.omg": {
+      "copied_from": "/tmp/cathedral-field-read-check-inputs/current-tiny1/build.omg",
+      "sha256": "c2e596eff7dc6a433c7903e64495ac67665563f6d0d4c388eb334b1db426595f"
+    },
+    "lean-main.omg": {
+      "copied_from": "/tmp/cathedral-field-read-check-inputs/lean-tiny1/main.omg",
+      "sha256": "df6bf81bdb8cccdb1f1f29f2cc0d11674ec8eb4274d9839a192295f4f3f5da14"
+    },
+    "lean-build.omg": {
+      "copied_from": "/tmp/cathedral-field-read-check-inputs/lean-tiny1/build.omg",
+      "sha256": "7989095621cef32eb03c1ef897c1b85d278a4544199422c2ca28c288c87e2354"
+    }
+  },
+  "regression_harness_sha256": "502fecf6cffc006f7cea7d74061a2c909c1d7ac088e5cf46a9453950bf9b382a"
+}

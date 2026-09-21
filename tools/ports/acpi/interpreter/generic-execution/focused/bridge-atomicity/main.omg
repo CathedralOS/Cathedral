@@ -18,6 +18,7 @@ use execution::execution_model::ExecutionOutcome;
 use execution::execution_model::Operand;
 use integer_helpers::integers::IntegerSize;
 use execution::execution_model::Frame;
+use execution::execution_model::DeferredRead;
 use execution::execution_model::Binding;
 use execution::execution_model::Target;
 use execution::execution_model::Block;
@@ -170,7 +171,13 @@ machine ba_operand_at(a:&Operation,b:&Operation,i:u64,n:u64)->bool {
 machine ba_frame(a:&Frame,b:&Frame)->bool {
  let scope:bool=fx_path(a.scope,b.scope);let body:bool=fx_span(a.body,b.body);let result:bool=ba_operand(a.return_value,b.return_value);
  let arrays:bool=ba_frame_arrays(a,b,0,16,true);
- scope && body && result && arrays && a.source_length==b.source_length && a.size==b.size && a.pc==b.pc && a.end==b.end && a.block_count==b.block_count && a.operation_count==b.operation_count && a.cache_count==b.cache_count && a.returned==b.returned && a.has_return_value==b.has_return_value
+ let deferred:bool=ba_deferred(a.deferred_read,b.deferred_read);
+ scope && body && result && arrays && deferred && a.field_reads==b.field_reads && a.source_length==b.source_length && a.size==b.size && a.pc==b.pc && a.end==b.end && a.block_count==b.block_count && a.operation_count==b.operation_count && a.cache_count==b.cache_count && a.returned==b.returned && a.has_return_value==b.has_return_value
+}
+machine ba_deferred(a:DeferredRead,b:DeferredRead)->bool {
+ transition a {DeferredRead::None -> none(b) DeferredRead::Field {object,at,next} -> field(object,at,next,b)}
+ state none(b:DeferredRead)->bool {transition b {DeferredRead::None -> (true) _ -> (false)}}
+ state field(id:u64,start:u64,end:u64,b:DeferredRead)->bool {transition b {DeferredRead::Field {object,at,next} -> (id==object && start==at && end==next) _ -> (false)}}
 }
 machine ba_frame_arrays(a:&Frame,b:&Frame,i:u64,n:u64,prior:bool)
 terminates by(i,n)->Nat::BoundedDistance;

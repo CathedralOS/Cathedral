@@ -1,0 +1,54 @@
+--- a/source/libraries/acpi/interpreter/execution/decode_execution.omg
++++ b/source/libraries/acpi/interpreter/execution/decode_execution.omg
+@@ -4,6 +4,9 @@
+ module decode_execution;
+ use aml::model::ObjectStore;
+ use aml::model::Value;
++use aml::model::Outcome;
++use aml::model::ReferenceState;
++use aml::object_references::unwrap_transparent;
+ use aml::model::Read;
+ use aml::model::Envelope;
+ use aml::bytes::opcode;
+@@ -15,7 +18,6 @@
+ use execution_model::Operation;
+ use execution_model::Operand;
+ use execution_model::OperandResult;
+-use execution_model::ValueResult;
+ use execution_model::Target;
+ use execution_model::TargetResult;
+ use execution_names::NamedResult;
+@@ -32,7 +34,6 @@
+ use operator_specs::target_count;
+ use generic_targets::read_generic_target;
+ use generic_values::validate_operand;
+-use generic_values::read_value;
+ use execution_model::DeferredRead;
+ use operands::contribute_operand;
+ use control::leave_loop;
+@@ -175,14 +176,20 @@
+   transition frame.field_reads {true -> selected(input,store,frame,next,operand) _ -> admit(input,store,frame,next,operand)}
+  }
+  state selected(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,next:u64,operand:Operand)->ExecutionOutcome {
+-  let value:ValueResult=read_value(store,operand);
+-  transition value.outcome==ExecutionOutcome::Success && value.has_object {
+-   true -> payload(input,store,frame,next,operand,value)
++  transition operand {
++   Operand::Object {object_id} -> resolved(input,store,frame,next,operand,object_id)
+    _ -> admit(input,store,frame,next,operand)
+   }
+  }
+- state payload(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,next:u64,operand:Operand,value:ValueResult)->ExecutionOutcome {
+-  transition value.value {Value::FieldUnit {binding,declaration,field} -> deferred(frame,next,value.object) _ -> admit(input,store,frame,next,operand)}
++ state resolved(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,next:u64,operand:Operand,object:u64)->ExecutionOutcome {
++  let found:ReferenceState=unwrap_transparent(&store.space,object,64);
++  transition found.outcome==Outcome::Success && found.object<64 {
++   true -> payload(input,store,frame,next,operand,found.object)
++   _ -> admit(input,store,frame,next,operand)
++  }
++ }
++ state payload(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,next:u64,operand:Operand,object:u64)->ExecutionOutcome {
++  transition store.space.objects[object].value {Value::FieldUnit {binding,declaration,field} -> deferred(frame,next,object) _ -> admit(input,store,frame,next,operand)}
+  }
+  state deferred(frame:&mut Frame,next:u64,object:u64)->ExecutionOutcome {
+   transition object<64 && next>frame.pc && next<=frame.end && frame.end<=frame.body.end && frame.body.end<=frame.source_length && frame.source_length<=1024 {

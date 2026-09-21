@@ -1,0 +1,318 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Original Cathedral synthetic normal-Field read composition. No live provider,
+// grant, mapping, lock or hardware access. See ADAPTER.md and field-reads.PORT.md.
+module field_reads;
+use program::Program;
+use program::admit_result;
+use aml::model::Value;
+use aml::model::FieldBinding;
+use aml::model::Path;
+use aml::model::ObjectStore;
+use aml::model::ByteBlock;
+use aml::model::BufferStorage;
+use aml::model::Read;
+use aml::model::Outcome;
+use aml::namespace::allocate_mut;
+use aml::field_model::DeclarationKind;
+use aml::field_model::Declaration;
+use aml::field_model::Field;
+use aml::result_graph::limits_valid;
+use field_access::geometry;
+use field_access::model::Plan;
+use field_access::model::PlanResult;
+use field_access::model::ReadShape;
+use field_access::model::LockRequirement;
+use field_access::model::Error;
+use field_values::read::assemble;
+use field_values::model::ReadResult;
+use execution::runtime_model::Runtime;
+use execution::runtime_model::RuntimeStart;
+use execution::execution_model::ExecutionOutcome;
+use execution::execution_model::DeferredRead;
+use execution::execution_model::Operand;
+use execution::engine::ExecutionResult;
+use execution::engine::start_read_runtime;
+use execution::engine::advance_read_runtime;
+use execution::engine::pending_read;
+use execution::engine::complete_decoded_read;
+use execution::engine::read_runtime_result;
+use integer_helpers::integers::IntegerSize;
+
+pub data State [copy] {case Failed;case Running;case AwaitingRead;case Finished;}
+pub data Fault [copy] {
+ case InvalidState;case Execution(outcome:ExecutionOutcome);case Geometry(cause:Error);
+ case UnsupportedSpace;case UnmetLock;case BaseAlignment;case AddressOverflow;
+ case Provider(outcome:ExecutionOutcome);
+}
+// Exact correlation coordinates only. They confer no authority to access base.
+pub data NativeRead [copy] {
+ session:u64;serial:u64;unit:u64;field:u64;region:u64;space:u8;
+ base:u64;offset:u64;width:u64;
+}
+pub data Completion [copy] {
+ case Failure(request:NativeRead,outcome:ExecutionOutcome);
+ case Word(request:NativeRead,value:u64);
+}
+pub data ReadField [copy] {object:u64;region:u64;declaration:Declaration;field:Field;}
+pub data Transfer [copy] {
+ definition:ReadField;region:u64;base:u64;region_bytes:u64;size:IntegerSize;
+ plan:Plan;words:[u64;257];received:u64;request:NativeRead;
+}
+// Owns the source snapshot and mutable store for the entire continuation. A
+// session is ordinary initialized data; copying numeric coordinates is no grant.
+pub data Session {
+ state:State;outcome:ExecutionOutcome;fault:Fault;program:Program;runtime:Runtime;
+ correlation:u64;fuel_limit:u64;issued:u64;accepted:u64;transfer:Transfer;
+ result_objects:u64;result_bytes:u64;result:ExecutionResult;
+}
+pub data Progress [copy] {
+ case Failure(outcome:ExecutionOutcome);case Paused;
+ case Read(request:NativeRead);case Finished(result:ExecutionResult);
+}
+pub machine begin(program:Program,path:Path,arguments:&[Value;7],count:u64,size:IntegerSize,fuel:u64,correlation:u64)->Session {
+ let session:Session=begin_limited(program,path,arguments,count,size,fuel,correlation,64,16384);session
+}
+// Quota bounds are admitted before argument allocation or any method turn.
+pub machine begin_limited(program:Program,path:Path,arguments:&[Value;7],count:u64,size:IntegerSize,fuel:u64,correlation:u64,result_objects:u64,result_bytes:u64)->Session {
+ let valid:bool=limits_valid(result_objects,result_bytes);
+ transition {
+  !program.loaded -> (Session {program:program,outcome:ExecutionOutcome::InvalidState,correlation:correlation})
+  program.length>1024 || !valid || fuel>1024 -> (Session {program:program,outcome:ExecutionOutcome::Capacity,correlation:correlation})
+  _ -> start(program,path,arguments,count,size,fuel,correlation,result_objects,result_bytes)
+ }
+ state start(program:Program,path:Path,arguments:&[Value;7],count:u64,size:IntegerSize,fuel:u64,correlation:u64,result_objects:u64,result_bytes:u64)->Session {
+  let mut session:Session=Session {program:program,correlation:correlation,fuel_limit:fuel,result_objects:result_objects,result_bytes:result_bytes};
+  let started:RuntimeStart=start_read_runtime(&session.program.source,session.program.length,session.program.unit,&mut session.program.store,&session.program.definitions.entries,path,arguments,count,size);
+  transition started {RuntimeStart::Ready {runtime} -> ready(session,runtime) RuntimeStart::Failure {outcome} -> rejected(session,outcome)}
+ }
+ state ready(session:Session,runtime:Runtime)->Session {let mut out:Session=session;out.runtime=runtime;out.state=State::Running;out}
+ state rejected(session:Session,outcome:ExecutionOutcome)->Session {let mut out:Session=session;out.outcome=outcome;out.fault=Fault::Execution {outcome:outcome};out}
+}
+pub machine progress(session:&Session)->Progress {
+ transition session.state {
+  State::Running -> (Progress::Paused)
+  State::AwaitingRead -> (Progress::Read {request:session.transfer.request})
+  State::Failed -> failed(session.outcome)
+  State::Finished -> result(session)
+ }
+ state failed(outcome:ExecutionOutcome)->Progress {transition outcome==ExecutionOutcome::Success {true -> (Progress::Failure {outcome:ExecutionOutcome::InvalidState}) _ -> (Progress::Failure {outcome:outcome})}}
+ state result(session:&Session)->Progress {Progress::Finished {result:session.result}}
+}
+// A quantum is at most 1024 AML turns. Zero is a nonmutating poll. Transfer
+// completions are separately bounded: at most257 reads per charged field decode,
+// and at most the caller's retained fuel limit (<=1024) in the whole session. Rejected completions and
+// polls consume neither a decoder turn nor an observation.
+pub machine advance(session:&mut Session,budget:u64)->Progress {
+ transition budget<=1024 {true -> run(session,budget) _ -> (Progress::Failure {outcome:ExecutionOutcome::Capacity})}
+ state run(session:&mut Session,budget:u64)->Progress {
+  let outcome:ExecutionOutcome=drive(session,0,budget);let result:Progress=progress(session);result
+ }
+}
+machine drive(session:&mut Session,index:u64,limit:u64)
+terminates by(index,limit)->Nat::BoundedDistance;
+->ExecutionOutcome {
+ let outcome:ExecutionOutcome=turn(session,index,limit);
+ transition {session.state!=State::Running -> (outcome)
+  index<limit -> drive(session,index+1,limit) _ -> (outcome)}
+}
+machine turn(session:&mut Session,index:u64,limit:u64)->ExecutionOutcome {
+ transition index<limit && session.state==State::Running {true -> fuel(session) _ -> (session.outcome)}
+ state fuel(session:&mut Session)->ExecutionOutcome {
+  transition session.fuel_limit<=1024 && session.runtime.steps<session.fuel_limit {true -> execute(session) _ -> failed(session,ExecutionOutcome::WorkLimit)}
+ }
+ state execute(session:&mut Session)->ExecutionOutcome {
+  let outcome:ExecutionOutcome=advance_read_runtime(&session.program.source,&mut session.program.store,&session.program.definitions.entries,&mut session.runtime);
+  transition outcome==ExecutionOutcome::Success {true -> inspect(session) _ -> failed(session,outcome)}
+ }
+ state failed(session:&mut Session,outcome:ExecutionOutcome)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,outcome,Fault::Execution {outcome:outcome});result}
+ state inspect(session:&mut Session)->ExecutionOutcome {
+  transition session.runtime.finished {true -> finished(session) _ -> pending(session)}
+ }
+ state finished(session:&mut Session)->ExecutionOutcome {
+  let raw:ExecutionResult=read_runtime_result(&session.program.store,&session.runtime);
+  let result:ExecutionResult=admit_result(&session.program,raw,session.result_objects,session.result_bytes);
+  session.result=result;
+  transition result.outcome==ExecutionOutcome::Success {true -> published(session) _ -> failed(session,result.outcome)}
+ }
+ state published(session:&mut Session)->ExecutionOutcome {session.state=State::Finished;ExecutionOutcome::Success}
+ state pending(session:&mut Session)->ExecutionOutcome {
+  let deferred:DeferredRead=pending_read(&session.runtime);
+  transition deferred {DeferredRead::Field {object,at,next} -> prepare(session,object) _ -> (ExecutionOutcome::Success)}
+ }
+}
+machine prepare(session:&mut Session,object:u64)->ExecutionOutcome {
+ let count:u64=session.program.store.space.object_count;
+ transition count<=64 && object<count && object<64 {true -> definition(session,object) _ -> invalid(session)}
+ state definition(session:&mut Session,object:u64)->ExecutionOutcome {
+  transition session.program.store.space.objects[object].value {
+   Value::FieldUnit {binding,declaration,field} -> kind(session,object,binding,declaration,field)
+   _ -> invalid(session)
+  }
+ }
+ state kind(session:&mut Session,object:u64,binding:FieldBinding,declaration:Declaration,field:Field)->ExecutionOutcome {
+  transition binding {
+   FieldBinding::Region {region_object} -> normal_binding(session,object,region_object,declaration,field)
+   FieldBinding::Bank {region_object,selector_object} -> bank_binding(session,declaration.kind)
+   FieldBinding::Index {index_object,data_object} -> index_binding(session,declaration.kind)
+  }
+ }
+ state normal_binding(session:&mut Session,object:u64,region:u64,declaration:Declaration,field:Field)->ExecutionOutcome {
+  transition declaration.kind==DeclarationKind::Field {true -> source(session,ReadField {object:object,region:region,declaration:declaration,field:field}) _ -> invalid(session)}
+ }
+ state bank_binding(session:&mut Session,kind:DeclarationKind)->ExecutionOutcome {
+  transition kind==DeclarationKind::Bank {true -> geometry_failed(session,Error::UnsupportedKind) _ -> invalid(session)}
+ }
+ state index_binding(session:&mut Session,kind:DeclarationKind)->ExecutionOutcome {
+  transition kind==DeclarationKind::Index {true -> geometry_failed(session,Error::UnsupportedKind) _ -> invalid(session)}
+ }
+ state source(session:&mut Session,field:ReadField)->ExecutionOutcome {
+  let unit:u64=session.program.unit;let length:u64=session.program.length;
+  transition field.declaration.source.unit==unit && field.field.source.unit==unit && field.declaration.source.start<=field.field.source.start && field.field.source.start<=field.field.source.end && field.field.source.end<=field.declaration.source.end && field.declaration.source.end<=length {
+   true -> region(session,field,field.region) _ -> invalid(session)
+  }
+ }
+ state region(session:&mut Session,field:ReadField,object:u64)->ExecutionOutcome {
+  let count:u64=session.program.store.space.object_count;
+  transition count<=64 && object<count && object<64 {true -> region_value(session,field,object) _ -> invalid(session)}
+ }
+ state region_value(session:&mut Session,field:ReadField,object:u64)->ExecutionOutcome {
+  transition session.program.store.space.objects[object].value {
+   Value::OperationRegion {space,base,length,scope} -> profile(session,field,object,space,base,length)
+   _ -> invalid(session)
+  }
+ }
+ state profile(session:&mut Session,field:ReadField,region:u64,space:u8,base:u64,length:u64)->ExecutionOutcome {
+  transition space==0 {true -> frame(session,field,region,base,length) _ -> unsupported(session)}
+ }
+ state frame(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64)->ExecutionOutcome {
+  let count:u64=session.runtime.count;
+  transition count>0 && count<=4 {true -> size(session,field,region,base,length,count-1) _ -> invalid(session)}
+ }
+ state size(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,index:u64)->ExecutionOutcome {
+  transition index<4 {true -> geometry(session,field,region,base,length,session.runtime.frames[index].size) _ -> invalid(session)}
+ }
+ state geometry(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize)->ExecutionOutcome {
+  let planned:PlanResult=geometry::plan(field.declaration.kind,&field.field,length,size);
+  transition planned {PlanResult::Ready {plan} -> lock(session,field,region,base,length,size,plan) PlanResult::Failure {error} -> geometry_failed(session,error)}
+ }
+ state lock(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan)->ExecutionOutcome {
+  transition plan.lock==LockRequirement::NotRequested {true -> width(session,field,region,base,length,size,plan) _ -> locked(session)}
+ }
+ state width(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan)->ExecutionOutcome {
+  transition plan.width==1 || plan.width==2 || plan.width==4 || plan.width==8 {true -> alignment(session,field,region,base,length,size,plan) _ -> invalid(session)}
+ }
+ state alignment(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan)->ExecutionOutcome {
+  transition base%plan.width==0 {true -> address(session,field,region,base,length,size,plan) _ -> misaligned(session)}
+ }
+ state address(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan)->ExecutionOutcome {
+  transition plan.start<=plan.end && base<=18446744073709551615-plan.end {true -> shape(session,field,region,base,length,size,plan) _ -> overflow(session)}
+ }
+ state shape(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan)->ExecutionOutcome {
+  transition plan.shape {
+   ReadShape::Integer {size} -> stage(session,field,region,base,length,size,plan)
+   ReadShape::Buffer {bytes} -> capacity(session,field,region,base,length,size,plan,bytes)
+  }
+ }
+ state capacity(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan,bytes:u64)->ExecutionOutcome {
+  transition bytes<=256 && session.program.store.space.object_count<64 && session.program.store.space.count<=32 {
+   true -> stage(session,field,region,base,length,size,plan) _ -> exhausted(session)
+  }
+ }
+ state stage(session:&mut Session,field:ReadField,region:u64,base:u64,length:u64,size:IntegerSize,plan:Plan)->ExecutionOutcome {
+  session.transfer=Transfer {definition:field,region:region,base:base,region_bytes:length,size:size,plan:plan};
+  let result:ExecutionOutcome=issue(session);result
+ }
+ state invalid(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::InvalidState,Fault::InvalidState);result}
+ state geometry_failed(session:&mut Session,error:Error)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::UnresolvedRegion,Fault::Geometry {cause:error});result}
+ state unsupported(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::UnresolvedRegion,Fault::UnsupportedSpace);result}
+ state locked(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::UnresolvedSynchronization,Fault::UnmetLock);result}
+ state misaligned(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::UnresolvedRegion,Fault::BaseAlignment);result}
+ state overflow(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::Overflow,Fault::AddressOverflow);result}
+ state exhausted(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::Capacity,Fault::Execution {outcome:ExecutionOutcome::Capacity});result}
+}
+machine issue(session:&mut Session)->ExecutionOutcome {
+ let index:u64=session.transfer.received;let count:u64=session.transfer.plan.count;
+ transition count>0 && count<=257 && index<count && index<257 && session.issued<263168 {
+  true -> request(session,index) _ -> invalid(session)
+ }
+ state request(session:&mut Session,index:u64)->ExecutionOutcome {
+  let sequence:u64=session.issued+1;
+  session.transfer.request=NativeRead {session:session.correlation,serial:sequence,unit:session.program.unit,field:session.transfer.definition.object,region:session.transfer.region,base:session.transfer.base,offset:session.transfer.plan.chunks[index].offset,width:session.transfer.plan.chunks[index].width};
+  session.issued=sequence;session.state=State::AwaitingRead;ExecutionOutcome::Success
+ }
+ state invalid(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::InvalidState,Fault::InvalidState);result}
+}
+pub machine same_request(a:NativeRead,b:NativeRead)->bool {
+ a.session==b.session && a.serial==b.serial && a.unit==b.unit && a.field==b.field && a.region==b.region && a.space==b.space && a.base==b.base && a.offset==b.offset && a.width==b.width
+}
+// Mismatch/duplicate rejection changes no session state, observations or fuel.
+pub machine complete(session:&mut Session,completion:Completion)->ExecutionOutcome {
+ transition session.state==State::AwaitingRead {
+  true -> kind(session,completion) _ -> (ExecutionOutcome::InvalidState)
+ }
+ state kind(session:&mut Session,completion:Completion)->ExecutionOutcome {
+  transition completion {Completion::Word {request,value} -> word(session,request,value) Completion::Failure {request,outcome} -> failed(session,request,outcome)}
+ }
+ state word(session:&mut Session,request:NativeRead,value:u64)->ExecutionOutcome {
+  let same:bool=same_request(request,session.transfer.request);
+  transition same {true -> received(session,value) _ -> (ExecutionOutcome::InvalidState)}
+ }
+ state failed(session:&mut Session,request:NativeRead,outcome:ExecutionOutcome)->ExecutionOutcome {
+  let same:bool=same_request(request,session.transfer.request);
+  transition same && outcome!=ExecutionOutcome::Success {
+   true -> provider_failed(session,outcome) _ -> (ExecutionOutcome::InvalidState)
+  }
+ }
+ state provider_failed(session:&mut Session,outcome:ExecutionOutcome)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,outcome,Fault::Provider {outcome:outcome});result}
+}
+machine received(session:&mut Session,value:u64)->ExecutionOutcome {
+ let index:u64=session.transfer.received;let count:u64=session.transfer.plan.count;
+ transition count<=257 && index<count && index<257 && session.accepted<263168 {true -> remember(session,value,index,count) _ -> invalid(session)}
+ state remember(session:&mut Session,value:u64,index:u64,count:u64)->ExecutionOutcome {
+  session.transfer.words[index]=value;session.transfer.received=index+1;session.accepted=session.accepted+1;
+  transition index+1<count {true -> next(session) _ -> assembled(session)}
+ }
+ state next(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=issue(session);result}
+ state assembled(session:&mut Session)->ExecutionOutcome {
+  let result:ReadResult=assemble(session.transfer.definition.declaration.kind,&session.transfer.definition.field,session.transfer.region_bytes,session.transfer.size,&session.transfer.words,session.transfer.received);
+  transition result {
+   ReadResult::Integer {value,size,lock} -> integer(session,value)
+   ReadResult::Buffer {length,bytes,lock} -> buffer(session,length,bytes)
+   _ -> invalid(session)
+  }
+ }
+ state integer(session:&mut Session,value:u64)->ExecutionOutcome {
+  let mut runtime:Runtime=session.runtime;
+  let outcome:ExecutionOutcome=complete_decoded_read(&session.program.source,&session.program.store,&mut runtime,Operand::Integer {number:value});
+  transition outcome==ExecutionOutcome::Success {true -> commit_integer(session,runtime) _ -> failed(session,outcome)}
+ }
+ state commit_integer(session:&mut Session,runtime:Runtime)->ExecutionOutcome {session.runtime=runtime;session.state=State::Running;ExecutionOutcome::Success}
+ state buffer(session:&mut Session,length:u64,bytes:[u8;256])->ExecutionOutcome {
+  let mut candidate:ObjectStore=ObjectStore {space:session.program.store.space,bytes:session.program.store.bytes};
+  let object:u64=candidate.space.object_count;
+  transition length<=256 && object<64 {true -> allocate(session,candidate,object,length,bytes) _ -> failed(session,ExecutionOutcome::Capacity)}
+ }
+ state allocate(session:&mut Session,candidate:ObjectStore,object:u64,length:u64,bytes:[u8;256])->ExecutionOutcome {
+  let mut store:ObjectStore=candidate;
+  let allocated:Read=allocate_mut(&mut store.space,Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:object}});
+  transition allocated.outcome==Outcome::Success && allocated.value==object {
+   true -> backing(session,store,object,length,bytes) _ -> failed(session,ExecutionOutcome::Capacity)
+  }
+ }
+ state backing(session:&mut Session,candidate:ObjectStore,object:u64,length:u64,bytes:[u8;256])->ExecutionOutcome {
+  let mut store:ObjectStore=candidate;
+  transition object<64 {true -> bytes(session,store,object,length,bytes) _ -> invalid(session)}
+ }
+ state bytes(session:&mut Session,candidate:ObjectStore,object:u64,length:u64,bytes:[u8;256])->ExecutionOutcome {
+  let mut store:ObjectStore=candidate;store.bytes.blocks[object]=ByteBlock {initialized:true,length:length,bytes:bytes};
+  let mut runtime:Runtime=session.runtime;
+  let outcome:ExecutionOutcome=complete_decoded_read(&session.program.source,&store,&mut runtime,Operand::Object {object_id:object});
+  transition outcome==ExecutionOutcome::Success {true -> commit_buffer(session,store,runtime) _ -> failed(session,outcome)}
+ }
+ state commit_buffer(session:&mut Session,store:ObjectStore,runtime:Runtime)->ExecutionOutcome {session.program.store=store;session.runtime=runtime;session.state=State::Running;ExecutionOutcome::Success}
+ state invalid(session:&mut Session)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,ExecutionOutcome::InvalidState,Fault::InvalidState);result}
+ state failed(session:&mut Session,outcome:ExecutionOutcome)->ExecutionOutcome {let result:ExecutionOutcome=fail(session,outcome,Fault::Execution {outcome:outcome});result}
+}
+machine fail(session:&mut Session,outcome:ExecutionOutcome,fault:Fault)->ExecutionOutcome {
+ session.outcome=outcome;session.fault=fault;session.state=State::Failed;session.runtime.outcome=outcome;outcome
+}

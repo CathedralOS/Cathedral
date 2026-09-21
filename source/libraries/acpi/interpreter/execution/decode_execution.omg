@@ -26,10 +26,14 @@ use operands::contribute_integer;
 use operands::contribute_target;
 use operands::push_operation;
 use operands::current_operation;
+use operands::OperationHeader;
+use operands::operation_header;
 use operator_specs::value_count;
 use operator_specs::target_count;
 use generic_targets::read_generic_target;
 use generic_values::validate_operand;
+use generic_values::read_value;
+use execution_model::DeferredRead;
 use operands::contribute_operand;
 use control::leave_loop;
 use integer_helpers::integers::integer_mask;
@@ -166,7 +170,35 @@ machine named_operand(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,found
  }
 }
 machine decode_generic_value(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,next:u64,found:OperandResult)->ExecutionOutcome {
- transition found.outcome==ExecutionOutcome::Success {true -> admit(input,store,frame,next,found.operand) _ -> (found.outcome)}
+ transition found.outcome==ExecutionOutcome::Success {true -> mode(input,store,frame,next,found.operand) _ -> (found.outcome)}
+ state mode(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,next:u64,operand:Operand)->ExecutionOutcome {
+  transition frame.field_reads {true -> selected(input,store,frame,next,operand) _ -> admit(input,store,frame,next,operand)}
+ }
+ state selected(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,next:u64,operand:Operand)->ExecutionOutcome {
+  let value:ValueResult=read_value(store,operand);
+  transition value.outcome==ExecutionOutcome::Success && value.has_object {
+   true -> payload(input,store,frame,next,operand,value)
+   _ -> admit(input,store,frame,next,operand)
+  }
+ }
+ state payload(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,next:u64,operand:Operand,value:ValueResult)->ExecutionOutcome {
+  transition value.value {Value::FieldUnit {binding,declaration,field} -> deferred(frame,next,value.object) _ -> admit(input,store,frame,next,operand)}
+ }
+ state deferred(frame:&mut Frame,next:u64,object:u64)->ExecutionOutcome {
+  transition object<64 && next>frame.pc && next<=frame.end && frame.end<=frame.body.end && frame.body.end<=frame.source_length && frame.source_length<=1024 {
+   true -> ready(frame,next,object) _ -> (ExecutionOutcome::InvalidState)
+  }
+ }
+ state ready(frame:&mut Frame,next:u64,object:u64)->ExecutionOutcome {
+  // Check contribution room without changing the real parent operation.
+  let operation:OperationHeader=operation_header(frame);
+  transition frame.operation_count==0 || (frame.operation_count<=16 && operation.count<operation.value_arity && operation.count<7) {
+   true -> suspend(frame,next,object) _ -> (ExecutionOutcome::InvalidState)
+  }
+ }
+ state suspend(frame:&mut Frame,next:u64,object:u64)->ExecutionOutcome {
+  frame.deferred_read=DeferredRead::Field {object:object,at:frame.pc,next:next};ExecutionOutcome::Success
+ }
  state admit(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,next:u64,operand:Operand)->ExecutionOutcome {
   let value:ExecutionOutcome=validate_operand(input,frame.source_length,frame.body.unit,store,operand);
   transition value==ExecutionOutcome::Success {true -> contribute(frame,next,operand) _ -> (value)}
