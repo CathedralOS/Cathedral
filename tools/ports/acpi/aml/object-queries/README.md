@@ -33,3 +33,8 @@ model-dependent receipts remain unchanged historical evidence; fresh query-era
 regressions are written to this directory's `regressions/` subdirectory. Storage
 operations do not call namespace get/bind, so unchanged byte kernels retain their
 prior behavior receipts without a redundant full replay.
+
+The full original verifier is bound to commit `600eb26`. After the later shared
+path/namespace guard fixes, current runtime query/parser verification lives in
+`tools/ports/acpi/pci-routing-kernel/regressions/`; historical const/full306
+receipts here are not rewritten to imply execution against changed source.

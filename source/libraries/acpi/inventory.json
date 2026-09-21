@@ -3877,14 +3877,13 @@
       ]
     },
     "src/aml/pci_routing.rs": {
-      "disposition": "pending",
-      "reason": "Source partition complete; implementation status remains pending until named slices land.",
+      "disposition": "translated",
+      "reason": "Strict bounded pure decomposition only; interpreter evaluation and interrupt installation remain caller boundaries. See PORT.md for exact pin deviations.",
       "sha256": "4c2371d38c0a67cab28ab686c8ad6374577e012cd02f561d4730e2f7895dcc39",
       "symbols": {
         "14:crate::aml::resource::IrqDescriptor;": {
           "anchor": "pub use crate::aml::resource::IrqDescriptor;",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-003, ACPI-005; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "platform_topology"
@@ -3892,12 +3891,18 @@
           "queue_tasks": [
             "ACPI-003",
             "ACPI-005"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "irq:Irq;",
+              "path": "source/libraries/acpi/pci_routing/model.omg"
+            }
+          ],
+          "note": "Reuse canonical resources::resource_model::Irq; no competing IRQ representation."
         },
         "170:route": {
           "anchor": "pub fn route(",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-003, ACPI-005; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "platform_topology"
@@ -3905,12 +3910,26 @@
           "queue_tasks": [
             "ACPI-003",
             "ACPI-005"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine select",
+              "path": "source/libraries/acpi/pci_routing/routes.omg"
+            },
+            {
+              "anchor": "pub machine crs_request",
+              "path": "source/libraries/acpi/pci_routing/routes.omg"
+            },
+            {
+              "anchor": "pub machine select_bytes",
+              "path": "source/libraries/acpi/pci_routing/link_resources.omg"
+            }
+          ],
+          "note": "Pure first-match selection plus crs_request and detached link_resources::select_bytes. SourceIndex counts physical resource descriptors. GSI remains a number; no interrupt setup or evaluator authority, and no default IRQ flags are fabricated."
         },
         "17:Pin": {
           "anchor": "pub enum Pin {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-003, ACPI-005; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "platform_topology"
@@ -3918,12 +3937,18 @@
           "queue_tasks": [
             "ACPI-003",
             "ACPI-005"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pin<4",
+              "path": "source/libraries/acpi/pci_routing/routes.omg"
+            }
+          ],
+          "note": "Validated numeric 0..3 operand; no invented native enum layout."
         },
         "25:PciRouteType": {
           "anchor": "pub enum PciRouteType {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-003, ACPI-005; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "platform_topology"
@@ -3931,12 +3956,18 @@
           "queue_tasks": [
             "ACPI-003",
             "ACPI-005"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub data Target",
+              "path": "source/libraries/acpi/pci_routing/model.omg"
+            }
+          ],
+          "note": "Semantic Gsi/Link cases; Link retains SourceIndex omitted by the pin; None is explicit empty/failure carrier."
         },
         "40:PciRoute": {
           "anchor": "pub struct PciRoute {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-003, ACPI-005; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "platform_topology"
@@ -3944,12 +3975,18 @@
           "queue_tasks": [
             "ACPI-003",
             "ACPI-005"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub data Route",
+              "path": "source/libraries/acpi/pci_routing/model.omg"
+            }
+          ],
+          "note": "Device/pin/target retained. Strict address requires functionFFFF, eliminating per-row function state."
         },
         "52:PciRoutingTable": {
           "anchor": "pub struct PciRoutingTable {",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-003, ACPI-005; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "platform_topology"
@@ -3957,12 +3994,18 @@
           "queue_tasks": [
             "ACPI-003",
             "ACPI-005"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub data Routes",
+              "path": "source/libraries/acpi/pci_routing/model.omg"
+            }
+          ],
+          "note": "Ordinary initialized 32-row storage/count, an explicit bounded profile replacing Vec."
         },
         "61:from_prt_path": {
           "anchor": "pub fn from_prt_path(",
-          "disposition": "pending",
-          "reason": "Inventoried for ACPI-003, ACPI-005; no translation/execution claimed.",
+          "disposition": "translated",
           "partition": [
             "aml_execution",
             "platform_topology"
@@ -3970,12 +4013,29 @@
           "queue_tasks": [
             "ACPI-003",
             "ACPI-005"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine decode",
+              "path": "source/libraries/acpi/pci_routing/routes.omg"
+            }
+          ],
+          "note": "Pure package decoding and captured NameReference level search; supplied already-evaluated ObjectStore object. No interpreter evaluation. Four members, DWORD widths, FFFF function and declared scope validation intentionally strict."
         }
       },
       "partition": [
         "aml_execution",
         "platform_topology"
+      ],
+      "targets": [
+        {
+          "anchor": "pub machine decode",
+          "path": "source/libraries/acpi/pci_routing/routes.omg"
+        },
+        {
+          "anchor": "pub machine select_bytes",
+          "path": "source/libraries/acpi/pci_routing/link_resources.omg"
+        }
       ]
     },
     "src/aml/resource.rs": {

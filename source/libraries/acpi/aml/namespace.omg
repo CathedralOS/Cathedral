@@ -35,7 +35,8 @@ pub machine object_set(space:Namespace,index:u64,object:Object)->Namespace {
  state set(space:Namespace,index:u64,object:Object)->Namespace {let mut out:Namespace=space;out.objects[index]=object;out}
 }
 pub machine locate(space:Namespace,path:Path)->Lookup {
- transition space.count<=32 && space.object_count<=64 && path.absolute && path.parents==0 && path_valid(path) {
+ let entries:u64=space.count;let objects:u64=space.object_count;
+ transition entries<=32 && objects<=64 && path.absolute && path.parents==0 && path_valid(path) {
   true -> scan(space,path) _ -> (Lookup {outcome:Outcome::InvalidState})
  }
  state scan(space:Namespace,path:Path)->Lookup {
@@ -172,7 +173,8 @@ pub machine bind(space:Namespace,path:Path,object:u64)->NamespaceResult {
 // These kernels mutate only supplied ordinary initialized storage. There is no
 // firmware, pointer dereference, device access, or allocator authority here.
 pub machine allocate_mut(space:&mut Namespace,value:Value)->Read {
- transition space.count<=32 && space.object_count<64 {true -> append(space,value) _ -> (Read {outcome:Outcome::Capacity})}
+ let entries:u64=space.count;let objects:u64=space.object_count;
+ transition entries<=32 && objects<64 {true -> append(space,value) _ -> (Read {outcome:Outcome::Capacity})}
  state append(space:&mut Namespace,value:Value)->Read {
   let index:u64=space.object_count;
   transition index<64 {true -> commit(space,value,index) _ -> (Read {outcome:Outcome::Capacity})}
@@ -184,8 +186,8 @@ pub machine allocate_mut(space:&mut Namespace,value:Value)->Read {
 pub machine bind_mut(space:&mut Namespace,candidate:Entry,collision:bool)->Outcome {
  transition candidate.path.absolute {true -> valid(space,candidate,collision) _ -> (Outcome::NotAbsolute)}
  state valid(space:&mut Namespace,candidate:Entry,collision:bool)->Outcome {
-  let object:u64=candidate.object;let count:u64=space.object_count;
-  transition path_valid(candidate.path) && candidate.path.count>0 && space.count<=32 && count<=64 && (!candidate.has_object || object<count) {
+  let object:u64=candidate.object;let count:u64=space.object_count;let entries:u64=space.count;
+  transition path_valid(candidate.path) && candidate.path.count>0 && entries<=32 && count<=64 && (!candidate.has_object || object<count) {
    true -> parent_level(space,candidate,collision) _ -> (Outcome::InvalidState)
   }
  }

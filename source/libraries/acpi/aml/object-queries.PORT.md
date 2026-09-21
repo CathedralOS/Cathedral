@@ -67,3 +67,9 @@ Records and reproduction tools live under `tools/ports/acpi/aml/object-queries/`
 The source inventory translates the bounded resolver and retains numeric type
 and size as partial operation components. Native ABI, device, firmware and
 production integration remain untested.
+
+The receipt snapshot above belongs to commit `600eb26`. Subsequent shared
+path/namespace guard fixes retain fresh 96 query runtime and 27 parser pairs in
+`tools/ports/acpi/pci-routing-kernel/regressions/`. Earlier constant and full306
+regression records remain unchanged historical evidence; their verifier is
+intentionally tied to the original source snapshot.

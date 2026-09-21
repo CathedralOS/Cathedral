@@ -529,8 +529,15 @@ authority. Runtime resource integration remains pending; ACPI-004/006 stay open.
 The [public PCI routing probe](tools/ports/acpi/pci-routing/README.md) adds 101
 original AML/resource fixtures using the pinned public loader and routing APIs.
 It records 74 successful decodes and 69 successful routes, with errors/panics
-separated and zero forbidden callbacks. Strict ACPI row widths, source-index
-selection and resource validation remain prospective Omega adapter work.
+separated and zero forbidden callbacks.
+The [detached PCI routing kernel](source/libraries/acpi/pci_routing/PORT.md) now
+passes 117 checked pairs for strict four-member `_PRT` rows, complete output
+validation, captured link-level lookup, `_CRS` requests and physical SourceIndex
+selection after complete resource-template validation. It reuses canonical AML
+storage and resource types. Shared name/namespace guards stage unsigned counts
+before comparison; maximum-count regressions and fresh 96 query/27 parser pairs
+pass, while prior source-bound receipts remain historical. Evaluating the supplied objects and installing
+interrupts remain separate caller boundaries; generic AML integration stays open.
 
 ## Phase 5 — only after the corpus above is healthy
 

@@ -1,0 +1,102 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Strict detached _PRT link-resource selection; acpi pin
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5, copyright 2018 Isaac Woods.
+// Supplied evaluated bytes only: no _CRS evaluation or device operation.
+module link_resources;
+use aml::model::Outcome;
+use aml::model::ObjectStore;
+use aml::byte_storage;
+use aml::byte_storage::ByteRead;
+use aml::byte_storage::ByteKind;
+use aml::byte_storage::ByteOutcome;
+use resources::resource_model;
+use resources::resource_model::Resource;
+use resources::resource_model::Parsed;
+use resources::resource_model::Template;
+use resources::resource_model::Interrupts;
+use resources::resource_irq;
+use resources::resource_parse;
+use resources::resource_template;
+use model::Fault;
+use model::ResourceSelection;
+data ResourceInput [copy] {length:u64;bytes:[u8;4096];}
+data Walk [copy] {at:u64;ordinal:u64;selected:Resource;outcome:resource_model::Outcome;found:bool;}
+// The object ID is an already-evaluated _CRS Buffer. Transparent wrappers are
+// read by the canonical byte store; nontransparent references are not guessed.
+pub machine select_buffer(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,source_index:u32)->ResourceSelection {
+ let snapshot:ByteRead=byte_storage::read_bytes(input,length,unit,store,object);
+ transition snapshot.outcome==ByteOutcome::Success {true -> kind(snapshot,source_index) _ -> (ResourceSelection {outcome:Outcome::InvalidState,fault:Fault::Buffer,byte_outcome:snapshot.outcome})}
+ state kind(snapshot:ByteRead,source_index:u32)->ResourceSelection {
+  transition snapshot.kind==ByteKind::Buffer && snapshot.length<=256 {true -> copy(snapshot,source_index) _ -> (ResourceSelection {outcome:Outcome::BadEncoding,fault:Fault::Buffer})}
+ }
+ state copy(snapshot:ByteRead,source_index:u32)->ResourceSelection {
+  let mut copied:ResourceInput=ResourceInput {length:snapshot.length};
+  _ = pr_copy(&snapshot.bytes,&mut copied.bytes,0,snapshot.length);
+  let result:ResourceSelection=select_bytes(&copied.bytes,copied.length,source_index);result
+ }
+}
+machine pr_copy(input:&[u8;256],output:&mut [u8;4096],index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->u8 { _ = pr_copy_step(input,output,index,count);transition index<count {true -> pr_copy(input,output,index+1,count) _ -> (0)} }
+machine pr_copy_step(input:&[u8;256],output:&mut [u8;4096],index:u64,count:u64)->u8 {
+ transition index<count && index<256 {true -> copy(input,output,index) _ -> (0)}
+ state copy(input:&[u8;256],output:&mut [u8;4096],index:u64)->u8 {output[index]=input[index];0}
+}
+// Physical descriptor ordinal counts every non-EndTag descriptor, including
+// retained unsupported descriptors. Whole-template validation precedes selection.
+pub machine select_bytes(input:&[u8;4096],length:u64,source_index:u32)->ResourceSelection {
+ let template:Template=resource_template::validate_template(input,length);
+ transition template.outcome==resource_model::Outcome::Success {true -> count(input,length,source_index as u64,template.count) _ -> (ResourceSelection {outcome:Outcome::BadEncoding,fault:Fault::Template,resource_outcome:template.outcome})}
+ state count(input:&[u8;4096],length:u64,index:u64,count:u64)->ResourceSelection {
+  transition index<count && length<=4096 {true -> walk(input,length,index,count) _ -> (ResourceSelection {outcome:Outcome::MissingObject,fault:Fault::Descriptor,resource_outcome:resource_model::Outcome::Success})}
+ }
+ state walk(input:&[u8;4096],length:u64,index:u64,count:u64)->ResourceSelection {
+  let initial:Walk=Walk {outcome:resource_model::Outcome::Success};let result:Walk=pr_descriptors(input,length,index,initial,0,count);
+  transition result.outcome==resource_model::Outcome::Success && result.found {true -> selected(input,length,result.selected) _ -> (ResourceSelection {outcome:Outcome::BadEncoding,fault:Fault::Descriptor,resource_outcome:result.outcome})}
+ }
+ state selected(input:&[u8;4096],length:u64,resource:Resource)->ResourceSelection {
+  transition resource {Resource::IrqResource {irq} -> cardinality(input,length,resource,irq.interrupts,irq.extended) _ -> (ResourceSelection {outcome:Outcome::BadEncoding,fault:Fault::Descriptor,resource_outcome:resource_model::Outcome::Success})}
+ }
+ state cardinality(input:&[u8;4096],length:u64,resource:Resource,interrupts:Interrupts,extended:bool)->ResourceSelection {
+  // A current IRQ assignment must identify exactly one interrupt. Existing
+  // irq_at handles either canonical mask or table view without a new IRQ type.
+  let first:resource_model::NumberResult=resource_irq::irq_at(input,length,interrupts,0);
+  let second:resource_model::NumberResult=resource_irq::irq_at(input,length,interrupts,1);
+  transition first.outcome==resource_model::Outcome::Success && second.outcome!=resource_model::Outcome::Success {true -> publish(input,length,resource) _ -> (ResourceSelection {outcome:Outcome::BadEncoding,fault:Fault::Descriptor,resource_outcome:resource_model::Outcome::Success})}
+ }
+ state publish(input:&[u8;4096],length:u64,resource:Resource)->ResourceSelection {
+  transition resource {Resource::IrqResource {irq} -> backing(input,length,resource) _ -> (ResourceSelection {outcome:Outcome::BadEncoding,fault:Fault::Descriptor})}
+ }
+ state backing(input:&[u8;4096],length:u64,resource:Resource)->ResourceSelection {
+  let mut result:ResourceSelection=ResourceSelection {length:length,resource_outcome:resource_model::Outcome::Success};
+  _ = pr_publish_bytes(input,&mut result.bytes,0,length);
+  transition resource {Resource::IrqResource {irq} -> finished(result,irq) _ -> (ResourceSelection {outcome:Outcome::BadEncoding,fault:Fault::Descriptor})}
+ }
+ state finished(result:ResourceSelection,irq:resource_model::Irq)->ResourceSelection {let mut out:ResourceSelection=result;out.irq=irq;out}
+}
+machine pr_publish_bytes(input:&[u8;4096],output:&mut [u8;4096],index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->u8 {_ = pr_publish_step(input,output,index,count);transition index<count {true -> pr_publish_bytes(input,output,index+1,count) _ -> (0)}}
+machine pr_publish_step(input:&[u8;4096],output:&mut [u8;4096],index:u64,count:u64)->u8 {
+ transition index<count && index<4096 {true -> write(input,output,index) _ -> (0)}
+ state write(input:&[u8;4096],output:&mut [u8;4096],index:u64)->u8 {output[index]=input[index];0}
+}
+machine pr_descriptors(input:&[u8;4096],length:u64,wanted:u64,prior:Walk,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->Walk {
+ let next:Walk=pr_descriptor_step(input,length,wanted,prior,index,count);
+ transition index<count {true -> pr_descriptors(input,length,wanted,next,index+1,count) _ -> (prior)}
+}
+machine pr_descriptor_step(input:&[u8;4096],length:u64,wanted:u64,prior:Walk,index:u64,count:u64)->Walk {
+ transition index<count && !prior.found && prior.outcome==resource_model::Outcome::Success {true -> parse(input,length,wanted,prior) _ -> (prior)}
+ state parse(input:&[u8;4096],length:u64,wanted:u64,prior:Walk)->Walk {
+  let parsed:Parsed=resource_parse::parse_one(input,length,prior.at);
+  transition parsed.outcome==resource_model::Outcome::Success {true -> selected(wanted,prior,parsed) _ -> (Walk {outcome:parsed.outcome})}
+ }
+ state selected(wanted:u64,prior:Walk,parsed:Parsed)->Walk {
+  let next:u64=pr_ordinal(prior.ordinal);
+  transition prior.ordinal==wanted {true -> (Walk {at:parsed.next,ordinal:prior.ordinal,selected:parsed.resource,outcome:resource_model::Outcome::Success,found:true}) _ -> (Walk {at:parsed.next,ordinal:next,outcome:resource_model::Outcome::Success})}
+ }
+}
+
+machine pr_ordinal(value:u64)->u64 {transition value<4096 {true -> (value+1) _ -> (0)}}

@@ -1,0 +1,5 @@
+machine build(builder:&mut Build) {
+ builder.package("cathedral-acpi-pci-routing");
+ builder.depend_as("aml",Source::Path {location:"../aml"});
+ builder.depend_as("resources",Source::Path {location:"../resources"});
+}

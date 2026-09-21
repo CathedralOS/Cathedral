@@ -1,0 +1,114 @@
+{
+  "files": {
+    "src/aml/pci_routing.rs": {
+      "disposition": "translated",
+      "reason": "Strict bounded pure decomposition only; interpreter evaluation and interrupt installation remain caller boundaries. See PORT.md for exact pin deviations.",
+      "sha256": "4c2371d38c0a67cab28ab686c8ad6374577e012cd02f561d4730e2f7895dcc39",
+      "symbols": {
+        "14:crate::aml::resource::IrqDescriptor;": {
+          "anchor": "pub use crate::aml::resource::IrqDescriptor;",
+          "disposition": "translated",
+          "reason": "Reuse canonical resources::resource_model::Irq; no competing IRQ representation.",
+          "targets": [
+            {
+              "anchor": "irq:Irq;",
+              "path": "source/libraries/acpi/pci_routing/model.omg"
+            }
+          ]
+        },
+        "170:route": {
+          "anchor": "pub fn route(",
+          "disposition": "translated",
+          "reason": "Pure first-match selection plus crs_request and detached link_resources::select_bytes. SourceIndex counts physical resource descriptors. GSI remains a number; no interrupt setup or evaluator authority, and no default IRQ flags are fabricated.",
+          "targets": [
+            {
+              "anchor": "pub machine select",
+              "path": "source/libraries/acpi/pci_routing/routes.omg"
+            },
+            {
+              "anchor": "pub machine crs_request",
+              "path": "source/libraries/acpi/pci_routing/routes.omg"
+            },
+            {
+              "anchor": "pub machine select_bytes",
+              "path": "source/libraries/acpi/pci_routing/link_resources.omg"
+            }
+          ]
+        },
+        "17:Pin": {
+          "anchor": "pub enum Pin {",
+          "disposition": "translated",
+          "reason": "Validated numeric 0..3 operand; no invented native enum layout.",
+          "targets": [
+            {
+              "anchor": "pin<4",
+              "path": "source/libraries/acpi/pci_routing/routes.omg"
+            }
+          ]
+        },
+        "25:PciRouteType": {
+          "anchor": "pub enum PciRouteType {",
+          "disposition": "translated",
+          "reason": "Semantic Gsi/Link cases; Link retains SourceIndex omitted by the pin; None is explicit empty/failure carrier.",
+          "targets": [
+            {
+              "anchor": "pub data Target",
+              "path": "source/libraries/acpi/pci_routing/model.omg"
+            }
+          ]
+        },
+        "40:PciRoute": {
+          "anchor": "pub struct PciRoute {",
+          "disposition": "translated",
+          "reason": "Device/pin/target retained. Strict address requires functionFFFF, eliminating per-row function state.",
+          "targets": [
+            {
+              "anchor": "pub data Route",
+              "path": "source/libraries/acpi/pci_routing/model.omg"
+            }
+          ]
+        },
+        "52:PciRoutingTable": {
+          "anchor": "pub struct PciRoutingTable {",
+          "disposition": "translated",
+          "reason": "Ordinary initialized 32-row storage/count, an explicit bounded profile replacing Vec.",
+          "targets": [
+            {
+              "anchor": "pub data Routes",
+              "path": "source/libraries/acpi/pci_routing/model.omg"
+            }
+          ]
+        },
+        "61:from_prt_path": {
+          "anchor": "pub fn from_prt_path(",
+          "disposition": "translated",
+          "reason": "Pure package decoding and captured NameReference level search; supplied already-evaluated ObjectStore object. No interpreter evaluation. Four members, DWORD widths, FFFF function and declared scope validation intentionally strict.",
+          "targets": [
+            {
+              "anchor": "pub machine decode",
+              "path": "source/libraries/acpi/pci_routing/routes.omg"
+            }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anchor": "pub machine decode",
+          "path": "source/libraries/acpi/pci_routing/routes.omg"
+        },
+        {
+          "anchor": "pub machine select_bytes",
+          "path": "source/libraries/acpi/pci_routing/link_resources.omg"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "upstream": {
+    "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+    "roots": [
+      "src/aml/pci_routing.rs"
+    ],
+    "url": "https://github.com/rust-osdev/acpi"
+  }
+}

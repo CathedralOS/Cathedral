@@ -4,7 +4,7 @@
 
 **Stage: inventoried, 2026-09-20.** This milestone covers the complete pinned
 Rust corpus and test-scenario metadata. It does not claim an Omega translation,
-compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 563 translated table/topology/AML/helper anchors and 1,018
+compiled parser, interpreted AML, or hardware integration. The cumulative source map now records 570 translated table/topology/AML/helper anchors and 1,011
 pending anchors. Inventory completion and translation completion are different
 milestones. The bounded ACPI-001 slice is separately
 [tested by Omega semantic evaluation](headers.PORT.md): 65 original scenarios
@@ -187,3 +187,13 @@ regression pairs, three const pairs and 44 public Rust observations (41 numeric 
 one caught load panic). Namespace get/bind guards now stage IDs and counts as
 u64 locals to reject malformed maximum IDs on the pinned evaluator. Generic
 query opcode retirement and absent payload kinds remain pending.
+
+[Detached PCI interrupt routing](pci_routing/PORT.md) translates the pinned routing
+file's pure behavior into strict package decoding, first-match selection,
+source-scoped link lookup, inert `_CRS` requests and physical SourceIndex resource
+selection. The 117 checked pairs validate all 32 route slots, exact request paths
+and all 4096 resource bytes. Shared unsigned-count guard fixes also pass fresh
+96 query and 27 parser pairs; earlier receipts retain their original hashes. The separate public
+Rust probe retains its 101 observations and documented pin differences. AML
+method evaluation and interrupt installation remain caller boundaries. No live
+access or completed generic AML routing service is implied.

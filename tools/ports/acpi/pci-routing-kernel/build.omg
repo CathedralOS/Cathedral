@@ -1,0 +1,7 @@
+machine build(builder:&mut Build) {
+ builder.application("cathedral-acpi-pci-routing-tests");
+ builder.freestanding=true;
+ builder.depend_as("prt",Source::Path {location:"../../../../source/libraries/acpi/pci_routing"});
+ builder.depend_as("aml",Source::Path {location:"../../../../source/libraries/acpi/aml"});
+ builder.depend_as("resources",Source::Path {location:"../../../../source/libraries/acpi/resources"});
+}

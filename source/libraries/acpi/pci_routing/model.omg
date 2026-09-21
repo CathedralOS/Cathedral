@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Strict bounded adaptation of rust-osdev/acpi pci_routing.rs at
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; copyright 2018 Isaac Woods.
+// Ordinary routing observations confer no device or interrupt authority.
+module model;
+use aml::model::Outcome;
+use aml::model::Path;
+use aml::byte_storage::ByteOutcome;
+use resources::resource_model;
+use resources::resource_model::Irq;
+pub data Fault [copy] {case None;case Package;case Address;case Pin;case Source;case SourceIndex;case LinkLevel;case Table;case Buffer;case Template;case Descriptor;}
+pub data Target [copy] {case None;case Gsi(number:u32);case Link(path:Path,source_index:u32);}
+pub data Route [copy] {device:u16;pin:u8;target:Target;}
+pub data Routes [copy] {count:u64;entries:[Route;32];}
+pub data Decode [copy] {outcome:Outcome;fault:Fault;row:u64;routes:Routes;}
+pub data Selection [copy] {outcome:Outcome;fault:Fault;row:u64;target:Target;}
+// A Link request is data for a caller to evaluate, never an evaluation capability.
+pub data Request [copy] {outcome:Outcome;path:Path;source_index:u32;}
+// The canonical IRQ may contain spans. Its initialized backing travels with it.
+pub data ResourceSelection [copy] {outcome:Outcome;fault:Fault;byte_outcome:ByteOutcome;resource_outcome:resource_model::Outcome;length:u64;bytes:[u8;4096];irq:Irq;}

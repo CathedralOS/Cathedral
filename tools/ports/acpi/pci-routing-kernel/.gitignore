@@ -1,0 +1,7 @@
+/build/
+/__pycache__/
+/run-suite.omg
+/suite.omg
+/cases.json
+/selections.json
+/smoke-verification.json

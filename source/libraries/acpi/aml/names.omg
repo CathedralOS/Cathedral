@@ -20,7 +20,9 @@ pub machine segment_set(value:Path,index:u64,segment:u32) -> Path {
 }
 pub machine root() -> Path { Path {absolute:true} }
 pub machine path_equal(left:Path,right:Path) -> bool {
- transition left.absolute == right.absolute && left.parents == right.parents && left.count == right.count && left.count <= 16 {
+ let left_count:u64=left.count;let right_count:u64=right.count;
+ let left_parents:u64=left.parents;let right_parents:u64=right.parents;
+ transition left.absolute == right.absolute && left_parents == right_parents && left_count == right_count && left_count <= 16 {
   true -> call_path_equal_scan_0(left,right,0) _ -> (false)
  }
 
@@ -38,7 +40,8 @@ terminates by (index,count) -> Nat::BoundedDistance;
 }
 
 pub machine path_valid(value:Path) -> bool {
- transition value.count<=16 && value.parents<=16 && (!value.absolute || value.parents==0) {
+ let count:u64=value.count;let parents:u64=value.parents;
+ transition count<=16 && parents<=16 && (!value.absolute || parents==0) {
   true -> call_path_valid_scan_0(value,0) _ -> (false)
  }
 

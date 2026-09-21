@@ -1,0 +1,212 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified pure _PRT decode/selection from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; copyright 2018 Isaac Woods.
+// Strict ACPI6.6: four members, DWORD widths, functionFFFF, NameReference/Zero.
+module routes;
+use aml::model::Outcome;
+use aml::model::Value;
+use aml::model::ObjectStore;
+use aml::model::Path;
+use aml::model::PathResult;
+use aml::model::Lookup;
+use aml::model::ReferenceState;
+use aml::names;
+use aml::namespace;
+use aml::object_references;
+use model::Fault;
+use model::Target;
+use model::Route;
+use model::Routes;
+use model::Decode;
+use model::Selection;
+use model::Request;
+data RowRead [copy] {outcome:Outcome;fault:Fault;route:Route;}
+
+// The caller supplies an already-evaluated package ID. No evaluation occurs.
+pub machine decode(store:&ObjectStore,object:u64,budget:u64)->Decode {
+ let count:u64=store.space.object_count;let entries:u64=store.space.count;
+ transition count<=64 && entries<=32 && object<count && object<64 && budget<=64 {
+  true -> payload(store,object,budget,store.space.objects[object].value)
+  _ -> (Decode {outcome:Outcome::InvalidState,fault:Fault::Package})
+ }
+ state payload(store:&ObjectStore,object:u64,budget:u64,value:Value)->Decode {
+  transition value {Value::Package {first,count} -> count(store,object,budget,count) _ -> (Decode {outcome:Outcome::BadEncoding,fault:Fault::Package})}
+ }
+ state count(store:&ObjectStore,object:u64,budget:u64,count:u64)->Decode {
+  transition {count>32 -> (Decode {outcome:Outcome::Capacity,fault:Fault::Table})
+   budget<count -> (Decode {outcome:Outcome::WorkLimit,fault:Fault::Package})
+   count==0 -> (Decode {})
+   _ -> rows(store,object,budget,count)}
+ }
+ state rows(store:&ObjectStore,object:u64,budget:u64,count:u64)->Decode {
+  let initial:Decode=Decode {};let result:Decode=pr_rows(store,object,budget,initial,0,count);
+  transition result.outcome==Outcome::Success {true -> (result) _ -> (Decode {outcome:result.outcome,fault:result.fault,row:result.row})}
+ }
+}
+machine pr_rows(store:&ObjectStore,package:u64,budget:u64,prior:Decode,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->Decode {
+ let next:Decode=pr_row_step(store,package,budget,prior,index,count);
+ transition index<count {true -> pr_rows(store,package,budget,next,index+1,count) _ -> (prior)}
+}
+machine pr_row_step(store:&ObjectStore,package:u64,budget:u64,prior:Decode,index:u64,count:u64)->Decode {
+ transition index<count && index<32 && prior.outcome==Outcome::Success {true -> member(store,package,budget,prior,index) _ -> (prior)}
+ state member(store:&ObjectStore,package:u64,budget:u64,prior:Decode,index:u64)->Decode {
+  let found:ReferenceState=object_references::package_element(&store.space,package,index,budget);
+  transition found.outcome==Outcome::Success {true -> parsed(store,found.object,budget,prior,index) _ -> (Decode {outcome:found.outcome,fault:Fault::Package,row:index})}
+ }
+ state parsed(store:&ObjectStore,object:u64,budget:u64,prior:Decode,index:u64)->Decode {
+  let row:RowRead=pr_parse_row(store,object,budget);
+  transition row.outcome==Outcome::Success {true -> insert(prior,index,row) _ -> (Decode {outcome:row.outcome,fault:row.fault,row:index})}
+ }
+ state insert(prior:Decode,index:u64,row:RowRead)->Decode {
+  transition index<32 {true -> write(prior,index,row) _ -> (Decode {outcome:Outcome::Capacity,fault:Fault::Table,row:index})}
+ }
+ state write(prior:Decode,index:u64,row:RowRead)->Decode {
+  let mut result:Decode=prior;result.routes.entries[index]=row.route;let next:u64=pr_count(index);result.routes.count=next;result
+ }
+}
+// Validate one row privately before adding it to the candidate table.
+machine pr_parse_row(store:&ObjectStore,object:u64,budget:u64)->RowRead {
+ transition object<store.space.object_count && object<64 {true -> payload(store,object,budget,store.space.objects[object].value) _ -> (RowRead {outcome:Outcome::InvalidState,fault:Fault::Package})}
+ state payload(store:&ObjectStore,object:u64,budget:u64,value:Value)->RowRead {
+  transition value {Value::Package {first,count} -> shape(store,object,budget,count) _ -> (RowRead {outcome:Outcome::BadEncoding,fault:Fault::Package})}
+ }
+ state shape(store:&ObjectStore,object:u64,budget:u64,count:u64)->RowRead {
+  transition count==4 {true -> first(store,object,budget) _ -> (RowRead {outcome:Outcome::BadEncoding,fault:Fault::Package})}
+ }
+ state first(store:&ObjectStore,object:u64,budget:u64)->RowRead {
+  let a:ReferenceState=object_references::package_element(&store.space,object,0,budget);
+  let b:ReferenceState=object_references::package_element(&store.space,object,1,budget);
+  let c:ReferenceState=object_references::package_element(&store.space,object,2,budget);
+  let d:ReferenceState=object_references::package_element(&store.space,object,3,budget);
+  transition {a.outcome!=Outcome::Success -> (RowRead {outcome:a.outcome,fault:Fault::Package})
+   b.outcome!=Outcome::Success -> (RowRead {outcome:b.outcome,fault:Fault::Package})
+   c.outcome!=Outcome::Success -> (RowRead {outcome:c.outcome,fault:Fault::Package})
+   d.outcome!=Outcome::Success -> (RowRead {outcome:d.outcome,fault:Fault::Package})
+   _ -> bounded(store,a.object,b.object,c.object,d.object,budget)}
+ }
+ state bounded(store:&ObjectStore,a:u64,b:u64,c:u64,d:u64,budget:u64)->RowRead {
+  transition a<64 && b<64 && c<64 && d<64 {true -> address(store,a,b,c,d,budget) _ -> (RowRead {outcome:Outcome::InvalidState,fault:Fault::Package})}
+ }
+ state address(store:&ObjectStore,a:u64,b:u64,c:u64,d:u64,budget:u64)->RowRead {
+  let field:Value=store.space.objects[a].value;
+  transition field {Value::Integer {number} -> address_number(store,b,c,d,budget,number) _ -> (RowRead {outcome:Outcome::BadEncoding,fault:Fault::Address})}
+ }
+ state address_number(store:&ObjectStore,b:u64,c:u64,d:u64,budget:u64,address:u64)->RowRead {
+  transition address<=4294967295 && address&65535==65535 {true -> pin(store,b,c,d,budget,address>>16) _ -> (RowRead {outcome:Outcome::BadEncoding,fault:Fault::Address})}
+ }
+ state pin(store:&ObjectStore,b:u64,c:u64,d:u64,budget:u64,device:u64)->RowRead {
+  transition b<64 {true -> pin_value(store,store.space.objects[b].value,c,d,budget,device) _ -> (RowRead {outcome:Outcome::InvalidState,fault:Fault::Pin})}
+ }
+ state pin_value(store:&ObjectStore,field:Value,c:u64,d:u64,budget:u64,device:u64)->RowRead {
+  transition field {Value::Integer {number} -> pin_number(store,c,d,budget,device,number) _ -> (RowRead {outcome:Outcome::BadEncoding,fault:Fault::Pin})}
+ }
+ state pin_number(store:&ObjectStore,c:u64,d:u64,budget:u64,device:u64,pin:u64)->RowRead {
+  transition pin<4 && d<64 {true -> source_index(store,c,budget,Route {device:device as u16,pin:pin as u8},store.space.objects[d].value) _ -> (RowRead {outcome:Outcome::BadEncoding,fault:Fault::Pin})}
+ }
+ state source_index(store:&ObjectStore,c:u64,budget:u64,route:Route,field:Value)->RowRead {
+  transition field {Value::Integer {number} -> source_index_number(store,c,budget,route,number) _ -> (RowRead {outcome:Outcome::BadEncoding,fault:Fault::SourceIndex})}
+ }
+ state source_index_number(store:&ObjectStore,c:u64,budget:u64,route:Route,index:u64)->RowRead {
+  transition index<=4294967295 {true -> source(store,c,budget,route,index as u32) _ -> (RowRead {outcome:Outcome::BadEncoding,fault:Fault::SourceIndex})}
+ }
+ state source(store:&ObjectStore,c:u64,budget:u64,route:Route,index:u32)->RowRead {
+  let source:ReferenceState=object_references::unwrap_all(&store.space,c,budget);
+  transition source.outcome==Outcome::Success && source.object<64 {true -> source_value(store,store.space.objects[source.object].value,route,index) _ -> (RowRead {outcome:source.outcome,fault:Fault::Source})}
+ }
+ state source_value(store:&ObjectStore,field:Value,route:Route,index:u32)->RowRead {
+  transition field {
+   Value::Integer {number} -> zero(number,route,index)
+   Value::NameReference {name,scope} -> link(store,name,scope,route,index)
+   _ -> (RowRead {outcome:Outcome::BadEncoding,fault:Fault::Source})
+  }
+ }
+ state zero(number:u64,route:Route,index:u32)->RowRead {
+  transition number==0 {true -> (RowRead {route:Route {device:route.device,pin:route.pin,target:Target::Gsi {number:index}}}) _ -> (RowRead {outcome:Outcome::BadEncoding,fault:Fault::Source})}
+ }
+ state link(store:&ObjectStore,name:Path,scope:Path,route:Route,index:u32)->RowRead {
+  let found:Lookup=resolve_level(store,name,scope);
+  transition found.outcome==Outcome::Success {true -> (RowRead {route:Route {device:route.device,pin:route.pin,target:Target::Link {path:found.path,source_index:index}}}) _ -> (RowRead {outcome:found.outcome,fault:Fault::LinkLevel})}
+ }
+}
+// Level search deliberately ignores ordinary object slots. Non-search paths
+// resolve against the declared scope and must identify an existing level.
+pub machine resolve_level(store:&ObjectStore,name:Path,scope:Path)->Lookup {
+ let resolved:PathResult=names::resolve(name,scope);
+ transition resolved.outcome==Outcome::Success {true -> declared(store,name,scope,resolved.value) _ -> (Lookup {outcome:resolved.outcome})}
+ state declared(store:&ObjectStore,name:Path,scope:Path,absolute:Path)->Lookup {
+  let declared:Lookup=namespace::level(store.space,scope);
+  transition declared.outcome==Outcome::Success {true -> choose(store,name,scope,absolute) _ -> (declared)}
+ }
+ state choose(store:&ObjectStore,name:Path,scope:Path,absolute:Path)->Lookup {
+  transition !name.absolute && name.parents==0 && name.count==1 {true -> search(store,name,scope) _ -> exact(store,absolute)}
+ }
+ state search(store:&ObjectStore,name:Path,scope:Path)->Lookup {
+  let initial:Lookup=Lookup {outcome:Outcome::MissingLevel};let result:Lookup=pr_level_walk(store,name,scope,initial,0,17);result
+ }
+ state exact(store:&ObjectStore,absolute:Path)->Lookup {let result:Lookup=namespace::level(store.space,absolute);result}
+}
+machine pr_level_walk(store:&ObjectStore,name:Path,scope:Path,prior:Lookup,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->Lookup {
+ let next:Lookup=pr_level_step(store,name,scope,prior,index,count);
+ let upper:PathResult=names::parent(scope);let parent:Path=pr_parent(scope,upper);
+ transition index<count {true -> pr_level_walk(store,name,parent,next,index+1,count) _ -> (prior)}
+}
+machine pr_parent(scope:Path,upper:PathResult)->Path {transition upper.outcome==Outcome::Success {true -> (upper.value) _ -> (scope)}}
+machine pr_level_step(store:&ObjectStore,name:Path,scope:Path,prior:Lookup,index:u64,count:u64)->Lookup {
+ transition index<count && prior.outcome!=Outcome::Success {true -> resolve(store,name,scope) _ -> (prior)}
+ state resolve(store:&ObjectStore,name:Path,scope:Path)->Lookup {
+  let resolved:PathResult=names::resolve(name,scope);
+  transition resolved.outcome==Outcome::Success {true -> lookup(store,resolved.value) _ -> (Lookup {outcome:resolved.outcome})}
+ }
+ state lookup(store:&ObjectStore,path:Path)->Lookup {let result:Lookup=namespace::level(store.space,path);result}
+}
+// Strict tables contain wildcard functions only, so every queried function
+// shares the same route. Query function is intentionally absent from this API.
+pub machine select(routes:&Routes,device:u16,pin:u8)->Selection {
+ let count:u64=routes.count;
+ transition count<=32 && pin<4 {true -> valid(routes,device,pin,count) _ -> (Selection {outcome:Outcome::InvalidState,fault:Fault::Table})}
+ state valid(routes:&Routes,device:u16,pin:u8,count:u64)->Selection {
+  let good:bool=pr_valid_table(routes,true,0,count);transition good {true -> scan(routes,device,pin,count) _ -> (Selection {outcome:Outcome::InvalidState,fault:Fault::Table})}
+ }
+ state scan(routes:&Routes,device:u16,pin:u8,count:u64)->Selection {
+  let initial:Selection=Selection {outcome:Outcome::MissingObject};let result:Selection=pr_select(routes,device,pin,initial,0,count);result
+ }
+}
+machine pr_select(routes:&Routes,device:u16,pin:u8,prior:Selection,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->Selection {
+ let next:Selection=pr_select_step(routes,device,pin,prior,index,count);
+ transition index<count {true -> pr_select(routes,device,pin,next,index+1,count) _ -> (prior)}
+}
+machine pr_select_step(routes:&Routes,device:u16,pin:u8,prior:Selection,index:u64,count:u64)->Selection {
+ transition index<count && index<32 && prior.outcome!=Outcome::Success {true -> row(routes.entries[index],device,pin,index,prior) _ -> (prior)}
+ state row(route:Route,device:u16,pin:u8,index:u64,prior:Selection)->Selection {
+  transition route.device==device && route.pin==pin {true -> (Selection {row:index,target:route.target}) _ -> (prior)}
+ }
+}
+pub machine crs_request(target:Target)->Request {
+ transition target {Target::Link {path,source_index} -> link(path,source_index) _ -> (Request {outcome:Outcome::InvalidState})}
+ state link(path:Path,source_index:u32)->Request {
+  let result:PathResult=namespace::child(path,0x5352435f);
+  transition result.outcome==Outcome::Success {true -> (Request {path:result.value,source_index:source_index}) _ -> (Request {outcome:result.outcome})}
+ }
+}
+
+machine pr_count(index:u64)->u64 {transition index<32 {true -> (index+1) _ -> (0)}}
+
+machine pr_valid_table(routes:&Routes,prior:bool,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->bool {let good:bool=pr_valid_slot(routes,index,count);transition index<count {true -> pr_valid_table(routes,prior && good,index+1,count) _ -> (prior)}}
+machine pr_valid_slot(routes:&Routes,index:u64,count:u64)->bool {
+ transition index<count && index<32 {true -> row(routes.entries[index]) _ -> (true)}
+ state row(route:Route)->bool {
+  let target:bool=pr_valid_target(route.target);route.pin<4 && target
+ }
+}
+machine pr_valid_target(target:Target)->bool {
+ transition target {Target::Gsi {number} -> (true) Target::Link {path,source_index} -> link(path) _ -> (false)}
+ state link(path:Path)->bool {let good:bool=names::path_valid(path);good && path.absolute && path.parents==0}
+}
