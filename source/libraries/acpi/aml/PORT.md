@@ -135,3 +135,10 @@ ASCII prefix ending at NUL or the requested maximum. All 195 checked pairs and
 three constant pairs pass. The 44 public Rust observations retain 33 agreements
 and 11 documented NUL/UTF-8 differences. Reference evaluation, target writes and
 opcode execution remain pending; aggregate source counts are unchanged.
+
+[Explicit numeric String composition](object-numeric-strings.PORT.md) handles direct Integer, String
+and Buffer sources for decimal/hexadecimal formatting. All 255 checked pairs,
+three constant pairs and 102 actual public opcode observations pass; the public
+record retains 100 String results and two pinned literal-construction panics.
+Explicit formatting and width/capacity differences are documented. Operand
+resolution, target writes and opcode retirement remain pending; counts are unchanged.

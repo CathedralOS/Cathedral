@@ -1,0 +1,79 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified do_to_dec_hex_string value composition from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
+// Direct data only: no operand/reference resolution, target store or retirement.
+module object_numeric_strings;
+use model::ObjectStore;
+use model::Value;
+use byte_storage::ByteRead;
+use byte_storage::ByteOutcome;
+use byte_storage::read_bytes;
+use object_conversions::ConversionFailure;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::string_numbers::NumberFormat;
+use integer_helpers::string_numbers::integer_to_string;
+use integer_helpers::string_numbers::buffer_to_numeric_string;
+use integer_helpers::conversions::mid;
+
+pub data NumericStringResult [copy] {
+ case Failure(reason:ConversionFailure);
+ case String(length:u64,bytes:[u8;256]);
+}
+
+pub machine convert(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize,format:NumberFormat)->NumericStringResult {
+ let count:u64=store.space.object_count;
+ transition count<=64 && object<count && object<64 {
+  true -> selected(input,length,unit,store,object,size,format)
+  _ -> (NumericStringResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+ state selected(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize,format:NumberFormat)->NumericStringResult {
+  transition store.space.objects[object].value {
+   Value::Integer {number} -> integer(number,size,format)
+   Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,object,format,false)
+   Value::String {string_storage} -> bytes(input,length,unit,store,object,format,true)
+   _ -> (NumericStringResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state integer(number:u64,size:IntegerSize,format:NumberFormat)->NumericStringResult {
+  let mut output:[u8;256];
+  let result:IntegerResult=integer_to_string(size,number,format,256,&mut output);
+  let out:NumericStringResult=ns_formatted(result,output);out
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,format:NumberFormat,string:bool)->NumericStringResult {
+  let snapshot:ByteRead=read_bytes(input,length,unit,store,object);
+  let failure:NumericStringResult=ns_storage_failure(snapshot.outcome);
+  transition snapshot.outcome==ByteOutcome::Success {true -> format_bytes(snapshot,format,string) _ -> (failure)}
+ }
+ state format_bytes(snapshot:ByteRead,format:NumberFormat,string:bool)->NumericStringResult {
+  let count:u64=snapshot.length;
+  transition string {true -> identity(snapshot,count) _ -> numeric(snapshot,count,format)}
+ }
+ state identity(snapshot:ByteRead,count:u64)->NumericStringResult {
+  let mut output:[u8;256];let copied:IntegerResult=mid(&snapshot.bytes,count,0,count,&mut output);
+  let out:NumericStringResult=ns_formatted(copied,output);out
+ }
+ state numeric(snapshot:ByteRead,count:u64,format:NumberFormat)->NumericStringResult {
+  let mut output:[u8;256];let formatted:IntegerResult=buffer_to_numeric_string(&snapshot.bytes,count,format,256,&mut output);
+  let out:NumericStringResult=ns_formatted(formatted,output);out
+ }
+}
+machine ns_formatted(result:IntegerResult,bytes:[u8;256])->NumericStringResult {
+ transition result.error {
+  0 -> (NumericStringResult::String {length:result.value,bytes:bytes})
+  4 -> (NumericStringResult::Failure {reason:ConversionFailure::Capacity})
+  7 -> (NumericStringResult::Failure {reason:ConversionFailure::Encoding})
+  _ -> (NumericStringResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+}
+machine ns_storage_failure(error:ByteOutcome)->NumericStringResult {
+ transition error {
+  ByteOutcome::Capacity -> (NumericStringResult::Failure {reason:ConversionFailure::Capacity})
+  ByteOutcome::Bounds -> (NumericStringResult::Failure {reason:ConversionFailure::Bounds})
+  ByteOutcome::Encoding -> (NumericStringResult::Failure {reason:ConversionFailure::Encoding})
+  ByteOutcome::UnsupportedValue -> (NumericStringResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  ByteOutcome::ReferenceCycle -> (NumericStringResult::Failure {reason:ConversionFailure::ReferenceCycle})
+  ByteOutcome::WorkLimit -> (NumericStringResult::Failure {reason:ConversionFailure::WorkLimit})
+  _ -> (NumericStringResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+}

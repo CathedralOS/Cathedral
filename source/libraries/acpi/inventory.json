@@ -816,7 +816,14 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/aml/object_numeric_strings.omg",
+              "anchor": "pub machine convert"
+            }
+          ],
+          "note": "Partial direct Integer/String/Buffer composition with selected-width normalization, exact pinned explicit numeric presentation, strict canonical String identity and bounded capacity. Operand evaluation/reference handling, targets, stores, context contribution and retirement remain pending."
         },
         "20:object": {
           "anchor": "pub mod object;",
