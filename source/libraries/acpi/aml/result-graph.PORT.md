@@ -1,7 +1,8 @@
 # Bounded result object graphs
 
-Status: 49 pure-kernel and 27 Program-boundary checked behavior/control pairs
-pass in the isolated `/private/tmp/cathedral-acpi-result-graph` worktree.
+Status: 49 pure-kernel, 27 Program-boundary and three supplemental checked
+behavior/control pairs pass in the isolated
+`/private/tmp/cathedral-acpi-result-graph` worktree.
 ACPI-006 remains open.
 
 `result_graph::check_graph` validates the reachable canonical object graph from
@@ -89,3 +90,11 @@ the actual loader and engine, with source and runner hashes unchanged. The
 receipts retain the exact isolated execution root; they are not relabeled as
 canonical-checkout execution. This does not close pending bytecode work,
 full deep package copying, reclamation or all ACPI-006 resource accounting.
+
+Three additional Program behavior/control pairs follow RefOf and Index edges to
+an extra four-byte Buffer under exact and one-short object/byte quotas. Each also
+executes the same initial Program state directly through `run_method` and checks
+that accepted and rejected results retain its exact `steps` and `fault_offset`.
+All three pairs and their exact-input receipt verification pass. This checks
+shared accounting beyond direct Package children and diagnostic preservation
+without changing the original 27-pair fixture or its recorded observations.

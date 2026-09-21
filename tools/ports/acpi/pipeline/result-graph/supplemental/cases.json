@@ -1,0 +1,47 @@
+[
+  {
+    "name": "nested_reference_exact",
+    "setup": "program.store.space.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:5};\nprogram.store.space.objects[5].value=Value::Reference {kind:ReferenceKind::Index,object_id:6};\nprogram.store.space.objects[6].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:6}};\nprogram.store.bytes.blocks[6]=ByteBlock {initialized:true,length:4};\nprogram.store.bytes.blocks[6].bytes[0]=68;program.store.bytes.blocks[6].bytes[1]=69;\nprogram.store.bytes.blocks[6].bytes[2]=70;program.store.bytes.blocks[6].bytes[3]=71;\nprogram.store.space.object_count=7;",
+    "error": "Success",
+    "objects": 5,
+    "bytes": 7,
+    "default": false,
+    "table": "08585f5f5f120b0211060a034142430a05085449434b0014114d41494e0070015449434ba4585f5f5f",
+    "tick": 1,
+    "steps": true,
+    "root": 0,
+    "scalar": null,
+    "present": true,
+    "count": 7
+  },
+  {
+    "name": "nested_reference_object_short",
+    "setup": "program.store.space.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:5};\nprogram.store.space.objects[5].value=Value::Reference {kind:ReferenceKind::Index,object_id:6};\nprogram.store.space.objects[6].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:6}};\nprogram.store.bytes.blocks[6]=ByteBlock {initialized:true,length:4};\nprogram.store.bytes.blocks[6].bytes[0]=68;program.store.bytes.blocks[6].bytes[1]=69;\nprogram.store.bytes.blocks[6].bytes[2]=70;program.store.bytes.blocks[6].bytes[3]=71;\nprogram.store.space.object_count=7;",
+    "error": "WorkLimit",
+    "objects": 4,
+    "bytes": 7,
+    "default": false,
+    "table": "08585f5f5f120b0211060a034142430a05085449434b0014114d41494e0070015449434ba4585f5f5f",
+    "tick": 1,
+    "steps": true,
+    "root": 0,
+    "scalar": null,
+    "present": false,
+    "count": 7
+  },
+  {
+    "name": "nested_reference_byte_short",
+    "setup": "program.store.space.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:5};\nprogram.store.space.objects[5].value=Value::Reference {kind:ReferenceKind::Index,object_id:6};\nprogram.store.space.objects[6].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:6}};\nprogram.store.bytes.blocks[6]=ByteBlock {initialized:true,length:4};\nprogram.store.bytes.blocks[6].bytes[0]=68;program.store.bytes.blocks[6].bytes[1]=69;\nprogram.store.bytes.blocks[6].bytes[2]=70;program.store.bytes.blocks[6].bytes[3]=71;\nprogram.store.space.object_count=7;",
+    "error": "Capacity",
+    "objects": 5,
+    "bytes": 6,
+    "default": false,
+    "table": "08585f5f5f120b0211060a034142430a05085449434b0014114d41494e0070015449434ba4585f5f5f",
+    "tick": 1,
+    "steps": true,
+    "root": 0,
+    "scalar": null,
+    "present": false,
+    "count": 7
+  }
+]
