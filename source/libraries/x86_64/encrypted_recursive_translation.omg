@@ -1,0 +1,37 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Explicit-profile composition of pinned RecursivePageTable::translate.
+// Selected initialized words only; no recursive alias or live access authority.
+module encrypted_recursive_translation;
+use recursive_translation;
+use recursive_translation::RecursiveTranslation;
+use translation::Translation;
+use memory_encryption;
+use memory_encryption::State;
+
+// Reuse the recursive whole-word/huge decision order and existing error cases.
+// Valid profiles only remove PTE address bits, so those decisions are unchanged.
+pub machine translate_words(profile: &State, va: u64, p4: u64, p3: u64, p2: u64, p1: u64) -> RecursiveTranslation {
+    let shape: RecursiveTranslation = recursive_translation::translate_words(va, p4, p3, p2, p1);
+    transition shape {
+        RecursiveTranslation::Result { value } -> projected(profile, value, p3, p2, p1)
+        _ -> (shape)
+    }
+    state projected(profile: &State, value: Translation, p3: u64, p2: u64, p1: u64) -> RecursiveTranslation {
+        transition value {
+            Translation::Mapped { frame, size, offset, flags } -> selected(profile, size, offset, p3, p2, p1)
+            _ -> (RecursiveTranslation::Result { value: value })
+        }
+    }
+    state selected(profile: &State, size: u64, offset: u64, p3: u64, p2: u64, p1: u64) -> RecursiveTranslation {
+        transition size {
+            1073741824 -> leaf(profile, p3, 1073741824, offset)
+            2097152 -> leaf(profile, p2, 2097152, offset)
+            _ -> leaf(profile, p1, 4096, offset)
+        }
+    }
+    state leaf(profile: &State, word: u64, size: u64 [1..=1073741824], offset: u64) -> RecursiveTranslation {
+        let address: u64 = memory_encryption::entry_address(profile, word);
+        let flags: u64 = memory_encryption::entry_flags(profile, word);
+        RecursiveTranslation::Result { value: Translation::Mapped { frame: address & ~(size - 1), size: size, offset: offset, flags: flags } }
+    }
+}

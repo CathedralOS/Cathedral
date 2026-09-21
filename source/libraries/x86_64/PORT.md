@@ -29,6 +29,7 @@ Completed slices: [tested numeric address algorithms](addresses.PORT.md),
 [numeric mapper topology](mapper-topology.PORT.md),
 [explicit memory-encryption state](memory-encryption.PORT.md),
 [encryption-profile captured translation](encrypted-translation.PORT.md),
+[encryption-profile recursive translation](encrypted-recursive-translation.PORT.md),
 [encryption-profile register expressions](encrypted-registers.PORT.md),
 [encryption-profile address projection](encrypted-projection.PORT.md), and
 [CPUID observation predicates](instruction-observations.PORT.md).

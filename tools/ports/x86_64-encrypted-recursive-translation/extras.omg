@@ -1,0 +1,22 @@
+use x86::encrypted_recursive_translation;
+use x86::recursive_translation::RecursiveTranslation;
+use x86::translation::Translation;
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+machine scenario()->i32 {
+ let profile:State=memory_encryption::initial();
+ let configured:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:47});
+ let observation:RecursiveTranslation=encrypted_recursive_translation::translate_words(&profile,140737488355328,129,0,0,128);
+ transition observation {
+  RecursiveTranslation::Result {value} -> check(value)
+  _ -> (1)
+ }
+ state check(value:Translation) {
+  transition value in Translation::InvalidVirtual {true -> (0) _ -> (1)}
+ }
+}
+const RESULT:i32=scenario();
+machine require_success(value:i32) requires value==0; {}
+data Main{}
+machine Main::main(&mut self){require_success(RESULT);}

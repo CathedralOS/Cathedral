@@ -1,0 +1,78 @@
+use x86::encrypted_recursive_translation;
+use x86::recursive_translation::RecursiveTranslation;
+use x86::memory_encryption;
+use x86::memory_encryption::State;
+use x86::memory_encryption::Configuration;
+use x86::translation::Translation;
+machine matches_encrypted_result(value:Translation, kind:u8, want_frame:u64, want_size:u64, want_offset:u64, want_flags:u64)->bool {
+ transition value {
+  Translation::NotMapped -> (kind==0)
+  Translation::InvalidRootHugePage -> (kind==2)
+  Translation::Mapped { frame, size, offset, flags } ->
+   (kind==1 && frame==want_frame && size==want_size && offset==want_offset && flags==want_flags)
+  _ -> (false)
+ }
+}
+machine matches_recursive_profile(observation:RecursiveTranslation, kind:u8, frame:u64, size:u64, offset:u64, flags:u64)->bool {
+ transition observation {
+  RecursiveTranslation::InvalidLeafHugePage -> (kind==3)
+  RecursiveTranslation::Result {value} -> compare(value,kind,frame,size,offset,flags)
+ }
+ state compare(inner:Translation,kind:u8,frame:u64,size:u64,offset:u64,flags:u64) {
+  let valid:bool=matches_encrypted_result(inner,kind,frame,size,offset,flags);valid
+ }
+}
+machine row0()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:0 });
+let observation:RecursiveTranslation=encrypted_recursive_translation::translate_words(&profile,3735928559,4097,8193,16385,0);
+let good:bool=matches_recursive_profile(observation,0,0,0,0,0);
+good
+}
+machine row1()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:0 });
+let observation:RecursiveTranslation=encrypted_recursive_translation::translate_words(&profile,3735928559,4225,0,0,0);
+let good:bool=matches_recursive_profile(observation,2,0,0,0,0);
+good
+}
+machine row2()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:0 });
+let observation:RecursiveTranslation=encrypted_recursive_translation::translate_words(&profile,3735928559,4096,8193,16385,320257118826243);
+let good:bool=matches_recursive_profile(observation,1,320257118822400,4096,3823,3843);
+good
+}
+machine row3()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:0 });
+let observation:RecursiveTranslation=encrypted_recursive_translation::translate_words(&profile,18446623141479811772,4097,8193,16385,320257118826243);
+let good:bool=matches_recursive_profile(observation,1,320257118822400,4096,2748,3843);
+good
+}
+machine row4()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:0 });
+let observation:RecursiveTranslation=encrypted_recursive_translation::translate_words(&profile,18446623141479811772,4097,8193,16385,320257118826243);
+let good:bool=matches_recursive_profile(observation,1,320257118822400,4096,2748,3843);
+good
+}
+machine row5()->bool {
+let profile:State=memory_encryption::initial();
+let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit { position:0 });
+let observation:RecursiveTranslation=encrypted_recursive_translation::translate_words(&profile,18446623141479811772,4097,320257118826371,0,0);
+let good:bool=matches_recursive_profile(observation,1,320256383909888,1073741824,90671804,3971);
+good
+}
+machine scenario()->i32 {
+let check0:bool=row0();
+let check1:bool=row1();
+let check2:bool=row2();
+let check3:bool=row3();
+let check4:bool=row4();
+let check5:bool=row5();
+transition check0 && check1 && check2 && check3 && check4 && check5 { true -> (0) _ -> (1) } }
+const RESULT:i32=scenario();
+machine require_success(value:i32) requires value==0; {}
+data Main{}
+machine Main::main(&mut self){require_success(RESULT);}

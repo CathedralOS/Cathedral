@@ -172,3 +172,8 @@ at its numeric/schema boundary while X86-002 retains the algorithm queue.
 [Encryption-profile address projection](encrypted-projection.PORT.md) completes
 the Translate-default addition component with 240 cases and eight controls,
 including offsets inside a huge frame that hit the configured bit.
+
+[Encryption-profile recursive translation](encrypted-recursive-translation.PORT.md)
+completes generic translation composition with 330 adapted private Rust-body
+observations, 55 Omega fixtures, one boundary assertion and eight controls.
+Its whole-word ancestor rules and separate leaf-HUGE failure remain distinct.
