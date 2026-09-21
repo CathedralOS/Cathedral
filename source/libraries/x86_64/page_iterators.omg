@@ -1,0 +1,153 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified detached PageRange/Inclusive cursor transitions from x86_64
+// cc35c876d3badb57df54a66e22f7768a52be95f2. See page-iterators.PORT.md.
+// Ordinary cursor numbers confer no mapping, pointer or frame authority.
+module page_iterators;
+use addresses;
+use addresses::NumberResult;
+use pages;
+use encrypted_frames::IteratorResult;
+
+// Index zero models next/next_back as well as nth(0)/nth_back(0). Rejected
+// selection without failed means exhaustion. Failed retains every preceding
+// cursor update but never yields the value whose next update panicked.
+pub machine step(start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool)->IteratorResult {
+ let first:bool=pages::start_valid(start,size,false);
+ let last:bool=pages::start_valid(end,size,false);
+ transition first && last && size>0 {
+  true -> admitted(start,end,size,inclusive,index,reverse)
+  _ -> (IteratorResult {start:start,end:end,failed:true})
+ }
+ state admitted(start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool)->IteratorResult {
+  transition start>end || (!inclusive && start==end) {
+   true -> (IteratorResult {start:start,end:end})
+   _ -> length(start,end,size,inclusive,index,reverse)
+  }
+ }
+ state length(start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool)->IteratorResult {
+  let difference:NumberResult=pages::difference(end,start,size,false);
+  transition difference {
+   NumberResult::Value {value} -> count(start,end,size,inclusive,index,reverse,value)
+   _ -> (IteratorResult {start:start,end:end,failed:true})
+  }
+ }
+ state count(start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool,difference:u64)->IteratorResult {
+  let count:NumberResult=addresses::checked_add(difference,inclusive as u64);
+  transition count {
+   NumberResult::Value {value} -> select(start,end,size,inclusive,index,reverse,value)
+   _ -> (IteratorResult {start:start,end:end,failed:true})
+  }
+ }
+ state select(start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool,count:u64)->IteratorResult {
+  transition {
+   count==0 -> (IteratorResult {start:start,end:end})
+   index<count -> within(start,end,size,inclusive,index,reverse)
+   _ -> exhaust(start,end,size,inclusive,count-1,reverse)
+  }
+ }
+ state within(start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool)->IteratorResult {
+  let result:IteratorResult=selected_step(start,end,size,inclusive,index,reverse);result
+ }
+ state exhaust(start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool)->IteratorResult {
+  let result:IteratorResult=selected_step(start,end,size,inclusive,index,reverse);
+  transition result.failed {true -> (result) _ -> after_last(result,size,inclusive,reverse)}
+ }
+ state after_last(result:IteratorResult,size:u64,inclusive:bool,reverse:bool)->IteratorResult {
+  transition result.selection {
+   NumberResult::Value {value} -> extra(result.start,result.end,size,inclusive,reverse)
+   _ -> (result)
+  }
+ }
+ state extra(start:u64,end:u64,size:u64,inclusive:bool,reverse:bool)->IteratorResult {
+  let result:IteratorResult=next_step(start,end,size,inclusive,reverse);result
+ }
+}
+
+machine selected_step(start:u64,end:u64,size:u64,inclusive:bool,index:u64,reverse:bool)->IteratorResult {
+ transition reverse {true -> reverse_gap(start,end,size,inclusive,index) _ -> forward_gap(start,end,size,inclusive,index)}
+ state forward_gap(start:u64,end:u64,size:u64,inclusive:bool,index:u64)->IteratorResult {
+  let distance:NumberResult=pages::steps_between(start,18446603336221196288,size);
+  let count:u64=before_gap(distance,index);
+  let result:IteratorResult=move_then_next(start,end,size,inclusive,count,false);result
+ }
+ state reverse_gap(start:u64,end:u64,size:u64,inclusive:bool,index:u64)->IteratorResult {
+  let boundary:NumberResult=pages::containing(140737488351232,size,false);
+  transition boundary {
+   NumberResult::Value {value} -> measured(start,end,size,inclusive,index,value)
+   _ -> (IteratorResult {start:start,end:end,failed:true})
+  }
+ }
+ state measured(start:u64,end:u64,size:u64,inclusive:bool,index:u64,boundary:u64)->IteratorResult {
+  let distance:NumberResult=pages::steps_between(boundary,end,size);
+  let count:u64=before_gap(distance,index);
+  let result:IteratorResult=move_then_next(start,end,size,inclusive,count,true);result
+ }
+}
+// A gap-crossing nth first moves to its adjacent canonical page, then its
+// ordinary next operation fails. It must not jump across using dense Step.
+machine before_gap(distance:NumberResult,index:u64)->u64 {
+ transition distance {NumberResult::Value {value} -> selected(value,index) _ -> (index)}
+ state selected(distance:u64,index:u64)->u64 {
+  transition distance>0 && distance<=index {true -> (distance-1) _ -> (index)}
+ }
+}
+machine move_then_next(start:u64,end:u64,size:u64,inclusive:bool,count:u64,reverse:bool)->IteratorResult {
+ transition reverse {true -> back(start,end,size,inclusive,count) _ -> front(start,end,size,inclusive,count)}
+ state front(start:u64,end:u64,size:u64,inclusive:bool,count:u64)->IteratorResult {
+  let moved:NumberResult=raw_move(start,size,count,false);
+  transition moved {NumberResult::Value {value} -> next(value,end,size,inclusive,false) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+ state back(start:u64,end:u64,size:u64,inclusive:bool,count:u64)->IteratorResult {
+  let moved:NumberResult=raw_move(end,size,count,true);
+  transition moved {NumberResult::Value {value} -> next(start,value,size,inclusive,true) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+ state next(start:u64,end:u64,size:u64,inclusive:bool,reverse:bool)->IteratorResult {
+  let result:IteratorResult=next_step(start,end,size,inclusive,reverse);result
+ }
+}
+machine next_step(start:u64,end:u64,size:u64,inclusive:bool,reverse:bool)->IteratorResult {
+ transition start>end || (!inclusive && start==end) {true -> (IteratorResult {start:start,end:end}) _ -> direction(start,end,size,inclusive,reverse)}
+ state direction(start:u64,end:u64,size:u64,inclusive:bool,reverse:bool)->IteratorResult {
+  transition reverse {true -> backwards(start,end,size,inclusive) _ -> forward(start,end,size,inclusive)}
+ }
+ state backwards(start:u64,end:u64,size:u64,inclusive:bool)->IteratorResult {
+  transition inclusive && end==0 {true -> advance(start,end,size,end) _ -> decrement(start,end,size,inclusive)}
+ }
+ state decrement(start:u64,end:u64,size:u64,inclusive:bool)->IteratorResult {
+  let moved:NumberResult=raw_move(end,size,1,true);
+  transition moved {NumberResult::Value {value} -> back_result(start,end,value,inclusive) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+ state back_result(start:u64,old_end:u64,end:u64,inclusive:bool)->IteratorResult {
+  transition inclusive {true -> (IteratorResult {start:start,end:end,selection:NumberResult::Value {value:old_end}}) _ -> (IteratorResult {start:start,end:end,selection:NumberResult::Value {value:end}})}
+ }
+ state forward(start:u64,end:u64,size:u64,inclusive:bool)->IteratorResult {
+  let maximum:NumberResult=pages::containing(addresses::INTEGER_MAX,size,false);
+  transition maximum {NumberResult::Value {value} -> compare(start,end,size,inclusive,value) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+ state compare(start:u64,end:u64,size:u64,inclusive:bool,maximum:u64)->IteratorResult {
+  transition inclusive && start>=maximum {true -> decrement_last(start,end,size) _ -> advance(start,end,size,start)}
+ }
+ state decrement_last(start:u64,end:u64,size:u64)->IteratorResult {
+  let moved:NumberResult=raw_move(end,size,1,true);
+  transition moved {NumberResult::Value {value} -> (IteratorResult {start:start,end:value,selection:NumberResult::Value {value:start}}) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+ state advance(start:u64,end:u64,size:u64,selected:u64)->IteratorResult {
+  let moved:NumberResult=raw_move(start,size,1,false);
+  transition moved {NumberResult::Value {value} -> (IteratorResult {start:value,end:end,selection:NumberResult::Value {value:selected}}) _ -> (IteratorResult {start:start,end:end,failed:true})}
+ }
+}
+
+// Inputs are admitted by step. Select only the requested virtual arithmetic
+// before calling its existing checked helper; pages::arithmetic also computes
+// unused physical alternatives, expanding the caller's analysis needlessly.
+machine raw_move(address:u64,size:u64,count:u64,reverse:bool)->NumberResult {
+ transition size>0 {true -> bounded(address,size,count,reverse) _ -> (NumberResult::Rejected)}
+ state bounded(address:u64,size:u64,count:u64,reverse:bool)->NumberResult {
+  transition count<=addresses::INTEGER_MAX/size {true -> selected(address,size*count,reverse) _ -> (NumberResult::Rejected)}
+ }
+ state selected(address:u64,bytes:u64,reverse:bool)->NumberResult {
+  transition reverse {true -> subtract(address,bytes) _ -> add(address,bytes)}
+ }
+ state subtract(address:u64,bytes:u64)->NumberResult {let value:NumberResult=addresses::virtual_sub(address,bytes);value}
+ state add(address:u64,bytes:u64)->NumberResult {let value:NumberResult=addresses::virtual_add(address,bytes);value}
+}

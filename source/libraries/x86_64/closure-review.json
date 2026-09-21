@@ -1,0 +1,674 @@
+{
+  "completed_profile_components": {
+    "encryption-profile-cleanup": "source/libraries/x86_64/encrypted-cleanup.PORT.md",
+    "encryption-profile-cr3-apic": "source/libraries/x86_64/encrypted-registers.PORT.md",
+    "encryption-profile-frames-ranges": "source/libraries/x86_64/encrypted-frames.PORT.md",
+    "encryption-profile-mapped-generic-translation": "source/libraries/x86_64/encrypted-translation.PORT.md",
+    "encryption-profile-mapped-recursive-routes": "source/libraries/x86_64/encrypted-mapping.PORT.md",
+    "encryption-profile-recursive-constructor": "source/libraries/x86_64/encrypted-constructor.PORT.md",
+    "encryption-profile-recursive-generic-translation": "source/libraries/x86_64/encrypted-recursive-translation.PORT.md",
+    "encryption-profile-translated-address": "source/libraries/x86_64/encrypted-projection.PORT.md",
+    "virtual-page-range-iterator-transitions": "source/libraries/x86_64/page-iterators.PORT.md"
+  },
+  "fact_inventory_count": 3,
+  "format": "cathedral-x86-pure-closure-v1",
+  "historical_families_completed": [
+    "cr3-cr8-operands",
+    "gdt-storage",
+    "memory-encryption",
+    "msr-composition",
+    "offset-address",
+    "recursive-cleanup",
+    "recursive-constructor",
+    "recursive-coordinates",
+    "recursive-routes",
+    "recursive-translation",
+    "register-merge",
+    "xcr0-validation"
+  ],
+  "historical_lexical_exceptions": [
+    {
+      "anchor": "127:MAX",
+      "evidence": "source/libraries/x86_64/gdt-storage.PORT.md",
+      "reason": "Impl const-generic parameter, represented by checked owned GDT capacity; not a missing declaration.",
+      "source": "src/structures/gdt.rs",
+      "translated_component_inventories": []
+    }
+  ],
+  "historical_pure_anchors_overlaid": [
+    {
+      "anchor": "266:write",
+      "source": "src/registers/control.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "340:read",
+      "source": "src/registers/control.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "348:read_raw",
+      "source": "src/registers/control.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-registers-inventory.json",
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "364:read_pcid",
+      "source": "src/registers/control.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "376:write",
+      "source": "src/registers/control.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-registers-inventory.json",
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "390:write_pcid",
+      "source": "src/registers/control.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-registers-inventory.json",
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "405:write_pcid_no_flush",
+      "source": "src/registers/control.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-registers-inventory.json",
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "418:write_raw",
+      "source": "src/registers/control.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-registers-inventory.json",
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "423:write_raw_impl",
+      "source": "src/registers/control.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-registers-inventory.json",
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "519:write",
+      "source": "src/registers/control.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "570:read",
+      "source": "src/registers/control.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "588:write",
+      "source": "src/registers/control.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "280:write",
+      "source": "src/registers/model_specific.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "411:read",
+      "source": "src/registers/model_specific.rs",
+      "translated_component_inventories": [
+        "source/drivers/facts/x86_registers-inventory.json",
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "605:read",
+      "source": "src/registers/model_specific.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "617:write",
+      "source": "src/registers/model_specific.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "651:read",
+      "source": "src/registers/model_specific.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "663:write",
+      "source": "src/registers/model_specific.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "682:read",
+      "source": "src/registers/model_specific.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "689:read_raw",
+      "source": "src/registers/model_specific.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-registers-inventory.json",
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "705:write",
+      "source": "src/registers/model_specific.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-registers-inventory.json",
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "723:write_raw",
+      "source": "src/registers/model_specific.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-registers-inventory.json",
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "100:write",
+      "source": "src/registers/rflags.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "90:write",
+      "source": "src/registers/xcontrol.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/register-operands-inventory.json"
+      ]
+    },
+    {
+      "anchor": "108:GlobalDescriptorTable",
+      "source": "src/structures/gdt.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/gdt-storage-inventory.json"
+      ]
+    },
+    {
+      "anchor": "115:new",
+      "source": "src/structures/gdt.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/gdt-storage-inventory.json"
+      ]
+    },
+    {
+      "anchor": "122:default",
+      "source": "src/structures/gdt.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/gdt-storage-inventory.json"
+      ]
+    },
+    {
+      "anchor": "130:empty",
+      "source": "src/structures/gdt.rs",
+      "translated_component_inventories": [
+        "source/drivers/facts/x86_descriptors-inventory.json",
+        "source/libraries/x86_64/gdt-storage-inventory.json"
+      ]
+    },
+    {
+      "anchor": "137:NULL",
+      "source": "src/structures/gdt.rs",
+      "translated_component_inventories": [
+        "source/drivers/facts/x86_descriptors-inventory.json",
+        "source/libraries/x86_64/gdt-storage-inventory.json"
+      ]
+    },
+    {
+      "anchor": "161:from_raw_entries",
+      "source": "src/structures/gdt.rs",
+      "translated_component_inventories": [
+        "source/drivers/facts/x86_descriptors-inventory.json",
+        "source/libraries/x86_64/gdt-storage-inventory.json"
+      ]
+    },
+    {
+      "anchor": "185:entries",
+      "source": "src/structures/gdt.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/gdt-storage-inventory.json"
+      ]
+    },
+    {
+      "anchor": "197:append",
+      "source": "src/structures/gdt.rs",
+      "translated_component_inventories": [
+        "source/drivers/facts/x86_descriptors-inventory.json",
+        "source/libraries/x86_64/gdt-storage-inventory.json"
+      ]
+    },
+    {
+      "anchor": "250:push",
+      "source": "src/structures/gdt.rs",
+      "translated_component_inventories": [
+        "source/drivers/facts/x86_descriptors-inventory.json",
+        "source/libraries/x86_64/gdt-storage-inventory.json"
+      ]
+    },
+    {
+      "anchor": "22:MemoryEncryptionConfiguration",
+      "source": "src/structures/mem_encrypt.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/memory-encryption-inventory.json"
+      ]
+    },
+    {
+      "anchor": "44:enable_memory_encryption",
+      "source": "src/structures/mem_encrypt.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/memory-encryption-inventory.json"
+      ]
+    },
+    {
+      "anchor": "59:enc_bit_flag",
+      "source": "src/structures/mem_encrypt.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/memory-encryption-inventory.json"
+      ]
+    },
+    {
+      "anchor": "74:set_encrypted",
+      "source": "src/structures/mem_encrypt.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/memory-encryption-inventory.json"
+      ]
+    },
+    {
+      "anchor": "80:is_encrypted",
+      "source": "src/structures/mem_encrypt.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/memory-encryption-inventory.json"
+      ]
+    },
+    {
+      "anchor": "60:frame_to_pointer",
+      "source": "src/structures/paging/mapper/offset_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/mapper-topology-inventory.json"
+      ]
+    },
+    {
+      "anchor": "57:new",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-constructor-inventory.json",
+        "source/libraries/x86_64/mapper-topology-inventory.json"
+      ]
+    },
+    {
+      "anchor": "117:create_next_table",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "129:inner",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "173:map_to_with_table_flags",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "205:unmap",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "235:update_flags",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "257:set_flags_p4_entry",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "274:set_flags_p3_entry",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "282:set_flags_p2_entry",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "290:translate_page",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "311:map_to_with_table_flags",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "353:unmap",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "389:update_flags",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "418:set_flags_p4_entry",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "435:set_flags_p3_entry",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "458:set_flags_p2_entry",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "466:translate_page",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "494:map_to_with_table_flags",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "545:unmap",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "582:update_flags",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "616:set_flags_p4_entry",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "633:set_flags_p3_entry",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "656:set_flags_p2_entry",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "685:translate_page",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-mapping-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "720:translate",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-recursive-translation-inventory.json",
+        "source/libraries/x86_64/recursive-routes-inventory.json"
+      ]
+    },
+    {
+      "anchor": "793:clean_up",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-cleanup-inventory.json",
+        "source/libraries/x86_64/recursive-cleanup-inventory.json"
+      ]
+    },
+    {
+      "anchor": "808:clean_up_addr_range",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-cleanup-inventory.json",
+        "source/libraries/x86_64/recursive-cleanup-inventory.json"
+      ]
+    },
+    {
+      "anchor": "815:clean_up",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/encrypted-cleanup-inventory.json",
+        "source/libraries/x86_64/recursive-cleanup-inventory.json"
+      ]
+    },
+    {
+      "anchor": "890:InvalidPageTable",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/mapper-topology-inventory.json"
+      ]
+    },
+    {
+      "anchor": "921:p3_page",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/mapper-topology-inventory.json"
+      ]
+    },
+    {
+      "anchor": "936:p2_page",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/mapper-topology-inventory.json"
+      ]
+    },
+    {
+      "anchor": "951:p1_page",
+      "source": "src/structures/paging/mapper/recursive_page_table.rs",
+      "translated_component_inventories": [
+        "source/libraries/x86_64/mapper-topology-inventory.json"
+      ]
+    }
+  ],
+  "input_sha256": {
+    "source/drivers/facts/x86_descriptors-inventory.json": "34e906fc7cd8e5e6e76d0811b4bd715c96d0c31ced5b02801606ad2f19028fa9",
+    "source/drivers/facts/x86_interrupts-inventory.json": "8e58e4cff92f9dcafccfa2ec2a99bc533aaa0f02abd2c7b2cc94d1a23140b0b1",
+    "source/drivers/facts/x86_registers-inventory.json": "9d2948931275f9e22f27cb9fea203ac1cbc50dc1a26edc44eb9898f31b87d64a",
+    "source/libraries/x86_64/addresses-inventory.json": "c052a1a766c70404219b1459e8301e522efb5998aaf930956206161dcc0fd38d",
+    "source/libraries/x86_64/cleanup-branch-inventory.json": "4c6141d6779549791d8b056a3d5e88857a84cb2fd82a71907d693da9beaac509",
+    "source/libraries/x86_64/cleanup-ranges-inventory.json": "2f5d0de1dab7c33c0983cdb11e5773971f2e7ff5a6491d8adea40498f63aec94",
+    "source/libraries/x86_64/encrypted-cleanup-inventory.json": "0e158c9936eea5c7915014876b568be46ae91c7edaf54479789acbe698b163e4",
+    "source/libraries/x86_64/encrypted-constructor-inventory.json": "a72311c5a83344db05133dec59496cd1081194951689418815683d917eb982c8",
+    "source/libraries/x86_64/encrypted-frames-inventory.json": "6231da5cda63652df88f4f9cc22ca7fe4607b2d28f90a20a62b690920e1b8d0d",
+    "source/libraries/x86_64/encrypted-mapping-inventory.json": "690edd11a616169c8a91163e156704e488c4142ab85bc87b0c53816ee17af90c",
+    "source/libraries/x86_64/encrypted-projection-inventory.json": "bc9715d066a2d8289c9d3a6fbab0fdb9796ea7400432babb3aaac7c4cb9a3cfc",
+    "source/libraries/x86_64/encrypted-recursive-translation-inventory.json": "13ed63dc95408d3356f392ef5d96d10dec99ab61d17e8bd2f7c3edaef3668b8b",
+    "source/libraries/x86_64/encrypted-registers-inventory.json": "4a7b4d24d90561e17527750e84369d3ba27db8d4daf973fa686e85ebb8d641dc",
+    "source/libraries/x86_64/encrypted-translation-inventory.json": "e22e4c97da31707655355ea1962a2587d1fa931706ca077c49b579c6ecc8304d",
+    "source/libraries/x86_64/gdt-storage-inventory.json": "bc5b211ac7624843efdc33d46c14201aeccca6be2c1da552a3cade939abec498",
+    "source/libraries/x86_64/instruction-observations-inventory.json": "285a02a880ca71d8d2ae9a20c73cea7d67ea82106d00fe25ebfb2bec05d96376",
+    "source/libraries/x86_64/inventory.json": "9ece056b09b9f32d4d07de8c423f2ac57ff425ab75b106dc29e4e31586ce0a10",
+    "source/libraries/x86_64/mapper-conveniences-inventory.json": "e4ababefa5356189ae448bbf78738b276a3a4598644d0587d7ea0e135dbb9664",
+    "source/libraries/x86_64/mapper-topology-inventory.json": "b14a71c5f1c1db0c1d7a0708c7d78c5163ec3c1cb65d58b6227e2baf6c534ebd",
+    "source/libraries/x86_64/mapping-plans-inventory.json": "b9584b5c62740e5a476078f4ad4d6746c50131946dc59262b1f694732f12d5f8",
+    "source/libraries/x86_64/mapping-routes-inventory.json": "704ec21d2890a1671a0096384b2c8e5b4f9e2e5020e7a5e3f941ead8ebaf6df5",
+    "source/libraries/x86_64/memory-encryption-inventory.json": "db3a4409e8dcd7d9d0ce40df8fc812df33e4e642a08b20372474333badb0edf4",
+    "source/libraries/x86_64/msr-words-inventory.json": "817b02946e8a5c8c7d68e4c2cfdad0142ad1d567014b938255a013bf9090dec3",
+    "source/libraries/x86_64/page-entries-inventory.json": "9078ba8823366aff508613496747de7caa47bbc1291ad66b87f901d65787dc90",
+    "source/libraries/x86_64/page-iterators-inventory.json": "e4f3723034940ce3a033f19c9302e86f468cc2a835755afe98cc0d9bf63fd104",
+    "source/libraries/x86_64/pages-inventory.json": "4db1aa6bae7edc42d83693c5e5de11a7001fa18341beb96bee3ccab505b54282",
+    "source/libraries/x86_64/recursive-cleanup-inventory.json": "1c28e1c1cf0a33cd5b1e5bd1ac6590eceb20ce7ec8e3bf2e770f42ff679584fa",
+    "source/libraries/x86_64/recursive-routes-inventory.json": "6c8779ba92cbd9f68448265b1533f93689ce38b6f4b67f836ae66faef8989cf4",
+    "source/libraries/x86_64/register-operands-inventory.json": "0477f2a5521427760ba28db7f5aaf560ec20b38140a1c232f9d11c1d301c2c8b",
+    "source/libraries/x86_64/remaining-pure.json": "944c4e58d156d1cada9b2e59877d1c78124eed1c6df6eeaa22dbe8ffcc8dca27",
+    "source/libraries/x86_64/tables-inventory.json": "0e8fd1b6db2920eb0cf961b905616609248e8eade53b16eb6d6c43a52b1fc7ba",
+    "source/libraries/x86_64/tlb-operands-inventory.json": "6aefe22edee8c8d48ce59aff1599d6f470888fd721ae8551bb06cc3f60077e5c",
+    "tools/ports/x86_64/check_closure.py": "e1f38326ef076b0a9eadb106ded41357fde0b8932ff47092983b55e81423167b"
+  },
+  "library_slice_inventory_count": 27,
+  "outside_boundary": [
+    "native ABI and instructions",
+    "live provider, mapping and custody integration",
+    "Kani universal proofs and 32-bit usize profiles",
+    "stale typed values surviving concurrent ambient encryption reconfiguration"
+  ],
+  "profiles": [
+    "64-bit usize, 48-bit canonical virtual and 52-bit physical geometry",
+    "explicit coherent encryption snapshots; current physical bit differs from accumulated PTE mask",
+    "checked overflow where documented, preserving separately retained pinned release behavior",
+    "numeric/captured/owned detached algorithms; no pointer/trait or live authority facsimiles"
+  ],
+  "remaining_ordinary_pure_families": [],
+  "source_hashes": {
+    "src/addr.rs": "8370e442e48677438615f9f0ac4a7e2fbf1a9aadec875348cc68a9e916031721",
+    "src/instructions/interrupts.rs": "2021860d3a7bfdf57789821cf917f44f84dd551ec417552c96f28c00e5630419",
+    "src/instructions/mod.rs": "d4fd3d08cef922e12dd94c6e08430319385d5b5c0115729b0e1edcec7f5da471",
+    "src/instructions/port.rs": "e548b3ddc13b738876fe932a15682aace0dfd8fbcccd5761782dc6742d505b53",
+    "src/instructions/random.rs": "a454ca21b303bcf6ece284ddfecb33e5cd1d4898a9adaddfb20520599f4688d1",
+    "src/instructions/segmentation.rs": "37e3d831a3d46d16a45397cd2b185d084ba70c4f48373a46653dac7fecc6b18d",
+    "src/instructions/smap.rs": "b5a6a5ae9bfb9051ca8fd2325f4fa50d73c2d7386726ea74155e101f8cfd2e20",
+    "src/instructions/tables.rs": "34ed3b42c79d72cb74cef8a2581dffa798b66ea77b793887910e38377d975bed",
+    "src/instructions/tlb.rs": "c4c47e0718be84a5e3812b20a4129e48d0ebc203e395476b117b540bc50dae88",
+    "src/lib.rs": "938e757fca881c483f4a886371019c30cfadf2d4fb5d53eb0fb94adc140a31f3",
+    "src/registers/control.rs": "805cb1e92e674510c61fc4f910b2ef16f769b5bbbc4f1264b455967d72a8b311",
+    "src/registers/debug.rs": "97d1da872447748fa46e2c3d47e9f59a04b930e453f1f120baf84a83ef9316d5",
+    "src/registers/mod.rs": "5d1dd2815b7898e2a9d88b883c8fcec4ffe7f69938ab8878da81544038975645",
+    "src/registers/model_specific.rs": "8315473c0eabb3178350f24ff284c3f6947f210cc341279c1b22bff6a599c29b",
+    "src/registers/mxcsr.rs": "fad54d431a4ce3c9e4c88147559e9a1b137d7ab831b25bb89d5970b6f812f645",
+    "src/registers/rflags.rs": "4facddd9d181ec9e5e5e9a77898bc2c761a37b092e4f7e7b5f2fed221966c9b0",
+    "src/registers/segmentation.rs": "2798e7398d1ee6cd57926e9d0e83049444a1032940f6774fe0882e8795bbaff6",
+    "src/registers/xcontrol.rs": "1c055cbf5b535bcf71738427109ec0a44bec97f2cf80bac12874946fb7eaba53",
+    "src/structures/gdt.rs": "a4232a94ccc9ce30c90d172360e1de316cbf46b10c4543307d2e3e34548aa865",
+    "src/structures/idt.rs": "e6fd82e5e76243c2e10bb1af8f476ed79c8905d1fa5aedaa070a99b4e01c02ce",
+    "src/structures/mem_encrypt.rs": "fb97af17b5d33745593bc21b5e7235ae57262895122bd8ff86cea781c3a6e4cb",
+    "src/structures/mod.rs": "f128249744c430272b564aefae864b7ea39cb8a93df6e0ff1ed20d5723c7fde6",
+    "src/structures/paging/frame.rs": "ef176a88a1b52eb33a2843f98286ac79946d77c5b4afa5959c5dc750af876880",
+    "src/structures/paging/frame_alloc.rs": "3e5911d6b6950f32316a7e7552218335345c4f4fd13354fa27bb2afc72396719",
+    "src/structures/paging/mapper/mapped_page_table.rs": "e250c729f0588d1ce129c1c68ab43337f2f44328d2b38fe896cbeeacc1bc4ff2",
+    "src/structures/paging/mapper/mod.rs": "9b33e4f767f0eb77560cc7daf0826feadd176d0ced292ada00329a0695f67b6e",
+    "src/structures/paging/mapper/offset_page_table.rs": "e5812f82d6b5076d73546c843f0ea921979b54499e71479d23b103838bbb32d0",
+    "src/structures/paging/mapper/recursive_page_table.rs": "e6a796d07b191d4857c931c7b4daf156a707c51fba675af6d9f1cee62c970e6f",
+    "src/structures/paging/mod.rs": "4ca202221fe00ea6a1b9c2fd356fe6e93326c00e2a4c9b5005e49c3cb0003960",
+    "src/structures/paging/page.rs": "3314b425ea669e883900bfbcb2357e3ea7b03517734d674596e613ff3664d630",
+    "src/structures/paging/page_table.rs": "c22af38b260fc7d51d7a1c156f3d8788b0e539563bbbd72ea7d417e513c89f42",
+    "src/structures/port.rs": "53fb98f83601ff411769984500c6b3ce06473273ef20ea06266188162d8df301",
+    "src/structures/tss.rs": "1a59b9b9b5270deb6be06b15e03a6fa738a89abd7d5224a250704b3037821233",
+    "testing/src/gdt.rs": "f23091cce7eded18057c3d94ea1d5296b8fc28446f53ec7f7e6864801dc7b2cf",
+    "testing/src/lib.rs": "ffff39aeffeb9bb0f316d1731765a8ef0b20e318a278f8c0e35857fa400db263",
+    "testing/src/serial.rs": "37e8689af8f5c8cf3bcc7b9105146ec7508cfb3ba7a6c4645e3f74e72aa21b34",
+    "testing/src/tests.rs": "d3b01bda8ef07ecfc215fde0f79ce2298c7969d33b1e1d550386234e589e85f5",
+    "testing/tests/basic_boot.rs": "910e18f6c132731672fa18318753e53024002fad9c5bfb112643dbbc109ac1ad",
+    "testing/tests/double_fault_stack_overflow.rs": "ac93873afed26d6bd84b5b32fa41fbbbf560b52976b0b6b11fc7f952cebeb756",
+    "testing/tests/interrupt_handling.rs": "d92df5c185a4e9586d6a8226d74f0a950aab0eb8811f15e4c335b7975cdf9603",
+    "testing/tests/port_read_write.rs": "ebad3d9d7d561e5dd23326412ebe342f02219da3846a8357fb75be968876f1aa"
+  },
+  "stage": "source and component-boundary audit; does not rerun semantic tests",
+  "upstream_revision": "cc35c876d3badb57df54a66e22f7768a52be95f2"
+}

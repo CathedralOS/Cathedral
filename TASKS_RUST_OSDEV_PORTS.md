@@ -191,7 +191,7 @@ projection, union/tail and native-boundary limitations remain recorded there.
   encodings, descriptor tables, selectors, registers, flags, MSRs, and
   instruction operands.  Extend existing files rather than introduce parallel
   types.
-- [ ] **X86-002 — Translate pure x86 algorithms and tests.** Canonical-address
+- [x] **X86-002 — Translate pure x86 algorithms and tests.** Canonical-address
   checks, index extraction, frame/page arithmetic, descriptor construction, and
   table walking.  Actual register access and instructions remain boundaries.
 
@@ -205,15 +205,15 @@ existing facts, 168 pinned values/ordinals, 45 Rust tests, translated Omega
 behavior and body-mutating controls. The existing fact canary passes; live
 port-I/O/MMIO and polling remain explicit owner boundaries.
 
-X86-001 representation evidence and X86-002 partial algorithm evidence: [address arithmetic](source/libraries/x86_64/addresses.PORT.md)
+X86-001 representation evidence and X86-002 algorithm evidence: [address arithmetic](source/libraries/x86_64/addresses.PORT.md)
 passes 110 Omega numeric cases, 102 actual pinned Rust witnesses, finite stepping
 relations and three body-mutating controls. The [register slice](source/drivers/facts/x86_registers.PORT.md)
 adds 177 observed constants and 31 tested helpers, including checked STAR
 underflow handling. The [descriptor slice](source/drivers/facts/x86_descriptors.PORT.md)
 adds semantic descriptor cases, complete byte codecs, GDT append and bitmap
 plans, four Rust tests and four body mutations; native imported-layout limits
-are recorded. The full task checkboxes stay open for remaining instruction
-and mapper surfaces. The [PTE codec slice](source/libraries/x86_64/page-entries.PORT.md)
+are recorded. Pure representation and detached algorithm tasks are complete
+at the documented boundaries; live instruction/provider integration remains separate. The [PTE codec slice](source/libraries/x86_64/page-entries.PORT.md)
 reuses the canonical entry schema: 151 Omega scenarios, 143 actual Rust
 witnesses and three body mutations pass. The modernized layout canary demands
 all fourteen fields through the existing bit policy; native ABI is not measured.
@@ -269,7 +269,7 @@ now records completion of its twelve historical families.
 pass 232 route and 90 translation cases against adapted pinned Rust bodies, four
 additional checks and nine body mutations. Child allocation, non-present/huge
 ancestor rules and partial writes retain the recursive mapper's distinct order.
-Remaining cross-feature algorithm composition is tracked under X86-002.
+Subsequent slices below complete the cross-feature algorithm compositions.
 [Owned GDT storage](source/libraries/x86_64/gdt-storage.PORT.md) now passes 16
 actual Rust/Omega scenarios, malformed-input/reset checks and four body mutations,
 including full 8192-word import and failed system appends without partial writes.
@@ -291,8 +291,8 @@ on their default physical profile.
 [Explicit-profile translation](source/libraries/x86_64/encrypted-translation.PORT.md)
 adds 330 actual Rust/Omega observations, seven boundary assertions and nine body
 mutations for generic mapped translation and captured child identities.
-Remaining virtual page-range iterator transitions are ordinary work;
-the closure audit lists their exact source anchors.
+Virtual page-range iterator transitions are covered by the final slice below;
+the closure audit retains their exact source anchors.
 [Encryption-aware register expressions](source/libraries/x86_64/encrypted-registers.PORT.md)
 pass 100 Rust reference rows, 800 Omega calls and twelve body controls, preserving
 strict CR3 rejection versus APIC truncation and typed-frame operand admission.
@@ -322,8 +322,15 @@ physical iterator cursor updates preserve current-bit admission and failure
 ordering, with checked multiplication overflow as an explicit policy.
 The full-source closure review found no remaining pure representation family:
 X86-001 is complete at the documented numeric/schema boundary. Native layout,
-instruction/provider and proof limits remain separate; X86-002 stays open for
-virtual iterator cursor transitions.
+instruction/provider and proof limits remain separate.
+[Virtual page iterator transitions](source/libraries/x86_64/page-iterators.PORT.md)
+pass 1,630 checked cases, 51 body controls and one direct const pair, against
+1,626 actual public Rust observations. The
+[final closure audit](source/libraries/x86_64/closure-review.json) checks all 41
+source hashes, 27 library and three fact inventories, twelve historical families
+and 71 translated anchor overlays plus one represented generic parameter.
+X86-002 is complete for the documented 64-bit usize/canonical48/physical52 and
+coherent explicit-encryption profiles; no native or universal-proof claim follows.
 
 X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors

@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Actual public pinned PageRange/Inclusive calls; no pointer or installed table.
+use x86_64::{VirtAddr,structures::paging::{Page,PageSize,Size4KiB,Size2MiB,Size1GiB}};
+use std::panic::{catch_unwind,AssertUnwindSafe};
+fn observe<S:PageSize>(start:u64,end:u64,inclusive:bool,index:u64,reverse:bool,direct:bool)->(bool,u64,bool,u64,u64){
+ let typed=||Some((Page::<S>::from_start_address(VirtAddr::try_new(start).ok()?).ok()?,Page::<S>::from_start_address(VirtAddr::try_new(end).ok()?).ok()?));
+ let Some((first,last))=typed()else{return(false,0,true,start,end)};
+ if inclusive {
+  let mut range=Page::range_inclusive(first,last);
+  let outcome=catch_unwind(AssertUnwindSafe(||match (reverse,direct){(false,true)=>range.next(),(true,true)=>range.next_back(),(false,false)=>range.nth(index as usize),(true,false)=>range.nth_back(index as usize)}));
+  let failed=outcome.is_err();let selection=outcome.ok().flatten().map(|page|page.start_address().as_u64());
+  (selection.is_some(),selection.unwrap_or(0),failed,range.start.start_address().as_u64(),range.end.start_address().as_u64())
+ }else{
+  let mut range=Page::range(first,last);
+  let outcome=catch_unwind(AssertUnwindSafe(||match (reverse,direct){(false,true)=>range.next(),(true,true)=>range.next_back(),(false,false)=>range.nth(index as usize),(true,false)=>range.nth_back(index as usize)}));
+  let failed=outcome.is_err();let selection=outcome.ok().flatten().map(|page|page.start_address().as_u64());
+  (selection.is_some(),selection.unwrap_or(0),failed,range.start.start_address().as_u64(),range.end.start_address().as_u64())
+ }
+}
+fn emit(id:usize,value:(bool,u64,bool,u64,u64)){
+ let(ok,value,failed,start,end)=value;
+ println!("{{\"id\":{id},\"ok\":{ok},\"value\":{value},\"failed\":{failed},\"out_start\":{start},\"out_end\":{end}}}");
+}
+fn main(){
+ assert_eq!(usize::BITS,64);std::panic::set_hook(Box::new(|_|{}));
+ // GENERATED_CHECKS
+}

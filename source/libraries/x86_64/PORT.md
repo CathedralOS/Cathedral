@@ -34,16 +34,22 @@ Completed slices: [tested numeric address algorithms](addresses.PORT.md),
 [encryption-profile cleanup](encrypted-cleanup.PORT.md),
 [encryption-profile constructor observations](encrypted-constructor.PORT.md),
 [encryption-profile register expressions](encrypted-registers.PORT.md),
-[encryption-profile address projection](encrypted-projection.PORT.md), and
+[encryption-profile address projection](encrypted-projection.PORT.md),
+[encryption-profile physical frames](encrypted-frames.PORT.md),
+[virtual page iterator transitions](page-iterators.PORT.md), and
 [CPUID observation predicates](instruction-observations.PORT.md).
 The [remaining pure-work audit](remaining-pure.RECONCILIATION.md) reconciles all
-41 files and identifies the concrete unfinished algorithm families.
+41 files and records completion of the twelve historical algorithm families
+and the subsequent profile compositions.
 Baseline reviewed 2026-09-20 against
 Cathedral `77544518fc947973a5607f28b278aca2e2ffa462` and
 Omega `eaa7993a23623cd8fabf45350340479c5c9c7879`. The subsequent full-source
-closure review completes X86-001 at its pure numeric/schema boundary. X86-002
-remains open for encryption-profile algorithm compositions; these are ordinary
-implementation work, not language blockers. Native layout and live authority
+closure review completes X86-001 at its pure numeric/schema boundary and
+X86-002 at its detached algorithm boundary. The reproducible
+[closure record](closure-review.json) checks 27 library and three fact inventories,
+71 historical pure-anchor overlays and one represented const-generic parameter.
+The virtual iterator slice passes 1,630 checked cases, 51 controls and one const
+pair, with 1,626 actual public Rust observations. Native layout and live authority
 limits retain their separate evidence below.
 
 ## Upstream pin and licensing
@@ -151,9 +157,17 @@ Run from Cathedral root; the source map requires the exact upstream checkout.
 | `python3 tools/ports/x86_64/inventory.py` | All41 files,1,307 source anchors,124 supplements,85 marked scenarios and4 integration roots reproduce exactly; local comparison targets exist. |
 | `python3 tools/ports/inventory.py check source/libraries/x86_64/inventory.json --checkout reference_code/rust-osdev/x86_64` | Shared schema/pin/hash/target checks pass;0 translated/205 omitted/5 blocked/1,097 pending implementation. |
 | `python3 tools/ports/x86_64/check_catalog.py /tmp/cathedral-omega-eaa7993/release/omega` | u8 input fixture source-checks11 files; u16 input and invlpg fixtures reject with the exact catalog diagnostics above. No hardware instructions executed. |
-| Upstream or translated x86 implementation tests | Not run; retained scenarios only. |
+| Upstream or translated x86 implementation tests in baseline audit | Not run by that audit; subsequent slices retain their own execution records. |
 | Native layouts, firmware, hardware, whole production root | Not run; no claims from an inventory or expected rejection. |
 
 The named binary was freshly built from Omega eaa7993; catalog runner accepts
 another exact compiler path as its optional positional argument. No Omega
 source was changed by this audit.
+
+The final closure audit is reproduced by
+`python3 tools/ports/x86_64/check_closure.py`. It checks source and inventory
+hashes and completion overlays; it does not rerun semantic tests. Completion
+is bounded to 64-bit usize, canonical 48-bit virtual and 52-bit physical geometry,
+and fresh coherent explicit encryption snapshots. Native realization, live
+provider/custody integration, 32-bit usize, concurrent ambient reconfiguration
+and universal Kani proofs remain outside this port boundary.

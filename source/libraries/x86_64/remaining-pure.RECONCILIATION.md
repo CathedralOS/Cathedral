@@ -9,10 +9,9 @@ specific remaining families below. Older `pending` rows in a narrow inventory
 do not override a later implementation. Conversely, a `translated` row can mean
 an extracted numeric component; it does not make the containing live API complete.
 
-No language blocker is asserted for any unfinished algorithm in this audit.
-There are ordinary pure algorithms left, particularly inside methods previously
-classified as instruction or policy boundaries. Layout/native limitations in
-existing PORT files remain separate from this implementation queue.
+The original missing-family findings below are historical. The final closure
+review records no remaining ordinary pure algorithm family within the documented
+profiles. Layout/native limitations remain separate.
 
 Subsequent completion: `gdt-storage` is now implemented and tested in
 [owned GDT storage](gdt-storage.PORT.md). The missing-family table below records
@@ -31,8 +30,8 @@ with tested self-link exclusion, bounded resumption and full-budget handling.
 [Recursive routes and translation](recursive-routes.PORT.md) complete the final
 two historical families with 232 route and 90 translation cases, four additional
 checks and nine body mutations. All twelve original families now have subsequent
-completion records. Cross-feature composition is under fresh review; this audit
-does not silently generalize default-mask walkers to encryption configurations.
+completion records. Subsequent explicit-profile components below complete the
+cross-feature compositions; default-mask APIs retain their documented profiles.
 
 ## Work that already has a reusable implementation
 
@@ -123,17 +122,17 @@ must-use tokens are deliberately not reproduced as authority facsimiles.
 
 The original suggested sequence (topology, encryption, registers, GDT storage,
 recursive algorithms) has now been implemented at each documented boundary.
-A fresh closure review must distinguish remaining cross-feature composition
-from live provider integration before completing the overall X86-001/002 tasks.
+The final closure review below distinguishes completed cross-feature composition
+from live provider integration when closing X86-001/002.
 
 ## Subsequent encryption-profile closure review
 
 The latest read-only review checked all 41 pinned source hashes and reconciled
-27 library slice inventories plus fact overlays. One pure family remains beyond
-the earlier bounded-selection profile: virtual PageRange/PageRangeInclusive
-mutable next/nth/next_back/nth_back transitions, including pre-yield cursor changes,
-canonical-gap failures and retained partial state. This is ordinary implementation
-work and keeps X86-002 open. The
+27 library slice inventories plus three fact inventories. The last family beyond
+the earlier bounded-selection profile, virtual PageRange/PageRangeInclusive
+mutable next/nth/next_back/nth_back transitions, now passes its full checked suite
+and direct const pair, including pre-yield cursor changes, canonical-gap failures
+and retained partial state. The
 unoverlaid `gdt.rs:127:MAX` anchor is a const-generic parameter represented by
 checked owned-table capacity, not a missing hardware constant.
 
@@ -171,7 +170,7 @@ The remaining profile compositions are documented in the component records below
 [Encryption-profile register expressions](encrypted-registers.PORT.md) now pass
 100 Rust rows, 800 Omega calls and twelve controls. CR3/APIC composition is
 complete. No additional pure representation family remains; X86-001 can close
-at its numeric/schema boundary while X86-002 retains the algorithm queue.
+at its numeric/schema boundary; the final algorithm components follow below.
 
 [Encryption-profile address projection](encrypted-projection.PORT.md) completes
 the Translate-default addition component with 240 cases and eight controls,
@@ -201,7 +200,7 @@ current-bit physical admission; accumulated-mask entry decoding remains distinct
 
 The virtual iterator anchors are page.rs:379/389/433/442 and
 535/554/598/616. Existing pages::range_at remains a checked selection API and
-does not imply those stateful iterator effects. A separate slice is in progress.
+does not imply those stateful iterator effects. The separate slice is now complete.
 
 [Encryption-profile physical frames](encrypted-frames.PORT.md) complete current-bit
 admission, PFNs, arithmetic, range selection and detached physical iterator
@@ -210,4 +209,16 @@ constant-evaluation pairs also pass. The 7,008 actual public Rust observations
 use thirteen isolated profiles; forty additional cases reject invalid geometry.
 Cursor mutations before arithmetic failure and inclusive endpoint behavior are
 preserved. Checked multiplication deliberately rejects pinned release overflow.
-Only the virtual page iterator family remains in the ordinary pure queue.
+[Virtual page iterator transitions](page-iterators.PORT.md) pass 1,630 checked
+cases in 51 groups with 51 controls and one direct constant/control pair.
+The 1,626 actual public Rust observations include 180 direct next/next_back
+operations alongside indexed-zero equivalents. No ordinary pure family remains
+within the documented profiles.
+
+`python3 tools/ports/x86_64/check_closure.py` reproduces
+[closure-review.json](closure-review.json): all 41 source hashes, 30 inventories,
+twelve historical completed families and 71 translated overlays. The sole
+unoverlaid lexical anchor is the represented GDT const-generic parameter.
+X86-002 is complete at this detached algorithm boundary; native ABI/instructions,
+live providers and custody, 32-bit usize, stale typed values across concurrent
+ambient reconfiguration and universal Kani proofs remain separate.
