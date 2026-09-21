@@ -65,8 +65,8 @@
     "tools/ports/acpi/aml-public-execution/check.py": "4a9b7214ae7952fe0ed5530dd274fd5fdc84c15519f34cdd3f39556b8ad7836f",
     "tools/ports/acpi/aml-public-execution/check_pipeline.py": "7d492d0cb3c82dea23569e8cccf22f19922d3d729702729c7d9494908b416051",
     "tools/ports/acpi/aml-public-execution/src/main.rs": "ca6c249f592018b4407cb3b16f36460c758cdd24e1b3834dc681ac6d43b4fb83",
-    "tools/ports/acpi/pipeline/cases.json": "42da1848eb1a9ef313451054ed56c51a701fd5d54c6baae0048aeeeb60398a6b",
-    "tools/ports/acpi/pipeline/fixtures.py": "b8be8ff1685ec1f0e08053aaf50e5f9ce947ac0c1d86e1024d94abb5fb9f18c1"
+    "tools/ports/acpi/pipeline/cases.json": "1c35949e9c52c107d50b38265ef3d663ad20b725370458c8cbd88decf137be46",
+    "tools/ports/acpi/pipeline/fixtures.py": "9cbede70f2be781843457f16403cb99b138a285693a95e8ae75b875779a121f9"
   },
   "stage": "actual public Rust load_table/evaluate; no Omega native or hardware execution",
   "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5"

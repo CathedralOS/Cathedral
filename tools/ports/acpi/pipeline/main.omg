@@ -5,6 +5,7 @@ use aml::model::Path;
 use aml::model::Span;
 use aml::model::Value;
 use aml::model::Namespace;
+use aml::model::ObjectStore;
 use aml::model::NamespaceResult;
 use aml::model::Lookup;
 use aml::model::MethodDefinition;

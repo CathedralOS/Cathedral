@@ -1,0 +1,26 @@
+{
+  "baseline_commit": "26f069d3a531bca313e49799942ff7c34482963f",
+  "current_regression_directory": "tools/ports/acpi/aml/owned-bytes/regressions",
+  "fixture_migrations": [
+    "tools/ports/acpi/aml/cases/values-buffer.omg",
+    "tools/ports/acpi/aml/cases/string-validation.omg",
+    "tools/ports/acpi/pipeline/fixtures.py"
+  ],
+  "historical_sha256": {
+    "tools/ports/acpi/aml/fields/checked-verification.json": "f847d78b5e09faaa8dfc00d13be76e30f0c55c5f2037821fc6fbce9c5f9744a0",
+    "tools/ports/acpi/aml/object-references/const-verification.json": "65729223f7e82486618ed0575d970c78adf829ff4c7c85f0879e73b8f74d9fd9",
+    "tools/ports/acpi/aml/object-references/verification.json": "13465cc1008d3e8c29e606924437a11a66985d1c5572ebd9db23fb6cda61daf8",
+    "tools/ports/acpi/interpreter/execution/verification.json": "6a199d0c60da0a233e5fd44068af190dfff203dd955d0831e51d61d80faa08ba",
+    "tools/ports/acpi/pipeline/const-verification.json": "088cc9fe8642cd8523d25682a86b69f3e1e22c7b1f5fecda6adc374a6e7c8458",
+    "tools/ports/acpi/pipeline/parser-verification.json": "3245355f6f563a097911b3f73830c26b08c5c9346e83084b9472160458a7e21c",
+    "tools/ports/acpi/pipeline/verification.json": "294257c90539a3cc7d33667ac4d44aa746d05c8a4f60c113b8a7dfb084e155c8"
+  },
+  "old_receipts": "historical, preserved byte-for-byte; not asserted against the evolved current source",
+  "representation_migrations": [
+    "Value String and Buffer explicit Source/Owned cases",
+    "new BufferField stable backing identity",
+    "paired Namespace/ByteArena ObjectStore",
+    "affine Program and Prepared with Program.store",
+    "namespace-only copy_value rejects Owned source or destination"
+  ]
+}

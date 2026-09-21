@@ -923,7 +923,20 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine make_byte_index",
+              "path": "source/libraries/acpi/aml/byte_storage.omg"
+            }
+          ],
+          "owned_byte_component": {
+            "components": [
+              "Internal String/Buffer indexed field plus RefOf identity construction",
+              "Both object slots reserved before publication"
+            ],
+            "remaining": "Byte Index construction kernel implemented; AML operand evaluation, package branch, target Store and operation retirement remain pending."
+          }
         },
         "228:load_table": {
           "anchor": "pub fn load_table(&self, stream: &[u8]) -> Result<(), AmlError> {",
@@ -1058,7 +1071,19 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine clone_bytes_into",
+              "path": "source/libraries/acpi/aml/byte_storage.omg"
+            }
+          ],
+          "owned_byte_component": {
+            "components": [
+              "Independent byte-value copy into existing ordinary data destination ID"
+            ],
+            "remaining": "Byte-copy kernel only; generic reference-target selection, non-byte value copying, MethodDefinitions handling and opcode retirement remain pending."
+          }
         },
         "2519:do_field_read": {
           "anchor": "fn do_field_read(&self, field: &FieldUnit) -> Result<WrappedObject, AmlError> {",
@@ -2793,7 +2818,25 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub data StringStorage",
+              "path": "source/libraries/acpi/aml/model.omg"
+            },
+            {
+              "anchor": "pub data ObjectStore",
+              "path": "source/libraries/acpi/aml/model.omg"
+            }
+          ],
+          "owned_byte_component": {
+            "components": [
+              "Canonical StringStorage and BufferStorage Source/Owned cases",
+              "ByteBlock/ByteArena/ObjectStore",
+              "BufferField backing by stable object ID"
+            ],
+            "remaining": "Partial canonical Object representation; full generic Object variants, contexts, handlers, allocation/reclamation and executor dispatch remain pending."
+          }
         },
         "160:Target": {
           "anchor": "type Target = Object;",
@@ -2923,7 +2966,19 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine read_field_integer",
+              "path": "source/libraries/acpi/aml/byte_storage.omg"
+            }
+          ],
+          "owned_byte_component": {
+            "components": [
+              "Bounded numeric field reads through stable IDs; source or owned backing"
+            ],
+            "remaining": "Numeric-only result kernel implemented with complete bounds; general Object Buffer results for fields wider than integer width and opcode integration remain pending. Corrects pin byte/bit-width branch comparison."
+          }
         },
         "291:write_buffer_field": {
           "anchor": "pub fn write_buffer_field(&mut self, value: &[u8], token: &ObjectToken) -> Result<(), AmlError> {",
@@ -2936,7 +2991,21 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "anchor": "pub machine write_field_integer",
+              "path": "source/libraries/acpi/aml/byte_storage.omg"
+            }
+          ],
+          "owned_byte_component": {
+            "components": [
+              "Atomic normalized integer writes into validated String/Buffer storage",
+              "ASCII/NUL-free string postcondition",
+              "Source materialization only after full validation"
+            ],
+            "remaining": "Integer-source write kernel implemented; arbitrary byte-input field stores, implicit conversion and full opcode/target dispatch remain pending. Pin lacks complete bounds and uses unsafe mutable String bytes; this profile rejects invalid ASCII atomically."
+          }
         },
         "317:replace_with_implicit_casting": {
           "anchor": "pub fn replace_with_implicit_casting(&mut self, new: Object) -> Result<(), AmlError> {",

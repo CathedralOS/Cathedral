@@ -19,11 +19,16 @@ pub data Span [copy] { unit: u64; start: u64; end: u64; }
 pub data LevelKind [copy] { case Scope; case Device; case Processor; case PowerResource; case ThermalZone; case MethodLocals; }
 // Ordinary stable-ID reference metadata, never a borrow or object-access token.
 pub data ReferenceKind [copy] { case Named; case RefOf; case Local; case Arg; case Index; case Unresolved; }
+// Source cases are immutable locations. Owned locators are valid only in their
+// containing ObjectStore object slot; they grant no independent access.
+pub data StringStorage [copy] { case Source(string_source:Span); case Owned(string_owner:u64); }
+pub data BufferStorage [copy] { case Source(declared_size:u64,buffer_initializer:Span); case Owned(buffer_owner:u64); }
 pub data Value [copy] {
  case Uninitialized;
  case Integer(number: u64);
- case String(bytes: Span);
- case Buffer(size: u64, initializer: Span);
+ case String(string_storage:StringStorage);
+ case Buffer(buffer_storage:BufferStorage);
+ case BufferField(backing_object:u64,bit_offset:u64,bit_length:u64);
  case Package(first: u64, count: u64);
  case NameReference(name: Path, scope: Path);
  case Reference(kind: ReferenceKind, object_id: u64);
@@ -59,3 +64,8 @@ pub data MethodDefinition [copy] { present: bool; object_id: u64; scope: Path; f
 // Persistent declaration-time observations; ordinary initialized metadata.
 pub data MethodDefinitions [copy] { entries: [MethodDefinition; 64]; }
 pub data ObservedLoad [copy] { load: LoadState; definitions: MethodDefinitions; }
+
+// Fixed initialized profile, not an ACPI maximum and not an allocator capability.
+pub data ByteBlock [copy] { initialized:bool; length:u64; bytes:[u8;256]; }
+pub data ByteArena [copy] { blocks:[ByteBlock;64]; }
+pub data ObjectStore [copy] { space:Namespace; bytes:ByteArena; }

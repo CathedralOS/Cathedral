@@ -45,7 +45,7 @@ The grammar review uses the [primary ACPI 6.5 Errata A AML grammar](https://uefi
 |---|---|---|
 | PkgLength reserved bits / invalid envelope | `mod.rs::pkglength` ignores bits 4–5 in extended form; consumers subtract lengths | Rejects reserved bits, lengths shorter than their encoding and enclosing-bound crossings |
 | MultiName count zero | `mod.rs::namestring` accepts the empty loop | Rejects zero count; NullName has its own encoding |
-| Buffer initializer exceeds declared length | `mod.rs` Buffer retirement takes a shortened destination but the whole initializer source for `copy_from_slice` | Stores declared length and complete initializer span without allocating/copying; eventual materialization must truncate/pad |
+| Buffer initializer exceeds declared length | `mod.rs` Buffer retirement takes a shortened destination but the whole initializer source for `copy_from_slice` | Stores declared length and complete initializer span; [owned-byte materialization](byte-storage.PORT.md) uses max(declared size, initializer length), copies the complete initializer and zero pads, per ACPI 6.6 §19.6.10 |
 | Extra Package elements | `mod.rs` Package retirement asserts end; VarPackage completion subtracts supplied count from declared count | Recoverable `BadEncoding` |
 | Alias collision | `namespace.rs::create_alias` inserts before returning NameCollision | Checks collision before mutation |
 | Rebinding names / opening levels | `namespace.rs::insert` replaces; `add_level` creates/reopens and preserves existing kind | Preserved as explicit pin-compatible namespace operations, even though ACPI 6.6 describes load-time name collisions as fatal |

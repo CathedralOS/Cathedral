@@ -5,6 +5,8 @@
 module object_references;
 use model::Outcome;
 use model::Value;
+use model::StringStorage;
+use model::BufferStorage;
 use model::ReferenceKind;
 use model::Object;
 use model::Namespace;
@@ -90,7 +92,15 @@ pub machine copy_value(space:Namespace,destination:u64,source:u64)->NamespaceRes
   _ -> (NamespaceResult {outcome:Outcome::InvalidState,space:space})
  }
  state copy(space:Namespace,destination:u64,source:u64)->NamespaceResult {
-  let payload:Value=space.objects[source].value;let mut out:Namespace=space;
+  let payload:Value=space.objects[source].value;
+  let source_owned:bool=or_owned_bytes(payload);let destination_owned:bool=or_owned_bytes(space.objects[destination].value);
+  transition source_owned || destination_owned {
+   true -> (NamespaceResult {outcome:Outcome::InvalidState,space:space})
+   _ -> publish(space,destination,payload)
+  }
+ }
+ state publish(space:Namespace,destination:u64,payload:Value)->NamespaceResult {
+  let mut out:Namespace=space;
   out.objects[destination].value=payload;
   NamespaceResult {space:out,object:destination}
  }
@@ -157,4 +167,11 @@ machine or_package_step(space:&Namespace,value:PackageWalk,index:u64,count:u64,s
  }
  state done(value:PackageWalk)->PackageWalk {let mut next:PackageWalk=value;next.done=true;next}
  state failure(value:PackageWalk,outcome:Outcome)->PackageWalk {let mut next:PackageWalk=value;next.outcome=outcome;next.done=true;next}
+}
+
+// Namespace-only copying cannot maintain the paired mutable byte arena.
+machine or_owned_bytes(value:Value)->bool {
+ transition value {Value::String {string_storage} -> string(string_storage) Value::Buffer {buffer_storage} -> buffer(buffer_storage) _ -> (false)}
+ state string(storage:StringStorage)->bool {transition storage {StringStorage::Owned {string_owner} -> (true) _ -> (false)}}
+ state buffer(storage:BufferStorage)->bool {transition storage {BufferStorage::Owned {buffer_owner} -> (true) _ -> (false)}}
 }

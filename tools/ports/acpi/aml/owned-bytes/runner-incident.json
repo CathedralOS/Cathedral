@@ -1,0 +1,23 @@
+{
+  "action": "Parent runner paused before further batch launch; resumed only after canonical hash confirmed. Original raw batch receipt will be preserved and superseded by an exact eight-case canonical rerun in composed verification.",
+  "affected_batch": "1d8eaadc4016",
+  "affected_pid": 88300,
+  "affected_start_observation": "Sun Sep 20 18:41:22 2026 (ps lstart)",
+  "alternate_build_source": "byte-identical checked_runner.rs built from another scratch path; not treated as canonical evidence",
+  "alternate_preserved_path": "/tmp/cathedral-query-runner-scratch-origin",
+  "alternate_runner_sha256": "6ae82dae55fb988207049b9d15dc224ac25740f4d918c7fef58899d42b5ab03c",
+  "canonical_runner_sha256": "e6d0aee6b4dddbbf34a60cffbe8f158643cc5c4d100f9e20f0481f75f52890be",
+  "format": "cathedral-runner-replacement-audit-v1",
+  "replacement_mtime_epoch": 1789954828.837742,
+  "restore_mtime_epoch": 1789954888.8302965,
+  "unaffected_processes": {
+    "extras": {
+      "pid": 88190,
+      "start": "18:39:33"
+    },
+    "pipeline": {
+      "pid": 88036,
+      "start": "18:35:10"
+    }
+  }
+}

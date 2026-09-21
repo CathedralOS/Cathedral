@@ -7,6 +7,7 @@ use aml::model::Span;
 use aml::model::Path;
 use aml::model::PathResult;
 use aml::model::Value;
+use aml::model::BufferStorage;
 use aml::model::Object;
 use aml::model::Namespace;
 use aml::model::NamespaceResult;
@@ -84,4 +85,4 @@ machine require_ok(result:u64) requires result==0; {}
 data Main {}
 machine Main::main(&mut self){require_ok(TEST_RESULT);}
 
-machine buffer_is(value:Value)->bool {transition value {Value::Buffer {size,initializer} -> check(size,initializer) _ -> (false)} state check(size:u64,initializer:Span)->bool {size==2 && initializer.unit==19 && initializer.start==4 && initializer.end==8}}
+machine buffer_is(value:Value)->bool {transition value {Value::Buffer {buffer_storage} -> storage(buffer_storage) _ -> (false)} state storage(value:BufferStorage)->bool {transition value {BufferStorage::Source {declared_size,buffer_initializer} -> check(declared_size,buffer_initializer) _ -> (false)}} state check(size:u64,initializer:Span)->bool {size==2 && initializer.unit==19 && initializer.start==4 && initializer.end==8}}

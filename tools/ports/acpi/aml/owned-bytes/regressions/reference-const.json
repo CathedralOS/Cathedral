@@ -1,0 +1,109 @@
+{
+  "cases": [
+    "rust_single_0_all",
+    "zero_budget",
+    "self_cycle",
+    "package_bad_tail_after_selection",
+    "copy_method"
+  ],
+  "control_count": 5,
+  "elapsed_seconds": 113.274,
+  "evaluator_step_limit": null,
+  "format": "cathedral-object-references-const-v1",
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "output": "PASS const rust_single_0_all control=False\nPASS const rust_single_0_all control=True\nPASS const zero_budget control=False\nPASS const zero_budget control=True\nPASS const self_cycle control=False\nPASS const self_cycle control=True\nPASS const package_bad_tail_after_selection control=False\nPASS const package_bad_tail_after_selection control=True\nPASS const copy_method control=False\nPASS const copy_method control=True\n",
+  "proofs": [
+    {
+      "case": "rust_single_0_all",
+      "control": false,
+      "fixture_sha256": "2d4b1109ba0fc9258a671b76bcded182a9fb083e462d6b8bfc42adf01b8a31e6",
+      "output": "compiled 15 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-6c7fc3c2a02557c08f351c4921166e89f0345c32847a6a52eaa109b61f0bb9e1/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "rust_single_0_all",
+      "control": true,
+      "fixture_sha256": "12089beb554de38a81e1f98f33df4a89b303e3d9789faa2fc7ebc473103c0e98",
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-aml-object-reference-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "case": "zero_budget",
+      "control": false,
+      "fixture_sha256": "c574569c010ce207421003e09a63c42ddaa2eae78485901c60191ef353444675",
+      "output": "compiled 15 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-b9c8f8fd033b182c70d4da4e70b3850ed73ace45cad3334deb47117b12d0d6fe/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "zero_budget",
+      "control": true,
+      "fixture_sha256": "967cc4eaf859227a03d02b00adf21709184a2c6e98d8fc32ff99ae5a5dd9fd17",
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-aml-object-reference-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "case": "self_cycle",
+      "control": false,
+      "fixture_sha256": "788a1a6e38b50f0f5400fa4a563a47aa930313880405ff9c94d1b1c5cdf8e1e6",
+      "output": "compiled 15 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-2500948af5185abf85a8331739184e3d9d7d06d45acefa2d693635710d6d6bcc/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "self_cycle",
+      "control": true,
+      "fixture_sha256": "f1e86f78137c09bcd32072ee34cab0b263ffeb2a88cc824c9bf2725bd342e8b6",
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-aml-object-reference-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "case": "package_bad_tail_after_selection",
+      "control": false,
+      "fixture_sha256": "2e6820af85d4adaf1746051f6943350f5196afb338edf59b21c1767ede54ee99",
+      "output": "compiled 15 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-e5f785f100930a05e96c552dc233582360f18eaf576efa105aef76d1a7dad054/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "package_bad_tail_after_selection",
+      "control": true,
+      "fixture_sha256": "50d6c55d5599e73d78b300a08875b0f10f69bf680280701c34a24a9a011fbd95",
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-aml-object-reference-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "case": "copy_method",
+      "control": false,
+      "fixture_sha256": "f5de591a66f745ed7428b38cc68d32b59f18ca0c8d0b7e9e8a1cdb445f48d538",
+      "output": "compiled 15 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-b2fd28e1a6d47904e7be54fefe5c6e04856da9d69976c148c05263f0ac126763/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "copy_method",
+      "control": true,
+      "fixture_sha256": "adb2237d40c87427fd6db23e42058c8ed63fd7343ce46042104076a125265f8b",
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-aml-object-reference-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    }
+  ],
+  "runner_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "scenario_count": 5,
+  "source_sha256": {
+    "source/libraries/acpi/aml/build.omg": "2129610bb9e275f63e87c5e736bb29114044d1a466cdc1d288e4c9103b076319",
+    "source/libraries/acpi/aml/byte_storage.omg": "045be1e6efc512f051231c3233f2a177473a15eb832f78111086f67a7b504f25",
+    "source/libraries/acpi/aml/bytes.omg": "66a5f91ebe3bba63c398a20dba184854f257d580279cde514ba00aa8216251be",
+    "source/libraries/acpi/aml/fields/build.omg": "1bed0d77c834d0cc89726bbb6990da3a985af2e88c2c7634eaf089eb505fab0c",
+    "source/libraries/acpi/aml/fields/declarations.omg": "e698e66463da5b111b58d9b3bc74b67c21359cacc4b9b34d0410e1e524a4bca2",
+    "source/libraries/acpi/aml/fields/field_list.omg": "57ae85b79e3efdd00a44e7a670e6972713f9542cf5d052b14dbe17f205a01f64",
+    "source/libraries/acpi/aml/fields/field_model.omg": "20516bb37529164d24f292aeae102189b761d41d22bdf48bf78aa460d78c7844",
+    "source/libraries/acpi/aml/fields/flags.omg": "5a284110c178c77ea64fff76e032f95639c55e949be512e7a48132822ac44431",
+    "source/libraries/acpi/aml/loader.omg": "a1e76eba4ef220ae814e487790a82a75f15fc61d00c3ca7816493fd4aa3bdf80",
+    "source/libraries/acpi/aml/model.omg": "1fc2a3ceb403f0adef2022f76ac0c1187fc74b0cd794df4e7855d643838a10af",
+    "source/libraries/acpi/aml/names.omg": "130e45f58ef1d94758cf24711223471fdbbc682d6a91c0aab2e5120ccaa79601",
+    "source/libraries/acpi/aml/namespace.omg": "4e7413e4fd13dd6857dd24abfb6f420849e24c6e1775b08115a17426478f8c12",
+    "source/libraries/acpi/aml/object_references.omg": "4c06bb925681f2e833ebb815b15e5e53d476f08810d0252e77a977af4134b703",
+    "source/libraries/acpi/aml/opcodes.omg": "e18372ec79288c6aa6da35700364ccde8f99d7847d7bd38de49c14ccfd9e7876",
+    "source/libraries/acpi/aml/references.omg": "528d5c097622c6bfd0391dd729306b2181b91e4bb7864c1d7ec94feb618eb6be",
+    "source/libraries/acpi/aml/values.omg": "5a48fdc3f34e2bac768470e27945a8e24fc125c4a71f85d529c274ae170fae9e",
+    "tools/ports/acpi/aml/object-references/build.omg": "d79fb81132553ee799939fe4745e63623123c8797794b48cbf91d0707be47ad2",
+    "tools/ports/acpi/aml/object-references/cases.json": "a75caf472eeffbb484e6e5ea4b0fd208a26964700f792ee3751fba8e4d29c119",
+    "tools/ports/acpi/aml/object-references/check.py": "fb2dc61e8677458fc1557a370be83c59407f4fb456ac7214e3c9aabf677a5b63",
+    "tools/ports/acpi/aml/object-references/evidence.py": "13fb4a1f43b26abaf0ef20866c219340e505d7ad62489fb11e366514a59b845b",
+    "tools/ports/acpi/aml/object-references/fixtures.py": "ff0cc17fc3a245bdedf365ec715d123389bddf0c1ff4891f7ca4fb276f8545f2",
+    "tools/ports/acpi/aml/object-references/reference.Cargo.lock": "d82c8dcfc608347f31ecdd7ca9f73a4402500bde218be5ad03a36e1e86cd526e",
+    "tools/ports/acpi/aml/object-references/reference.py": "75197a1aa5bab55fbed5becc1b1aa848d660e9335603c2b18f3faa08a36fa6ea",
+    "tools/ports/acpi/aml/object-references/reference.rs": "ea715082f297a7f05ebf7fd20e4f043b426e91d6c1fdd6ab746da00c50db2a97",
+    "tools/ports/acpi/aml/object-references/verify_record.py": "fb6cc52e172a2cb58a832de13d60cce3a208480c06b4acbbcea6add35c9a0d2d",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805"
+  },
+  "stage": "Omega constant evaluation with requires checking"
+}

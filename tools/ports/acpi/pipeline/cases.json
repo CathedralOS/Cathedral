@@ -81,7 +81,7 @@
   },
   {
     "name": "method_payload_mismatch",
-    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,14,7,64,128);\nlet mut program: Program = prepared.program;\nprogram.space.objects[0].value = Value::Method { body: Span { unit:7,start:0,end:0 } };\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);\n",
+    "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,14,7,64,128);\nlet mut program: Program = prepared.program;\nprogram.store.space.objects[0].value = Value::Method { body: Span { unit:7,start:0,end:0 } };\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,256);\n",
     "check": "prepared.outcome == Outcome::Success && result.outcome == ExecutionOutcome::MethodDefinition",
     "mutation": [
       "result.outcome == ExecutionOutcome::MethodDefinition",
@@ -102,30 +102,30 @@
   {
     "name": "rollback_unsupported",
     "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\ninput[14] = 114;\nlet prepared: Prepared = prepare_program(input,15,7,64,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
-    "check": "prepared.outcome == Outcome::UnsupportedSyntax && !program.loaded && program.space.object_count == 0 && !program.definitions.entries[0].present && result.outcome == ExecutionOutcome::InvalidState",
+    "check": "prepared.outcome == Outcome::UnsupportedSyntax && !program.loaded && program.store.space.object_count == 0 && !program.definitions.entries[0].present && result.outcome == ExecutionOutcome::InvalidState",
     "mutation": [
-      "program.space.object_count == 0",
-      "program.space.object_count == 1"
+      "program.store.space.object_count == 0",
+      "program.store.space.object_count == 1"
     ],
     "description": "Failed static load rolls namespace and captured definitions back; failed program cannot execute"
   },
   {
     "name": "rollback_after_capture",
     "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,14,7,1,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
-    "check": "prepared.outcome == Outcome::WorkLimit && !program.loaded && program.space.object_count == 0 && !program.definitions.entries[0].present && result.outcome == ExecutionOutcome::InvalidState",
+    "check": "prepared.outcome == Outcome::WorkLimit && !program.loaded && program.store.space.object_count == 0 && !program.definitions.entries[0].present && result.outcome == ExecutionOutcome::InvalidState",
     "mutation": [
-      "program.space.object_count == 0",
-      "program.space.object_count == 1"
+      "program.store.space.object_count == 0",
+      "program.store.space.object_count == 1"
     ],
     "description": "Failed static load rolls namespace and captured definitions back; failed program cannot execute"
   },
   {
     "name": "zero_load_budget",
     "body": "let mut input: [u8;1024];\ninput[0] = 20;\ninput[1] = 13;\ninput[2] = 77;\ninput[3] = 65;\ninput[4] = 73;\ninput[5] = 78;\ninput[7] = 164;\ninput[8] = 114;\ninput[9] = 10;\ninput[10] = 40;\ninput[11] = 10;\ninput[12] = 2;\nlet prepared: Prepared = prepare_program(input,14,7,0,128);\nlet mut program: Program = prepared.program;\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
-    "check": "prepared.outcome == Outcome::WorkLimit && !program.loaded && program.space.object_count == 0 && !program.definitions.entries[0].present && result.outcome == ExecutionOutcome::InvalidState",
+    "check": "prepared.outcome == Outcome::WorkLimit && !program.loaded && program.store.space.object_count == 0 && !program.definitions.entries[0].present && result.outcome == ExecutionOutcome::InvalidState",
     "mutation": [
-      "program.space.object_count == 0",
-      "program.space.object_count == 1"
+      "program.store.space.object_count == 0",
+      "program.store.space.object_count == 1"
     ],
     "description": "Failed static load rolls namespace and captured definitions back; failed program cannot execute"
   },
@@ -191,7 +191,7 @@
   },
   {
     "name": "incremental_rollback",
-    "body": "let initial_space:Namespace=empty();\nlet mut first_bytes: [u8;1024];\nfirst_bytes[0] = 20;\nfirst_bytes[1] = 9;\nfirst_bytes[2] = 79;\nfirst_bytes[3] = 76;\nfirst_bytes[4] = 68;\nfirst_bytes[5] = 78;\nfirst_bytes[7] = 164;\nfirst_bytes[8] = 10;\nfirst_bytes[9] = 11;\nlet mut second_bytes: [u8;1024];\nsecond_bytes[0] = 20;\nsecond_bytes[1] = 9;\nsecond_bytes[2] = 78;\nsecond_bytes[3] = 69;\nsecond_bytes[4] = 87;\nsecond_bytes[5] = 78;\nsecond_bytes[7] = 164;\nsecond_bytes[8] = 10;\nsecond_bytes[9] = 22;\nsecond_bytes[10] = 114;\nlet first: ObservedLoad = load_with_definitions(&first_bytes,10,6,initial_space,MethodDefinitions {},4,128);\nlet second: ObservedLoad = load_with_definitions(&second_bytes,11,7,first.load.space,first.definitions,8,128);\nlet mut program: Program = Program { loaded:true,source:first_bytes,length:10,unit:6,space:second.load.space,definitions:second.definitions };\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313098831;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
+    "body": "let initial_space:Namespace=empty();\nlet mut first_bytes: [u8;1024];\nfirst_bytes[0] = 20;\nfirst_bytes[1] = 9;\nfirst_bytes[2] = 79;\nfirst_bytes[3] = 76;\nfirst_bytes[4] = 68;\nfirst_bytes[5] = 78;\nfirst_bytes[7] = 164;\nfirst_bytes[8] = 10;\nfirst_bytes[9] = 11;\nlet mut second_bytes: [u8;1024];\nsecond_bytes[0] = 20;\nsecond_bytes[1] = 9;\nsecond_bytes[2] = 78;\nsecond_bytes[3] = 69;\nsecond_bytes[4] = 87;\nsecond_bytes[5] = 78;\nsecond_bytes[7] = 164;\nsecond_bytes[8] = 10;\nsecond_bytes[9] = 22;\nsecond_bytes[10] = 114;\nlet first: ObservedLoad = load_with_definitions(&first_bytes,10,6,initial_space,MethodDefinitions {},4,128);\nlet second: ObservedLoad = load_with_definitions(&second_bytes,11,7,first.load.space,first.definitions,8,128);\nlet mut program: Program = Program { loaded:true,source:first_bytes,length:10,unit:6,store:ObjectStore {space:second.load.space},definitions:second.definitions };\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313098831;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
     "check": "first.load.outcome == Outcome::Success && second.load.outcome == Outcome::UnsupportedSyntax && second.definitions.entries[0].present && second.definitions.entries[0].body.unit == 6 && result.outcome == ExecutionOutcome::Success && !second.definitions.entries[1].present && result.value.number == 11",
     "mutation": [
       "result.value.number == 11",
@@ -201,7 +201,7 @@
   },
   {
     "name": "incremental_source_unit",
-    "body": "let initial_space:Namespace=empty();\nlet mut first_bytes: [u8;1024];\nfirst_bytes[0] = 20;\nfirst_bytes[1] = 9;\nfirst_bytes[2] = 79;\nfirst_bytes[3] = 76;\nfirst_bytes[4] = 68;\nfirst_bytes[5] = 78;\nfirst_bytes[7] = 164;\nfirst_bytes[8] = 10;\nfirst_bytes[9] = 11;\nlet mut second_bytes: [u8;1024];\nsecond_bytes[0] = 20;\nsecond_bytes[1] = 11;\nsecond_bytes[2] = 77;\nsecond_bytes[3] = 65;\nsecond_bytes[4] = 73;\nsecond_bytes[5] = 78;\nsecond_bytes[7] = 164;\nsecond_bytes[8] = 79;\nsecond_bytes[9] = 76;\nsecond_bytes[10] = 68;\nsecond_bytes[11] = 78;\nlet first: ObservedLoad = load_with_definitions(&first_bytes,10,6,initial_space,MethodDefinitions {},4,128);\nlet second: ObservedLoad = load_with_definitions(&second_bytes,12,7,first.load.space,first.definitions,8,128);\nlet mut program: Program = Program { loaded:true,source:second_bytes,length:12,unit:7,space:second.load.space,definitions:second.definitions };\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
+    "body": "let initial_space:Namespace=empty();\nlet mut first_bytes: [u8;1024];\nfirst_bytes[0] = 20;\nfirst_bytes[1] = 9;\nfirst_bytes[2] = 79;\nfirst_bytes[3] = 76;\nfirst_bytes[4] = 68;\nfirst_bytes[5] = 78;\nfirst_bytes[7] = 164;\nfirst_bytes[8] = 10;\nfirst_bytes[9] = 11;\nlet mut second_bytes: [u8;1024];\nsecond_bytes[0] = 20;\nsecond_bytes[1] = 11;\nsecond_bytes[2] = 77;\nsecond_bytes[3] = 65;\nsecond_bytes[4] = 73;\nsecond_bytes[5] = 78;\nsecond_bytes[7] = 164;\nsecond_bytes[8] = 79;\nsecond_bytes[9] = 76;\nsecond_bytes[10] = 68;\nsecond_bytes[11] = 78;\nlet first: ObservedLoad = load_with_definitions(&first_bytes,10,6,initial_space,MethodDefinitions {},4,128);\nlet second: ObservedLoad = load_with_definitions(&second_bytes,12,7,first.load.space,first.definitions,8,128);\nlet mut program: Program = Program { loaded:true,source:second_bytes,length:12,unit:7,store:ObjectStore {space:second.load.space},definitions:second.definitions };\nlet mut target_path: Path = Path { absolute:true,count:1 };\ntarget_path.segments[0] = 1313423693;\nlet arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n",
     "check": "first.load.outcome == Outcome::Success && second.load.outcome == Outcome::Success && second.definitions.entries[0].present && second.definitions.entries[0].body.unit == 6 && result.outcome == ExecutionOutcome::SourceUnit && second.definitions.entries[1].present && second.definitions.entries[1].body.unit == 7",
     "mutation": [
       "result.outcome == ExecutionOutcome::SourceUnit",

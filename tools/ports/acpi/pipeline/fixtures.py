@@ -34,6 +34,7 @@ use aml::model::Path;
 use aml::model::Span;
 use aml::model::Value;
 use aml::model::Namespace;
+use aml::model::ObjectStore;
 use aml::model::NamespaceResult;
 use aml::model::Lookup;
 use aml::model::MethodDefinition;
@@ -77,12 +78,12 @@ def cases():
     program_case('method_redeclaration',twice,33,description='Fresh method ID gets new observation; old alias retains old body and observation')
     program_case('serialized_boundary',method('MAIN',returned(integer(1)),8),error='UnresolvedSynchronization',description='Loader captures flags; executor explicitly rejects serialized method')
     program_case('source_unit_mismatch',minimal,error='SourceUnit',before='program.unit = 8;\n',description='Mismatched retained source unit is rejected before byte execution')
-    program_case('method_payload_mismatch',minimal,error='MethodDefinition',before='program.space.objects[0].value = Value::Method { body: Span { unit:7,start:0,end:0 } };\n',description='Changed live Method payload does not silently rewrite captured observation')
+    program_case('method_payload_mismatch',minimal,error='MethodDefinition',before='program.store.space.objects[0].value = Value::Method { body: Span { unit:7,start:0,end:0 } };\n',description='Changed live Method payload does not silently rewrite captured observation')
     program_case('maximum_source_unit',minimal,unit=(1<<64)-1,description='Opaque u64 maximum source identity remains exact data')
     for label,data,budget,error in [('rollback_unsupported',minimal+b'\x72',64,'UnsupportedSyntax'),('rollback_after_capture',minimal,1,'WorkLimit'),('zero_load_budget',minimal,0,'WorkLimit')]:
         body=array(data)+f'let prepared: Prepared = prepare_program(input,{len(data)},7,{budget},128);\nlet mut program: Program = prepared.program;\n'+path('target_path','MAIN')+'let arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n'
-        check=f'prepared.outcome == Outcome::{error} && !program.loaded && program.space.object_count == 0 && !program.definitions.entries[0].present && result.outcome == ExecutionOutcome::InvalidState'
-        add(label,body,check,'program.space.object_count == 0','program.space.object_count == 1','Failed static load rolls namespace and captured definitions back; failed program cannot execute')
+        check=f'prepared.outcome == Outcome::{error} && !program.loaded && program.store.space.object_count == 0 && !program.definitions.entries[0].present && result.outcome == ExecutionOutcome::InvalidState'
+        add(label,body,check,'program.store.space.object_count == 0','program.store.space.object_count == 1','Failed static load rolls namespace and captured definitions back; failed program cannot execute')
     for label,length,budget in [('input_capacity',1025,64),('input_maximum',(1<<64)-1,64),('budget_maximum',len(minimal),(1<<64)-1)]:
         body=array(minimal)+f'let prepared: Prepared = prepare_program(input,{length},7,{budget},128);\n'
         add(label,body,'prepared.outcome == Outcome::Capacity && !prepared.program.loaded && !prepared.program.definitions.entries[0].present','prepared.outcome == Outcome::Capacity','prepared.outcome == Outcome::Success','Capacity rejection does not install namespace or method observations')
@@ -108,7 +109,7 @@ def cases():
         ('incremental_source_unit',method('MAIN',returned(name('OLDN'))),'Success','MAIN','SourceUnit')]:
         body=array(first,'first_bytes')+array(second,'second_bytes')+f'let first: ObservedLoad = load_with_definitions(&first_bytes,{len(first)},6,empty(),MethodDefinitions {{}},4,128);\nlet second: ObservedLoad = load_with_definitions(&second_bytes,{len(second)},7,first.load.space,first.definitions,8,128);\n'
         source='first_bytes'if expected_load!='Success'else'second_bytes';length=len(first)if source=='first_bytes'else len(second);unit=6 if source=='first_bytes'else 7
-        body+=f'let mut program: Program = Program {{ loaded:true,source:{source},length:{length},unit:{unit},space:second.load.space,definitions:second.definitions }};\n'+path('target_path',entry)+'let arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n'
+        body+=f'let mut program: Program = Program {{ loaded:true,source:{source},length:{length},unit:{unit},store:ObjectStore {{space:second.load.space}},definitions:second.definitions }};\n'+path('target_path',entry)+'let arguments: [Value;7];\nlet result: ExecutionResult = run_program(&mut program,target_path,&arguments,0,IntegerSize::FourBytes,64);\n'
         check=f'first.load.outcome == Outcome::Success && second.load.outcome == Outcome::{expected_load} && second.definitions.entries[0].present && second.definitions.entries[0].body.unit == 6 && result.outcome == ExecutionOutcome::{expected_run}'
         if expected_load!='Success':check+=' && !second.definitions.entries[1].present && result.value.number == 11';old='result.value.number == 11';new='result.value.number == 12'
         else:check+=' && second.definitions.entries[1].present && second.definitions.entries[1].body.unit == 7';old='result.outcome == ExecutionOutcome::SourceUnit';new='result.outcome == ExecutionOutcome::Success'

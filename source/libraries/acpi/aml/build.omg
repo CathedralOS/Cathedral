@@ -1,1 +1,1 @@
-machine build(builder: &mut Build) { builder.package("cathedral-acpi-aml"); }
+machine build(builder:&mut Build){builder.package("cathedral-acpi-aml");builder.depend_as("integer_helpers",Source::Path {location:"../interpreter"});}

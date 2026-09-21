@@ -10,6 +10,8 @@ use model::Span;
 use model::Path;
 use model::PathResult;
 use model::Value;
+use model::StringStorage;
+use model::BufferStorage;
 use model::ValueRead;
 use model::Object;
 use model::Namespace;
@@ -78,7 +80,7 @@ pub machine atom(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:Path,allow_refer
  }
  state string_failure(parsed:Read)->ValueRead {transition parsed.outcome==Outcome::Success {true -> (ValueRead {outcome:Outcome::Truncated,offset:parsed.next}) _ -> (ValueRead {outcome:parsed.outcome,offset:parsed.next})}}
  state string_value(at:u64,unit:u64,parsed:Read)->ValueRead {
-  transition parsed.next>0 {true -> (ValueRead {value:Value::String {bytes:Span {unit:unit,start:at,end:parsed.next-1}},next:parsed.next}) _ -> (ValueRead {outcome:Outcome::BadEncoding,offset:at})}
+  transition parsed.next>0 {true -> (ValueRead {value:Value::String {string_storage:StringStorage::Source {string_source:Span {unit:unit,start:at,end:parsed.next-1}}},next:parsed.next}) _ -> (ValueRead {outcome:Outcome::BadEncoding,offset:at})}
  }
  state buffer(input:&[u8;1024],end:u64,at:u64,unit:u64)->ValueRead {
   let package:Envelope=envelope(input,end,at);
@@ -87,7 +89,7 @@ pub machine atom(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:Path,allow_refer
  state buffer_size(input:&[u8;1024],package:Envelope,unit:u64)->ValueRead {
   let size:Read=integer(input,package.end,package.body);
   transition size.outcome==Outcome::Success {
-   true -> (ValueRead {value:Value::Buffer {size:size.value,initializer:Span {unit:unit,start:size.next,end:package.end}},next:package.end})
+   true -> (ValueRead {value:Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:size.value,buffer_initializer:Span {unit:unit,start:size.next,end:package.end}}},next:package.end})
    _ -> (ValueRead {outcome:size.outcome,offset:size.offset})
   }
  }

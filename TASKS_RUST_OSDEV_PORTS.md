@@ -486,8 +486,17 @@ ACPI-004/005/006 stay open.
 [Canonical object references](source/libraries/acpi/aml/object-references.PORT.md)
 add full/transparent unwrap, stable-ID reference allocation, payload copy and
 complete package-chain selection. All 160 checked pairs, five const pairs and
-116 public immutable Rust observations pass. Generic opcode integration and
-mutable backing remain ordinary implementation work.
+116 public immutable Rust observations pass. Generic opcode integration remains ordinary implementation work.
+
+[Owned byte storage](source/libraries/acpi/aml/byte-storage.PORT.md) adds canonical
+Source/Owned String and Buffer cases, stable indexed fields and affine Program
+ownership. All 138 storage/composition pairs, 306 existing regression pairs, eight
+const pairs and 21 labelled Rust observations pass. Mutations validate and stage
+their complete result before publishing; failures preserve the entire store.
+Current model-migration regression receipts live under
+`tools/ports/acpi/aml/owned-bytes/regressions/`; earlier receipts keep their
+original hashes as historical evidence. Generic opcode dispatch and complete
+AML resource accounting remain pending.
 
 ACPI-004 partial evidence: [static AML syntax and namespace](source/libraries/acpi/aml/PORT.md)
 passes 27 Omega scenarios with 27 body mutations and an 18-file source check.

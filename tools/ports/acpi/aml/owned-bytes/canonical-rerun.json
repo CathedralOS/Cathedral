@@ -1,0 +1,53 @@
+{
+  "stage": "checked-interpreter actual bodies and body-mutating controls; native/hardware NOT RUN",
+  "scenario_count": 8,
+  "control_count": 8,
+  "cases": [
+    "field_write_8_zero_pad",
+    "field_write_8_last",
+    "field_bad_start_max",
+    "field_bad_count_max",
+    "field_bad_past_length",
+    "field_bad_zero",
+    "string_field_ascii",
+    "string_field_nul"
+  ],
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "runner_sha256": "e6d0aee6b4dddbbf34a60cffbe8f158643cc5c4d100f9e20f0481f75f52890be",
+  "source_sha256": {
+    "source/libraries/acpi/aml/build.omg": "2129610bb9e275f63e87c5e736bb29114044d1a466cdc1d288e4c9103b076319",
+    "source/libraries/acpi/aml/model.omg": "1fc2a3ceb403f0adef2022f76ac0c1187fc74b0cd794df4e7855d643838a10af",
+    "source/libraries/acpi/aml/byte_storage.omg": "045be1e6efc512f051231c3233f2a177473a15eb832f78111086f67a7b504f25",
+    "source/libraries/acpi/aml/object_references.omg": "4c06bb925681f2e833ebb815b15e5e53d476f08810d0252e77a977af4134b703",
+    "source/libraries/acpi/aml/namespace.omg": "4e7413e4fd13dd6857dd24abfb6f420849e24c6e1775b08115a17426478f8c12",
+    "source/libraries/acpi/aml/names.omg": "130e45f58ef1d94758cf24711223471fdbbc682d6a91c0aab2e5120ccaa79601",
+    "source/libraries/acpi/aml/bytes.omg": "66a5f91ebe3bba63c398a20dba184854f257d580279cde514ba00aa8216251be",
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196",
+    "source/libraries/acpi/interpreter/conversions.omg": "b3ee9811b5434883bfa2374c8ca6a746ad2a75ab4c9eacea3e8dd19b5510f714",
+    "source/libraries/acpi/interpreter/buffer_fields.omg": "98e1df3d821a88ba1d63c63189f3d9ac782f197b62cd04e6b71abd396042688a",
+    "tools/ports/acpi/aml/owned-bytes/fixtures.py": "57d656ec5b517131ed7663d2563ad5aace05df90d310a2ab43d9aea786289b11",
+    "tools/ports/acpi/aml/owned-bytes/cases.json": "a35859ff3d749246e734995e23a797492d57552e49bfc9cb4ee883632eb45b71",
+    "tools/ports/acpi/aml/owned-bytes/check.py": "b3e48d6e66153a627f81cf5a9646d2ceabaac141ced9032bfdf9c5e4a0b82a14",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805"
+  },
+  "batches": [
+    {
+      "cases": [
+        "field_write_8_zero_pad",
+        "field_write_8_last",
+        "field_bad_start_max",
+        "field_bad_count_max",
+        "field_bad_past_length",
+        "field_bad_zero",
+        "string_field_ascii",
+        "string_field_nul"
+      ],
+      "suite_sha256": "cfefe5f0450dc29d4539954e6caece4dafb4353f5387d44c8c1461a0d882d51b",
+      "output": "CHECKED authored package and dependency bodies; native publication NOT requested\nPASS Suite::field_write_8_zero_pad_positive expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 534840, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37915, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::field_write_8_zero_pad_control expected=1 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 534824, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37915, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::field_write_8_last_positive expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 519504, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37915, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::field_write_8_last_control expected=1 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 519488, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37915, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::field_bad_start_max_positive expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 503992, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37188, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::field_bad_start_max_control expected=1 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 503976, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37188, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::field_bad_count_max_positive expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 503996, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37188, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::field_bad_count_max_control expected=1 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 503980, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37188, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::field_bad_past_length_positive expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 503996, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37188, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::field_bad_past_length_control expected=1 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 503980, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37188, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::field_bad_zero_positive expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 503982, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37188, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::field_bad_zero_control expected=1 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 503966, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37188, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::string_field_ascii_positive expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 505721, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37914, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::string_field_ascii_control expected=1 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 505705, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37914, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::string_field_nul_positive expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 505657, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37902, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS Suite::string_field_nul_control expected=1 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 505641, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 37902, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\n",
+      "seconds": 93.944,
+      "exit": 0
+    }
+  ]
+}

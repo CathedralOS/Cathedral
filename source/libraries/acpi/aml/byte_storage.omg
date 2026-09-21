@@ -1,0 +1,273 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Bounded adaptation of rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Copyright 2018 Isaac Woods; Omega adaptation 2026. See byte-storage.PORT.md.
+// Initialized ordinary data only: no allocator, firmware or region authority.
+module byte_storage;
+use model::Outcome;
+use model::Value;
+use model::Span;
+use model::StringStorage;
+use model::BufferStorage;
+use model::ByteBlock;
+use model::ObjectStore;
+use model::Object;
+use model::ReferenceKind;
+use model::ReferenceState;
+use object_references::unwrap_transparent;
+use object_references::unwrap_all;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::integers::integer_bits;
+use integer_helpers::conversions::integer_to_buffer;
+use integer_helpers::buffer_fields::field_to_integer;
+use integer_helpers::buffer_fields::copy_bits;
+pub data ByteOutcome [copy] { case Success; case InvalidState; case Capacity; case Bounds; case Encoding; case UnsupportedValue; case ReferenceCycle; case WorkLimit; }
+pub data ByteKind [copy] { case Buffer; case String; }
+pub data ByteResult [copy] { outcome:ByteOutcome; object:u64; length:u64; value:u64; }
+pub data ByteRead [copy] { outcome:ByteOutcome; kind:ByteKind; object:u64; length:u64; bytes:[u8;256]; }
+pub data FieldRead [copy] { outcome:ByteOutcome; backing:u64; start:u64; count:u64; snapshot:ByteRead; }
+
+// Validate the current object identity and complete logical bytes before returning
+// a snapshot. Named/Local/Arg wrappers are transparent; RefOf/Index are not.
+pub machine read_bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64)->ByteRead {
+ let resolved:ReferenceState=unwrap_transparent(&store.space,object,64);
+ transition resolved.outcome==Outcome::Success {true -> slot(input,length,unit,store,resolved.object) _ -> reference_error(resolved.outcome)}
+ state reference_error(outcome:Outcome)->ByteRead {let error:ByteOutcome=bs_reference_error(outcome);ByteRead {outcome:error}}
+ state slot(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64)->ByteRead {
+  let count:u64=store.space.object_count;
+  transition count<=64 && object<count && object<64 {true -> payload(input,length,unit,store,object,store.space.objects[object].value) _ -> (ByteRead {outcome:ByteOutcome::InvalidState})}
+ }
+ state payload(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,value:Value)->ByteRead {
+  transition value {
+   Value::String {string_storage} -> string(input,length,unit,store,object,string_storage)
+   Value::Buffer {buffer_storage} -> buffer(input,length,unit,store,object,buffer_storage)
+   _ -> (ByteRead {outcome:ByteOutcome::UnsupportedValue})
+  }
+ }
+ state string(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,storage:StringStorage)->ByteRead {
+  transition storage {
+   StringStorage::Source {string_source} -> source_string(input,length,unit,object,string_source)
+   StringStorage::Owned {string_owner} -> owned(store,object,string_owner,ByteKind::String)
+  }
+ }
+ state buffer(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,storage:BufferStorage)->ByteRead {
+  transition storage {
+   BufferStorage::Source {declared_size,buffer_initializer} -> source_buffer(input,length,unit,object,declared_size,buffer_initializer)
+   BufferStorage::Owned {buffer_owner} -> owned(store,object,buffer_owner,ByteKind::Buffer)
+  }
+ }
+ state source_string(input:&[u8;1024],length:u64,unit:u64,object:u64,span:Span)->ByteRead {
+  let result:ByteRead=bs_source(input,length,unit,object,span,0,ByteKind::String);result
+ }
+ state source_buffer(input:&[u8;1024],length:u64,unit:u64,object:u64,declared:u64,span:Span)->ByteRead {
+  let result:ByteRead=bs_source(input,length,unit,object,span,declared,ByteKind::Buffer);result
+ }
+ state owned(store:&ObjectStore,object:u64,owner:u64,kind:ByteKind)->ByteRead {
+  transition owner==object && object<64 {true -> allocation(store,object,kind) _ -> (ByteRead {outcome:ByteOutcome::InvalidState})}
+ }
+ state allocation(store:&ObjectStore,object:u64,kind:ByteKind)->ByteRead {
+  let allocation:ByteBlock=store.bytes.blocks[object];let count:u64=allocation.length;
+  transition { !allocation.initialized -> (ByteRead {outcome:ByteOutcome::InvalidState})
+   count>256 -> (ByteRead {outcome:ByteOutcome::Capacity})
+   _ -> owned_valid(allocation,object,kind,count) }
+ }
+ state owned_valid(allocation:ByteBlock,object:u64,kind:ByteKind,count:u64)->ByteRead {
+  let result:ByteRead=ByteRead {kind:kind,object:object,length:count,bytes:allocation.bytes};let checked:ByteRead=bs_validate_encoding(result);checked
+ }
+}
+machine bs_reference_error(outcome:Outcome)->ByteOutcome {
+ transition outcome {Outcome::ReferenceCycle -> (ByteOutcome::ReferenceCycle) Outcome::WorkLimit -> (ByteOutcome::WorkLimit) _ -> (ByteOutcome::InvalidState)}
+}
+machine bs_source(input:&[u8;1024],length:u64,unit:u64,object:u64,span:Span,declared:u64,kind:ByteKind)->ByteRead {
+ let start:u64=span.start;let end:u64=span.end;
+ transition {length>1024 -> (ByteRead {outcome:ByteOutcome::Capacity})
+  span.unit!=unit || start>end || end>length -> (ByteRead {outcome:ByteOutcome::Bounds})
+  _ -> extent(input,object,start,end,declared,kind)}
+ state extent(input:&[u8;1024],object:u64,start:u64,end:u64,declared:u64,kind:ByteKind)->ByteRead {
+  let count:u64=end-start;
+  transition count<=256 && declared<=256 {true -> copy(input,object,start,count,declared,kind) _ -> (ByteRead {outcome:ByteOutcome::Capacity})}
+ }
+ state copy(input:&[u8;1024],object:u64,start:u64,count:u64,declared:u64,kind:ByteKind)->ByteRead {
+  let size:u64=bs_max(count,declared);let mut result:ByteRead=ByteRead {kind:kind,object:object,length:size};
+  _ = bs_source_copy(input,start,&mut result.bytes,0,count);
+  let checked:ByteRead=bs_validate_encoding(result);checked
+ }
+}
+machine bs_max(left:u64,right:u64)->u64 {transition left>right {true -> (left) _ -> (right)}}
+machine bs_source_copy(input:&[u8;1024],start:u64,output:&mut [u8;256],index:u64,limit:u64)
+terminates by(index,limit)->Nat::BoundedDistance;
+->u8 { _ = bs_source_step(input,start,output,index,limit);transition index<limit {true -> bs_source_copy(input,start,output,index+1,limit) _ -> (0)} }
+machine bs_source_step(input:&[u8;1024],start:u64,output:&mut [u8;256],index:u64,limit:u64)->u8 {
+ transition index<limit && index<256 && start<1024 {true -> bounds(input,start,output,index) _ -> (0)}
+ state bounds(input:&[u8;1024],start:u64,output:&mut [u8;256],index:u64)->u8 {
+  transition index<1024-start {true -> write(input,start,output,index) _ -> (0)}
+ }
+ state write(input:&[u8;1024],start:u64,output:&mut [u8;256],index:u64)->u8 {
+  let at:u64=start+index;transition at<1024 {true -> store_byte(input,at,output,index) _ -> (0)}
+ }
+ state store_byte(input:&[u8;1024],at:u64,output:&mut [u8;256],index:u64)->u8 {output[index]=input[at];0}
+}
+machine bs_validate_encoding(snapshot:ByteRead)->ByteRead {
+ transition snapshot.kind==ByteKind::String {true -> string(snapshot) _ -> (snapshot)}
+ state string(snapshot:ByteRead)->ByteRead {
+  let good:bool=bs_ascii(&snapshot.bytes,0,snapshot.length,true);
+  transition good {true -> (snapshot) _ -> (ByteRead {outcome:ByteOutcome::Encoding})}
+ }
+}
+machine bs_ascii(input:&[u8;256],index:u64,limit:u64,prior:bool)
+terminates by(index,limit)->Nat::BoundedDistance;
+->bool {let good:bool=bs_ascii_step(input,index,limit);transition index<limit {true -> bs_ascii(input,index+1,limit,prior && good) _ -> (prior)}}
+machine bs_ascii_step(input:&[u8;256],index:u64,limit:u64)->bool {
+ transition index<limit && index<256 {true -> (input[index]>0 && input[index]<128) _ -> (true)}
+}
+pub machine byte_length(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64)->ByteResult {
+ let snapshot:ByteRead=read_bytes(input,length,unit,store,object);
+ ByteResult {outcome:snapshot.outcome,object:snapshot.object,length:snapshot.length}
+}
+pub machine materialize(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,object:u64)->ByteResult {
+ let snapshot:ByteRead=read_bytes(input,length,unit,store,object);
+ transition snapshot.outcome==ByteOutcome::Success {true -> commit(store,snapshot,snapshot.object) _ -> (ByteResult {outcome:snapshot.outcome})}
+ state commit(store:&mut ObjectStore,snapshot:ByteRead,target:u64)->ByteResult {
+  let result:ByteResult=bs_commit(store,target,snapshot);result
+ }
+}
+// Only byte payloads are copied. Ordinary data destinations may be replaced;
+// permanent fields, Methods and service objects are deliberately excluded.
+pub machine clone_bytes_into(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64)->ByteResult {
+ let count:u64=store.space.object_count;
+ transition count<=64 && destination<count && destination<64 {true -> target(input,length,unit,store,destination,source,store.space.objects[destination].value) _ -> (ByteResult {outcome:ByteOutcome::InvalidState})}
+ state target(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,value:Value)->ByteResult {
+  transition value {
+   Value::Uninitialized -> copy(input,length,unit,store,destination,source)
+   Value::Integer {number} -> copy(input,length,unit,store,destination,source)
+   Value::Package {first,count} -> copy(input,length,unit,store,destination,source)
+   Value::Reference {kind,object_id} -> copy(input,length,unit,store,destination,source)
+   Value::String {string_storage} -> validate_target(input,length,unit,store,destination,source)
+   Value::Buffer {buffer_storage} -> validate_target(input,length,unit,store,destination,source)
+   _ -> (ByteResult {outcome:ByteOutcome::UnsupportedValue})
+  }
+ }
+ state validate_target(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64)->ByteResult {
+  let old:ByteRead=read_bytes(input,length,unit,store,destination);
+  transition old.outcome==ByteOutcome::Success {true -> copy(input,length,unit,store,destination,source) _ -> (ByteResult {outcome:old.outcome})}
+ }
+ state copy(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64)->ByteResult {
+  let snapshot:ByteRead=read_bytes(input,length,unit,store,source);
+  transition snapshot.outcome==ByteOutcome::Success {true -> stage(store,destination,snapshot) _ -> (ByteResult {outcome:snapshot.outcome})}
+ }
+ state stage(store:&mut ObjectStore,destination:u64,snapshot:ByteRead)->ByteResult {
+  let mut staged:ByteRead=ByteRead {kind:snapshot.kind,length:snapshot.length};
+  _ = bs_logical_copy(&snapshot.bytes,&mut staged.bytes,0,snapshot.length);
+  let result:ByteResult=bs_commit(store,destination,staged);result
+ }
+}
+machine bs_logical_copy(input:&[u8;256],output:&mut [u8;256],index:u64,limit:u64)
+terminates by(index,limit)->Nat::BoundedDistance;
+->u8 {_ = bs_logical_step(input,output,index,limit);transition index<limit {true -> bs_logical_copy(input,output,index+1,limit) _ -> (0)}}
+machine bs_logical_step(input:&[u8;256],output:&mut [u8;256],index:u64,limit:u64)->u8 {
+ transition index<limit && index<256 {true -> write(input,output,index) _ -> (0)}
+ state write(input:&[u8;256],output:&mut [u8;256],index:u64)->u8 {output[index]=input[index];0}
+}
+machine bs_commit(store:&mut ObjectStore,target:u64,snapshot:ByteRead)->ByteResult {
+ let count:u64=store.space.object_count;let size:u64=snapshot.length;
+ transition target<count && target<64 && count<=64 && size<=256 {true -> write(store,target,snapshot) _ -> (ByteResult {outcome:ByteOutcome::InvalidState})}
+ state write(store:&mut ObjectStore,target:u64,snapshot:ByteRead)->ByteResult {
+  let payload:Value=bs_owned_value(snapshot.kind,target);
+  store.bytes.blocks[target]=ByteBlock {initialized:true,length:snapshot.length,bytes:snapshot.bytes};
+  store.space.objects[target].value=payload;
+  ByteResult {object:target,length:snapshot.length}
+ }
+}
+machine bs_owned_value(kind:ByteKind,target:u64)->Value {
+ transition kind {ByteKind::Buffer -> (Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:target}}) ByteKind::String -> (Value::String {string_storage:StringStorage::Owned {string_owner:target}})}
+}
+
+// Zero-width declarations are rejected; all other fields must fit current bytes.
+pub machine create_buffer_field(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,backing:u64,start:u64,count:u64)->ByteResult {
+ let snapshot:ByteRead=read_bytes(input,length,unit,store,backing);
+ transition snapshot.outcome==ByteOutcome::Success {true -> bounds(store,snapshot,start,count) _ -> (ByteResult {outcome:snapshot.outcome})}
+ state bounds(store:&mut ObjectStore,snapshot:ByteRead,start:u64,count:u64)->ByteResult {
+  let good:bool=bs_field_bounds(snapshot.length,start,count);
+  transition good {true -> reserve(store,snapshot.object,start,count) _ -> (ByteResult {outcome:ByteOutcome::Bounds})}
+ }
+ state reserve(store:&mut ObjectStore,backing:u64,start:u64,count:u64)->ByteResult {
+  let at:u64=store.space.object_count;
+  transition at<64 {true -> commit(store,at,backing,start,count) _ -> (ByteResult {outcome:ByteOutcome::Capacity})}
+ }
+ state commit(store:&mut ObjectStore,at:u64,backing:u64,start:u64,count:u64)->ByteResult {
+  store.space.objects[at]=Object {value:Value::BufferField {backing_object:backing,bit_offset:start,bit_length:count}};
+  store.space.object_count=at+1;
+  ByteResult {object:at,length:count}
+ }
+}
+pub machine make_byte_index(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,backing:u64,index:u64)->ByteResult {
+ let snapshot:ByteRead=read_bytes(input,length,unit,store,backing);
+ transition snapshot.outcome==ByteOutcome::Success {true -> bounds(store,snapshot,index) _ -> (ByteResult {outcome:snapshot.outcome})}
+ state bounds(store:&mut ObjectStore,snapshot:ByteRead,index:u64)->ByteResult {
+  let count:u64=snapshot.length;
+  transition index<count && index<256 {true -> reserve(store,snapshot.object,index) _ -> (ByteResult {outcome:ByteOutcome::Bounds})}
+ }
+ state reserve(store:&mut ObjectStore,backing:u64,index:u64)->ByteResult {
+  let at:u64=store.space.object_count;
+  transition at<=62 {true -> commit(store,at,backing,index) _ -> (ByteResult {outcome:ByteOutcome::Capacity})}
+ }
+ state commit(store:&mut ObjectStore,at:u64,backing:u64,index:u64)->ByteResult {
+  let reference:u64=at+1;
+  transition reference<64 {true -> write_index(store,at,backing,index,reference) _ -> (ByteResult {outcome:ByteOutcome::Capacity})}
+ }
+ state write_index(store:&mut ObjectStore,at:u64,backing:u64,index:u64,reference:u64)->ByteResult {
+  store.space.objects[at]=Object {value:Value::BufferField {backing_object:backing,bit_offset:index*8,bit_length:8}};
+  store.space.objects[reference]=Object {value:Value::Reference {kind:ReferenceKind::RefOf,object_id:at}};
+  store.space.object_count=at+2;
+  ByteResult {object:reference,length:8}
+ }
+}
+machine bs_field_bounds(length:u64,start:u64,count:u64)->bool {
+ transition length<=256 && count>0 {true -> start_bound(length,start,count) _ -> (false)}
+ state start_bound(length:u64,start:u64,count:u64)->bool {let bits:u64=length*8;transition start<=bits {true -> (count<=bits-start) _ -> (false)}}
+}
+machine bs_field(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,field:u64)->FieldRead {
+ let resolved:ReferenceState=unwrap_all(&store.space,field,64);
+ transition resolved.outcome==Outcome::Success {true -> slot(input,length,unit,store,resolved.object) _ -> reference_error(resolved.outcome)}
+ state reference_error(outcome:Outcome)->FieldRead {let error:ByteOutcome=bs_reference_error(outcome);FieldRead {outcome:error}}
+ state slot(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,field:u64)->FieldRead {
+  let count:u64=store.space.object_count;
+  transition field<count && field<64 && count<=64 {true -> payload(input,length,unit,store,store.space.objects[field].value) _ -> (FieldRead {outcome:ByteOutcome::InvalidState})}
+ }
+ state payload(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,value:Value)->FieldRead {
+  transition value {Value::BufferField {backing_object,bit_offset,bit_length} -> backing(input,length,unit,store,backing_object,bit_offset,bit_length) _ -> (FieldRead {outcome:ByteOutcome::UnsupportedValue})}
+ }
+ state backing(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,start:u64,count:u64)->FieldRead {
+  let snapshot:ByteRead=read_bytes(input,length,unit,store,object);
+  transition snapshot.outcome==ByteOutcome::Success {true -> bounds(snapshot,start,count) _ -> (FieldRead {outcome:snapshot.outcome})}
+ }
+ state bounds(snapshot:ByteRead,start:u64,count:u64)->FieldRead {
+  let good:bool=bs_field_bounds(snapshot.length,start,count);
+  transition good {true -> (FieldRead {backing:snapshot.object,start:start,count:count,snapshot:snapshot}) _ -> (FieldRead {outcome:ByteOutcome::Bounds})}
+ }
+}
+pub machine read_field_integer(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,field:u64,size:IntegerSize)->ByteResult {
+ let found:FieldRead=bs_field(input,length,unit,store,field);let bits:u64=integer_bits(size);let count:u64=found.count;
+ transition {found.outcome!=ByteOutcome::Success -> (ByteResult {outcome:found.outcome})
+  count>bits -> (ByteResult {outcome:ByteOutcome::UnsupportedValue})
+  _ -> read(found,size)}
+ state read(found:FieldRead,size:IntegerSize)->ByteResult {
+  let result:IntegerResult=field_to_integer(size,&found.snapshot.bytes,found.snapshot.length,found.start,found.count);
+  ByteResult {object:found.backing,length:found.count,value:result.value}
+ }
+}
+pub machine write_field_integer(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,field:u64,size:IntegerSize,number:u64)->ByteResult {
+ let found:FieldRead=bs_field(input,length,unit,store,field);
+ transition found.outcome==ByteOutcome::Success {true -> stage(store,found,size,number) _ -> (ByteResult {outcome:found.outcome})}
+ state stage(store:&mut ObjectStore,found:FieldRead,size:IntegerSize,number:u64)->ByteResult {
+  let mut integer:[u8;256];let converted:IntegerResult=integer_to_buffer(size,number,&mut integer);
+  let mut staged:ByteRead=found.snapshot;
+  let error:u8=copy_bits(&integer,converted.value,0,&mut staged.bytes,staged.length,found.start,found.count);
+  transition error==0 {true -> encoding(store,found.backing,staged) _ -> (ByteResult {outcome:ByteOutcome::Bounds})}
+ }
+ state encoding(store:&mut ObjectStore,target:u64,staged:ByteRead)->ByteResult {
+  let checked:ByteRead=bs_validate_encoding(staged);
+  transition checked.outcome==ByteOutcome::Success {true -> commit(store,target,checked) _ -> (ByteResult {outcome:checked.outcome})}
+ }
+ state commit(store:&mut ObjectStore,target:u64,snapshot:ByteRead)->ByteResult {let result:ByteResult=bs_commit(store,target,snapshot);result}
+}

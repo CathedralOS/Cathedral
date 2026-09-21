@@ -168,4 +168,14 @@ transparent unwrap and six reference kinds, with stable-ID allocation, shallow
 payload copy and complete package-chain validation. Their 160 checked pairs,
 five const pairs and 116 actual public immutable Rust observations pass, alongside
 146 existing parser/executor/pipeline/field regression pairs. Generic opcode
-execution and owned mutable byte storage remain pending.
+execution remains pending.
+
+[Owned AML byte storage](aml/byte-storage.PORT.md) adds explicit Source/Owned
+String and Buffer cases, a detached 64×256-byte arena, atomic byte copies and
+field operations, stable Index identities and affine Program ownership. Its
+138 checked pairs, 306 existing regression pairs, eight const pairs and 21
+labelled Rust observations pass. The current regression receipts are under
+`tools/ports/acpi/aml/owned-bytes/regressions/`; earlier model-dependent receipts
+remain historical with their original hashes. Generic opcode dispatch remains
+pending. The source-map count is unchanged: these are partial Object/interpreter
+components and an already translated bit-copy dependency.

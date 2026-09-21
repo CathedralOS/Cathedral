@@ -64,13 +64,13 @@ A copied package payload shares its first/count descriptor and element IDs;
 future changes to those element slots are visible through both package objects.
 The current linked-node representation cannot encode arbitrary independent
 Vec membership using repeated occurrences of one node ID. General mutable
-package membership/storage remains ordinary future work. Copying a String or
-Buffer descriptor copies its inert source span; mutable byte backing and the
-pin's owned byte-container clone behavior are not implemented here.
+package membership/storage remains ordinary future work. Copying a Source String/Buffer descriptor shares its immutable span. The
+[owned-byte layer](byte-storage.PORT.md) now supplies independent mutable byte
+copies; namespace-only `copy_value` rejects Owned payloads on either side.
 
 `allocate_reference` validates the target before allocation. Capacity failure
 and all validation failures leave the original namespace unchanged. `copy_value`
-validates source/destination IDs and then changes only destination `.value`;
+validates source/destination IDs, rejects Owned byte payloads, then changes only destination `.value`;
 source and destination `has_next`/`next` metadata, namespace bindings and object
 count remain unchanged. Self-copy is allowed. It does not recursively validate
 or materialize the copied payload.
@@ -82,17 +82,19 @@ or materialize the copied payload.
 this namespace primitive. A copied method is therefore not established as
 executable by this operation. Future Program-level generic copy must atomically
 invalidate or recapture affected method-definition provenance before publishing
-the copy. The current integer executor and owned pipeline are unchanged; no
-call site to these kernels is added. This is pending integration, not a compiler
+the copy. The integer opcode dispatch remains unchanged; the owned-byte layer now uses
+reference unwrapping and the pipeline owns ObjectStore. This is pending integration, not a compiler
 or authority blocker.
 
 ## Verification
 
-Current evidence passes **160 checked-interpreter scenarios and 160 changed-body
-controls**, **five current constant-evaluation pairs**, and **116 actual public
+The pre-storage milestone evidence passed **160 checked-interpreter scenarios and 160 changed-body
+controls**, **five constant-evaluation pairs**, and **116 actual public
 Rust observations**. Existing parser **27**, integer executor **79**, owned
 pipeline **22**, and field parser **18** scenarios and their original controls
-also pass after the additive model change. All retained current record hashes
+also passed after the additive model change. These original receipts retain
+their old hashes; current storage-migration regressions are linked from
+[byte storage](byte-storage.PORT.md). All retained historical record hashes
 verify; previous parser/field/pipeline constant proofs keep their original
 hashes and are explicitly historical.
 

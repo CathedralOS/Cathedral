@@ -7,6 +7,7 @@ use aml::model::Span;
 use aml::model::Path;
 use aml::model::PathResult;
 use aml::model::Value;
+use aml::model::StringStorage;
 use aml::model::Object;
 use aml::model::Namespace;
 use aml::model::NamespaceResult;
@@ -85,4 +86,4 @@ machine require_ok(result:u64) requires result==0; {}
 data Main {}
 machine Main::main(&mut self){require_ok(TEST_RESULT);}
 
-machine string_is(value:Value)->bool {transition value {Value::String {bytes} -> check(bytes) _ -> (false)} state check(bytes:Span)->bool {bytes.unit==3 && bytes.start==1 && bytes.end==2}}
+machine string_is(value:Value)->bool {transition value {Value::String {string_storage} -> storage(string_storage) _ -> (false)} state storage(value:StringStorage)->bool {transition value {StringStorage::Source {string_source} -> check(string_source) _ -> (false)}} state check(bytes:Span)->bool {bytes.unit==3 && bytes.start==1 && bytes.end==2}}
