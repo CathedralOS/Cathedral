@@ -70,11 +70,10 @@ def main():
     p.add_argument('--runner', type=Path, default=RUNNER)
     p.add_argument('--record', type=Path)
     p.add_argument('--verify', type=Path)
-    p.add_argument('--production-root', type=Path, default=ROOT)
     args=p.parse_args()
     if args.verify:
         return verify(args.verify)
-    root=args.production_root.resolve()
+    root=ROOT
     rows,source,names=fixtures.render(args.group,args.match)
     inputs=snapshot(); binary=sha(args.runner); started=time.monotonic()
     with tempfile.TemporaryDirectory(prefix='cathedral-to-integer-execution-') as directory:
