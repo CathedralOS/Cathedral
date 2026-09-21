@@ -19,6 +19,31 @@ runner binary and before/after stability. Existing source-bound receipts are not
 rewritten. No passing result is claimed until receipt verification succeeds.
 Broader unchanged regression replay remains required before this extension lands.
 
+After the focused check passes, run the complete 110-pair Concatenate corpus,
+then replay the existing 315-pair Mid/executor suite against this checkout. Keep
+the new receipts separate from the historical Mid receipt. The retained suite
+contains 74 Mid AML, 42 Mid retirement, 79 integer, 55 generic, 22 pipeline and
+43 ToInteger pairs; its original assertions and changed-expectation controls are
+reused unchanged. Generation of all 315 pairs has passed, but execution against
+the Concatenate extension is still pending.
+
+```sh
+python3 tools/ports/acpi/interpreter/concat-execution/check.py \
+  --record /tmp/cathedral-concat-execution-full110.json
+python3 tools/ports/acpi/interpreter/concat-execution/check.py \
+  --verify /tmp/cathedral-concat-execution-full110.json
+python3 tools/ports/acpi/interpreter/mid-execution/check.py \
+  --batch-size 1000 --workers 1 \
+  --record /tmp/cathedral-concat-regressions315.json
+python3 tools/ports/acpi/interpreter/mid-execution/verify_record.py \
+  /tmp/cathedral-concat-regressions315.json --require-binaries
+```
+
+The single regression worker limits contention with other active validations.
+Both checkers bind the current production sources and binary before and after
+execution. A changed source snapshot requires a fresh run; successful generation
+or an earlier branch's receipt does not satisfy this replay.
+
 See [the port contract](../../../../../source/libraries/acpi/interpreter/execution/concat.PORT.md)
 for source pin, primary rules, allocation atomicity, Field continuation and
 remaining opcode/description boundaries.
