@@ -689,6 +689,12 @@ constant pairs pass, including separate quotient/remainder results and semantic
 conversion, divide-by-zero and BCD failures. Target writes, operand/reference
 evaluation and opcode retirement remain pending; aggregate counts are unchanged.
 
+[Package Index construction](source/libraries/acpi/aml/package-index.PORT.md) validates the advertised member chain and
+allocates one fresh RefOf wrapper preserving the selected element's identity.
+All 65 complete-store checked pairs, three bounded constant pairs and 19 public
+Index observations pass. Source evaluation, target Store and opcode retirement
+remain pending; aggregate counts are unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

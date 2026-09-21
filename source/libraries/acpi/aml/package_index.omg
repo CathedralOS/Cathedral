@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Package construction portion of rust-osdev/acpi do_index, pin
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
+// Ordinary stable identities only; no AML evaluation, target Store or authority.
+module package_index;
+use model::ObjectStore;
+use model::Outcome;
+use model::Read;
+use model::ReferenceState;
+use model::ReferenceKind;
+use model::NamespaceResult;
+use object_references::package_element;
+use object_references::allocate_reference;
+
+// Complete advertised chain admission precedes allocation. The selected payload
+// remains untouched and unresolved. A RefOf wrapper consumes one fresh slot;
+// even that slot's old byte block is retained, unused by the Reference payload.
+pub machine make_package_index(store:&mut ObjectStore,package:u64,index:u64)->Read {
+ let selected:ReferenceState=package_element(&store.space,package,index,64);
+ transition selected.outcome==Outcome::Success {
+  true -> allocate(store,selected.object)
+  _ -> (Read {outcome:selected.outcome})
+ }
+ state allocate(store:&mut ObjectStore,target:u64)->Read {
+  let allocated:NamespaceResult=allocate_reference(store.space,ReferenceKind::RefOf,target);
+  transition allocated.outcome==Outcome::Success {
+   true -> commit(store,allocated)
+   _ -> (Read {outcome:allocated.outcome})
+  }
+ }
+ state commit(store:&mut ObjectStore,allocated:NamespaceResult)->Read {
+  store.space=allocated.space;Read {value:allocated.object}
+ }
+}

@@ -1,0 +1,587 @@
+[
+  {
+    "index": 0,
+    "mutation": "",
+    "name": "first",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 1,
+    "mutation": "",
+    "name": "middle",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 2
+  },
+  {
+    "index": 2,
+    "mutation": "",
+    "name": "last",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 3
+  },
+  {
+    "index": 0,
+    "mutation": "",
+    "name": "repeated",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 2,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.object_count=63;",
+    "name": "last_slot",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.object_count=64;",
+    "name": "full",
+    "outcome": "Capacity",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.object_count=63;",
+    "name": "repeat_exhausts",
+    "outcome": "Capacity",
+    "package": 0,
+    "repeat": 2,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.object_count=0;",
+    "name": "object_count_0",
+    "outcome": "InvalidState",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.object_count=65;",
+    "name": "object_count_65",
+    "outcome": "InvalidState",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.object_count=9223372036854775808;",
+    "name": "object_count_9223372036854775808",
+    "outcome": "InvalidState",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.object_count=18446744073709551615;",
+    "name": "object_count_18446744073709551615",
+    "outcome": "InvalidState",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "",
+    "name": "package_id_4",
+    "outcome": "InvalidState",
+    "package": 4,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "",
+    "name": "package_id_64",
+    "outcome": "InvalidState",
+    "package": 64,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "",
+    "name": "package_id_9223372036854775808",
+    "outcome": "InvalidState",
+    "package": 9223372036854775808,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "",
+    "name": "package_id_18446744073709551615",
+    "outcome": "InvalidState",
+    "package": 18446744073709551615,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 3,
+    "mutation": "",
+    "name": "index_3",
+    "outcome": "MissingObject",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 64,
+    "mutation": "",
+    "name": "index_64",
+    "outcome": "MissingObject",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 9223372036854775808,
+    "mutation": "",
+    "name": "index_9223372036854775808",
+    "outcome": "MissingObject",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 18446744073709551615,
+    "mutation": "",
+    "name": "index_18446744073709551615",
+    "outcome": "MissingObject",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[0].value=Value::Package {first:1,count:0};",
+    "name": "package_count_0",
+    "outcome": "MissingObject",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[0].value=Value::Package {first:1,count:65};",
+    "name": "package_count_65",
+    "outcome": "Capacity",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[0].value=Value::Package {first:1,count:9223372036854775808};",
+    "name": "package_count_9223372036854775808",
+    "outcome": "Capacity",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[0].value=Value::Package {first:1,count:18446744073709551615};",
+    "name": "package_count_18446744073709551615",
+    "outcome": "Capacity",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[0].value=Value::Package {first:18446744073709551615,count:0};",
+    "name": "empty_dangling",
+    "outcome": "MissingObject",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[2].next=64;",
+    "name": "late_dangling",
+    "outcome": "InvalidState",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[2].next=18446744073709551615;",
+    "name": "late_dangling_max",
+    "outcome": "InvalidState",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].has_next=false;",
+    "name": "early_end",
+    "outcome": "BadEncoding",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[3].has_next=true;s.space.objects[3].next=18446744073709551615;",
+    "name": "extra_tail",
+    "outcome": "BadEncoding",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[2].next=1;",
+    "name": "cycle",
+    "outcome": "ReferenceCycle",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.object_count=64;s.space.objects[2].next=64;",
+    "name": "full_bad_tail",
+    "outcome": "InvalidState",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.count=0;",
+    "name": "entry_count_0",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.count=32;",
+    "name": "entry_count_32",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.count=33;",
+    "name": "entry_count_33",
+    "outcome": "Capacity",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.count=9223372036854775808;",
+    "name": "entry_count_9223372036854775808",
+    "outcome": "Capacity",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.count=18446744073709551615;",
+    "name": "entry_count_18446744073709551615",
+    "outcome": "Capacity",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 3,
+    "mutation": "s.space.count=18446744073709551615;",
+    "name": "entries_bad_index_first",
+    "outcome": "MissingObject",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.count=18446744073709551615;s.space.objects[2].next=64;",
+    "name": "entries_bad_tail_first",
+    "outcome": "InvalidState",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};",
+    "name": "direct_reference_rejected",
+    "outcome": "InvalidState",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[0].value=Value::Integer {number:3};",
+    "name": "direct_integer_rejected",
+    "outcome": "InvalidState",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[0]=Object {value:Value::Package {first:0,count:1}};",
+    "name": "self_package",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 0
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Uninitialized;",
+    "name": "element_Uninitialized",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Integer {number:18446744073709551615};",
+    "name": "element_Integer",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::String {string_storage:StringStorage::Source {string_source:Span {unit:99,start:18446744073709551615,end:0}}};",
+    "name": "element_SourceString",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::String {string_storage:StringStorage::Owned {string_owner:63}};",
+    "name": "element_OwnedString",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:18446744073709551615,buffer_initializer:Span {unit:88,start:8,end:1}}};",
+    "name": "element_SourceBuffer",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:63}};",
+    "name": "element_OwnedBuffer",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::BufferField {backing_object:18446744073709551615,bit_offset:18446744073709551615,bit_length:0};",
+    "name": "element_BufferField",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Package {first:18446744073709551615,count:18446744073709551615};",
+    "name": "element_Package",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::NameReference {name:Path {count:18446744073709551615},scope:Path {parents:18446744073709551615}};",
+    "name": "element_NameReference",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Method {flags:255,body:Span {unit:4,start:8,end:2}};",
+    "name": "element_Method",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Device;",
+    "name": "element_Device",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Processor {id:255,address:4294967295,length:255};",
+    "name": "element_Processor",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::PowerResource {system_level:255,order:65535};",
+    "name": "element_PowerResource",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::ThermalZone;",
+    "name": "element_ThermalZone",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Mutex {sync_level:255};",
+    "name": "element_Mutex",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Event;",
+    "name": "element_Event",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::OperationRegion {space:255,base:18446744073709551615,length:18446744073709551615,scope:Path {count:17}};",
+    "name": "element_OperationRegion",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:18446744073709551615};",
+    "name": "element_Named",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:18446744073709551615};",
+    "name": "element_RefOf",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Reference {kind:ReferenceKind::Local,object_id:18446744073709551615};",
+    "name": "element_Local",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Reference {kind:ReferenceKind::Arg,object_id:18446744073709551615};",
+    "name": "element_Arg",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:18446744073709551615};",
+    "name": "element_Index",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[1].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:18446744073709551615};",
+    "name": "element_Unresolved",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 0,
+    "mutation": "s.space.objects[4]=Object {value:Value::Package {first:1,count:3}};s.space.object_count=5;",
+    "name": "alias_package",
+    "outcome": "Success",
+    "package": 4,
+    "repeat": 1,
+    "target": 1
+  },
+  {
+    "index": 61,
+    "mutation": "long_chain(&mut s);",
+    "name": "long_chain",
+    "outcome": "Success",
+    "package": 0,
+    "repeat": 1,
+    "target": 62
+  }
+]

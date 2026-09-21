@@ -1043,6 +1043,10 @@
             {
               "anchor": "pub machine make_byte_index",
               "path": "source/libraries/acpi/aml/byte_storage.omg"
+            },
+            {
+              "path": "source/libraries/acpi/aml/package_index.omg",
+              "anchor": "pub machine make_package_index("
             }
           ],
           "owned_byte_component": {
@@ -1050,7 +1054,10 @@
               "Internal String/Buffer indexed field plus RefOf identity construction",
               "Both object slots reserved before publication"
             ],
-            "remaining": "Byte Index construction kernel implemented; AML operand evaluation, package branch, target Store and operation retirement remain pending."
+            "remaining": "Byte and Package Index construction kernels are implemented; AML operand evaluation, target Store and operation retirement remain pending."
+          },
+          "package_index_component": {
+            "note": "Direct Package selection validates the entire advertised member chain before allocating a RefOf wrapper preserving member identity. Complete failure atomicity and exact one-slot/count changes are checked. Source evaluation, target Store, context contribution and retirement remain pending."
           }
         },
         "228:load_table": {

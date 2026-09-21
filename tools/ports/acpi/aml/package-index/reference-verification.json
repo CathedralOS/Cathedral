@@ -1,0 +1,727 @@
+{
+  "binary_sha256": "d063459a6883bbe4da96dc14fbcb914bd4fa302490bf14ebba4ff0a4e210f023",
+  "pin": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "rows": [
+    {
+      "aml_hex": "08504b475f120200140e4d41494e00a488504b475f0000",
+      "count": 0,
+      "index": 0,
+      "name": "empty_0",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "success": false,
+      "values": []
+    },
+    {
+      "aml_hex": "08504b475f120200140e4d41494e00a488504b475fff00",
+      "count": 0,
+      "index": 18446744073709551615,
+      "name": "empty_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "success": false,
+      "values": []
+    },
+    {
+      "aml_hex": "08504b475f1204010a0b140e4d41494e00a488504b475f0000",
+      "count": 1,
+      "index": 0,
+      "name": "single_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_wrappers": "true",
+        "kind": "RefOf",
+        "load": "ok",
+        "retained_name_path": "false",
+        "same_element": "true",
+        "second_kind": "RefOf",
+        "selected_type": "Integer"
+      },
+      "success": true,
+      "values": [
+        11
+      ]
+    },
+    {
+      "aml_hex": "08504b475f1204010a0b140e4d41494e00a488504b475f0100",
+      "count": 1,
+      "index": 1,
+      "name": "single_1",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "success": false,
+      "values": [
+        11
+      ]
+    },
+    {
+      "aml_hex": "08504b475f1204010a0b140e4d41494e00a488504b475fff00",
+      "count": 1,
+      "index": 18446744073709551615,
+      "name": "single_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "success": false,
+      "values": [
+        11
+      ]
+    },
+    {
+      "aml_hex": "08504b475f1218050a0b0d4142430011050a02ff001204010a634c415445140e4d41494e00a488504b475f0000",
+      "count": 5,
+      "index": 0,
+      "name": "mixed_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_wrappers": "true",
+        "kind": "RefOf",
+        "load": "ok",
+        "retained_name_path": "false",
+        "same_element": "true",
+        "second_kind": "RefOf",
+        "selected_type": "Integer"
+      },
+      "success": true,
+      "values": [
+        11,
+        {
+          "text": "ABC"
+        },
+        {
+          "buffer": "ff00"
+        },
+        {
+          "package": [
+            99
+          ]
+        },
+        {
+          "name": "LATE"
+        }
+      ]
+    },
+    {
+      "aml_hex": "08504b475f1218050a0b0d4142430011050a02ff001204010a634c415445140e4d41494e00a488504b475f0100",
+      "count": 5,
+      "index": 1,
+      "name": "mixed_1",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_wrappers": "true",
+        "kind": "RefOf",
+        "load": "ok",
+        "retained_name_path": "false",
+        "same_element": "true",
+        "second_kind": "RefOf",
+        "selected_type": "String"
+      },
+      "success": true,
+      "values": [
+        11,
+        {
+          "text": "ABC"
+        },
+        {
+          "buffer": "ff00"
+        },
+        {
+          "package": [
+            99
+          ]
+        },
+        {
+          "name": "LATE"
+        }
+      ]
+    },
+    {
+      "aml_hex": "08504b475f1218050a0b0d4142430011050a02ff001204010a634c415445140f4d41494e00a488504b475f0a0200",
+      "count": 5,
+      "index": 2,
+      "name": "mixed_2",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_wrappers": "true",
+        "kind": "RefOf",
+        "load": "ok",
+        "retained_name_path": "false",
+        "same_element": "true",
+        "second_kind": "RefOf",
+        "selected_type": "Buffer"
+      },
+      "success": true,
+      "values": [
+        11,
+        {
+          "text": "ABC"
+        },
+        {
+          "buffer": "ff00"
+        },
+        {
+          "package": [
+            99
+          ]
+        },
+        {
+          "name": "LATE"
+        }
+      ]
+    },
+    {
+      "aml_hex": "08504b475f1218050a0b0d4142430011050a02ff001204010a634c415445140f4d41494e00a488504b475f0a0300",
+      "count": 5,
+      "index": 3,
+      "name": "mixed_3",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_wrappers": "true",
+        "kind": "RefOf",
+        "load": "ok",
+        "retained_name_path": "false",
+        "same_element": "true",
+        "second_kind": "RefOf",
+        "selected_type": "Package"
+      },
+      "success": true,
+      "values": [
+        11,
+        {
+          "text": "ABC"
+        },
+        {
+          "buffer": "ff00"
+        },
+        {
+          "package": [
+            99
+          ]
+        },
+        {
+          "name": "LATE"
+        }
+      ]
+    },
+    {
+      "aml_hex": "08504b475f1218050a0b0d4142430011050a02ff001204010a634c415445140f4d41494e00a488504b475f0a0400",
+      "count": 5,
+      "index": 4,
+      "name": "mixed_4",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_wrappers": "true",
+        "kind": "RefOf",
+        "load": "ok",
+        "retained_name_path": "true",
+        "same_element": "true",
+        "second_kind": "RefOf",
+        "selected_type": "Reference"
+      },
+      "success": true,
+      "values": [
+        11,
+        {
+          "text": "ABC"
+        },
+        {
+          "buffer": "ff00"
+        },
+        {
+          "package": [
+            99
+          ]
+        },
+        {
+          "name": "LATE"
+        }
+      ]
+    },
+    {
+      "aml_hex": "08504b475f1218050a0b0d4142430011050a02ff001204010a634c415445140f4d41494e00a488504b475f0a0500",
+      "count": 5,
+      "index": 5,
+      "name": "mixed_5",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "success": false,
+      "values": [
+        11,
+        {
+          "text": "ABC"
+        },
+        {
+          "buffer": "ff00"
+        },
+        {
+          "package": [
+            99
+          ]
+        },
+        {
+          "name": "LATE"
+        }
+      ]
+    },
+    {
+      "aml_hex": "08504b475f1218050a0b0d4142430011050a02ff001204010a634c415445140e4d41494e00a488504b475fff00",
+      "count": 5,
+      "index": 18446744073709551615,
+      "name": "mixed_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "success": false,
+      "values": [
+        11,
+        {
+          "text": "ABC"
+        },
+        {
+          "buffer": "ff00"
+        },
+        {
+          "package": [
+            99
+          ]
+        },
+        {
+          "name": "LATE"
+        }
+      ]
+    },
+    {
+      "aml_hex": "08504b475f120201140e4d41494e00a488504b475f0000",
+      "count": 1,
+      "index": 0,
+      "name": "uninitialized_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_wrappers": "true",
+        "kind": "RefOf",
+        "load": "ok",
+        "retained_name_path": "false",
+        "same_element": "true",
+        "second_kind": "RefOf",
+        "selected_type": "Uninitialized"
+      },
+      "success": true,
+      "values": []
+    },
+    {
+      "aml_hex": "08504b475f120201140e4d41494e00a488504b475f0100",
+      "count": 1,
+      "index": 1,
+      "name": "uninitialized_1",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "success": false,
+      "values": []
+    },
+    {
+      "aml_hex": "08504b475f120201140e4d41494e00a488504b475fff00",
+      "count": 1,
+      "index": 18446744073709551615,
+      "name": "uninitialized_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "success": false,
+      "values": []
+    },
+    {
+      "aml_hex": "08504b475f124f073f00010a020a030a040a050a060a070a080a090a0a0a0b0a0c0a0d0a0e0a0f0a100a110a120a130a140a150a160a170a180a190a1a0a1b0a1c0a1d0a1e0a1f0a200a210a220a230a240a250a260a270a280a290a2a0a2b0a2c0a2d0a2e0a2f0a300a310a320a330a340a350a360a370a380a390a3a0a3b0a3c0a3d0a3e140e4d41494e00a488504b475f0000",
+      "count": 63,
+      "index": 0,
+      "name": "long_0",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_wrappers": "true",
+        "kind": "RefOf",
+        "load": "ok",
+        "retained_name_path": "false",
+        "same_element": "true",
+        "second_kind": "RefOf",
+        "selected_type": "Integer"
+      },
+      "success": true,
+      "values": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62
+      ]
+    },
+    {
+      "aml_hex": "08504b475f124f073f00010a020a030a040a050a060a070a080a090a0a0a0b0a0c0a0d0a0e0a0f0a100a110a120a130a140a150a160a170a180a190a1a0a1b0a1c0a1d0a1e0a1f0a200a210a220a230a240a250a260a270a280a290a2a0a2b0a2c0a2d0a2e0a2f0a300a310a320a330a340a350a360a370a380a390a3a0a3b0a3c0a3d0a3e140f4d41494e00a488504b475f0a3e00",
+      "count": 63,
+      "index": 62,
+      "name": "long_62",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "fresh_wrappers": "true",
+        "kind": "RefOf",
+        "load": "ok",
+        "retained_name_path": "false",
+        "same_element": "true",
+        "second_kind": "RefOf",
+        "selected_type": "Integer"
+      },
+      "success": true,
+      "values": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62
+      ]
+    },
+    {
+      "aml_hex": "08504b475f124f073f00010a020a030a040a050a060a070a080a090a0a0a0b0a0c0a0d0a0e0a0f0a100a110a120a130a140a150a160a170a180a190a1a0a1b0a1c0a1d0a1e0a1f0a200a210a220a230a240a250a260a270a280a290a2a0a2b0a2c0a2d0a2e0a2f0a300a310a320a330a340a350a360a370a380a390a3a0a3b0a3c0a3d0a3e140f4d41494e00a488504b475f0a3f00",
+      "count": 63,
+      "index": 63,
+      "name": "long_63",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "success": false,
+      "values": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62
+      ]
+    },
+    {
+      "aml_hex": "08504b475f124f073f00010a020a030a040a050a060a070a080a090a0a0a0b0a0c0a0d0a0e0a0f0a100a110a120a130a140a150a160a170a180a190a1a0a1b0a1c0a1d0a1e0a1f0a200a210a220a230a240a250a260a270a280a290a2a0a2b0a2c0a2d0a2e0a2f0a300a310a320a330a340a350a360a370a380a390a3a0a3b0a3c0a3d0a3e140e4d41494e00a488504b475fff00",
+      "count": 63,
+      "index": 18446744073709551615,
+      "name": "long_18446744073709551615",
+      "observed": {
+        "created_mutexes": "1",
+        "error": "IndexOutOfBounds|IndexOutOfBounds",
+        "forbidden_calls": "0",
+        "load": "ok"
+      },
+      "success": false,
+      "values": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62
+      ]
+    }
+  ],
+  "source_sha256": {
+    "aml_encoding.py": "e46261542865a0d84870e9d97165d5cc67aa839a828073348dd1f3111b897e42",
+    "reference.Cargo.lock": "81595cbbbd5e12502e6ccc13d216f8c6d639d1217cba148ca15802d2cab353da",
+    "reference.py": "8d558cda4efdd4c89bcfa1450ce89be7624863879101f6876557eee8c403fb0e",
+    "reference.rs": "8ed0bd3baa026f6e0ac331405d6f57431f5bd0d2ed82e36ea3bb81b2ef86297c"
+  },
+  "stage": "actual public Interpreter::new/load_table/evaluate, synthetic AML, all hardware and services trapped; no private mirrors",
+  "upstream_sha256": {
+    "Cargo.toml": "437a679d0f958db2171af775e0a1368ac35edd4cc0a48ec8b449233750db61cf",
+    "LICENCE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "LICENCE-MIT": "d7ed579f795c55b1b9f734f3f1ac6410ba84fef011acf3aaff95d0c9fe6cdd77",
+    "src/address.rs": "38048355ffe9b7c956e3ebaf84effdadca7defffd70c07feb0587e1c85fbb20a",
+    "src/aml/mod.rs": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+    "src/aml/namespace.rs": "311f3d9b5fbcb08395dcde0b5dce5455e932ad4a8fb6c273580d80c507b2f347",
+    "src/aml/object.rs": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+    "src/aml/op_region.rs": "43f7430d7aa41625f944bf66ffccc7f9bed7d403ff1979a9a2c09dedba7bf69b",
+    "src/aml/pci_routing.rs": "4c2371d38c0a67cab28ab686c8ad6374577e012cd02f561d4730e2f7895dcc39",
+    "src/aml/resource.rs": "abca9e6c8c60e40730cc11b2304acf37e2171942097f8871f5f8a8c7911fae09",
+    "src/lib.rs": "09fcc41658affdc55f6d8c0cb2b29b642d908879a07ed735014b70c7935335c7",
+    "src/platform/interrupt.rs": "c9a95f11b49535cd2baee66bdb55944870df284d3bc65f7a0e34416c5631c2bf",
+    "src/platform/mod.rs": "e49bb52792f164f1001a397bee489dc9dda8f3501681072a21396f4d276c87b5",
+    "src/platform/numa.rs": "93371276644afdf0dee1cf8b8215bb24c54a485552f045705b88424e69139596",
+    "src/platform/pci.rs": "5ad4a415a5037a741a7312d950299640a83905d454ba0eb4d40925c47a90d0c0",
+    "src/registers.rs": "9d8ed68f84cf8659f7822b0edd97fd7153a99bcca39de44b3726c6d5c00990a8",
+    "src/rsdp.rs": "ca2389abeffce9de4e1e28a87b9097c195a737f4dfa0beca5d2ccb23067f824c",
+    "src/sdt/bgrt.rs": "33baf3f6d386a091dc7ad13fb902ed4a265bbebd9809dd122d107981ea5cf5bb",
+    "src/sdt/facs.rs": "6977a2857c78c2bb07e880f555a738278571c4e5e9e173cc1375ca600da161d8",
+    "src/sdt/fadt.rs": "3b213e82029458b0c4c2633b232f2e3f1b4f9f59c07c5ac201286fb54a7927b7",
+    "src/sdt/hpet.rs": "ad52bbf848ac167a26561838d2695579b780b174006d9b553f8b154e74e6aca5",
+    "src/sdt/madt.rs": "4decb527324cd1aec925b20adc517d56f88ea80cc8c1cd50741a15b7da927ac0",
+    "src/sdt/mcfg.rs": "c33d9c34b0e270f5a7b3bf1817853aa07e7cb800030eace6447b915b4651900b",
+    "src/sdt/mod.rs": "136cb4b65a02f8e0bb3949543ff4f55fdaa540117010540cc4fe770e400a7052",
+    "src/sdt/slit.rs": "46b271c98f0071b65ccccce36db98aa8d8e4a8929c99bf81cd0ad90e5703ba52",
+    "src/sdt/spcr.rs": "bcd71238ac0a4a08946380508cc4d72762eb93cd7935fc4cc5fbad8519721fbd",
+    "src/sdt/srat.rs": "a73a29fff2fc609f3012c096a1f860d2f577593ef7995f9518e2b34f05b87b66"
+  }
+}
