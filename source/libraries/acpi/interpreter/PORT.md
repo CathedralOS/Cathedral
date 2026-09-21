@@ -194,3 +194,9 @@ primary hexadecimal prefix rule with 8/16-digit stopping. Its 630 checked pairs
 and three constant pairs cover complete ASCII admission and width limits. It is
 separate from the existing explicit decimal/hex parser; generic implicit operand
 and named-target conversion dispatch remain pending.
+
+[Primary String formatting](implicit-strings.PORT.md) adds fixed-width Integer
+hexadecimal text and space-separated Buffer byte pairs. All 334 checked pairs
+and three const pairs verify complete initialized outputs and capacity rejection.
+These helpers complement the explicit formatting policies; implicit conversion
+selection and target mutation remain pending.

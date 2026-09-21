@@ -240,3 +240,7 @@ integration remain pending, so aggregate source-map counts are unchanged.
 the primary Table 19.7 hexadecimal prefix rule, with 630 checked pairs and three
 constant pairs. This pure helper does not change upstream anchor counts or finish
 implicit operand/target conversion dispatch.
+
+[Primary Integer/Buffer-to-String conversion](interpreter/implicit-strings.PORT.md)
+adds fixed-width Integer text and spaced byte pairs, with 334 checked pairs and
+three const pairs. Aggregate Store/conversion anchors remain pending.

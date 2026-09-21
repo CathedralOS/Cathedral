@@ -573,6 +573,11 @@ the explicit decimal/hex parser. The 630 checked pairs and three const pairs
 cover all first bytes, widths and malformed extents. This is a pure helper;
 implicit operand/target dispatch and the ACPI-005 aggregate remain pending.
 
+[Primary Integer/Buffer-to-String conversion](source/libraries/acpi/interpreter/implicit-strings.PORT.md)
+adds fixed-width hexadecimal Integer text and spaced byte pairs. Its 334 checked
+pairs and three const pairs verify complete initialized output and bounded
+capacity. Generic implicit conversion selection and target dispatch stay pending.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

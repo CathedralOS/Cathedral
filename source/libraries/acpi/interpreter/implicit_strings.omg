@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// ACPI 6.6 Table 19.7 Integer/Buffer-to-String rules, bounded initialized data.
+// Primary-rule companion to the rust-osdev/acpi conversion port.
+module implicit_strings;
+use integers::IntegerSize;
+use integers::integer_bits;
+use integers::normalize;
+pub data StringResult [copy] {
+ case Capacity;
+ case String(length:u64,bytes:[u8;256]);
+}
+// Logical output excludes a terminator; all unused storage is initialized zero.
+pub machine from_integer(size:IntegerSize,number:u64)->StringResult {
+ let value:u64=normalize(size,number);let bits:u64=integer_bits(size);let count:u64=bits/4;
+ let mut output:[u8;256];_=is_integer(&mut output,value,0,count);
+ StringResult::String {length:count,bytes:output}
+}
+pub machine from_buffer(input:&[u8;256],length:u64)->StringResult {
+ // 85 bytes need 254 characters; 86 would need 257 and cannot fit.
+ transition length<=85 {true -> admitted(input,length) _ -> (StringResult::Capacity)}
+ state admitted(input:&[u8;256],length:u64)->StringResult {
+  let mut output:[u8;256];_=is_buffer(input,&mut output,0,length);
+  let count:u64=is_length(length);StringResult::String {length:count,bytes:output}
+ }
+}
+machine is_length(count:u64)->u64 {transition count>0 && count<=85 {true -> (count*3-1) _ -> (0)}}
+machine is_hex(digit:u8)->u8 {transition {digit<10 -> (digit+48) digit<16 -> (digit+55) _ -> (63)}}
+machine is_integer(output:&mut [u8;256],value:u64,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->u8 {
+ _=is_integer_at(output,value,index,count);
+ transition index<count {true -> is_integer(output,value,index+1,count) _ -> (0)}
+}
+machine is_integer_at(output:&mut [u8;256],value:u64,index:u64,count:u64)->u8 {
+ transition index<count && index<16 && count<=16 {true -> positions(output,value,index*4,count-index-1) _ -> (0)}
+ state positions(output:&mut [u8;256],value:u64,shift:u64,slot:u64)->u8 {
+  transition shift<64 && slot<256 {true -> write(output,value,shift,slot) _ -> (0)}
+ }
+ state write(output:&mut [u8;256],value:u64,shift:u64,slot:u64)->u8 {
+  let digit:u8=((value>>shift)&15) as u8;let byte:u8=is_hex(digit);output[slot]=byte;0
+ }
+}
+machine is_buffer(input:&[u8;256],output:&mut [u8;256],index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->u8 {
+ _=is_buffer_at(input,output,index,count);
+ transition index<count {true -> is_buffer(input,output,index+1,count) _ -> (0)}
+}
+machine is_buffer_at(input:&[u8;256],output:&mut [u8;256],index:u64,count:u64)->u8 {
+ transition index<count && index<85 {true -> positions(input[index],output,index*3) _ -> (0)}
+ state positions(byte:u8,output:&mut [u8;256],slot:u64)->u8 {
+  transition slot<255 {true -> write(byte,output,slot,slot+1) _ -> (0)}
+ }
+ state write(byte:u8,output:&mut [u8;256],high:u64,low:u64)->u8 {
+  transition high<256 && low<256 {true -> write_pair(byte,output,high,low) _ -> (0)}
+ }
+ state write_pair(byte:u8,output:&mut [u8;256],high:u64,low:u64)->u8 {
+  let a:u8=is_hex(byte>>4);let b:u8=is_hex(byte&15);
+  output[high]=a;output[low]=b;
+  transition high>0 {true -> separator(output,high-1) _ -> (0)}
+ }
+ state separator(output:&mut [u8;256],slot:u64)->u8 {
+  transition slot<256 {true -> write_separator(output,slot) _ -> (0)}
+ }
+ state write_separator(output:&mut [u8;256],slot:u64)->u8 {output[slot]=32;0}
+}
