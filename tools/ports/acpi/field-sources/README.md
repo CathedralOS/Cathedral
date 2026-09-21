@@ -1,8 +1,12 @@
 # Field source payload evidence
 
-Published bounded module; all final-path checks pass. API, ordering,
+Historical published bounded module; its recorded final-path checks pass. API, ordering,
 primary edge interpretations and partial provenance are in
 `source/libraries/acpi/field_sources/PORT.md`.
+
+The later [inline Integer entry](../field-source-inline/README.md) retains a
+separate source-bound regression receipt after sharing the Integer kernel.
+This directory's original constant and public evidence keeps its original scope.
 
 ```sh
 python3 tools/ports/acpi/field-sources/fixtures.py

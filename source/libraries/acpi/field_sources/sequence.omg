@@ -19,6 +19,17 @@ use integers::buffer_fields;
 use model::PayloadResult;
 data Bytes [copy] {bytes:[u8;256];}
 
+// Inline executor Integers need no temporary namespace object or backing slot.
+// Width admission precedes ordinal selection, just as in the object entry.
+pub machine integer_payload_at(number:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
+ transition {field_bits==0 -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})
+  field_bits>2048 -> (PayloadResult::Failure {reason:ConversionFailure::Capacity})
+  _ -> integer(number,size,field_bits,ordinal)}
+ state integer(number:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
+  let result:PayloadResult=integer_payload(number,size,field_bits,ordinal);result
+ }
+}
+
 pub machine payload_at(input:&[u8;1024],input_length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
  transition {field_bits==0 -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})
   field_bits>2048 -> (PayloadResult::Failure {reason:ConversionFailure::Capacity})
@@ -36,12 +47,7 @@ pub machine payload_at(input:&[u8;1024],input_length:u64,unit:u64,store:&ObjectS
   }
  }
  state integer(number:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
-  let normalized:u64=integers::normalize(size,number);
-  transition ordinal==0 {true -> encode(normalized,size,field_bits) _ -> (PayloadResult::End {total:1})}
- }
- state encode(number:u64,size:IntegerSize,field_bits:u64)->PayloadResult {
-  let mut data:Bytes=Bytes {};let encoded:IntegerResult=conversions::integer_to_buffer(size,number,&mut data.bytes);
-  let result:PayloadResult=copy_payload(&data.bytes,encoded.value,0,field_bits,1,0);result
+  let result:PayloadResult=integer_payload(number,size,field_bits,ordinal);result
  }
  state bytes(input:&[u8;1024],input_length:u64,unit:u64,store:&ObjectStore,source:u64,field_bits:u64,ordinal:u64)->PayloadResult {
   let read:ByteRead=byte_storage::read_bytes(input,input_length,unit,store,source);
@@ -75,6 +81,14 @@ pub machine payload_at(input:&[u8;1024],input_length:u64,unit:u64,store:&ObjectS
  }
  state part(read:ByteRead,field_bits:u64,ordinal:u64,total:u64,start:u64)->PayloadResult {
   let result:PayloadResult=copy_payload(&read.bytes,read.length,start,field_bits,total,ordinal);result
+ }
+}
+machine integer_payload(number:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
+ let normalized:u64=integers::normalize(size,number);
+ transition ordinal==0 {true -> encode(normalized,size,field_bits) _ -> (PayloadResult::End {total:1})}
+ state encode(number:u64,size:IntegerSize,field_bits:u64)->PayloadResult {
+  let mut data:Bytes=Bytes {};let encoded:IntegerResult=conversions::integer_to_buffer(size,number,&mut data.bytes);
+  let result:PayloadResult=copy_payload(&data.bytes,encoded.value,0,field_bits,1,0);result
  }
 }
 machine buffer_rounds(bits:u64,width:u64)->u64 {

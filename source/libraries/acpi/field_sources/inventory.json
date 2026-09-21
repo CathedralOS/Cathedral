@@ -238,7 +238,7 @@
         "2612:do_field_write": {
           "anchor": "fn do_field_write(&self, field: &FieldUnit, value: WrappedObject) -> Result<(), AmlError> {",
           "disposition": "pending",
-          "reason": "Partial source-value preparation: Integer normalized once; Buffer chunk ordinals and String characters follow explicitly documented primary rules where the pin only writes one Integer/Buffer pass and rejects String. No native execution, source evaluation or whole Store/Field write completion.",
+          "reason": "Partial source-value preparation: Integer normalized once; Buffer chunk ordinals and String characters follow explicitly documented primary rules where the pin only writes one Integer/Buffer pass and rejects String. No native execution, source evaluation or whole Store/Field write completion. Inline Integer payload preparation shares the same conversion path without a temporary object.",
           "targets": [
             {
               "anchor": "pub machine payload_at(",
@@ -247,6 +247,10 @@
             {
               "anchor": "pub data PayloadResult [copy]",
               "path": "source/libraries/acpi/field_sources/model.omg"
+            },
+            {
+              "anchor": "pub machine integer_payload_at(",
+              "path": "source/libraries/acpi/field_sources/sequence.omg"
             }
           ]
         },

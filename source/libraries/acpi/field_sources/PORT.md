@@ -1,6 +1,6 @@
 # Primary FieldUnit source payload sequencing
 
-Status: **published and tested at the final repository paths**. All 315 checked
+Historical status: **published and tested at the recorded repository paths**. All 315 checked
 positives and 315 changed-body controls passed in 277.751 seconds wall time
 (831.466 seconds summed batch time, three independent processes).
 Three constant positives and rejecting controls passed in 136.158 seconds.
@@ -8,6 +8,10 @@ All 38 public observations reproduce. The verifier validates 33 current input
 hashes, exact upstream HEAD and all 27 pinned hashes, generated fixture/build
 recipes, and exact results. This is a detached source-data algorithm, not
 repeated Field execution or complete `Interpreter::do_field_write`.
+
+The later [inline Integer entry](inline.PORT.md) shares the Integer conversion
+path and owns separate current-source receipts. The measurements above retain
+their original source identity rather than describing the refactored code.
 
 The composition reuses canonical adaptations of rust-osdev/acpi
 `257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5`, MIT OR Apache-2.0, copyright 2018

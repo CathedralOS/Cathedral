@@ -303,9 +303,15 @@ and runtime integration remain pending; aggregate source counts are unchanged.
 ordered Buffer pieces, or individual String characters for a normal Field.
 All 315 checked pairs, three constant pairs and 38 public Rust observations pass;
 the observations retain the pin's single-pass and String-rejection differences.
+
 Empty-source and terminator choices are documented primary-profile interpretations.
 Repeated execution, provider/lock access and Store integration remain pending;
 aggregate source counts are unchanged.
+
+[Inline Integer Field payloads](field_sources/inline.PORT.md)
+expose the shared Integer conversion without a temporary namespace object. All
+168 scalar pairs and 315 original object-source pairs pass with exact source and
+binary verification. Interpreter Field writes and provider integration remain pending.
 
 [Direct basic-data Concatenate](aml/object-concat.PORT.md) composes all Integer/String/Buffer
 pairings with primary right-hand conversion, little-endian integer encoding and

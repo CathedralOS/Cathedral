@@ -647,9 +647,15 @@ operators and opcode retirement remain pending; aggregate anchors stay open.
 ordered Buffer pieces, or individual String characters for a normal Field.
 All 315 checked pairs, three constant pairs and 38 public Rust observations pass;
 the observations retain the pin's single-pass and String-rejection differences.
+
 Empty-source and terminator choices are documented primary-profile interpretations.
 Repeated execution, provider/lock access and Store integration remain pending;
 aggregate source counts are unchanged.
+
+[Inline Integer Field payloads](source/libraries/acpi/field_sources/inline.PORT.md)
+reuse the same conversion path without a temporary object slot. All 168 scalar
+pairs and 315 original object-source pairs pass with exact source and binary
+verification. Field-write retirement and providers remain pending.
 
 [Direct basic-data Concatenate](source/libraries/acpi/aml/object-concat.PORT.md) composes all Integer/String/Buffer
 pairings with primary right-hand conversion, little-endian integer encoding and
