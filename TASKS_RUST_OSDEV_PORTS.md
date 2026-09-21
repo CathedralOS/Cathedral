@@ -677,6 +677,13 @@ before empty selection and full zero output tails. Parameter evaluation,
 reference policy, target writes and opcode retirement remain pending; aggregate
 source counts are unchanged.
 
+[Mid opcode execution](source/libraries/acpi/interpreter/execution/mid.PORT.md) adds scalar/byte operand conversion, independent owned
+expression results and staged target publication. Nine focused retirement pairs
+pass; its full 116 new and 199 retained regression pairs remain under checked
+verification. The 64 public Rust observations
+retain 33 value/state agreements and explicit pin differences. This remains
+a partial ACPI-005 component.
+
 [Direct Buffer ToString](source/libraries/acpi/aml/object-to-string.PORT.md) admits complete backing before selecting the
 ASCII prefix ending at NUL or the requested maximum. All 195 checked pairs and
 three constant pairs pass. The 44 public Rust observations retain 33 agreements
